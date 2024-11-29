@@ -1,0 +1,46 @@
+name: Release Nightly
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Replace package name
+        run: sed -i 's/atlascode/atlascode-nightly/g' package.json
+
+      # TODO if we want to publish this, just a different version is not enough
+      # We'd probably want to use a different id for the extension, too - e.g. atlascode-nightly
+      - name: Evaluate version
+        run: |
+          RELEASE_VERSION=$(./nightlyver.sh ${GITHUB_SHA}) && \
+          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV && \
+          echo "Using version '${RELEASE_VERSION}'"
+
+      - name: Set version
+        run: npm -no-git-tag-version --allow-same-version -f version $RELEASE_VERSION
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm run test
+
+      - name: Build the extension
+        run: npm run extension:package
+
+      # No publish actions here for the time being - let's get the builds going first

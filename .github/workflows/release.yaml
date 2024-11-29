@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Evaluate version
+        run: |
+          RELEASE_VERSION=${GITHUB_REF##*/v} && \
+          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV && \
+          echo "Using version '${RELEASE_VERSION}'"
+
+      - name: Set version
+        run: npm -no-git-tag-version --allow-same-version -f version $RELEASE_VERSION
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm run test
+
+      - name: Build the extension
+        run: npm run extension:package
+
+      # keeping this two stubbed until we're ready to release
+      # until then we might want to add tags without actually releasing
+      # (e.g. to enable rollbacks down the line)
+      # TODO after repo is public:
+      #   * change baseContentUrl across the repo
+      #   * remove `echo` stubs
+
+      - name: Publish the extension
+        run: |
+          npx vsce verify-pat -p ${{ secrets.VSCE_MARKETPLACE_TOKEN }}
+          # echo npx vsce publish \
+          #   -p ${{ secrets.VSCE_MARKETPLACE_TOKEN }} \
+          #   --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/main/ \
+          #   --packagePath atlascode-${GITHUB_REF##*/v}.vsix
+
+      - name: Publish to OpenVSX
+        run: |
+          npx ovsx verify-pat -p ${{ secrets.OPENVSX_KEY }}
+          # echo npx ovsx publish \
+          #    -p ${{ secrets.OPENVSX_KEY }} \
+          #   "atlascode-${GITHUB_REF##*/v}.vsix"
+
