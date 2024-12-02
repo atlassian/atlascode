@@ -120,28 +120,8 @@ You can find your instance's version in the footer of any Jira/Bitbucket page.
 
 ## License
 
-Copyright (c) [YYYY] Atlassian US., Inc.
-Apache 2.0 licensed, see [LICENSE](LICENSE) file.
+See [LICENSE](LICENSE) file
 
 <br/> 
 
-[![With â¤ï¸ from Atlassian](https://raw.githubusercontent.com/atlassian-internal/oss-assets/master/banner-with-thanks-light.png)](https://www.atlassian.com)
-
-
-
-# Atlassian for VS Code
-
-Atlassian for VS Code brings the functionality of Atlassian products to your favorite IDE!
-
-This extension combines the power of Jira and Bitbucket to streamline the developer workflow within VS Code.
-
-With Atlassian for VS Code you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!
-
-**Note:** 'Atlassian for VS Code' is published as an Atlassian Labs project.
-Although you may find unique and highly useful functionality in the Atlassian Labs apps, Atlassian takes no responsibility for your use of these apps.
-
-
-
-
-
-
+[![With thanks from Atlassian](https://raw.githubusercontent.com/atlassian-internal/oss-assets/master/banner-with-thanks-light.png)](https://www.atlassian.com)
