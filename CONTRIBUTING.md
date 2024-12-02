@@ -1,27 +1,18 @@
-## Developer Information
+# Contributing to [Project name]
 
-### Remote Debugging
+Thank you for considering a contribution to [Project name]! Pull requests, issues and comments are welcome. For pull requests, please:
 
-For some tasks, it's important to be able to emulate [remote execution](https://code.visualstudio.com/docs/remote/remote-overview) of the VS Code - e.g. to reproduce or debug the behavior users observe when working in browser-based tools like Github Codespaces, or Salesforce Code Builder.
+* Add tests for new features and bug fixes
+* Follow the existing style
+* Separate unrelated changes into multiple pull requests
 
-VSCode provides some very helpful [documentation](https://code.visualstudio.com/api/advanced-topics/remote-extensions#debugging-extensions) on how to test and debug extensions for that environment. In short, one would need to set up Dev Containers execution as described [here](https://code.visualstudio.com/api/advanced-topics/remote-extensions#debugging-in-a-custom-development-container).
+See the existing issues for things to start contributing.
 
-To run `atlascode` in such a way, please follow the VSCode documentation:
+For bigger changes, please make sure you start a discussion first by creating an issue and explaining the intended change.
 
--   Install [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) VSCode Extension
--   Run `npm install` like you normally would
--   In VSCode, choose `Dev Containers: Rebuild and Reopen in Container` from the command pallette
--   Wait for the VSCode to re-open in the container evnironment - you'll be able to see the difference in the header/search bar
--   Proceed to run or debug the extension as usual - it will now be running as it would in remote execution
+Atlassian requires contributors to sign a Contributor License Agreement, known as a CLA. This serves as a record stating that the contributor is entitled to contribute the code/documentation/translation to the project and is willing to have it used in distributions and derivative works (or is willing to transfer ownership).
 
-The configuration for the Dev Container is located in [./.devcontainer/devcontainer.json](https://bitbucket.org/atlassianlabs/atlascode/src/main/.devcontainer/devcontainer.json).
+Prior to accepting your contributions we ask that you please follow the appropriate link below to digitally sign the CLA. The Corporate CLA is for those who are contributing as a member of an organization and the individual CLA is for those contributing as an individual.
 
-Note: for advanced use-cases, it is possible to run scripts in dev containers via [@devcontainers/cli](https://github.com/devcontainers/cli) - try `npx devcontainer --help`
-
-### Feature Flags
-
-This package uses FX3 - Atlassian's internal solution for running experiments and rolling out features. Using it requires an API key, which is not included in code as a matter of policy.
-
-If you are an Atlassian dev reading this - please look up the `atlascode` section [here](https://developer.atlassian.com/platform/frontend-feature-flags/resources/api-keys/), copy the value for the appropriate environment into `.env`, and rebuild the project.
-
-If you are an external contributor - please feel free to ignore the feature gate client initialization failure, the default configuration of the extension will work without it, as if all feature gated content were disabled.
+* [CLA for corporate contributors](https://opensource.atlassian.com/corporate)
+* [CLA for individuals](https://opensource.atlassian.com/individual)
