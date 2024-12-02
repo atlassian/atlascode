@@ -13,7 +13,7 @@
     "version": "0.0.0",
     "publisher": "atlassian",
     "license": "SEE LICENSE IN LICENSE",
-    "homepage": "https://bitbucket.org/atlassianlabs/atlascode/src/main/README.md",
+    "homepage": "https://github.com/atlassian/atlascode/blob/main/HOMEPAGE.md",
     "repository": {
         "type": "git",
         "url": "https://bitbucket.org/atlassianlabs/atlascode.git"
