@@ -1,15 +1,17 @@
 # Atlassian for VS Code
 
-Atlassian for VS Code brings the functionality of Atlassian products to your favorite IDE!
+[![Atlassian license](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square)](LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](CONTRIBUTING.md)
 
-This extension combines the power of Jira and Bitbucket to streamline the developer workflow within VS Code.
+Stay in the flow by using Atlassian for VSCode to start work on a JIRA issue, raise and review PRs, and close out work! All directly from the IDE.
 
-With Atlassian for VS Code you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!
 
-**Note:** 'Atlassian for VS Code' is published as an Atlassian Labs project.
-Although you may find unique and highly useful functionality in the Atlassian Labs apps, Atlassian takes no responsibility for your use of these apps.
+[**Download now**](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode&ssr=false#overview)
 
-## Getting Started
+
+## Usage
+
+
+### Getting Started
 
 -   Make sure you have VS Code version 1.40.0 or above
 -   Download the extension from the marketplace
@@ -20,7 +22,7 @@ For more information, see [Getting started with VS Code](https://confluence.atla
 
 **Note:** Jira Service Desk projects are not fully supported at this time.
 
-## Features at a Glance
+### Features at a Glance
 
 Here's a quick peek at a developer's workflow:
 
@@ -44,22 +46,12 @@ Create that issue without breaking your stride:
 
 ...and lots more
 
-## Everyone Has Issues...
 
-Please refer to [our issue tracker for known issues](https://bitbucket.org/atlassianlabs/atlascode/issues) and please contribute if you encounter an issue yourself.
-
-**Note for Server/Data Center users:** The extension supports Jira and Bitbucket versions released in the last two years, per our [end of life policy](https://confluence.atlassian.com/x/ewAID).
-You can find your instance's version in the footer of any Jira/Bitbucket page.
-
-### Questions? Comments? Kudos?
+## Feedback
 
 Please use the in-app feedback form to tell us what you think! It's available from the 'Atlassian: Open Settings' and 'Atlassian: Open Welcome' pages available in the command palette.
 
-## Contributors
-
-Pull requests, issues and comments welcome.
-
-Please read our [Code of Conduct](CODE_OF_CONDUCT.md).
+## Installation
 
 Running and debugging the extension:
 
@@ -73,22 +65,83 @@ Running and debugging the extension:
     ** If the extension development host is still running restart by clicking ⟲ in the debug toolbar.
     ** If you've already stopped the host just start debugging again.
 
-For pull requests:
 
--   Follow the existing style
--   Separate unrelated changes into multiple pull requests
--   Pull requests should target the `external-contributions` branch
 
-Atlassian requires contributors to sign a Contributor License Agreement,
-known as a CLA. This serves as a record stating that the contributor is
-entitled to contribute the code/documentation/translation to the project
-and is willing to have it used in distributions and derivative works
-(or is willing to transfer ownership).
+## Documentation
 
-Prior to accepting your contributions we ask that you please follow the appropriate
-link below to digitally sign the CLA. The Corporate CLA is for those who are
-contributing as a member of an organization and the individual CLA is for
-those contributing as an individual.
+### Feature Flags
 
--   [CLA for corporate contributors](https://na2.docusign.net/Member/PowerFormSigning.aspx?PowerFormId=e1c17c66-ca4d-4aab-a953-2c231af4a20b)
--   [CLA for individuals](https://na2.docusign.net/Member/PowerFormSigning.aspx?PowerFormId=3f94fbdc-2fbe-46ac-b14c-5d152700ae5d)
+This package uses FX3 - Atlassian's internal solution for running experiments and rolling out features. Using it requires an API key, which is not included in code as a matter of policy.
+
+If you are an Atlassian dev reading this - please look up the `atlascode` section [here](https://developer.atlassian.com/platform/frontend-feature-flags/resources/api-keys/), copy the value for the appropriate environment into `.env`, and rebuild the project.
+
+If you are an external contributor - please feel free to ignore the feature gate client initialization failure, the default configuration of the extension will work without it, as if all feature gated content were disabled.
+
+### Remote Debugging
+
+For some tasks, it's important to be able to emulate [remote execution](https://code.visualstudio.com/docs/remote/remote-overview) of the VS Code - e.g. to reproduce or debug the behavior users observe when working in browser-based tools like Github Codespaces, or Salesforce Code Builder.
+
+VSCode provides some very helpful [documentation](https://code.visualstudio.com/api/advanced-topics/remote-extensions#debugging-extensions) on how to test and debug extensions for that environment. In short, one would need to set up Dev Containers execution as described [here](https://code.visualstudio.com/api/advanced-topics/remote-extensions#debugging-in-a-custom-development-container).
+
+To run `atlascode` in such a way, please follow the VSCode documentation:
+
+-   Install [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) VSCode Extension
+-   Run `npm install` like you normally would
+-   In VSCode, choose `Dev Containers: Rebuild and Reopen in Container` from the command pallette
+-   Wait for the VSCode to re-open in the container evnironment - you'll be able to see the difference in the header/search bar
+-   Proceed to run or debug the extension as usual - it will now be running as it would in remote execution
+
+The configuration for the Dev Container is located in [./.devcontainer/devcontainer.json](https://bitbucket.org/atlassianlabs/atlascode/src/main/.devcontainer/devcontainer.json).
+
+Note: for advanced use-cases, it is possible to run scripts in dev containers via [@devcontainers/cli](https://github.com/devcontainers/cli) - try `npx devcontainer --help`
+
+
+
+## Tests
+
+```
+npm run test
+```
+
+## Contributions
+
+Contributions to Atlassian for VS Code are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details. 
+
+# Issues 
+
+We moved from Bitbucket to Github. 
+
+To open a new issues, please see Github 
+
+To see old issues, please first look at Github then at [Bitbucket](https://bitbucket.org/atlassianlabs/atlascode/issues)
+
+**Note for Server/Data Center users:** The extension supports Jira and Bitbucket versions released in the last two years, per our [end of life policy](https://confluence.atlassian.com/x/ewAID).
+You can find your instance's version in the footer of any Jira/Bitbucket page.
+
+## License
+
+Copyright (c) [YYYY] Atlassian US., Inc.
+Apache 2.0 licensed, see [LICENSE](LICENSE) file.
+
+<br/> 
+
+[![With â¤ï¸ from Atlassian](https://raw.githubusercontent.com/atlassian-internal/oss-assets/master/banner-with-thanks-light.png)](https://www.atlassian.com)
+
+
+
+# Atlassian for VS Code
+
+Atlassian for VS Code brings the functionality of Atlassian products to your favorite IDE!
+
+This extension combines the power of Jira and Bitbucket to streamline the developer workflow within VS Code.
+
+With Atlassian for VS Code you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!
+
+**Note:** 'Atlassian for VS Code' is published as an Atlassian Labs project.
+Although you may find unique and highly useful functionality in the Atlassian Labs apps, Atlassian takes no responsibility for your use of these apps.
+
+
+
+
+
+
