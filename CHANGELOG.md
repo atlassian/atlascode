@@ -1,3 +1,13 @@
+## What's New in 3.0.16
+
+### Improvements 
+
+- License Change from MIT to Apache to align with Atlassian Open Source Standards
+- Moved source code and release process from Bitbucket to Github for better collaboration with community
+- Usage of pre-releases. We will follow the convention of even numbered minor release being the stable release ex: "xx.2.xx" . Odd numbers will be the pre-releases. 
+
+### Bug Fixes
+
 ## What's New in 3.0.11
 
 ### Improvements
