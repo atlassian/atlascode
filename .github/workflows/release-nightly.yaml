@@ -11,9 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Replace package name
-        run: sed -i 's/atlascode/atlascode-nightly/g' package.json
-
       # TODO if we want to publish this, just a different version is not enough
       # We'd probably want to use a different id for the extension, too - e.g. atlascode-nightly
       - name: Evaluate version
