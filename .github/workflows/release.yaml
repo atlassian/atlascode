@@ -3,14 +3,34 @@ name: Release
 on:
   push:
     tags:
-      - '**'
+      - 'v*'
+      - '!*nightly*'
 
 jobs:
+  release-nightly:
+    uses: ./.github/workflows/release-nightly.yaml
+
   release:
     runs-on: ubuntu-latest
+
+    # Release the next `nightly` before a stable version
+    # to prvent folks on pre-releases from being downgraded
+    needs: release-nightly
+
+    permissions:
+      contents: write
+
     steps:
 
       - uses: actions/checkout@v4
+
+      - name: Evaluate version
+        run: |
+          PACKAGE_VERSION=${GITHUB_REF##*/v}
+          ./scripts/version/assert-stable.sh $PACKAGE_VERSION
+          echo "PACKAGE_VERSION=${PACKAGE_VERSION}" >> $GITHUB_ENV
+          echo "RELEASE_TAG=v${PACKAGE_VERSION}" >> $GITHUB_ENV
+          echo "Using version '${PACKAGE_VERSION}'"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -18,14 +38,8 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Evaluate version
-        run: |
-          RELEASE_VERSION=${GITHUB_REF##*/v} && \
-          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV && \
-          echo "Using version '${RELEASE_VERSION}'"
-
       - name: Set version
-        run: npm -no-git-tag-version --allow-same-version -f version $RELEASE_VERSION
+        run: npm -no-git-tag-version --allow-same-version -f version $PACKAGE_VERSION
 
       - name: Install dependencies
         run: npm install
@@ -52,12 +66,33 @@ jobs:
           # echo npx vsce publish \
           #   -p ${{ secrets.VSCE_MARKETPLACE_TOKEN }} \
           #   --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/main/ \
-          #   --packagePath atlascode-${GITHUB_REF##*/v}.vsix
+          #   --packagePath atlascode-${PACKAGE_VERSION}.vsix
 
       - name: Publish to OpenVSX
         run: |
           npx ovsx verify-pat -p ${{ secrets.OPENVSX_KEY }}
           # echo npx ovsx publish \
           #    -p ${{ secrets.OPENVSX_KEY }} \
-          #   "atlascode-${GITHUB_REF##*/v}.vsix"
+          #   "atlascode-${PACKAGE_VERSION}.vsix"
 
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          release_name: Release ${{ env.RELEASE_TAG }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./atlascode-${{ env.PACKAGE_VERSION }}.vsix
+          asset_name: atlascode-${{ env.PACKAGE_VERSION }}.vsix
+          asset_content_type: application/zip
