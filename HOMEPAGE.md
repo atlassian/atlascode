@@ -24,29 +24,29 @@ For more information, see [Getting started with VS Code](https://confluence.atla
 
 Here's a quick peek at a developer's workflow:
 
-![dev workflow](https://bitbucket.org/atlassianlabs/atlascode/raw/main/.readme/dev-workflow.gif)
+![dev workflow](.readme/dev-workflow.gif)
 
 Reviewing with Bitbucket pull request features is a snap:
 
-![review pr](https://bitbucket.org/atlassianlabs/atlascode/raw/main/.readme/review-pr.gif)
+![review pr](.readme/review-pr.gif)
 
 Got a burning issue you'd like to work on?
 
-![start work](https://bitbucket.org/atlassianlabs/atlascode/raw/main/.readme/issue-start-work.gif)
+![start work](.readme/issue-start-work.gif)
 
 Kick off your builds:
 
-![builds](https://bitbucket.org/atlassianlabs/atlascode/raw/main/.readme/start-pipeline.gif)
+![builds](.readme/start-pipeline.gif)
 
 Create that issue without breaking your stride:
 
-![issue from todo](https://bitbucket.org/atlassianlabs/atlascode/raw/main/.readme/create-from-code-lens.gif)
+![issue from todo](.readme/create-from-code-lens.gif)
 
 ...and lots more
 
 ## Everyone Has Issues...
 
-Please refer to [our issue tracker for known issues](https://bitbucket.org/atlassianlabs/atlascode/issues) and please contribute if you encounter an issue yourself.
+Please refer to [our issue tracker for known issues](https://github.com/atlassian/atlascode/issues) and please contribute if you encounter an issue yourself.
 
 **Note for Server/Data Center users:** The extension supports Jira and Bitbucket versions released in the last two years, per our [end of life policy](https://confluence.atlassian.com/x/ewAID).
 You can find your instance's version in the footer of any Jira/Bitbucket page.

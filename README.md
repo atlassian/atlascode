@@ -26,23 +26,23 @@ For more information, see [Getting started with VS Code](https://confluence.atla
 
 Here's a quick peek at a developer's workflow:
 
-![dev workflow](https://bitbucket.org/atlassianlabs/atlascode/raw/main/.readme/dev-workflow.gif)
+![dev workflow](.readme/dev-workflow.gif)
 
 Reviewing with Bitbucket pull request features is a snap:
 
-![review pr](https://bitbucket.org/atlassianlabs/atlascode/raw/main/.readme/review-pr.gif)
+![review pr](.readme/review-pr.gif)
 
 Got a burning issue you'd like to work on?
 
-![start work](https://bitbucket.org/atlassianlabs/atlascode/raw/main/.readme/issue-start-work.gif)
+![start work](.readme/issue-start-work.gif)
 
 Kick off your builds:
 
-![builds](https://bitbucket.org/atlassianlabs/atlascode/raw/main/.readme/start-pipeline.gif)
+![builds](.readme/start-pipeline.gif)
 
 Create that issue without breaking your stride:
 
-![issue from todo](https://bitbucket.org/atlassianlabs/atlascode/raw/main/.readme/create-from-code-lens.gif)
+![issue from todo](.readme/create-from-code-lens.gif)
 
 ...and lots more
 
@@ -91,7 +91,7 @@ To run `atlascode` in such a way, please follow the VSCode documentation:
 -   Wait for the VSCode to re-open in the container evnironment - you'll be able to see the difference in the header/search bar
 -   Proceed to run or debug the extension as usual - it will now be running as it would in remote execution
 
-The configuration for the Dev Container is located in [./.devcontainer/devcontainer.json](https://bitbucket.org/atlassianlabs/atlascode/src/main/.devcontainer/devcontainer.json).
+The configuration for the Dev Container is located in [./.devcontainer/devcontainer.json](.devcontainer/devcontainer.json).
 
 Note: for advanced use-cases, it is possible to run scripts in dev containers via [@devcontainers/cli](https://github.com/devcontainers/cli) - try `npx devcontainer --help`
 
@@ -111,9 +111,9 @@ Contributions to Atlassian for VS Code are welcome! Please see [CONTRIBUTING.md]
 
 We moved from Bitbucket to Github. 
 
-To open a new issues, please see Github 
+To open a new issues, please see [Github](https://github.com/atlassian/atlascode/issues)
 
-To see old issues, please first look at Github then at [Bitbucket](https://bitbucket.org/atlassianlabs/atlascode/issues)
+To see old issues, please first look at [Github](https://github.com/atlassian/atlascode/issues) then at [Bitbucket](https://bitbucket.org/atlassianlabs/atlascode/issues)
 
 **Note for Server/Data Center users:** The extension supports Jira and Bitbucket versions released in the last two years, per our [end of life policy](https://confluence.atlassian.com/x/ewAID).
 You can find your instance's version in the footer of any Jira/Bitbucket page.
