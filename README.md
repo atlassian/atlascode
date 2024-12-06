@@ -26,23 +26,23 @@ For more information, see [Getting started with VS Code](https://confluence.atla
 
 Here's a quick peek at a developer's workflow:
 
-![dev workflow](.readme/dev-workflow.gif)
+![dev workflow](https://raw.githubusercontent.com/atlassian/atlascode/main/.readme/dev-workflow.gif)
 
 Reviewing with Bitbucket pull request features is a snap:
 
-![review pr](.readme/review-pr.gif)
+![review pr](https://raw.githubusercontent.com/atlassian/atlascode/main/.readme/review-pr.gif)
 
 Got a burning issue you'd like to work on?
 
-![start work](.readme/issue-start-work.gif)
+![start work](https://raw.githubusercontent.com/atlassian/atlascode/main/.readme/issue-start-work.gif)
 
 Kick off your builds:
 
-![builds](.readme/start-pipeline.gif)
+![builds](https://raw.githubusercontent.com/atlassian/atlascode/main/.readme/start-pipeline.gif)
 
 Create that issue without breaking your stride:
 
-![issue from todo](.readme/create-from-code-lens.gif)
+![issue from todo](https://raw.githubusercontent.com/atlassian/atlascode/main/.readme/create-from-code-lens.gif)
 
 ...and lots more
 
