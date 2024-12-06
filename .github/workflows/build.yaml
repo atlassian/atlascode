@@ -6,8 +6,17 @@ on:
       - '**'
 
 jobs:
+
   build:
+
     runs-on: ubuntu-latest
+
+    env:
+      ATLASCODE_FX3_API_KEY: ${{ secrets.ATLASCODE_FX3_API_KEY }}
+      ATLASCODE_FX3_ENVIRONMENT: ${{ vars.ATLASCODE_FX3_ENVIRONMENT }}
+      ATLASCODE_FX3_TARGET_APP: ${{ vars.ATLASCODE_FX3_TARGET_APP }}
+      ATLASCODE_FX3_TIMEOUT: ${{ vars.ATLASCODE_FX3_TIMEOUT }}
+
     steps:
 
       - uses: actions/checkout@v4
