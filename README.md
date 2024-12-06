@@ -91,7 +91,7 @@ To run `atlascode` in such a way, please follow the VSCode documentation:
 -   Wait for the VSCode to re-open in the container evnironment - you'll be able to see the difference in the header/search bar
 -   Proceed to run or debug the extension as usual - it will now be running as it would in remote execution
 
-The configuration for the Dev Container is located in [./.devcontainer/devcontainer.json](.devcontainer/devcontainer.json).
+The configuration for the Dev Container is located in [./.devcontainer/devcontainer.json](https://github.com/atlassian/atlascode/blob/main/.devcontainer/devcontainer.json).
 
 Note: for advanced use-cases, it is possible to run scripts in dev containers via [@devcontainers/cli](https://github.com/devcontainers/cli) - try `npx devcontainer --help`
 
