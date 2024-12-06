@@ -1365,7 +1365,7 @@
         "@atlaskit/modal-dialog": "^12.1.0",
         "@atlaskit/page": "^12.0.7",
         "@atlaskit/page-header": "^10.2.2",
-        "@atlaskit/panel": "^0.9.15",
+        "@atlaskit/panel": "^0.4.7",
         "@atlaskit/radio": "^5.3.3",
         "@atlaskit/section-message": "^6.1.4",
         "@atlaskit/select": "^15.2.4",
