@@ -36,7 +36,7 @@ module.exports = {
         ],
         'import/no-extraneous-dependencies': [
             'error',
-            { devDependencies: ['**/webpack.*', '**/test/*', '**/*.test.js', '**/*.spec.js'] },
+            { devDependencies: ['**/webpack.*', '**/test/*', '**/*.test.js', '**/*.spec.js', '**/*.test.ts'] },
         ],
         'no-restricted-imports': [
             'error',

@@ -569,7 +569,7 @@
             "type": "object",
             "properties": {
                 "cloud": {
-                    "$ref": "#/components/schemas/cloud"
+                    "$ref": "#/definitions/cloud"
                 }
             }
         },
