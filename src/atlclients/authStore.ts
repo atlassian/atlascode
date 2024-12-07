@@ -26,7 +26,7 @@ import { Tokens } from './tokens';
 import crypto from 'crypto';
 import { keychain } from '../util/keychain';
 import { loggedOutEvent } from '../analytics';
-import { Container } from 'src/container';
+import { Container } from '../container';
 const keychainServiceNameV3 = version.endsWith('-insider') ? 'atlascode-insiders-authinfoV3' : 'atlascode-authinfoV3';
 
 enum Priority {

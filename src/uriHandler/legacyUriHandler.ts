@@ -1,14 +1,14 @@
-import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
+import { ConfigSection, ConfigSubSection } from '../lib/ipc/models/config';
 import { Disposable, Uri, UriHandler, env, window } from 'vscode';
 
-import { AnalyticsApi } from './lib/analyticsApi';
-import { CheckoutHelper } from './bitbucket/interfaces';
-import { Container } from './container';
-import { Logger } from './logger';
-import { ProductJira } from './atlclients/authInfo';
-import { fetchMinimalIssue } from './jira/fetchIssue';
-import { showIssue } from './commands/jira/showIssue';
-import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
+import { AnalyticsApi } from '../lib/analyticsApi';
+import { CheckoutHelper } from '../bitbucket/interfaces';
+import { Container } from '../container';
+import { Logger } from '../logger';
+import { ProductJira } from '../atlclients/authInfo';
+import { fetchMinimalIssue } from '../jira/fetchIssue';
+import { showIssue } from '../commands/jira/showIssue';
+import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
 
 const ExtensionId = 'atlassian.atlascode';
 //const pullRequestUrl = `${env.uriScheme}://${ExtensionId}/openPullRequest`;
@@ -46,7 +46,8 @@ export const ONBOARDING_URL = `${env.uriScheme}://${ExtensionId}/openOnboarding`
  *      -- issueKey: issue key to show
  *      e.g. vscode://atlassian.atlascode/showJiraIssue?site=https%3A%2F%2Fsome-test-site.atlassian.net&issueKey=VSCODE-1320
  */
-export class AtlascodeUriHandler implements Disposable, UriHandler {
+
+export class LegacyAtlascodeUriHandler implements Disposable, UriHandler {
     private disposables: Disposable;
 
     constructor(

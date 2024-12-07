@@ -3,7 +3,7 @@ import { AgentProvider, getProxyHostAndPort, shouldTunnelHost } from '@atlassian
 import axios, { AxiosInstance } from 'axios';
 import * as fs from 'fs';
 import * as https from 'https';
-import { Logger } from 'src/logger';
+import { Logger } from '../../logger';
 import * as sslRootCas from 'ssl-root-cas';
 import { DetailedSiteInfo, SiteInfo } from '../../atlclients/authInfo';
 import { BasicInterceptor } from '../../atlclients/basicInterceptor';

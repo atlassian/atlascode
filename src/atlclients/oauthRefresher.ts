@@ -6,7 +6,7 @@ import { AxiosUserAgent } from '../constants';
 import { ConnectionTimeout } from '../util/time';
 import { Container } from '../container';
 import { Disposable } from 'vscode';
-import { Logger } from 'src/logger';
+import { Logger } from '../logger';
 import { addCurlLogging } from './interceptors';
 import { getAgent } from '../jira/jira-client/providers';
 import { strategyForProvider } from './strategy';
