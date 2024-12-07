@@ -5,6 +5,7 @@ import * as schema from '../../resources/schemas/pipelines-schema.json';
 describe('Pipeline schema', () => {
     const ajv = new Ajv();
     addFormats(ajv);
+    ajv.addVocabulary(['components', 'example']);
 
     it('Schema should be valid', () => {
         expect(ajv.compile(schema)).toBeTruthy();
