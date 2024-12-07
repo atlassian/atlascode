@@ -1,6 +1,6 @@
-import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
+import { LegacyAtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler/legacyUriHandler';
 import { BitbucketIssue, BitbucketSite, PullRequest, WorkspaceRepo } from './bitbucket/model';
-import { Disposable, ExtensionContext, UriHandler, env, workspace, UIKind } from 'vscode';
+import { Disposable, ExtensionContext, env, workspace, UIKind } from 'vscode';
 import { IConfig, configuration } from './config/configuration';
 
 import { analyticsClient } from './analytics-node-client/src/client.min.js';
@@ -65,8 +65,9 @@ import { VSCWelcomeActionApi } from './webview/welcome/vscWelcomeActionApi';
 import { VSCWelcomeWebviewControllerFactory } from './webview/welcome/vscWelcomeWebviewControllerFactory';
 import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
-import { FeatureFlagClient } from './util/featureFlags';
+import { FeatureFlagClient, Features } from './util/featureFlags';
 import { EventBuilder } from './util/featureFlags/eventBuilder';
+import { AtlascodeUriHandler } from './uriHandler';
 import { CheckoutHelper } from './bitbucket/interfaces';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
@@ -84,14 +85,6 @@ export class Container {
             version: version,
             deviceId: env.machineId,
             enable: this.getAnalyticsEnable(),
-        });
-
-        FeatureFlagClient.initialize({
-            analyticsClient: this._analyticsClient,
-            identifiers: {
-                analyticsAnonymousId: env.machineId,
-            },
-            eventBuilder: new EventBuilder(),
         });
 
         this._cancellationManager = new Map();
@@ -189,9 +182,6 @@ export class Container {
 
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
         this._bitbucketHelper = new BitbucketCheckoutHelper(context.globalState);
-        context.subscriptions.push(
-            (this._uriHandler = new AtlascodeUriHandler(this._analyticsApi, this._bitbucketHelper)),
-        );
 
         if (config.jira.explorer.enabled) {
             context.subscriptions.push((this._jiraExplorer = new JiraContext()));
@@ -206,11 +196,42 @@ export class Container {
         }
 
         context.subscriptions.push((this._helpExplorer = new HelpExplorer()));
+
+        FeatureFlagClient.initialize({
+            analyticsClient: this._analyticsClient,
+            identifiers: {
+                analyticsAnonymousId: env.machineId,
+            },
+            eventBuilder: new EventBuilder(),
+        }).then(() => {
+            this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
+        });
     }
 
     static getAnalyticsEnable(): boolean {
         const telemetryConfig = workspace.getConfiguration('telemetry');
         return telemetryConfig.get<boolean>('enableTelemetry', true);
+    }
+
+    static initializeUriHandler(
+        context: ExtensionContext,
+        analyticsApi: VSCAnalyticsApi,
+        bitbucketHelper: CheckoutHelper,
+    ) {
+        FeatureFlagClient.checkGate(Features.EnableNewUriHandler)
+            .then((enabled) => {
+                if (enabled) {
+                    console.log('Using new URI handler');
+                    context.subscriptions.push(AtlascodeUriHandler.create(analyticsApi, bitbucketHelper));
+                } else {
+                    context.subscriptions.push(new LegacyAtlascodeUriHandler(analyticsApi, bitbucketHelper));
+                }
+            })
+            .catch((err) => {
+                // Not likely that we'd land here - but if anything goes wrong, default to legacy handler
+                console.error(`Error checking feature flag ${Features.EnableNewUriHandler}: ${err}`);
+                context.subscriptions.push(new LegacyAtlascodeUriHandler(analyticsApi, bitbucketHelper));
+            });
     }
 
     static initializeBitbucket(bbCtx: BitbucketContext) {
@@ -286,11 +307,6 @@ export class Container {
 
     public static set configTarget(target: ConfigTarget) {
         this._context.globalState.update(ConfigTargetKey, target);
-    }
-
-    private static _uriHandler: UriHandler;
-    static get uriHandler() {
-        return this._uriHandler;
     }
 
     private static _version: string;

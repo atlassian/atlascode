@@ -1,5 +1,5 @@
 import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
-import { Logger } from 'src/logger';
+import { Logger } from '../../logger';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { Repo, WorkspaceRepo, emptyRepo } from '../../bitbucket/model';
