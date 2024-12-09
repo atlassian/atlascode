@@ -69,18 +69,16 @@ jobs:
 
       - name: Publish the extension
         run: |
-          npx vsce verify-pat -p ${{ secrets.VSCE_MARKETPLACE_TOKEN }}
-          # npx vsce publish \
-          #   -p ${{ secrets.VSCE_MARKETPLACE_TOKEN }} \
-          #   --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/ \
-          #   --packagePath atlascode-${PACKAGE_VERSION}.vsix
+          npx vsce publish \
+            -p ${{ secrets.VSCE_MARKETPLACE_TOKEN }} \
+            --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/ \
+            --packagePath atlascode-${PACKAGE_VERSION}.vsix
 
       - name: Publish to OpenVSX
         run: |
-          npx ovsx verify-pat -p ${{ secrets.OPENVSX_KEY }}
-          # npx ovsx publish \
-          #    -p ${{ secrets.OPENVSX_KEY }} \
-          #   "atlascode-${PACKAGE_VERSION}.vsix"
+          npx ovsx publish \
+             -p ${{ secrets.OPENVSX_KEY }} \
+            "atlascode-${PACKAGE_VERSION}.vsix"
 
       - name: Create Release
         id: create_release
