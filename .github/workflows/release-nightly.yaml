@@ -54,7 +54,20 @@ jobs:
       - name: Build the extension
         run: npm run extension:package
 
-      # No VSCE/OVSX publish actions here for the time being - let's get the builds going first
+      - name: Publish the pre-release extension
+        run: |
+          echo npx vsce publish \
+            --pre-release \
+            --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/ \
+            -p ${{ secrets.VSCE_MARKETPLACE_TOKEN }} \
+            --packagePath atlascode-${PACKAGE_VERSION}.vsix
+
+      - name: Publish the pre-release to OpenVSX
+        run: |
+          echo npx ovsx publish \
+            --pre-release \
+            -p ${{ secrets.OPENVSX_KEY }} \
+            "atlascode-${PACKAGE_VERSION}.vsix"
 
       - name: Create Tag
         run: |

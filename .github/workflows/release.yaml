@@ -71,7 +71,7 @@ jobs:
           npx vsce verify-pat -p ${{ secrets.VSCE_MARKETPLACE_TOKEN }}
           # echo npx vsce publish \
           #   -p ${{ secrets.VSCE_MARKETPLACE_TOKEN }} \
-          #   --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/main/ \
+          #   --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/ \
           #   --packagePath atlascode-${PACKAGE_VERSION}.vsix
 
       - name: Publish to OpenVSX
