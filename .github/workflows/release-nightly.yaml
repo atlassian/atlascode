@@ -52,7 +52,7 @@ jobs:
         run: npm run test
 
       - name: Build the extension
-        run: npm run extension:package
+        run: npm run extension:package:prerelease
 
       - name: Publish the pre-release extension
         run: |

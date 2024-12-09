@@ -58,6 +58,7 @@
         "compile:react": "NODE_OPTIONS=--openssl-legacy-provider webpack --mode production --config webpack.react.prod.js",
         "postinstall": "patch-package",
         "extension:clean": "rm -rf ./atlascode-*.vsix",
+        "extension:package:prerelease": "npm run extension:clean && vsce package --pre-release --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/ --allow-star-activation",
         "extension:package": "npm run extension:clean && vsce package --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/ --allow-star-activation",
         "extension:install": "npm run extension:package && code --install-extension ./atlascode-*.vsix --force",
         "test": "jest",
