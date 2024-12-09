@@ -9,6 +9,7 @@ on:
 jobs:
   release-nightly:
     uses: ./.github/workflows/release-nightly.yaml
+    secrets: inherit
 
   release:
     runs-on: ubuntu-latest
