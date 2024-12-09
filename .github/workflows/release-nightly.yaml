@@ -56,7 +56,7 @@ jobs:
 
       - name: Publish the pre-release extension
         run: |
-          echo npx vsce publish \
+          npx vsce publish \
             --pre-release \
             --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/ \
             -p ${{ secrets.VSCE_MARKETPLACE_TOKEN }} \
@@ -64,7 +64,7 @@ jobs:
 
       - name: Publish the pre-release to OpenVSX
         run: |
-          echo npx ovsx publish \
+          npx ovsx publish \
             --pre-release \
             -p ${{ secrets.OPENVSX_KEY }} \
             "atlascode-${PACKAGE_VERSION}.vsix"
