@@ -29,7 +29,7 @@ jobs:
           PACKAGE_VERSION=$(./scripts/version/get-next-nightly.sh)
           ./scripts/version/assert-nightly.sh $PACKAGE_VERSION
           echo "PACKAGE_VERSION=${PACKAGE_VERSION}" >> $GITHUB_ENV
-          echo "RELEASE_TAG=v${PACKAGE_VERSION}" >> $GITHUB_ENV
+          echo "RELEASE_TAG=v${PACKAGE_VERSION}-nightly" >> $GITHUB_ENV
           echo "Using version '${PACKAGE_VERSION}'"
 
       - name: Set up Node.js
