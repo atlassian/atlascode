@@ -26,4 +26,4 @@ else
     next_patch=0
 fi
 
-echo "$stable_major.$next_minor.$next_patch-nightly"
+echo "$stable_major.$next_minor.$next_patch"
