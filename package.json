@@ -50,7 +50,7 @@
         "vscode:uninstall": "node ./build/extension/uninstall.js",
         "vscode:prepublish": "npm run compile",
         "clean": "rm -rf ./build",
-        "format": "prettier --write . --log-level warn",
+        "format": "prettier --write --log-level warn src",
         "lint": "eslint ./src --ext .js,.jsx,.ts,.tsx",
         "lint:fix": "eslint --fix ./src --ext .js,.jsx,.ts,.tsx",
         "compile:ui-test": "tsc --project tsconfig.ui-test.json",
