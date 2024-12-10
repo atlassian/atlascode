@@ -9,7 +9,7 @@ import { AuthStatusBar } from './views/authStatusBar';
 import { BitbucketContext } from './bitbucket/bbContext';
 import { BitbucketIssueAction } from './lib/ipc/fromUI/bbIssue';
 import { CancellationManager } from './lib/cancellation';
-import { CheckoutHelper } from './bitbucket/checkoutHelper';
+import { BitbucketCheckoutHelper } from './bitbucket/checkoutHelper';
 import { ClientManager } from './atlclients/clientManager';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { ConfigAction } from './lib/ipc/fromUI/config';
@@ -67,6 +67,7 @@ import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
 import { FeatureFlagClient } from './util/featureFlags';
 import { EventBuilder } from './util/featureFlags/eventBuilder';
+import { CheckoutHelper } from './bitbucket/interfaces';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -187,7 +188,7 @@ export class Container {
         this._pmfStats = new PmfStats(context);
 
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
-        this._bitbucketHelper = new CheckoutHelper(context.globalState);
+        this._bitbucketHelper = new BitbucketCheckoutHelper(context.globalState);
         context.subscriptions.push(
             (this._uriHandler = new AtlascodeUriHandler(this._analyticsApi, this._bitbucketHelper)),
         );

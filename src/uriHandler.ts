@@ -2,7 +2,7 @@ import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
 import { Disposable, Uri, UriHandler, env, window } from 'vscode';
 
 import { AnalyticsApi } from './lib/analyticsApi';
-import { CheckoutHelper } from './bitbucket/checkoutHelper';
+import { CheckoutHelper } from './bitbucket/interfaces';
 import { Container } from './container';
 import { Logger } from './logger';
 import { ProductJira } from './atlclients/authInfo';
