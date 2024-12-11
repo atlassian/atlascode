@@ -16,7 +16,7 @@ import { CommonMessageType } from '../lib/ipc/toUI/common';
 import { WebviewController } from '../lib/webview/controller/webviewController';
 import { UIWebsocket } from '../ws';
 import { VSCWebviewControllerFactory } from './vscWebviewControllerFactory';
-import { FeatureFlagClient } from 'src/util/featureFlags';
+import { FeatureFlagClient } from '../util/featureFlags';
 
 // ReactWebview is the interface for all basic webviews.
 // It takes FD as a generic type parameter that represents the type of "Factory Data" that will be

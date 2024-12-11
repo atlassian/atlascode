@@ -6,6 +6,7 @@ import { Logger } from '../logger';
 import { checkout } from '../views/pullrequest/gitActions';
 import { bitbucketSiteForRemote, clientForHostname } from './bbUtils';
 import { WorkspaceRepo } from './model';
+import { CheckoutHelper } from './interfaces';
 
 type RefInfo = {
     timestamp: number;
@@ -28,10 +29,16 @@ const RefInfoLifespanMs = 60 * 1000;
 /**
  * Methods for checking out branches and pulling repos given their urls and ref names.
  */
-export class CheckoutHelper {
+export class BitbucketCheckoutHelper implements CheckoutHelper {
     constructor(private globalState: Memento) {}
 
-    public async checkoutRef(cloneUrl: string, ref: string, refType: string, sourceCloneUrl = ''): Promise<boolean> {
+    public async checkoutRef(
+        cloneUrl: string,
+        ref: string,
+        refType: string,
+        sourceCloneUrl?: string,
+    ): Promise<boolean> {
+        sourceCloneUrl = sourceCloneUrl || '';
         let wsRepo = this.findRepoInCurrentWorkspace(cloneUrl);
         if (!wsRepo) {
             this.globalState.update(BitbucketRefInfoKey, {
