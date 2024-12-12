@@ -278,7 +278,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                     }}
                                 >
                                     <Tab label="Username and Password" />
-                                    {product.key === ProductJira.key && <Tab label="Personal Access Token" />}
+                                    <Tab label="Personal Access Token" />
                                 </Tabs>
                                 <TabPanel value={authTypeTabIndex} index={0}>
                                     <Grid item>
