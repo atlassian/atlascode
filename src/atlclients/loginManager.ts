@@ -29,8 +29,6 @@ import { Logger } from '../logger';
 import { OAuthDancer } from './oauthDancer';
 import { SiteManager } from '../siteManager';
 
-const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
-
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
     private _jiraAuthenticator: JiraAuthenticator;
@@ -156,6 +154,7 @@ export class LoginManager {
         let apiUrl = '';
         const protocol = site.protocol ? site.protocol : 'https:';
         const contextPath = site.contextPath ? site.contextPath : '';
+        const transport = getAxiosInstance();
         switch (site.product.key) {
             case ProductJira.key:
                 siteDetailsUrl = `${protocol}//${site.host}${contextPath}/rest/api/2/myself`;
@@ -163,16 +162,20 @@ export class LoginManager {
                 apiUrl = `${protocol}//${site.host}${contextPath}/rest`;
                 break;
             case ProductBitbucket.key:
-                const bbCredentials = credentials as BasicAuthInfo;
-                siteDetailsUrl = `${protocol}//${
-                    site.host
-                }${contextPath}/rest/api/1.0/users/${bbCredentials.username.replace(slugRegex, '_')}?avatarSize=64`;
-                avatarUrl = '';
                 apiUrl = `${protocol}//${site.host}${contextPath}`;
+                // Needed when using a API key to login (credentials is PATAuthInfo):
+                const res = await transport(`${apiUrl}/rest/api/latest/build/capabilities`, {
+                    method: 'GET',
+                    headers: {
+                        Authorization: authHeader,
+                    },
+                    ...getAgent(site),
+                });
+                let ausername = res.headers['x-ausername'];
+                siteDetailsUrl = `${apiUrl}/rest/api/1.0/users/${ausername}`;
+                avatarUrl = `${apiUrl}/users/${ausername}/avatar.png?s=64`;
                 break;
         }
-
-        const transport = getAxiosInstance();
 
         const res = await transport(siteDetailsUrl, {
             method: 'GET',
