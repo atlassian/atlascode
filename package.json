@@ -62,6 +62,7 @@
         "extension:package": "npm run extension:clean && vsce package --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/ --allow-star-activation",
         "extension:install": "npm run extension:package && code --install-extension ./atlascode-*.vsix --force",
         "test": "jest",
+        "test:ui": "extest setup-and-run './src/ui-test/*.test.js' --code_version max --code_settings ui-test-settings.json --extensions_dir .test-extensions",
         "devcompile": "npm-run-all --parallel devcompile:react devcompile:extension",
         "devcompile:react": "webpack --mode development --config webpack.react.dev.js",
         "devcompile:extension": "webpack --mode development --config webpack.extension.dev.js",
