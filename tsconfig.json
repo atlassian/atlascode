@@ -3,7 +3,7 @@
         "baseUrl": ".",
         "outDir": "build/extension",
         "module": "esnext",
-        "target": "es2022",
+        "target": "es6",
         "lib": ["esnext", "dom"],
         "resolveJsonModule": true,
         "skipLibCheck": true,
