@@ -6,10 +6,16 @@ if [ "$1" == "--rerun" ]; then
     # Skip rebuilding the extension and setting up the tests
     # Use this if you are iterating in the tests themselves
     command="run-tests"
+
+    # If you delete your e2e/.resources, or bump a version somewhere
+    # it could be useful to have these here. They are only ran if
+    # the binaries are not already present
+    extest get-vscode
+    extest get-chromedriver
 fi
 
 extest ${command} \
     './.generated/atlascode/e2e/tests/*.test.js' \
     --code_version max \
     --code_settings e2e/test-settings.json \
-    --extensions_dir .test-extensions
+    --extensions_dir e2e/.test-extensions

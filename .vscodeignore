@@ -6,6 +6,7 @@
 
 .generated/
 e2e/
+.npm/
 
 .env
 .env.example
@@ -26,7 +27,6 @@ ui-test-settings.json
 vscode-stylenames.txt
 .devcontainer/
 .github/
-.test-extensions/
 coverage/
 scripts/
 

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# Usage:
+# e2e/scripts/in-docker some-fancy-command --with-args
+
+docker run \
+    --platform linux/amd64 \
+    -v $(pwd):/atlascode \
+    --user atlascode \
+    -it \
+    atlascode-e2e $@

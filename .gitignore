@@ -16,6 +16,6 @@ TEMP-*
 yalc.lock
 .env
 coverage
-.test-extensions/
 .generated/
 e2e/.resources/
+e2e/.test-extensions/

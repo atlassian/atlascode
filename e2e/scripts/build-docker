@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# Build the docker iamge for e2e tests
+# Explicitly using empty context to avoid unnecessary rebuilds,
+# since we'll be mounting the whole work folder when using the image
+docker build --platform linux/amd64 --tag atlascode-e2e - <e2e/Dockerfile
