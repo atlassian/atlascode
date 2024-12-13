@@ -10,7 +10,7 @@ module.exports = {
         ],
     },
     transformIgnorePatterns: ['/node_modules/'],
-    testPathIgnorePatterns: ['/node_modules/', '<rootDir>/src/ui-test/'],
+    testPathIgnorePatterns: ['/node_modules/', '/e2e/'],
     verbose: true,
     setupFilesAfterEnv: ['<rootDir>/setupTests.js'],
     // coverage configuration

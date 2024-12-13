@@ -41,6 +41,7 @@
         "__fixtures__",
         "**/__fixtures__",
         "test",
-        ".yalc"
+        ".yalc",
+        "e2e",
     ]
 }

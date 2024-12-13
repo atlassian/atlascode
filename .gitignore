@@ -17,4 +17,5 @@ yalc.lock
 .env
 coverage
 .test-extensions/
-generated/
+.generated/
+e2e/.resources/

@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "baseUrl": ".",
-        "outDir": "generated/ui-test",
+        "outDir": "../.generated",
         "module": "CommonJS",
         "target": "es6",
         "lib": ["esnext", "dom"],
@@ -12,7 +12,7 @@
         "allowJs": true,
         "jsx": "react",
         "moduleResolution": "node",
-        "rootDir": "src/ui-test",
+        "rootDir": "../..",
         "allowSyntheticDefaultImports": true,
         "forceConsistentCasingInFileNames": true,
         "noImplicitReturns": true,
@@ -24,5 +24,5 @@
         "noUnusedLocals": true,
         "typeRoots": ["node_modules/@types", "src/typings/"]
     },
-    "include": ["src/ui-test/**/*"],
+    "include": ["tests/**/*"]
 }

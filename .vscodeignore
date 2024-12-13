@@ -4,6 +4,9 @@
 # images/
 # LICENSE
 
+.generated/
+e2e/
+
 .env
 .env.example
 .eslintignore
