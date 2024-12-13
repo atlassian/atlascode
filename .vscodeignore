@@ -1,3 +1,32 @@
+# Allowed:
+# build/
+# resources/
+# images/
+# LICENSE
+
+.env
+.env.example
+.eslintignore
+.mocharc.js
+.nvmrc
+.prettierignore
+CODEOWNERS
+HOMEPAGE.md
+changelog.md
+nightlyver.sh
+package.json
+readme.md
+setupTests.js
+tsconfig.notest.json
+tsconfig.ui-test.json
+ui-test-settings.json
+vscode-stylenames.txt
+.devcontainer/
+.github/
+.test-extensions/
+coverage/
+scripts/
+
 .vscode/**
 .vscode-test/**
 out/test/**
