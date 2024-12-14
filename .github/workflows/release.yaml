@@ -60,13 +60,6 @@ jobs:
       - name: Build the extension
         run: npm run extension:package
 
-      # keeping this two stubbed until we're ready to release
-      # until then we might want to add tags without actually releasing
-      # (e.g. to enable rollbacks down the line)
-      # TODO after repo is public:
-      #   * change baseContentUrl across the repo
-      #   * remove `echo` stubs
-
       - name: Publish the extension
         run: |
           npx vsce publish \
