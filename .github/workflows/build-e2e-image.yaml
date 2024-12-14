@@ -1,0 +1,30 @@
+name: Build E2E Image
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+
+  build-e2e-docker-image:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+
+      - uses: actions/checkout@v4
+        
+      - name: Build the Docker image
+        run: | 
+          docker build \
+            --platform linux/amd64 \
+            --tag ghcr.io/atlassian/atlascode-e2e:$GITHUB_SHA \
+            --tag ghcr.io/atlassian/atlascode-e2e:latest \
+            - <e2e/Dockerfile
+
+      - name: Log in to registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push the Docker image
+        run: |
+          docker push ghcr.io/atlassian/atlascode-e2e:$GITHUB_SHA
+          docker push ghcr.io/atlassian/atlascode-e2e:latest

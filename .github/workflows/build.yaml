@@ -36,6 +36,10 @@ jobs:
       - name: Run unit tests
         run: npm run test
 
-      - name: Build the extension
-        run: npm run extension:package
+      - name: Fetch E2E image
+        run: |
+          docker pull ghcr.io/atlassian/atlascode-e2e:latest
+          docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e
 
+      - name: Run E2E tests
+        run: npm run e2e:docker

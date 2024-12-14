@@ -7,5 +7,5 @@ docker run \
     --platform linux/amd64 \
     -v $(pwd):/atlascode \
     --user atlascode \
-    -it \
+    $([ -z "$CI" ] && echo "-it" || echo "") \
     atlascode-e2e $@
