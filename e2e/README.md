@@ -18,15 +18,15 @@ What do these tests use?
 Commands related to e2e tests:
 
     # Compile the tests in this folder into JS
-    npm run e2e:compile
+    npm run test:e2e:compile
 
     # Build the extension, e2e tests, configure the test runner,
     # then run the E2E tests
-    npm run e2e
+    npm run test:e2e
 
     # Run the tests without rebuilding the extension
     # Use this one when iterating
-    npm run e2e:rerun
+    npm run test:e2e:rerun
 
 ### Running E2E Tests Headless
 
@@ -36,7 +36,7 @@ However, we can work around that - by running our tests in Docker! We can mount 
 
 In this folder, there's a `Dockerfile` with a rather lightweight image - `vscode`, `xvfb`, their dependencies, and `npm`/`node` - and some scripts to run it. The intended usage is as follows:
 
-* Build the docker image by running `npm run e2e:docker:build`. You only need to do it once
+* Build the docker image by running `npm run test:e2e:docker:build`. You only need to do it once
 * Run one of the two commands:
-    - `npm run e2e:docker` - this will do the full cycle of building the extension and setting up tests. You typically want to run this when you've just updated the extension
-    - `npm run e2e:docker:rerun` - a much faster command to rerun the tests against an already prepared setup. Use this when iterating on tests themselves
+    - `npm run test:e2e:docker` - this will do the full cycle of building the extension and setting up tests. You typically want to run this when you've just updated the extension
+    - `npm run test:e2e:docker:rerun` - a much faster command to rerun the tests against an already prepared setup. Use this when iterating on tests themselves
