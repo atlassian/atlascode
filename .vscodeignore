@@ -4,6 +4,7 @@
 # images/
 # LICENSE
 
+__mocks__/
 .generated/
 e2e/
 .npm/
