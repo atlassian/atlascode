@@ -2,7 +2,7 @@
 
 ### Improvements 
 
-- PAT authentication is now supported for JIRA. 
+- PAT authentication is now supported for JIRA Data Center / Server. 
 
 ### Bug Fixes
 
