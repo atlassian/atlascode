@@ -134,10 +134,10 @@ export class ClientManager implements Disposable {
             } else {
                 result = {
                     repositories: isBasicAuthInfo(info)
-                        ? new ServerRepositoriesApi(this.createBasicHTTPClient(site, info.username, info.password))
+                        ? new ServerRepositoriesApi(this.createHTTPClient(site, info))
                         : undefined!,
                     pullrequests: isBasicAuthInfo(info)
-                        ? new ServerPullRequestApi(this.createBasicHTTPClient(site, info.username, info.password))
+                        ? new ServerPullRequestApi(this.createHTTPClient(site, info))
                         : undefined!,
                     issues: undefined,
                     pipelines: undefined,
@@ -216,10 +216,21 @@ export class ClientManager implements Disposable {
         );
     }
 
-    private createBasicHTTPClient(site: DetailedSiteInfo, username: string, password: string): HTTPClient {
+    private createHTTPClient(site: DetailedSiteInfo, info: AuthInfo): HTTPClient {
+        let auth = '';
+        if (isBasicAuthInfo(info)) {
+            Logger.info("Using Username and Password Auth");
+            auth = `Basic ${Buffer.from(info.username + ':' + info.password).toString('base64')}`;
+        } else if (isPATAuthInfo(info)) {
+            Logger.info("Using PAT Auth");
+            auth = `Bearer ${info.token}`;
+        } else {
+            Logger.warn("Auth format not recognized");    
+        }
+        
         return new HTTPClient(
             site.baseApiUrl,
-            `Basic ${Buffer.from(username + ':' + password).toString('base64')}`,
+            auth,
             getAgent(site),
             async (response: AxiosResponse): Promise<Error> => {
                 let errString = 'Unknown error';
