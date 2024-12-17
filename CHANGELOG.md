@@ -1,3 +1,12 @@
+## What's New in 3.2.0
+
+### Improvements 
+
+- PAT authentication is now supported for JIRA. 
+
+### Bug Fixes
+
+
 ## What's New in 3.0.16
 
 ### Improvements 
