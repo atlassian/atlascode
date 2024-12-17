@@ -2,7 +2,7 @@
 
 ### Improvements 
 
-- PAT authentication is now supported for JIRA Data Center / Server. 
+- PAT authentication is now supported for Bitbucket Data Center / Server. 
 
 ### Bug Fixes
 
