@@ -219,15 +219,15 @@ export class ClientManager implements Disposable {
     private createHTTPClient(site: DetailedSiteInfo, info: AuthInfo): HTTPClient {
         let auth = '';
         if (isBasicAuthInfo(info)) {
-            Logger.info("Using Username and Password Auth");
+            Logger.info('Using Username and Password Auth');
             auth = `Basic ${Buffer.from(info.username + ':' + info.password).toString('base64')}`;
         } else if (isPATAuthInfo(info)) {
-            Logger.info("Using PAT Auth");
+            Logger.info('Using PAT Auth');
             auth = `Bearer ${info.token}`;
         } else {
-            Logger.warn("Auth format not recognized");    
+            Logger.warn('Auth format not recognized');
         }
-        
+
         return new HTTPClient(
             site.baseApiUrl,
             auth,
