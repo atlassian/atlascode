@@ -52,7 +52,7 @@ export const StatusBarPanel: React.FunctionComponent<StatusBarPanelProps> = memo
                 <ExpansionPanelSummary
                     expandIcon={<ExpandMoreIcon />}
                     aria-controls={`${configSection}-${ConfigSubSection.Auth}-content`}
-                    id={`${configSection}-${ConfigSubSection.Auth}-header`}
+                    id={`${configSection}-${ConfigSubSection.Status}-header`}
                 >
                     <PanelTitle>Status Bar</PanelTitle>
                     <PanelSubtitle>{`configure the status bar display for ${productName}`}</PanelSubtitle>
