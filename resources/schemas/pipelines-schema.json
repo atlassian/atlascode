@@ -172,6 +172,15 @@
               "description": "Whether it uses Atlassian ip ranges.",
               "type": "boolean"
             },
+            "arch": {
+              "default": "x86",
+              "description": "The architecture type cloud step runtime used.",
+              "type": "string",
+              "enum": [
+                "x86",
+                "arm"
+              ]
+            },
             "version": {
               "description": "Cloud Runtime version.",
               "type": "string"
@@ -351,17 +360,17 @@
               "properties": {
                 "aws": {
                   "not": {
-  
+
                   }
                 },
                 "password": {
                   "not": {
-  
+
                   }
                 },
                 "username": {
                   "not": {
-  
+
                   }
                 }
               },
@@ -802,7 +811,7 @@
                         "properties": {
                           "condition": {
                             "not": {
-  
+
                             }
                           }
                         },
