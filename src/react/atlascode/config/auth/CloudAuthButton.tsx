@@ -18,7 +18,13 @@ export const CloudAuthButton: React.FunctionComponent<CloudAuthButtonProps> = ({
     };
 
     return (
-        <Button id="settings.login.cloud.button" variant="contained" color="primary" startIcon={<CloudIcon />} onClick={() => handleCloudProd()}>
+        <Button
+            id="settings.login.cloud.button"
+            variant="contained"
+            color="primary"
+            startIcon={<CloudIcon />}
+            onClick={() => handleCloudProd()}
+        >
             {loginText}
         </Button>
     );

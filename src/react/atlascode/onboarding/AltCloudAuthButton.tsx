@@ -53,7 +53,13 @@ export const AltCloudAuthButton: React.FunctionComponent<AltCloudAuthButtonProps
 
     return (
         <Tooltip title={'Opens a browser window to log in via OAuth'}>
-            <Button id="onboarding.cloud.button" variant="contained" color="primary" className={classes.button} onClick={handleCloudProd}>
+            <Button
+                id="onboarding.cloud.button"
+                variant="contained"
+                color="primary"
+                className={classes.button}
+                onClick={handleCloudProd}
+            >
                 <Grid container direction="column">
                     <Grid container direction="row" alignItems="center" justify="center" spacing={3}>
                         <Grid item>

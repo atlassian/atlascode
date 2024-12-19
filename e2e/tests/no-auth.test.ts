@@ -1,6 +1,5 @@
 import { expect } from 'chai';
-import { before, ActivityBar, after, SideBarView, By, WebView, EditorView, Workbench} from 'vscode-extension-tester';
-
+import { before, ActivityBar, after, SideBarView, By, WebView, EditorView, Workbench } from 'vscode-extension-tester';
 
 describe('Atlassian Extension Activity Bar', async () => {
     let activityBar: ActivityBar;
@@ -23,7 +22,7 @@ describe('Atlassian Extension Activity Bar', async () => {
 describe('Atlassian Extension SideBar', async () => {
     let activityBar: ActivityBar;
     let sideBarView: SideBarView;
-    
+
     before(async () => {
         activityBar = new ActivityBar();
         (await activityBar.getViewControl('Atlassian'))?.openView();
@@ -39,15 +38,13 @@ describe('Atlassian Extension SideBar', async () => {
     after(async () => {});
 
     it('should have a login action suggestion', async () => {
-        
-
         let atlasDrawer = sideBarView.findElement(By.id('workbench.view.extension.atlascode-drawer'));
         expect(atlasDrawer).to.not.be.undefined;
 
         // find element by aria-label: "Please login to Jira"
         const loginButton = atlasDrawer.findElement(By.css('[aria-label="Please login to Jira"]'));
         expect(loginButton).to.not.be.undefined;
-        expect((await loginButton.getText())).to.equal('Please login to Jira');
+        expect(await loginButton.getText()).to.equal('Please login to Jira');
     });
 });
 
@@ -57,17 +54,17 @@ describe('Atlassian Extension Settings Page', async () => {
     before(async () => {
         await new EditorView().closeAllEditors();
         await new Workbench().executeCommand('Atlassian: Open Settings');
-		await new Promise((res) => {
-			setTimeout(res, 6000);
-		});
-		// init the WebView page object
-		view = new WebView();
+        await new Promise((res) => {
+            setTimeout(res, 6000);
+        });
+        // init the WebView page object
+        view = new WebView();
     });
 
     after(async () => {
         // after we are done with the webview, switch webdriver back to the vscode window
-		await view.switchBack();
-		await new EditorView().closeAllEditors();
+        await view.switchBack();
+        await new EditorView().closeAllEditors();
     });
 
     it('should have a title', async () => {
@@ -76,17 +73,14 @@ describe('Atlassian Extension Settings Page', async () => {
     });
 
     it('should have an Authentication Section', async () => {
-        // can't write this test because selectors on webViews is broken 
-        // https://github.com/redhat-developer/vscode-extension-tester/issues/1492 
+        // can't write this test because selectors on webViews is broken
+        // https://github.com/redhat-developer/vscode-extension-tester/issues/1492
         // Going to add our repro steps to the issue in hopes that this gets fixed
-
         // alternative: we could downgrade the version that we test.
-            // No. because we should be testing on the latest version of VSCode
+        // No. because we should be testing on the latest version of VSCode
         // alternative: we could speed up the bug fix by contributing to the project
-            // Perhaps, but we have other priorities first. Eg: testing the authenticated flows
-        // alternative: we could do some kind of screenshot computer vision test 
-            // Maybe, but seems overkill for something that looks like its going to be fixed soon
-
+        // Perhaps, but we have other priorities first. Eg: testing the authenticated flows
+        // alternative: we could do some kind of screenshot computer vision test
+        // Maybe, but seems overkill for something that looks like its going to be fixed soon
     });
-
 });
