@@ -177,7 +177,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                                 variant="contained"
                                                 color="primary"
                                                 onClick={handleNext}
-                                                id="onboarding.next.button"
+                                                id="onboarding-next-button"
                                                 className={classes.button}
                                                 disabled={
                                                     !state.config['bitbucket.enabled'] && !state.config['jira.enabled']
