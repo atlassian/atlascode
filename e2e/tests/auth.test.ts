@@ -17,9 +17,9 @@ describe('Auth User', async () => {
         sideBarView = new SideBarView();
         sideBarView.wait();
 
-        // wait for 2 seconds so the sidebar can load
+        // wait for X seconds so the sidebar can load
         await new Promise((res) => {
-            setTimeout(res, 2000);
+            setTimeout(res, 6000);
         });
     });
 
