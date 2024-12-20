@@ -6,9 +6,6 @@ describe('Auth User', async () => {
     let sideBarView: SideBarView;
 
     before(async () => {
-        // using a test user bot, login via an API
-        // [Optional <ID:1>] Ideally, the test user already has some JIRAs assigned to them, If not, create a JIRA and assign it to the test user
-        // use the tokens in the API to inject into the VSCode test extension
         await new EditorView().closeAllEditors();
         await new Workbench().executeCommand('Atlassian: Test Login');
         await new Promise((res) => {
@@ -28,8 +25,7 @@ describe('Auth User', async () => {
 
     after(async () => {});
 
-    it('in SideBarView should not see log in button and should see My <Team> Issues', async () => {
-        // test: given user is logged in, when they view the atlas drawer, they should not see a "please login to JIRA" button AND should see a "My <Team> Issues" section
+    it('in SideBarView should see Create issue... button', async () => {
         let atlasDrawer = sideBarView.findElement(By.id('workbench.view.extension.atlascode-drawer'));
         expect(atlasDrawer).to.not.be.undefined;
 
@@ -38,7 +34,5 @@ describe('Auth User', async () => {
         expect(await createIssueButton.getText()).to.equal('Create issue...');
     });
 
-    it('in SideBarView should see a assigned JIRA issues', async () => {
-        // [Optional <ID:1>]  test: given user is logged in, when they view the atlas drawer, they should see JIRA issues assigned to them
-    });
+    it('in SideBarView should see a assigned JIRA issues', async () => {});
 });

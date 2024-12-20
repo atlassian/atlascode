@@ -271,6 +271,7 @@ export function oauthProviderForSite(site: SiteInfo): OAuthProvider | undefined 
         return OAuthProvider.JiraCloud;
     }
 
+    // Commented out to allow for testing flow of AXON-32 PR: https://github.com/atlassian/atlascode/pull/54/files
     // if (hostname.endsWith('jira-dev.com')) {
     //     return OAuthProvider.JiraCloudStaging;
     // }

@@ -40,7 +40,6 @@ export class VSCConfigActionApi implements ConfigActionApi {
         this._cancelMan = cancelMan;
     }
     public async authenticateServer(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
-        console.log('BWIEGER: Site Info:', site, 'Auth Info:', authInfo);
         return await Container.loginManager.userInitiatedServerLogin(site, authInfo);
     }
 
