@@ -283,6 +283,16 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.testLogin",
+                "title": "Test Login",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.testLogout",
+                "title": "Test Logout",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.bb.openInBitbucket",
                 "title": "Open in Bitbucket",
                 "category": "Atlassian"

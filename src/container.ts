@@ -1,6 +1,6 @@
 import { LegacyAtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler/legacyUriHandler';
 import { BitbucketIssue, BitbucketSite, PullRequest, WorkspaceRepo } from './bitbucket/model';
-import { Disposable, ExtensionContext, env, workspace, UIKind } from 'vscode';
+import { Disposable, ExtensionContext, env, workspace, UIKind, window } from 'vscode';
 import { IConfig, configuration } from './config/configuration';
 
 import { analyticsClient } from './analytics-node-client/src/client.min.js';
@@ -69,6 +69,7 @@ import { FeatureFlagClient, Features } from './util/featureFlags';
 import { EventBuilder } from './util/featureFlags/eventBuilder';
 import { AtlascodeUriHandler } from './uriHandler';
 import { CheckoutHelper } from './bitbucket/interfaces';
+import { ProductJira } from './atlclients/authInfo';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -352,6 +353,43 @@ export class Container {
     private static _onboardingWebviewFactory: SingleWebview<any, OnboardingAction>;
     static get onboardingWebviewFactory() {
         return this._onboardingWebviewFactory;
+    }
+
+    static async testLogout() {
+        Container.siteManager.getSitesAvailable(ProductJira).forEach(async (site) => {
+            await Container.clientManager.removeClient(site);
+            Container.siteManager.removeSite(site);
+        });
+    }
+
+    static async testLogin() {
+        if (!process.env.ATLASCODE_TEST_USER_API_TOKEN) {
+            // vscode notify user that this is for testing only
+            window.showInformationMessage(
+                'This is for testing only. Please set the ATLASCODE_TEST_USER_API_TOKEN environment variable to run this test',
+            );
+            return;
+        }
+        const authInfo = {
+            username: 'axon-test@polli.tlp.usersinbuckets.com',
+            password: process.env.ATLASCODE_TEST_USER_API_TOKEN,
+            user: {
+                id: '',
+                displayName: '',
+                email: '',
+                avatarUrl: '',
+            },
+            state: 0,
+        };
+        const site = {
+            host: 'axon-test.jira-dev.com',
+            protocol: 'https:',
+            product: {
+                name: 'Jira',
+                key: 'jira',
+            },
+        };
+        await Container.loginManager.userInitiatedServerLogin(site, authInfo);
     }
 
     private static _pullRequestDetailsWebviewFactory: MultiWebview<any, PullRequestDetailsAction>;

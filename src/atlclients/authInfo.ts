@@ -271,9 +271,9 @@ export function oauthProviderForSite(site: SiteInfo): OAuthProvider | undefined 
         return OAuthProvider.JiraCloud;
     }
 
-    if (hostname.endsWith('jira-dev.com')) {
-        return OAuthProvider.JiraCloudStaging;
-    }
+    // if (hostname.endsWith('jira-dev.com')) {
+    //     return OAuthProvider.JiraCloudStaging;
+    // }
 
     if (hostname.endsWith('bitbucket.org')) {
         return OAuthProvider.BitbucketCloud;
