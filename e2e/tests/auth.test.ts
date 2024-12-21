@@ -15,7 +15,7 @@ describe('Auth User', async () => {
         activityBar = new ActivityBar();
         (await activityBar.getViewControl('Atlassian'))?.openView();
         sideBarView = new SideBarView();
-        sideBarView.wait();
+        sideBarView.wait(10000);
 
         // wait for X seconds so the sidebar can load
         await new Promise((res) => {
