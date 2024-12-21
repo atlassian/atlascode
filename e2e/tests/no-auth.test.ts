@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { before, ActivityBar, after, SideBarView, By, WebView, EditorView, Workbench } from 'vscode-extension-tester';
+import { before, ActivityBar, after, SideBarView, By, EditorView, Workbench } from 'vscode-extension-tester';
 
 describe('Atlassian Extension Activity Bar', async () => {
     let activityBar: ActivityBar;
