@@ -8,5 +8,6 @@ docker run \
     -v $(pwd):/atlascode \
     --user atlascode \
     -e ATLASCODE_TEST_USER_API_TOKEN=$ATLASCODE_TEST_USER_API_TOKEN \
+    -e CI=$CI \
     $([ -z "$CI" ] && echo "-it" || echo "") \
     atlascode-e2e $@
