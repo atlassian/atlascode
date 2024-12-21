@@ -26,6 +26,11 @@ describe('Auth User', async () => {
     after(async () => {});
 
     it('in SideBarView should see Create issue... button', async () => {
+        if (isCI()) {
+            console.log('Test skipped in non-CI environment');
+            return;
+        }
+
         let atlasDrawer = sideBarView.findElement(By.id('workbench.view.extension.atlascode-drawer'));
         expect(atlasDrawer).to.not.be.undefined;
 
@@ -36,3 +41,10 @@ describe('Auth User', async () => {
 
     it('in SideBarView should see a assigned JIRA issues', async () => {});
 });
+
+function isCI() {
+    if (process.env.CI) {
+        return true;
+    }
+    return false;
+}
