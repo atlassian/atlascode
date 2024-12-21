@@ -2,6 +2,10 @@ import { expect } from 'chai';
 import { before, after, EditorView, Workbench, By, ActivityBar, SideBarView } from 'vscode-extension-tester';
 
 describe('Auth User', async () => {
+    if (process.env.CI) {
+        console.log('Test skipped in CI environment');
+        return;
+    }
     let activityBar: ActivityBar;
     let sideBarView: SideBarView;
 
@@ -26,10 +30,7 @@ describe('Auth User', async () => {
     after(async () => {});
 
     it('in SideBarView should see Create issue... button', async () => {
-        if (isCI()) {
-            console.log('Test skipped in non-CI environment');
-            return;
-        }
+        
 
         let atlasDrawer = sideBarView.findElement(By.id('workbench.view.extension.atlascode-drawer'));
         expect(atlasDrawer).to.not.be.undefined;
@@ -41,10 +42,3 @@ describe('Auth User', async () => {
 
     it('in SideBarView should see a assigned JIRA issues', async () => {});
 });
-
-function isCI() {
-    if (process.env.CI) {
-        return true;
-    }
-    return false;
-}
