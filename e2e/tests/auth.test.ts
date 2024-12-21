@@ -30,8 +30,6 @@ describe('Auth User', async () => {
     after(async () => {});
 
     it('in SideBarView should see Create issue... button', async () => {
-        
-
         let atlasDrawer = sideBarView.findElement(By.id('workbench.view.extension.atlascode-drawer'));
         expect(atlasDrawer).to.not.be.undefined;
 
