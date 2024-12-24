@@ -34,6 +34,8 @@ import {
     CreateBitbucketIssueControllerContext,
     useCreateBitbucketIssueController,
 } from './createBitbucketIssueController';
+import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
+import { AnalyticsView } from 'src/analyticsTypes';
 
 const priorityIcon = {
     trivial: <RadioButtonUncheckedIcon />,
@@ -129,120 +131,125 @@ const CreateBitbucketIssuePage: React.FunctionComponent = () => {
 
     return (
         <CreateBitbucketIssueControllerContext.Provider value={controller}>
-            <Container maxWidth="lg" hidden={state.site === emptyBitbucketSite}>
-                <AppBar position="relative">
-                    <Toolbar>
-                        <Typography variant="h3" className={classes.title}>
-                            Create issue - {state.site.ownerSlug}/{state.site.repoSlug}
-                        </Typography>
-                        <Box className={classes.grow} />
-                        <Tooltip title="Create in browser...">
-                            <IconButton
-                                href={`https://bitbucket.org/${state.site.ownerSlug}/${state.site.repoSlug}/issues/new`}
-                            >
-                                <LaunchIcon />
-                            </IconButton>
-                        </Tooltip>
-                        <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
-                    </Toolbar>
-                </AppBar>
-                <Grid container spacing={1}>
-                    <Grid item xs={12}>
-                        <Paper className={classes.paper100}>
-                            <Box margin={2}>
-                                <ErrorDisplay />
-                                <PMFDisplay postMessageFunc={controller.postMessage} />
-                                <form onSubmit={submitForm}>
-                                    <Grid container spacing={1} direction="column">
-                                        <Grid item xs={12}>
-                                            <TextField
-                                                required
-                                                fullWidth
-                                                size="small"
-                                                label="Title"
-                                                name="title"
-                                                value={title}
-                                                onChange={handleTitleChange}
-                                            />
-                                        </Grid>
-                                        <Grid item xs={12}>
-                                            <TextField
-                                                fullWidth
-                                                multiline
-                                                size="small"
-                                                rows={4}
-                                                value={description}
-                                                onChange={handleDescriptionChange}
-                                                label="Description"
-                                                name="description"
-                                            />
-                                        </Grid>
-                                        <Grid item xs={12}>
-                                            <TextField
-                                                select
-                                                size="small"
-                                                label="Kind"
-                                                name="kind"
-                                                value={kind}
-                                                onChange={handleKindChange}
-                                            >
-                                                {Object.getOwnPropertyNames(typeIcon).map((name) => (
-                                                    <MenuItem key={name} value={name}>
-                                                        <Grid container spacing={1} direction="row">
-                                                            <Grid item>{typeIcon[name]}</Grid>
-                                                            <Grid item>
-                                                                <Typography>{name}</Typography>
+            <AtlascodeErrorBoundary
+                context={{ view: AnalyticsView.CreateBitbucketIssuePage }}
+                postMessageFunc={controller.postMessage}
+            >
+                <Container maxWidth="lg" hidden={state.site === emptyBitbucketSite}>
+                    <AppBar position="relative">
+                        <Toolbar>
+                            <Typography variant="h3" className={classes.title}>
+                                Create issue - {state.site.ownerSlug}/{state.site.repoSlug}
+                            </Typography>
+                            <Box className={classes.grow} />
+                            <Tooltip title="Create in browser...">
+                                <IconButton
+                                    href={`https://bitbucket.org/${state.site.ownerSlug}/${state.site.repoSlug}/issues/new`}
+                                >
+                                    <LaunchIcon />
+                                </IconButton>
+                            </Tooltip>
+                            <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
+                        </Toolbar>
+                    </AppBar>
+                    <Grid container spacing={1}>
+                        <Grid item xs={12}>
+                            <Paper className={classes.paper100}>
+                                <Box margin={2}>
+                                    <ErrorDisplay />
+                                    <PMFDisplay postMessageFunc={controller.postMessage} />
+                                    <form onSubmit={submitForm}>
+                                        <Grid container spacing={1} direction="column">
+                                            <Grid item xs={12}>
+                                                <TextField
+                                                    required
+                                                    fullWidth
+                                                    size="small"
+                                                    label="Title"
+                                                    name="title"
+                                                    value={title}
+                                                    onChange={handleTitleChange}
+                                                />
+                                            </Grid>
+                                            <Grid item xs={12}>
+                                                <TextField
+                                                    fullWidth
+                                                    multiline
+                                                    size="small"
+                                                    rows={4}
+                                                    value={description}
+                                                    onChange={handleDescriptionChange}
+                                                    label="Description"
+                                                    name="description"
+                                                />
+                                            </Grid>
+                                            <Grid item xs={12}>
+                                                <TextField
+                                                    select
+                                                    size="small"
+                                                    label="Kind"
+                                                    name="kind"
+                                                    value={kind}
+                                                    onChange={handleKindChange}
+                                                >
+                                                    {Object.getOwnPropertyNames(typeIcon).map((name) => (
+                                                        <MenuItem key={name} value={name}>
+                                                            <Grid container spacing={1} direction="row">
+                                                                <Grid item>{typeIcon[name]}</Grid>
+                                                                <Grid item>
+                                                                    <Typography>{name}</Typography>
+                                                                </Grid>
                                                             </Grid>
-                                                        </Grid>
-                                                    </MenuItem>
-                                                ))}
-                                            </TextField>
-                                        </Grid>
-                                        <Grid item xs={12}>
-                                            <TextField
-                                                select
-                                                size="small"
-                                                label="Priority"
-                                                name="priority"
-                                                value={priority}
-                                                onChange={handlePriorityChange}
-                                            >
-                                                {Object.getOwnPropertyNames(priorityIcon).map((name) => (
-                                                    <MenuItem key={name} value={name}>
-                                                        <Grid container spacing={1} direction="row">
-                                                            <Grid item>{priorityIcon[name]}</Grid>
-                                                            <Grid item>
-                                                                <Typography>{name}</Typography>
+                                                        </MenuItem>
+                                                    ))}
+                                                </TextField>
+                                            </Grid>
+                                            <Grid item xs={12}>
+                                                <TextField
+                                                    select
+                                                    size="small"
+                                                    label="Priority"
+                                                    name="priority"
+                                                    value={priority}
+                                                    onChange={handlePriorityChange}
+                                                >
+                                                    {Object.getOwnPropertyNames(priorityIcon).map((name) => (
+                                                        <MenuItem key={name} value={name}>
+                                                            <Grid container spacing={1} direction="row">
+                                                                <Grid item>{priorityIcon[name]}</Grid>
+                                                                <Grid item>
+                                                                    <Typography>{name}</Typography>
+                                                                </Grid>
                                                             </Grid>
-                                                        </Grid>
-                                                    </MenuItem>
-                                                ))}
-                                            </TextField>
+                                                        </MenuItem>
+                                                    ))}
+                                                </TextField>
+                                            </Grid>
+                                            <Grid item xs={12}>
+                                                <Button
+                                                    variant="contained"
+                                                    color="primary"
+                                                    type="submit"
+                                                    endIcon={
+                                                        submitState === 'submitting' ? (
+                                                            <CircularProgress
+                                                                color="inherit"
+                                                                size={theme.typography.fontSize}
+                                                            />
+                                                        ) : null
+                                                    }
+                                                >
+                                                    Submit
+                                                </Button>
+                                            </Grid>
                                         </Grid>
-                                        <Grid item xs={12}>
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                type="submit"
-                                                endIcon={
-                                                    submitState === 'submitting' ? (
-                                                        <CircularProgress
-                                                            color="inherit"
-                                                            size={theme.typography.fontSize}
-                                                        />
-                                                    ) : null
-                                                }
-                                            >
-                                                Submit
-                                            </Button>
-                                        </Grid>
-                                    </Grid>
-                                </form>
-                            </Box>
-                        </Paper>
+                                    </form>
+                                </Box>
+                            </Paper>
+                        </Grid>
                     </Grid>
-                </Grid>
-            </Container>
+                </Container>
+            </AtlascodeErrorBoundary>
         </CreateBitbucketIssueControllerContext.Provider>
     );
 };
