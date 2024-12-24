@@ -40,6 +40,8 @@ import UserPicker from './UserPicker';
 import { colorToLozengeAppearanceMap } from '../../vscode/theme/colors';
 import { makeStyles } from '@material-ui/styles';
 import path from 'path';
+import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
+import { AnalyticsView } from 'src/analyticsTypes';
 
 const useStyles = makeStyles((theme: Theme) => ({
     title: {
@@ -234,275 +236,295 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
 
     return (
         <CreatePullRequestControllerContext.Provider value={controller}>
-            <Container maxWidth="lg">
-                <AppBar position="relative">
-                    <Toolbar>
-                        <Typography variant="h3" className={classes.title}>
-                            <Box fontWeight="fontWeightBold" display="inline">
-                                Create pull request -{' '}
-                            </Box>
-                            {path.basename(state.repoData.workspaceRepo.rootUri)}
-                        </Typography>
-                        <Box className={classes.grow} />
-                        <Tooltip title="Create in browser...">
-                            <IconButton
-                                href={
-                                    state.repoData.isCloud
-                                        ? `${state.repoData.href}/pull-requests/new`
-                                        : `${state.repoData.href}/pull-requests?create`
-                                }
-                            >
-                                <LaunchIcon />
-                            </IconButton>
-                        </Tooltip>
-                        <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
-                    </Toolbar>
-                </AppBar>
-                <Grid container spacing={1}>
-                    <Grid item xs={12}>
-                        <Paper className={classes.paper100}>
-                            <Box margin={2}>
-                                <ErrorDisplay />
-                                <PMFDisplay postMessageFunc={controller.postMessage} />
-                                <Grid container spacing={2} direction="column">
-                                    <Grid item>
-                                        <Box />
-                                    </Grid>
-                                    <Grid container alignItems="center">
-                                        <Grid item xs>
-                                            <Card>
-                                                <CardContent>
-                                                    {state.repoData.workspaceRepo.siteRemotes.filter(
-                                                        (r) => !r.remote.name.endsWith('(parent repo)'),
-                                                    ).length > 1 && (
-                                                        <TextField
-                                                            select
-                                                            fullWidth
+            <AtlascodeErrorBoundary
+                context={{ view: AnalyticsView.CreatePullRequestPage }}
+                postMessageFunc={controller.postMessage}
+            >
+                <Container maxWidth="lg">
+                    <AppBar position="relative">
+                        <Toolbar>
+                            <Typography variant="h3" className={classes.title}>
+                                <Box fontWeight="fontWeightBold" display="inline">
+                                    Create pull request -{' '}
+                                </Box>
+                                {path.basename(state.repoData.workspaceRepo.rootUri)}
+                            </Typography>
+                            <Box className={classes.grow} />
+                            <Tooltip title="Create in browser...">
+                                <IconButton
+                                    href={
+                                        state.repoData.isCloud
+                                            ? `${state.repoData.href}/pull-requests/new`
+                                            : `${state.repoData.href}/pull-requests?create`
+                                    }
+                                >
+                                    <LaunchIcon />
+                                </IconButton>
+                            </Tooltip>
+                            <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
+                        </Toolbar>
+                    </AppBar>
+                    <Grid container spacing={1}>
+                        <Grid item xs={12}>
+                            <Paper className={classes.paper100}>
+                                <Box margin={2}>
+                                    <ErrorDisplay />
+                                    <PMFDisplay postMessageFunc={controller.postMessage} />
+                                    <Grid container spacing={2} direction="column">
+                                        <Grid item>
+                                            <Box />
+                                        </Grid>
+                                        <Grid container alignItems="center">
+                                            <Grid item xs>
+                                                <Card>
+                                                    <CardContent>
+                                                        {state.repoData.workspaceRepo.siteRemotes.filter(
+                                                            (r) => !r.remote.name.endsWith('(parent repo)'),
+                                                        ).length > 1 && (
+                                                            <TextField
+                                                                select
+                                                                fullWidth
+                                                                size="small"
+                                                                label="Remote"
+                                                                value={sourceRemoteName}
+                                                                onChange={handleSourceRemoteChange}
+                                                            >
+                                                                {state.repoData.workspaceRepo.siteRemotes
+                                                                    .filter(
+                                                                        (r) => !r.remote.name.endsWith('(parent repo)'),
+                                                                    )
+                                                                    .map((r) => (
+                                                                        <MenuItem
+                                                                            key={r.remote.name}
+                                                                            value={r.remote.name}
+                                                                        >
+                                                                            {r.remote.name}
+                                                                        </MenuItem>
+                                                                    ))}
+                                                            </TextField>
+                                                        )}
+                                                        <Autocomplete
+                                                            options={state.repoData.localBranches}
+                                                            getOptionLabel={(option: Branch) => option.name!}
+                                                            getOptionSelected={(option: Branch, value: Branch) =>
+                                                                option.name === value.name
+                                                            }
+                                                            value={sourceBranch}
+                                                            loading={sourceBranch.name === ''}
+                                                            onChange={handleSourceBranchChange}
                                                             size="small"
-                                                            label="Remote"
-                                                            value={sourceRemoteName}
-                                                            onChange={handleSourceRemoteChange}
-                                                        >
-                                                            {state.repoData.workspaceRepo.siteRemotes
-                                                                .filter((r) => !r.remote.name.endsWith('(parent repo)'))
-                                                                .map((r) => (
-                                                                    <MenuItem key={r.remote.name} value={r.remote.name}>
-                                                                        {r.remote.name}
-                                                                    </MenuItem>
-                                                                ))}
-                                                        </TextField>
-                                                    )}
-                                                    <Autocomplete
-                                                        options={state.repoData.localBranches}
-                                                        getOptionLabel={(option: Branch) => option.name!}
-                                                        getOptionSelected={(option: Branch, value: Branch) =>
-                                                            option.name === value.name
-                                                        }
-                                                        value={sourceBranch}
-                                                        loading={sourceBranch.name === ''}
-                                                        onChange={handleSourceBranchChange}
-                                                        size="small"
-                                                        disableClearable
-                                                        openOnFocus
-                                                        renderInput={(params) => (
-                                                            <TextField {...params} label="Source branch" />
-                                                        )}
-                                                    />
-                                                </CardContent>
-                                            </Card>
-                                        </Grid>
-                                        <Grid item xs={1} style={{ textAlign: 'center' }}>
-                                            <ArrowForwardIcon />
-                                        </Grid>
-                                        <Grid item xs>
-                                            <Card>
-                                                <CardContent>
-                                                    <Autocomplete
-                                                        options={state.repoData.remoteBranches}
-                                                        getOptionLabel={(option: Branch) => option.name!}
-                                                        getOptionSelected={(option: Branch, value: Branch) =>
-                                                            option.name === value.name
-                                                        }
-                                                        groupBy={(option) => option.remote!}
-                                                        value={destinationBranch}
-                                                        loading={destinationBranch.name === ''}
-                                                        onChange={handleDestinationBranchChange}
-                                                        size="small"
-                                                        disableClearable
-                                                        openOnFocus
-                                                        renderInput={(params) => (
-                                                            <TextField {...params} label="Destination branch" />
-                                                        )}
-                                                    />
-                                                </CardContent>
-                                            </Card>
-                                        </Grid>
-                                    </Grid>
-                                    <Grid item>
-                                        <ToggleWithLabel
-                                            label="Push latest changes from local to remote branch"
-                                            spacing={1}
-                                            control={
-                                                <Switch
-                                                    color="primary"
-                                                    size="small"
-                                                    checked={pushLocalChanges}
-                                                    onChange={togglePushLocalChanges}
-                                                />
-                                            }
-                                        />
-                                    </Grid>
-                                    <Grid item>
-                                        <BranchWarning
-                                            sourceBranch={sourceBranch}
-                                            sourceRemoteName={state.repoData.workspaceRepo.mainSiteRemote.remote.name}
-                                            remoteBranches={state.repoData.remoteBranches}
-                                            hasLocalChanges={state.repoData.hasLocalChanges}
-                                        />
-                                    </Grid>
-                                    <Grid item>
-                                        <TextField
-                                            fullWidth
-                                            label="Title"
-                                            name="title"
-                                            value={title}
-                                            onChange={handleTitleChange}
-                                        />
-                                    </Grid>
-                                    <Grid item>
-                                        <TextField
-                                            fullWidth
-                                            multiline
-                                            rows={4}
-                                            rowsMax={20}
-                                            label="Summary"
-                                            name="summary"
-                                            value={summary}
-                                            onChange={handleSummaryChange}
-                                        />
-                                    </Grid>
-                                    <Grid item>
-                                        <UserPicker
-                                            site={
-                                                state.repoData.workspaceRepo.siteRemotes.find(
-                                                    (r) => r.remote.name === destinationBranch.remote,
-                                                )?.site
-                                            }
-                                            users={reviewers}
-                                            defaultUsers={state.repoData.defaultReviewers}
-                                            onChange={handleReviewersChange}
-                                        />
-                                    </Grid>
-                                    <Grid item>
-                                        <ToggleWithLabel
-                                            label="Close source branch after the pull request is merged"
-                                            spacing={1}
-                                            control={
-                                                <Switch
-                                                    color="primary"
-                                                    size="small"
-                                                    checked={closeSourceBranch}
-                                                    onChange={toggleCloseSourceBranch}
-                                                />
-                                            }
-                                        />
-                                    </Grid>
-                                    <Grid item hidden={state.issue === undefined}>
-                                        <Divider />
-                                    </Grid>
-                                    <Grid item hidden={state.issue === undefined}>
-                                        <ToggleWithLabel
-                                            label="Transition issue"
-                                            variant="h4"
-                                            spacing={1}
-                                            control={
-                                                <Switch
-                                                    color="primary"
-                                                    size="small"
-                                                    checked={transitionIssueEnabled}
-                                                    onChange={toggleTransitionIssueEnabled}
-                                                />
-                                            }
-                                        />
-                                    </Grid>
-                                    <Grid item hidden={state.issue === undefined || transition === emptyTransition}>
-                                        <Grid container spacing={2} direction="column" className={classes.leftBorder}>
-                                            <Grid item direction="row">
-                                                <Typography>
-                                                    <Box display="inline-flex" fontWeight="fontWeightBold">
-                                                        {state.issue?.key}
-                                                    </Box>{' '}
-                                                    {state.issue?.summary}
-                                                </Typography>
+                                                            disableClearable
+                                                            openOnFocus
+                                                            renderInput={(params) => (
+                                                                <TextField {...params} label="Source branch" />
+                                                            )}
+                                                        />
+                                                    </CardContent>
+                                                </Card>
                                             </Grid>
+                                            <Grid item xs={1} style={{ textAlign: 'center' }}>
+                                                <ArrowForwardIcon />
+                                            </Grid>
+                                            <Grid item xs>
+                                                <Card>
+                                                    <CardContent>
+                                                        <Autocomplete
+                                                            options={state.repoData.remoteBranches}
+                                                            getOptionLabel={(option: Branch) => option.name!}
+                                                            getOptionSelected={(option: Branch, value: Branch) =>
+                                                                option.name === value.name
+                                                            }
+                                                            groupBy={(option) => option.remote!}
+                                                            value={destinationBranch}
+                                                            loading={destinationBranch.name === ''}
+                                                            onChange={handleDestinationBranchChange}
+                                                            size="small"
+                                                            disableClearable
+                                                            openOnFocus
+                                                            renderInput={(params) => (
+                                                                <TextField {...params} label="Destination branch" />
+                                                            )}
+                                                        />
+                                                    </CardContent>
+                                                </Card>
+                                            </Grid>
+                                        </Grid>
+                                        <Grid item>
+                                            <ToggleWithLabel
+                                                label="Push latest changes from local to remote branch"
+                                                spacing={1}
+                                                control={
+                                                    <Switch
+                                                        color="primary"
+                                                        size="small"
+                                                        checked={pushLocalChanges}
+                                                        onChange={togglePushLocalChanges}
+                                                    />
+                                                }
+                                            />
+                                        </Grid>
+                                        <Grid item>
+                                            <BranchWarning
+                                                sourceBranch={sourceBranch}
+                                                sourceRemoteName={
+                                                    state.repoData.workspaceRepo.mainSiteRemote.remote.name
+                                                }
+                                                remoteBranches={state.repoData.remoteBranches}
+                                                hasLocalChanges={state.repoData.hasLocalChanges}
+                                            />
+                                        </Grid>
+                                        <Grid item>
+                                            <TextField
+                                                fullWidth
+                                                label="Title"
+                                                name="title"
+                                                value={title}
+                                                onChange={handleTitleChange}
+                                            />
+                                        </Grid>
+                                        <Grid item>
+                                            <TextField
+                                                fullWidth
+                                                multiline
+                                                rows={4}
+                                                rowsMax={20}
+                                                label="Summary"
+                                                name="summary"
+                                                value={summary}
+                                                onChange={handleSummaryChange}
+                                            />
+                                        </Grid>
+                                        <Grid item>
+                                            <UserPicker
+                                                site={
+                                                    state.repoData.workspaceRepo.siteRemotes.find(
+                                                        (r) => r.remote.name === destinationBranch.remote,
+                                                    )?.site
+                                                }
+                                                users={reviewers}
+                                                defaultUsers={state.repoData.defaultReviewers}
+                                                onChange={handleReviewersChange}
+                                            />
+                                        </Grid>
+                                        <Grid item>
+                                            <ToggleWithLabel
+                                                label="Close source branch after the pull request is merged"
+                                                spacing={1}
+                                                control={
+                                                    <Switch
+                                                        color="primary"
+                                                        size="small"
+                                                        checked={closeSourceBranch}
+                                                        onChange={toggleCloseSourceBranch}
+                                                    />
+                                                }
+                                            />
+                                        </Grid>
+                                        <Grid item hidden={state.issue === undefined}>
+                                            <Divider />
+                                        </Grid>
+                                        <Grid item hidden={state.issue === undefined}>
+                                            <ToggleWithLabel
+                                                label="Transition issue"
+                                                variant="h4"
+                                                spacing={1}
+                                                control={
+                                                    <Switch
+                                                        color="primary"
+                                                        size="small"
+                                                        checked={transitionIssueEnabled}
+                                                        onChange={toggleTransitionIssueEnabled}
+                                                    />
+                                                }
+                                            />
+                                        </Grid>
+                                        <Grid item hidden={state.issue === undefined || transition === emptyTransition}>
+                                            <Grid
+                                                container
+                                                spacing={2}
+                                                direction="column"
+                                                className={classes.leftBorder}
+                                            >
+                                                <Grid item direction="row">
+                                                    <Typography>
+                                                        <Box display="inline-flex" fontWeight="fontWeightBold">
+                                                            {state.issue?.key}
+                                                        </Box>{' '}
+                                                        {state.issue?.summary}
+                                                    </Typography>
+                                                </Grid>
 
-                                            <Grid item xs={6} md={4}>
-                                                <TextField
-                                                    select
-                                                    fullWidth
-                                                    size="small"
-                                                    label="Transition issue"
-                                                    value={transition}
-                                                    onChange={handleIssueTransitionChange}
-                                                >
-                                                    {(state.issue?.transitions || [emptyTransition]).map(
-                                                        (transition) => (
-                                                            //@ts-ignore
-                                                            <MenuItem key={transition.id} value={transition}>
-                                                                <Lozenge
-                                                                    appearance={
-                                                                        colorToLozengeAppearanceMap[
-                                                                            transition.to.statusCategory.colorName
-                                                                        ]
-                                                                    }
-                                                                    label={transition.to.name}
-                                                                />
-                                                            </MenuItem>
-                                                        ),
-                                                    )}
-                                                </TextField>
+                                                <Grid item xs={6} md={4}>
+                                                    <TextField
+                                                        select
+                                                        fullWidth
+                                                        size="small"
+                                                        label="Transition issue"
+                                                        value={transition}
+                                                        onChange={handleIssueTransitionChange}
+                                                    >
+                                                        {(state.issue?.transitions || [emptyTransition]).map(
+                                                            (transition) => (
+                                                                //@ts-ignore
+                                                                <MenuItem key={transition.id} value={transition}>
+                                                                    <Lozenge
+                                                                        appearance={
+                                                                            colorToLozengeAppearanceMap[
+                                                                                transition.to.statusCategory.colorName
+                                                                            ]
+                                                                        }
+                                                                        label={transition.to.name}
+                                                                    />
+                                                                </MenuItem>
+                                                            ),
+                                                        )}
+                                                    </TextField>
+                                                </Grid>
                                             </Grid>
                                         </Grid>
+                                        <Grid item>
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                onClick={handleSubmit}
+                                                endIcon={
+                                                    submitState === 'submitting' ? (
+                                                        <CircularProgress
+                                                            color="inherit"
+                                                            size={theme.typography.fontSize}
+                                                        />
+                                                    ) : null
+                                                }
+                                            >
+                                                Create pull request
+                                            </Button>
+                                        </Grid>
+                                        <Grid item />
+                                        <Grid item hidden={state.commits.length === 0 && state.fileDiffs.length === 0}>
+                                            <Divider />
+                                        </Grid>
+                                        <Grid item hidden={state.commits.length === 0}>
+                                            <Typography variant="h4" gutterBottom>
+                                                Commits
+                                            </Typography>
+                                            <Commits commits={state.commits} />
+                                        </Grid>
+                                        <Grid item hidden={state.fileDiffs.length === 0}>
+                                            <Typography variant="h4" gutterBottom>
+                                                Files changed
+                                            </Typography>
+                                            <DiffList
+                                                fileDiffs={state.fileDiffs}
+                                                openDiffHandler={controller.openDiff}
+                                            />
+                                        </Grid>
                                     </Grid>
-                                    <Grid item>
-                                        <Button
-                                            variant="contained"
-                                            color="primary"
-                                            onClick={handleSubmit}
-                                            endIcon={
-                                                submitState === 'submitting' ? (
-                                                    <CircularProgress
-                                                        color="inherit"
-                                                        size={theme.typography.fontSize}
-                                                    />
-                                                ) : null
-                                            }
-                                        >
-                                            Create pull request
-                                        </Button>
-                                    </Grid>
-                                    <Grid item />
-                                    <Grid item hidden={state.commits.length === 0 && state.fileDiffs.length === 0}>
-                                        <Divider />
-                                    </Grid>
-                                    <Grid item hidden={state.commits.length === 0}>
-                                        <Typography variant="h4" gutterBottom>
-                                            Commits
-                                        </Typography>
-                                        <Commits commits={state.commits} />
-                                    </Grid>
-                                    <Grid item hidden={state.fileDiffs.length === 0}>
-                                        <Typography variant="h4" gutterBottom>
-                                            Files changed
-                                        </Typography>
-                                        <DiffList fileDiffs={state.fileDiffs} openDiffHandler={controller.openDiff} />
-                                    </Grid>
-                                </Grid>
-                            </Box>
-                        </Paper>
+                                </Box>
+                            </Paper>
+                        </Grid>
                     </Grid>
-                </Grid>
-            </Container>
+                </Container>
+            </AtlascodeErrorBoundary>
         </CreatePullRequestControllerContext.Provider>
     );
 };
