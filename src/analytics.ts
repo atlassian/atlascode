@@ -2,6 +2,7 @@ import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/ty
 import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira, SiteInfo } from './atlclients/authInfo';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
+import { UIErrorInfo } from './analyticsTypes';
 
 // IMPORTANT
 // Make sure there is a corresponding event with the correct attributes in the Data Portal for any event created here.
@@ -254,6 +255,13 @@ export async function viewScreenEvent(
 }
 
 // UI Events
+
+export async function uiErrorEvent(errorInfo: UIErrorInfo): Promise<TrackEvent> {
+    const e = trackEvent('failedTest', 'ui', {
+        attributes: { ...errorInfo },
+    });
+    return e;
+}
 
 export async function bbIssuesPaginationEvent(): Promise<UIEvent> {
     const e = {

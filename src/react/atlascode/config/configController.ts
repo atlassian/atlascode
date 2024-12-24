@@ -24,6 +24,7 @@ import { ReducerAction, defaultActionGuard, defaultStateGuard } from '@atlassian
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { ConnectionTimeout } from '../../../util/time';
 import { v4 } from 'uuid';
+import { UIErrorInfo } from 'src/analyticsTypes';
 
 export interface ConfigControllerApi {
     postMessage: PostMessageFunc<ConfigAction>;
@@ -156,6 +157,7 @@ export enum ConfigUIActionType {
 }
 
 export type ConfigUIAction =
+    | ReducerAction<CommonActionType.SendAnalytics, { errorInfo: UIErrorInfo }>
     | ReducerAction<ConfigUIActionType.Init, { data: ConfigInitMessage }>
     | ReducerAction<ConfigUIActionType.ConfigChange, { config: FlattenedConfig; target: ConfigTarget }>
     | ReducerAction<ConfigUIActionType.SectionChange, { data: SectionChangeMessage }>
@@ -222,6 +224,9 @@ function configReducer(state: ConfigState, action: ConfigUIAction): ConfigState 
         }
         case ConfigUIActionType.Loading: {
             return { ...state, ...{ isSomethingLoading: true } };
+        }
+        case CommonActionType.SendAnalytics: {
+            return state;
         }
 
         default:

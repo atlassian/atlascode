@@ -275,6 +275,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 break;
             }
 
+            case CommonActionType.SendAnalytics:
             case CommonActionType.CopyLink:
             case CommonActionType.OpenJiraIssue:
             case CommonActionType.ExternalLink:

@@ -2,6 +2,7 @@ import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { FeedbackData, PMFData } from '../models/common';
+import { UIErrorInfo } from '../../../analyticsTypes';
 
 export enum CommonActionType {
     SubmitPMF = 'pmfSubmit',
@@ -14,9 +15,11 @@ export enum CommonActionType {
     CopyLink = 'copyLink',
     OpenJiraIssue = 'openJiraIssue',
     Cancel = 'cancelInFlight',
+    SendAnalytics = 'sendAnalytics',
 }
 
 export type CommonAction =
+    | ReducerAction<CommonActionType.SendAnalytics, SendAnalyticsAction>
     | ReducerAction<CommonActionType.SubmitPMF, PMFSubmitAction>
     | ReducerAction<CommonActionType.OpenPMFSurvey>
     | ReducerAction<CommonActionType.DismissPMFLater>
@@ -28,6 +31,9 @@ export type CommonAction =
     | ReducerAction<CommonActionType.OpenJiraIssue, OpenJiraIssueAction>
     | ReducerAction<CommonActionType.Cancel, CancelAction>;
 
+export interface SendAnalyticsAction {
+    errorInfo: UIErrorInfo;
+}
 export interface PMFSubmitAction {
     pmfData: PMFData;
 }

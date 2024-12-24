@@ -1,3 +1,4 @@
+import { UIErrorInfo } from '../analyticsTypes';
 import { DetailedSiteInfo, Product, SiteInfo } from '../atlclients/authInfo';
 
 export interface AnalyticsApi {
@@ -48,4 +49,5 @@ export interface AnalyticsApi {
     fireOpenSettingsButtonEvent(source: string): Promise<void>;
     fireExploreFeaturesButtonEvent(source: string): Promise<void>;
     firePipelineRerunEvent(site: DetailedSiteInfo, source: string): Promise<void>;
+    fireUIErrorEvent(errorInfo: UIErrorInfo): Promise<void>;
 }
