@@ -111,6 +111,10 @@ export class VSCCommonMessageHandler implements CommonActionMessageHandler {
                 this._cancelMan.delete(msg.abortKey);
                 break;
             }
+            case CommonActionType.SendAnalytics: {
+                this._analytics.fireUIErrorEvent(msg.errorInfo);
+                break;
+            }
             default: {
                 defaultActionGuard(msg);
             }

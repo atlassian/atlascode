@@ -171,6 +171,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 break;
             }
 
+            case CommonActionType.SendAnalytics:
             case CommonActionType.CopyLink:
             case CommonActionType.OpenJiraIssue:
             case CommonActionType.ExternalLink:

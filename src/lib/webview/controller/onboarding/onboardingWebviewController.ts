@@ -159,6 +159,7 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
                 break;
             }
 
+            case CommonActionType.SendAnalytics:
             case CommonActionType.CopyLink:
             case CommonActionType.OpenJiraIssue:
             case CommonActionType.SubmitFeedback:

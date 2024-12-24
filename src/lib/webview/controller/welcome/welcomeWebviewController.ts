@@ -76,6 +76,7 @@ export class WelcomeWebviewController implements WebviewController<WelcomeInitMe
                 break;
             }
 
+            case CommonActionType.SendAnalytics:
             case CommonActionType.CopyLink:
             case CommonActionType.OpenJiraIssue:
             case CommonActionType.ExternalLink:

@@ -44,12 +44,14 @@ import {
     prUrlCopiedEvent,
     saveManualCodeEvent,
     startIssueCreationEvent,
+    uiErrorEvent,
     upgradedEvent,
     viewScreenEvent,
 } from './analytics';
 import { AnalyticsClient } from './analytics-node-client/src/client.min.js';
 import { DetailedSiteInfo, Product, SiteInfo } from './atlclients/authInfo';
 import { AnalyticsApi } from './lib/analyticsApi';
+import { UIErrorInfo } from './analyticsTypes';
 
 export class VSCAnalyticsApi implements AnalyticsApi {
     private _analyticsClient: AnalyticsClient;
@@ -345,6 +347,12 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async firePipelineRerunEvent(site: DetailedSiteInfo, source: string) {
         return pipelineRerunEvent(site, source).then((e) => {
+            this._analyticsClient.sendTrackEvent(e);
+        });
+    }
+
+    public async fireUIErrorEvent(errorInfo: UIErrorInfo) {
+        return uiErrorEvent(errorInfo).then(async (e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }
