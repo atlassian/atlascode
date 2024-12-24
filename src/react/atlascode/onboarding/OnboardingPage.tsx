@@ -7,6 +7,8 @@ import LandingPage from './LandingPage';
 import { OnboardingControllerContext, useOnboardingController } from './onboardingController';
 import ProductSelector from './ProductSelector';
 import { SimpleSiteAuthenticator } from './SimpleSiteAuthenticator';
+import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
+import { AnalyticsView } from 'src/analyticsTypes';
 
 const useStyles = makeStyles((theme: Theme) => ({
     root: {
@@ -138,88 +140,93 @@ export const OnboardingPage: React.FunctionComponent = () => {
     return (
         <OnboardingControllerContext.Provider value={controller}>
             <AuthDialogControllerContext.Provider value={authDialogController}>
-                <Container maxWidth="xl">
-                    <div className={classes.root}>
-                        <Stepper activeStep={activeStep}>
-                            {steps.map((label) => {
-                                const stepProps = {};
-                                const labelProps = {};
-                                return (
-                                    <Step key={label} {...stepProps}>
-                                        <StepLabel {...labelProps}>{label}</StepLabel>
-                                    </Step>
-                                );
-                            })}
-                        </Stepper>
-                        <div>
-                            {activeStep === steps.length ? (
-                                <div>
-                                    <Typography className={classes.pageContent}>
-                                        All steps completed - you&apos;re finished
-                                    </Typography>
-                                    <Button onClick={handleReset} className={classes.button}>
-                                        Reset
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div>
-                                    <div className={classes.pageContent}>{getStepContent(activeStep)}</div>
-                                    <div style={{ float: 'right', marginBottom: '30px' }}>
-                                        <Button
-                                            disabled={activeStep === 0}
-                                            onClick={handleBack}
-                                            className={classes.backButton}
-                                        >
-                                            Back
+                <AtlascodeErrorBoundary
+                    context={{ view: AnalyticsView.OnboardingPage }}
+                    postMessageFunc={controller.postMessage}
+                >
+                    <Container maxWidth="xl">
+                        <div className={classes.root}>
+                            <Stepper activeStep={activeStep}>
+                                {steps.map((label) => {
+                                    const stepProps = {};
+                                    const labelProps = {};
+                                    return (
+                                        <Step key={label} {...stepProps}>
+                                            <StepLabel {...labelProps}>{label}</StepLabel>
+                                        </Step>
+                                    );
+                                })}
+                            </Stepper>
+                            <div>
+                                {activeStep === steps.length ? (
+                                    <div>
+                                        <Typography className={classes.pageContent}>
+                                            All steps completed - you&apos;re finished
+                                        </Typography>
+                                        <Button onClick={handleReset} className={classes.button}>
+                                            Reset
                                         </Button>
-                                        {activeStep !== 2 && (
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                onClick={handleNext}
-                                                id="onboarding-next-button"
-                                                className={classes.button}
-                                                disabled={
-                                                    !state.config['bitbucket.enabled'] && !state.config['jira.enabled']
-                                                }
-                                            >
-                                                {activeStep === 1 ? 'Skip' : 'Next'}
-                                            </Button>
-                                        )}
-                                        {activeStep === 2 && (
-                                            <React.Fragment>
-                                                <Button
-                                                    variant="contained"
-                                                    color="primary"
-                                                    onClick={handleOpenSettings}
-                                                    className={classes.button}
-                                                >
-                                                    Open Extension Settings
-                                                </Button>
-                                                <Button
-                                                    variant="contained"
-                                                    color="primary"
-                                                    onClick={handleClosePage}
-                                                    className={classes.button}
-                                                >
-                                                    Finish
-                                                </Button>
-                                            </React.Fragment>
-                                        )}
                                     </div>
-                                </div>
-                            )}
+                                ) : (
+                                    <div>
+                                        <div className={classes.pageContent}>{getStepContent(activeStep)}</div>
+                                        <div style={{ float: 'right', marginBottom: '30px' }}>
+                                            <Button
+                                                disabled={activeStep === 0}
+                                                onClick={handleBack}
+                                                className={classes.backButton}
+                                            >
+                                                Back
+                                            </Button>
+                                            {activeStep !== 2 && (
+                                                <Button
+                                                    variant="contained"
+                                                    color="primary"
+                                                    onClick={handleNext}
+                                                    className={classes.button}
+                                                    disabled={
+                                                        !state.config['bitbucket.enabled'] &&
+                                                        !state.config['jira.enabled']
+                                                    }
+                                                >
+                                                    {activeStep === 1 ? 'Skip' : 'Next'}
+                                                </Button>
+                                            )}
+                                            {activeStep === 2 && (
+                                                <React.Fragment>
+                                                    <Button
+                                                        variant="contained"
+                                                        color="primary"
+                                                        onClick={handleOpenSettings}
+                                                        className={classes.button}
+                                                    >
+                                                        Open Extension Settings
+                                                    </Button>
+                                                    <Button
+                                                        variant="contained"
+                                                        color="primary"
+                                                        onClick={handleClosePage}
+                                                        className={classes.button}
+                                                    >
+                                                        Finish
+                                                    </Button>
+                                                </React.Fragment>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                </Container>
-                <AuthDialog
-                    product={authDialogProduct}
-                    doClose={handleCloseDialog}
-                    authEntry={authDialogEntry}
-                    open={authDialogOpen}
-                    save={handleLogin}
-                    onExited={handleExit}
-                />
+                    </Container>
+                    <AuthDialog
+                        product={authDialogProduct}
+                        doClose={handleCloseDialog}
+                        authEntry={authDialogEntry}
+                        open={authDialogOpen}
+                        save={handleLogin}
+                        onExited={handleExit}
+                    />
+                </AtlascodeErrorBoundary>
             </AuthDialogControllerContext.Provider>
         </OnboardingControllerContext.Provider>
     );

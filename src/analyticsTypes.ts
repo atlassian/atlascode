@@ -8,6 +8,24 @@ export enum AnalyticsChannels {
     AtlascodeUiErrors = 'atlascode.ui.errors',
 }
 
+export enum AnalyticsView {
+    OnboardingPage = 'onboarding',
+    SettingsPage = 'settings',
+    WelcomePage = 'welcome',
+
+    BitbucketIssuePage = 'bitbucketIssue',
+    PullRequestPage = 'pullRequest',
+
+    CreateBitbucketIssuePage = 'createBitbucketIssue',
+    CreatePullRequestPage = 'createPullRequest',
+
+    PipelineSummaryPage = 'pipelineSummary',
+
+    StartWorkPage = 'startWork',
+
+    Other = 'other',
+}
+
 export type UIAnalyticsContext = {
     view: string;
 };

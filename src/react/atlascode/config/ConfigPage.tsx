@@ -34,6 +34,7 @@ import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import WorkIcon from '@material-ui/icons/Work';
 import equal from 'fast-deep-equal/es6';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
+import { AnalyticsView } from 'src/analyticsTypes';
 
 const useStyles = makeStyles(
     (theme: Theme) =>
@@ -170,7 +171,10 @@ const ConfigPage: React.FunctionComponent = () => {
     return (
         <ConfigControllerContext.Provider value={controller}>
             <AuthDialogControllerContext.Provider value={authDialogController}>
-                <AtlascodeErrorBoundary postMessageFunc={controller.postMessage} context={{ view: 'config' }}>
+                <AtlascodeErrorBoundary
+                    context={{ view: AnalyticsView.SettingsPage }}
+                    postMessageFunc={controller.postMessage}
+                >
                     <Container maxWidth="xl">
                         <AppBar position="relative">
                             <Toolbar>

@@ -37,6 +37,8 @@ import PausedIcon from '../icons/PausedIcon';
 import StoppedIcon from '../icons/StoppedIcon';
 import SuccessIcon from '../icons/SuccessIcon';
 import { PipelineSummaryControllerContext, usePipelineSummaryController } from './pipelineSummaryController';
+import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
+import { AnalyticsView } from 'src/analyticsTypes';
 
 const failureRed = 'rgb(255, 86, 48)';
 const successGreen = 'rgb(54, 178, 126)';
@@ -508,49 +510,58 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
 
     return (
         <PipelineSummaryControllerContext.Provider value={controller}>
-            <Container maxWidth="xl">
-                <Toolbar className={headerClass}>
-                    {state.pipeline === emptyPipeline ? (
-                        <div />
-                    ) : (
-                        <div className={classes.pipelineHeader}>
-                            <Typography variant="h3" className={classes.pipelineHeaderText}>
-                                <div className={classes.pipelineHeaderStatusIcon}>
-                                    {iconForPipelineState(state.pipeline.state, classes.pipelineHeaderStatusIcon)}
+            <AtlascodeErrorBoundary
+                postMessageFunc={controller.postMessage}
+                context={{ view: AnalyticsView.PipelineSummaryPage }}
+            >
+                <Container maxWidth="xl">
+                    <Toolbar className={headerClass}>
+                        {state.pipeline === emptyPipeline ? (
+                            <div />
+                        ) : (
+                            <div className={classes.pipelineHeader}>
+                                <Typography variant="h3" className={classes.pipelineHeaderText}>
+                                    <div className={classes.pipelineHeaderStatusIcon}>
+                                        {iconForPipelineState(state.pipeline.state, classes.pipelineHeaderStatusIcon)}
+                                    </div>
+                                    <a
+                                        className={headerClass}
+                                        href={`${state.pipeline.repository!.url}/addon/pipelines/home#!/results/${
+                                            state.pipeline.build_number
+                                        }`}
+                                    >{`Pipeline #${state.pipeline.build_number}`}</a>
+                                    {state.pipeline.duration_in_seconds ? (
+                                        <AccessTimeIcon className={classes.icon} />
+                                    ) : (
+                                        ''
+                                    )}
+                                    {`${durationString(state.pipeline.duration_in_seconds)}`}
+                                    {state.pipeline.completed_on ? <CalendarTodayIcon className={classes.icon} /> : ''}
+                                    <span title={dateString(state.pipeline.completed_on)}>{`${formatTime(
+                                        state.pipeline.completed_on,
+                                    )}`}</span>
+                                </Typography>
+                                <div className={classes.flex}>
+                                    <Avatar
+                                        alt={state.pipeline.creator_name}
+                                        src={state.pipeline.creator_avatar}
+                                        className={classes.avatar}
+                                    />
+                                    {isStoppable(state.pipeline) ? (
+                                        ''
+                                    ) : (
+                                        <Button variant="contained" className={buttonClass} onClick={controller.rerun}>
+                                            Rerun
+                                        </Button>
+                                    )}
+                                    <RefreshButton loading={state.isRefreshing} onClick={controller.refresh} />
                                 </div>
-                                <a
-                                    className={headerClass}
-                                    href={`${state.pipeline.repository!.url}/addon/pipelines/home#!/results/${
-                                        state.pipeline.build_number
-                                    }`}
-                                >{`Pipeline #${state.pipeline.build_number}`}</a>
-                                {state.pipeline.duration_in_seconds ? <AccessTimeIcon className={classes.icon} /> : ''}
-                                {`${durationString(state.pipeline.duration_in_seconds)}`}
-                                {state.pipeline.completed_on ? <CalendarTodayIcon className={classes.icon} /> : ''}
-                                <span title={dateString(state.pipeline.completed_on)}>{`${formatTime(
-                                    state.pipeline.completed_on,
-                                )}`}</span>
-                            </Typography>
-                            <div className={classes.flex}>
-                                <Avatar
-                                    alt={state.pipeline.creator_name}
-                                    src={state.pipeline.creator_avatar}
-                                    className={classes.avatar}
-                                />
-                                {isStoppable(state.pipeline) ? (
-                                    ''
-                                ) : (
-                                    <Button variant="contained" className={buttonClass} onClick={controller.rerun}>
-                                        Rerun
-                                    </Button>
-                                )}
-                                <RefreshButton loading={state.isRefreshing} onClick={controller.refresh} />
                             </div>
-                        </div>
-                    )}
-                </Toolbar>
-                {pipelineSteps}
-            </Container>
+                        )}
+                    </Toolbar>
+                    {pipelineSteps}
+                </Container>
+            </AtlascodeErrorBoundary>
         </PipelineSummaryControllerContext.Provider>
     );
 };

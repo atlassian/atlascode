@@ -16,6 +16,7 @@ export interface PipelineSummaryControllerApi {
     refresh: () => void;
     rerun: () => void;
     fetchLogs: (stepUuid: string, logReference: PipelineLogReference) => void;
+    postMessage: (a: PipelineSummaryAction) => void;
 }
 
 export const emptyApi: PipelineSummaryControllerApi = {
@@ -28,6 +29,7 @@ export const emptyApi: PipelineSummaryControllerApi = {
     fetchLogs: (stepUuid: string, logReference: PipelineLogReference) => {
         return Promise.resolve('');
     },
+    postMessage: () => {},
 };
 
 export enum PipelineSummaryUIActionType {
@@ -138,6 +140,7 @@ export function usePipelineSummaryController(): [PipelineSummaryState, PipelineS
             refresh: sendRefresh,
             rerun: rerun,
             fetchLogs: fetchLogs,
+            postMessage: postMessage,
         };
     }, [sendRefresh, rerun, fetchLogs]);
 
