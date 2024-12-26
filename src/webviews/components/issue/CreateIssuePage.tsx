@@ -26,6 +26,8 @@ import Panel from '@atlaskit/panel';
 import SectionMessage from '@atlaskit/section-message';
 import Spinner from '@atlaskit/spinner';
 import { chain } from '../fieldValidators';
+import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
+import { AnalyticsView } from 'src/analyticsTypes';
 
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;
@@ -276,132 +278,139 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         }
         return (
             <Page>
-                <Grid>
-                    <GridColumn medium={8}>
-                        <div>
-                            {!this.state.isOnline && <Offline />}
-                            {this.state.showPMF && (
-                                <PMFBBanner
-                                    onPMFOpen={() => this.onPMFOpen()}
-                                    onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })}
-                                    onPMFLater={() => this.onPMFLater()}
-                                    onPMFNever={() => this.onPMFNever()}
-                                    onPMFSubmit={(data: LegacyPMFData) => this.onPMFSubmit(data)}
-                                />
-                            )}
-                            {this.state.isCreateBannerOpen && (
-                                <div className="fade-in">
-                                    <SectionMessage appearance="confirmation" title="Issue Created">
-                                        <p>
-                                            Issue{' '}
+                <AtlascodeErrorBoundary
+                    postMessageFunc={(e) => {
+                        this.postMessage(e); /* just {this.postMessage} doesn't work */
+                    }}
+                    context={{ view: AnalyticsView.CreateJiraIssuePage }}
+                >
+                    <Grid>
+                        <GridColumn medium={8}>
+                            <div>
+                                {!this.state.isOnline && <Offline />}
+                                {this.state.showPMF && (
+                                    <PMFBBanner
+                                        onPMFOpen={() => this.onPMFOpen()}
+                                        onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })}
+                                        onPMFLater={() => this.onPMFLater()}
+                                        onPMFNever={() => this.onPMFNever()}
+                                        onPMFSubmit={(data: LegacyPMFData) => this.onPMFSubmit(data)}
+                                    />
+                                )}
+                                {this.state.isCreateBannerOpen && (
+                                    <div className="fade-in">
+                                        <SectionMessage appearance="confirmation" title="Issue Created">
+                                            <p>
+                                                Issue{' '}
+                                                <Button
+                                                    className="ac-banner-link-button"
+                                                    appearance="link"
+                                                    spacing="none"
+                                                    onClick={() => {
+                                                        this.handleOpenIssue(this.state.createdIssue);
+                                                    }}
+                                                >
+                                                    {this.state.createdIssue.key}
+                                                </Button>{' '}
+                                                has been created.
+                                            </p>
+                                        </SectionMessage>
+                                    </div>
+                                )}
+                                {this.state.isErrorBannerOpen && (
+                                    <ErrorBanner
+                                        onDismissError={this.handleDismissError}
+                                        errorDetails={this.state.errorDetails}
+                                    />
+                                )}
+                                <div className="ac-vpadding">
+                                    <div className="ac-flex">
+                                        <h2>Create Issue</h2>
+                                        {this.state.isSomethingLoading && (
+                                            <div className="spinner" style={{ marginLeft: '15px' }}>
+                                                <Spinner size="medium" />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <Form name="create-issue" onSubmit={this.handleSubmit}>
+                                    {(frmArgs: any) => {
+                                        return (
+                                            <form {...frmArgs.formProps}>
+                                                <Field
+                                                    label="Select Site"
+                                                    id="site"
+                                                    name="site"
+                                                    defaultValue={this.state.siteDetails}
+                                                >
+                                                    {(fieldArgs: any) => {
+                                                        return (
+                                                            <Select
+                                                                {...fieldArgs.fieldProps}
+                                                                className="ac-select-container"
+                                                                classNamePrefix="ac-select"
+                                                                getOptionLabel={(option: any) => option.name}
+                                                                getOptionValue={(option: any) => option.id}
+                                                                options={this.state.selectFieldOptions['site']}
+                                                                components={{
+                                                                    Option: IconOption,
+                                                                    SingleValue: IconValue,
+                                                                }}
+                                                                onChange={chain(
+                                                                    fieldArgs.fieldProps.onChange,
+                                                                    this.handleSiteChange,
+                                                                )}
+                                                            />
+                                                        );
+                                                    }}
+                                                </Field>
+                                                {this.getCommonFieldMarkup()}
+                                                {this.commonFields && this.commonFields.length === 1 && (
+                                                    <div className="ac-vpadding">
+                                                        <h3>
+                                                            No fields found for selected project. Please choose another.
+                                                        </h3>
+                                                    </div>
+                                                )}
+                                                {this.advancedFields && this.advancedFields.length > 0 && (
+                                                    <Panel isDefaultExpanded={false} header={<h4>Advanced Options</h4>}>
+                                                        <div>{this.getAdvancedFieldMarkup()}</div>
+                                                    </Panel>
+                                                )}
+                                                <FormFooter actions={{}}>
+                                                    <LoadingButton
+                                                        type="submit"
+                                                        className="ac-button"
+                                                        isDisabled={this.state.isSomethingLoading}
+                                                        isLoading={this.state.loadingField === 'submitButton'}
+                                                    >
+                                                        Submit
+                                                    </LoadingButton>
+                                                </FormFooter>
+                                            </form>
+                                        );
+                                    }}
+                                </Form>
+                                {this.state.transformerProblems &&
+                                    Object.keys(this.state.transformerProblems).length > 0 && (
+                                        <div className="fade-in" style={{ marginTop: '20px' }}>
+                                            <span>non-renderable fields detected.</span>{' '}
                                             <Button
                                                 className="ac-banner-link-button"
                                                 appearance="link"
                                                 spacing="none"
                                                 onClick={() => {
-                                                    this.handleOpenIssue(this.state.createdIssue);
+                                                    this.postMessage({ action: 'openProblemReport' });
                                                 }}
                                             >
-                                                {this.state.createdIssue.key}
-                                            </Button>{' '}
-                                            has been created.
-                                        </p>
-                                    </SectionMessage>
-                                </div>
-                            )}
-                            {this.state.isErrorBannerOpen && (
-                                <ErrorBanner
-                                    onDismissError={this.handleDismissError}
-                                    errorDetails={this.state.errorDetails}
-                                />
-                            )}
-                            <div className="ac-vpadding">
-                                <div className="ac-flex">
-                                    <h2>Create Issue</h2>
-                                    {this.state.isSomethingLoading && (
-                                        <div className="spinner" style={{ marginLeft: '15px' }}>
-                                            <Spinner size="medium" />
+                                                View a problem report
+                                            </Button>
                                         </div>
                                     )}
-                                </div>
                             </div>
-                            <Form name="create-issue" onSubmit={this.handleSubmit}>
-                                {(frmArgs: any) => {
-                                    return (
-                                        <form {...frmArgs.formProps}>
-                                            <Field
-                                                label="Select Site"
-                                                id="site"
-                                                name="site"
-                                                defaultValue={this.state.siteDetails}
-                                            >
-                                                {(fieldArgs: any) => {
-                                                    return (
-                                                        <Select
-                                                            {...fieldArgs.fieldProps}
-                                                            className="ac-select-container"
-                                                            classNamePrefix="ac-select"
-                                                            getOptionLabel={(option: any) => option.name}
-                                                            getOptionValue={(option: any) => option.id}
-                                                            options={this.state.selectFieldOptions['site']}
-                                                            components={{
-                                                                Option: IconOption,
-                                                                SingleValue: IconValue,
-                                                            }}
-                                                            onChange={chain(
-                                                                fieldArgs.fieldProps.onChange,
-                                                                this.handleSiteChange,
-                                                            )}
-                                                        />
-                                                    );
-                                                }}
-                                            </Field>
-                                            {this.getCommonFieldMarkup()}
-                                            {this.commonFields && this.commonFields.length === 1 && (
-                                                <div className="ac-vpadding">
-                                                    <h3>
-                                                        No fields found for selected project. Please choose another.
-                                                    </h3>
-                                                </div>
-                                            )}
-                                            {this.advancedFields && this.advancedFields.length > 0 && (
-                                                <Panel isDefaultExpanded={false} header={<h4>Advanced Options</h4>}>
-                                                    <div>{this.getAdvancedFieldMarkup()}</div>
-                                                </Panel>
-                                            )}
-                                            <FormFooter actions={{}}>
-                                                <LoadingButton
-                                                    type="submit"
-                                                    className="ac-button"
-                                                    isDisabled={this.state.isSomethingLoading}
-                                                    isLoading={this.state.loadingField === 'submitButton'}
-                                                >
-                                                    Submit
-                                                </LoadingButton>
-                                            </FormFooter>
-                                        </form>
-                                    );
-                                }}
-                            </Form>
-                            {this.state.transformerProblems &&
-                                Object.keys(this.state.transformerProblems).length > 0 && (
-                                    <div className="fade-in" style={{ marginTop: '20px' }}>
-                                        <span>non-renderable fields detected.</span>{' '}
-                                        <Button
-                                            className="ac-banner-link-button"
-                                            appearance="link"
-                                            spacing="none"
-                                            onClick={() => {
-                                                this.postMessage({ action: 'openProblemReport' });
-                                            }}
-                                        >
-                                            View a problem report
-                                        </Button>
-                                    </div>
-                                )}
-                        </div>
-                    </GridColumn>
-                </Grid>
+                        </GridColumn>
+                    </Grid>
+                </AtlascodeErrorBoundary>
             </Page>
         );
     }

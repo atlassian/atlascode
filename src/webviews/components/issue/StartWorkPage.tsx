@@ -42,6 +42,8 @@ import Offline from '../Offline';
 import { WebviewComponent } from '../WebviewComponent';
 import NavItem from './NavItem';
 import { TransitionMenu } from './TransitionMenu';
+import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
+import { AnalyticsView } from 'src/analyticsTypes';
 
 type Emit =
     | RefreshIssueAction
@@ -453,36 +455,74 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
 
         return (
             <Page>
-                <Grid>
-                    <GridColumn medium={8}>
-                        {!this.state.isOnline && <Offline />}
+                <AtlascodeErrorBoundary
+                    context={{ view: AnalyticsView.OldStartWorkPage }}
+                    postMessageFunc={(e) => {
+                        this.postMessage(e); /* just {this.postMessage} doesn't work */
+                    }}
+                >
+                    <Grid>
+                        <GridColumn medium={8}>
+                            {!this.state.isOnline && <Offline />}
 
-                        {this.state.result.successMessage && (
-                            <SectionMessage appearance="confirmation" title="Work Started">
-                                <div className="start-work-success">
-                                    <p dangerouslySetInnerHTML={{ __html: this.state.result.successMessage }} />
+                            {this.state.result.successMessage && (
+                                <SectionMessage appearance="confirmation" title="Work Started">
+                                    <div className="start-work-success">
+                                        <p dangerouslySetInnerHTML={{ __html: this.state.result.successMessage }} />
+                                    </div>
+                                </SectionMessage>
+                            )}
+                            {this.state.isErrorBannerOpen && (
+                                <ErrorBanner
+                                    onDismissError={this.handleDismissError}
+                                    errorDetails={this.state.errorDetails}
+                                />
+                            )}
+                        </GridColumn>
+                        {pageHeader}
+                        {this.state.issueType === 'jiraIssue' && (
+                            <GridColumn medium={6}>
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    <Checkbox
+                                        isChecked={this.state.jiraSetupEnabled}
+                                        onChange={this.toggleJiraSetupEnabled}
+                                        name="setup-jira-checkbox"
+                                    />
+                                    <h4>Transition issue</h4>
                                 </div>
-                            </SectionMessage>
+                                {this.state.jiraSetupEnabled && (
+                                    <div
+                                        style={{
+                                            margin: 10,
+                                            borderLeftWidth: 'initial',
+                                            borderLeftStyle: 'solid',
+                                            borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)',
+                                        }}
+                                    >
+                                        <div style={{ margin: 10 }}>
+                                            <label>Select new status</label>
+                                            <TransitionMenu
+                                                transitions={(issue as MinimalIssue<DetailedSiteInfo>).transitions}
+                                                currentStatus={(issue as MinimalIssue<DetailedSiteInfo>).status}
+                                                isStatusButtonLoading={false}
+                                                onStatusChange={this.handleStatusChange}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </GridColumn>
                         )}
-                        {this.state.isErrorBannerOpen && (
-                            <ErrorBanner
-                                onDismissError={this.handleDismissError}
-                                errorDetails={this.state.errorDetails}
-                            />
-                        )}
-                    </GridColumn>
-                    {pageHeader}
-                    {this.state.issueType === 'jiraIssue' && (
-                        <GridColumn medium={6}>
+                        <GridColumn medium={12} />
+                        <GridColumn medium={8}>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
                                 <Checkbox
-                                    isChecked={this.state.jiraSetupEnabled}
-                                    onChange={this.toggleJiraSetupEnabled}
-                                    name="setup-jira-checkbox"
+                                    isChecked={this.state.bitbucketSetupEnabled}
+                                    onChange={this.toggleBitbucketSetupEnabled}
+                                    name="setup-bitbucket-checkbox"
                                 />
-                                <h4>Transition issue</h4>
+                                <h4>Set up git branch</h4>
                             </div>
-                            {this.state.jiraSetupEnabled && (
+                            {this.isEmptyRepo(repo) && (
                                 <div
                                     style={{
                                         margin: 10,
@@ -492,196 +532,167 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                                     }}
                                 >
                                     <div style={{ margin: 10 }}>
-                                        <label>Select new status</label>
-                                        <TransitionMenu
-                                            transitions={(issue as MinimalIssue<DetailedSiteInfo>).transitions}
-                                            currentStatus={(issue as MinimalIssue<DetailedSiteInfo>).status}
-                                            isStatusButtonLoading={false}
-                                            onStatusChange={this.handleStatusChange}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </GridColumn>
-                    )}
-                    <GridColumn medium={12} />
-                    <GridColumn medium={8}>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <Checkbox
-                                isChecked={this.state.bitbucketSetupEnabled}
-                                onChange={this.toggleBitbucketSetupEnabled}
-                                name="setup-bitbucket-checkbox"
-                            />
-                            <h4>Set up git branch</h4>
-                        </div>
-                        {this.isEmptyRepo(repo) && (
-                            <div
-                                style={{
-                                    margin: 10,
-                                    borderLeftWidth: 'initial',
-                                    borderLeftStyle: 'solid',
-                                    borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)',
-                                }}
-                            >
-                                <div style={{ margin: 10 }}>
-                                    <div className="ac-vpadding">
-                                        <label>Repository</label>
-                                        <Select
-                                            className="ac-select-container"
-                                            classNamePrefix="ac-select"
-                                            placeholder="No repositories found..."
-                                            value={repo}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                        {this.state.bitbucketSetupEnabled && !this.isEmptyRepo(this.state.repo) && (
-                            <div
-                                style={{
-                                    margin: 10,
-                                    borderLeftWidth: 'initial',
-                                    borderLeftStyle: 'solid',
-                                    borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)',
-                                }}
-                            >
-                                <div style={{ margin: 10 }}>
-                                    {this.state.data.repoData.length > 1 && (
                                         <div className="ac-vpadding">
                                             <label>Repository</label>
                                             <Select
                                                 className="ac-select-container"
                                                 classNamePrefix="ac-select"
-                                                options={this.state.data.repoData}
-                                                getOptionLabel={(option: RepoData) =>
-                                                    this.isEmptyRepo(option)
-                                                        ? 'No repositories found...'
-                                                        : path.basename(option.workspaceRepo.rootUri)
-                                                }
-                                                getOptionValue={(option: RepoData) => option}
-                                                onChange={this.handleRepoChange}
-                                                placeholder="Loading..."
+                                                placeholder="No repositories found..."
                                                 value={repo}
                                             />
                                         </div>
-                                    )}
-                                    {repo.branchTypes.length > 0 && (
-                                        <div className="ac-vpadding" style={{ textTransform: 'capitalize' }}>
-                                            <label>Type</label>
-                                            <CreatableSelect
-                                                className="ac-select-container"
-                                                classNamePrefix="ac-select"
-                                                options={repo.branchTypes}
-                                                getOptionLabel={(option: BranchType) => option.kind}
-                                                getOptionValue={(option: BranchType) => option.prefix}
-                                                onChange={(model: any) => {
-                                                    this.setState({ branchType: model });
-                                                }}
-                                                value={this.state.branchType}
-                                            />
-                                        </div>
-                                    )}
-                                    <div className="ac-vpadding">
-                                        <label>Source branch (this will be the start point for the new branch)</label>
-                                        <Select
-                                            className="ac-select-container"
-                                            classNamePrefix="ac-select"
-                                            options={[...repo.localBranches, ...repo.remoteBranches]}
-                                            getOptionLabel={(option: Branch) => option.name}
-                                            getOptionValue={(option: Branch) => option}
-                                            onChange={this.handleSourceBranchChange}
-                                            value={this.state.sourceBranch}
-                                        />
                                     </div>
-                                    <div className="ac-vpadding">
-                                        <label>Local branch</label>
-                                        <div className="branch-container">
-                                            {this.state.branchType && this.state.branchType.prefix && (
-                                                <div className="prefix-container">
-                                                    <label>{this.state.branchType.prefix}</label>
-                                                </div>
-                                            )}
-                                            <div className="branch-name">
-                                                <EdiText
-                                                    type="text"
-                                                    value={this.state.localBranch || ''}
-                                                    onSave={this.handleBranchNameChange}
-                                                    validation={FieldValidators.isValidString}
-                                                    validationMessage="Branch name is required"
-                                                    inputProps={{ className: 'ac-inputField' }}
-                                                    viewProps={{
-                                                        id: 'start-work-branch-name',
-                                                        className: 'ac-inline-input-view-p',
-                                                    }}
-                                                    editButtonClassName="ac-inline-edit-button"
-                                                    cancelButtonClassName="ac-inline-cancel-button"
-                                                    saveButtonClassName="ac-inline-save-button"
-                                                    editOnViewClick={true}
+                                </div>
+                            )}
+                            {this.state.bitbucketSetupEnabled && !this.isEmptyRepo(this.state.repo) && (
+                                <div
+                                    style={{
+                                        margin: 10,
+                                        borderLeftWidth: 'initial',
+                                        borderLeftStyle: 'solid',
+                                        borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)',
+                                    }}
+                                >
+                                    <div style={{ margin: 10 }}>
+                                        {this.state.data.repoData.length > 1 && (
+                                            <div className="ac-vpadding">
+                                                <label>Repository</label>
+                                                <Select
+                                                    className="ac-select-container"
+                                                    classNamePrefix="ac-select"
+                                                    options={this.state.data.repoData}
+                                                    getOptionLabel={(option: RepoData) =>
+                                                        this.isEmptyRepo(option)
+                                                            ? 'No repositories found...'
+                                                            : path.basename(option.workspaceRepo.rootUri)
+                                                    }
+                                                    getOptionValue={(option: RepoData) => option}
+                                                    onChange={this.handleRepoChange}
+                                                    placeholder="Loading..."
+                                                    value={repo}
                                                 />
                                             </div>
-                                        </div>
-                                        {this.state.existingBranchOptions.length > 0 && (
-                                            <SectionMessage appearance="change" title="Use an existing branch?">
-                                                <div>
-                                                    <p>
-                                                        Click to use an existing branch for this issue: (
-                                                        <em>
-                                                            source branch selection is ignored for existing branches
-                                                        </em>
-                                                        )
-                                                    </p>
-                                                    <ul>
-                                                        {this.state.existingBranchOptions.map((branchName) => (
-                                                            <li>
-                                                                <Button
-                                                                    className="ac-link-button"
-                                                                    appearance="link"
-                                                                    onClick={() =>
-                                                                        this.handleSelectExistingBranch(branchName)
-                                                                    }
-                                                                >
-                                                                    {branchName}
-                                                                </Button>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            </SectionMessage>
                                         )}
-                                    </div>
-                                    {repo.workspaceRepo.siteRemotes.length > 1 && (
-                                        <div>
-                                            <label>Set upstream to</label>
+                                        {repo.branchTypes.length > 0 && (
+                                            <div className="ac-vpadding" style={{ textTransform: 'capitalize' }}>
+                                                <label>Type</label>
+                                                <CreatableSelect
+                                                    className="ac-select-container"
+                                                    classNamePrefix="ac-select"
+                                                    options={repo.branchTypes}
+                                                    getOptionLabel={(option: BranchType) => option.kind}
+                                                    getOptionValue={(option: BranchType) => option.prefix}
+                                                    onChange={(model: any) => {
+                                                        this.setState({ branchType: model });
+                                                    }}
+                                                    value={this.state.branchType}
+                                                />
+                                            </div>
+                                        )}
+                                        <div className="ac-vpadding">
+                                            <label>
+                                                Source branch (this will be the start point for the new branch)
+                                            </label>
                                             <Select
                                                 className="ac-select-container"
                                                 classNamePrefix="ac-select"
-                                                options={repo.workspaceRepo.siteRemotes}
-                                                getOptionLabel={(option: SiteRemote) => option.remote.name}
-                                                getOptionValue={(option: SiteRemote) => option}
-                                                onChange={this.handleSiteRemoteChange}
-                                                value={this.state.siteRemote}
+                                                options={[...repo.localBranches, ...repo.remoteBranches]}
+                                                getOptionLabel={(option: Branch) => option.name}
+                                                getOptionValue={(option: Branch) => option}
+                                                onChange={this.handleSourceBranchChange}
+                                                value={this.state.sourceBranch}
                                             />
                                         </div>
-                                    )}
+                                        <div className="ac-vpadding">
+                                            <label>Local branch</label>
+                                            <div className="branch-container">
+                                                {this.state.branchType && this.state.branchType.prefix && (
+                                                    <div className="prefix-container">
+                                                        <label>{this.state.branchType.prefix}</label>
+                                                    </div>
+                                                )}
+                                                <div className="branch-name">
+                                                    <EdiText
+                                                        type="text"
+                                                        value={this.state.localBranch || ''}
+                                                        onSave={this.handleBranchNameChange}
+                                                        validation={FieldValidators.isValidString}
+                                                        validationMessage="Branch name is required"
+                                                        inputProps={{ className: 'ac-inputField' }}
+                                                        viewProps={{
+                                                            id: 'start-work-branch-name',
+                                                            className: 'ac-inline-input-view-p',
+                                                        }}
+                                                        editButtonClassName="ac-inline-edit-button"
+                                                        cancelButtonClassName="ac-inline-cancel-button"
+                                                        saveButtonClassName="ac-inline-save-button"
+                                                        editOnViewClick={true}
+                                                    />
+                                                </div>
+                                            </div>
+                                            {this.state.existingBranchOptions.length > 0 && (
+                                                <SectionMessage appearance="change" title="Use an existing branch?">
+                                                    <div>
+                                                        <p>
+                                                            Click to use an existing branch for this issue: (
+                                                            <em>
+                                                                source branch selection is ignored for existing branches
+                                                            </em>
+                                                            )
+                                                        </p>
+                                                        <ul>
+                                                            {this.state.existingBranchOptions.map((branchName) => (
+                                                                <li>
+                                                                    <Button
+                                                                        className="ac-link-button"
+                                                                        appearance="link"
+                                                                        onClick={() =>
+                                                                            this.handleSelectExistingBranch(branchName)
+                                                                        }
+                                                                    >
+                                                                        {branchName}
+                                                                    </Button>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                </SectionMessage>
+                                            )}
+                                        </div>
+                                        {repo.workspaceRepo.siteRemotes.length > 1 && (
+                                            <div>
+                                                <label>Set upstream to</label>
+                                                <Select
+                                                    className="ac-select-container"
+                                                    classNamePrefix="ac-select"
+                                                    options={repo.workspaceRepo.siteRemotes}
+                                                    getOptionLabel={(option: SiteRemote) => option.remote.name}
+                                                    getOptionValue={(option: SiteRemote) => option}
+                                                    onChange={this.handleSiteRemoteChange}
+                                                    value={this.state.siteRemote}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </GridColumn>
-                    <GridColumn medium={12}>
-                        <div className="ac-vpadding">
-                            {!this.state.result.successMessage && (
-                                <LoadingButton
-                                    className="ac-button"
-                                    isLoading={this.state.isStartButtonLoading}
-                                    onClick={this.handleStart}
-                                >
-                                    Start
-                                </LoadingButton>
                             )}
-                        </div>
-                        {snippetTip}
-                    </GridColumn>
-                </Grid>
+                        </GridColumn>
+                        <GridColumn medium={12}>
+                            <div className="ac-vpadding">
+                                {!this.state.result.successMessage && (
+                                    <LoadingButton
+                                        className="ac-button"
+                                        isLoading={this.state.isStartButtonLoading}
+                                        onClick={this.handleStart}
+                                    >
+                                        Start
+                                    </LoadingButton>
+                                )}
+                            </div>
+                            {snippetTip}
+                        </GridColumn>
+                    </Grid>
+                </AtlascodeErrorBoundary>
             </Page>
         );
     }

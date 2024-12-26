@@ -19,6 +19,7 @@ import { isAction, isAlertable, isPMFSubmitAction } from '../ipc/messaging';
 import { iconSet, Resources } from '../resources';
 import { OnlineInfoEvent } from '../util/online';
 import { UIWebsocket } from '../ws';
+import { CommonActionType } from '../lib/ipc/fromUI/common';
 
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
 export interface ReactWebview extends Disposable {
@@ -206,6 +207,13 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 }
             }
         }
+
+        // Special case for analytics which are normally routed through the new IPC system
+        if (a?.type === CommonActionType.SendAnalytics && a?.errorInfo) {
+            Container.analyticsApi.fireUIErrorEvent(a.errorInfo);
+            return true;
+        }
+
         return false;
     }
 

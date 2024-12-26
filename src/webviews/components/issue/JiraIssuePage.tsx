@@ -47,6 +47,8 @@ import VotesForm from './VotesForm';
 import WatchesForm from './WatchesForm';
 import WorklogForm from './WorklogForm';
 import Worklogs from './Worklogs';
+import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
+import { AnalyticsView } from 'src/analyticsTypes';
 
 type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -901,36 +903,43 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         return (
             <Page>
-                <WidthDetector>
-                    {(width?: number) => {
-                        if (width && width < 800) {
-                            return (
-                                <div style={{ margin: '20px 16px 0px 16px' }}>
-                                    {this.getMainPanelHeaderMarkup()}
-                                    {this.commonSidebar()}
-                                    {this.getMainPanelBodyMarkup()}
-                                    {this.advancedSidebar()}
-                                    {this.createdUpdatedDates()}
-                                </div>
-                            );
-                        }
-                        return (
-                            <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
-                                <Grid layout="fluid">
-                                    <GridColumn medium={8}>
+                <AtlascodeErrorBoundary
+                    context={{ view: AnalyticsView.JiraIssuePage }}
+                    postMessageFunc={(e) => {
+                        this.postMessage(e); /* just {this.postMessage} doesn't work */
+                    }}
+                >
+                    <WidthDetector>
+                        {(width?: number) => {
+                            if (width && width < 800) {
+                                return (
+                                    <div style={{ margin: '20px 16px 0px 16px' }}>
                                         {this.getMainPanelHeaderMarkup()}
-                                        {this.getMainPanelBodyMarkup()}
-                                    </GridColumn>
-                                    <GridColumn medium={4}>
                                         {this.commonSidebar()}
+                                        {this.getMainPanelBodyMarkup()}
                                         {this.advancedSidebar()}
                                         {this.createdUpdatedDates()}
-                                    </GridColumn>
-                                </Grid>
-                            </div>
-                        );
-                    }}
-                </WidthDetector>
+                                    </div>
+                                );
+                            }
+                            return (
+                                <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
+                                    <Grid layout="fluid">
+                                        <GridColumn medium={8}>
+                                            {this.getMainPanelHeaderMarkup()}
+                                            {this.getMainPanelBodyMarkup()}
+                                        </GridColumn>
+                                        <GridColumn medium={4}>
+                                            {this.commonSidebar()}
+                                            {this.advancedSidebar()}
+                                            {this.createdUpdatedDates()}
+                                        </GridColumn>
+                                    </Grid>
+                                </div>
+                            );
+                        }}
+                    </WidthDetector>
+                </AtlascodeErrorBoundary>
             </Page>
         );
     }

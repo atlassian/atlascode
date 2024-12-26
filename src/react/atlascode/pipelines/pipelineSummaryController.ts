@@ -142,7 +142,7 @@ export function usePipelineSummaryController(): [PipelineSummaryState, PipelineS
             fetchLogs: fetchLogs,
             postMessage: postMessage,
         };
-    }, [sendRefresh, rerun, fetchLogs]);
+    }, [sendRefresh, rerun, fetchLogs, postMessage]);
 
     return [state, pipelineSummaryApi];
 }

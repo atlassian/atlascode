@@ -19,9 +19,13 @@ export enum AnalyticsView {
     CreateBitbucketIssuePage = 'createBitbucketIssue',
     CreatePullRequestPage = 'createPullRequest',
 
+    CreateJiraIssuePage = 'createJiraIssue',
+    JiraIssuePage = 'jiraIssue',
+
     PipelineSummaryPage = 'pipelineSummary',
 
     StartWorkPage = 'startWork',
+    OldStartWorkPage = 'oldStartWork',
 
     Other = 'other',
 }
