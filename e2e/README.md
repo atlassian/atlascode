@@ -36,7 +36,7 @@ However, we can work around that - by running our tests in Docker! We can mount 
 
 In this folder, there's a `Dockerfile` with a rather lightweight image - `vscode`, `xvfb`, their dependencies, and `npm`/`node` - and some scripts to run it. The intended usage is as follows:
 
-* Build the docker image by running `npm run test:e2e:docker:build`. You only need to do it once
-* Run one of the two commands:
-    - `npm run test:e2e:docker` - this will do the full cycle of building the extension and setting up tests. You typically want to run this when you've just updated the extension
-    - `npm run test:e2e:docker:rerun` - a much faster command to rerun the tests against an already prepared setup. Use this when iterating on tests themselves
+-   Build the docker image by running `npm run test:e2e:docker:build`. You only need to do it once
+-   Run one of the two commands:
+    -   `npm run test:e2e:docker` - this will do the full cycle of building the extension and setting up tests. You typically want to run this when you've just updated the extension
+    -   `npm run test:e2e:docker:rerun` - a much faster command to rerun the tests against an already prepared setup. Use this when iterating on tests themselves
