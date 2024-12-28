@@ -250,7 +250,7 @@ export class ClientManager implements Disposable {
     }
 
     private keyForSite(site: DetailedSiteInfo): string {
-        return site.credentialId;
+        return `${site.credentialId} - ${site.baseApiUrl}`;
     }
 
     private async createClient<T>(site: DetailedSiteInfo, factory: (info: AuthInfo) => any): Promise<T | undefined> {

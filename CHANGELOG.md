@@ -1,3 +1,9 @@
+## What's new in 3.2.1
+
+### Bug Fixes
+
+- Issues fetched from multiple JIRA sites now display correctly in the tree
+
 ## What's New in 3.2.0
 
 ### Improvements 
