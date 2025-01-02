@@ -86,22 +86,14 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.RELEASE_TAG }}
-          release_name: Release ${{ env.RELEASE_TAG }}
+          name: Release ${{ env.RELEASE_TAG }}
           draft: false
           prerelease: false
-
-      - name: Upload Release Assets
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./atlascode-${{ env.PACKAGE_VERSION }}.vsix
-          asset_name: atlascode-${{ env.PACKAGE_VERSION }}.vsix
-          asset_content_type: application/zip
+          files: |
+            atlascode-${{ env.PACKAGE_VERSION }}.vsix
+          fail_on_unmatched_files: true
