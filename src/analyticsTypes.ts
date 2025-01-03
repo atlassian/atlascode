@@ -8,24 +8,40 @@ export enum AnalyticsChannels {
     AtlascodeUiErrors = 'atlascode.ui.errors',
 }
 
+/**
+ * Descriptions of the different pages that the extension can render as webviews.
+ * These appear in error reports, so it's best if they are verbose and descriptive.
+ *
+ * Values typically follow the pattern of `<type>:<version>:[?product]:<view>`
+ *
+ * Versions so far:
+ *  - v1: (legacy) Webviews based on AbstractReactWebview
+ *  - v2: (legacy) Webviews based on the WebviewController/WebviewControllerFactory architecture
+ */
 export enum AnalyticsView {
-    OnboardingPage = 'onboarding',
-    SettingsPage = 'settings',
-    WelcomePage = 'welcome',
+    // v1
 
-    BitbucketIssuePage = 'bitbucketIssue',
-    PullRequestPage = 'pullRequest',
+    CreateJiraIssuePage = 'page:v1:jira:createIssue',
+    JiraIssuePage = 'page:v1:jira:issue',
+    OldStartWorkPage = 'page:v1:bitbucket:startWork',
 
-    CreateBitbucketIssuePage = 'createBitbucketIssue',
-    CreatePullRequestPage = 'createPullRequest',
+    // v2
 
-    CreateJiraIssuePage = 'createJiraIssue',
-    JiraIssuePage = 'jiraIssue',
+    OnboardingPage = 'page:v2:onboarding',
+    SettingsPage = 'page:v2:settings',
+    WelcomePage = 'page:v2:welcome',
 
-    PipelineSummaryPage = 'pipelineSummary',
+    BitbucketIssuePage = 'page:v2:bitbucket:issue',
+    CreateBitbucketIssuePage = 'page:v2:bitbucket:createIssue',
 
-    StartWorkPage = 'startWork',
-    OldStartWorkPage = 'oldStartWork',
+    PullRequestPage = 'page:v2:bitbucket:pullRequest',
+    CreatePullRequestPage = 'page:v2:bitbucket:createPullRequest',
+
+    PipelineSummaryPage = 'page:v2:bitbucket:pipeline',
+
+    StartWorkPage = 'page:v2:jira:startWork',
+
+    // Reserved for future use
 
     Other = 'other',
 }

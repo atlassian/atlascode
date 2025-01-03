@@ -4,7 +4,10 @@ import { AnalyticsErrorBoundary, AnalyticsListener, UIAnalyticsEvent } from '@at
 import { CommonActionType } from 'src/lib/ipc/fromUI/common';
 import { AnalyticsChannels, UIAnalyticsContext } from 'src/analyticsTypes';
 
-const STACK_LIMIT = 150;
+// Maximum limit for the simplified stack trace
+// We're using a high value deliberately for now, but it's arbitrary and can be changed in the future
+const STACK_LIMIT = 1500;
+
 const COMPONENT_GLOBAL = 'global';
 
 export type AtlascodeErrorBoundaryProps = {
