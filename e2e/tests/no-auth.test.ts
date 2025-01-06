@@ -20,10 +20,6 @@ describe('Atlassian Extension Activity Bar', async () => {
 });
 
 describe('Atlassian Extension SideBar', async () => {
-    if (process.env.CI) {
-        console.log('Test skipped in CI environment');
-        return;
-    }
     let activityBar: ActivityBar;
     let sideBarView: SideBarView;
 
@@ -55,10 +51,6 @@ describe('Atlassian Extension SideBar', async () => {
 });
 
 describe('Atlassian Extension Settings Page', async () => {
-    if (process.env.CI) {
-        console.log('Test skipped in CI environment');
-        return;
-    }
     // let view: WebView;
 
     before(async () => {

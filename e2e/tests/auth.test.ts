@@ -2,10 +2,6 @@ import { expect } from 'chai';
 import { before, after, EditorView, Workbench, By, ActivityBar, SideBarView } from 'vscode-extension-tester';
 
 describe('Auth User', async () => {
-    if (process.env.CI) {
-        console.log('Test skipped in CI environment');
-        return;
-    }
     let activityBar: ActivityBar;
     let sideBarView: SideBarView;
 

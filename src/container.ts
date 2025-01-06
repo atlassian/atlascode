@@ -371,7 +371,7 @@ export class Container {
             return;
         }
         const authInfo = {
-            username: 'axon-test@polli.tlp.usersinbuckets.com',
+            username: 'axontest2025@gmail.com',
             password: process.env.ATLASCODE_TEST_USER_API_TOKEN,
             user: {
                 id: '',
@@ -382,7 +382,7 @@ export class Container {
             state: 0,
         };
         const site = {
-            host: 'axon-test.jira-dev.com',
+            host: 'axontest2025.atlassian.net',
             protocol: 'https:',
             product: {
                 name: 'Jira',

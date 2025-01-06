@@ -267,14 +267,18 @@ export function getSecretForAuthInfo(info: any): string {
 export function oauthProviderForSite(site: SiteInfo): OAuthProvider | undefined {
     const hostname = site.host.split(':')[0];
 
+    // Added to allow for testing flow of AXON-32
+    if (hostname.endsWith('axontest2025.atlassian.net')) {
+        return undefined;
+    }
+
     if (hostname.endsWith('atlassian.net') || hostname.endsWith('jira.com')) {
         return OAuthProvider.JiraCloud;
     }
 
-    // Commented out to allow for testing flow of AXON-32 PR: https://github.com/atlassian/atlascode/pull/54/files
-    // if (hostname.endsWith('jira-dev.com')) {
-    //     return OAuthProvider.JiraCloudStaging;
-    // }
+    if (hostname.endsWith('jira-dev.com')) {
+        return OAuthProvider.JiraCloudStaging;
+    }
 
     if (hostname.endsWith('bitbucket.org')) {
         return OAuthProvider.BitbucketCloud;
