@@ -1,6 +1,6 @@
 'use strict';
 
-import { ATLASCODE_TEST_HOST } from 'src/constants';
+import { ATLASCODE_TEST_HOST } from '../../src/constants';
 
 export enum AuthChangeType {
     Update = 'update',
