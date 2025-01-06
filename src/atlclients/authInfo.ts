@@ -1,5 +1,7 @@
 'use strict';
 
+import { ATLASCODE_TEST_HOST } from 'src/constants';
+
 export enum AuthChangeType {
     Update = 'update',
     Remove = 'remove',
@@ -268,7 +270,7 @@ export function oauthProviderForSite(site: SiteInfo): OAuthProvider | undefined 
     const hostname = site.host.split(':')[0];
 
     // Added to allow for testing flow of AXON-32
-    if (hostname.endsWith('axontest2025.atlassian.net')) {
+    if (hostname.endsWith(ATLASCODE_TEST_HOST)) {
         return undefined;
     }
 

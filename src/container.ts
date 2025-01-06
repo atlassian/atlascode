@@ -70,6 +70,7 @@ import { EventBuilder } from './util/featureFlags/eventBuilder';
 import { AtlascodeUriHandler } from './uriHandler';
 import { CheckoutHelper } from './bitbucket/interfaces';
 import { ProductJira } from './atlclients/authInfo';
+import { ATLASCODE_TEST_USER_EMAIL, ATLASCODE_TEST_HOST } from './constants';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -371,7 +372,7 @@ export class Container {
             return;
         }
         const authInfo = {
-            username: 'axontest2025@gmail.com',
+            username: ATLASCODE_TEST_USER_EMAIL,
             password: process.env.ATLASCODE_TEST_USER_API_TOKEN,
             user: {
                 id: '',
@@ -382,7 +383,7 @@ export class Container {
             state: 0,
         };
         const site = {
-            host: 'axontest2025.atlassian.net',
+            host: ATLASCODE_TEST_HOST,
             protocol: 'https:',
             product: {
                 name: 'Jira',

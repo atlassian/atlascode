@@ -34,6 +34,8 @@ import {
 import { emptySiteWithAuthInfo, SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { useFormValidation } from '../../common/form/useFormValidation';
 import { validateRequiredString, validateStartsWithProtocol } from '../../util/fieldValidators';
+import { ATLASCODE_TEST_HOST } from 'src/constants';
+
 export type AuthDialogProps = {
     open: boolean;
     doClose: () => void;
@@ -86,7 +88,7 @@ const isCustomUrl = (data?: string) => {
         const url = new URL(data);
 
         // To allow for testing flow of AXON-32
-        if (url.hostname.endsWith('axontest2025.atlassian.net')) {
+        if (url.hostname.endsWith(ATLASCODE_TEST_HOST)) {
             return true;
         }
 
