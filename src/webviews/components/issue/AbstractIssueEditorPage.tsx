@@ -284,9 +284,21 @@ export abstract class AbstractIssueEditorPage<
         });
     };
 
+    /**
+     * AXON-49 This is a workaround for the suggested autocomplete URL
+     * (.../user/recommend/...) not being accessible
+     */
+    protected fixAutocompleteUrl(url: string): string {
+        if (url.includes('user/recommend')) {
+            url = url.replace('user/recommend', 'user/search') + '&query=';
+        }
+
+        return url;
+    }
+
     protected loadSelectOptionsForField = (field: SelectFieldUI, input: string): Promise<any[]> => {
         this.setState({ isSomethingLoading: true, loadingField: field.key });
-        return this.loadSelectOptions(input, field.autoCompleteUrl);
+        return this.loadSelectOptions(input, this.fixAutocompleteUrl(field.autoCompleteUrl));
     };
 
     protected loadSelectOptions = (input: string, url: string): Promise<any[]> => {

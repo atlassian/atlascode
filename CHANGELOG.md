@@ -3,6 +3,8 @@
 ### Bug Fixes
 
 - Issues fetched from multiple JIRA sites now display correctly in the tree
+- Error banner no longer causes JIRA issue page to crash
+- Added workaround to fix completion for JIRA Reporter field
 
 ## What's New in 3.2.0
 

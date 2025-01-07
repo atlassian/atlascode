@@ -69,20 +69,16 @@ export default class ErrorBanner extends React.Component<
 
         const title: string = this.state.errorDetails.title ? this.state.errorDetails.title : 'Something went wrong';
         return (
-            <SectionMessage
-                appearance="warning"
-                title={title}
-                actions={[
-                    {
-                        text: 'Dismiss',
-                        onClick: () => {
-                            this.setState({ errorDetails: undefined });
-                            this.props.onDismissError();
-                        },
-                    },
-                ]}
-            >
+            <SectionMessage appearance="warning" title={title}>
                 <div>{errorMarkup}</div>
+                <button
+                    onClick={() => {
+                        this.setState({ errorDetails: undefined });
+                        this.props.onDismissError();
+                    }}
+                >
+                    Dismiss
+                </button>
             </SectionMessage>
         );
     }
