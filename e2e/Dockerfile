@@ -1,4 +1,4 @@
-FROM node:20.18.1-bookworm-slim
+FROM node:20.18.1-alpine3.20
 
 # Install dependencies and xvfb
 RUN apt-get update && apt-get install -y wget gpg xvfb xauth --no-install-recommends
