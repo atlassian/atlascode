@@ -18,7 +18,7 @@ import { ConfigControllerContext, useConfigController } from './configController
 import { ConfigSection, ConfigSubSection, ConfigTarget } from '../../../lib/ipc/models/config';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { AuthDialog } from './auth/AuthDialog';
+import { AuthDialog } from './auth/dialog/AuthDialog';
 import { BitbucketPanel } from './bitbucket/BitbucketPanel';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { ExplorePanel } from './explore/ExplorePanel';

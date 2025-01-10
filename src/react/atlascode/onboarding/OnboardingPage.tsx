@@ -1,7 +1,7 @@
 import { Button, Container, lighten, makeStyles, Step, StepLabel, Stepper, Theme, Typography } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import { AuthInfo, SiteInfo } from '../../../atlclients/authInfo';
-import { AuthDialog } from '../config/auth/AuthDialog';
+import { AuthDialog } from '../config/auth/dialog/AuthDialog';
 import { AuthDialogControllerContext, useAuthDialog } from '../config/auth/useAuthDialog';
 import LandingPage from './LandingPage';
 import { OnboardingControllerContext, useOnboardingController } from './onboardingController';
