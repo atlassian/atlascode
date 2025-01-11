@@ -342,7 +342,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
             <div className="ac-vpadding">
                 <p>
                     <strong>Tip:</strong> You can have issue keys auto-added to your commit messages using{' '}
-                    <a type="button" className="ac-link-button" href="https://bitbucket.org/snippets/atlassian/qedp7d">
+                    <a type="button" className="ac-link-button" href="https://github.com/atlassian/atlascode/blob/main/scripts/prepare-commit-jira.sh">
                         <span>our prepare-commit-msg hook</span>
                     </a>
                 </p>
