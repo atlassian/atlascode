@@ -13,7 +13,7 @@ dotenv.config();
 
 module.exports = [
     {
-        bail: true,
+        bail: !process.env.WATCH,
         name: 'extension',
         mode: 'development',
         target: 'node',

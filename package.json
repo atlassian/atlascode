@@ -71,6 +71,12 @@
         "devcompile": "npm-run-all --parallel devcompile:react devcompile:extension",
         "devcompile:react": "webpack --mode development --config webpack.react.dev.js",
         "devcompile:extension": "webpack --mode development --config webpack.extension.dev.js",
+
+        "watch": "concurrently -r \"npm:watch:*\"",
+        "watch:extension": "WATCH=true webpack --mode development --config webpack.react.dev.js --progress --watch",
+        "watch:react": "WATCH=true webpack --mode development --config webpack.extension.dev.js --progress --watch",
+        "dev": "concurrently -r npm:watch:extension npm:watch:react",
+
         "mui:atlascodeSettings:dark": "cross-env PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettingsV2\" THEME=\"dark\" webpack-dev-server --open --config webpack.mui.webview.js",
         "mui:atlascodeSettings:light": "cross-env PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettingsV2\" THEME=\"light\" webpack-dev-server --open --config webpack.mui.webview.js",
         "mui:atlascodeOnboarding:dark": "cross-env PAGETSX=\"onboarding/OnboardingPage.tsx\" VIEW=\"atlascodeOnboardingV2\" THEME=\"dark\" webpack-dev-server --open --config webpack.mui.webview.js",
@@ -1523,6 +1529,7 @@
         "autoprefixer": "^10.4.20",
         "babel-loader": "^9.2.1",
         "chai": "^4",
+        "concurrently": "^9.1.2",
         "cross-env": "^7.0.2",
         "css-loader": "^7.1.2",
         "css-minimizer-webpack-plugin": "^7.0.0",

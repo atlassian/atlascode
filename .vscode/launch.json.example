@@ -11,21 +11,21 @@
             "request": "launch",
             "program": "${workspaceFolder}/node_modules/.bin/extest",
             "windows": {
-              "program": "${workspaceFolder}/node_modules/vscode-extension-tester/out/cli.js",
+                "program": "${workspaceFolder}/node_modules/vscode-extension-tester/out/cli.js",
             },
             "args": [
-              "run-tests",
-              "${workspaceFolder}/.generated/atlascode/e2e/tests/*.test.js",
-              "--code_settings",
-              "${workspaceFolder}/e2e/test-settings.json",
-              "--extensions_dir",
-              ".test-extensions",
-              "--mocha_config",
-              "${workspaceFolder}/.mocharc.js"
+                "run-tests",
+                "${workspaceFolder}/.generated/atlascode/e2e/tests/*.test.js",
+                "--code_settings",
+                "${workspaceFolder}/e2e/test-settings.json",
+                "--extensions_dir",
+                ".test-extensions",
+                "--mocha_config",
+                "${workspaceFolder}/.mocharc.js"
             ],
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"
-          },
+        },
         {
             "name": "Extension",
             "type": "extensionHost",
@@ -38,6 +38,20 @@
                 "${workspaceFolder}/build/**/*.js"
             ],
             "preLaunchTask": "npm: devcompile"
+        },
+        {
+            // This configuration requires npm run dev to be running externally
+            // It will pick up the re-compiled extension code but not hot-swap it 
+            "name": "Extension (watch/external)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/build/**/*.js"
+            ],
         }
     ]
 }
