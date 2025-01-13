@@ -5,6 +5,7 @@
 - Issues fetched from multiple JIRA sites now display correctly in the tree
 - Error banner no longer causes JIRA issue page to crash
 - Added workaround to fix completion for JIRA Reporter field
+- Fixed link in the Start Work flow for adding JIRAs to commit messages [Issue 70](https://github.com/atlassian/atlascode/issues/70)
 
 ## What's New in 3.2.0
 
