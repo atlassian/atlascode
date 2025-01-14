@@ -1,4 +1,4 @@
-## What's new in 3.2.1
+## What's new in 3.2.2
 
 ### Bug Fixes
 
