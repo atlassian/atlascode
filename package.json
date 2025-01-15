@@ -71,6 +71,7 @@
         "devcompile": "npm-run-all --parallel devcompile:react devcompile:extension",
         "devcompile:react": "webpack --mode development --config webpack.react.dev.js",
         "devcompile:extension": "webpack --mode development --config webpack.extension.dev.js",
+        "release:stable": "scripts/release.sh",
 
         "watch": "concurrently -r \"npm:watch:*\"",
         "watch:extension": "WATCH=true webpack --mode development --config webpack.react.dev.js --progress --watch",
