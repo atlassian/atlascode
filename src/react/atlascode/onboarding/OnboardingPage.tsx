@@ -9,6 +9,8 @@ import ProductSelector from './ProductSelector';
 import { SimpleSiteAuthenticator } from './SimpleSiteAuthenticator';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
+import { Features } from 'src/util/featureFlags';
+import { CommonMessageType } from 'src/lib/ipc/toUI/common';
 
 const useStyles = makeStyles((theme: Theme) => ({
     root: {
@@ -31,18 +33,36 @@ const useStyles = makeStyles((theme: Theme) => ({
     },
 }));
 
-function getSteps() {
-    return ['Select Products', 'Authenticate', 'Explore'];
-}
+
 
 export const OnboardingPage: React.FunctionComponent = () => {
     const classes = useStyles();
     const [changes, setChanges] = useState<{ [key: string]: any }>({});
     const [state, controller] = useOnboardingController();
     const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry } = useAuthDialog();
-
     const [activeStep, setActiveStep] = React.useState(0);
+    const [useAuthUI, setUseAuthUI] = React.useState(false);
+    React.useEffect(() => {
+        window.addEventListener('message', (event) => {
+            const message = event.data;
+            if (message.command === CommonMessageType.UpdateFeatureFlags) {
+                const featureValue = message.featureFlags[Features.EnableAuthUI];
+                console.log(
+                    `FeatureGates: received by OnboardingPage - ${Features.EnableAuthUI} -> ${featureValue}`,
+                );
+                setUseAuthUI(featureValue);
+            }
+        });
+    }, []);
+    function getSteps() {
+        if (useAuthUI) {
+            return ['Setup Jira', 'Setup BitBucket', 'Explore'];
+        }
+    
+        return ['Select Products', 'Authenticate', 'Explore'];
+    }
     const steps = getSteps();
+
 
     const handleNext = useCallback(() => {
         setActiveStep((prevActiveStep) => prevActiveStep + 1);

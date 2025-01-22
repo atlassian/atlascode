@@ -39,6 +39,12 @@ export class FeatureFlagClient {
                     options.analyticsClient.sendTrackEvent(e);
                 });
             })
+            .then(() => {
+                // console log all feature gates and values 
+                for (const feat of Object.values(Features)) {
+                    console.log(`FeatureGates: ${feat} -> ${FeatureGates.checkGate(feat)}`);
+                }
+            })
             .catch((err) => {
                 console.warn(`FeatureGates: Failed to initialize client. ${err}`);
                 console.warn('FeatureGates: Disabling feature flags');
@@ -48,8 +54,14 @@ export class FeatureFlagClient {
             });
     }
 
-    public static async checkGate(gate: string) {
-        const gateValue = FeatureGates.checkGate(gate);
+    public static checkGate(gate: string) {
+        var gateValue = false
+        if( FeatureGates == null) {
+            console.warn('FeatureGates: FeatureGates is not initialized. Defaulting to False');
+        } else {
+            // FeatureGates.checkGate returns false if any errors
+            gateValue = FeatureGates.checkGate(gate); 
+        }
         console.log(`FeatureGates: ${gate} -> ${gateValue}`);
         return gateValue;
     }

@@ -220,20 +220,12 @@ export class Container {
         analyticsApi: VSCAnalyticsApi,
         bitbucketHelper: CheckoutHelper,
     ) {
-        FeatureFlagClient.checkGate(Features.EnableNewUriHandler)
-            .then((enabled) => {
-                if (enabled) {
-                    console.log('Using new URI handler');
-                    context.subscriptions.push(AtlascodeUriHandler.create(analyticsApi, bitbucketHelper));
-                } else {
-                    context.subscriptions.push(new LegacyAtlascodeUriHandler(analyticsApi, bitbucketHelper));
-                }
-            })
-            .catch((err) => {
-                // Not likely that we'd land here - but if anything goes wrong, default to legacy handler
-                console.error(`Error checking feature flag ${Features.EnableNewUriHandler}: ${err}`);
-                context.subscriptions.push(new LegacyAtlascodeUriHandler(analyticsApi, bitbucketHelper));
-            });
+        if(FeatureFlagClient.checkGate(Features.EnableNewUriHandler)){
+            console.log('Using new URI handler');
+            context.subscriptions.push(AtlascodeUriHandler.create(analyticsApi, bitbucketHelper));
+        } else {
+            context.subscriptions.push(new LegacyAtlascodeUriHandler(analyticsApi, bitbucketHelper));
+        }
     }
 
     static initializeBitbucket(bbCtx: BitbucketContext) {
