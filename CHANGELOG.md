@@ -1,3 +1,9 @@
+## What's new in 3.2.3
+
+### Bug Fixes
+
+- Fix on create Issue for JIRA cloud when there were no attachments. 
+
 ## What's new in 3.2.2
 
 ### Bug Fixes
