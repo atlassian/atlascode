@@ -489,7 +489,7 @@ export class CreateIssueWebview
                             commands.executeCommand(Commands.RefreshJiraExplorer);
                             this.fireCallback(resp.key, payload.summary);
                         } catch (e) {
-                            Logger.error(new Error(`error creating issue: ${e}`)); // bwieger
+                            Logger.error(new Error(`error creating issue: ${e}`));
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error creating issue'),

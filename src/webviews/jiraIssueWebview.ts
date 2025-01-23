@@ -402,7 +402,7 @@ export class JiraIssueWebview
                         handled = true;
                         try {
                             let client = await Container.clientManager.jiraClient(msg.site);
-                            const resp = await client.createIssue(msg.issueData); // bwieger
+                            const resp = await client.createIssue(msg.issueData);
 
                             const createdIssue = await client.getIssue(resp.key, IssueLinkIssueKeys, '');
                             const picked = readIssueLinkIssue(createdIssue, msg.site);
