@@ -8,12 +8,7 @@ import {
     isScreensForSite,
     isSetIssueType,
 } from '../ipc/issueActions';
-import {
-    CreateMetaTransformerResult,
-    FieldValues,
-    IssueTypeUI,
-    ValueType,
-} from '@atlassianlabs/jira-pi-meta-models/ui-meta';
+import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { DetailedSiteInfo, Product, ProductJira, emptySiteInfo } from '../atlclients/authInfo';
 import { IssueType, Project, emptyIssueType } from '@atlassianlabs/jira-pi-common-models';
 import { Position, Uri, ViewColumn, commands } from 'vscode';

@@ -22,7 +22,7 @@ import {
     SelectFieldUI,
     UIType,
     ValueType,
-} from '@atlassianlabs/jira-pi-meta-models/ui-meta';
+} from '@atlassianlabs/jira-pi-meta-models';
 import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
 import * as React from 'react';

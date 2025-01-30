@@ -13,7 +13,7 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
 import { Comment as JiraComment, CommentVisibility, Transition } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI, InputFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
+import { FieldUI, InputFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
 // NOTE: for now we have to use react-collapsible and NOT Panel because panel uses display:none

@@ -10,7 +10,7 @@ import {
     readSearchResults,
     User,
 } from '@atlassianlabs/jira-pi-common-models';
-import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
+import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import FormData from 'form-data';
 import * as fs from 'fs';
 import { commands, env } from 'vscode';

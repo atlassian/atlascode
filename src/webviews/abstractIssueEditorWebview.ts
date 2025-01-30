@@ -7,7 +7,7 @@ import {
     IssuePickerIssue,
     IssuePickerResult,
 } from '@atlassianlabs/jira-pi-common-models';
-import { ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
+import { ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { showIssue } from '../commands/jira/showIssue';
 import { Container } from '../container';
 import { FetchQueryAction, isCreateSelectOption, isFetchQueryAndSite, isOpenJiraIssue } from '../ipc/issueActions';

@@ -9,7 +9,7 @@ import {
 } from './AbstractIssueEditorPage';
 import { CreateIssueData, emptyCreateIssueData, isIssueCreated } from '../../../ipc/issueMessaging';
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
-import { FieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
+import { FieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import Form, { Field, FormFooter } from '@atlaskit/form';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Select, { components } from '@atlaskit/select';
