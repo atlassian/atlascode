@@ -44,6 +44,8 @@ export const OnboardingPage: React.FunctionComponent = () => {
     const [useAuthUI, setUseAuthUI] = React.useState(false);
     const [jiraSignInText, setJiraSignInText] = useState('Sign In to Jira Cloud');
     const [bitbucketSignInText, setBitbucketSignInText] = useState('Sign In to Bitbucket Cloud');
+    const [jiraSignInFlow, setJiraSignInFlow] = useState('option1');
+    const [bitbucketSignInFlow, setBitbucketSignInFlow] = useState('option1');
 
     React.useEffect(() => {
         window.addEventListener('message', (event) => {
@@ -121,11 +123,20 @@ export const OnboardingPage: React.FunctionComponent = () => {
         }
     }, [changes, controller]);
 
+
+    const executeBitbucketSignInFlow = () => {
+        console.log(bitbucketSignInFlow);
+    };
+    const executeJiraSignInFlow = () => {
+        console.log(jiraSignInFlow);
+    };
+
     const handleJiraOptionChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
-        if (value === 'option1') {
+        setJiraSignInFlow(value);
+        if (value === 'jira-setup-radio-cloud') {
             setJiraSignInText('Sign in to Jira Cloud');
-        } else if (value === 'option2') {
+        } else if (value === 'jira-setup-radio-server') {
             setJiraSignInText('Sign in to Jira Server');
         } else {
             setJiraSignInText('Next');
@@ -134,9 +145,10 @@ export const OnboardingPage: React.FunctionComponent = () => {
 
     const handleBitbucketOptionChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
-        if (value === 'option1') {
+        setBitbucketSignInFlow(value);
+        if (value === 'bitbucket-setup-radio-cloud') {
             setBitbucketSignInText('Sign in to Bitbucket Cloud');
-        } else if (value === 'option2') {
+        } else if (value === 'bitbucket-setup-radio-server') {
             setBitbucketSignInText('Sign in to Bitbucket Server');
         } else {
             setBitbucketSignInText('Next');
@@ -229,18 +241,21 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 <div className={classes.pageContent}>
                     <Typography variant="h5">What version of Jira do you use?</Typography>
                     <div>
-                        <input type="radio" id="jiraOption1" name="jira" value="option1" defaultChecked onChange={handleJiraOptionChange} />
+                        <input type="radio" id="jiraOption1" name="jira" value="jira-setup-radio-cloud" defaultChecked onChange={handleJiraOptionChange} />
                         <label htmlFor="jiraOption1">Cloud</label>
                     </div>
                     <div>
-                        <input type="radio" id="jiraOption2" name="jira" value="option2" onChange={handleJiraOptionChange} />
+                        <input type="radio" id="jiraOption2" name="jira" value="jira-setup-radio-server" onChange={handleJiraOptionChange} />
                         <label htmlFor="jiraOption2">Server</label>
                     </div>
                     <div>
-                        <input type="radio" id="jiraOption3" name="jira" value="option3" onChange={handleJiraOptionChange} />
+                        <input type="radio" id="jiraOption3" name="jira" value="jira-setup-radio-none" onChange={handleJiraOptionChange} />
                         <label htmlFor="jiraOption3">I don't have Jira</label>
                     </div>
-                    <Button variant="contained" color="primary" onClick={handleNext}>
+                    <Button variant="contained" color="primary" onClick={() => {
+                        executeJiraSignInFlow();
+                        handleNext();
+                    }}>
                         {jiraSignInText}
                     </Button>
                 </div>
@@ -249,18 +264,21 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 <div className={classes.pageContent}>
                     <Typography variant="h5">Setup BitBucket</Typography>
                     <div>
-                        <input type="radio" id="bitbucketOption1" name="bitbucket" value="option1" defaultChecked onChange={handleBitbucketOptionChange} />
+                        <input type="radio" id="bitbucketOption1" name="bitbucket" value="bitbucket-setup-radio-server" defaultChecked onChange={handleBitbucketOptionChange} />
                         <label htmlFor="bitbucketOption1">Cloud</label>
                     </div>
                     <div>
-                        <input type="radio" id="bitbucketOption2" name="bitbucket" value="option2" onChange={handleBitbucketOptionChange} />
+                        <input type="radio" id="bitbucketOption2" name="bitbucket" value="bitbucket-setup-radio-server" onChange={handleBitbucketOptionChange} />
                         <label htmlFor="bitbucketOption2">Server</label>
                     </div>
                     <div>
-                        <input type="radio" id="bitbucketOption3" name="bitbucket" value="option3" onChange={handleBitbucketOptionChange} />
+                        <input type="radio" id="bitbucketOption3" name="bitbucket" value="bitbucket-setup-radio-server" onChange={handleBitbucketOptionChange} />
                         <label htmlFor="bitbucketOption3">I don't have BitBucket</label>
                     </div>
-                    <Button variant="contained" color="primary" onClick={handleNext}>
+                    <Button variant="contained" color="primary" onClick={() => {
+                        executeBitbucketSignInFlow();
+                        handleNext();
+                    }}>
                         {bitbucketSignInText}
                     </Button>
                     <Button onClick={handleBack} className={classes.backButton}>
