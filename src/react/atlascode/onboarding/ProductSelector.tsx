@@ -20,7 +20,7 @@ export type ProductSelectorProps = {
     jiraEnabled: boolean;
 };
 
-export const ProductSelector: React.FunctionComponent<ProductSelectorProps> = ({
+export const ProductSelector: React.FunctionComponent<ProductSelectorProps> = ({ // bwieger 
     bitbucketToggleHandler,
     jiraToggleHandler,
     jiraEnabled,
