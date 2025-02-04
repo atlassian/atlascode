@@ -1,6 +1,6 @@
 import { Button, Container, lighten, makeStyles, Step, StepLabel, Stepper, Theme, Typography } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
-import { AuthInfo, SiteInfo } from '../../../atlclients/authInfo';
+import { AuthInfo, AuthInfoState, emptyUserInfo, ProductBitbucket, ProductJira, SiteInfo } from '../../../atlclients/authInfo';
 import { AuthDialog } from '../config/auth/dialog/AuthDialog';
 import { AuthDialogControllerContext, useAuthDialog } from '../config/auth/useAuthDialog';
 import LandingPage from './LandingPage';
@@ -126,9 +126,41 @@ export const OnboardingPage: React.FunctionComponent = () => {
 
     const executeBitbucketSignInFlow = () => {
         console.log(bitbucketSignInFlow);
+        switch (bitbucketSignInFlow) {
+            case 'bitbucket-setup-radio-cloud':
+                handleCloudSignIn(ProductBitbucket);
+                break;
+            case 'bitbucket-setup-radio-server':
+                break;
+            case 'bitbucket-setup-radio-none':
+                break;
+            default:
+                console.log('Invalid Bitbucket sign in flow: %s', bitbucketSignInFlow);
+                break;
+        }
     };
+
+
+    const handleCloudSignIn = useCallback((product) => {
+            const hostname = product.key === ProductJira.key ? 'atlassian.net' : 'bitbucket.org';
+            controller.login({ host: hostname, product: product }, { user: emptyUserInfo, state: AuthInfoState.Valid });
+        }, [controller]);
+
+    
     const executeJiraSignInFlow = () => {
         console.log(jiraSignInFlow);
+        switch (jiraSignInFlow) {
+            case 'jira-setup-radio-cloud':
+                handleCloudSignIn(ProductJira);
+                break;
+            case 'jira-setup-radio-server':
+                break;
+            case 'jira-setup-radio-none':
+                break;
+            default:
+                console.log('Invalid Jira sign in flow: %s', jiraSignInFlow);
+                break;
+        }
     };
 
     const handleJiraOptionChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
