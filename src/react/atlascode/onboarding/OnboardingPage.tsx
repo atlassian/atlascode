@@ -124,6 +124,16 @@ export const OnboardingPage: React.FunctionComponent = () => {
     }, [changes, controller]);
 
 
+    const handleServerSignIn = useCallback((product) => {
+        authDialogController.openDialog(product, undefined);
+    }, [authDialogController]);
+    
+    const handleCloudSignIn = useCallback((product) => {
+            const hostname = product.key === ProductJira.key ? 'atlassian.net' : 'bitbucket.org';
+            controller.login({ host: hostname, product: product }, { user: emptyUserInfo, state: AuthInfoState.Valid });
+        }, [controller]);
+
+    
     const executeBitbucketSignInFlow = () => {
         console.log(bitbucketSignInFlow);
         switch (bitbucketSignInFlow) {
@@ -131,6 +141,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 handleCloudSignIn(ProductBitbucket);
                 break;
             case 'bitbucket-setup-radio-server':
+                handleServerSignIn(ProductBitbucket);
                 break;
             case 'bitbucket-setup-radio-none':
                 break;
@@ -140,13 +151,6 @@ export const OnboardingPage: React.FunctionComponent = () => {
         }
     };
 
-
-    const handleCloudSignIn = useCallback((product) => {
-            const hostname = product.key === ProductJira.key ? 'atlassian.net' : 'bitbucket.org';
-            controller.login({ host: hostname, product: product }, { user: emptyUserInfo, state: AuthInfoState.Valid });
-        }, [controller]);
-
-    
     const executeJiraSignInFlow = () => {
         console.log(jiraSignInFlow);
         switch (jiraSignInFlow) {
@@ -154,6 +158,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 handleCloudSignIn(ProductJira);
                 break;
             case 'jira-setup-radio-server':
+                handleServerSignIn(ProductJira);
                 break;
             case 'jira-setup-radio-none':
                 break;
