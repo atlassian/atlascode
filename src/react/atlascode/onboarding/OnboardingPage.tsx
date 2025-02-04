@@ -44,8 +44,8 @@ export const OnboardingPage: React.FunctionComponent = () => {
     const [useAuthUI, setUseAuthUI] = React.useState(false);
     const [jiraSignInText, setJiraSignInText] = useState('Sign In to Jira Cloud');
     const [bitbucketSignInText, setBitbucketSignInText] = useState('Sign In to Bitbucket Cloud');
-    const [jiraSignInFlow, setJiraSignInFlow] = useState('option1');
-    const [bitbucketSignInFlow, setBitbucketSignInFlow] = useState('option1');
+    const [jiraSignInFlow, setJiraSignInFlow] = useState('jira-setup-radio-cloud');
+    const [bitbucketSignInFlow, setBitbucketSignInFlow] = useState('bitbucket-setup-radio-cloud');
 
     React.useEffect(() => {
         window.addEventListener('message', (event) => {
@@ -241,15 +241,15 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 <div className={classes.pageContent}>
                     <Typography variant="h5">What version of Jira do you use?</Typography>
                     <div>
-                        <input type="radio" id="jiraOption1" name="jira" value="jira-setup-radio-cloud" defaultChecked onChange={handleJiraOptionChange} />
+                        <input type="radio" id="jiraOption1" name="jira" value="jira-setup-radio-cloud" checked={jiraSignInFlow === 'jira-setup-radio-cloud'} onChange={handleJiraOptionChange} />
                         <label htmlFor="jiraOption1">Cloud</label>
                     </div>
                     <div>
-                        <input type="radio" id="jiraOption2" name="jira" value="jira-setup-radio-server" onChange={handleJiraOptionChange} />
+                        <input type="radio" id="jiraOption2" name="jira" value="jira-setup-radio-server" checked={jiraSignInFlow === 'jira-setup-radio-server'} onChange={handleJiraOptionChange} />
                         <label htmlFor="jiraOption2">Server</label>
                     </div>
                     <div>
-                        <input type="radio" id="jiraOption3" name="jira" value="jira-setup-radio-none" onChange={handleJiraOptionChange} />
+                        <input type="radio" id="jiraOption3" name="jira" value="jira-setup-radio-none" checked={jiraSignInFlow === 'jira-setup-radio-none'} onChange={handleJiraOptionChange} />
                         <label htmlFor="jiraOption3">I don't have Jira</label>
                     </div>
                     <Button variant="contained" color="primary" onClick={() => {
@@ -264,15 +264,15 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 <div className={classes.pageContent}>
                     <Typography variant="h5">Setup BitBucket</Typography>
                     <div>
-                        <input type="radio" id="bitbucketOption1" name="bitbucket" value="bitbucket-setup-radio-server" defaultChecked onChange={handleBitbucketOptionChange} />
+                        <input type="radio" id="bitbucketOption1" name="bitbucket" value="bitbucket-setup-radio-cloud" checked={bitbucketSignInFlow === 'bitbucket-setup-radio-cloud'} onChange={handleBitbucketOptionChange} />
                         <label htmlFor="bitbucketOption1">Cloud</label>
                     </div>
                     <div>
-                        <input type="radio" id="bitbucketOption2" name="bitbucket" value="bitbucket-setup-radio-server" onChange={handleBitbucketOptionChange} />
+                        <input type="radio" id="bitbucketOption2" name="bitbucket" value="bitbucket-setup-radio-server" checked={bitbucketSignInFlow === 'bitbucket-setup-radio-server'} onChange={handleBitbucketOptionChange} />
                         <label htmlFor="bitbucketOption2">Server</label>
                     </div>
                     <div>
-                        <input type="radio" id="bitbucketOption3" name="bitbucket" value="bitbucket-setup-radio-server" onChange={handleBitbucketOptionChange} />
+                        <input type="radio" id="bitbucketOption3" name="bitbucket" value="bitbucket-setup-radio-none" checked={bitbucketSignInFlow === 'bitbucket-setup-radio-none'} onChange={handleBitbucketOptionChange} />
                         <label htmlFor="bitbucketOption3">I don't have BitBucket</label>
                     </div>
                     <Button variant="contained" color="primary" onClick={() => {
