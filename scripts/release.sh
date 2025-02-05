@@ -22,7 +22,7 @@ VERSION="v$VERSION"
 
 MESSAGE=${2:-"Release $VERSION"}
 
-# git checkout main
-# git pull origin main 
-# git tag $VERSION -m "$MESSAGE"
-# git push origin $VERSION
+git checkout main
+git pull origin main 
+git tag $VERSION -m "$MESSAGE"
+git push origin $VERSION
