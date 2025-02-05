@@ -49,6 +49,7 @@ import WorklogForm from './WorklogForm';
 import Worklogs from './Worklogs';
 import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
+import { readFilesContentAsync } from '../../../util/files';
 
 type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -68,6 +69,7 @@ const emptyState: ViewState = {
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
     private advancedSidebarFields: FieldUI[] = [];
     private advancedMainFields: FieldUI[] = [];
+    private attachingInProgress: boolean;
 
     constructor(props: any) {
         super(props);
@@ -384,23 +386,32 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({ action: 'removeVote', site: this.state.siteDetails, issueKey: this.state.key, voter: user });
     };
 
-    handleAddAttachments = (files: any[]) => {
-        this.setState({ currentInlineDialog: '', isSomethingLoading: false, loadingField: 'attachment' });
-        const serFiles = files.map((file: any) => {
-            return {
-                lastModified: file.lastModified,
-                lastModifiedDate: file.lastModifiedDate,
-                name: file.name,
-                size: file.size,
-                type: file.type,
-                path: file.path,
-            };
-        });
-        this.postMessage({
-            action: 'addAttachments',
-            site: this.state.siteDetails,
-            issueKey: this.state.key,
-            files: serFiles,
+    handleAddAttachments = (files: File[]) => {
+        if (this.attachingInProgress) {
+            return;
+        }
+        this.attachingInProgress = true;
+
+        readFilesContentAsync(files).then(filesWithContent => {
+            this.setState({ currentInlineDialog: '', isSomethingLoading: false, loadingField: 'attachment' });
+            const serFiles = filesWithContent.map((file) => {
+                return {
+                    lastModified: file.lastModified,
+                    lastModifiedDate: (file as any).lastModifiedDate,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    path: (file as any).path,
+                    fileContent: file.fileContent,
+                };
+            });
+            this.postMessage({
+                action: 'addAttachments',
+                site: this.state.siteDetails,
+                issueKey: this.state.key,
+                files: serFiles,
+            });
+            this.attachingInProgress = false;
         });
     };
 

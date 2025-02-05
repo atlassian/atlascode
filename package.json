@@ -1426,7 +1426,7 @@
         "fast-deep-equal": "^3.1.1",
         "filesize": "^4.1.2",
         "flatten-anything": "^2.0.1",
-        "form-data": "^2.5.1",
+        "form-data": "^2.5.2",
         "git-url-parse": "^15.0.0",
         "ini": "^1.3.8",
         "jwt-decode": "^3.1.2",

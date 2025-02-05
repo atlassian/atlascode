@@ -12,7 +12,6 @@ import {
 } from '@atlassianlabs/jira-pi-common-models';
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import FormData from 'form-data';
-import * as fs from 'fs';
 import { commands, env } from 'vscode';
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
@@ -47,6 +46,7 @@ import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
+import { base64ToBuffer } from '../util/bufferTransformers';
 
 export class JiraIssueWebview
     extends AbstractIssueEditorWebview
@@ -750,16 +750,18 @@ export class JiraIssueWebview
                     if (isAddAttachmentsAction(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jiraClient(msg.site);
-
                             let formData = new FormData();
                             msg.files.forEach((file: any) => {
-                                formData.append('file', fs.createReadStream(file.path), {
+                                if (!file.fileContent) {
+                                    throw new Error(`Unable to read the file '${file.name}'`);
+                                }
+                                formData.append('file', base64ToBuffer(file.fileContent), {
                                     filename: file.name,
                                     contentType: file.type,
                                 });
                             });
 
+                            const client = await Container.clientManager.jiraClient(msg.site);
                             const resp = await client.addAttachments(msg.issueKey, formData);
 
                             if (
