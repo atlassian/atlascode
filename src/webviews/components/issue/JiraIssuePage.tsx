@@ -392,7 +392,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         }
         this.attachingInProgress = true;
 
-        readFilesContentAsync(files).then(filesWithContent => {
+        readFilesContentAsync(files).then((filesWithContent) => {
             this.setState({ currentInlineDialog: '', isSomethingLoading: false, loadingField: 'attachment' });
             const serFiles = filesWithContent.map((file) => {
                 return {

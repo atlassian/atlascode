@@ -13,7 +13,7 @@ export function readFilesContentAsync(files: File[]): Promise<FileWithContent[]>
             const reader = new FileReader();
             reader.onloadend = (event) => {
                 (files[index] as FileWithContent).fileContent = arrayBufferToBase64(reader.result as ArrayBuffer);
-                if (++doneCount == files.length) {
+                if (++doneCount === files.length) {
                     resolve(files);
                 }
             };

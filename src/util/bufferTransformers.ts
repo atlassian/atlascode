@@ -2,7 +2,7 @@ export function arrayBufferToBase64(buffer: ArrayBuffer | null | undefined): str
     if (!buffer) {
         return undefined;
     }
-    let binary = "";
+    let binary = '';
     const bytes = new Uint8Array(buffer);
     const len = bytes.byteLength;
     for (let i = 0; i < len; ++i) {

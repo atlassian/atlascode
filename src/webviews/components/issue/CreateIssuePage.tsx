@@ -37,7 +37,6 @@ interface ViewState extends CommonEditorViewState, CreateIssueData {
     createdIssue: IssueKeyAndSite<DetailedSiteInfo>;
 }
 
-
 const emptyState: ViewState = {
     ...emptyCommonEditorState,
     ...emptyCreateIssueData,
@@ -193,7 +192,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
     protected handleInlineAttachments = async (fieldkey: string, newValue: any) => {
         if (Array.isArray(newValue) && newValue.length > 0) {
-            readFilesContentAsync(newValue).then(filesWithContent => {
+            readFilesContentAsync(newValue).then((filesWithContent) => {
                 const serFiles = filesWithContent.map((file) => {
                     return {
                         lastModified: file.lastModified,
