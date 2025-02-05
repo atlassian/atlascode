@@ -1,4 +1,4 @@
-import { arrayBufferToBase64 } from './bufferTransformers';
+import { encode } from 'base64-arraybuffer-es6';
 
 export interface FileWithContent extends File {
     /** base64-encoded file content */
@@ -12,7 +12,7 @@ export function readFilesContentAsync(files: File[]): Promise<FileWithContent[]>
             const index = i;
             const reader = new FileReader();
             reader.onloadend = (event) => {
-                (files[index] as FileWithContent).fileContent = arrayBufferToBase64(reader.result as ArrayBuffer);
+                (files[index] as FileWithContent).fileContent = encode(reader.result as ArrayBuffer);
                 if (++doneCount === files.length) {
                     resolve(files);
                 }

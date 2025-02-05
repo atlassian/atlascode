@@ -23,7 +23,7 @@ import { configuration } from '../config/configuration';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { format } from 'date-fns';
 import { issueCreatedEvent } from '../analytics';
-import { base64ToBuffer } from '../util/bufferTransformers';
+import { decode } from 'base64-arraybuffer-es6';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -467,7 +467,7 @@ export class CreateIssueWebview
                                     if (!file.fileContent) {
                                         throw new Error(`Unable to read the file '${file.name}'`);
                                     }
-                                    formData.append('file', base64ToBuffer(file.fileContent), {
+                                    formData.append('file', Buffer.from(decode(file.fileContent)), {
                                         filename: file.name,
                                         contentType: file.type,
                                     });
