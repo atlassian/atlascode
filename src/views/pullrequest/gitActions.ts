@@ -1,4 +1,4 @@
-import { commands, window } from 'vscode';
+import { commands, window, l10n } from 'vscode';
 import { parseGitUrl, urlForRemote } from '../../bitbucket/bbUtils';
 import { PullRequest, WorkspaceRepo } from '../../bitbucket/model';
 import { Container } from '../../container';
@@ -12,7 +12,10 @@ export async function checkout(wsRepo: WorkspaceRepo, ref: string, forkCloneUrl:
 
 export async function checkoutPRBranch(pr: PullRequest, branch: string): Promise<boolean> {
     if (!pr.workspaceRepo) {
-        window.showInformationMessage(`Error checking out the pull request branch: no workspace repo`, `Dismiss`);
+        window.showInformationMessage(
+            l10n.t('Error checking out the pull request branch: no workspace repo'),
+            l10n.t('Dismiss'),
+        );
         Logger.error(new Error('error checking out the pull request branch: no workspace repo'));
         return false;
     }
@@ -54,14 +57,15 @@ async function checkoutRemote(rootUri: string, remote: string): Promise<boolean>
         return true;
     } catch (e) {
         if (e.stderr.includes('Your local changes to the following files would be overwritten by checkout')) {
+            const choice = l10n.t('Stash changes and try again');
             return window
                 .showInformationMessage(
-                    `Checkout Failed: You have uncommitted changes`,
-                    'Stash changes and try again',
-                    'Dismiss',
+                    l10n.t('Checkout Failed: You have uncommitted changes'),
+                    choice,
+                    l10n.t('Dismiss'),
                 )
                 .then(async (userChoice) => {
-                    if (userChoice === 'Stash changes and try again') {
+                    if (userChoice === choice) {
                         await commands.executeCommand('git.stash');
                         return await checkoutRemote(rootUri, remote);
                     } else {

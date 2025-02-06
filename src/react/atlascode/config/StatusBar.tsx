@@ -3,6 +3,7 @@ import { Box, Checkbox, Grid, Switch } from '@material-ui/core';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigSection } from '../../../lib/ipc/models/config';
 import { ConfigControllerContext } from './configController';
+import * as l10n from '@vscode/l10n';
 
 type StatusBarProps = {
     configSection: ConfigSection;
@@ -57,7 +58,7 @@ export const StatusBar: React.FunctionComponent<StatusBarProps> = ({
                             onChange={handleChange}
                         />
                     }
-                    label={`Enable ${productName} Status Bar`}
+                    label={l10n.t('Enable {0} Status Bar', productName)}
                     spacing={1}
                     variant="body1"
                 />
@@ -78,7 +79,7 @@ export const StatusBar: React.FunctionComponent<StatusBarProps> = ({
                         }
                         spacing={1}
                         variant="body1"
-                        label="Show product name"
+                        label={l10n.t('Show product name')}
                     />
                 </Grid>
                 <Grid item>
@@ -96,7 +97,7 @@ export const StatusBar: React.FunctionComponent<StatusBarProps> = ({
                         }
                         spacing={1}
                         variant="body1"
-                        label="Show user's name"
+                        label={l10n.t("Show user's name")}
                     />
                 </Grid>
                 <Grid item>
@@ -114,7 +115,7 @@ export const StatusBar: React.FunctionComponent<StatusBarProps> = ({
                         }
                         spacing={1}
                         variant="body1"
-                        label="Show login button when not authenticated"
+                        label={l10n.t('Show login button when not authenticated')}
                     />
                 </Grid>
             </Box>

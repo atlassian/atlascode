@@ -9,6 +9,7 @@ import { ProductJira } from '../atlclients/authInfo';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { showIssue } from '../commands/jira/showIssue';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
+import { l10n } from 'vscode';
 
 const ExtensionId = 'atlassian.atlascode';
 //const pullRequestUrl = `${env.uriScheme}://${ExtensionId}/openPullRequest`;
@@ -83,7 +84,7 @@ export class LegacyAtlascodeUriHandler implements Disposable, UriHandler {
             // const aaid = query.get('aaid'); aaid is not currently used for anything is included in the url and may be useful to have in the future
 
             if (!siteBaseURL || !issueKey) {
-                throw new Error(`Cannot parse request URL from: ${query}`);
+                throw new Error(l10n.t('Cannot parse request URL from: {0}', query));
             }
 
             const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
@@ -91,13 +92,18 @@ export class LegacyAtlascodeUriHandler implements Disposable, UriHandler {
                 (availableSite) => availableSite.isCloud && availableSite.baseLinkUrl.includes(siteBaseURL),
             );
             if (!site) {
+                const choice = l10n.t('Open auth settings');
                 window
                     .showInformationMessage(
-                        `Cannot start work on ${issueKey} because site '${siteBaseURL}' is not authenticated. Please authenticate and try again.`,
-                        'Open auth settings',
+                        l10n.t(
+                            "Cannot start work on {0} because site '{1}' is not authenticated. Please authenticate and try again.",
+                            issueKey,
+                            siteBaseURL,
+                        ),
+                        choice,
                     )
                     .then((userChoice) => {
-                        if (userChoice === 'Open auth settings') {
+                        if (userChoice === choice) {
                             Container.settingsWebviewFactory.createOrShow({
                                 section: ConfigSection.Jira,
                                 subSection: ConfigSubSection.Auth,
@@ -120,7 +126,7 @@ export class LegacyAtlascodeUriHandler implements Disposable, UriHandler {
             );
         } catch (e) {
             Logger.debug('error opening start work page:', e);
-            window.showErrorMessage('Error opening start work page (check log for details)');
+            window.showErrorMessage(l10n.t('Error opening start work page (check log for details)'));
         }
     }
 
@@ -139,13 +145,18 @@ export class LegacyAtlascodeUriHandler implements Disposable, UriHandler {
                 (availableSite) => availableSite.isCloud && availableSite.baseLinkUrl.includes(siteBaseURL),
             );
             if (!site) {
+                const choice = l10n.t('Open auth settings');
                 window
                     .showInformationMessage(
-                        `Cannot open ${issueKey} because site '${siteBaseURL}' is not authenticated. Please authenticate and try again.`,
-                        'Open auth settings',
+                        l10n.t(
+                            "Cannot open {0} because site '{1}' is not authenticated. Please authenticate and try again.",
+                            issueKey,
+                            siteBaseURL,
+                        ),
+                        choice,
                     )
                     .then((userChoice) => {
-                        if (userChoice === 'Open auth settings') {
+                        if (userChoice === choice) {
                             Container.settingsWebviewFactory.createOrShow({
                                 section: ConfigSection.Jira,
                                 subSection: ConfigSubSection.Auth,
@@ -165,7 +176,7 @@ export class LegacyAtlascodeUriHandler implements Disposable, UriHandler {
             this.analyticsApi.fireDeepLinkEvent(decodeURIComponent(query.get('source') || 'unknown'), 'showJiraIssue');
         } catch (e) {
             Logger.debug('error opening issue page:', e);
-            window.showErrorMessage('Error opening issue page (check log for details)');
+            window.showErrorMessage(l10n.t('Error opening issue page (check log for details)'));
         }
     }
 
@@ -190,7 +201,7 @@ export class LegacyAtlascodeUriHandler implements Disposable, UriHandler {
             }
         } catch (e) {
             Logger.debug('error checkout out branch:', e);
-            window.showErrorMessage('Error checkout out branch (check log for details)');
+            window.showErrorMessage(l10n.t('Error checkout out branch (check log for details)'));
         }
     }
 
@@ -209,7 +220,7 @@ export class LegacyAtlascodeUriHandler implements Disposable, UriHandler {
             this.analyticsApi.fireDeepLinkEvent(decodeURIComponent(query.get('source') || 'unknown'), 'pullRequest');
         } catch (e) {
             Logger.debug('error opening pull request:', e);
-            window.showErrorMessage('Error opening pull request (check log for details)');
+            window.showErrorMessage(l10n.t('Error opening pull request (check log for details)'));
         }
     }
 
@@ -228,7 +239,7 @@ export class LegacyAtlascodeUriHandler implements Disposable, UriHandler {
             );
         } catch (e) {
             Logger.debug('error cloning repository:', e);
-            window.showErrorMessage('Error cloning repository (check log for details)');
+            window.showErrorMessage(l10n.t('Error cloning repository (check log for details)'));
         }
     }
 

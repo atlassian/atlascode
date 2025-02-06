@@ -1,5 +1,6 @@
 import * as React from 'react';
 import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
+import * as l10n from '@vscode/l10n';
 
 export default class Offline extends React.Component<{}, {}> {
     constructor(props: any) {
@@ -10,12 +11,12 @@ export default class Offline extends React.Component<{}, {}> {
         return (
             <ModalTransition>
                 <Modal
-                    heading="Looks like you've gone offline"
+                    heading={l10n.t("Looks like you've gone offline")}
                     shouldCloseOnEscapePress={false}
                     shouldCloseOnOverlayClick={false}
                 >
                     <p style={{ color: 'var(--vscode-foreground)!important' }}>
-                        This page will be available when you're back online.
+                        {l10n.t("This page will be available when you're back online.")}
                     </p>
                 </Modal>
             </ModalTransition>

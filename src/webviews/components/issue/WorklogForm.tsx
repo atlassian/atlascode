@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import * as React from 'react';
 import { WorklogData } from '../../../ipc/issueActions';
 import * as FieldValidators from '../fieldValidators';
+import * as l10n from '@vscode/l10n';
 
 type MyState = {
     comment: string;
@@ -80,7 +81,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                         return (
                             <form {...frmArgs.formProps}>
                                 <Field
-                                    label="Description"
+                                    label={l10n.t('Description')}
                                     isRequired={false}
                                     id="comment"
                                     name="comment"
@@ -106,7 +107,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                     }}
                                 </Field>
                                 <Field
-                                    label="Date"
+                                    label={l10n.t('Date')}
                                     id="started"
                                     name="started"
                                     isRequired={true}
@@ -116,7 +117,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                     {(fieldArgs: any) => {
                                         let errDiv = <span />;
                                         if (fieldArgs.error === 'EMPTY') {
-                                            errDiv = <ErrorMessage>Date is required</ErrorMessage>;
+                                            errDiv = <ErrorMessage>{l10n.t('Date is required')}</ErrorMessage>;
                                         }
                                         return (
                                             <div>
@@ -150,7 +151,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                     }}
                                 </Field>
                                 <Field
-                                    label="Time spent"
+                                    label={l10n.t('Time spent')}
                                     id="timeSpent"
                                     name="timeSpent"
                                     isRequired={true}
@@ -193,7 +194,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                         return (
                                             <Checkbox
                                                 {...fieldArgs.fieldProps}
-                                                label="Auto adjust remaining estimate"
+                                                label={l10n.t('Auto adjust remaining estimate')}
                                                 onChange={FieldValidators.chain(
                                                     fieldArgs.fieldProps.onChange,
                                                     (item: any) => {
@@ -208,7 +209,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                 </CheckboxField>
                                 {!this.state.autoAdjust && (
                                     <Field
-                                        label="Remaining estimate"
+                                        label={l10n.t('Remaining estimate')}
                                         id="newEstimate"
                                         name="newEstimate"
                                         isRequired={!this.state.autoAdjust}
@@ -259,12 +260,12 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                             className="ac-button"
                                             isDisabled={this.state.savingDisabled}
                                         >
-                                            Submit
+                                            {l10n.t('Submit')}
                                         </Button>
                                     </div>
                                     <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
                                         <Button className="ac-button" onClick={this.handleClose}>
-                                            Cancel
+                                            {l10n.t('Cancel')}
                                         </Button>
                                     </div>
                                 </FormFooter>

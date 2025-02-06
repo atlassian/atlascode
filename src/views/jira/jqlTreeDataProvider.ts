@@ -1,5 +1,5 @@
 import { isMinimalIssue, MinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
-import { Command, Disposable, Event, EventEmitter, TreeItem } from 'vscode';
+import { Command, Disposable, Event, EventEmitter, TreeItem, l10n } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { JQLEntry } from '../../config/model';
@@ -68,10 +68,10 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
         if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             return [
                 new SimpleJiraIssueNode(
-                    'Please login to Jira',
+                    l10n.t('Please login to Jira'),
                     {
                         command: Commands.ShowConfigPage,
-                        title: 'Login to Jira',
+                        title: l10n.t('Login to Jira'),
                         arguments: [ProductJira],
                     },
                     this,

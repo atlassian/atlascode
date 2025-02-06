@@ -20,6 +20,7 @@ import { iconSet, Resources } from '../resources';
 import { OnlineInfoEvent } from '../util/online';
 import { UIWebsocket } from '../ws';
 import { CommonActionType } from '../lib/ipc/fromUI/common';
+import * as vscode from 'vscode';
 
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
 export interface ReactWebview extends Disposable {
@@ -272,6 +273,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
         const mainStyle = manifest['main.css'];
 
         const template = Resources.html.get('reactHtml');
+        const l10ndata = JSON.stringify(vscode.l10n.bundle || undefined);
 
         if (template) {
             return Mustache.render(template, {
@@ -280,6 +282,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 scriptUri: `build/${mainScript}`,
                 baseUri: baseUri,
                 cspSource: cspSource,
+                l10ndata: l10ndata ? btoa(l10ndata) : undefined,
             });
         } else {
             return Mustache.render(Resources.htmlNotFound, { resource: 'reactHtml' });

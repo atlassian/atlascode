@@ -2,6 +2,7 @@ import { Button, Tooltip, Typography } from '@material-ui/core';
 import React, { useCallback, useState } from 'react';
 import { BitbucketSite, User } from '../../../bitbucket/model';
 import DialogUserPicker from './DialogUserPicker';
+import * as l10n from '@vscode/l10n';
 
 type AddReviewersProps = {
     site: BitbucketSite;
@@ -29,9 +30,9 @@ export const AddReviewers: React.FunctionComponent<AddReviewersProps> = ({ site,
 
     return (
         <React.Fragment>
-            <Tooltip title="Add Reviewers">
-                <Button color={'primary'} onClick={handleToggleOpen} value={'Add Reviewers'}>
-                    <Typography variant="button">Add Reviewers</Typography>
+            <Tooltip title={l10n.t('Add Reviewers')}>
+                <Button color={'primary'} onClick={handleToggleOpen} value={l10n.t('Add Reviewers')}>
+                    <Typography variant="button">{l10n.t('Add Reviewers')}</Typography>
                 </Button>
             </Tooltip>
             <DialogUserPicker

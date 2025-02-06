@@ -1,4 +1,4 @@
-import { commands, Memento, QuickPickItem, window } from 'vscode';
+import { commands, Memento, QuickPickItem, window, l10n } from 'vscode';
 import { Commands } from '../commands';
 import { Container } from '../container';
 import { ConfigSection, ConfigSubSection } from '../lib/ipc/models/config';
@@ -48,13 +48,14 @@ export class BitbucketCheckoutHelper implements CheckoutHelper {
                 refType: refType,
                 sourceCloneUrl: sourceCloneUrl,
             });
+            const choice = l10n.t('Clone Repo');
             await window
                 .showInformationMessage(
-                    `To checkout ref ${ref}: this repository must be cloned in this workspace`,
-                    'Clone Repo',
+                    l10n.t('To checkout ref {0}: this repository must be cloned in this workspace', ref),
+                    choice,
                 )
                 .then(async (userChoice) => {
-                    if (userChoice === 'Clone Repo') {
+                    if (userChoice === choice) {
                         await this.showCloneOptions(cloneUrl);
                     }
                 });
@@ -93,7 +94,9 @@ export class BitbucketCheckoutHelper implements CheckoutHelper {
                 let wsRepo = this.findRepoInCurrentWorkspace(refInfo.cloneUrl);
                 if (!wsRepo) {
                     this.showLoginMessage(
-                        `Could not find repo in current workspace after attempting to clone. Are you authenticated with Bitbucket?`,
+                        l10n.t(
+                            'Could not find repo in current workspace after attempting to clone. Are you authenticated with Bitbucket?',
+                        ),
                     );
                     return;
                 }
@@ -112,7 +115,7 @@ export class BitbucketCheckoutHelper implements CheckoutHelper {
         const wsRepo = this.findRepoInCurrentWorkspace(repoUrl);
         if (wsRepo !== undefined) {
             window.showInformationMessage(
-                `Skipped cloning. Repository is open in this workspace already: ${wsRepo.rootUri}`,
+                l10n.t('Skipped cloning. Repository is open in this workspace already: {0}', wsRepo.rootUri),
             );
         } else {
             this.showCloneOptions(repoUrl);
@@ -136,22 +139,25 @@ export class BitbucketCheckoutHelper implements CheckoutHelper {
             });
         } catch {
             this.showLoginMessage(
-                'Cannot open pull request. Authenticate with Bitbucket in the extension settings and try again.',
+                l10n.t(
+                    'Cannot open pull request. Authenticate with Bitbucket in the extension settings and try again.',
+                ),
             );
         }
     }
 
     private showCheckoutSuccessMessage(refName: string, refType: string) {
         if (refType === 'branch') {
-            window.showInformationMessage(`Branch ${refName} successfully checked out`);
+            window.showInformationMessage(l10n.t('Branch {0} successfully checked out', refName));
         } else {
-            window.showInformationMessage(`${refName} successfully checked out`);
+            window.showInformationMessage(l10n.t('{0} successfully checked out'));
         }
     }
 
     private showLoginMessage(prompt: string) {
-        window.showInformationMessage(prompt, 'Open auth settings').then((userChoice) => {
-            if (userChoice === 'Open auth settings') {
+        const choice = l10n.t('Open auth settings');
+        window.showInformationMessage(prompt, choice).then((userChoice) => {
+            if (userChoice === choice) {
                 Container.settingsWebviewFactory.createOrShow({
                     section: ConfigSection.Bitbucket,
                     subSection: ConfigSubSection.Auth,
@@ -171,17 +177,17 @@ export class BitbucketCheckoutHelper implements CheckoutHelper {
     private async showCloneOptions(repoUrl: string) {
         const options: (QuickPickItem & { action: () => Promise<void> })[] = [
             {
-                label: 'Clone a new copy',
+                label: l10n.t('Clone a new copy'),
                 action: async () => {
                     await commands.executeCommand(Commands.CloneRepository, 'uriHandler', repoUrl);
                 },
             },
             {
-                label: 'Add an existing folder to this workspace',
+                label: l10n.t('Add an existing folder to this workspace'),
                 action: async () => commands.executeCommand(Commands.WorkbenchOpenRepository, 'uriHandler'),
             },
             {
-                label: 'Open repository in an different workspace',
+                label: l10n.t('Open repository in an different workspace'),
                 action: async () => commands.executeCommand(Commands.WorkbenchOpenWorkspace, 'uriHandler'),
             },
         ];

@@ -6,6 +6,7 @@ import { IssueProblemsData } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage } from '../../../ipc/messaging';
 import ErrorBanner from '../ErrorBanner';
 import { WebviewComponent } from '../WebviewComponent';
+import * as l10n from '@vscode/l10n';
 //import TableTree from '@atlaskit/table-tree';
 type Accept = IssueProblemsData | HostErrorMessage;
 
@@ -84,11 +85,11 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                         <h4 style={{ marginTop: '3px', marginBottom: '5px;' }}>Non-renderable Fields:</h4>
                         <table className="field-problem-table">
                             <tr>
-                                <th>Field Name</th>
-                                <th>Key</th>
-                                <th>Is Required</th>
-                                <th>Schema</th>
-                                <th>Message</th>
+                                <th>{l10n.t('Field Name')}</th>
+                                <th>{l10n.t('Key')}</th>
+                                <th>{l10n.t('Is Required')}</th>
+                                <th>{l10n.t('Schema')}</th>
+                                <th>{l10n.t('Message')}</th>
                             </tr>
                             {issueTypeFields}
                         </table>
@@ -109,13 +110,17 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                                 />
                             )}
                             <h2>
-                                Create Issue Problem Report: {this.state.project.name} ({this.state.project.key})
+                                {l10n.t(
+                                    'Create Issue Problem Report: {0} ({1})',
+                                    this.state.project.name,
+                                    this.state.project.key,
+                                )}
                             </h2>
                             <table className="problem-table">
                                 <tr>
-                                    <th>Issue Type</th>
-                                    <th>Is Renderable</th>
-                                    <th>Message</th>
+                                    <th>{l10n.t('Issue Type')}</th>
+                                    <th>{l10n.t('Is Renderable')}</th>
+                                    <th>{l10n.t('Message')}</th>
                                 </tr>
                                 {issueTypeProblems}
                             </table>

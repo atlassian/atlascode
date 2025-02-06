@@ -37,28 +37,34 @@ export class BitbucketIssuesMonitor implements BitbucketActivityMonitor {
         Promise.all(promises)
             .then((result) => result.reduce((prev, curr) => prev.concat(curr), []))
             .then((notifiableRepos) => {
+                const choice = vscode.l10n.t('Show');
                 if (notifiableRepos.length === 1 && notifiableRepos[0].issues.length === 1) {
                     let issue: BitbucketIssue = notifiableRepos[0].issues[0];
                     vscode.window
                         .showInformationMessage(
-                            `New Bitbucket issue "${issue.data.title}" was created for repo "${notifiableRepos[0].repo}"`,
-                            'Show',
+                            vscode.l10n.t(
+                                'New Bitbucket issue "{0}" was created for repo "{1}"',
+                                issue.data.title,
+                                notifiableRepos[0].repo,
+                            ),
+                            choice,
                         )
                         .then((usersChoice) => {
-                            if (usersChoice === 'Show') {
+                            if (usersChoice === choice) {
                                 vscode.commands.executeCommand(Commands.ShowBitbucketIssue, issue);
                             }
                         });
                 } else if (notifiableRepos.length > 0) {
                     vscode.window
                         .showInformationMessage(
-                            `New Bitbucket issues were created for the following repositories: ${notifiableRepos
-                                .map((nr) => nr.repo)
-                                .join(', ')}`,
-                            'Show',
+                            vscode.l10n.t(
+                                'New Bitbucket issues were created for the following repositories: {0}',
+                                notifiableRepos.map((nr) => nr.repo).join(', '),
+                            ),
+                            choice,
                         )
                         .then((usersChoice) => {
-                            if (usersChoice === 'Show') {
+                            if (usersChoice === choice) {
                                 vscode.commands.executeCommand('workbench.view.extension.atlascode-drawer');
                                 vscode.commands.executeCommand(Commands.BitbucketIssuesRefresh);
                             }

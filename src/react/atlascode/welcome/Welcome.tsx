@@ -21,6 +21,7 @@ import { FeedbackDialogButton } from '../common/feedback/FeedbackDialogButton';
 import BitbucketIcon from '../icons/BitbucketIcon';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
+import * as l10n from '@vscode/l10n';
 
 const useStyles = makeStyles(
     (theme: Theme) =>
@@ -59,7 +60,7 @@ const WelcomePage: React.FunctionComponent = () => {
                     <AppBar position="relative">
                         <Toolbar>
                             <Typography variant="h3" className={classes.title}>
-                                Welcome To Atlassian for VS Code!
+                                {l10n.t('Welcome To Atlassian for VS Code!')}
                             </Typography>
                         </Toolbar>
                     </AppBar>
@@ -70,36 +71,39 @@ const WelcomePage: React.FunctionComponent = () => {
                                 <Box margin={2} fontSize="0.85rem">
                                     <Grid container spacing={1} direction="column">
                                         <Grid item>
-                                            <h2>🎉 First Time Here? 🎉</h2>
+                                            <h2>{l10n.t('{0} First Time Here? {1}', '🎉')}</h2>
                                             <section>
                                                 <div>
                                                     <p>
-                                                        To get started, you'll need to authenticate with Jira and/or
-                                                        Bitbucket from the configuration screen
+                                                        {l10n.t(
+                                                            "To get started, you'll need to authenticate with Jira and/or Bitbucket from the configuration screen",
+                                                        )}
                                                     </p>
                                                     <p>
                                                         click <em>Configure Settings</em> to access the configuration 👉
                                                     </p>
                                                     <p>
-                                                        The configuration screen can also be used to completely
-                                                        customize the extension to fit your own workflow.
+                                                        {l10n.t(
+                                                            'The configuration screen can also be used to completely customize the extension to fit your own workflow.',
+                                                        )}
                                                     </p>
                                                     <p>
-                                                        You can always get to the configuration screen by opening the
-                                                        command palette and typing 'Atlassian: Open Settings'
+                                                        {l10n.t(
+                                                            "You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'",
+                                                        )}
                                                     </p>
                                                 </div>
                                             </section>
-                                            <h4>🎉 What's New in 3.0.10 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '3.0.10')}</h4>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed bug that caused comments in the PR diff view to stop
                                                         showing up
                                                     </li>
                                                 </ul>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed Incomplete List of Disallowed Inputs vulnerability in
@@ -111,9 +115,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 3.0.9 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '3.0.9')}</h4>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Resolved the issue of Visual Studio Code highlighting OpenID
@@ -121,16 +125,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 3.0.8 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '3.0.8')}</h4>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Fixed the vulnerability in axios</li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 3.0.7 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '3.0.7')}</h4>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed bug that would show "cannot get client for jira" and/or
@@ -146,9 +150,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 3.0.6 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '3.0.6')}</h4>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Resolved an issue where the extension was not functioning
@@ -156,25 +160,25 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 3.0.5 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '3.0.5')}</h4>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Migrated from keytar to secretstorage</li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 3.0.4 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '3.0.4')}</h4>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed bug that required remote to be set in destination branch
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 3.0.3 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '3.0.3')}</h4>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed bug that prevented any operations requiring git branches
@@ -182,16 +186,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 3.0.2 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '3.0.2')}</h4>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Improved description of pipelines import</li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 3.0.1 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '3.0.1')}</h4>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Now allow changing the remote when creating a PR</li>
                                                     <li>
@@ -200,9 +204,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 3.0.0 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '3.0.0')}</h4>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>
                                                         UpdatUpdate to handle changes in how Atlassian handles
@@ -219,9 +223,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.10.12 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.10.12')}</h4>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed bug that prevented displaying pull requests if any files
@@ -235,23 +239,23 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.10.11 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.10.11')}</h4>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Update to handle changes to Bitbucket pull request API</li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.10.9 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.10.9')}</h4>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Use new image endpoint for Jira attachments</li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.10.7 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.10.7')}</h4>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed bug that could prevent credential refreshes when multiple
@@ -259,9 +263,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.10.6 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.10.6')}</h4>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed bug preventing the viewing of pull request details for
@@ -269,16 +273,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.10.5 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.10.5')}</h4>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Fixed viewing comments in pull requests</li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.10.4 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.10.4')}</h4>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed bug preventing old accounts from updating their
@@ -287,23 +291,23 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.10.3 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.10.3')}</h4>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Update to error logging</li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.10.2 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.10.2')}</h4>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Fixed bug causing users to get logged out frequently</li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.10.1 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.10.1')}</h4>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed bug causing excessive calls to refresh Bitbucket Pipelines
@@ -311,9 +315,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.10.0 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.10.0')}</h4>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Enable refresh token rotation for Jira Cloud</li>
                                                     <li>
@@ -321,7 +325,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                         settings (Thanks to Ian Chamberlain)
                                                     </li>
                                                 </ul>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed bug preventing viewing Bitbucket Pipelines while building
@@ -332,9 +336,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.9.1 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.9.1')}</h4>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed bug preventing viewing pull requests on Bitbucket Server
@@ -342,9 +346,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     <li>Fixed bug preventing time tracking on Jira issues</li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.9.0 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.9.0')}</h4>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>
                                                         Added support for the use of personal access tokens with Jira
@@ -352,16 +356,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.8.6 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.8.6')}</h4>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Added URI handler to open specific Jira issue</li>
                                                     <li>Added filter for unreviewed pull requests</li>
                                                 </ul>
                                             </section>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed issue preventing the extension from correctly showing that
@@ -373,9 +377,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.8.5 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.8.5')}</h4>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Added messaging explaining how to disable auto-refresh</li>
                                                     <li>
@@ -386,7 +390,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </ul>
                                             </section>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         No longer make repeated calls with invalid credentials on server
@@ -406,9 +410,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h4>🎉 What's New in 2.8.4 🎉</h4>
+                                            <h4>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.8.4')}</h4>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Open Jira issue image attachments within VS Code</li>
                                                     <li>Support commit-level diffs for pull requests</li>
@@ -422,16 +426,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </ul>
                                             </section>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Fixed summary editor size on the create pull request screen</li>
                                                     <li>Fixed styling for expander headers</li>
                                                     <li>Fixed JQL entry being erased when updating query name</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.8.3 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.8.3')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Create PR view now displays correctly when using high contrast
@@ -442,9 +446,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.8.2 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.8.2')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed more of the bug that caused Bitbucket Server users to not
@@ -452,16 +456,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.8.1 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.8.1')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Fixed bug that caused Bitbucket Server users to not see PRs</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.8.0 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.8.0')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Redesigned pull request webview UI and improved performance</li>
                                                     <li>
@@ -482,7 +486,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </ul>
                                             </section>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed pull request filters failing for some Bitbucket Server
@@ -490,9 +494,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.7.1 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.7.1')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>
                                                         Added better handling of deep links for non-authenticated users
@@ -501,7 +505,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </ul>
                                             </section>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Comments in PR diff view no longer show up twice when the page
@@ -509,9 +513,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.7.0 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.7.0')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Show images in comments for issues on Jira server instances</li>
                                                     <li>Add hyperlinks to attachment list in Jira issue webview</li>
@@ -519,7 +523,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </ul>
                                             </section>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed an issue affecting authenticating with sites with
@@ -527,9 +531,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.6.4 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.6.4')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>
                                                         Support for customizing the generated branch name when starting
@@ -537,14 +541,14 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                     <li>Updated Create Bitbucket Issue webview UI</li>
                                                 </ul>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Fixed resource loading in webviews in VS Code Insiders</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.6.5 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.6.5')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Branch prefix is no longer duplicated when starting work on an
@@ -552,9 +556,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.6.4 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.6.4')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>
                                                         Support for customizing the generated branch name when starting
@@ -562,22 +566,22 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                     <li>Updated Create Bitbucket Issue webview UI</li>
                                                 </ul>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Fixed resource loading in webviews in VS Code Insiders</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.6.3 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.6.3')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Explorer no longer focuses on start up of VS Code</li>
                                                     <li>Webviews load as expected for Windows users</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.6.2 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.6.2')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Better log parsing for Bitbucket Pipelines results</li>
                                                     <li>Pipeline page has been reskinned with Material UI</li>
@@ -599,7 +603,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                     <li>Start Work message styling has been updated</li>
                                                 </ul>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         "Checkout Source Branch" and "Edit this File" commands now work
@@ -635,9 +639,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     <li>High contrast color themes no longer break Webviews</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.6.1 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.6.1')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>
                                                         Added an "Explore" tab to the settings page to help make key
@@ -645,9 +649,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.6.0 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.6.0')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>
                                                         Onboarding screen has been redesigned and reskinned with
@@ -665,7 +669,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                     <li>Support configuring preferred remotes to view pull requests</li>
                                                 </ul>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         A few styling issues were fixed on the settings page for light
@@ -675,16 +679,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     <li>Changing refresh intervals now works properly</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.5.1 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.5.1')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Settings page now loads properly</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.5.0 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.5.0')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Refactored settings page to use new material-ui GUI</li>
                                                     <li>Rewrote JQL Editor</li>
@@ -702,7 +706,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                         relaxed
                                                     </li>
                                                 </ul>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Hide the Approve/Needs work buttons on Bitbucket Server PRs if
@@ -715,9 +719,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     <li>Emoji size in PR diff view comments has been fixed</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.4.11 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.4.11')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>No longer show error for certain pipeline configurations</li>
                                                     <li>
@@ -726,9 +730,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.4.10 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.4.10')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Pull Request descriptions can now be edited</li>
                                                     <li>Jira mentions are now supported from the issue description</li>
@@ -750,7 +754,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                         the command palette and select “Run Pipeline for Branch”
                                                     </li>
                                                 </ul>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Subtasks are no longer excluded from grouped JQL results</li>
                                                     <li>
@@ -765,16 +769,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     <li>Non-American style dates are now displayed correctly</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.4.9 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.4.9')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Fixed a bug in extension build</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.4.7 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.4.7')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed loop that could cause infinite credential refreshing in
@@ -782,9 +786,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.4.6 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.4.6')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Pull Request preloading has been reverted to avoid rate-limiting
@@ -792,16 +796,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.4.4 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.4.4')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Fixed a bug in extension build</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.4.3 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.4.3')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>
                                                         If there's only one related issue, don't make the user expand
@@ -820,30 +824,30 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     <li>Added repository name to pipeline messages</li>
                                                     <li>Show active Jira issue in status bar</li>
                                                 </ul>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Jira issue webviews don't render well when narrow</li>
                                                     <li>Long branch names in PRs are not entirely visible</li>
                                                     <li>Merge Dialog not Readable with Dark Theme (High Contrast)</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.4.2 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.4.2')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Fixed certificate handling when adding new Jira sites</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.4.1 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.4.1')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Fix certificate handling for Jira clients</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.4.0 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.4.0')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Jira explorer shows issue count for each JQL entry</li>
                                                     <li>Added ability to search for issues in the Jira explorer</li>
@@ -859,7 +863,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                     <li>Improved support for assigning Bitbucket issues</li>
                                                 </ul>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Worklog comment is optional now</li>
                                                     <li>Fixed formatting Jira issues in comments</li>
@@ -873,9 +877,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.3.2 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.3.2')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Updated README to include complete build instructions</li>
                                                     <li>
@@ -887,7 +891,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                         diff view
                                                     </li>
                                                 </ul>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Matched cursor behavior in diff lists to the Bitbucket Cloud
@@ -903,16 +907,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.3.1 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.3.1')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Start work on issue now works correctly again</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.3.0 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.3.0')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Added support for Bitbucket tasks</li>
                                                     <li>Can now edit both time and date when adding a worklog</li>
@@ -950,7 +954,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                         forks
                                                     </li>
                                                 </ul>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed link to "Select merge strategy" when merging a pull
@@ -982,16 +986,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.2.1 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.2.1')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>
                                                         Added “Group issues by Epic” option to display issues in a list
                                                         instead of nesting subtasks under issues and issues under Epics
                                                     </li>
                                                 </ul>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed bug where special characters were being escaped in the
@@ -1004,9 +1008,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.2.0 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.2.0')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>
                                                         Support for importing Jira filters when adding custom JQL
@@ -1015,7 +1019,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     <li>Support editing pull request titles</li>
                                                     <li>Support for custom online check URLs</li>
                                                 </ul>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed bug where extension does not work when Jira and Bitbucket
@@ -1049,16 +1053,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     <li>Fixed delay when refreshing pull requests treeview</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.1.5 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.1.5')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Added welcome screen to help new users get up and running</li>
                                                     <li>
                                                         Support using existing branches when starting work on an issue
                                                     </li>
                                                 </ul>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed issue that could prevent Windows users from adding
@@ -1078,9 +1082,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.1.4 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.1.4')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Fixed issue that resulted in failure to save credentials when
@@ -1088,9 +1092,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.1.3 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.1.3')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>
                                                         Added tooltip text clarifying that only exact matches are
@@ -1104,7 +1108,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </ul>
                                             </section>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>
                                                         Jira issues are now correctly assigned when using start work on
@@ -1124,9 +1128,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     </li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.1.2 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.1.2')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>
                                                         Allow extension to be used when working in remote workspaces
@@ -1137,7 +1141,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </ul>
                                             </section>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Jira issue status was empty in some cases</li>
                                                     <li>
@@ -1154,16 +1158,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     <li>Fixed link to prepare-commit-message snippet</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.1.1 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.1.1')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Added support for tunneling https when using a proxy server</li>
                                                     <li>Now using a reasonable placeholder for broken images</li>
                                                 </ul>
                                             </section>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Jira issue screen broken due to missing priority field</li>
                                                     <li>Jira issue screen broken due to missing subtasks field</li>
@@ -1175,9 +1179,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     <li>Pipelines explorer filters not working properly</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.1.0 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.1.0')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Clicking on a pull request preview file now opens the file</li>
                                                     <li>Added advanced SSL options to custom login screen</li>
@@ -1186,30 +1190,30 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </ul>
                                             </section>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Bitbucket pull request filters not working</li>
                                                     <li>Sometimes issue screen would be blank</li>
                                                     <li>Online/Offline checker sometimes gave wrong results</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.0.4 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.0.4')}</h3>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Some Jira fields not populating due to invalid field keys</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.0.3 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.0.3')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Removed the file changes count limit for pull requests</li>
                                                     <li>Webview tabs now have an Atlassian icon</li>
                                                 </ul>
                                             </section>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Create Issue page not loading in some instances</li>
                                                     <li>Webviews didn't allow images to load over http</li>
@@ -1220,9 +1224,9 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     <li>Doc links fixed and various spelling corrections</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.0.1 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.0.1')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>
                                                         Added support for plain http when connecting to server instances
@@ -1236,14 +1240,14 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </ul>
                                             </section>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Fixed Bitbucket authentication not working</li>
                                                 </ul>
                                             </section>
-                                            <h3>🎉 What's New in 2.0.0 🎉</h3>
+                                            <h3>{l10n.t("{0} What's New in {1} {0}", '🎉', '2.0.0')}</h3>
                                             <section>
-                                                <h4>✨ Improvements ✨</h4>
+                                                <h4>{l10n.t('{0} Improvements {0}', '✨')}</h4>
                                                 <ul>
                                                     <li>Support for Jira Server and Bitbucket Server</li>
                                                     <li>
@@ -1296,7 +1300,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </ul>
                                             </section>
                                             <section>
-                                                <h4>🐞 Bugs Fixed 🐞</h4>
+                                                <h4>{l10n.t('{0} Bugs Fixed {0}', '🐞')}</h4>
                                                 <ul>
                                                     <li>Build statuses now link to the tool that created them</li>
                                                     <li>Fixed URL creation on Windows</li>
@@ -1324,15 +1328,18 @@ const WelcomePage: React.FunctionComponent = () => {
                                             </section>
                                             <section>
                                                 <Link href="https://bitbucket.org/atlassianlabs/atlascode/src/main/CHANGELOG.md">
-                                                    Previous changelog
+                                                    {l10n.t('Previous changelog')}
                                                 </Link>
                                             </section>
                                             <section>
-                                                <h2>Feedback</h2>
-                                                <p>We can only make this extension better with your help!</p>
+                                                <h2>{l10n.t('Feedback')}</h2>
                                                 <p>
-                                                    Make sure to let us know how we're doing by using the feedback
-                                                    buttons available on this screen and the configuration screen.
+                                                    {l10n.t('We can only make this extension better with your help!')}
+                                                </p>
+                                                <p>
+                                                    {l10n.t(
+                                                        "Make sure to let us know how we're doing by using the feedback buttons available on this screen and the configuration screen.",
+                                                    )}
                                                 </p>
                                             </section>
                                         </Grid>

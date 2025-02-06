@@ -54,7 +54,11 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
             ]);
         } catch (err) {
             vscode.window.showErrorMessage(
-                `We couldn't find ${path} at commit ${commitHash}. You may want to sync the branch with remote. Sometimes commits can disappear after a force-push.`,
+                vscode.l10n.t(
+                    "We couldn't find {0} at commit {1}. You may want to sync the branch with remote. Sometimes commits can disappear after a force-push.",
+                    path,
+                    commitHash,
+                ),
             );
         }
 

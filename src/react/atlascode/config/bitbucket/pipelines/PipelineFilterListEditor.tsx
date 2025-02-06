@@ -3,6 +3,7 @@ import { Box, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigSection } from '../../../../../lib/ipc/models/config';
 import { ConfigControllerContext } from '../../configController';
+import * as l10n from '@vscode/l10n';
 
 type PipelineFilterListEditorProps = {
     filters: string[];
@@ -31,13 +32,13 @@ export const PipelineFilterListEditor: React.FunctionComponent<PipelineFilterLis
             <InlineTextEditorList
                 options={filters}
                 reverseButtons={true}
-                addOptionButtonContent="Add Filter"
+                addOptionButtonContent={l10n.t('Add Filter')}
                 disabled={!enabled}
-                inputLabel="Filter Text"
+                inputLabel={l10n.t('Filter Text')}
                 onChange={handleOptionsChange}
                 emptyComponent={
                     <Box width="100%">
-                        <Typography align="center">No filters found.</Typography>
+                        <Typography align="center">{l10n.t('No filters found.')}</Typography>
                     </Box>
                 }
             />

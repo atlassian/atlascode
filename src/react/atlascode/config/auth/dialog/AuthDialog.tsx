@@ -28,6 +28,7 @@ import { validateRequiredString, validateStartsWithProtocol } from '../../../uti
 import { emptyAuthFormState, FormFields } from './types';
 import { JiraBasicAuthForm } from './JiraApiTokenAuthForm';
 import { CustomSiteAuthForm } from './CustomSiteAuthForm';
+import * as l10n from '@vscode/l10n';
 
 export type AuthDialogProps = {
     open: boolean;
@@ -64,8 +65,16 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
 
         const helperText =
             product.key === ProductJira.key
-                ? 'You can enter a cloud or server url like https://jiracloud.atlassian.net or https://jira.mydomain.com'
-                : 'You can enter a cloud or server url like https://bitbucket.org or https://bitbucket.mydomain.com';
+                ? l10n.t(
+                      'You can enter a cloud or server url like {0} or {1}',
+                      'https://jiracloud.atlassian.net',
+                      'https://jira.mydomain.com',
+                  )
+                : l10n.t(
+                      'You can enter a cloud or server url like {0} or {1}',
+                      'https://bitbucket.org',
+                      'https://bitbucket.mydomain.com',
+                  );
 
         const authFormType = selectAuthFormType(product, watches, errors);
 
@@ -143,7 +152,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
         return (
             <Dialog fullWidth maxWidth="md" open={open} onExited={onExited}>
                 <DialogTitle>
-                    <Typography variant="h4">Authenticate</Typography>
+                    <Typography variant="h4">{l10n.t('Authenticate')}</Typography>
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText>{`Add ${product.name} Site`}</DialogContentText>
@@ -197,10 +206,10 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                 </DialogContent>
                 <DialogActions>
                     <Button disabled={!isValid} onClick={handleSubmit(handleSave)} variant="contained" color="primary">
-                        Save Site
+                        {l10n.t('Save Site')}
                     </Button>
                     <Button onClick={doClose} color="primary">
-                        Cancel
+                        {l10n.t('Cancel')}
                     </Button>
                 </DialogActions>
                 <Box marginBottom={2} />

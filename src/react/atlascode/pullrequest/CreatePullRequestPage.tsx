@@ -42,6 +42,7 @@ import { makeStyles } from '@material-ui/styles';
 import path from 'path';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
+import * as l10n from '@vscode/l10n';
 
 const useStyles = makeStyles((theme: Theme) => ({
     title: {
@@ -250,7 +251,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                 {path.basename(state.repoData.workspaceRepo.rootUri)}
                             </Typography>
                             <Box className={classes.grow} />
-                            <Tooltip title="Create in browser...">
+                            <Tooltip title={l10n.t('Create in browser...')}>
                                 <IconButton
                                     href={
                                         state.repoData.isCloud
@@ -285,7 +286,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                                 select
                                                                 fullWidth
                                                                 size="small"
-                                                                label="Remote"
+                                                                label={l10n.t('Remote')}
                                                                 value={sourceRemoteName}
                                                                 onChange={handleSourceRemoteChange}
                                                             >
@@ -351,7 +352,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                         </Grid>
                                         <Grid item>
                                             <ToggleWithLabel
-                                                label="Push latest changes from local to remote branch"
+                                                label={l10n.t('Push latest changes from local to remote branch')}
                                                 spacing={1}
                                                 control={
                                                     <Switch
@@ -376,7 +377,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                         <Grid item>
                                             <TextField
                                                 fullWidth
-                                                label="Title"
+                                                label={l10n.t('Title')}
                                                 name="title"
                                                 value={title}
                                                 onChange={handleTitleChange}
@@ -388,7 +389,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                 multiline
                                                 rows={4}
                                                 rowsMax={20}
-                                                label="Summary"
+                                                label={l10n.t('Summary')}
                                                 name="summary"
                                                 value={summary}
                                                 onChange={handleSummaryChange}
@@ -408,7 +409,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                         </Grid>
                                         <Grid item>
                                             <ToggleWithLabel
-                                                label="Close source branch after the pull request is merged"
+                                                label={l10n.t('Close source branch after the pull request is merged')}
                                                 spacing={1}
                                                 control={
                                                     <Switch
@@ -425,7 +426,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                         </Grid>
                                         <Grid item hidden={state.issue === undefined}>
                                             <ToggleWithLabel
-                                                label="Transition issue"
+                                                label={l10n.t('Transition issue')}
                                                 variant="h4"
                                                 spacing={1}
                                                 control={
@@ -459,7 +460,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                         select
                                                         fullWidth
                                                         size="small"
-                                                        label="Transition issue"
+                                                        label={l10n.t('Transition issue')}
                                                         value={transition}
                                                         onChange={handleIssueTransitionChange}
                                                     >

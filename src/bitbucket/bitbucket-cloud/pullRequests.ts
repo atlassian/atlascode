@@ -27,6 +27,7 @@ import {
     WorkspaceRepo,
 } from '../model';
 import { CloudRepositoriesApi } from './repositories';
+import * as vscode from 'vscode';
 
 export const maxItemsSupported = {
     commits: 100,
@@ -37,9 +38,9 @@ export const maxItemsSupported = {
 export const defaultPagelen = 25;
 
 const mergeStrategyLabels = {
-    merge_commit: 'Merge commit',
-    squash: 'Squash',
-    fast_forward: 'Fast forward',
+    merge_commit: vscode.l10n.t('Merge commit'),
+    squash: vscode.l10n.t('Squash'),
+    fast_forward: vscode.l10n.t('Fast forward'),
 };
 
 const TEAM_MEMBERS_CACHE_LIMIT = 1000;
@@ -61,7 +62,7 @@ export class CloudPullRequestApi implements PullRequestApi {
     static toUserModel(input: any): User {
         const accountId = input?.account_id ?? 'unknown';
         const avatarUrl = input?.links?.avatar?.href ?? '';
-        const displayName = input?.display_name ?? 'Unknown User';
+        const displayName = input?.display_name ?? vscode.l10n.t('Unknown User');
         const url = input?.links?.html?.href ?? '';
         const mention = `@[${displayName}](account_id:${accountId})`;
 
@@ -465,12 +466,13 @@ export class CloudPullRequestApi implements PullRequestApi {
             if (!c.deleted && c.content && c.content.raw && c.content.raw.trim().length > 0) {
                 return c;
             }
+            const label = vscode.l10n.t('Comment deleted');
             return {
                 ...c,
                 content: {
                     markup: 'markdown',
-                    raw: '*Comment deleted*',
-                    html: '<p><em>Comment deleted</em></p>',
+                    raw: `*${label}*`,
+                    html: `<p><em>${label}</em></p>`,
                 },
                 deleted: true,
             } as any;

@@ -1,6 +1,7 @@
 import { Box, Button, Checkbox, CircularProgress, Grid, TextField, Typography } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Task } from '../../../bitbucket/model';
+import * as l10n from '@vscode/l10n';
 
 type CommentTaskProps = {
     task: Task;
@@ -68,12 +69,12 @@ export const CommentTask: React.FunctionComponent<CommentTaskProps> = ({ task, o
                                 <Grid container direction={'row'}>
                                     <Grid item hidden={!task.editable}>
                                         <Button color={'primary'} onClick={handleEditPressed} disabled={isLoading}>
-                                            Edit
+                                            {l10n.t('Edit')}
                                         </Button>
                                     </Grid>
                                     <Grid item hidden={!task.deletable}>
                                         <Button color={'primary'} onClick={handleDelete} disabled={isLoading}>
-                                            Delete
+                                            {l10n.t('Delete')}
                                         </Button>
                                     </Grid>
                                 </Grid>
@@ -105,12 +106,12 @@ export const CommentTask: React.FunctionComponent<CommentTaskProps> = ({ task, o
                                             onClick={handleSave}
                                             disabled={taskContent.trim() === '' || isLoading}
                                         >
-                                            Save
+                                            {l10n.t('Save')}
                                         </Button>
                                     </Grid>
                                     <Grid item>
                                         <Button color={'primary'} onClick={handleCancel} disabled={isLoading}>
-                                            Cancel
+                                            {l10n.t('Cancel')}
                                         </Button>
                                     </Grid>
                                 </Grid>

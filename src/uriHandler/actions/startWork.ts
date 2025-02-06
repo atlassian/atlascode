@@ -4,6 +4,7 @@ import { startWorkOnIssue } from '../../commands/jira/startWorkOnIssue';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { Logger } from '../../logger';
 import { JiraIssueFetcher } from './util/jiraIssueFetcher';
+import * as vscode from 'vscode';
 
 /**
  * Use a deep link to start work on a Jira issue
@@ -45,7 +46,7 @@ export class StartWorkUriHandlerAction implements UriHandlerAction {
             );
         } catch (e) {
             Logger.debug('error opening start work page:', e);
-            window.showErrorMessage('Error opening start work page (check log for details)');
+            window.showErrorMessage(vscode.l10n.t('Error opening start work page (check log for details)'));
         }
     }
 }

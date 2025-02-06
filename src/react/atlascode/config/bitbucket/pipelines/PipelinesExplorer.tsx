@@ -7,6 +7,7 @@ import { useBorderBoxStyles } from '../../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../../configController';
 import { PipelinesExplorerOptions } from './PipelineExplorerOptions';
 import { PipelineFilterListEditor } from './PipelineFilterListEditor';
+import * as l10n from '@vscode/l10n';
 
 type PipelinesExplorerProps = {
     enabled: boolean;
@@ -60,7 +61,7 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                         <Grid item>
                             <ToggleWithLabel
                                 control={
-                                    <Tooltip title="Enable pipelines Explorer">
+                                    <Tooltip title={l10n.t('Enable pipelines Explorer')}>
                                         <Switch
                                             color="primary"
                                             size="small"
@@ -70,7 +71,7 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                                         />
                                     </Tooltip>
                                 }
-                                label="Enable pipelines Explorer"
+                                label={l10n.t('Enable pipelines Explorer')}
                                 spacing={1}
                                 variant="body1"
                             />
@@ -92,7 +93,7 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                                         />
                                     </Tooltip>
                                 }
-                                label="Show notifications when new Bitbucket pipelines are created"
+                                label={l10n.t('Show notifications when new Bitbucket pipelines are created')}
                                 spacing={1}
                                 variant="body1"
                             />
@@ -102,7 +103,7 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                         <Grid item>
                             <ToggleWithLabel
                                 control={
-                                    <Tooltip title="Show empty pipelines">
+                                    <Tooltip title={l10n.t('Show empty pipelines')}>
                                         <Switch
                                             className={classes.indent}
                                             disabled={!enabled}
@@ -114,7 +115,7 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                                         />
                                     </Tooltip>
                                 }
-                                label="Hide Bitbucket pipelines with no results"
+                                label={l10n.t('Hide Bitbucket pipelines with no results')}
                                 spacing={1}
                                 variant="body1"
                             />
@@ -124,7 +125,7 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                         <Grid item>
                             <ToggleWithLabel
                                 control={
-                                    <Tooltip title="Enable filters">
+                                    <Tooltip title={l10n.t('Enable filters')}>
                                         <Switch
                                             className={classes.indent}
                                             disabled={!enabled}
@@ -136,7 +137,7 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                                         />
                                     </Tooltip>
                                 }
-                                label="Show only Bitbucket pipelines matching the filters below"
+                                label={l10n.t('Show only Bitbucket pipelines matching the filters below')}
                                 spacing={1}
                                 variant="body1"
                             />
@@ -150,14 +151,16 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                                         className={classes.indent}
                                         interval={refreshInterval}
                                         max={120}
-                                        label="Refresh interval:"
+                                        label={l10n.t('Refresh interval:')}
                                         enabled={enabled}
                                         units="minutes"
                                         onChange={handleInterval}
                                     />
                                 </Grid>
                                 <Grid item>
-                                    <Typography variant="subtitle2">(setting to 0 disables auto-refresh)</Typography>
+                                    <Typography variant="subtitle2">
+                                        {l10n.t('(setting to 0 disables auto-refresh)')}
+                                    </Typography>
                                 </Grid>
                             </Grid>
                         </Grid>
@@ -165,7 +168,7 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                 />
                 <Grid item>
                     <Box marginTop={2}>
-                        <Typography variant="h4">Pipeline Filters</Typography>
+                        <Typography variant="h4">{l10n.t('Pipeline Filters')}</Typography>
 
                         <Box className={boxClass.box} marginTop={1} paddingBottom={2}>
                             <PipelineFilterListEditor enabled={hideFiltered} filters={filters} />

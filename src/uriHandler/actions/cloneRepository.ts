@@ -3,6 +3,7 @@ import { isAcceptedBySuffix, UriHandlerAction } from '../uriHandlerAction';
 import { CheckoutHelper } from '../../bitbucket/interfaces';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { Logger } from '../../logger';
+import * as vscode from 'vscode';
 
 /**
  * Use a deep link to clone a repository
@@ -38,7 +39,7 @@ export class CloneRepositoryUriHandlerAction implements UriHandlerAction {
             );
         } catch (e) {
             Logger.debug('error cloning repository:', e);
-            window.showErrorMessage('Error cloning repository (check log for details)');
+            window.showErrorMessage(vscode.l10n.t('Error cloning repository (check log for details)'));
         }
     }
 }

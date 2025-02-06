@@ -27,7 +27,7 @@ export class StartWorkOnBitbucketIssueWebview
     }
 
     public get title(): string {
-        return 'Start work on Bitbucket Issue';
+        return vscode.l10n.t('Start work on Bitbucket Issue');
     }
     public get id(): string {
         return 'startWorkOnIssueScreen';
@@ -112,9 +112,13 @@ export class StartWorkOnBitbucketIssueWebview
                             await bbApi.issues!.assign(issue, issue.site.details.userId);
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
-                                successMessage: `<ul><li>Assigned the issue to you</li>${
+                                successMessage: `<ul><li>${vscode.l10n.t('Assigned the issue to you')}</li>${
                                     e.setupBitbucket
-                                        ? `<li>Switched to <code>${e.targetBranchName}</code> branch with upstream set to <code>${e.remoteName}/${e.targetBranchName}</code></li>`
+                                        ? `<li>${vscode.l10n.t(
+                                              'Switched to {0} branch with upstream set to {1}',
+                                              `<code>${e.targetBranchName}</code>`,
+                                              `<code>${e.remoteName}/${e.targetBranchName}</code>`,
+                                          )}</li>`
                                         : ''
                                 }</ul>`,
                             });
@@ -168,7 +172,7 @@ export class StartWorkOnBitbucketIssueWebview
         this._state = issue;
 
         if (this._panel) {
-            this._panel.title = `Start work on Issue #${issue.data.id}`;
+            this._panel.title = vscode.l10n.t('Start work on Issue #{0}', issue.data.id);
         }
 
         const repos = Container.bitbucketContext ? Container.bitbucketContext.getAllRepositories() : [];

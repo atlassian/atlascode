@@ -2,6 +2,7 @@ import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { Box, Grid, MenuItem, Switch, TextField } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigControllerContext } from '../configController';
+import * as l10n from '@vscode/l10n';
 
 export enum OutputLevelOption {
     SILENT = 'silent',
@@ -59,7 +60,7 @@ export const Misc: React.FunctionComponent<MiscProps> = memo(({ showWelcome, hel
                             onChange={handleWelcomeChange}
                         />
                     }
-                    label="Show welcome screen when extension is updated"
+                    label={l10n.t('Show welcome screen when extension is updated')}
                     spacing={1}
                     variant="body1"
                 />
@@ -75,7 +76,7 @@ export const Misc: React.FunctionComponent<MiscProps> = memo(({ showWelcome, hel
                             onChange={handleHelpExplorerEnabledChange}
                         />
                     }
-                    label="Enable Help Explorer"
+                    label={l10n.t('Enable Help Explorer')}
                     spacing={1}
                     variant="body1"
                 />
@@ -89,7 +90,7 @@ export const Misc: React.FunctionComponent<MiscProps> = memo(({ showWelcome, hel
                         name="outputLevel"
                         id="outputLevel"
                         onChange={handleOutputChange}
-                        label="Output Level"
+                        label={l10n.t('Output Level')}
                     >
                         <MenuItem key={OutputLevelOption.SILENT} value={OutputLevelOption.SILENT}>
                             {OutputLevelOption.SILENT}

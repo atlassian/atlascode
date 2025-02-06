@@ -1,5 +1,5 @@
 import { Project } from '@atlassianlabs/jira-pi-common-models';
-import { ViewColumn } from 'vscode';
+import { ViewColumn, l10n } from 'vscode';
 import { DetailedSiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { Logger } from '../logger';
@@ -14,7 +14,7 @@ export class CreateIssueProblemsWebview extends AbstractReactWebview {
     }
 
     public get title(): string {
-        return 'Create JIRA Issue Problem Report';
+        return l10n.t('Create JIRA Issue Problem Report');
     }
     public get id(): string {
         return 'atlascodeCreateIssueProblemsScreen';

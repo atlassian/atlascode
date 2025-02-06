@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import PopoutMentionPicker from '../pullrequest/PopoutMentionPicker';
+import * as l10n from '@vscode/l10n';
 
 type Props = {
     value: string;
@@ -45,7 +46,7 @@ export const TextAreaEditor: React.FC<Props> = ({ value, disabled, placeholder, 
             <div className="ac-textarea-toolbar">
                 <PopoutMentionPicker
                     targetButtonContent="@"
-                    targetButtonTooltip="Mention @"
+                    targetButtonTooltip={l10n.t('Mention {0}', '@')}
                     loadUserOptions={fetchUsers}
                     onUserMentioned={handleCommentMention}
                 />

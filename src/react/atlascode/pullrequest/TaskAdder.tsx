@@ -1,5 +1,6 @@
 import { Button, Checkbox, CircularProgress, Grid, TextField } from '@material-ui/core';
 import React, { useCallback, useState } from 'react';
+import * as l10n from '@vscode/l10n';
 
 type TaskAdderProps = {
     addTask: (content: string) => Promise<void>;
@@ -55,12 +56,12 @@ export const TaskAdder: React.FunctionComponent<TaskAdderProps> = ({ addTask, ha
                                     onClick={handleSave}
                                     disabled={taskContent.trim() === '' || isLoading}
                                 >
-                                    Save
+                                    {l10n.t('Save')}
                                 </Button>
                             </Grid>
                             <Grid item>
                                 <Button color={'primary'} onClick={handleCancelClicked} disabled={isLoading}>
-                                    Cancel
+                                    {l10n.t('Cancel')}
                                 </Button>
                             </Grid>
                         </Grid>

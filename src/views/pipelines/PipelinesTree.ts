@@ -9,6 +9,7 @@ import {
     TreeItem,
     TreeItemCollapsibleState,
     Uri,
+    l10n,
 } from 'vscode';
 import { ProductBitbucket } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
@@ -131,9 +132,9 @@ export class PipelinesRepoNode extends AbstractBaseNode {
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (!this.workspaceRepo.mainSiteRemote.site) {
             return Promise.resolve([
-                new SimpleNode(`Please login to ${ProductBitbucket.name}`, {
+                new SimpleNode(l10n.t('Please login to {0}', ProductBitbucket.name), {
                     command: Commands.ShowConfigPage,
-                    title: 'Login to Bitbucket',
+                    title: l10n.t('Login to Bitbucket'),
                     arguments: [ProductBitbucket],
                 }),
             ]);
@@ -143,13 +144,13 @@ export class PipelinesRepoNode extends AbstractBaseNode {
                 this._pipelines = await this.fetchPipelines();
             }
             if (this._pipelines.length === 0 && !filtersActive()) {
-                return [new SimpleNode('No pipelines results for this repository')];
+                return [new SimpleNode(l10n.t('No pipelines results for this repository'))];
             }
 
             const filteredPipelines = this._pipelines.filter((pipeline) => shouldDisplay(pipeline.target));
             let nodes: AbstractBaseNode[] = [];
             if (filtersActive() && filteredPipelines.length === 0 && !this._morePages) {
-                nodes = [new SimpleNode(`No pipelines matching your filters`)];
+                nodes = [new SimpleNode(l10n.t('No pipelines matching your filters'))];
             } else if (filtersActive() && filteredPipelines.length === 0) {
                 const firstPipeTime: string = this._pipelines[0].created_on;
                 const lastPipeTime: string = this._pipelines[this._pipelines.length - 1].created_on;
@@ -226,7 +227,7 @@ export class PipelineNode extends AbstractBaseNode {
         item.tooltip = label;
         item.command = {
             command: Commands.ShowPipeline,
-            title: 'Show Pipeline',
+            title: l10n.t('Show Pipeline'),
             arguments: [this.pipeline],
         };
         item.iconPath = iconUriForPipeline(this.pipeline);
@@ -259,11 +260,11 @@ class NextPageNode extends AbstractBaseNode {
                       'yyyy-MM-dd h:mm a',
                   )})`,
               )
-            : new TreeItem('Load more', TreeItemCollapsibleState.None);
+            : new TreeItem(l10n.t('Load more'), TreeItemCollapsibleState.None);
         treeItem.iconPath = Resources.icons.get('more');
         treeItem.command = {
             command: Commands.PipelinesNextPage,
-            title: 'Load more branches',
+            title: l10n.t('Load more branches'),
             arguments: [this.workspaceRepo],
         };
         return treeItem;

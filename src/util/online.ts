@@ -9,6 +9,7 @@ import { Container } from '../container';
 import { getAgent } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { ConnectionTimeout, Time } from './time';
+import { l10n } from 'vscode';
 
 export type OnlineInfoEvent = {
     isOnline: boolean;
@@ -125,7 +126,7 @@ export class OnlineDetector extends Disposable {
                 }
 
                 if (!this._isOfflineMode) {
-                    Logger.debug(newIsOnline ? 'You have gone online!' : 'You have gone offline :(');
+                    Logger.debug(newIsOnline ? l10n.t('You have gone online!') : l10n.t('You have gone offline :('));
                     this._onDidOnlineChange.fire({ isOnline: newIsOnline });
                 }
             }

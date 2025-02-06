@@ -1,5 +1,5 @@
 import { JQLEntry } from 'src/config/model';
-import { Disposable, TreeItem, TreeItemCollapsibleState } from 'vscode';
+import { Disposable, TreeItem, TreeItemCollapsibleState, l10n } from 'vscode';
 import { Container } from '../../container';
 import { MAX_RESULTS } from '../../jira/issuesForJql';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
@@ -11,7 +11,7 @@ export class CustomJQLTree extends JQLTreeDataProvider implements AbstractBaseNo
     private _numIssues: number;
 
     constructor(readonly jqlEntry: JQLEntry) {
-        super(undefined, 'No issues match this query');
+        super(undefined, l10n.t('No issues match this query'));
         this.setJqlEntry(this.jqlEntry);
     }
 
@@ -33,14 +33,14 @@ export class CustomJQLTree extends JQLTreeDataProvider implements AbstractBaseNo
         item.collapsibleState = TreeItemCollapsibleState.Collapsed;
         if (!!this._numIssues) {
             if (this._numIssues === MAX_RESULTS && !Container.config.jira.explorer.fetchAllQueryResults) {
-                item.description = `${this._numIssues}+ Issues`;
+                item.description = l10n.t('{0}+ Issues', this._numIssues);
             } else if (this._numIssues === 1) {
-                item.description = `1 Issue`;
+                item.description = l10n.t('1 Issue');
             } else {
-                item.description = `${this._numIssues} Issues`;
+                item.description = l10n.t('{0} Issues', this._numIssues);
             }
         } else {
-            item.description = `No Issues Found`;
+            item.description = l10n.t('No Issues Found');
         }
         return item;
     }

@@ -6,6 +6,7 @@ import { CommonSubpanelProps } from '../../../common/commonPanelProps';
 import { PanelSubtitle } from '../../../common/PanelSubtitle';
 import { PanelTitle } from '../../../common/PanelTitle';
 import { ContextMenus } from '../ContextMenus';
+import * as l10n from '@vscode/l10n';
 
 type ContextMenuPanelProps = CommonSubpanelProps & {
     enabled: boolean;
@@ -39,8 +40,8 @@ export const ContextMenuPanel: React.FunctionComponent<ContextMenuPanelProps> = 
                     aria-controls={`${ConfigSection.Bitbucket}-${ConfigSubSection.ContextMenus}-content`}
                     id={`${ConfigSection.Bitbucket}-${ConfigSubSection.ContextMenus}-header`}
                 >
-                    <PanelTitle>Bitbucket Context Menus</PanelTitle>
-                    <PanelSubtitle>configure the context menus in editor</PanelSubtitle>
+                    <PanelTitle>{l10n.t('Bitbucket Context Menus')}</PanelTitle>
+                    <PanelSubtitle>{l10n.t('configure the context menus in editor')}</PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <ContextMenus enabled={enabled} />

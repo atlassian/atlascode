@@ -29,7 +29,7 @@ export class RelatedIssuesNode extends AbstractBaseNode {
         const issueKeys = await extractIssueKeys(pr, commits, allComments);
         if (issueKeys.length > 0) {
             const node = new RelatedIssuesNode();
-            node._delegate = new StaticIssuesNode(issueKeys, 'Related Jira issues');
+            node._delegate = new StaticIssuesNode(issueKeys, vscode.l10n.t('Related Jira issues'));
             await node._delegate.updateJqlEntry();
             return node;
         }

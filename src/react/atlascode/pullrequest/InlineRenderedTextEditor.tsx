@@ -3,6 +3,7 @@ import EditIcon from '@material-ui/icons/Edit';
 import React, { useCallback, useState } from 'react';
 import { User } from '../../../bitbucket/model';
 import { MarkdownEditor } from '../common/editor/MarkdownEditor';
+import * as l10n from '@vscode/l10n';
 
 const useStyles = makeStyles(
     (theme: Theme) =>
@@ -80,7 +81,7 @@ const InlineRenderedTextEditor: React.FC<InlineTextEditorProps> = (props: Inline
                     onClick={enterEditMode}
                     visibility={showEditButton === true && props.onSave !== undefined ? 'visible' : 'hidden'}
                 >
-                    <Tooltip title="Click to edit">
+                    <Tooltip title={l10n.t('Click to edit')}>
                         <EditIcon />
                     </Tooltip>
                 </Box>

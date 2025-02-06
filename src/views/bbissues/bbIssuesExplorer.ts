@@ -13,6 +13,7 @@ import { BitbucketIssuesDataProvider } from '../bitbucketIssuesDataProvider';
 import { BaseTreeDataProvider } from '../Explorer';
 import { BitbucketIssuesMonitor } from './bbIssuesMonitor';
 import { BitbucketSite } from '../../bitbucket/model';
+import { l10n } from 'vscode';
 
 export class BitbucketIssuesExplorer extends BitbucketExplorer {
     constructor(ctx: BitbucketContext) {
@@ -42,10 +43,12 @@ export class BitbucketIssuesExplorer extends BitbucketExplorer {
         }
         const picker = window.createQuickPick<QuickPickItem & { value: BitbucketSite }>();
         picker.items = options;
-        picker.title = 'Create Bitbucket Issue';
+        picker.title = l10n.t('Create Bitbucket Issue');
 
         picker.placeholder =
-            options.length > 0 ? 'Pick a repository' : 'No Bitbucket repositories found in this workspace';
+            options.length > 0
+                ? l10n.t('Pick a repository')
+                : l10n.t('No Bitbucket repositories found in this workspace');
 
         picker.onDidAccept(() => {
             if (picker.selectedItems.length > 0) {

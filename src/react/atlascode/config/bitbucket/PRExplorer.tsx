@@ -4,6 +4,7 @@ import React, { memo, useCallback, useContext, useEffect, useState } from 'react
 import { ConfigSection } from '../../../../lib/ipc/models/config';
 import { IntervalInput } from '../../common/IntervalInput';
 import { ConfigControllerContext } from '../configController';
+import * as l10n from '@vscode/l10n';
 
 type PRExplorerProps = {
     enabled: boolean;
@@ -63,7 +64,7 @@ export const PRExplorer: React.FunctionComponent<PRExplorerProps> = memo(
                                 onChange={handleChange}
                             />
                         }
-                        label="Enable Bitbucket pull requests explorer"
+                        label={l10n.t('Enable Bitbucket pull requests explorer')}
                         spacing={1}
                         variant="body1"
                     />
@@ -82,7 +83,7 @@ export const PRExplorer: React.FunctionComponent<PRExplorerProps> = memo(
                                 onChange={handleChange}
                             />
                         }
-                        label="Show related Jira issues for Bitbucket pull requests"
+                        label={l10n.t('Show related Jira issues for Bitbucket pull requests')}
                         spacing={1}
                         variant="body1"
                     />
@@ -101,7 +102,7 @@ export const PRExplorer: React.FunctionComponent<PRExplorerProps> = memo(
                                 onChange={handleChange}
                             />
                         }
-                        label="Show related Bitbucket issues for pull requests"
+                        label={l10n.t('Show related Bitbucket issues for pull requests')}
                         spacing={1}
                         variant="body1"
                     />
@@ -120,7 +121,7 @@ export const PRExplorer: React.FunctionComponent<PRExplorerProps> = memo(
                                 onChange={handleChange}
                             />
                         }
-                        label="Show notifications when new Bitbucket pull requests are created"
+                        label={l10n.t('Show notifications when new Bitbucket pull requests are created')}
                         spacing={1}
                         variant="body1"
                     />
@@ -139,7 +140,7 @@ export const PRExplorer: React.FunctionComponent<PRExplorerProps> = memo(
                                 onChange={handleChange}
                             />
                         }
-                        label="Nest modified files by folder"
+                        label={l10n.t('Nest modified files by folder')}
                         spacing={1}
                         variant="body1"
                     />
@@ -151,14 +152,16 @@ export const PRExplorer: React.FunctionComponent<PRExplorerProps> = memo(
                                 className={classes.indent}
                                 interval={refreshInterval}
                                 max={120}
-                                label="Refresh explorer every:"
+                                label={l10n.t('Refresh explorer every:')}
                                 enabled={enabled}
                                 units="minutes"
                                 onChange={handleInterval}
                             />
                         </Grid>
                         <Grid item>
-                            <Typography variant="subtitle2">(setting to 0 disables auto-refresh)</Typography>
+                            <Typography variant="subtitle2">
+                                {l10n.t('(setting to 0 disables auto-refresh)')}
+                            </Typography>
                         </Grid>
                     </Grid>
                 </Grid>

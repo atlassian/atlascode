@@ -12,6 +12,7 @@ import React, { useState } from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { RenderedContent } from '../RenderedContent';
 import { TextAreaEditor } from './TextAreaEditor';
+import * as l10n from '@vscode/l10n';
 
 type Props = {
     siteDetails: DetailedSiteInfo;
@@ -44,7 +45,13 @@ export const CommentComponent: React.FC<Props> = ({
         return (
             <React.Fragment>
                 <Comment
-                    avatar={<Avatar src={comment.author.avatarUrls['48x48']} label="Atlaskit avatar" size="medium" />}
+                    avatar={
+                        <Avatar
+                            src={comment.author.avatarUrls['48x48']}
+                            label={l10n.t('Atlaskit avatar')}
+                            size="medium"
+                        />
+                    }
                     author={
                         <CommentAuthor>
                             <div className="jira-comment-author">{comment.author.displayName}</div>
@@ -75,7 +82,7 @@ export const CommentComponent: React.FC<Props> = ({
                                     }}
                                     isDisabled={isSaving}
                                 >
-                                    {isServiceDeskProject ? 'Reply to customer' : 'Save'}
+                                    {isServiceDeskProject ? l10n.t('Reply to customer') : l10n.t('Save')}
                                 </Button>
                                 {isServiceDeskProject && (
                                     <Button
@@ -86,7 +93,7 @@ export const CommentComponent: React.FC<Props> = ({
                                         }}
                                         isDisabled={isSaving}
                                     >
-                                        Add internal note
+                                        {l10n.t('Add internal note')}
                                     </Button>
                                 )}
                                 <Button
@@ -96,7 +103,7 @@ export const CommentComponent: React.FC<Props> = ({
                                         setCommentInputValue(comment.body);
                                     }}
                                 >
-                                    Cancel
+                                    {l10n.t('Cancel')}
                                 </Button>
                             </ButtonGroup>
                         </React.Fragment>
@@ -108,7 +115,7 @@ export const CommentComponent: React.FC<Props> = ({
 
     return (
         <Comment
-            avatar={<Avatar src={comment.author.avatarUrls['48x48']} label="Atlaskit avatar" size="medium" />}
+            avatar={<Avatar src={comment.author.avatarUrls['48x48']} label={l10n.t('Atlaskit avatar')} size="medium" />}
             author={
                 <CommentAuthor>
                     <div className="jira-comment-author">{comment.author.displayName}</div>
@@ -138,7 +145,7 @@ export const CommentComponent: React.FC<Props> = ({
                                   setIsSaving(true);
                               }}
                           >
-                              Delete
+                              {l10n.t('Delete')}
                           </CommentAction>,
                       ]
                     : []

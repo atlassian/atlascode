@@ -3,6 +3,7 @@ import CloudIcon from '@material-ui/icons/Cloud';
 import React, { useCallback, useContext } from 'react';
 import { AuthInfoState, emptyUserInfo, Product, ProductJira } from '../../../atlclients/authInfo';
 import { OnboardingControllerContext } from './onboardingController';
+import * as l10n from '@vscode/l10n';
 
 const useStyles = makeStyles((theme) => ({
     box: {
@@ -52,7 +53,7 @@ export const AltCloudAuthButton: React.FunctionComponent<AltCloudAuthButtonProps
     }, [controller, product]);
 
     return (
-        <Tooltip title={'Opens a browser window to log in via OAuth'}>
+        <Tooltip title={l10n.t('Opens a browser window to log in via OAuth')}>
             <Button
                 id="onboarding-cloud-button"
                 variant="contained"

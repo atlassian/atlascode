@@ -5,6 +5,7 @@ import { LegacyPMFData } from '../ipc/messaging';
 import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
 import { PMFData } from '../lib/ipc/models/common';
 import { getFeedbackUser } from './feedbackUser';
+import * as vscode from 'vscode';
 
 const q1Choices = {
     '0': 'Very disappointed',
@@ -199,5 +200,5 @@ export async function submitLegacyJSDPMF(feedback: LegacyPMFData) {
         },
     );
 
-    window.showInformationMessage('The Atlassian team thanks you for your feedback!');
+    window.showInformationMessage(vscode.l10n.t('The Atlassian team thanks you for your feedback!'));
 }

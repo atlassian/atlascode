@@ -6,6 +6,7 @@ import { StatusBar } from '../config/StatusBar';
 import { CommonSubpanelProps } from './commonPanelProps';
 import { PanelSubtitle } from './PanelSubtitle';
 import { PanelTitle } from './PanelTitle';
+import * as l10n from '@vscode/l10n';
 
 type StatusBarPanelProps = CommonSubpanelProps & {
     configSection: ConfigSection;
@@ -55,7 +56,7 @@ export const StatusBarPanel: React.FunctionComponent<StatusBarPanelProps> = memo
                     id={`${configSection}-${ConfigSubSection.Status}-header`}
                 >
                     <PanelTitle>Status Bar</PanelTitle>
-                    <PanelSubtitle>{`configure the status bar display for ${productName}`}</PanelSubtitle>
+                    <PanelSubtitle>{l10n.t('configure the status bar display for {0}', productName)}</PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <StatusBar

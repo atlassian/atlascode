@@ -4,6 +4,7 @@ import { emptyIssueType, IssueType } from '@atlassianlabs/jira-pi-common-models'
 import * as React from 'react';
 import EdiText from 'react-editext';
 import * as FieldValidators from '../fieldValidators';
+import * as l10n from '@vscode/l10n';
 
 export type SummaryAndIssueType = {
     summary: string;
@@ -140,7 +141,7 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
                         onSave={this.handleSave}
                         onCancel={this.handleCancelInlineEdit}
                         validation={FieldValidators.isValidString}
-                        validationMessage="sub-task summary is required"
+                        validationMessage={l10n.t('sub-task summary is required')}
                         inputProps={{
                             className: 'ac-inputField',
                             placeholder: 'What needs to be done?',

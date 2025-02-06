@@ -11,6 +11,7 @@ import { Uri, UriHandler, window, Disposable } from 'vscode';
 import { Logger } from '../logger';
 import { JiraIssueFetcher } from './actions/util/jiraIssueFetcher';
 import { Container } from '../container';
+import * as vscode from 'vscode';
 
 export class AtlascodeUriHandler implements Disposable, UriHandler {
     private disposables: Disposable;
@@ -28,7 +29,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
         const action = this.actions.find((h) => h.isAccepted(uri));
         if (!action) {
             Logger.debug(`Unsupported URI path: ${uri.path}`);
-            window.showErrorMessage(`Handler not found for URI: ${uri.toString()}`);
+            window.showErrorMessage(vscode.l10n.t(`Handler not found for URI: {0}`, uri.toString()));
             return;
         }
 
@@ -36,7 +37,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             await action.handle(uri);
         } catch (e) {
             Logger.debug('Error handling URI:', e);
-            window.showErrorMessage(`Error handling URI: ${uri.toString()}. Check log for details`);
+            window.showErrorMessage(vscode.l10n.t('Error handling URI: {0}. Check log for details', uri.toString()));
         }
     }
 

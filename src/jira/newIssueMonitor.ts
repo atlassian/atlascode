@@ -7,6 +7,7 @@ import { showIssue } from '../commands/jira/showIssue';
 import { Container } from '../container';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { Logger } from '../logger';
+import * as vscode from 'vscode';
 
 type JQLSettleResult = { jqlName: string; issues: MinimalIssue<DetailedSiteInfo>[] };
 export class NewIssueMonitor {
@@ -95,16 +96,18 @@ export class NewIssueMonitor {
         const issueNames = newIssues.map((issue) => `[${issue.key}] "${issue.summary}"`);
         var message = '';
         if (newIssues.length === 1) {
-            message = `${issueNames[0]} added to explorer`;
+            message = vscode.l10n.t('{0} added to explorer', issueNames[0]);
         } else if (newIssues.length <= 3) {
-            message = `${issueNames.slice(0, -1).join(', ')} and ${issueNames.slice(-1)} added to explorer`;
+            const param1 = issueNames.slice(0, -1).join(', ');
+            const param2 = issueNames.slice(-1)[0];
+            message = vscode.l10n.t('{0} and {1} added to explorer', param1, param2);
         } else {
-            message = `${issueNames.slice(0, 2).join(', ')} and ${
-                newIssues.length - 2
-            } other new issues added to explorer`;
+            const param1 = issueNames.slice(0, 2).join(', ');
+            const param2 = newIssues.length - 2;
+            message = vscode.l10n.t('{0} and {1} other new issues added to explorer', param1, param2);
         }
 
-        const title = newIssues.length === 1 ? 'Open Issue' : 'View Atlassian Explorer';
+        const title = newIssues.length === 1 ? vscode.l10n.t('Open Issue') : vscode.l10n.t('View Atlassian Explorer');
         window.showInformationMessage(message, title).then((selection) => {
             if (selection) {
                 if (newIssues.length === 1) {

@@ -50,6 +50,7 @@ import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
 import { ParticipantList } from './ParticipantList';
 import { TextAreaEditor } from './TextAreaEditor';
+import * as l10n from '@vscode/l10n';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -614,7 +615,7 @@ export abstract class AbstractIssueEditorPage<
                         {(fieldArgs: any) => {
                             let errDiv = <span />;
                             if (fieldArgs.error === 'EMPTY') {
-                                errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                errDiv = <ErrorMessage>{l10n.t('{0} is required', field.name)}</ErrorMessage>;
                             }
                             return (
                                 <div>
@@ -689,7 +690,7 @@ export abstract class AbstractIssueEditorPage<
                                 {(fieldArgs: any) => {
                                     let errDiv = <span />;
                                     if (fieldArgs.error === 'EMPTY') {
-                                        errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                        errDiv = <ErrorMessage>{l10n.t('{0} is required', field.name)}</ErrorMessage>;
                                     }
 
                                     return (
@@ -742,7 +743,7 @@ export abstract class AbstractIssueEditorPage<
                                             }
                                             getOptionLabel={(option: any) => option.key}
                                             getOptionValue={(option: any) => option.key}
-                                            placeholder="Search for an issue"
+                                            placeholder={l10n.t('Search for an issue')}
                                             isLoading={this.state.loadingField === field.key}
                                             isDisabled={this.state.isSomethingLoading}
                                             onChange={FieldValidators.chain(
@@ -787,7 +788,7 @@ export abstract class AbstractIssueEditorPage<
                                         : `[~${user.name}]`,
                                 }))
                             }
-                            placeholder="Add a comment..."
+                            placeholder={l10n.t('Add a comment...')}
                             disabled={false}
                             onChange={(input: string) => this.setState({ commentInputValue: input })}
                         />
@@ -798,7 +799,7 @@ export abstract class AbstractIssueEditorPage<
                                 onClick={this.handleExternalCommentSave}
                                 isDisabled={this.state.commentInputValue === '' || this.state.isSomethingLoading}
                             >
-                                {isServiceDeskProject ? 'Reply to customer' : 'Save'}
+                                {isServiceDeskProject ? l10n.t('Reply to customer') : l10n.t('Save')}
                             </Button>
                             {isServiceDeskProject && (
                                 <Button
@@ -881,7 +882,7 @@ export abstract class AbstractIssueEditorPage<
                                 {(fieldArgs: any) => {
                                     let errDiv = <span />;
                                     if (fieldArgs.error === 'EMPTY') {
-                                        errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                        errDiv = <ErrorMessage>{l10n.t('{0} is required', field.name)}</ErrorMessage>;
                                     }
                                     return (
                                         <React.Fragment>
@@ -911,7 +912,7 @@ export abstract class AbstractIssueEditorPage<
                             return (
                                 <CreatableSelect
                                     {...commonProps}
-                                    placeholder="Type to create new option"
+                                    placeholder={l10n.t('Type to create new option')}
                                     createOptionPosition="first"
                                     value={this.state.fieldValues[field.key]}
                                     isClearable={this.isClearableSelect(selectField)}
@@ -919,7 +920,7 @@ export abstract class AbstractIssueEditorPage<
                                     isDisabled={this.state.isSomethingLoading}
                                     isLoading={this.state.loadingField === field.key}
                                     isValidNewOption={shouldShowCreateOption}
-                                    noOptionsMessage={(input: any) => 'Type to create new option'}
+                                    noOptionsMessage={(input: any) => l10n.t('Type to create new option')}
                                     onCreateOption={(input: any): void => {
                                         this.handleSelectOptionCreate(selectField, input);
                                     }}
@@ -943,16 +944,16 @@ export abstract class AbstractIssueEditorPage<
                                 {(fieldArgs: any) => {
                                     let errDiv = <span />;
                                     if (fieldArgs.error === 'EMPTY') {
-                                        errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                        errDiv = <ErrorMessage>{l10n.t('{0} is required', field.name)}</ErrorMessage>;
                                     }
                                     return (
                                         <React.Fragment>
                                             <CreatableSelect
                                                 {...fieldArgs.fieldProps}
                                                 {...commonProps}
-                                                placeholder="Type to create new option"
+                                                placeholder={l10n.t('Type to create new option')}
                                                 createOptionPosition="first"
-                                                noOptionsMessage={(input: any) => 'Type to create new option'}
+                                                noOptionsMessage={(input: any) => l10n.t('Type to create new option')}
                                                 isClearable={this.isClearableSelect(selectField)}
                                                 options={this.state.selectFieldOptions[field.key]}
                                                 isDisabled={this.state.isSomethingLoading}
@@ -981,8 +982,8 @@ export abstract class AbstractIssueEditorPage<
                             return (
                                 <AsyncSelect
                                     {...commonProps}
-                                    placeholder="Type to search"
-                                    noOptionsMessage={(input: any) => 'Type to search'}
+                                    placeholder={l10n.t('Type to search')}
+                                    noOptionsMessage={(input: any) => l10n.t('Type to search')}
                                     isClearable={this.isClearableSelect(selectField)}
                                     isDisabled={this.state.isSomethingLoading && this.state.loadingField !== field.key}
                                     defaultOptions={this.state.selectFieldOptions[field.key]}
@@ -1010,15 +1011,15 @@ export abstract class AbstractIssueEditorPage<
                                 {(fieldArgs: any) => {
                                     let errDiv = <span />;
                                     if (fieldArgs.error === 'EMPTY') {
-                                        errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                        errDiv = <ErrorMessage>{l10n.t('{0} is required', field.name)}</ErrorMessage>;
                                     }
                                     return (
                                         <React.Fragment>
                                             <AsyncSelect
                                                 {...fieldArgs.fieldProps}
                                                 {...commonProps}
-                                                placeholder="Type to search"
-                                                noOptionsMessage={(input: any) => 'Type to search'}
+                                                placeholder={l10n.t('Type to search')}
+                                                noOptionsMessage={(input: any) => l10n.t('Type to search')}
                                                 isDisabled={
                                                     this.state.isSomethingLoading &&
                                                     this.state.loadingField !== field.key
@@ -1062,10 +1063,10 @@ export abstract class AbstractIssueEditorPage<
                             return (
                                 <AsyncCreatableSelect
                                     {...commonProps}
-                                    placeholder="Type to search"
+                                    placeholder={l10n.t('Type to search')}
                                     createOptionPosition="first"
                                     value={this.state.fieldValues[field.key]}
-                                    noOptionsMessage={(input: any) => 'Type to search'}
+                                    noOptionsMessage={(input: any) => l10n.t('Type to search')}
                                     isDisabled={this.state.isSomethingLoading && this.state.loadingField !== field.key}
                                     isClearable={this.isClearableSelect(selectField)}
                                     defaultOptions={this.state.selectFieldOptions[field.key]}
@@ -1103,9 +1104,9 @@ export abstract class AbstractIssueEditorPage<
                                             <AsyncCreatableSelect
                                                 {...fieldArgs.fieldProps}
                                                 {...commonProps}
-                                                placeholder="Type to search"
+                                                placeholder={l10n.t('Type to search')}
                                                 createOptionPosition="first"
-                                                noOptionsMessage={(input: any) => 'Type to search'}
+                                                noOptionsMessage={(input: any) => l10n.t('Type to search')}
                                                 isDisabled={
                                                     this.state.isSomethingLoading &&
                                                     this.state.loadingField !== field.key
@@ -1278,7 +1279,7 @@ export abstract class AbstractIssueEditorPage<
                 return (
                     <div className="ac-flex">
                         <Field
-                            label="Original estimate"
+                            label={l10n.t('Original estimate')}
                             isRequired={field.required}
                             id={`${field.key}.originalEstimate`}
                             name={`${field.key}.originalEstimate`}
@@ -1287,7 +1288,7 @@ export abstract class AbstractIssueEditorPage<
                             {(fieldArgs: any) => {
                                 let errDiv = <span />;
                                 if (fieldArgs.error === 'EMPTY') {
-                                    errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                    errDiv = <ErrorMessage>{l10n.t('{0} is required', field.name)}</ErrorMessage>;
                                 }
                                 return (
                                     <div>
@@ -1313,7 +1314,7 @@ export abstract class AbstractIssueEditorPage<
                         </Field>
                         <div className="ac-inline-flex-hpad"></div>
                         <Field
-                            label="Remaining estimate"
+                            label={l10n.t('Remaining estimate')}
                             isRequired={field.required}
                             id={`${field.key}.remainingEstimate`}
                             name={`${field.key}.remainingEstimate`}
@@ -1351,7 +1352,7 @@ export abstract class AbstractIssueEditorPage<
             }
             case UIType.Worklog: {
                 if (editmode) {
-                    return <div>don't call getInputMarkup for worklog in editmode</div>;
+                    return <div>{l10n.t("don't call getInputMarkup for worklog in editmode")}</div>;
                 }
                 let validateFunc = FieldValidators.validateString;
                 return (
@@ -1368,7 +1369,7 @@ export abstract class AbstractIssueEditorPage<
                                             };
                                             this.handleInlineEdit(subField, e.target.checked);
                                         })}
-                                        label="Log work"
+                                        label={l10n.t('Log work')}
                                     />
                                 )}
                             </Field>
@@ -1377,7 +1378,7 @@ export abstract class AbstractIssueEditorPage<
                             <React.Fragment>
                                 <div className="ac-flex">
                                     <Field
-                                        label="Worklog time spent"
+                                        label={l10n.t('Worklog time spent')}
                                         isRequired={true}
                                         id={`${field.key}.timeSpent`}
                                         name={`${field.key}.timeSpent`}
@@ -1386,7 +1387,9 @@ export abstract class AbstractIssueEditorPage<
                                         {(fieldArgs: any) => {
                                             let errDiv = <span />;
                                             if (fieldArgs.error === 'EMPTY') {
-                                                errDiv = <ErrorMessage>Time spent is required</ErrorMessage>;
+                                                errDiv = (
+                                                    <ErrorMessage>{l10n.t('Time spent is required')}</ErrorMessage>
+                                                );
                                             }
                                             return (
                                                 <div>
@@ -1412,7 +1415,7 @@ export abstract class AbstractIssueEditorPage<
                                     </Field>
                                     <div className="ac-inline-flex-hpad"></div>
                                     <Field
-                                        label="Remaining estimate"
+                                        label={l10n.t('Remaining estimate')}
                                         isRequired={true}
                                         id={`${field.key}.newEstimate`}
                                         name={`${field.key}.newEstimate`}
@@ -1421,7 +1424,11 @@ export abstract class AbstractIssueEditorPage<
                                         {(fieldArgs: any) => {
                                             let errDiv = <span />;
                                             if (fieldArgs.error === 'EMPTY') {
-                                                errDiv = <ErrorMessage>Remaining estimate is required</ErrorMessage>;
+                                                errDiv = (
+                                                    <ErrorMessage>
+                                                        {l10n.t('Remaining estimate is required')}
+                                                    </ErrorMessage>
+                                                );
                                             }
                                             return (
                                                 <div>
@@ -1447,7 +1454,7 @@ export abstract class AbstractIssueEditorPage<
                                     </Field>
                                 </div>
                                 <Field
-                                    label="Worklog start time"
+                                    label={l10n.t('Worklog start time')}
                                     isRequired={true}
                                     id={`${field.key}.started`}
                                     name={`${field.key}.started`}
@@ -1456,7 +1463,7 @@ export abstract class AbstractIssueEditorPage<
                                     {(fieldArgs: any) => {
                                         let errDiv = <span />;
                                         if (fieldArgs.error === 'EMPTY') {
-                                            errDiv = <ErrorMessage>Start time is required</ErrorMessage>;
+                                            errDiv = <ErrorMessage>{l10n.t('Start time is required')}</ErrorMessage>;
                                         }
                                         return (
                                             <div>
@@ -1489,7 +1496,7 @@ export abstract class AbstractIssueEditorPage<
                                     }}
                                 </Field>
                                 <Field
-                                    label="Worklog comment"
+                                    label={l10n.t('Worklog comment')}
                                     isRequired={false}
                                     id={`${field.key}.comment`}
                                     name={`${field.key}.comment`}

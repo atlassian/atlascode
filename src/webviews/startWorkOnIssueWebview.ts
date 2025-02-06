@@ -32,7 +32,7 @@ export class StartWorkOnIssueWebview
     }
 
     public get title(): string {
-        return 'Start work on Jira Issue';
+        return vscode.l10n.t('Start work on Jira Issue');
     }
     public get id(): string {
         return 'startWorkOnIssueScreen';
@@ -122,13 +122,13 @@ export class StartWorkOnIssueWebview
                             }
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
-                                successMessage: `<ul><li>Assigned the issue to you</li>${
+                                successMessage: `<ul><li>${vscode.l10n.t('Assigned the issue to you')}</li>${
                                     e.setupJira
-                                        ? `<li>Transitioned status to <code>${e.transition.to.name}</code></li>`
+                                        ? `<li>${vscode.l10n.t('Transitioned status to {0}', `<code>${e.transition.to.name}</code>`)}</li>`
                                         : ''
                                 }  ${
                                     e.setupBitbucket
-                                        ? `<li>Switched to <code>${e.targetBranchName}</code> branch with upstream set to <code>${e.remoteName}/${e.targetBranchName}</code></li>`
+                                        ? `<li>${vscode.l10n.t('Switched to {0} branch with upstream set to {1}', `<code>${e.targetBranchName}</code>`, `<code>${e.remoteName}/${e.targetBranchName}</code>`)}</li>`
                                         : ''
                                 }</ul>`,
                             });

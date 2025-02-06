@@ -7,6 +7,7 @@ import { CommentTaskList } from './CommentTaskList';
 import { NestedCommentList } from './NestedCommentList';
 import { PullRequestDetailsControllerContext } from './pullRequestDetailsController';
 import { TaskAdder } from './TaskAdder';
+import * as l10n from '@vscode/l10n';
 
 type NestedCommentProps = {
     comment: Comment;
@@ -110,27 +111,27 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
                                 <Grid container direction={'row'}>
                                     <Grid item>
                                         <Button color={'primary'} onClick={handleReplyPressed}>
-                                            Reply
+                                            {l10n.t('Reply')}
                                         </Button>
                                     </Grid>
                                     <Grid item>
                                         <Box hidden={!comment.editable}>
                                             <Button color={'primary'} onClick={handleEditPressed}>
-                                                Edit
+                                                {l10n.t('Edit')}
                                             </Button>
                                         </Box>
                                     </Grid>
                                     <Grid item>
                                         <Box hidden={comment.deleted || !comment.deletable}>
                                             <Button color={'primary'} onClick={handleDelete}>
-                                                Delete
+                                                {l10n.t('Delete')}
                                             </Button>
                                         </Box>
                                     </Grid>
                                     <Grid item>
                                         <Box marginLeft={2}>
                                             <Button color={'primary'} onClick={handleCreateTaskPressed}>
-                                                Create Task
+                                                {l10n.t('Create Task')}
                                             </Button>
                                         </Box>
                                     </Grid>

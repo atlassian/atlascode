@@ -4,6 +4,7 @@ import { ProductBitbucket, ProductJira } from '../../../atlclients/authInfo';
 import { SiteWithAuthInfo } from '../../../lib/ipc/toUI/config';
 import { AltCloudAuthButton } from './AltCloudAuthButton';
 import { AltServerAuthButton } from './AltServerAuthButton';
+import * as l10n from '@vscode/l10n';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -40,7 +41,7 @@ export const SimpleSiteAuthenticator: React.FunctionComponent<SimpleSiteAuthenti
             <Grid container justify="center" spacing={3}>
                 <Grid hidden={jiraAuthComplete} item xs={12}>
                     <Typography variant="h1" align="center">
-                        Authenticate with {ProductJira.name}
+                        {l10n.t('Authenticate with {0}', ProductJira.name)}
                     </Typography>
                 </Grid>
                 <Grid hidden={jiraAuthComplete} item lg={6} md={12} sm={12} xs={12} alignItems={'flex-end'}>
@@ -51,7 +52,7 @@ export const SimpleSiteAuthenticator: React.FunctionComponent<SimpleSiteAuthenti
                 </Grid>
                 <Grid hidden={!jiraAuthComplete || bitbucketAuthComplete} item xs={12}>
                     <Typography variant="h1" align="center">
-                        Authenticate with {ProductBitbucket.name}
+                        {l10n.t('Authenticate with {0}', ProductBitbucket.name)}
                     </Typography>
                 </Grid>
                 <Grid
@@ -83,7 +84,7 @@ export const SimpleSiteAuthenticator: React.FunctionComponent<SimpleSiteAuthenti
 
                 <Grid item xs={12}>
                     <Typography variant="h3" align="center">
-                        Additional sites can be added later
+                        {l10n.t('Additional sites can be added later')}
                     </Typography>
                 </Grid>
             </Grid>

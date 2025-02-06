@@ -8,6 +8,7 @@ import { PanelSubtitle } from '../../../common/PanelSubtitle';
 import { PanelTitle } from '../../../common/PanelTitle';
 import { useBorderBoxStyles } from '../../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../../configController';
+import * as l10n from '@vscode/l10n';
 
 type PreferredRemotesPanelProps = CommonSubpanelProps & {
     preferredRemotes: string[];
@@ -58,14 +59,15 @@ export const PreferredRemotesPanel: React.FunctionComponent<PreferredRemotesPane
                     aria-controls={`${ConfigSection.Bitbucket}-${ConfigSubSection.PreferredRemotes}-content`}
                     id={`${ConfigSection.Bitbucket}-${ConfigSubSection.PreferredRemotes}-header`}
                 >
-                    <PanelTitle>Preferred Git Remotes</PanelTitle>
-                    <PanelSubtitle>configure the preferred remotes</PanelSubtitle>
+                    <PanelTitle>{l10n.t('Preferred Git Remotes')}</PanelTitle>
+                    <PanelSubtitle>{l10n.t('configure the preferred remotes')}</PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Grid container direction="column">
                         <Typography>
-                            The first remote that matches the list will be used to fetch pull requests, issues, and
-                            pipelines. A random remote is chosen if a match is not found.
+                            {l10n.t(
+                                'The first remote that matches the list will be used to fetch pull requests, issues, and pipelines. A random remote is chosen if a match is not found.',
+                            )}
                         </Typography>
 
                         <Box className={boxClass.box} marginTop={1} paddingBottom={2}>
@@ -73,13 +75,15 @@ export const PreferredRemotesPanel: React.FunctionComponent<PreferredRemotesPane
                                 options={preferredRemotes}
                                 optionsOrdered={true}
                                 reverseButtons={true}
-                                addOptionButtonContent="Add remote"
-                                inputLabel="Remote"
+                                addOptionButtonContent={l10n.t('Add remote')}
+                                inputLabel={l10n.t('Remote')}
                                 disabled={false}
                                 onChange={handleOptionsChange}
                                 emptyComponent={
                                     <Box width="100%">
-                                        <Typography align="center">No preferred remotes configured.</Typography>
+                                        <Typography align="center">
+                                            {l10n.t('No preferred remotes configured.')}
+                                        </Typography>
                                     </Box>
                                 }
                             />

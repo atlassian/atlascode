@@ -1,4 +1,4 @@
-import { TreeItem, TreeItemCollapsibleState } from 'vscode';
+import { TreeItem, TreeItemCollapsibleState, l10n } from 'vscode';
 import { Commands } from '../../commands';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 
@@ -15,7 +15,7 @@ export class ConfigureJQLNode extends AbstractBaseNode {
 
         treeItem.command = {
             command: Commands.ShowJiraIssueSettings,
-            title: 'Configure Filters',
+            title: l10n.t('Configure Filters'),
             arguments: ['ConfigureJQLNode'],
         };
 

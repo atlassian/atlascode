@@ -22,6 +22,7 @@ import { parseJiraIssueKeys } from '../../jira/issueKeyParser';
 import { AuthStatusBar } from '../authStatusBar';
 import { PRFileDiffQueryParams } from '../pullrequest/diffViewHelper';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
+import { l10n } from 'vscode';
 
 export class JiraActiveIssueStatusBar implements Disposable {
     // show active issue to the right of auth status bar item
@@ -140,7 +141,7 @@ export class JiraActiveIssueStatusBar implements Disposable {
 
     private showEmptyStateStatusBarItem() {
         this.statusBarItem!.text = `$(chevron-right) No active issue`;
-        this.statusBarItem!.tooltip = 'No active Jira issue - click to view issue explorer';
+        this.statusBarItem!.tooltip = l10n.t('No active Jira issue - click to view issue explorer');
         this.statusBarItem!.command = 'atlascode.views.jira.customJql.focus';
         this.statusBarItem!.show();
     }

@@ -16,6 +16,7 @@ import { v4 } from 'uuid';
 import { DetailedSiteInfo, emptySiteInfo } from '../../../../../atlclients/authInfo';
 import { JQLEntry } from '../../../../../config/model';
 import { FilterSearchResultsTable } from './FilterSearchResultsTable';
+import * as l10n from '@vscode/l10n';
 
 export type FilterSearchDialogProps = {
     open: boolean;
@@ -66,16 +67,16 @@ export const FilterSearchDialog: React.FunctionComponent<FilterSearchDialogProps
     return (
         <Dialog fullWidth maxWidth="md" open={open} onClose={onCancel}>
             <DialogTitle>
-                <Typography variant="h4">Filter Search</Typography>
+                <Typography variant="h4">{l10n.t('Filter Search')}</Typography>
             </DialogTitle>
             <DialogContent>
-                <DialogContentText>{`Import Filters`}</DialogContentText>
+                <DialogContentText>{l10n.t('Import Filters')}</DialogContentText>
                 <Grid container direction="column" spacing={2}>
                     <Grid item>
                         <SiteSelector
                             name="site"
                             value={site.id}
-                            label="Select a site"
+                            label={l10n.t('Select a site')}
                             required
                             sites={sites}
                             fullWidth

@@ -1,4 +1,4 @@
-import { commands, window } from 'vscode';
+import { commands, window, l10n } from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { WorkspaceRepo } from '../../bitbucket/model';
 import { Commands } from '../../commands';
@@ -32,7 +32,7 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
             bbApi.pipelines.getRecentActivity(site).then((newResults) => {
                 var diffs = this.diffResults(previousResults, newResults);
                 diffs = diffs.filter((p) => this.shouldDisplayTarget(p.target));
-                const buttonText = diffs.length === 1 ? 'View' : 'View Pipeline Explorer';
+                const buttonText = diffs.length === 1 ? l10n.t('View') : l10n.t('View Pipeline Explorer');
                 if (diffs.length > 0) {
                     window.showInformationMessage(this.composeMessage(diffs), buttonText).then((selection) => {
                         if (selection) {

@@ -28,6 +28,7 @@ import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import clsx from 'clsx';
 import { uid } from 'react-uid';
 import { useBorderBoxStyles } from '../../common/useBorderBoxStyles';
+import * as l10n from '@vscode/l10n';
 
 type SiteListProps = {
     product: Product;
@@ -60,7 +61,7 @@ function generateListItems(
         return [
             <ListItem key="empty">
                 <Box width="100%">
-                    <Typography align="center">No sites found.</Typography>
+                    <Typography align="center">{l10n.t('No sites found.')}</Typography>
                 </Box>
             </ListItem>,
         ];
@@ -86,7 +87,7 @@ function generateListItems(
                     <ListItemText primary={swa.site.name} />
                     <ListItemSecondaryAction>
                         {swa.auth.state === AuthInfoState.Invalid && (
-                            <Tooltip title="Credential Error">
+                            <Tooltip title={l10n.t('Credential Error')}>
                                 <IconButton edge="end" aria-label="error" onClick={() => edit(swa)}>
                                     <ErrorIcon fontSize="small" color="inherit" />
                                 </IconButton>

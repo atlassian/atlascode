@@ -49,6 +49,7 @@ import WorklogForm from './WorklogForm';
 import Worklogs from './Worklogs';
 import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
+import * as l10n from '@vscode/l10n';
 
 type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -645,7 +646,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         <LoadingButton
                             className="ac-button-secondary"
                             onClick={this.handleRefresh}
-                            iconBefore={<RefreshIcon label="refresh" />}
+                            iconBefore={<RefreshIcon label={l10n.t('refresh')} />}
                             isLoading={this.state.loadingField === 'refresh'}
                         />
                     </Tooltip>
@@ -669,7 +670,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     <LoadingButton
                                         className="ac-button-secondary"
                                         onClick={this.handleOpenWorklogEditor}
-                                        iconBefore={<EmojiFrequentIcon label="Log Work" />}
+                                        iconBefore={<EmojiFrequentIcon label={l10n.t('Log Work')} />}
                                         isLoading={this.state.loadingField === 'worklog'}
                                     />
                                 </Tooltip>
@@ -682,7 +683,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 <LoadingButton
                                     className="ac-button-secondary"
                                     onClick={this.handleOpenAttachmentEditor}
-                                    iconBefore={<EditorAttachmentIcon label="Add Attachment" />}
+                                    iconBefore={<EditorAttachmentIcon label={l10n.t('Add Attachment')} />}
                                     isLoading={this.state.loadingField === 'attachment'}
                                 />
                             </Tooltip>
@@ -717,9 +718,9 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                         onClick={this.handleOpenWatchesEditor}
                                         iconBefore={
                                             this.state.fieldValues['watches'].isWatching ? (
-                                                <WatchFilledIcon label="Watches" />
+                                                <WatchFilledIcon label={l10n.t('Watches')} />
                                             ) : (
-                                                <WatchIcon label="Watches" />
+                                                <WatchIcon label={l10n.t('Watches')} />
                                             )
                                         }
                                         isLoading={this.state.loadingField === 'watches'}
@@ -753,9 +754,9 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                         onClick={this.handleOpenVotesEditor}
                                         iconBefore={
                                             this.state.fieldValues['votes'].hasVoted ? (
-                                                <StarFilledIcon label="Votes" />
+                                                <StarFilledIcon label={l10n.t('Votes')} />
                                             ) : (
-                                                <StarIcon label="Votes" />
+                                                <StarIcon label={l10n.t('Votes')} />
                                             )
                                         }
                                         isLoading={this.state.loadingField === 'votes'}
@@ -770,7 +771,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         <LoadingButton
                             className="ac-button"
                             onClick={this.handleStartWorkOnIssue}
-                            iconBefore={<BitbucketBranchesIcon label="Start work" />}
+                            iconBefore={<BitbucketBranchesIcon label={l10n.t('Start work')} />}
                             isLoading={false}
                         >
                             Start work
@@ -814,12 +815,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.advancedSidebarFields.forEach((field) => {
             if (field.advanced && field.uiType !== UIType.NonEditable) {
                 if (field.uiType === UIType.Timetracking) {
-                    field.name = 'Original estimate';
+                    field.name = l10n.t('Original estimate');
                 }
                 markups.push(
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{field.name}</label>
-                        {this.getInputMarkup(field, true, `Advanced sidebar`)}
+                        {this.getInputMarkup(field, true, l10n.t('Advanced sidebar'))}
                     </div>,
                 );
             }
@@ -828,7 +829,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         if (this.state.recentPullRequests && this.state.recentPullRequests.length > 0) {
             markups.push(
                 <div className="ac-vpadding">
-                    <label className="ac-field-label">Recent pull requests</label>
+                    <label className="ac-field-label">{l10n.t('Recent pull requests')}</label>
                     <PullRequests
                         pullRequests={this.state.recentPullRequests}
                         onClick={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.url })}

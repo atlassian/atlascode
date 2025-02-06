@@ -14,8 +14,8 @@ export class CommitSectionNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        let item = new vscode.TreeItem('Commits', vscode.TreeItemCollapsibleState.Collapsed);
-        item.tooltip = 'View commits';
+        let item = new vscode.TreeItem(vscode.l10n.t('Commits'), vscode.TreeItemCollapsibleState.Collapsed);
+        item.tooltip = vscode.l10n.t('View commits');
         return item;
     }
 

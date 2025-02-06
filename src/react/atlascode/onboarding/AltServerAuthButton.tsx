@@ -3,6 +3,7 @@ import StorageIcon from '@material-ui/icons/Storage';
 import React, { useCallback, useContext } from 'react';
 import { Product } from '../../../atlclients/authInfo';
 import { AuthDialogControllerContext } from '../config/auth/useAuthDialog';
+import * as l10n from '@vscode/l10n';
 
 const useStyles = makeStyles((theme) => ({
     box: {
@@ -50,7 +51,7 @@ export const AltServerAuthButton: React.FunctionComponent<AltServerAuthButtonPro
     }, [authDialogController, product]);
 
     return (
-        <Tooltip title={'Opens a dialog window to log in with custom instance'}>
+        <Tooltip title={l10n.t('Opens a dialog window to log in with custom instance')}>
             <Button variant="contained" className={classes.button} onClick={openProductAuth}>
                 <Grid container direction="column">
                     <Grid container direction="row" alignItems="center" justify="center" spacing={3}>

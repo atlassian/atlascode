@@ -4,6 +4,7 @@ import { Logger } from '../../logger';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { showIssue } from '../../commands/jira/showIssue';
 import { JiraIssueFetcher } from './util/jiraIssueFetcher';
+import * as vscode from 'vscode';
 
 /**
  * Use a deep link to show a Jira issue
@@ -40,7 +41,7 @@ export class ShowJiraIssueUriHandlerAction implements UriHandlerAction {
             this.analyticsApi.fireDeepLinkEvent(decodeURIComponent(query.get('source') || 'unknown'), 'showJiraIssue');
         } catch (e) {
             Logger.debug('error opening issue page:', e);
-            window.showErrorMessage('Error opening issue page (check log for details)');
+            window.showErrorMessage(vscode.l10n.t('Error opening issue page (check log for details)'));
         }
     }
 }

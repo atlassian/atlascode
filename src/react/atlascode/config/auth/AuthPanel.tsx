@@ -9,6 +9,7 @@ import { PanelTitle } from '../../common/PanelTitle';
 import { Product } from '../../../../atlclients/authInfo';
 import { SiteAuthenticator } from './SiteAuthenticator';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
+import * as l10n from '@vscode/l10n';
 
 type AuthPanelProps = CommonSubpanelProps & {
     isRemote: boolean;
@@ -45,8 +46,8 @@ export const AuthPanel: React.FunctionComponent<AuthPanelProps> = memo(
                     aria-controls={`${section}-${ConfigSubSection.Auth}-content`}
                     id={`${section}-${ConfigSubSection.Auth}-header`}
                 >
-                    <PanelTitle>Authentication</PanelTitle>
-                    <PanelSubtitle>authenticate with {product.name} instances</PanelSubtitle>
+                    <PanelTitle>{l10n.t('Authentication')}</PanelTitle>
+                    <PanelSubtitle>{l10n.t('authenticate with {0} instances', product.name)}</PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <SiteAuthenticator product={product} isRemote={isRemote} sites={sites} />

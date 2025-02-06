@@ -2,6 +2,7 @@ import { Box, Grid, lighten, makeStyles, Tooltip, Typography } from '@material-u
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import { ToggleButton } from '@material-ui/lab';
 import React, { useCallback } from 'react';
+import * as l10n from '@vscode/l10n';
 
 const useStyles = makeStyles((theme) => ({
     buttonInterior: {
@@ -62,7 +63,7 @@ export const AltProductEnabler: React.FunctionComponent<AltProductEnablerProps> 
     }, [enabled, onToggle]);
 
     return (
-        <Tooltip title={enabled ? `Disable ${label} features` : `Enable ${label} features`}>
+        <Tooltip title={enabled ? l10n.t('Disable {0} features', label) : l10n.t('Enable {0} features', label)}>
             <ToggleButton className={classes.button} onClick={handleToggle} selected={enabled}>
                 <Grid container direction="column">
                     <Grid container direction="row" alignItems="center" justify="center" spacing={1}>

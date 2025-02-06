@@ -6,6 +6,7 @@ import { AbstractBaseNode } from './nodes/abstractBaseNode';
 import { InternalLinkNode } from './nodes/internalLinkNode';
 import { IssueNode } from './nodes/issueNode';
 import { LinkNode } from './nodes/linkNode';
+import { l10n } from 'vscode';
 
 export class HelpDataProvider extends BaseTreeDataProvider {
     constructor() {
@@ -19,32 +20,42 @@ export class HelpDataProvider extends BaseTreeDataProvider {
     async getChildren(element: IssueNode | undefined) {
         return [
             new LinkNode(
-                'Get Started',
-                'Check out our quick-start guide',
+                l10n.t('Get Started'),
+                l10n.t('Check out our quick-start guide'),
                 iconSet.ATLASSIANICON,
                 KnownLinkID.GettingStarted,
             ),
-            new LinkNode('What is JQL?', 'Learn about Jira Query Language', iconSet.JIRAICON, KnownLinkID.WhatIsJQL),
             new LinkNode(
-                'Contribute',
-                'Create pull requests for this extension',
+                l10n.t('What is JQL?'),
+                l10n.t('Learn about Jira Query Language'),
+                iconSet.JIRAICON,
+                KnownLinkID.WhatIsJQL,
+            ),
+            new LinkNode(
+                l10n.t('Contribute'),
+                l10n.t('Create pull requests for this extension'),
                 iconSet.PULLREQUEST,
                 KnownLinkID.Contribute,
             ),
-            new LinkNode('Report an Issue', 'Report and vote on issues', iconSet.ISSUES, KnownLinkID.ReportAnIssue),
             new LinkNode(
-                'Tweet about us',
-                'Share your love for this extension',
+                l10n.t('Report an Issue'),
+                l10n.t('Report and vote on issues'),
+                iconSet.ISSUES,
+                KnownLinkID.ReportAnIssue,
+            ),
+            new LinkNode(
+                l10n.t('Tweet about us'),
+                l10n.t('Share your love for this extension'),
                 iconSet.TWITTERLOGOBLUE,
                 KnownLinkID.TweetAboutUs,
             ),
             new InternalLinkNode(
-                'Explore Features',
-                'Overwhelmed? Check out some of the most common features, all in one place',
+                l10n.t('Explore Features'),
+                l10n.t('Overwhelmed? Check out some of the most common features, all in one place'),
                 iconSet.SEARCH,
                 {
                     command: Commands.ShowExploreSettings,
-                    title: 'Open Explore Page',
+                    title: l10n.t('Open Explore Page'),
                 },
             ),
         ];

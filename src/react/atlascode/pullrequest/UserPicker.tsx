@@ -6,6 +6,7 @@ import { useAsyncAbortable } from 'react-async-hook';
 import useConstant from 'use-constant';
 import { User, BitbucketSite } from '../../../bitbucket/model';
 import { CreatePullRequestControllerContext } from './createPullRequestController';
+import * as l10n from '@vscode/l10n';
 
 type UserPickerProps = { site?: BitbucketSite; users: User[]; defaultUsers: User[]; onChange: (users: User[]) => void };
 
@@ -63,7 +64,7 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
             onInputChange={handleInputChange}
             onChange={handleChange}
             loading={fetchUsers.loading}
-            renderInput={(params) => <TextField {...params} label="Reviewers" />}
+            renderInput={(params) => <TextField {...params} label={l10n.t('Reviewers')} />}
             renderOption={(option) => (
                 <Grid container spacing={1} direction="row" alignItems="center">
                     <Grid item>

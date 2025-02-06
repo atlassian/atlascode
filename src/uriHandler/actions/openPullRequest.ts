@@ -3,6 +3,7 @@ import { Logger } from '../../logger';
 import { UriHandlerAction } from '../uriHandlerAction';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { CheckoutHelper } from '../../bitbucket/interfaces';
+import * as vscode from 'vscode';
 
 /**
  * Use a deep link to open pull request
@@ -38,7 +39,7 @@ export class OpenPullRequestUriHandlerAction implements UriHandlerAction {
             this.analyticsApi.fireDeepLinkEvent(source, 'pullRequest');
         } catch (e) {
             Logger.debug('error opening pull request:', e);
-            window.showErrorMessage('Error opening pull request (check log for details)');
+            window.showErrorMessage(vscode.l10n.t('Error opening pull request (check log for details)'));
         }
     }
 

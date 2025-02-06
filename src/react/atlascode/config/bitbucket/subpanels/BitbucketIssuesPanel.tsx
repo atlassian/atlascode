@@ -6,6 +6,7 @@ import { CommonSubpanelProps } from '../../../common/commonPanelProps';
 import { PanelSubtitle } from '../../../common/PanelSubtitle';
 import { PanelTitle } from '../../../common/PanelTitle';
 import { BitbucketIssues } from '../BitbucketIssues';
+import * as l10n from '@vscode/l10n';
 
 type BitbucketIssuesPanelProps = CommonSubpanelProps & {
     enabled: boolean;
@@ -42,8 +43,8 @@ export const BitbucketIssuesPanel: React.FunctionComponent<BitbucketIssuesPanelP
                     aria-controls={`${ConfigSection.Bitbucket}-${ConfigSubSection.Issues}-content`}
                     id={`${ConfigSection.Bitbucket}-${ConfigSubSection.Issues}-header`}
                 >
-                    <PanelTitle>Bitbucket Issues Explorer</PanelTitle>
-                    <PanelSubtitle>configure the Bitbucket issues explorer and notifications</PanelSubtitle>
+                    <PanelTitle>{l10n.t('Bitbucket Issues Explorer')}</PanelTitle>
+                    <PanelSubtitle>{l10n.t('configure the Bitbucket issues explorer and notifications')}</PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <BitbucketIssues

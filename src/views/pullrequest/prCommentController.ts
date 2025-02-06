@@ -1,7 +1,7 @@
 import { fileCheckoutEvent, prCommentEvent, prTaskEvent } from 'src/analytics';
 import TurndownService from 'turndown';
 import { v4 } from 'uuid';
-import vscode, { commands, CommentThread, MarkdownString } from 'vscode';
+import vscode, { commands, CommentThread, MarkdownString, l10n } from 'vscode';
 import { BitbucketMentionsCompletionProvider } from '../../bitbucket/bbMentionsCompletionProvider';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, Comment, emptyTask, Task } from '../../bitbucket/model';
@@ -99,7 +99,7 @@ function isPRComment(comment: vscode.Comment): comment is PullRequestComment {
 export class PullRequestCommentController implements vscode.Disposable {
     private _commentController: vscode.CommentController = vscode.comments.createCommentController(
         'bbpr',
-        'Bitbucket pullrequest comments',
+        l10n.t('Bitbucket pullrequest comments'),
     );
     // map of comment threads keyed by pull request - Map<`pull request href`, Map<`comment id`, vscode.CommentThread>>
     private _commentsCache = new Map<string, Map<string, vscode.CommentThread>>();
@@ -908,7 +908,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             body: taskBody,
             contextValue: contextValueList.join(','),
             author: {
-                name: task.isComplete ? 'Task (Complete)' : 'Task',
+                name: task.isComplete ? l10n.t('Task (Complete)') : l10n.t('Task'),
             },
             mode: vscode.CommentMode.Preview,
             prHref: prHref,
@@ -943,7 +943,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             prCommentThreadId: parentCommentThreadId,
             body: new vscode.MarkdownString(turndownService.turndown(comment.htmlContent)),
             author: {
-                name: comment.user.displayName || 'Unknown user',
+                name: comment.user.displayName || l10n.t('Unknown user'),
                 iconPath: vscode.Uri.parse(comment.user.avatarUrl),
             },
             authorId: comment.user.accountId,

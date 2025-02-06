@@ -3,6 +3,7 @@ import { Container } from '../../../container';
 import { fetchMinimalIssue } from '../../../jira/fetchIssue';
 import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
 import { window } from 'vscode';
+import * as vscode from 'vscode';
 
 // Common logic that's shared between multiple actions that deal with Jira issues
 export class JiraIssueFetcher {
@@ -34,13 +35,18 @@ export class JiraIssueFetcher {
     }
 
     async handleSiteNotFound(issueKey: string, siteBaseURL: string) {
+        const choice = vscode.l10n.t('Open auth settings');
         await window
             .showInformationMessage(
-                `Cannot open ${issueKey} because site '${siteBaseURL}' is not authenticated. Please authenticate and try again.`,
-                'Open auth settings',
+                vscode.l10n.t(
+                    "Cannot open {0} because site '{1}' is not authenticated. Please authenticate and try again.",
+                    issueKey,
+                    siteBaseURL,
+                ),
+                choice,
             )
             .then((userChoice) => {
-                if (userChoice === 'Open auth settings') {
+                if (userChoice === choice) {
                     Container.settingsWebviewFactory.createOrShow({
                         section: ConfigSection.Jira,
                         subSection: ConfigSubSection.Auth,

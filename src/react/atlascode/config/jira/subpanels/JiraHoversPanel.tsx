@@ -6,6 +6,7 @@ import { CommonSubpanelProps } from '../../../common/commonPanelProps';
 import { PanelSubtitle } from '../../../common/PanelSubtitle';
 import { PanelTitle } from '../../../common/PanelTitle';
 import { IssueHovers } from '../IssueHovers';
+import * as l10n from '@vscode/l10n';
 
 type JiraHoversPanelProps = CommonSubpanelProps & {
     enabled: boolean;
@@ -39,8 +40,8 @@ export const JiraHoversPanel: React.FunctionComponent<JiraHoversPanelProps> = me
                     aria-controls={`${ConfigSection.Jira}-${ConfigSubSection.Hovers}-content`}
                     id={`${ConfigSection.Jira}-${ConfigSubSection.Hovers}-header`}
                 >
-                    <PanelTitle>Jira Issue Hovers</PanelTitle>
-                    <PanelSubtitle>configure hovering for Jira issue keys</PanelSubtitle>
+                    <PanelTitle>{l10n.t('Jira Issue Hovers')}</PanelTitle>
+                    <PanelSubtitle>{l10n.t('configure hovering for Jira issue keys')}</PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <IssueHovers enabled={enabled} />

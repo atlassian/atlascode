@@ -7,6 +7,7 @@ import { CommonSubpanelProps } from '../../../common/commonPanelProps';
 import { PanelSubtitle } from '../../../common/PanelSubtitle';
 import { PanelTitle } from '../../../common/PanelTitle';
 import { PipelinesExplorer } from '../pipelines/PipelinesExplorer';
+import * as l10n from '@vscode/l10n';
 
 type PipelinesPanelProps = CommonSubpanelProps & {
     enabled: boolean;
@@ -65,8 +66,10 @@ export const PipelinesPanel: React.FunctionComponent<PipelinesPanelProps> = memo
                     aria-controls={`${ConfigSection.Bitbucket}-${ConfigSubSection.Pipelines}-content`}
                     id={`${ConfigSection.Bitbucket}-${ConfigSubSection.Pipelines}-header`}
                 >
-                    <PanelTitle>Bitbucket Pipelines Explorer</PanelTitle>
-                    <PanelSubtitle>configure the Bitbucket pipelines explorer and notifications</PanelSubtitle>
+                    <PanelTitle>{l10n.t('Bitbucket Pipelines Explorer')}</PanelTitle>
+                    <PanelSubtitle>
+                        {l10n.t('configure the Bitbucket pipelines explorer and notifications')}
+                    </PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <PipelinesExplorer

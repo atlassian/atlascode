@@ -9,6 +9,7 @@ import ProductSelector from './ProductSelector';
 import { SimpleSiteAuthenticator } from './SimpleSiteAuthenticator';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
+import * as l10n from '@vscode/l10n';
 
 const useStyles = makeStyles((theme: Theme) => ({
     root: {
@@ -133,7 +134,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                     />
                 );
             default:
-                return 'Unknown step';
+                return l10n.t('Unknown step');
         }
     };
 
@@ -161,10 +162,10 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                 {activeStep === steps.length ? (
                                     <div>
                                         <Typography className={classes.pageContent}>
-                                            All steps completed - you&apos;re finished
+                                            {l10n.t("All steps completed - you're finished")}
                                         </Typography>
                                         <Button onClick={handleReset} className={classes.button}>
-                                            Reset
+                                            {l10n.t('Reset')}
                                         </Button>
                                     </div>
                                 ) : (
@@ -200,7 +201,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                                         onClick={handleOpenSettings}
                                                         className={classes.button}
                                                     >
-                                                        Open Extension Settings
+                                                        {l10n.t('Open Extension Settings')}
                                                     </Button>
                                                     <Button
                                                         variant="contained"
@@ -208,7 +209,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                                         onClick={handleClosePage}
                                                         className={classes.button}
                                                     >
-                                                        Finish
+                                                        {l10n.t('Finish')}
                                                     </Button>
                                                 </React.Fragment>
                                             )}

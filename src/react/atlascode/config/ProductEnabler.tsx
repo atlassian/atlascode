@@ -1,5 +1,6 @@
 import { Grid, Switch, Tooltip } from '@material-ui/core';
 import React, { useCallback } from 'react';
+import * as l10n from '@vscode/l10n';
 
 export type ProductEnablerProps = {
     label: string;
@@ -22,7 +23,7 @@ export const ProductEnabler: React.FunctionComponent<ProductEnablerProps> = ({ l
     return (
         <Grid container justify="center" alignItems="center" spacing={1}>
             <Grid item>
-                <Tooltip title={enabled ? `Disable ${label} features` : `Enable ${label} features`}>
+                <Tooltip title={enabled ? l10n.t('Disable {0} features', label) : l10n.t('Enable {0} features', label)}>
                     <Switch
                         color="primary"
                         size="small"

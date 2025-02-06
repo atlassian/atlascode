@@ -6,14 +6,15 @@ import SectionMessage from '@atlaskit/section-message';
 import * as React from 'react';
 import { LegacyPMFData } from '../../ipc/messaging';
 import * as FieldValidators from './fieldValidators';
+import * as l10n from '@vscode/l10n';
 
-const q1 = { id: 'q1', question: 'How would you feel if you could no longer use this extension?' };
-const q2 = { id: 'q2', question: '(optional) How can we improve this extension for you?' };
+const q1 = { id: 'q1', question: l10n.t('How would you feel if you could no longer use this extension?') };
+const q2 = { id: 'q2', question: l10n.t('(optional) How can we improve this extension for you?') };
 const q3 = {
     id: 'q3',
-    question: '(optional) What would you use as an alternative if this extension were no longer available?',
+    question: l10n.t('(optional) What would you use as an alternative if this extension were no longer available?'),
 };
-const q4 = { id: 'q4', question: '(optional) What is the main benefit you receive from this extension?' };
+const q4 = { id: 'q4', question: l10n.t('(optional) What is the main benefit you receive from this extension?') };
 
 export default class PMFBBanner extends React.Component<
     {
@@ -61,24 +62,27 @@ export default class PMFBBanner extends React.Component<
         const { isOpen } = this.state;
 
         const radioItems = [
-            { name: '0', label: 'Very disappointed', value: '0' },
-            { name: '1', label: 'Somewhat disappointed', value: '1' },
-            { name: '2', label: 'Not disappointed', value: '2' },
+            { name: '0', label: l10n.t('Very disappointed'), value: '0' },
+            { name: '1', label: l10n.t('Somewhat disappointed'), value: '1' },
+            { name: '2', label: l10n.t('Not disappointed'), value: '2' },
         ];
 
         return (
             <div>
-                <SectionMessage appearance="change" title="Take a quick survey to let us know how we're doing">
+                <SectionMessage
+                    appearance="change"
+                    title={l10n.t("Take a quick survey to let us know how we're doing")}
+                >
                     <div>
                         <ButtonGroup>
                             <Button className="ac-button" onClick={this.handleOpen}>
-                                Take Survey
+                                {l10n.t('Take Survey')}
                             </Button>
                             <Button className="ac-banner-link-button" appearance="link" onClick={this.handleLater}>
-                                Maybe Later
+                                {l10n.t('Maybe Later')}
                             </Button>
                             <Button className="ac-banner-link-button" appearance="link" onClick={this.handleNever}>
-                                No Thanks
+                                {l10n.t('No Thanks')}
                             </Button>
                         </ButtonGroup>
                     </div>
@@ -86,7 +90,11 @@ export default class PMFBBanner extends React.Component<
 
                 {isOpen && (
                     <ModalTransition>
-                        <Modal onClose={this.handleLater} heading="Send Survey" shouldCloseOnEscapePress={false}>
+                        <Modal
+                            onClose={this.handleLater}
+                            heading={l10n.t('Send Survey')}
+                            shouldCloseOnEscapePress={false}
+                        >
                             <Form name="pmf-collector" onSubmit={this.handleFeedback}>
                                 {(frmArgs: any) => {
                                     return (
@@ -171,7 +179,7 @@ export default class PMFBBanner extends React.Component<
                                                         className="ac-button"
                                                         isDisabled={this.state.q1Value === undefined}
                                                     >
-                                                        Submit
+                                                        {l10n.t('Submit')}
                                                     </Button>
                                                 </div>
                                                 <div
@@ -182,7 +190,7 @@ export default class PMFBBanner extends React.Component<
                                                     }}
                                                 >
                                                     <Button className="ac-button" onClick={this.handleLater}>
-                                                        Cancel
+                                                        {l10n.t('Cancel')}
                                                     </Button>
                                                 </div>
                                             </FormFooter>

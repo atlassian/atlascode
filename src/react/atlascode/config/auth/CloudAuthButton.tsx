@@ -3,13 +3,14 @@ import CloudIcon from '@material-ui/icons/Cloud';
 import React, { useContext } from 'react';
 import { AuthInfoState, emptyUserInfo, Product, ProductJira } from '../../../../atlclients/authInfo';
 import { ConfigControllerContext } from '../configController';
+import * as l10n from '@vscode/l10n';
 
 type CloudAuthButtonProps = {
     product: Product;
 };
 
 export const CloudAuthButton: React.FunctionComponent<CloudAuthButtonProps> = ({ product }) => {
-    const loginText = `Login to ${product.name} Cloud`;
+    const loginText = l10n.t('Login to {0} Cloud', product.name);
     const controller = useContext(ConfigControllerContext);
 
     const handleCloudProd = () => {

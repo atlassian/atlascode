@@ -2,6 +2,7 @@ import * as React from 'react';
 import Button from '@atlaskit/button';
 import Tooltip from '@atlaskit/tooltip';
 import CopyIcon from '@atlaskit/icon/glyph/copy';
+import * as l10n from '@vscode/l10n';
 
 export default class NavItem extends React.Component<
     {
@@ -29,8 +30,8 @@ export default class NavItem extends React.Component<
                     </Button>
                     {this.props.onCopy && (
                         <div className="jira-issue-copy-icon" onClick={this.props.onCopy}>
-                            <Tooltip content="Copy the web link to clipboard">
-                                <CopyIcon label="copy issue link" size="small" />
+                            <Tooltip content={l10n.t('Copy the web link to clipboard')}>
+                                <CopyIcon label={l10n.t('copy issue link')} size="small" />
                             </Tooltip>
                         </div>
                     )}

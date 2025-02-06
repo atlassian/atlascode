@@ -151,7 +151,7 @@ export class RepositoriesNode extends AbstractBaseNode {
             await this.refresh();
         }
         if (this.children!.length === 0) {
-            return [new SimpleNode('No pull requests found for this repository')];
+            return [new SimpleNode(vscode.l10n.t('No pull requests found for this repository'))];
         }
         return this.children!;
     }

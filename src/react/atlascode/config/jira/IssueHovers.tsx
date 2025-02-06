@@ -2,6 +2,8 @@ import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { Switch } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigControllerContext } from '../configController';
+import * as l10n from '@vscode/l10n';
+
 type IssueHoversProps = {
     enabled: boolean;
 };
@@ -29,7 +31,7 @@ export const IssueHovers: React.FunctionComponent<IssueHoversProps> = memo(({ en
             control={
                 <Switch size="small" color="primary" id="jiraHoverEnabled" checked={enabled} onChange={handleChange} />
             }
-            label="Show details when hovering over issue keys in the editor"
+            label={l10n.t('Show details when hovering over issue keys in the editor')}
             spacing={1}
             variant="body1"
         />

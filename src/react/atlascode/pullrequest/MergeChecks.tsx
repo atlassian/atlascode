@@ -2,6 +2,7 @@ import { Typography } from '@material-ui/core';
 import { Alert } from '@material-ui/lab';
 import * as React from 'react';
 import { PullRequestData } from '../../../bitbucket/model';
+import * as l10n from '@vscode/l10n';
 
 type MergeChecksProps = {
     prData: PullRequestData;
@@ -24,13 +25,15 @@ export const MergeChecks: React.FC<MergeChecksProps> = ({ prData }) => {
         <Alert variant="standard" severity={allClear ? 'success' : 'warning'}>
             <Typography>
                 {approvalCount === 0
-                    ? 'Pull request has no approvals'
-                    : `Pull request has ${approvalCount} ${approvalCount === 1 ? 'approval' : 'approvals'}`}
+                    ? l10n.t('Pull request has no approvals')
+                    : approvalCount === 1
+                      ? l10n.t('Pull request has 1 approval')
+                      : l10n.t('Pull request has {0} approvals', approvalCount)}
             </Typography>
 
-            {openTaskCount > 0 && <Typography>Pull request has unresolved tasks</Typography>}
-            {needsWorkCount > 0 && <Typography>Pull request has been marked as - Needs work</Typography>}
-            {unsuccessfulBuilds && <Typography>Pull request has unsuccessful builds</Typography>}
+            {openTaskCount > 0 && <Typography>{l10n.t('Pull request has unresolved tasks')}</Typography>}
+            {needsWorkCount > 0 && <Typography>{l10n.t('Pull request has been marked as - Needs work')}</Typography>}
+            {unsuccessfulBuilds && <Typography>{l10n.t('Pull request has unsuccessful builds')}</Typography>}
         </Alert>
     );
 };

@@ -7,13 +7,16 @@ import { parseGitUrl, urlForRemote } from './bbUtils';
 
 export function showBitbucketDebugInfo() {
     if (Container.config.outputLevel !== OutputLevel.Debug) {
+        const choice = vscode.l10n.t('Open settings');
         vscode.window
             .showInformationMessage(
-                'Set ouput level setting (atlascode.outputLevel) to debug and run the command again to view the information',
-                'Open settings',
+                vscode.l10n.t(
+                    'Set ouput level setting (atlascode.outputLevel) to debug and run the command again to view the information',
+                ),
+                choice,
             )
             .then((userChoice) => {
-                if (userChoice === 'Open settings') {
+                if (userChoice === choice) {
                     vscode.commands.executeCommand('workbench.action.openSettings2');
                 }
             });

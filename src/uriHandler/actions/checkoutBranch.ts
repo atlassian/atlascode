@@ -3,6 +3,7 @@ import { isAcceptedBySuffix, UriHandlerAction } from '../uriHandlerAction';
 import { CheckoutHelper } from '../../bitbucket/interfaces';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { Logger } from '../../logger';
+import * as vscode from 'vscode';
 
 /**
  * Use a deep link to checkout a branch
@@ -47,7 +48,7 @@ export class CheckoutBranchUriHandlerAction implements UriHandlerAction {
             }
         } catch (e) {
             Logger.debug('error checkout out branch:', e);
-            window.showErrorMessage('Error checkout out branch (check log for details)');
+            window.showErrorMessage(vscode.l10n.t('Error checkout out branch (check log for details)'));
         }
     }
 }

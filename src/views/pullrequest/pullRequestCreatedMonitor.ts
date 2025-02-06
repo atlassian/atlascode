@@ -42,15 +42,16 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
         Promise.all(promises)
             .then((result) => result.reduce((prev, curr) => prev.concat(curr), []))
             .then((allPRs) => {
+                const choice = vscode.l10n.t('Show');
                 if (allPRs.length === 1) {
                     let repoName = path.basename(allPRs[0].site.repoSlug);
                     vscode.window
                         .showInformationMessage(
-                            `New pull request "${allPRs[0].data.title}" for repo "${repoName}"`,
-                            'Show',
+                            vscode.l10n.t('New pull request "{0}" for repo "{1}"', allPRs[0].data.title, repoName),
+                            choice,
                         )
                         .then((usersChoice) => {
-                            if (usersChoice === 'Show') {
+                            if (usersChoice === choice) {
                                 vscode.commands.executeCommand(Commands.BitbucketShowPullRequestDetails, allPRs[0]);
                             }
                         });
@@ -58,11 +59,11 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                     let repoNames = [...new Set(allPRs.map((r) => path.basename(r.site.repoSlug)))].join(', ');
                     vscode.window
                         .showInformationMessage(
-                            `New pull requests found for the following repositories: ${repoNames}`,
-                            'Show',
+                            vscode.l10n.t('New pull requests found for the following repositories: {0}', repoNames),
+                            choice,
                         )
                         .then((usersChoice) => {
-                            if (usersChoice === 'Show') {
+                            if (usersChoice === choice) {
                                 vscode.commands.executeCommand('workbench.view.extension.atlascode-drawer');
                                 vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
                             }

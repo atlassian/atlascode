@@ -5,6 +5,7 @@ import { Alert, AlertTitle } from '@material-ui/lab';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { v4 } from 'uuid';
 import { ErrorControllerContext, ErrorStateContext } from './errorController';
+import * as l10n from '@vscode/l10n';
 
 export type ErrorDisplayProps = {};
 
@@ -83,7 +84,7 @@ export const ErrorDisplay: React.FunctionComponent<ErrorDisplayProps> = ({}) => 
     }, []);
 
     const title: string =
-        state.errorDetails && state.errorDetails.title ? state.errorDetails.title : 'Something went wrong';
+        state.errorDetails && state.errorDetails.title ? state.errorDetails.title : l10n.t('Something went wrong');
 
     return (
         <>
@@ -117,7 +118,7 @@ export const ErrorDisplay: React.FunctionComponent<ErrorDisplayProps> = ({}) => 
                     }
                 >
                     <AlertTitle>{title}</AlertTitle>
-                    <p>See details at the top of this page</p>
+                    <p>{l10n.t('See details at the top of this page')}</p>
                 </Alert>
             </Snackbar>
         </>

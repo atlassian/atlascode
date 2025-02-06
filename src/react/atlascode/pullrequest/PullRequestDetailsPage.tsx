@@ -39,6 +39,7 @@ import { Reviewers } from './Reviewers';
 import { SummaryPanel } from './SummaryPanel';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
+import * as l10n from '@vscode/l10n';
 
 const useStyles = makeStyles((theme: Theme) => ({
     grow: {
@@ -111,7 +112,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                 </Typography>
                             </Box>
                             <CopyLinkButton
-                                tooltip="Copy link to pull request"
+                                tooltip={l10n.t('Copy link to pull request')}
                                 url={state.pr.data.url}
                                 onClick={controller.copyLink}
                             />
@@ -191,8 +192,8 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                     >
                                                         <Typography variant="button" noWrap>
                                                             {state.pr.data.source.branchName === state.currentBranchName
-                                                                ? 'Source branch checked out'
-                                                                : 'Checkout source branch'}
+                                                                ? l10n.t('Source branch checked out')
+                                                                : l10n.t('Checkout source branch')}
                                                         </Typography>
                                                     </Button>
                                                 </Grid>
@@ -215,8 +216,8 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                         </Grid>
                                         <Grid item>
                                             <BasicPanel
-                                                title={'Related Jira Issues'}
-                                                subtitle={`${state.relatedJiraIssues.length} issues`}
+                                                title={l10n.t('Related Jira Issues')}
+                                                subtitle={l10n.t('{0} issues', state.relatedJiraIssues.length)}
                                                 isLoading={state.loadState.relatedJiraIssues}
                                                 hidden={state.relatedJiraIssues.length === 0}
                                             >
@@ -228,8 +229,8 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                         </Grid>
                                         <Grid item>
                                             <BasicPanel
-                                                title={'Related Bitbucket Issues'}
-                                                subtitle={`${state.relatedBitbucketIssues.length} issues`}
+                                                title={l10n.t('Related Bitbucket Issues')}
+                                                subtitle={l10n.t('{0} issues', state.relatedBitbucketIssues.length)}
                                                 isLoading={state.loadState.relatedBitbucketIssues}
                                                 hidden={state.relatedBitbucketIssues.length === 0}
                                             >
@@ -241,8 +242,8 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                         </Grid>
                                         <Grid item>
                                             <BasicPanel
-                                                title={'Commits'}
-                                                subtitle={`${state.commits.length} commits`}
+                                                title={l10n.t('Commits')}
+                                                subtitle={l10n.t('{0} commits', state.commits.length)}
                                                 isDefaultExpanded
                                                 isLoading={state.loadState.commits}
                                             >
@@ -251,7 +252,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                         </Grid>
                                         <Grid item>
                                             <BasicPanel
-                                                title={'Tasks'}
+                                                title={l10n.t('Tasks')}
                                                 subtitle={taskTitle()}
                                                 isDefaultExpanded
                                                 isLoading={state.loadState.tasks}
@@ -265,8 +266,8 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                         </Grid>
                                         <Grid item>
                                             <BasicPanel
-                                                title={'Files Changed'}
-                                                subtitle={'Click on file names to open diff in editor'}
+                                                title={l10n.t('Files Changed')}
+                                                subtitle={l10n.t('Click on file names to open diff in editor')}
                                                 isDefaultExpanded
                                                 isLoading={state.loadState.diffs}
                                             >
@@ -278,7 +279,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                         </Grid>
                                         <Grid item>
                                             <BasicPanel
-                                                title={'Comments'}
+                                                title={l10n.t('Comments')}
                                                 isDefaultExpanded
                                                 isLoading={state.loadState.comments}
                                             >
@@ -311,7 +312,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                     <Grid container spacing={1} direction={'column'}>
                                         <Grid item>
                                             <Typography variant="h6">
-                                                <strong>Author</strong>
+                                                <strong>{l10n.t('Author')}</strong>
                                             </Typography>
                                             <Box hidden={state.loadState.basicData}>
                                                 <Grid container spacing={1} direction="row" alignItems="center">
@@ -337,7 +338,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
 
                                         <Grid item>
                                             <Typography variant="h6">
-                                                <strong>Reviewers</strong>
+                                                <strong>{l10n.t('Reviewers')}</strong>
                                             </Typography>
                                             <Box marginLeft={2} marginTop={1}>
                                                 <Reviewers
@@ -351,7 +352,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
 
                                         <Grid item>
                                             <Typography variant="h6">
-                                                <strong>Created</strong>
+                                                <strong>{l10n.t('Created')}</strong>
                                             </Typography>
                                             <Tooltip title={state.pr.data.ts || 'unknown'}>
                                                 <Typography>{formatDate(state.pr.data.ts)}</Typography>
@@ -360,7 +361,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
 
                                         <Grid item>
                                             <Typography variant="h6">
-                                                <strong>Updated</strong>
+                                                <strong>{l10n.t('Updated')}</strong>
                                             </Typography>
                                             <Tooltip title={state.pr.data.updatedTs || 'unknown'}>
                                                 <Typography>{formatDate(state.pr.data.updatedTs)}</Typography>

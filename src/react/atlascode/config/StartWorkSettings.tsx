@@ -4,6 +4,7 @@ import Mustache from 'mustache';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useBorderBoxStyles } from '../common/useBorderBoxStyles';
 import { ConfigControllerContext } from './configController';
+import * as l10n from '@vscode/l10n';
 
 type StartWorkSettings = {
     customTemplate: string;
@@ -50,9 +51,9 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
         //However, it is possible to cause it to error if the entire format is messed up, so it's better to catch those cases than to
         //crash the entire page.
         try {
-            return `Preview: ${Mustache.render(template, view)}`;
+            return l10n.t('Preview: {0}', Mustache.render(template, view));
         } catch {
-            return 'Invalid template: please follow the format described above';
+            return l10n.t('Invalid template: please follow the format described above');
         }
     }, [template]);
 
@@ -60,7 +61,7 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
         <Grid container direction="column">
             <Grid item>
                 <Box margin={2}>
-                    <Typography variant="h4">Custom Branch Template</Typography>
+                    <Typography variant="h4">{l10n.t('Custom Branch Template')}</Typography>
 
                     <Typography variant="caption">
                         Branch names will be generated based on the template. Use the keywords <code>prefix</code>,{' '}
@@ -80,7 +81,7 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
                     <Box marginTop={1} paddingBottom={2}>
                         <InlineTextEditor
                             fullWidth
-                            label="Custom Template Text"
+                            label={l10n.t('Custom Template Text')}
                             defaultValue={customTemplate}
                             onSave={handleTemplateChange}
                         />
@@ -90,17 +91,17 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
             </Grid>
             <Grid item>
                 <Box margin={2}>
-                    <Typography variant="h4">Custom Prefixes</Typography>
+                    <Typography variant="h4">{l10n.t('Custom Prefixes')}</Typography>
 
                     <Typography variant="caption">
                         <Typography variant="body2">
-                            For repos with no branching model, custom prefixes can be created here.
+                            {l10n.t('For repos with no branching model, custom prefixes can be created here.')}
                         </Typography>
                         <Typography variant="body2">
                             <b>Bitbucket Users:</b> Prefixes are part of your branching model and can be configured on
                             the{' '}
                             <Link href="https://bitbucket.org/blog/introducing-bitbucket-branching-model-support">
-                                Bitbucket Website
+                                {l10n.t('Bitbucket Website')}
                             </Link>
                         </Typography>
                     </Typography>
@@ -109,13 +110,13 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
                         <InlineTextEditorList
                             options={customPrefixes}
                             reverseButtons={true}
-                            addOptionButtonContent="Add Custom Prefix"
-                            inputLabel="Custom Prefix Text"
+                            addOptionButtonContent={l10n.t('Add Custom Prefix')}
+                            inputLabel={l10n.t('Custom Prefix Text')}
                             onChange={handlePrefixesChange}
                             disabled={false}
                             emptyComponent={
                                 <Box width="100%">
-                                    <Typography align="center">No prefixes found.</Typography>
+                                    <Typography align="center">{l10n.t('No prefixes found.')}</Typography>
                                 </Box>
                             }
                         />

@@ -24,6 +24,7 @@ import { DetailedSiteInfo } from '../../../../../atlclients/authInfo';
 import { VSCodeStyles, VSCodeStylesContext } from '../../../../vscode/theme/styles';
 import { ConfigControllerContext } from '../../configController';
 import { useFilterSearch } from './useFilterSearch';
+import * as l10n from '@vscode/l10n';
 
 type FilterTableToolbarProps = {
     numSelected: number;
@@ -119,7 +120,7 @@ const FilterTableToolbar: React.FunctionComponent<FilterTableToolbarProps> = ({
             )}
 
             <TextField
-                label="Search for filters"
+                label={l10n.t('Search for filters')}
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 fullWidth

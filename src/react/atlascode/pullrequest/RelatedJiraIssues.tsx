@@ -16,6 +16,7 @@ import React from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { colorToLozengeAppearanceMap } from '../../vscode/theme/colors';
 import Lozenge from '../common/Lozenge';
+import * as l10n from '@vscode/l10n';
 
 const useStyles = makeStyles((theme: Theme) => ({
     table: {
@@ -37,7 +38,7 @@ export const RelatedJiraIssues: React.FunctionComponent<RelatedJiraIssuesProps> 
     const classes = useStyles();
     return (
         <TableContainer>
-            <Table size="small" aria-label="related jira issues" className={classes.table}>
+            <Table size="small" aria-label={l10n.t('related jira issues')} className={classes.table}>
                 <TableBody>
                     {relatedIssues.map((issue) => (
                         <TableRow key={issue.id}>

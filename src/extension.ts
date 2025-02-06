@@ -1,7 +1,7 @@
 'use strict';
 
 import * as semver from 'semver';
-import { commands, env, ExtensionContext, extensions, languages, Memento, window } from 'vscode';
+import { commands, env, ExtensionContext, extensions, languages, Memento, window, l10n } from 'vscode';
 import { installedEvent, launchedEvent, upgradedEvent } from './analytics';
 import { DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
 import { BitbucketContext } from './bitbucket/bbContext';
@@ -99,7 +99,7 @@ async function activateBitbucketFeatures() {
     } catch (e) {
         Logger.error(e, 'Error activating vscode.git extension');
         window.showWarningMessage(
-            'Activating Bitbucket features failed. There was an issue activating vscode.git extension.',
+            l10n.t('Activating Bitbucket features failed. There was an issue activating vscode.git extension.'),
         );
         return;
     }
@@ -110,7 +110,7 @@ async function activateBitbucketFeatures() {
         Container.initializeBitbucket(bbContext);
     } catch (e) {
         Logger.error(e, 'Activating Bitbucket features failed');
-        window.showWarningMessage('Activating Bitbucket features failed');
+        window.showWarningMessage(l10n.t('Activating Bitbucket features failed'));
     }
 }
 
@@ -131,10 +131,11 @@ async function showWelcomePage(version: string, previousVersion: string | undefi
         Container.config.showWelcomeOnInstall &&
         window.state.focused
     ) {
+        const choice = l10n.t('Release notes');
         window
-            .showInformationMessage(`Jira and Bitbucket (Official) has been updated to v${version}`, 'Release notes')
+            .showInformationMessage(l10n.t('Jira and Bitbucket (Official) has been updated to v{0}', version), choice)
             .then((userChoice) => {
-                if (userChoice === 'Release notes') {
+                if (userChoice === choice) {
                     commands.executeCommand(Commands.ShowWelcomePage);
                 }
             });

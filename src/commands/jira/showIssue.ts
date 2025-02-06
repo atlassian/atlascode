@@ -59,7 +59,7 @@ export async function showIssueForKey(issueKey?: string) {
     let issue: MinimalIssue<DetailedSiteInfo> = createIssueNotFoundIssue(createEmptyMinimalIssue(emptySiteInfo));
 
     if (issueKey === undefined) {
-        const input = await vscode.window.showInputBox({ prompt: 'Enter issue key' });
+        const input = await vscode.window.showInputBox({ prompt: vscode.l10n.t('Enter issue key') });
         if (input) {
             issueKey = input.trim();
         }

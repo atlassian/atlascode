@@ -4,6 +4,7 @@ import Comment from '@atlaskit/comment';
 import React, { useState } from 'react';
 import { RenderedContent } from '../RenderedContent';
 import { TextAreaEditor } from './TextAreaEditor';
+import * as l10n from '@vscode/l10n';
 
 interface Props {
     text: string;
@@ -50,7 +51,7 @@ export const EditRenderedTextArea: React.FC<Props> = ({
                 />
                 <ButtonGroup>
                     <Button className="ac-button" onClick={handleSave} isDisabled={isSaving}>
-                        Save
+                        {l10n.t('Save')}
                     </Button>
                     <Button
                         appearance="default"
@@ -59,7 +60,7 @@ export const EditRenderedTextArea: React.FC<Props> = ({
                             setCommentInputValue(text);
                         }}
                     >
-                        Cancel
+                        {l10n.t('Cancel')}
                     </Button>
                 </ButtonGroup>
             </React.Fragment>

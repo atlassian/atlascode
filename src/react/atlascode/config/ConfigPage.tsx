@@ -35,6 +35,7 @@ import WorkIcon from '@material-ui/icons/Work';
 import equal from 'fast-deep-equal/es6';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
+import * as l10n from '@vscode/l10n';
 
 const useStyles = makeStyles(
     (theme: Theme) =>
@@ -179,7 +180,7 @@ const ConfigPage: React.FunctionComponent = () => {
                         <AppBar position="relative">
                             <Toolbar>
                                 <Typography variant="h3" className={classes.title}>
-                                    Atlassian Settings
+                                    {l10n.t('Atlassian Settings')}
                                 </Typography>
                                 <Tabs
                                     value={openSection}
@@ -217,18 +218,18 @@ const ConfigPage: React.FunctionComponent = () => {
                                         id="simple-tab-2"
                                         aria-controls="simple-tabpanel-2"
                                         value={ConfigSection.General}
-                                        label="General"
+                                        label={l10n.t('General')}
                                     />
                                     <Tab
                                         id="simple-tab-3"
                                         aria-controls="simple-tabpanel-3"
                                         value={ConfigSection.Explore}
-                                        label="Explore"
+                                        label={l10n.t('Explore')}
                                     />
                                 </Tabs>
                                 <div className={classes.grow} />
                                 <Typography variant="subtitle1" classes={{ root: classes.targetSelectLabel }}>
-                                    Save settings to:{' '}
+                                    {l10n.t('Save settings to:')}{' '}
                                 </Typography>
                                 <ToggleButtonGroup
                                     color="primary"
@@ -237,7 +238,7 @@ const ConfigPage: React.FunctionComponent = () => {
                                     exclusive
                                     onChange={handleTargetChange}
                                 >
-                                    <Tooltip title="User settings">
+                                    <Tooltip title={l10n.t('User settings')}>
                                         <ToggleButton
                                             key={1}
                                             value={ConfigTarget.User}
@@ -253,7 +254,7 @@ const ConfigPage: React.FunctionComponent = () => {
                                             </Badge>
                                         </ToggleButton>
                                     </Tooltip>
-                                    <Tooltip title="Workspace settings">
+                                    <Tooltip title={l10n.t('Workspace settings')}>
                                         <ToggleButton
                                             key={2}
                                             value={ConfigTarget.Workspace}

@@ -42,7 +42,7 @@ export class CommitNode extends AbstractBaseNode {
             return children;
         } catch (e) {
             Logger.debug('error fetching changed files', e);
-            return [new SimpleNode('⚠️ Error: fetching changed files')];
+            return [new SimpleNode(vscode.l10n.t('{0} Error: fetching changed files', '⚠️'))];
         }
     }
 

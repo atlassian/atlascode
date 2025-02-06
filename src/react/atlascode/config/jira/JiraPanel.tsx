@@ -11,6 +11,7 @@ import { ProductJira } from '../../../../atlclients/authInfo';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { StartWorkPanel } from '../../common/StartWorkPanel';
 import { StatusBarPanel } from '../../common/StatusBarPanel';
+import * as l10n from '@vscode/l10n';
 
 type JiraPanelProps = CommonPanelProps & {
     config: { [key: string]: any };
@@ -36,7 +37,7 @@ export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
     return (
         <>
             <Fade in={visible}>
-                <div hidden={!visible || config['jira.enabled']}>Enable Jira features to see settings</div>
+                <div hidden={!visible || config['jira.enabled']}>{l10n.t('Enable Jira features to see settings')}</div>
             </Fade>
 
             <Fade in={visible}>

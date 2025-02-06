@@ -1,4 +1,4 @@
-import { workspace, Uri, ConfigurationTarget, window, Extension, extensions, commands } from 'vscode';
+import { workspace, Uri, ConfigurationTarget, window, Extension, extensions, commands, l10n } from 'vscode';
 import { Resources } from '../../resources';
 
 export const VSCODE_YAML_EXTENSION_ID = 'redhat.vscode-yaml';
@@ -56,7 +56,9 @@ export async function activateYamlExtension() {
 
     if (!yamlPlugin || !yamlPlugin.registerContributor) {
         window.showWarningMessage(
-            "The installed Red Hat YAML extension doesn't support Intellisense. Please upgrade 'YAML Support by Red Hat' via the Extensions pane.",
+            l10n.t(
+                "The installed Red Hat YAML extension doesn't support Intellisense. Please upgrade 'YAML Support by Red Hat' via the Extensions pane.",
+            ),
         );
         return;
     }

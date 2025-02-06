@@ -8,6 +8,7 @@ import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { PipelineReferenceTarget, PipelineReferenceType, PipelineTargetType } from '../../pipelines/model';
 import { Remote } from '../../typings/git';
+import * as vscode from 'vscode';
 
 interface QuickPickRepo extends QuickPickItem {
     repo: WorkspaceRepo;
@@ -16,14 +17,14 @@ interface QuickPickRepo extends QuickPickItem {
 export async function runPipeline() {
     const repoQuickPicks = fetchRepos();
     if (repoQuickPicks.length === 0) {
-        window.showErrorMessage(`There are no repos available to build`);
+        window.showErrorMessage(vscode.l10n.t('There are no repos available to build'));
     } else if (repoQuickPicks.length === 1) {
         showBranchPicker(repoQuickPicks[0].repo.mainSiteRemote.remote);
     } else {
         window
             .showQuickPick<QuickPickRepo>(repoQuickPicks, {
                 matchOnDescription: true,
-                placeHolder: 'Select repo',
+                placeHolder: vscode.l10n.t('Select repo'),
             })
             .then((quickPickRepo: QuickPickRepo | undefined) => {
                 if (quickPickRepo) {
@@ -36,7 +37,7 @@ export async function runPipeline() {
 async function showBranchPicker(remote: Remote) {
     const bbSite = bitbucketSiteForRemote(remote);
     if (!bbSite) {
-        window.showErrorMessage(`No Bitbucket site has been configured for this repo.`);
+        window.showErrorMessage(vscode.l10n.t('No Bitbucket site has been configured for this repo.'));
         return;
     }
 
@@ -49,7 +50,7 @@ async function showBranchPicker(remote: Remote) {
     window
         .showQuickPick<QuickPickItem>(fetchBranches(bbApi, bbSite!), {
             matchOnDescription: true,
-            placeHolder: 'Search for branch',
+            placeHolder: vscode.l10n.t('Search for branch'),
         })
         .then(async (quickPickItem: QuickPickItem | undefined) => {
             if (quickPickItem) {
@@ -63,7 +64,7 @@ async function showBranchPicker(remote: Remote) {
                     await bbApi.pipelines!.triggerPipeline(bbSite!, target);
                 } catch (e) {
                     Logger.error(e);
-                    window.showErrorMessage(`Error building branch`);
+                    window.showErrorMessage(vscode.l10n.t('Error building branch'));
                 }
                 // Seems like there's a bit of lag between a build starting and it showing up in the list API.
                 setTimeout(() => {

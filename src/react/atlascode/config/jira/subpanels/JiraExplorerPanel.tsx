@@ -9,6 +9,7 @@ import { CommonSubpanelProps } from '../../../common/commonPanelProps';
 import { PanelSubtitle } from '../../../common/PanelSubtitle';
 import { PanelTitle } from '../../../common/PanelTitle';
 import { JiraExplorer } from '../JiraExplorer';
+import * as l10n from '@vscode/l10n';
 
 type JiraExplorerPanelProps = CommonSubpanelProps & {
     enabled: boolean;
@@ -36,6 +37,7 @@ export const JiraExplorerPanel: React.FunctionComponent<JiraExplorerPanelProps> 
         const [internalExpanded, setInternalExpanded] = useState(expanded);
         const [internalSites, setInternalSites] = useState(sites);
         const [internalJql, setInternalJql] = useState(jqlList);
+        const [ready, setIsReady] = useState<boolean>(false);
 
         const expansionHandler = useCallback(
             (event: React.ChangeEvent<{}>, expanded: boolean) => {
@@ -72,6 +74,18 @@ export const JiraExplorerPanel: React.FunctionComponent<JiraExplorerPanelProps> 
             });
         }, [expanded]);
 
+        useEffect(() => {
+            const b64contents = document.getElementById('l10ndata')?.innerHTML;
+            if (b64contents) {
+                l10n.config({ contents: atob(b64contents) });
+            }
+            setIsReady(true);
+        }, []);
+
+        if (!ready) {
+            return <div>Loading data...</div>;
+        }
+
         return (
             <ExpansionPanel hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
                 <ExpansionPanelSummary
@@ -79,8 +93,10 @@ export const JiraExplorerPanel: React.FunctionComponent<JiraExplorerPanelProps> 
                     aria-controls={`${ConfigSection.Jira}-${ConfigSubSection.Issues}-content`}
                     id={`${ConfigSection.Jira}-${ConfigSubSection.Issues}-header`}
                 >
-                    <PanelTitle>Jira Issues Explorer</PanelTitle>
-                    <PanelSubtitle>configure the Jira issue explorer, custom JQL and notifications</PanelSubtitle>
+                    <PanelTitle>{l10n.t('Jira Issues Explorer.')}</PanelTitle>
+                    <PanelSubtitle>
+                        {l10n.t('configure the Jira issue explorer, custom JQL and notifications')}
+                    </PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <JiraExplorer

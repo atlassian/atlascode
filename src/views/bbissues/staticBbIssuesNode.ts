@@ -20,7 +20,7 @@ export class StaticBitbucketIssuesNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        const item = new vscode.TreeItem('Related Bitbucket issues', this.collapsibleState);
+        const item = new vscode.TreeItem(vscode.l10n.t('Related Bitbucket issues'), this.collapsibleState);
         item.iconPath = Resources.icons.get('issues');
         return item;
     }
@@ -33,13 +33,13 @@ export class StaticBitbucketIssuesNode extends AbstractBaseNode {
             const bbApi = await clientForSite(this.site);
             let issues = await bbApi.issues?.getIssuesForKeys(this.site, this.issueKeys);
             if (!issues || issues.length === 0) {
-                return [new SimpleNode('No issues found')];
+                return [new SimpleNode(vscode.l10n.t('No issues found'))];
             }
             this._children = issues.map(
                 (i) =>
                     new SimpleNode(`#${i.data.id} ${i.data.title!}`, {
                         command: Commands.ShowBitbucketIssue,
-                        title: 'Open bitbucket issue',
+                        title: vscode.l10n.t('Open bitbucket issue'),
                         arguments: [i],
                     }),
             );

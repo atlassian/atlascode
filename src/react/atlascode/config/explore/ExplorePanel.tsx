@@ -6,6 +6,7 @@ import BitbucketIcon from '../../icons/BitbucketIcon';
 import { DemoDialog } from '../../onboarding/DemoDialog';
 import { ConfigControllerContext } from '../configController';
 import AltDemoButton from './AltDemoButton';
+import * as l10n from '@vscode/l10n';
 
 const useStyles = makeStyles(
     (theme: Theme) =>
@@ -96,7 +97,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                         <Grid item hidden={!config['jira.enabled']}>
                             <AltDemoButton
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/CreateIssueFromTodo.gif"
-                                label="Create a Jira issue from a code comment"
+                                label={l10n.t('Create a Jira issue from a code comment')}
                                 description={
                                     <>
                                         Adding a trigger to your code comments will bring up a{' '}
@@ -121,7 +122,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                         <Grid item hidden={!config['jira.enabled']}>
                             <AltDemoButton
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/StartWorkTutorial.gif"
-                                label="Start Work from a Jira issue"
+                                label={l10n.t('Start Work from a Jira issue')}
                                 description={
                                     <>
                                         When viewing a Jira issue, pressing{' '}
@@ -148,7 +149,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                         <Grid item hidden={!config['jira.enabled']}>
                             <AltDemoButton
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/CreateJiraIssue.gif"
-                                label="Create a Jira issue"
+                                label={l10n.t('Create a Jira issue')}
                                 description={
                                     <>
                                         Jira issues can be created by pressing the{' '}
@@ -166,7 +167,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                         <Grid item hidden={!config['jira.enabled']}>
                             <AltDemoButton
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/ReviewJiraIssue.gif"
-                                label="View a Jira issue"
+                                label={l10n.t('View a Jira issue')}
                                 description={
                                     <>
                                         Jira issues show up in the <code className={classes.code}>JIRA ISSUES</code>{' '}
@@ -189,7 +190,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                         <Grid item hidden={!config['bitbucket.enabled']}>
                             <AltDemoButton
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/CreatePullRequest.gif"
-                                label="Create a pull request"
+                                label={l10n.t('Create a pull request')}
                                 description={
                                     <>
                                         Bitbucket pull requests can be created by pressing the{' '}
@@ -209,7 +210,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                         <Grid item hidden={!config['bitbucket.enabled']}>
                             <AltDemoButton
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/ReviewAndApprovePullRequest.gif"
-                                label="Review a pull request"
+                                label={l10n.t('Review a pull request')}
                                 description={
                                     <>
                                         Bitbucket pull request show up in the{' '}

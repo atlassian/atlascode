@@ -3,6 +3,7 @@ import { Box, Grid, Switch, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { useBorderBoxStyles } from '../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../configController';
+import * as l10n from '@vscode/l10n';
 
 type CreateTriggerEditorProps = {
     triggers: string[];
@@ -45,30 +46,30 @@ export const CreateTriggerEditor: React.FunctionComponent<CreateTriggerEditorPro
                             onChange={handleEnableToggle}
                         />
                     }
-                    label="Show code action to 'Create Jira issue' for comment triggers"
+                    label={l10n.t("Show code action to 'Create Jira issue' for comment triggers")}
                     spacing={1}
                     variant="body1"
                 />
             </Grid>
             <Grid item>
                 <Box marginTop={2}>
-                    <Typography variant="h4">Comment Triggers</Typography>
+                    <Typography variant="h4">{l10n.t('Comment Triggers')}</Typography>
 
                     <Typography variant="caption">
-                        Strings (in comments) that will cause the 'Create Jira issue' code action to show
+                        {l10n.t("Strings (in comments) that will cause the 'Create Jira issue' code action to show")}
                     </Typography>
 
                     <Box className={boxClass.box} marginTop={1} paddingBottom={2}>
                         <InlineTextEditorList
                             options={triggers}
                             reverseButtons={true}
-                            addOptionButtonContent="Add Trigger"
+                            addOptionButtonContent={l10n.t('Add Trigger')}
                             disabled={disabled}
-                            inputLabel="Trigger Text"
+                            inputLabel={l10n.t('Trigger Text')}
                             onChange={handleOptionsChange}
                             emptyComponent={
                                 <Box width="100%">
-                                    <Typography align="center">No triggers found.</Typography>
+                                    <Typography align="center">{l10n.t('No triggers found.')}</Typography>
                                 </Box>
                             }
                         />

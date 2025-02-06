@@ -39,6 +39,7 @@ import SuccessIcon from '../icons/SuccessIcon';
 import { PipelineSummaryControllerContext, usePipelineSummaryController } from './pipelineSummaryController';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
+import * as l10n from '@vscode/l10n';
 
 const failureRed = 'rgb(255, 86, 48)';
 const successGreen = 'rgb(54, 178, 126)';
@@ -551,7 +552,7 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
                                         ''
                                     ) : (
                                         <Button variant="contained" className={buttonClass} onClick={controller.rerun}>
-                                            Rerun
+                                            {l10n.t('Rerun')}
                                         </Button>
                                     )}
                                     <RefreshButton loading={state.isRefreshing} onClick={controller.refresh} />

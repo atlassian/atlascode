@@ -125,7 +125,7 @@ export async function getArgsForDiffView(
 
     //@ts-ignore
     if (fileDiff.status === 'merge conflict') {
-        fileDisplayName = `⚠️ CONFLICTED: ${fileDisplayName}`;
+        fileDisplayName = vscode.l10n.t('{0} CONFLICTED: ${fileDisplayName}', '⚠️');
     }
 
     let lhsCommentThreads: Comment[][] = [];
@@ -302,7 +302,10 @@ export async function createFileChangesNodes(
     if (allComments.next) {
         result.push(
             new SimpleNode(
-                '⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.',
+                vscode.l10n.t(
+                    '{0} All file comments are not shown. This PR has more comments than what is supported by this extension.',
+                    '⚠️',
+                ),
             ),
         );
     }

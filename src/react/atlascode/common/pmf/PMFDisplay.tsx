@@ -6,6 +6,7 @@ import { PMFData } from '../../../../lib/ipc/models/common';
 import { PostMessageFunc } from '../../messagingApi';
 import { PMFControllerContext, PMFDismissal, PMFStateContext } from './pmfController';
 import { PMFDialog } from './PMFDialog';
+import * as l10n from '@vscode/l10n';
 
 export type PMFDisplayProps = {
     postMessageFunc: PostMessageFunc<CommonAction>;
@@ -37,22 +38,22 @@ export const PMFDisplay: React.FunctionComponent<PMFDisplayProps> = ({ postMessa
         <div>
             <Collapse in={state.isPMFBannerOpen}>
                 <Alert severity="info">
-                    <AlertTitle>Take a quick survey to let us know how we're doing</AlertTitle>
+                    <AlertTitle>{l10n.t("Take a quick survey to let us know how we're doing")}</AlertTitle>
                     <Box marginBottom={2} />
                     <Grid spacing={3} container>
                         <Grid item>
                             <Button variant="contained" color="primary" size="small" onClick={handleOpenSurvey}>
-                                Take Survey
+                                {l10n.t('Take Survey')}
                             </Button>
                         </Grid>
                         <Grid item>
                             <Button color="inherit" size="small" onClick={handleLater}>
-                                Maybe Later
+                                {l10n.t('Maybe Later')}
                             </Button>
                         </Grid>
                         <Grid item>
                             <Button color="inherit" size="small" onClick={handleNever}>
-                                No Thanks
+                                {l10n.t('No Thanks')}
                             </Button>
                         </Grid>
                     </Grid>

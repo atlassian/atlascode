@@ -6,6 +6,7 @@ import { CommonSubpanelProps } from '../../../common/commonPanelProps';
 import { PanelSubtitle } from '../../../common/PanelSubtitle';
 import { PanelTitle } from '../../../common/PanelTitle';
 import { PRExplorer } from '../PRExplorer';
+import * as l10n from '@vscode/l10n';
 
 type PRExplorerPanelProps = CommonSubpanelProps & {
     enabled: boolean;
@@ -54,8 +55,8 @@ export const PRExplorerPanel: React.FunctionComponent<PRExplorerPanelProps> = me
                     aria-controls={`${ConfigSection.Bitbucket}-${ConfigSubSection.PR}-content`}
                     id={`${ConfigSection.Bitbucket}-${ConfigSubSection.PR}-header`}
                 >
-                    <PanelTitle>Pull Requests Explorer</PanelTitle>
-                    <PanelSubtitle>configure the pull requests explorer and notifications</PanelSubtitle>
+                    <PanelTitle>{l10n.t('Pull Requests Explorer')}</PanelTitle>
+                    <PanelSubtitle>{l10n.t('configure the pull requests explorer and notifications')}</PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <PRExplorer

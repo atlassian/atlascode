@@ -107,7 +107,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             },
             (reason) => {
                 Logger.debug('error fetching pull request details', reason);
-                return [new SimpleNode('⚠️ Error: fetching pull request details failed')];
+                return [new SimpleNode(vscode.l10n.t('{0} Error: fetching pull request details failed', '⚠️'))];
             },
         );
     }
@@ -154,13 +154,13 @@ export class DescriptionNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        let item = new vscode.TreeItem('Details', vscode.TreeItemCollapsibleState.None);
-        item.tooltip = 'Open pull request details';
+        let item = new vscode.TreeItem(vscode.l10n.t('Details'), vscode.TreeItemCollapsibleState.None);
+        item.tooltip = vscode.l10n.t('Open pull request details');
         item.iconPath = Resources.icons.get('detail');
 
         item.command = {
             command: Commands.BitbucketShowPullRequestDetails,
-            title: 'Open pull request details',
+            title: vscode.l10n.t('Open pull request details'),
             arguments: [this.pr],
         };
 
@@ -181,12 +181,12 @@ export class NextPageNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        let item = new vscode.TreeItem('Load next page', vscode.TreeItemCollapsibleState.None);
+        let item = new vscode.TreeItem(vscode.l10n.t('Load next page'), vscode.TreeItemCollapsibleState.None);
         item.iconPath = Resources.icons.get('more');
 
         item.command = {
             command: Commands.BitbucketPullRequestsNextPage,
-            title: 'Load pull requests next page',
+            title: vscode.l10n.t('Load pull requests next page'),
             arguments: [this.prs],
         };
 

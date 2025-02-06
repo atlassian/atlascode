@@ -6,6 +6,7 @@ import { SiteWithAuthInfo } from 'src/lib/ipc/toUI/config';
 import React, { useState } from 'react';
 import { TabPanel } from './TabPanel';
 import { BasicAuthInfo } from 'src/atlclients/authInfo';
+import * as l10n from '@vscode/l10n';
 
 export type CustomSiteAuthFormProps = {
     defaultSiteWithAuth: SiteWithAuthInfo;
@@ -52,7 +53,7 @@ export const CustomSiteAuthForm = ({
                     }
                     spacing={1}
                     variant="body1"
-                    label="Use context path"
+                    label={l10n.t('Use context path')}
                 />
             </Grid>
             {watches.contextPathEnabled && (
@@ -69,7 +70,7 @@ export const CustomSiteAuthForm = ({
                             helperText={
                                 errors.contextPath
                                     ? errors.contextPath
-                                    : 'The context path your server is mounted at (e.g. /issues or /jira)'
+                                    : l10n.t('The context path your server is mounted at (e.g. /issues or /jira)')
                             }
                             fullWidth
                             error={!!errors.contextPath}
@@ -84,8 +85,8 @@ export const CustomSiteAuthForm = ({
                     setAuthTypeTabIndex(value);
                 }}
             >
-                <Tab label="Username and Password" />
-                <Tab label="Personal Access Token" />
+                <Tab label={l10n.t('Username and Password')} />
+                <Tab label={l10n.t('Personal Access Token')} />
             </Tabs>
             <TabPanel value={authTypeTabIndex} index={0}>
                 <Grid item>
@@ -94,7 +95,7 @@ export const CustomSiteAuthForm = ({
                         margin="dense"
                         id="username"
                         name="username"
-                        label="Username"
+                        label={l10n.t('Username')}
                         defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).username}
                         helperText={errors.username ? errors.username : undefined}
                         fullWidth
@@ -108,7 +109,7 @@ export const CustomSiteAuthForm = ({
                         margin="dense"
                         id="password"
                         name="password"
-                        label="Password"
+                        label={l10n.t('Password')}
                         defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).password}
                         type={authFormState.showPassword ? 'text' : 'password'}
                         helperText={errors.password ? errors.password : undefined}
@@ -145,7 +146,7 @@ export const CustomSiteAuthForm = ({
                         margin="dense"
                         id="personalAccessToken"
                         name="personalAccessToken"
-                        label="Personal Access Token"
+                        label={l10n.t('Personal Access Token')}
                         defaultValue={''}
                         helperText={errors.personalAccessToken ? errors.personalAccessToken : undefined}
                         fullWidth
@@ -169,7 +170,7 @@ export const CustomSiteAuthForm = ({
                     }
                     spacing={1}
                     variant="body1"
-                    label="Use Custom SSL Settings"
+                    label={l10n.t('Use Custom SSL Settings')}
                 />
             </Grid>
 
@@ -182,7 +183,7 @@ export const CustomSiteAuthForm = ({
                                     <Radio inputRef={register} size="small" color="primary" value="customServerSSL" />
                                 }
                                 spacing={1}
-                                label="Use custom CA certificate(s) (e.g. a self-signed cert)"
+                                label={l10n.t('Use custom CA certificate(s) (e.g. a self-signed cert)')}
                                 variant="body1"
                             />
                             <ToggleWithLabel
@@ -190,7 +191,9 @@ export const CustomSiteAuthForm = ({
                                     <Radio inputRef={register} value="customClientSSL" color="primary" size="small" />
                                 }
                                 spacing={1}
-                                label="Use custom client-side certificates (CA certificates bundled in PKCS#12 (pfx)"
+                                label={l10n.t(
+                                    'Use custom client-side certificates (CA certificates bundled in PKCS#12 (pfx))',
+                                )}
                                 variant="body1"
                             />
                         </RadioGroup>
@@ -211,7 +214,7 @@ export const CustomSiteAuthForm = ({
                             helperText={
                                 errors.sslCertPaths
                                     ? errors.sslCertPaths
-                                    : 'The full absolute path to your custom certificates separated by commas'
+                                    : l10n.t('The full absolute path to your custom certificates separated by commas')
                             }
                             fullWidth
                             error={!!errors.sslCertPaths}
@@ -232,7 +235,9 @@ export const CustomSiteAuthForm = ({
                             label="pfxPath"
                             defaultValue={defaultSiteWithAuth.site.pfxPath}
                             helperText={
-                                errors.pfxPath ? errors.pfxPath : 'The full absolute path to your custom pfx file'
+                                errors.pfxPath
+                                    ? errors.pfxPath
+                                    : l10n.t('The full absolute path to your custom pfx file')
                             }
                             fullWidth
                             error={!!errors.pfxPath}
@@ -244,9 +249,9 @@ export const CustomSiteAuthForm = ({
                             margin="dense"
                             id="pfxPassphrase"
                             name="pfxPassphrase"
-                            label="PFX passphrase"
+                            label={l10n.t('PFX passphrase')}
                             type={authFormState.showPFXPassphrase ? 'text' : 'password'}
-                            helperText="The passphrase used to decrypt the pfx file (if required)"
+                            helperText={l10n.t('The passphrase used to decrypt the pfx file (if required)')}
                             fullWidth
                             defaultValue={defaultSiteWithAuth.site.pfxPassphrase}
                             inputRef={register}

@@ -1,4 +1,4 @@
-import { CodeLens, Range, Position, TextDocument, CancellationToken } from 'vscode';
+import { CodeLens, Range, Position, TextDocument, CancellationToken, l10n } from 'vscode';
 import { parseJiraIssueKeys } from './issueKeyParser';
 import { Container } from '../container';
 import { Commands } from '../commands';
@@ -18,7 +18,7 @@ export function provideCodeLenses(document: TextDocument, token: CancellationTok
     return matches.map((match) => {
         const insertionPoint = new Position(match.range.end.line, match.range.end.character + 1);
         return new CodeLens(match.range, {
-            title: 'Create Jira Issue',
+            title: l10n.t('Create Jira Issue'),
             command: Commands.CreateIssue,
             arguments: [{ fromCodeLens: true, summary: match.text, uri: document.uri, insertionPoint: insertionPoint }],
         });

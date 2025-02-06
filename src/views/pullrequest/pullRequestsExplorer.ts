@@ -1,5 +1,5 @@
 import path from 'path';
-import { commands, ConfigurationChangeEvent, QuickPickItem, window } from 'vscode';
+import { commands, ConfigurationChangeEvent, QuickPickItem, window, l10n } from 'vscode';
 import { BitbucketContext } from '../../bitbucket/bbContext';
 import { PullRequest, WorkspaceRepo } from '../../bitbucket/model';
 import { Commands } from '../../commands';
@@ -40,9 +40,11 @@ export class PullRequestsExplorer extends BitbucketExplorer {
 
         const picker = window.createQuickPick<QuickPickItem & { value: WorkspaceRepo }>();
         picker.items = options;
-        picker.title = 'Create pull request';
+        picker.title = l10n.t('Create pull request');
         picker.placeholder =
-            options.length > 0 ? 'Pick a repository' : 'No Bitbucket repositories found in this workspace';
+            options.length > 0
+                ? l10n.t('Pick a repository')
+                : l10n.t('No Bitbucket repositories found in this workspace');
 
         picker.onDidAccept(() => {
             if (picker.selectedItems.length > 0) {

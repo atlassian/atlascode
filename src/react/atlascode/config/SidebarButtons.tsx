@@ -5,6 +5,7 @@ import { FeedbackUser, KnownLinkID } from '../../../lib/ipc/models/common';
 import { FeedbackDialogButton } from '../common/feedback/FeedbackDialogButton';
 import BitbucketIcon from '../icons/BitbucketIcon';
 import { ConfigControllerContext } from './configController';
+import * as l10n from '@vscode/l10n';
 
 type SidebarButtonProps = {
     feedbackUser: FeedbackUser;
@@ -26,7 +27,7 @@ export const SidebarButtons: React.FunctionComponent<SidebarButtonProps> = memo(
                             onClick={() => controller.openLink(KnownLinkID.AtlascodeRepo)}
                             startIcon={<BitbucketIcon />}
                         >
-                            Source Code
+                            {l10n.t('Source Code')}
                         </IconLink>
                     </Grid>
                     <Grid item>
@@ -35,7 +36,7 @@ export const SidebarButtons: React.FunctionComponent<SidebarButtonProps> = memo(
                             onClick={() => controller.openLink(KnownLinkID.AtlascodeIssues)}
                             startIcon={<BitbucketIcon />}
                         >
-                            Got Issues?
+                            {l10n.t('Got Issues?')}
                         </IconLink>
                     </Grid>
                     <Grid item>
@@ -44,7 +45,7 @@ export const SidebarButtons: React.FunctionComponent<SidebarButtonProps> = memo(
                             onClick={() => controller.openLink(KnownLinkID.AtlascodeDocs)}
                             startIcon={<BitbucketIcon />}
                         >
-                            User Guide
+                            {l10n.t('User Guide')}
                         </IconLink>
                     </Grid>
                 </Grid>

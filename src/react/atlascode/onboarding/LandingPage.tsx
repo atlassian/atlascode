@@ -9,6 +9,7 @@ import BitbucketIcon from '../icons/BitbucketIcon';
 import DemoButton from './DemoButton';
 import { DemoDialog } from './DemoDialog';
 import { OnboardingControllerContext } from './onboardingController';
+import * as l10n from '@vscode/l10n';
 
 const useStyles = makeStyles((theme: Theme) => ({
     landingPageButton: {
@@ -79,17 +80,19 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
             <Grid container spacing={3} direction="row" justify="center">
                 <Grid item xs={12}>
                     <Typography variant="h1" align="center">
-                        You're ready to get started! {<CheckCircleIcon fontSize={'large'} htmlColor={'#07b82b'} />}
+                        {l10n.t("You're ready to get started!")}{' '}
+                        {<CheckCircleIcon fontSize={'large'} htmlColor={'#07b82b'} />}
                     </Typography>
                 </Grid>
 
                 <Grid item xs={12}>
                     <Typography variant="h3" align="center">
-                        With Atlassian for VS Code, you can create and view issues, start work on issues, create pull
-                        requests, do code reviews, start builds, get build statuses and more!{' '}
+                        {l10n.t(
+                            'With Atlassian for VS Code, you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!',
+                        )}{' '}
                     </Typography>
                     <Typography variant="h3" align="center" style={{ marginBottom: '25px' }}>
-                        <b>Press the buttons below to try out a common action!</b>
+                        <b>{l10n.t('Press the buttons below to try out a common action!')}</b>
                     </Typography>
                 </Grid>
                 <Grid container xs={12} direction="row" justify="center" spacing={3}>
@@ -104,7 +107,7 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                     >
                         <DemoButton
                             gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/CreateJiraIssue.gif"
-                            description="Create a Jira issue"
+                            description={l10n.t('Create a Jira issue')}
                             productIcon={<JiraIcon style={{ float: 'right', color: '#0052CC' }} />}
                             action={controller.createJiraIssue}
                             onClick={handleDemoButtonClick}
@@ -121,7 +124,7 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                     >
                         <DemoButton
                             gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/ReviewJiraIssue.gif"
-                            description="View a Jira issue"
+                            description={l10n.t('View a Jira issue')}
                             productIcon={<JiraIcon style={{ float: 'right', color: '#0052CC' }} />}
                             action={controller.viewJiraIssue}
                             onClick={handleDemoButtonClick}
@@ -138,7 +141,7 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                     >
                         <DemoButton
                             gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/CreatePullRequest.gif"
-                            description="Create a pull request"
+                            description={l10n.t('Create a pull request')}
                             productIcon={
                                 <BitbucketIcon color={'primary'} style={{ float: 'right', color: '#0052CC' }} />
                             }
@@ -157,7 +160,7 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                     >
                         <DemoButton
                             gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/ReviewAndApprovePullRequest.gif"
-                            description="Review a pull request"
+                            description={l10n.t('Review a pull request')}
                             productIcon={
                                 <BitbucketIcon color={'primary'} style={{ float: 'right', color: '#0052CC' }} />
                             }
@@ -168,12 +171,12 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                 </Grid>
                 <Grid item xs={12}>
                     <Typography variant="h1" align="center" style={{ marginTop: '50px' }}>
-                        Need to add more sites?
+                        {l10n.t('Need to add more sites?')}
                     </Typography>
                 </Grid>
                 <Grid item xs={12}>
                     <Typography variant="h3" align="center" style={{ marginBottom: '25px' }}>
-                        Need to authenticate with multiple sites? We've got you covered.
+                        {l10n.t("Need to authenticate with multiple sites? We've got you covered.")}
                     </Typography>
                 </Grid>
                 <Grid container xs={12} direction="row" justify="center" spacing={2}>
@@ -185,7 +188,7 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                             onClick={() => controller.openSettings(ConfigSection.Jira, ConfigSubSection.Auth)}
                         >
                             <Grid container direction="row" alignItems="center" justify="center" spacing={1}>
-                                <Grid item>Add Jira Sites</Grid>
+                                <Grid item>{l10n.t('Add Jira Sites')}</Grid>
                                 <Grid item>{<JiraIcon fontSize={'inherit'} className={classes.addSitesIcon} />}</Grid>
                             </Grid>
                         </Button>
@@ -199,7 +202,7 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                             onClick={() => controller.openSettings(ConfigSection.Bitbucket, ConfigSubSection.Auth)}
                         >
                             <Grid container direction="row" alignItems="center" justify="center" spacing={1}>
-                                <Grid item>Add Bitbucket Sites</Grid>
+                                <Grid item>{l10n.t('Add Bitbucket Sites')}</Grid>
                                 <Grid item>
                                     {<BitbucketIcon fontSize={'inherit'} className={classes.addSitesIcon} />}
                                 </Grid>
@@ -208,12 +211,14 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                     </Grid>
                     <Grid item xs={12}>
                         <Typography variant="h1" align="center" style={{ marginTop: '50px' }}>
-                            Supercharge your workflow!
+                            {l10n.t('Supercharge your workflow!')}
                         </Typography>
                     </Grid>
                     <Grid item xs={12}>
                         <Typography variant="h3" align="center" style={{ marginBottom: '25px' }}>
-                            Do you use Slack, Google Sheets, Excel, Teams, or Outlook? Check out our other Integrations!
+                            {l10n.t(
+                                'Do you use Slack, Google Sheets, Excel, Teams, or Outlook? Check out our other Integrations!',
+                            )}
                         </Typography>
                     </Grid>
                     <Grid container xs={12} direction="row" alignItems="center" justify="center">
@@ -222,7 +227,7 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                                 onClick={() => controller.openLink(KnownLinkID.Integrations)}
                                 className={classes.landingPageButton}
                             >
-                                More Integrations
+                                {l10n.t('More Integrations')}
                             </Button>
                         </Grid>
                     </Grid>

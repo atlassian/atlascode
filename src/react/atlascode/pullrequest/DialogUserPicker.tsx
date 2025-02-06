@@ -16,6 +16,7 @@ import { useAsyncAbortable } from 'react-async-hook';
 import useConstant from 'use-constant';
 import { BitbucketSite, User } from '../../../bitbucket/model';
 import { PullRequestDetailsControllerContext } from './pullRequestDetailsController';
+import * as l10n from '@vscode/l10n';
 
 type DialogUserPickerProps = {
     site: BitbucketSite;
@@ -86,7 +87,7 @@ const DialogUserPicker: React.FC<DialogUserPickerProps> = (props: DialogUserPick
             aria-labelledby="reviewers-dialog-title"
         >
             <DialogTitle>
-                <Typography variant="h4">Select Reviewers</Typography>
+                <Typography variant="h4">{l10n.t('Select Reviewers')}</Typography>
             </DialogTitle>
             <DialogContent>
                 <Autocomplete
@@ -119,10 +120,10 @@ const DialogUserPicker: React.FC<DialogUserPickerProps> = (props: DialogUserPick
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleClose} color="default" variant={'contained'}>
-                    Cancel
+                    {l10n.t('Cancel')}
                 </Button>
                 <Button onClick={handleSubmitReviewers} color="primary" variant={'contained'}>
-                    Ok
+                    {l10n.t('Ok')}
                 </Button>
             </DialogActions>
         </Dialog>

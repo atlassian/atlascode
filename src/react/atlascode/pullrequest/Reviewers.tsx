@@ -4,6 +4,8 @@ import { AvatarGroup } from '@material-ui/lab';
 import React, { useCallback, useEffect, useState } from 'react';
 import { BitbucketSite, Reviewer, User } from '../../../bitbucket/model';
 import { AddReviewers } from './AddReviewers';
+import * as l10n from '@vscode/l10n';
+
 type ReviewersProps = {
     site: BitbucketSite;
     onUpdateReviewers: (reviewers: User[]) => Promise<void>;
@@ -49,7 +51,7 @@ export const Reviewers: React.FunctionComponent<ReviewersProps> = ({
             ) : (
                 <Grid item>
                     {activeParticipants.length === 0 ? (
-                        <Typography variant="body2">No reviewers!</Typography>
+                        <Typography variant="body2">{l10n.t('No reviewers!')}</Typography>
                     ) : (
                         <AvatarGroup max={5}>
                             {activeParticipants.map((participant) => (
@@ -63,7 +65,7 @@ export const Reviewers: React.FunctionComponent<ReviewersProps> = ({
                                     invisible={participant.status !== 'APPROVED'}
                                     key={participant.accountId}
                                     badgeContent={
-                                        <Tooltip title="Approved">
+                                        <Tooltip title={l10n.t('Approved')}>
                                             <Box bgcolor={'white'} borderRadius={'100%'}>
                                                 <CheckCircleIcon fontSize={'small'} htmlColor={'#07b82b'} />
                                             </Box>

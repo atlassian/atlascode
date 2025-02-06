@@ -16,6 +16,8 @@ import { useForm } from 'react-hook-form';
 import { CommonAction, CommonActionType } from '../../../../lib/ipc/fromUI/common';
 import { FeedbackData, FeedbackType, FeedbackUser } from '../../../../lib/ipc/models/common';
 import { PostMessageFunc } from '../../messagingApi';
+import * as l10n from '@vscode/l10n';
+
 type FeedbackDialogButtonProps = {
     user: FeedbackUser;
     postMessageFunc: PostMessageFunc<CommonAction>;
@@ -54,12 +56,12 @@ export const FeedbackDialogButton: React.FunctionComponent<FeedbackDialogButtonP
     return (
         <>
             <Button variant="contained" color="primary" onClick={handleOpenDialog}>
-                Send Feedback
+                {l10n.t('Send Feedback')}
             </Button>
 
             <Dialog fullWidth maxWidth="md" open={formOpen} onClose={handleDialogClose}>
                 <DialogContent>
-                    <DialogContentText>Send Feedback</DialogContentText>
+                    <DialogContentText>{l10n.t('Send Feedback')}</DialogContentText>
                     <Grid container direction="column" spacing={2}>
                         <Grid item>
                             <TextField
@@ -71,23 +73,23 @@ export const FeedbackDialogButton: React.FunctionComponent<FeedbackDialogButtonP
                                 autoComplete="off"
                                 margin="dense"
                                 id="type"
-                                label="Type of Feedback"
+                                label={l10n.t('Type of Feedback')}
                                 helperText={errors.type ? errors.type.message : undefined}
                                 fullWidth
                                 error={!!errors.type}
                                 inputRef={register}
                             >
                                 <MenuItem key={FeedbackType.Question} value={FeedbackType.Question}>
-                                    Ask a question
+                                    {l10n.t('Ask a question')}
                                 </MenuItem>
                                 <MenuItem key={FeedbackType.Comment} value={FeedbackType.Comment}>
-                                    Leave a comment
+                                    {l10n.t('Leave a comment')}
                                 </MenuItem>
                                 <MenuItem key={FeedbackType.Bug} value={FeedbackType.Bug}>
-                                    Report a bug
+                                    {l10n.t('Report a bug')}
                                 </MenuItem>
                                 <MenuItem key={FeedbackType.Suggestion} value={FeedbackType.Suggestion}>
-                                    Suggest an improvement
+                                    {l10n.t('Suggest an improvement')}
                                 </MenuItem>
                             </TextField>
                         </Grid>
@@ -98,12 +100,12 @@ export const FeedbackDialogButton: React.FunctionComponent<FeedbackDialogButtonP
                                 rows={3}
                                 id="description"
                                 name="description"
-                                label="Description"
+                                label={l10n.t('Description')}
                                 helperText={errors.description ? errors.description.message : undefined}
                                 fullWidth
                                 error={!!errors.description}
                                 inputRef={register({
-                                    required: 'Description URL is required',
+                                    required: l10n.t('Description URL is required'),
                                 })}
                             />
                         </Grid>
@@ -115,12 +117,12 @@ export const FeedbackDialogButton: React.FunctionComponent<FeedbackDialogButtonP
                                 autoComplete="off"
                                 margin="dense"
                                 id="userName"
-                                label="Your name"
+                                label={l10n.t('Your name')}
                                 helperText={errors.userName ? errors.userName.message : undefined}
                                 fullWidth
                                 error={!!errors.userName}
                                 inputRef={register({
-                                    required: 'Your name is required',
+                                    required: l10n.t('Your name is required'),
                                 })}
                             />
                         </Grid>
@@ -137,7 +139,7 @@ export const FeedbackDialogButton: React.FunctionComponent<FeedbackDialogButtonP
                                         inputRef={register}
                                     />
                                 }
-                                label="Atlassian can contact me about this feedback"
+                                label={l10n.t('Atlassian can contact me about this feedback')}
                                 variant="body1"
                                 spacing={1}
                             />
@@ -151,12 +153,12 @@ export const FeedbackDialogButton: React.FunctionComponent<FeedbackDialogButtonP
                                     autoComplete="off"
                                     margin="dense"
                                     id="emailAddress"
-                                    label="Your contact email"
+                                    label={l10n.t('Your contact email')}
                                     helperText={errors.emailAddress ? errors.emailAddress.message : undefined}
                                     fullWidth
                                     error={!!errors.emailAddress}
                                     inputRef={register({
-                                        required: 'Your contact email is required',
+                                        required: l10n.t('Your contact email is required'),
                                     })}
                                 />
                             )}

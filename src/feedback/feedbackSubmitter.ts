@@ -4,6 +4,7 @@ import { ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
 import { FeedbackData, FeedbackType } from '../lib/ipc/models/common';
+import * as vscode from 'vscode';
 
 const feedbackTypeIds = {
     [FeedbackType.Bug]: '10105',
@@ -95,5 +96,5 @@ export async function submitFeedback(feedback: FeedbackData) {
         },
     );
 
-    window.showInformationMessage('The Atlassian team thanks you for your feedback!');
+    window.showInformationMessage(vscode.l10n.t('The Atlassian team thanks you for your feedback!'));
 }

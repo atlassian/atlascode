@@ -45,6 +45,7 @@
         "workspace"
     ],
     "main": "./build/extension/extension",
+    "l10n": "./l10n",
     "scripts": {
         "precommit": "pretty-quick --staged",
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -76,6 +77,7 @@
         "watch:extension": "WATCH=true webpack --mode development --config webpack.react.dev.js --progress --watch",
         "watch:react": "WATCH=true webpack --mode development --config webpack.extension.dev.js --progress --watch",
         "dev": "concurrently -r npm:watch:extension npm:watch:react",
+        "npx": "npx @vscode/l10n-dev export -o ./l10n ./src",
         "mui:atlascodeSettings:dark": "cross-env PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettingsV2\" THEME=\"dark\" webpack-dev-server --open --config webpack.mui.webview.js",
         "mui:atlascodeSettings:light": "cross-env PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettingsV2\" THEME=\"light\" webpack-dev-server --open --config webpack.mui.webview.js",
         "mui:atlascodeOnboarding:dark": "cross-env PAGETSX=\"onboarding/OnboardingPage.tsx\" VIEW=\"atlascodeOnboardingV2\" THEME=\"dark\" webpack-dev-server --open --config webpack.mui.webview.js",
@@ -100,7 +102,7 @@
         "commands": [
             {
                 "command": "atlascode.jira.createIssue",
-                "title": "Create Jira Issue",
+                "title": "%command.atlascode.jira.createIssue%",
                 "icon": {
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
@@ -109,12 +111,12 @@
             },
             {
                 "command": "atlascode.jira.searchIssues",
-                "title": "Search Jira Issue Results",
+                "title": "%command.atlascode.jira.searchIssues%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.deleteComment",
-                "title": "Delete",
+                "title": "%command.atlascode.bb.deleteComment%",
                 "icon": {
                     "dark": "resources/dark/delete.svg",
                     "light": "resources/light/delete.svg"
@@ -123,7 +125,7 @@
             },
             {
                 "command": "atlascode.bb.editComment",
-                "title": "Edit",
+                "title": "%command.atlascode.bb.editComment%",
                 "icon": {
                     "dark": "resources/dark/edit.svg",
                     "light": "resources/light/edit.svg"
@@ -132,15 +134,15 @@
             },
             {
                 "command": "atlascode.bb.cancelCommentAction",
-                "title": "Cancel"
+                "title": "%command.atlascode.bb.cancelCommentAction%"
             },
             {
                 "command": "atlascode.bb.saveCommentAction",
-                "title": "Save Changes"
+                "title": "%command.atlascode.bb.saveCommentAction%"
             },
             {
                 "command": "atlascode.bb.deleteTask",
-                "title": "Delete",
+                "title": "%command.atlascode.bb.deleteTask%",
                 "icon": {
                     "dark": "resources/dark/delete.svg",
                     "light": "resources/light/delete.svg"
@@ -149,7 +151,7 @@
             },
             {
                 "command": "atlascode.bb.addReply",
-                "title": "Reply to this Comment",
+                "title": "%command.atlascode.bb.addReply%",
                 "icon": {
                     "dark": "resources/dark/add-comment.svg",
                     "light": "resources/light/add-comment.svg"
@@ -158,7 +160,7 @@
             },
             {
                 "command": "atlascode.bb.addTask",
-                "title": "Add Task",
+                "title": "%command.atlascode.bb.addTask%",
                 "icon": {
                     "dark": "resources/dark/addTask.svg",
                     "light": "resources/light/addTask.svg"
@@ -167,7 +169,7 @@
             },
             {
                 "command": "atlascode.bb.editTask",
-                "title": "Edit",
+                "title": "%command.atlascode.bb.editTask%",
                 "icon": {
                     "dark": "resources/dark/edit.svg",
                     "light": "resources/light/edit.svg"
@@ -176,7 +178,7 @@
             },
             {
                 "command": "atlascode.bb.markTaskIncomplete",
-                "title": "Mark Task As Incomplete",
+                "title": "%command.atlascode.bb.markTaskIncomplete%",
                 "icon": {
                     "dark": "resources/dark/checked.svg",
                     "light": "resources/light/checked.svg"
@@ -185,7 +187,7 @@
             },
             {
                 "command": "atlascode.bb.markTaskComplete",
-                "title": "Mark Task As Complete",
+                "title": "%command.atlascode.bb.markTaskComplete%",
                 "icon": {
                     "dark": "resources/dark/unchecked.svg",
                     "light": "resources/light/unchecked.svg"
@@ -194,7 +196,7 @@
             },
             {
                 "command": "atlascode.jira.refreshExplorer",
-                "title": "Refresh Jira Issues",
+                "title": "%command.atlascode.jira.refreshExplorer%",
                 "icon": {
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
@@ -203,7 +205,7 @@
             },
             {
                 "command": "atlascode.jira.showJiraIssueSettings",
-                "title": "Jira Issue Settings",
+                "title": "%command.atlascode.jira.showJiraIssueSettings%",
                 "icon": {
                     "dark": "resources/dark/settings.svg",
                     "light": "resources/light/settings.svg"
@@ -212,22 +214,22 @@
             },
             {
                 "command": "atlascode.jira.showIssueForKey",
-                "title": "Open Jira Issue",
+                "title": "%command.atlascode.jira.showIssueForKey%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.assignIssueToMe",
-                "title": "Assign Jira Issue to Me",
+                "title": "%command.atlascode.jira.assignIssueToMe%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.startWorkOnIssue",
-                "title": "Start work on Jira issue",
+                "title": "%command.atlascode.jira.startWorkOnIssue%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.refreshPullRequests",
-                "title": "Refresh pull requests",
+                "title": "%command.atlascode.bb.refreshPullRequests%",
                 "icon": {
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
@@ -236,7 +238,7 @@
             },
             {
                 "command": "atlascode.bb.toggleFileNesting",
-                "title": "Toggle File Nesting",
+                "title": "%command.atlascode.bb.toggleFileNesting%",
                 "icon": {
                     "dark": "resources/dark/fileTree.svg",
                     "light": "resources/light/fileTree.svg"
@@ -245,7 +247,7 @@
             },
             {
                 "command": "atlascode.bb.showPullRequestSettings",
-                "title": "Pull Request Settings",
+                "title": "%command.atlascode.bb.showPullRequestSettings%",
                 "icon": {
                     "dark": "resources/dark/settings.svg",
                     "light": "resources/light/settings.svg"
@@ -254,62 +256,62 @@
             },
             {
                 "command": "atlascode.viewInWebBrowser",
-                "title": "View in Browser",
+                "title": "%command.atlascode.viewInWebBrowser%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.showConfigPage",
-                "title": "Open Settings",
+                "title": "%command.atlascode.showConfigPage%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.extensionContext.showConfigPage",
-                "title": "Extension Settings (UI)",
+                "title": "%command.atlascode.extensionContext.showConfigPage%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.showJiraAuth",
-                "title": "Open Jira Auth Settings",
+                "title": "%command.atlascode.showJiraAuth%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.showBitbucketAuth",
-                "title": "Open Bitbucket Auth Settings",
+                "title": "%command.atlascode.showBitbucketAuth%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.showWelcomePage",
-                "title": "Open Welcome Page",
+                "title": "%command.atlascode.showWelcomePage%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.showOnboardingPage",
-                "title": "Open Onboarding Page",
+                "title": "%command.atlascode.showOnboardingPage%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.testLogin",
-                "title": "Test Login",
+                "title": "%command.atlascode.testLogin%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.testLogout",
-                "title": "Test Logout",
+                "title": "%command.atlascode.testLogout%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.openInBitbucket",
-                "title": "Open in Bitbucket",
+                "title": "%command.atlascode.bb.openInBitbucket%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.openChangeset",
-                "title": "Open Changeset",
+                "title": "%command.atlascode.bb.openChangeset%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.createPullRequest",
-                "title": "Create Pull Request",
+                "title": "%command.atlascode.bb.createPullRequest%",
                 "icon": {
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
@@ -318,17 +320,17 @@
             },
             {
                 "command": "atlascode.bb.viewPullRequest",
-                "title": "View Pull Request",
+                "title": "%command.atlascode.bb.viewPullRequest%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.copyPullRequest",
-                "title": "Copy Pull Request Url to Clipboard",
+                "title": "%command.atlascode.bb.copyPullRequest%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.editThisFile",
-                "title": "Edit this File",
+                "title": "%command.atlascode.bb.editThisFile%",
                 "category": "Atlassian",
                 "icon": {
                     "dark": "resources/dark/edit.svg",
@@ -337,12 +339,12 @@
             },
             {
                 "command": "atlascode.bb.rerunPipeline",
-                "title": "Rerun Build",
+                "title": "%command.atlascode.bb.rerunPipeline%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.runPipelineForBranch",
-                "title": "Run Pipeline for Branch",
+                "title": "%command.atlascode.bb.runPipelineForBranch%",
                 "icon": {
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
@@ -351,7 +353,7 @@
             },
             {
                 "command": "atlascode.bb.refreshPipelines",
-                "title": "Refresh Pipelines",
+                "title": "%command.atlascode.bb.refreshPipelines%",
                 "icon": {
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
@@ -360,7 +362,7 @@
             },
             {
                 "command": "atlascode.bb.showPipelineSettings",
-                "title": "Pipeline Settings",
+                "title": "%command.atlascode.bb.showPipelineSettings%",
                 "icon": {
                     "dark": "resources/dark/settings.svg",
                     "light": "resources/light/settings.svg"
@@ -369,7 +371,7 @@
             },
             {
                 "command": "atlascode.bb.createIssue",
-                "title": "Create Bitbucket Issue",
+                "title": "%command.atlascode.bb.createIssue%",
                 "icon": {
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
@@ -378,7 +380,7 @@
             },
             {
                 "command": "atlascode.bb.refreshIssues",
-                "title": "Refresh Bitbucket Issues",
+                "title": "%command.atlascode.bb.refreshIssues%",
                 "icon": {
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
@@ -387,7 +389,7 @@
             },
             {
                 "command": "atlascode.bb.showBitbucketIssueSettings",
-                "title": "Bitbucket Issue Settings",
+                "title": "%command.atlascode.bb.showBitbucketIssueSettings%",
                 "icon": {
                     "dark": "resources/dark/settings.svg",
                     "light": "resources/light/settings.svg"
@@ -396,12 +398,12 @@
             },
             {
                 "command": "atlascode.bb.addComment",
-                "title": "Add comment",
+                "title": "%command.atlascode.bb.addComment%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.toggleCommentsVisibility",
-                "title": "Show/hide comments",
+                "title": "%command.atlascode.bb.toggleCommentsVisibility%",
                 "icon": {
                     "dark": "resources/dark/comment.svg",
                     "light": "resources/light/comment.svg"
@@ -410,17 +412,17 @@
             },
             {
                 "command": "atlascode.debug.bitbucketSites",
-                "title": "Show Bitbucket sites info",
+                "title": "%command.atlascode.debug.bitbucketSites%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.showExploreSettings",
-                "title": "Explore",
+                "title": "%command.atlascode.showExploreSettings%",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.disableHelpExplorer",
-                "title": "Disable Help Explorer",
+                "title": "%command.atlascode.disableHelpExplorer%",
                 "category": "Atlassian"
             }
         ],
@@ -437,27 +439,27 @@
             "atlascode-drawer": [
                 {
                     "id": "atlascode.views.jira.customJql",
-                    "name": "Jira Issues",
+                    "name": "%views.id.atlascode.views.jira.customJql%",
                     "when": "atlascode:jiraExplorerEnabled && config.atlascode.jira.enabled"
                 },
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
-                    "name": "Bitbucket pull requests",
+                    "name": "%views.id.atlascode.views.bb.pullrequestsTreeView%",
                     "when": "atlascode:bitbucketExplorerEnabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "id": "atlascode.views.bb.pipelinesTreeView",
-                    "name": "Bitbucket pipelines",
+                    "name": "%views.id.atlascode.views.bb.pipelinesTreeView%",
                     "when": "atlascode:pipelineExplorerEnabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "id": "atlascode.views.bb.issuesTreeView",
-                    "name": "Bitbucket issues",
+                    "name": "%views.id.atlascode.views.bb.issuesTreeView%",
                     "when": "atlascode:bitbucketIssuesExplorerEnabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "id": "atlascode.views.helpTreeView",
-                    "name": "Help and Feedback",
+                    "name": "%views.id.atlascode.views.helpTreeView%",
                     "when": "config.atlascode.helpExplorerEnabled"
                 }
             ]
@@ -1414,6 +1416,7 @@
         "@material-ui/styles": "^4.10.0",
         "@segment/analytics-node": "^2.1.3",
         "@types/mustache": "^4.0.1",
+        "@vscode/l10n": "^0.0.18",
         "awesome-debounce-promise": "^2.1.0",
         "axios": "^1.7.4",
         "axios-curlirize": "^1.3.4",

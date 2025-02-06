@@ -6,6 +6,7 @@ import InputIcon from '@material-ui/icons/Input';
 import NotificationsActiveIcon from '@material-ui/icons/NotificationsActive';
 import NotificationsOffIcon from '@material-ui/icons/NotificationsOff';
 import React, { memo } from 'react';
+import * as l10n from '@vscode/l10n';
 
 type JQLListItemProps = {
     id: string;
@@ -23,11 +24,11 @@ export const JQLListItem: React.FunctionComponent<JQLListItemProps> = memo(
     ({ id, name, enabled, monitor, filterId, toggleEnabled, toggleMonitor, handleEdit, handleDelete }) => {
         const enableTT = enabled ? `Disable ${name}` : `Enable ${name}`;
         const typeIcon = filterId ? (
-            <Tooltip title="Filter">
+            <Tooltip title={l10n.t('Filter')}>
                 <FilterListIcon fontSize="small" />
             </Tooltip>
         ) : (
-            <Tooltip title="JQL">
+            <Tooltip title={l10n.t('JQL')}>
                 <InputIcon fontSize="small" />
             </Tooltip>
         );
@@ -45,18 +46,18 @@ export const JQLListItem: React.FunctionComponent<JQLListItemProps> = memo(
                 <Grid item>
                     <ListItemSecondaryAction>
                         {!filterId && (
-                            <Tooltip title={`Edit ${name}`}>
+                            <Tooltip title={l10n.t('Edit {0}', name)}>
                                 <IconButton id={id} edge="end" aria-label="edit" onClick={handleEdit}>
                                     <EditIcon fontSize="small" color="inherit" />
                                 </IconButton>
                             </Tooltip>
                         )}
-                        <Tooltip title={`Delete ${name}`}>
+                        <Tooltip title={l10n.t('Delete {0}', name)}>
                             <IconButton id={id} edge="end" aria-label="delete" onClick={handleDelete}>
                                 <DeleteIcon fontSize="small" color="inherit" />
                             </IconButton>
                         </Tooltip>
-                        <Tooltip title="Inlclude in issue notifications">
+                        <Tooltip title={l10n.t('Include in issue notifications')}>
                             <Switch
                                 id={id}
                                 color="primary"

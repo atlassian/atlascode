@@ -15,7 +15,7 @@ export class StaticIssuesNode extends JQLTreeDataProvider implements AbstractBas
         issueKeys: string[],
         private label: string,
     ) {
-        super(undefined, 'No issues found');
+        super(undefined, vscode.l10n.t('No issues found'));
         this.collapsibleState =
             issueKeys.length > 1 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.Expanded;
         this.issueKeys = issueKeys;

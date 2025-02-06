@@ -36,6 +36,7 @@ import {
 } from './createBitbucketIssueController';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
+import * as l10n from '@vscode/l10n';
 
 const priorityIcon = {
     trivial: <RadioButtonUncheckedIcon />,
@@ -142,7 +143,7 @@ const CreateBitbucketIssuePage: React.FunctionComponent = () => {
                                 Create issue - {state.site.ownerSlug}/{state.site.repoSlug}
                             </Typography>
                             <Box className={classes.grow} />
-                            <Tooltip title="Create in browser...">
+                            <Tooltip title={l10n.t('Create in browser...')}>
                                 <IconButton
                                     href={`https://bitbucket.org/${state.site.ownerSlug}/${state.site.repoSlug}/issues/new`}
                                 >

@@ -3,6 +3,8 @@ import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
 import React, { useState } from 'react';
 import { FileWithPath } from 'react-dropzone';
 import { AttachmentForm } from './AttachmentForm';
+import * as l10n from '@vscode/l10n';
+
 type AttachmentsModalProps = {
     isOpen: boolean;
     onSave(files: FileWithPath[]): void;
@@ -24,14 +26,14 @@ export const AttachmentsModal: React.FunctionComponent<AttachmentsModalProps> = 
 
     return (
         <ModalTransition>
-            <Modal onClose={onCancel} heading="Add Attachment" shouldCloseOnEscapePress={false}>
+            <Modal onClose={onCancel} heading={l10n.t('Add Attachment')} shouldCloseOnEscapePress={false}>
                 <AttachmentForm onFilesChanged={setFiles} />
                 <ButtonGroup>
                     <Button className="ac-button" onClick={doSave} isDisabled={files.length < 1}>
-                        Save
+                        {l10n.t('Save')}
                     </Button>
                     <Button className="ac-button" onClick={onCancel}>
-                        Cancel
+                        {l10n.t('Cancel')}
                     </Button>
                 </ButtonGroup>
             </Modal>

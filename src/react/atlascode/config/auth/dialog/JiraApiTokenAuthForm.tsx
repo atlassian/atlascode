@@ -5,6 +5,7 @@ import { Box, Grid, IconButton, Link, TextField, Typography } from '@material-ui
 import { BasicAuthInfo } from 'src/atlclients/authInfo';
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
+import * as l10n from '@vscode/l10n';
 
 type JiraBasicAuthFormProps = {
     defaultSiteWithAuth: SiteWithAuthInfo;
@@ -27,7 +28,7 @@ export const JiraBasicAuthForm = ({
         <React.Fragment>
             <Grid item>
                 <Typography variant="body1">
-                    <Box fontWeight="fontWeightBold">This looks like a Jira Cloud site ☁</Box>
+                    <Box fontWeight="fontWeightBold">{l10n.t('This looks like a Jira Cloud site {0}', '☁')}</Box>
                     <Box fontSize="small">
                         You can use an{' '}
                         <Link href="https://id.atlassian.com/manage-profile/security/api-tokens">API Token</Link> to
@@ -45,7 +46,7 @@ export const JiraBasicAuthForm = ({
                     margin="dense"
                     id="username"
                     name="username"
-                    label="Username"
+                    label={l10n.t('Username')}
                     defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).username}
                     helperText={errors.username ? errors.username : undefined}
                     fullWidth
@@ -59,7 +60,7 @@ export const JiraBasicAuthForm = ({
                     margin="dense"
                     id="password"
                     name="password"
-                    label="Password (API token)"
+                    label={l10n.t('Password (API token)')}
                     defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).password}
                     type={authFormState.showPassword ? 'text' : 'password'}
                     helperText={errors.password ? errors.password : undefined}

@@ -11,6 +11,7 @@ import { useFilterDialog } from '../filters/useFilterDialog';
 import { JQLListItem } from './JQLListItem';
 import { JQLSpeedDial } from './JQLSpeedDial';
 import { useJqlEditDialog } from './useJqlEditDialog';
+import * as l10n from '@vscode/l10n';
 
 const reorder = (jqlList: JQLEntry[], oldIndex: number, newIndex: number): JQLEntry[] => {
     const result = [...jqlList];
@@ -202,7 +203,7 @@ export const JQLListEditor: React.FunctionComponent<JQLListEditorProps> = memo((
                                       })
                                     : [
                                           <Box width="100%">
-                                              <Typography align="center">No entries found.</Typography>
+                                              <Typography align="center">{l10n.t('No entries found.')}</Typography>
                                           </Box>,
                                       ]
                             }

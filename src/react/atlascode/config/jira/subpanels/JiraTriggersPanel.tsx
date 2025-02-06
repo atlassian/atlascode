@@ -7,6 +7,7 @@ import { CommonSubpanelProps } from '../../../common/commonPanelProps';
 import { PanelSubtitle } from '../../../common/PanelSubtitle';
 import { PanelTitle } from '../../../common/PanelTitle';
 import { CreateTriggerEditor } from '../CreateTriggerEditor';
+import * as l10n from '@vscode/l10n';
 
 type JiraTriggersPanelProps = CommonSubpanelProps & {
     enabled: boolean;
@@ -52,8 +53,8 @@ export const JiraTriggersPanel: React.FunctionComponent<JiraTriggersPanelProps> 
                     aria-controls={`${ConfigSection.Jira}-${ConfigSubSection.Triggers}-content`}
                     id={`${ConfigSection.Jira}-${ConfigSubSection.Triggers}-header`}
                 >
-                    <PanelTitle>Create Jira Issue Triggers</PanelTitle>
-                    <PanelSubtitle>configure creation of Jira issues from TODOs and similar</PanelSubtitle>
+                    <PanelTitle>{l10n.t('Create Jira Issue Triggers')}</PanelTitle>
+                    <PanelSubtitle>{l10n.t('configure creation of Jira issues from TODOs and similar')}</PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <CreateTriggerEditor disabled={!enabled} triggers={internalList} />

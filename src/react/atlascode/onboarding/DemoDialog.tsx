@@ -12,6 +12,7 @@ import {
 } from '@material-ui/core';
 import Skeleton from '@material-ui/lab/Skeleton';
 import React, { useCallback, useState } from 'react';
+import * as l10n from '@vscode/l10n';
 
 const useStyles = makeStyles((theme) => ({
     dialogGifBox: {
@@ -83,8 +84,8 @@ export const DemoDialog: React.FunctionComponent<DemoDialogProps> = ({
                 <Tooltip
                     title={
                         actionNotAvailable
-                            ? 'Not available for this action'
-                            : 'Click to perform this action automatically'
+                            ? l10n.t('Not available for this action')
+                            : l10n.t('Click to perform this action automatically')
                     }
                 >
                     <span>
@@ -94,12 +95,12 @@ export const DemoDialog: React.FunctionComponent<DemoDialogProps> = ({
                             variant="contained"
                             color="primary"
                         >
-                            Try it!
+                            {l10n.t('Try it!')}
                         </Button>
                     </span>
                 </Tooltip>
                 <Button color="primary" onClick={handleModalClose}>
-                    Close
+                    {l10n.t('Close')}
                 </Button>
             </DialogActions>
         </Dialog>
