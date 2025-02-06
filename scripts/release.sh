@@ -11,6 +11,12 @@ fi
 ./scripts/version/assert-stable.sh $VERSION
 
 
+# Confirm that the CHANGELOG.md has been updated
+if ! grep -q "## What's new in $VERSION" CHANGELOG.md; then
+  echo "CHANGELOG.md has not been updated. Please update CHANGELOG.md with the changes in this release."
+  exit 1
+fi
+
 # add v to the beginning of the version number
 VERSION="v$VERSION"
 
