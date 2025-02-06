@@ -413,7 +413,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     files: serFiles,
                 });
             })
-            .finally(() => this.attachingInProgress = false);
+            .finally(() => (this.attachingInProgress = false));
     };
 
     handleDeleteAttachment = (file: any) => {

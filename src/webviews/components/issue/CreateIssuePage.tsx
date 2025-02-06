@@ -214,7 +214,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
                     this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [fieldkey]: serFiles } } });
                 })
-                .finally(() => this.attachingInProgress = false);
+                .finally(() => (this.attachingInProgress = false));
         }
     };
 
