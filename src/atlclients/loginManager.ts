@@ -172,13 +172,13 @@ export class LoginManager {
                     ...getAgent(site),
                 });
                 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
-                let ausername = res.headers['x-ausername']; // bwieger 
+                let ausername = res.headers['x-ausername'];
                 // convert the %40 and similar to special characters
                 ausername = decodeURIComponent(ausername);
                 // replace special characters with underscore (_)
                 ausername = ausername.replace(slugRegex, '_');
                 siteDetailsUrl = `${apiUrl}/rest/api/1.0/users/${ausername}`;
-                avatarUrl = `${apiUrl}/users/${ausername}/avatar.png?s=64`; 
+                avatarUrl = `${apiUrl}/users/${ausername}/avatar.png?s=64`;
                 break;
         }
 
