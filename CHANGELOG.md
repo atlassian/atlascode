@@ -1,3 +1,21 @@
+## What's new in 3.4.2
+
+### Bug Fixes
+
+- Fixed file not found error when attaching files to Jira tickets
+
+## What's new in 3.4.1
+
+### Improvements
+
+- Lowered VSCode engine compatibility to v1.77.0
+
+## What's new in 3.4.0
+
+### Bug Fixes
+
+- Fixed several API calls broken due to a breaking change introduced since Jira DC 8.4.0, which causes Jira tickets to not be displayed (404 error)
+
 ## What's new in 3.2.3
 
 ### Bug Fixes
@@ -21,7 +39,6 @@
 
 ### Bug Fixes
 
-
 ## What's New in 3.0.16
 
 ### Improvements 
@@ -38,7 +55,6 @@
 
 -   A number of small improvements on the package structure
 -   Re-enabled authentication when VSCode is running remotely
-
 
 ## What's New in 3.0.10
 
