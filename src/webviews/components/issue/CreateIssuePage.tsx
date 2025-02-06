@@ -65,6 +65,7 @@ const IconValue = (props: any) => (
 export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
     private advancedFields: FieldUI[] = [];
     private commonFields: FieldUI[] = [];
+    private attachingInProgress: boolean;
 
     getProjectKey(): string {
         return this.state.fieldValues['project'].key;
@@ -191,22 +192,29 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     };
 
     protected handleInlineAttachments = async (fieldkey: string, newValue: any) => {
-        if (Array.isArray(newValue) && newValue.length > 0) {
-            readFilesContentAsync(newValue).then((filesWithContent) => {
-                const serFiles = filesWithContent.map((file) => {
-                    return {
-                        lastModified: file.lastModified,
-                        lastModifiedDate: (file as any).lastModifiedDate,
-                        name: file.name,
-                        size: file.size,
-                        type: file.type,
-                        path: (file as any).path,
-                        fileContent: file.fileContent,
-                    };
-                });
+        if (this.attachingInProgress) {
+            return;
+        }
 
-                this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [fieldkey]: serFiles } } });
-            });
+        if (Array.isArray(newValue) && newValue.length > 0) {
+            this.attachingInProgress = true;
+            readFilesContentAsync(newValue)
+                .then((filesWithContent) => {
+                    const serFiles = filesWithContent.map((file) => {
+                        return {
+                            lastModified: file.lastModified,
+                            lastModifiedDate: (file as any).lastModifiedDate,
+                            name: file.name,
+                            size: file.size,
+                            type: file.type,
+                            path: (file as any).path,
+                            fileContent: file.fileContent,
+                        };
+                    });
+
+                    this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [fieldkey]: serFiles } } });
+                })
+                .finally(() => this.attachingInProgress = false);
         }
     };
 

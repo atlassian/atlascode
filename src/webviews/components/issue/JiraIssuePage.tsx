@@ -392,27 +392,28 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         }
         this.attachingInProgress = true;
 
-        readFilesContentAsync(files).then((filesWithContent) => {
-            this.setState({ currentInlineDialog: '', isSomethingLoading: false, loadingField: 'attachment' });
-            const serFiles = filesWithContent.map((file) => {
-                return {
-                    lastModified: file.lastModified,
-                    lastModifiedDate: (file as any).lastModifiedDate,
-                    name: file.name,
-                    size: file.size,
-                    type: file.type,
-                    path: (file as any).path,
-                    fileContent: file.fileContent,
-                };
-            });
-            this.postMessage({
-                action: 'addAttachments',
-                site: this.state.siteDetails,
-                issueKey: this.state.key,
-                files: serFiles,
-            });
-            this.attachingInProgress = false;
-        });
+        readFilesContentAsync(files)
+            .then((filesWithContent) => {
+                this.setState({ currentInlineDialog: '', isSomethingLoading: false, loadingField: 'attachment' });
+                const serFiles = filesWithContent.map((file) => {
+                    return {
+                        lastModified: file.lastModified,
+                        lastModifiedDate: (file as any).lastModifiedDate,
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        path: (file as any).path,
+                        fileContent: file.fileContent,
+                    };
+                });
+                this.postMessage({
+                    action: 'addAttachments',
+                    site: this.state.siteDetails,
+                    issueKey: this.state.key,
+                    files: serFiles,
+                });
+            })
+            .finally(() => this.attachingInProgress = false);
     };
 
     handleDeleteAttachment = (file: any) => {
