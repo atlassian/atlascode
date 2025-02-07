@@ -1,3 +1,9 @@
+## What's new in 3.4.3
+
+### Bug Fixes
+
+- Fixed Bitbucket Data Center Auth not working for usernames with special characters. 
+
 ## What's new in 3.4.2
 
 ### Bug Fixes
