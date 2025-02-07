@@ -21,7 +21,7 @@ export const Registry = {
 };
 
 class AnalyticsPlatform {
-    private static nodeJsPlatformMapping = {
+    private static nodeJsPlatformMapping: Record<string, string> = {
         aix: 'desktop',
         android: 'android',
         darwin: 'mac',
@@ -660,7 +660,7 @@ function tenantOrNull<T>(e: Object, tenantId?: string): T {
 
 function instanceType(eventProps: Object, site?: DetailedSiteInfo, product?: Product): Object {
     let attrs: Object | undefined = undefined;
-    let newObj = eventProps;
+    let newObj = eventProps as Record<string, object>;
 
     if (product) {
         attrs = { hostProduct: product.name };
@@ -679,7 +679,7 @@ function instanceType(eventProps: Object, site?: DetailedSiteInfo, product?: Pro
 }
 
 function excludeFromActivity(eventProps: Object): Object {
-    let newObj = eventProps;
+    let newObj = eventProps as Record<string, object>;
 
     if (newObj['attributes']) {
         newObj['attributes'] = { ...newObj['attributes'], ...{ excludeFromActivity: true } };

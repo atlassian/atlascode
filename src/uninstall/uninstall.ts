@@ -4,7 +4,7 @@ import { analyticsClient } from '../analytics-node-client/src/client.min.js';
 import { v4 } from 'uuid';
 
 class AnalyticsPlatform {
-    private static nodeJsPlatformMapping = {
+    private static nodeJsPlatformMapping: Record<string, string> = {
         aix: 'desktop',
         android: 'android',
         darwin: 'mac',

@@ -36,7 +36,7 @@ export const maxItemsSupported = {
 };
 export const defaultPagelen = 25;
 
-const mergeStrategyLabels = {
+const mergeStrategyLabels: Record<string, string> = {
     merge_commit: 'Merge commit',
     squash: 'Squash',
     fast_forward: 'Fast forward',
@@ -251,7 +251,7 @@ export class CloudPullRequestApi implements PullRequestApi {
     private isFileConflicted(diffType: string, diffStat: any, conflictData: any[]): boolean | undefined {
         const oldPath = diffStat.old?.path;
         const newPath = diffStat.new?.path;
-        return diffType === 'TOPIC' && conflictData.some((c) => c.path === newPath ?? oldPath);
+        return diffType === 'TOPIC' && conflictData.some((c) => c.path === newPath || oldPath);
     }
 
     private mapStatusWordsToFileStatus(status: string): FileStatus {

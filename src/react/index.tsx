@@ -16,7 +16,7 @@ import { createVSCodeTheme } from './vscode/theme/vscodeTheme';
 declare var __webpack_public_path__: string;
 __webpack_public_path__ = `${document.baseURI!}build/`;
 
-const routes = {
+const routes: Record<string, any> = {
     atlascodeSettingsV2: React.lazy(
         () => import(/* webpackChunkName: "atlascodeSettingsV2" */ './atlascode/config/ConfigPage'),
     ),

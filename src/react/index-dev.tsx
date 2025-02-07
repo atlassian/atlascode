@@ -10,12 +10,18 @@ import { atlascodeTheme } from './atlascode/theme/atlascodeTheme';
 import { computeStyles, VSCodeStylesContext } from './vscode/theme/styles';
 import { createVSCodeTheme } from './vscode/theme/vscodeTheme';
 
+declare global {
+    interface Window {
+        acquireVsCodeApi: () => any;
+    }
+}
+
 // @ts-ignore
 // __webpack_public_path__ is used to set the public path for the js files - https://webpack.js.org/guides/public-path/
 declare var __webpack_public_path__: string;
 __webpack_public_path__ = `${document.baseURI!}build/`;
 
-const routes = {
+const routes: Record<string, any> = {
     atlascodeSettingsV2: React.lazy(
         () => import(/* webpackChunkName: "atlascodeSettingsV2" */ './atlascode/config/ConfigPage'),
     ),
@@ -45,7 +51,7 @@ const routes = {
     ),
 };
 
-const ports = {
+const ports: Record<string, number> = {
     atlascodeSettingsV2: UIWSPort.Settings,
     atlascodeOnboardingV2: UIWSPort.Onboarding,
     bitbucketIssuePageV2: UIWSPort.BitbucketIssuePage,

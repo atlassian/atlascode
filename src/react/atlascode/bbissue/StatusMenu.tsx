@@ -10,7 +10,7 @@ type StatusMenuProps = {
     variant?: 'filled' | 'outlined' | 'standard';
 };
 
-const StatusRenderer = {
+const StatusRenderer: Record<string, JSX.Element> = {
     new: <Lozenge appearance="new" label="new" />,
     open: <Lozenge appearance="inprogress" label="open" />,
     resolved: <Lozenge appearance="success" label="resolved" />,

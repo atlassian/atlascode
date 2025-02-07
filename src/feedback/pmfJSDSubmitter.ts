@@ -6,7 +6,7 @@ import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
 import { PMFData } from '../lib/ipc/models/common';
 import { getFeedbackUser } from './feedbackUser';
 
-const q1Choices = {
+const q1Choices: Record<string, string> = {
     '0': 'Very disappointed',
     '1': 'Somewhat disappointed',
     '2': 'Not disappointed',

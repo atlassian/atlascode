@@ -3,8 +3,8 @@
         "baseUrl": ".",
         "outDir": "../.generated",
         "module": "CommonJS",
-        "target": "es6",
-        "lib": ["esnext", "dom"],
+        "target": "es2018",
+        "lib": ["es2018", "dom"],
         "skipDefaultLibCheck": true,
         "resolveJsonModule": true,
         "skipLibCheck": true,
@@ -19,7 +19,6 @@
         "noImplicitThis": true,
         "noImplicitAny": true,
         "strictNullChecks": true,
-        "suppressImplicitAnyIndexErrors": true,
         "ignoreDeprecations": "5.0",
         "noUnusedLocals": true,
         "typeRoots": ["node_modules/@types", "src/typings/"]

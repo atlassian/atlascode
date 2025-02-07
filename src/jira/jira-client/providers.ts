@@ -60,7 +60,7 @@ export const jiraBasicAuthProvider = (username: string, password: string): Autho
 };
 
 export const getAgent: AgentProvider = (site?: SiteInfo) => {
-    let agent = {};
+    let agent: Record<string, any> = {};
     try {
         if (site) {
             if (site.customSSLCertPaths && site.customSSLCertPaths.trim() !== '') {
