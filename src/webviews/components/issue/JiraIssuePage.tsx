@@ -79,12 +79,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     // TODO: proper error handling in webviews :'(
     // This is a temporary workaround to hopefully troubleshoot
     // https://github.com/atlassian/atlascode/issues/46
-    override getInputMarkup(field: FieldUI, editmode?: boolean, context?: String) {
+    override getInputMarkup(field: FieldUI, baseApiUrl: string, editmode?: boolean, context?: String) {
         if (!field) {
             console.warn(`Field error - no field when trying to render ${context}`);
             return null;
         }
-        return super.getInputMarkup(field, editmode);
+        return super.getInputMarkup(field, baseApiUrl, editmode);
     }
 
     getProjectKey = (): string => {
@@ -501,7 +501,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             />
                         </Tooltip>
                     </div>
-                    <h2>{this.getInputMarkup(this.state.fields['summary'], true, 'summary')}</h2>
+                    <h2>{this.getInputMarkup(this.state.fields['summary'], this.state.siteDetails.baseApiUrl, true, 'summary')}</h2>
                 </div>
                 {this.state.isErrorBannerOpen && (
                     <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
@@ -516,7 +516,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.state.fields['description'] && (
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{this.state.fields['description'].name}</label>
-                        {this.getInputMarkup(this.state.fields['description'], true, 'description')}
+                        {this.getInputMarkup(this.state.fields['description'], this.state.siteDetails.baseApiUrl, true, 'description')}
                     </div>
                 )}
                 {this.state.fields['attachment'] &&
@@ -552,7 +552,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     this.state.fieldValues['environment'].trim() !== '' && (
                         <div className="ac-vpadding">
                             <label className="ac-field-label">{this.state.fields['environment'].name}</label>
-                            {this.getInputMarkup(this.state.fields['environment'], true, 'environment')}
+                            {this.getInputMarkup(this.state.fields['environment'], this.state.siteDetails.baseApiUrl, true, 'environment')}
                         </div>
                     )}
 
@@ -568,7 +568,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     !this.state.isEpic &&
                     !this.state.fieldValues['issuetype'].subtask && (
                         <div className="ac-vpadding">
-                            {this.getInputMarkup(this.state.fields['subtasks'], true, 'subtasks')}
+                            {this.getInputMarkup(this.state.fields['subtasks'], this.state.siteDetails.baseApiUrl, true, 'subtasks')}
                             <IssueList
                                 issues={this.state.fieldValues['subtasks']}
                                 onIssueClick={this.handleOpenIssue}
@@ -577,7 +577,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     )}
                 {this.state.fields['issuelinks'] && (
                     <div className="ac-vpadding">
-                        {this.getInputMarkup(this.state.fields['issuelinks'], true, 'issuelinks')}
+                        {this.getInputMarkup(this.state.fields['issuelinks'], this.state.siteDetails.baseApiUrl, true, 'issuelinks')}
                         <LinkedIssues
                             issuelinks={this.state.fieldValues['issuelinks']}
                             onIssueClick={this.handleOpenIssue}
@@ -604,6 +604,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     this.state.fieldValues['project'].projectTypeKey === 'service_desk'
                                 }
                                 comment={comment}
+                                baseApiUrl={this.state.siteDetails.baseApiUrl}
                                 fetchUsers={this.fetchUsers}
                                 onSave={this.handleUpdateComment}
                                 onDelete={this.handleDeleteComment}
@@ -624,7 +625,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 }}
                             />
                         ))}
-                        {this.getInputMarkup(this.state.fields['comment'], true, 'comment')}
+                        {this.getInputMarkup(this.state.fields['comment'], this.state.siteDetails.baseApiUrl, true, 'comment')}
                     </div>
                 )}
             </div>
@@ -814,7 +815,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             field && (
                 <div className="ac-vpadding" onClick={onClick}>
                     <label className="ac-field-label">{field.name}</label>
-                    {this.getInputMarkup(field, true, key)}
+                    {this.getInputMarkup(field, this.state.siteDetails.baseApiUrl, true, key)}
                 </div>
             )
         );
@@ -831,7 +832,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 markups.push(
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{field.name}</label>
-                        {this.getInputMarkup(field, true, `Advanced sidebar`)}
+                        {this.getInputMarkup(field, this.state.siteDetails.baseApiUrl, true, `Advanced sidebar`)}
                     </div>,
                 );
             }
@@ -873,7 +874,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 markups.push(
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{field.name}</label>
-                        {this.getInputMarkup(field, true, `Advanced main`)}
+                        {this.getInputMarkup(field, this.state.siteDetails.baseApiUrl, true, `Advanced main`)}
                     </div>,
                 );
             }
