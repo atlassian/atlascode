@@ -501,7 +501,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             />
                         </Tooltip>
                     </div>
-                    <h2>{this.getInputMarkup(this.state.fields['summary'], this.state.siteDetails.baseApiUrl, true, 'summary')}</h2>
+                    <h2>
+                        {this.getInputMarkup(
+                            this.state.fields['summary'],
+                            this.state.siteDetails.baseApiUrl,
+                            true,
+                            'summary',
+                        )}
+                    </h2>
                 </div>
                 {this.state.isErrorBannerOpen && (
                     <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
@@ -516,7 +523,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.state.fields['description'] && (
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{this.state.fields['description'].name}</label>
-                        {this.getInputMarkup(this.state.fields['description'], this.state.siteDetails.baseApiUrl, true, 'description')}
+                        {this.getInputMarkup(
+                            this.state.fields['description'],
+                            this.state.siteDetails.baseApiUrl,
+                            true,
+                            'description',
+                        )}
                     </div>
                 )}
                 {this.state.fields['attachment'] &&
@@ -552,7 +564,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     this.state.fieldValues['environment'].trim() !== '' && (
                         <div className="ac-vpadding">
                             <label className="ac-field-label">{this.state.fields['environment'].name}</label>
-                            {this.getInputMarkup(this.state.fields['environment'], this.state.siteDetails.baseApiUrl, true, 'environment')}
+                            {this.getInputMarkup(
+                                this.state.fields['environment'],
+                                this.state.siteDetails.baseApiUrl,
+                                true,
+                                'environment',
+                            )}
                         </div>
                     )}
 
@@ -568,7 +585,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     !this.state.isEpic &&
                     !this.state.fieldValues['issuetype'].subtask && (
                         <div className="ac-vpadding">
-                            {this.getInputMarkup(this.state.fields['subtasks'], this.state.siteDetails.baseApiUrl, true, 'subtasks')}
+                            {this.getInputMarkup(
+                                this.state.fields['subtasks'],
+                                this.state.siteDetails.baseApiUrl,
+                                true,
+                                'subtasks',
+                            )}
                             <IssueList
                                 issues={this.state.fieldValues['subtasks']}
                                 onIssueClick={this.handleOpenIssue}
@@ -577,7 +599,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     )}
                 {this.state.fields['issuelinks'] && (
                     <div className="ac-vpadding">
-                        {this.getInputMarkup(this.state.fields['issuelinks'], this.state.siteDetails.baseApiUrl, true, 'issuelinks')}
+                        {this.getInputMarkup(
+                            this.state.fields['issuelinks'],
+                            this.state.siteDetails.baseApiUrl,
+                            true,
+                            'issuelinks',
+                        )}
                         <LinkedIssues
                             issuelinks={this.state.fieldValues['issuelinks']}
                             onIssueClick={this.handleOpenIssue}
@@ -625,7 +652,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 }}
                             />
                         ))}
-                        {this.getInputMarkup(this.state.fields['comment'], this.state.siteDetails.baseApiUrl, true, 'comment')}
+                        {this.getInputMarkup(
+                            this.state.fields['comment'],
+                            this.state.siteDetails.baseApiUrl,
+                            true,
+                            'comment',
+                        )}
                     </div>
                 )}
             </div>
