@@ -337,6 +337,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         const { ownerSlug, repoSlug } = pr.site;
 
         try {
+            console.log('bwieger 340');
             let { data } = await this.client.get(
                 `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/tasks`,
             );
@@ -363,6 +364,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const commentData = commentId ? { comment: { id: commentId } } : {};
         try {
+            console.log('bwieger 367');
             const { data } = await this.client.post(
                 `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/`,
                 {
@@ -386,6 +388,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         const { ownerSlug, repoSlug } = site;
 
         try {
+            console.log('bwieger 391');
             const { data } = await this.client.put(
                 `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
                 {
@@ -413,6 +416,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         const { ownerSlug, repoSlug } = site;
 
         try {
+            console.log('bwieger 419');
             await this.client.delete(
                 `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
                 {},
