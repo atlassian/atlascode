@@ -21,14 +21,12 @@ import {
     PaginatedPullRequests,
     PullRequest,
     PullRequestApi,
-    Repo,
     Task,
     UnknownUser,
     User,
     WorkspaceRepo,
 } from '../model';
 import { ServerRepositoriesApi } from './repositories';
-import { Logger } from 'src/logger';
 
 export class ServerPullRequestApi implements PullRequestApi {
     private defaultReviewersCache: CacheMap = new CacheMap();
@@ -234,11 +232,11 @@ export class ServerPullRequestApi implements PullRequestApi {
 
     async postTask(site: BitbucketSite, prId: string, content: string, commentId?: string): Promise<Task> {
         try {
-            return await this.postTask_v8(site, prId, content, commentId);
+            return this.postTask_v8(site, prId, content, commentId);
         } catch (error) {
             if (error.message && error.message['status-code'] === 404) {
                 // Retry with the legacy endpoint
-                return await this.postTask_v0(site, prId, content, commentId);
+                return this.postTask_v0(site, prId, content, commentId);
             } else {
                 throw error;
             }
@@ -325,10 +323,10 @@ export class ServerPullRequestApi implements PullRequestApi {
 
     async deleteTask(site: BitbucketSite, prId: string, task: Task): Promise<void> {
         try {
-            await this.deleteTask_v8(site, prId, task);
+            return this.deleteTask_v8(site, prId, task);
         } catch (error) {
             if (error.message && error.message['status-code'] === 404) {
-                await this.deleteTask_v0(site, prId, task);
+                return this.deleteTask_v0(site, prId, task);
             } else {
                 throw error;
             }
