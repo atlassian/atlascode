@@ -246,7 +246,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     private async postTask_v0(site: BitbucketSite, prId: string, content: string, commentId?: string) {
         const bbApi = await clientForSite(site);
         const repo = await bbApi.repositories.get(site);
-        let data = await this.client.post(`/rest/api/1.0/tasks`, {
+        const data = await this.client.post(`/rest/api/1.0/tasks`, {
             anchor: {
                 id: commentId,
                 type: 'COMMENT',
@@ -265,7 +265,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         const bbApi = await clientForSite(site);
         const repo = await bbApi.repositories.get(site);
         const ownerSlug = site.ownerSlug;
-        let data = await this.client.post(
+        const data = await this.client.post(
             `/rest/api/latest/projects/${ownerSlug}/repos/${repo.name}/pull-requests/${prId}/comments`,
             {
                 id: commentId,
@@ -291,10 +291,9 @@ export class ServerPullRequestApi implements PullRequestApi {
         }
     }
 
-    private async editTask_v8(site: BitbucketSite, prId: string, task: Task) {
+    private async editTask_v8(site: BitbucketSite, pullRequestId: string, task: Task) {
         const projectKey = site.ownerSlug;
         const repositorySlug = site.repoSlug;
-        const pullRequestId = prId;
         const commentId = task.commentId;
         const { data } = await this.client.put(
             `/rest/api/1.0/projects/${projectKey}/repos/${repositorySlug}/pull-requests/${pullRequestId}/comments/${commentId}`,
@@ -333,10 +332,9 @@ export class ServerPullRequestApi implements PullRequestApi {
         }
     }
 
-    private async deleteTask_v8(site: BitbucketSite, prId: string, task: Task) {
+    private async deleteTask_v8(site: BitbucketSite, pullRequestId: string, task: Task) {
         const projectKey = site.ownerSlug;
         const repositorySlug = site.repoSlug;
-        const pullRequestId = prId;
         const commentId = task.commentId;
 
         await this.client.delete(
