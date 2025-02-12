@@ -16,7 +16,6 @@ export type StartWorkAction =
     | ReducerAction<StartWorkActionType.ClosePage, {}>
     | ReducerAction<StartWorkActionType.StartRequest, StartRequestAction>
     | ReducerAction<StartWorkActionType.OpenSettings, OpenSettingsAction>
-    | ReducerAction<StartWorkActionType.OpenSettings, OpenSettingsAction>
     | ReducerAction<StartWorkActionType.GetImage, GetImageAction>
     | CommonAction;
 
