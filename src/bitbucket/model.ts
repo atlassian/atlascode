@@ -72,6 +72,7 @@ export type Repo = {
 };
 
 export type Task = {
+    // bwieger
     commentId?: string;
     creator: User;
     created: string;
@@ -81,6 +82,7 @@ export type Task = {
     editable: boolean;
     deletable: boolean;
     content: string;
+    version?: number;
 };
 
 export type Comment = {
