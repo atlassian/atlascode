@@ -40,7 +40,7 @@ export class FeatureFlagClient {
                 });
             })
             .then(() => {
-                // console log all feature gates and values 
+                // console log all feature gates and values
                 for (const feat of Object.values(Features)) {
                     console.log(`FeatureGates: ${feat} -> ${FeatureGates.checkGate(feat)}`);
                 }
@@ -55,12 +55,12 @@ export class FeatureFlagClient {
     }
 
     public static checkGate(gate: string) {
-        var gateValue = false
-        if( FeatureGates == null) {
+        var gateValue = false;
+        if (FeatureGates === null) {
             console.warn('FeatureGates: FeatureGates is not initialized. Defaulting to False');
         } else {
             // FeatureGates.checkGate returns false if any errors
-            gateValue = FeatureGates.checkGate(gate); 
+            gateValue = FeatureGates.checkGate(gate);
         }
         console.log(`FeatureGates: ${gate} -> ${gateValue}`);
         return gateValue;
@@ -70,6 +70,7 @@ export class FeatureFlagClient {
         const featureFlags = await Promise.all(
             Object.values(Features).map(async (feature) => {
                 return {
+                    // eslint-disable-next-line @typescript-eslint/await-thenable
                     [feature]: await this.checkGate(feature),
                 };
             }),
