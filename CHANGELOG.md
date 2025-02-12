@@ -1,3 +1,9 @@
+## What's new in 3.4.4
+
+### Bug Fixes
+
+- Fixed images not showing up in Jira tickets' description and comments
+
 ## What's new in 3.4.3
 
 ### Bug Fixes
