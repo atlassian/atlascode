@@ -181,24 +181,41 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getTasks(pr: PullRequest): Promise<Task[]> {
-        const { ownerSlug, repoSlug } = pr.site;
-
-        let data;
         try {
-            data = await this.client.get(
-                `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/blocker-comments`,
-            );
+            return this.getTasks_v8(pr);
         } catch (error) {
             if (error.message && error.message['status-code'] === 404) {
-                // this is the legacy endpoint (Bitbucker DC v7.2 and older)
-                // https://developer.atlassian.com/server/bitbucket/rest/v805/api-group-deprecated/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-tasks-get
-                data = await this.client.get(
-                    `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/tasks`,
-                );
+                return this.getTasks_v0(pr);
             } else {
                 throw error;
             }
         }
+    }
+
+    private async getTasks_v8(pr: PullRequest) {
+        const { ownerSlug, repoSlug } = pr.site;
+        let { data } = await this.client.get(
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/blocker-comments`,
+        );
+        if (!data.values) {
+            return [];
+        }
+
+        const accumulatedTasks = data.values as any[];
+        while (data.next) {
+            const nextPage = await this.client.get(data.next);
+            data = nextPage.data;
+            accumulatedTasks.push(...(data.values || []));
+        }
+
+        return accumulatedTasks.map((task: any) => this.convertDataToTask_v8(task, pr.site));
+    }
+
+    private async getTasks_v0(pr: PullRequest) {
+        const { ownerSlug, repoSlug } = pr.site;
+        let { data } = await this.client.get(
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/tasks`,
+        );
 
         if (!data.values) {
             return [];
