@@ -72,7 +72,6 @@ export type Repo = {
 };
 
 export type Task = {
-    // bwieger
     commentId?: string;
     creator: User;
     created: string;

@@ -21,6 +21,7 @@ import {
     PaginatedPullRequests,
     PullRequest,
     PullRequestApi,
+    Repo,
     Task,
     UnknownUser,
     User,
@@ -232,45 +233,52 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async postTask(site: BitbucketSite, prId: string, content: string, commentId?: string): Promise<Task> {
-        const bbApi = await clientForSite(site);
-        const repo = await bbApi.repositories.get(site);
-        const ownerSlug = site.ownerSlug;
-
-        Logger.warn('bwieger 207');
-        let data;
         try {
-            data = await this.client.post(
-                `/rest/api/latest/projects/${ownerSlug}/repos/${repo.name}/pull-requests/${prId}/comments`,
-                {
-                    id: commentId,
-                    state: 'OPEN',
-                    version: 1,
-                    severity: 'BLOCKER',
-                    text: content,
-                    properties: {},
-                },
-            );
-            return this.convertDataToTask_v8(data.data, site);
+            return await this.postTask_v8(site, prId, content, commentId);
         } catch (error) {
             if (error.message && error.message['status-code'] === 404) {
                 // Retry with the legacy endpoint
-                data = await this.client.post(`/rest/api/1.0/tasks`, {
-                    anchor: {
-                        id: commentId,
-                        type: 'COMMENT',
-                    },
-                    pendingSync: true,
-                    permittedOperations: {},
-                    pullRequestId: prId,
-                    repositoryId: repo.id,
-                    state: 'OPEN',
-                    text: content,
-                });
-                return this.convertDataToTask(data.data, site);
+                return await this.postTask_v0(site, prId, content, commentId);
             } else {
                 throw error;
             }
         }
+    }
+
+    private async postTask_v0(site: BitbucketSite, prId: string, content: string, commentId?: string) {
+        const bbApi = await clientForSite(site);
+        const repo = await bbApi.repositories.get(site);
+        let data = await this.client.post(`/rest/api/1.0/tasks`, {
+            anchor: {
+                id: commentId,
+                type: 'COMMENT',
+            },
+            pendingSync: true,
+            permittedOperations: {},
+            pullRequestId: prId,
+            repositoryId: repo.id,
+            state: 'OPEN',
+            text: content,
+        });
+        return this.convertDataToTask(data.data, site);
+    }
+
+    private async postTask_v8(site: BitbucketSite, prId: string, content: string, commentId?: string) {
+        const bbApi = await clientForSite(site);
+        const repo = await bbApi.repositories.get(site);
+        const ownerSlug = site.ownerSlug;
+        let data = await this.client.post(
+            `/rest/api/latest/projects/${ownerSlug}/repos/${repo.name}/pull-requests/${prId}/comments`,
+            {
+                id: commentId,
+                state: 'OPEN',
+                version: 1,
+                severity: 'BLOCKER',
+                text: content,
+                properties: {},
+            },
+        );
+        return this.convertDataToTask_v8(data.data, site);
     }
 
     async editTask(site: BitbucketSite, prId: string, task: Task): Promise<Task> {
@@ -316,7 +324,6 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async deleteTask(site: BitbucketSite, prId: string, task: Task): Promise<void> {
-        Logger.warn('bwieger 235');
         try {
             await this.deleteTask_v8(site, prId, task);
         } catch (error) {
@@ -915,26 +922,30 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     private async getTaskCount(site: BitbucketSite, prId: string): Promise<number> {
-        const { ownerSlug, repoSlug } = site;
-
-        Logger.warn('bwieger 794');
-        let data;
         try {
-            data = await this.client.get(
-                `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/blocker-comments?count=true`,
-            );
+            return this.getTaskCount_v8(site, prId);
         } catch (error) {
             if (error.message && error.message['status-code'] === 404) {
                 // Retry with the legacy endpoint
-                data = await this.client.get(
-                    `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/tasks/count`,
-                );
+                return this.getTaskCount_v0(site, prId);
             } else {
                 throw error;
             }
         }
+    }
 
-        return data;
+    private getTaskCount_v0(site: BitbucketSite, prId: string): number | PromiseLike<number> {
+        const { ownerSlug, repoSlug } = site;
+        return this.client.get(
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/tasks/count`,
+        );
+    }
+
+    private getTaskCount_v8(site: BitbucketSite, prId: string): number | PromiseLike<number> {
+        const { ownerSlug, repoSlug } = site;
+        return this.client.get(
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/blocker-comments?count=true`,
+        );
     }
 
     static toUser(site: DetailedSiteInfo, input: any): User {
