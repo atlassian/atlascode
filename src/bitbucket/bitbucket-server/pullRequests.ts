@@ -246,7 +246,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     private async postTask_v0(site: BitbucketSite, prId: string, content: string, commentId?: string) {
         const bbApi = await clientForSite(site);
         const repo = await bbApi.repositories.get(site);
-        const { data } = await this.client.post(`/rest/api/1.0/tasks`, {
+        const { data } = await this.client.post(`/rest/api/latest/tasks`, {
             anchor: {
                 id: commentId,
                 type: 'COMMENT',
@@ -258,6 +258,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             state: 'OPEN',
             text: content,
         });
+
         return this.convertDataToTask(data, site);
     }
 
@@ -935,6 +936,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         const { data } = await this.client.get(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/tasks/count`,
         );
+
         return data;
     }
 
