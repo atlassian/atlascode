@@ -278,11 +278,11 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     };
 
     getCommonFieldMarkup(): any {
-        return this.commonFields.map((field) => this.getInputMarkup(field, this.state.siteDetails.baseApiUrl));
+        return this.commonFields.map((field) => this.getInputMarkup(field));
     }
 
     getAdvancedFieldMarkup(): any {
-        return this.advancedFields.map((field) => this.getInputMarkup(field, this.state.siteDetails.baseApiUrl));
+        return this.advancedFields.map((field) => this.getInputMarkup(field));
     }
 
     public render() {

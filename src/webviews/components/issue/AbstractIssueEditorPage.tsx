@@ -40,7 +40,6 @@ import {
 } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
 import { ConnectionTimeout } from '../../../util/time';
-import { replaceRelativeURLsWithAbsolute } from '../../../util/html';
 import { colorToLozengeAppearanceMap } from '../colors';
 import * as FieldValidators from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
@@ -372,7 +371,7 @@ export abstract class AbstractIssueEditorPage<
         }
     }, 100);
 
-    protected getInputMarkup(field: FieldUI, baseApiUrl: string, editmode: boolean = false): any {
+    protected getInputMarkup(field: FieldUI, editmode: boolean = false): any {
         switch (field.uiType) {
             case UIType.Input: {
                 let validateFunc = this.getValidateFunction(field, editmode);
@@ -402,12 +401,10 @@ export abstract class AbstractIssueEditorPage<
                     let markup: React.ReactNode = <p></p>;
 
                     if ((field as InputFieldUI).isMultiline) {
-                        const html = this.state.fieldValues[`${field.key}.rendered`] || undefined;
-                        const fixedHtml = replaceRelativeURLsWithAbsolute(html, baseApiUrl);
                         markup = (
                             <EditRenderedTextArea
                                 text={this.state.fieldValues[`${field.key}`]}
-                                renderedText={fixedHtml}
+                                renderedText={this.state.fieldValues[`${field.key}.rendered`]}
                                 fetchUsers={async (input: string) =>
                                     (await this.fetchUsers(input)).map((user) => ({
                                         displayName: user.displayName,
@@ -420,21 +417,7 @@ export abstract class AbstractIssueEditorPage<
                                 onSave={async (val: string) => {
                                     await this.handleInlineEdit(field, val);
                                 }}
-                                fetchImage={async (url: string) => {
-                                    const nonce = uuid.v4();
-                                    return (
-                                        await this.postMessageWithEventPromise(
-                                            {
-                                                action: 'getImage',
-                                                nonce: nonce,
-                                                url: url,
-                                            },
-                                            'getImageDone',
-                                            ConnectionTimeout,
-                                            nonce,
-                                        )
-                                    ).imgData;
-                                }}
+                                fetchImage={(img) => this.fetchImage(img)}
                             />
                         );
                     } else {

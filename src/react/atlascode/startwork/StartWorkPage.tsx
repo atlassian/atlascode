@@ -46,6 +46,11 @@ import { PrepareCommitTip } from '../common/PrepareCommitTip';
 import { StartWorkControllerContext, useStartWorkController } from './startWorkController';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
+import { RenderedContent } from '../../../webviews/components/RenderedContent';
+import { StartWorkAction, StartWorkActionType } from '../../../lib/ipc/fromUI/startWork';
+import { OnMessageEventPromise } from '../../../util/reactpromise';
+import { ConnectionTimeout } from '../../../util/time';
+import uuid from 'uuid';
 
 const useStyles = makeStyles((theme: Theme) => ({
     title: {
@@ -308,6 +313,33 @@ const StartWorkPage: React.FunctionComponent = () => {
         setTransition(inProgressTransitionGuess);
     }, [state.issue]);
 
+    const postMessageWithEventPromise = (
+        send: StartWorkAction,
+        waitForEvent: string,
+        timeout: number,
+        nonce?: string,
+    ): Promise<any> => {
+        controller.postMessage(send);
+        return OnMessageEventPromise(waitForEvent, timeout, nonce);
+    };
+
+    const fetchImage = async (url: string): Promise<any> => {
+        const nonce = uuid.v4();
+        return (
+            await postMessageWithEventPromise(
+                {
+                    type: StartWorkActionType.GetImage,
+                    nonce: nonce,
+                    url: url,
+                    siteDetailsStringified: JSON.stringify(state.issue.siteDetails),
+                },
+                'getImageDone',
+                ConnectionTimeout,
+                nonce,
+            )
+        ).imgData;
+    };
+
     return (
         <StartWorkControllerContext.Provider value={controller}>
             <AtlascodeErrorBoundary
@@ -380,10 +412,12 @@ const StartWorkPage: React.FunctionComponent = () => {
                                             </Grid>
                                         </Grid>
                                         <Grid item>
-                                            <Typography
-                                                variant="body2"
-                                                dangerouslySetInnerHTML={{ __html: state.issue.descriptionHtml }}
-                                            ></Typography>
+                                            {state.issue.siteDetails.baseApiUrl && (
+                                                <RenderedContent
+                                                    html={state.issue.descriptionHtml}
+                                                    fetchImage={(url) => fetchImage(url)}
+                                                />
+                                            )}
                                         </Grid>
                                         <Grid item>
                                             <Divider />

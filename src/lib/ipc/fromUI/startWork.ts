@@ -9,12 +9,15 @@ export enum StartWorkActionType {
     ClosePage = 'closePage',
     StartRequest = 'startRequest',
     OpenSettings = 'openSettings',
+    GetImage = 'getImage',
 }
 
 export type StartWorkAction =
     | ReducerAction<StartWorkActionType.ClosePage, {}>
     | ReducerAction<StartWorkActionType.StartRequest, StartRequestAction>
     | ReducerAction<StartWorkActionType.OpenSettings, OpenSettingsAction>
+    | ReducerAction<StartWorkActionType.OpenSettings, OpenSettingsAction>
+    | ReducerAction<StartWorkActionType.GetImage, GetImageAction>
     | CommonAction;
 
 export interface StartRequestAction {
@@ -30,4 +33,10 @@ export interface StartRequestAction {
 export interface OpenSettingsAction {
     section?: ConfigSection;
     subsection?: ConfigSubSection;
+}
+
+export interface GetImageAction {
+    nonce: string;
+    url: string;
+    siteDetailsStringified: string;
 }

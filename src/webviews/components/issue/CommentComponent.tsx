@@ -12,13 +12,11 @@ import React, { useState } from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { RenderedContent } from '../RenderedContent';
 import { TextAreaEditor } from './TextAreaEditor';
-import { replaceRelativeURLsWithAbsolute } from '../../../util/html';
 
 type Props = {
     siteDetails: DetailedSiteInfo;
     comment: JiraComment;
     isServiceDeskProject: boolean;
-    baseApiUrl: string;
     fetchUsers: (input: string) => Promise<any[]>;
     onSave: (commentBody: string, commentId?: string, restriction?: CommentVisibility) => void;
     onDelete: (commentId: string) => void;
@@ -29,7 +27,6 @@ export const CommentComponent: React.FC<Props> = ({
     siteDetails,
     comment,
     isServiceDeskProject,
-    baseApiUrl,
     fetchUsers,
     onSave,
     onDelete,
@@ -40,7 +37,7 @@ export const CommentComponent: React.FC<Props> = ({
     const [isSaving, setIsSaving] = useState(false);
 
     const prettyCreated = `${formatDistanceToNow(parseISO(comment.created))} ago`;
-    const body = replaceRelativeURLsWithAbsolute(comment.renderedBody!, baseApiUrl) || comment.body;
+    const body = comment.renderedBody ? comment.renderedBody : comment.body;
     const type = isServiceDeskProject ? (comment.jsdPublic ? 'external' : 'internal') : undefined;
 
     if (editing && !isSaving) {

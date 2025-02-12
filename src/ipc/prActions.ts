@@ -172,7 +172,3 @@ export interface GetImageAction extends Action {
     action: 'getImage';
     url: string;
 }
-
-export function isGetImage(a: Action): a is GetImageAction {
-    return (<GetImageAction>a).action === 'getImage';
-}

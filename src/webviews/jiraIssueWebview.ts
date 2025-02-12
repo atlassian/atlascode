@@ -918,8 +918,8 @@ export class JiraIssueWebview
                                 ),
                             );
                             // Prefix base URL for a relative URL
-                            const href = msg.url.startsWith('/secure/attachment')
-                                ? new URL(baseApiUrl + msg.url)
+                            const href = msg.url.startsWith('/')
+                                ? new URL(baseApiUrl.href + msg.url)
                                 : new URL(msg.url);
                             // Skip fetching external images (that do not belong to the site)
                             if (href.hostname !== baseApiUrl.hostname) {

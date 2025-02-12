@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { Action, LegacyPMFData } from '../../ipc/messaging';
 import { OnMessageEventPromise } from '../../util/reactpromise';
+import { ConnectionTimeout } from '../../util/time';
 import { darken, lighten, opacity } from './colors';
+import uuid from 'uuid';
 
 interface VsCodeApi {
     postMessage(msg: {}): void;
@@ -112,5 +114,21 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
     ): Promise<any> {
         this._api.postMessage(send);
         return OnMessageEventPromise(waitForEvent, timeout, nonce);
+    }
+
+    protected async fetchImage(url: string): Promise<any> {
+        const nonce = uuid.v4();
+        return (
+            await this.postMessageWithEventPromise(
+                {
+                    action: 'getImage',
+                    nonce: nonce,
+                    url: url,
+                },
+                'getImageDone',
+                ConnectionTimeout,
+                nonce,
+            )
+        ).imgData;
     }
 }
