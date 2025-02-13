@@ -28,13 +28,16 @@ describe('ServerPullRequestApi', () => {
     });
 
     it('should get with a v8 if no 404s', async () => {
-        mockGet.mockImplementation((url) => {
+        mockGet.mockImplementation((url, queryParams?) => {
             if (
                 url.includes('/rest/api/1.0/projects/owner/repos/repo/pull-requests/PR-1/blocker-comments?count=true')
             ) {
                 return Promise.resolve(getTaskCountDataV8);
             }
-            if (url.includes('/rest/api/1.0/projects/owner/repos/repo/pull-requests/PR-1')) {
+            if (
+                url.includes('/rest/api/1.0/projects/owner/repos/repo/pull-requests/PR-1') &&
+                queryParams?.['markup'] === true
+            ) {
                 return Promise.resolve({ data: getPullRequestData });
             }
 
