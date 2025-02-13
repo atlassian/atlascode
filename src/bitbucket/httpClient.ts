@@ -11,18 +11,6 @@ export interface RequestRange {
     end: number;
 }
 
-export interface IHTTPClient {
-    getUrl(url: string, cancelToken?: CancelToken): Promise<any>;
-    get(urlSlug: string, queryParams?: any, cancelToken?: CancelToken): Promise<any>;
-    getRaw(urlSlug: string, queryParams?: any): Promise<any>;
-    getArrayBuffer(urlSlug: string, queryParams?: any): Promise<any>;
-    getOctetStream(urlSlug: string, range?: RequestRange, queryParams?: any): Promise<any>;
-    post(urlSlug: string, body: any, queryParams?: any): Promise<any>;
-    put(urlSlug: string, body: any, queryParams?: any): Promise<any>;
-    delete(urlSlug: string, body: any, queryParams?: any): Promise<any>;
-    generateUrl(urlSlug: string, queryParams?: any): string;
-}
-
 export class HTTPClient {
     private transport: AxiosInstance;
 
