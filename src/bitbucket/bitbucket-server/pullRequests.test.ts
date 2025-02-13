@@ -1,27 +1,34 @@
 import { ServerPullRequestApi } from './pullRequests';
 import { BitbucketSite } from '../model';
-import { IHTTPClient } from '../httpClient';
+
+const mockGet = jest.fn();
+const mockPost = jest.fn();
+const mockPut = jest.fn();
+const mockDelete = jest.fn();
+jest.mock('../httpClient', () => ({
+    HTTPClient: jest.fn().mockImplementation(() => ({
+        get: mockGet,
+        post: mockPost,
+        put: mockPut,
+        delete: mockDelete,
+    })),
+}));
+import { HTTPClient } from '../httpClient';
+import { AxiosResponse } from 'axios';
 
 describe('ServerPullRequestApi', () => {
     let api: ServerPullRequestApi;
-    let mockClient: jest.Mocked<IHTTPClient>;
+    let mockClient: HTTPClient = new HTTPClient('', '', '', async (errJson: AxiosResponse) => Error('some error'));
     let site: BitbucketSite;
 
     beforeEach(() => {
-        mockClient = {
-            get: jest.fn(),
-            post: jest.fn(),
-            put: jest.fn(),
-            delete: jest.fn(),
-            getRaw: jest.fn(),
-        } as unknown as jest.Mocked<IHTTPClient>;
-
+        jest.clearAllMocks();
         api = new ServerPullRequestApi(mockClient);
         site = { ownerSlug: 'owner', repoSlug: 'repo', details: { userId: 'user' } } as BitbucketSite;
     });
 
     it('should get with a v8 if no 404s', async () => {
-        mockClient.get.mockImplementation((url) => {
+        mockGet.mockImplementation((url) => {
             if (
                 url.includes('/rest/api/1.0/projects/owner/repos/repo/pull-requests/PR-1/blocker-comments?count=true')
             ) {
@@ -36,7 +43,7 @@ describe('ServerPullRequestApi', () => {
 
         await api.get(site, 'PR-1');
 
-        expect(mockClient.get).lastCalledWith(
+        expect(mockGet).lastCalledWith(
             '/rest/api/1.0/projects/owner/repos/repo/pull-requests/PR-1/blocker-comments?count=true',
         );
     });
