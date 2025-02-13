@@ -33,6 +33,7 @@ export interface ConfigControllerApi {
     refresh: () => void;
     openLink: (linkId: KnownLinkID) => void;
     login: (site: SiteInfo, auth: AuthInfo) => void;
+    remoteLogin: () => void;
     logout: (site: DetailedSiteInfo) => void;
     fetchJqlOptions: (site: DetailedSiteInfo) => Promise<JqlAutocompleteRestData>;
     fetchJqlSuggestions: (
@@ -73,6 +74,9 @@ export const emptyApi: ConfigControllerApi = {
         return;
     },
     login: (site: SiteInfo, auth: AuthInfo) => {
+        return;
+    },
+    remoteLogin: () => {
         return;
     },
     logout: (site: DetailedSiteInfo) => {
@@ -314,6 +318,11 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         [postMessage],
     );
 
+    const remoteLogin = useCallback(() => {
+        dispatch({ type: ConfigUIActionType.Loading });
+        postMessage({ type: ConfigActionType.RemoteLogin });
+    }, [postMessage]);
+
     const logout = useCallback(
         (site: DetailedSiteInfo) => {
             dispatch({ type: ConfigUIActionType.Loading });
@@ -503,6 +512,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             refresh: sendRefresh,
             openLink: openLink,
             login: login,
+            remoteLogin: remoteLogin,
             logout: logout,
             fetchJqlSuggestions: fetchJqlSuggestions,
             fetchJqlOptions: fetchJqlOptions,
@@ -516,6 +526,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
     }, [
         handleConfigChange,
         login,
+        remoteLogin,
         logout,
         openLink,
         postMessage,

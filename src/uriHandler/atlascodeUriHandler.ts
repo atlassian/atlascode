@@ -50,6 +50,10 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
         jiraIssueFetcher: JiraIssueFetcher = new JiraIssueFetcher(),
     ) {
         return new AtlascodeUriHandler([
+            new SimpleCallbackAction('auth', async (uri) => {
+                const params = new URLSearchParams(uri.query);
+                Container.loginManager.finishRemoteAuth(params.get('code')!);
+            }),
             new SimpleCallbackAction('openSettings', () => Container.settingsWebviewFactory.createOrShow()),
             new SimpleCallbackAction('openOnboarding', () => Container.onboardingWebviewFactory.createOrShow()),
             new CheckoutBranchUriHandlerAction(bitbucketHelper, analyticsApi),

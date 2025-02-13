@@ -7,6 +7,7 @@ import DomainIcon from '@material-ui/icons/Domain';
 import { Product, ProductJira } from '../../../../atlclients/authInfo';
 import { SiteList } from './SiteList';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
+import { ConfigControllerContext } from '../configController';
 
 type SiteAuthenticatorProps = {
     product: Product;
@@ -17,9 +18,14 @@ type SiteAuthenticatorProps = {
 export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> = memo(
     ({ product, isRemote, sites }) => {
         const authDialogController = useContext(AuthDialogControllerContext);
+        const configController = useContext(ConfigControllerContext);
         const openProductAuth = useCallback(() => {
             authDialogController.openDialog(product, undefined);
         }, [authDialogController, product]);
+
+        const remoteAuth = useCallback(() => {
+            configController.remoteLogin();
+        }, [configController]);
 
         const handleEdit = useCallback(
             (swa: SiteWithAuthInfo) => {
@@ -27,6 +33,9 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
             },
             [authDialogController, product],
         );
+
+        // TODO AXON-46: feature flag this when closer to release
+        const [isRemoteAuthButtonVisible] = React.useState(false);
 
         return (
             <Box flexGrow={1}>
@@ -38,6 +47,8 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
                             openProductAuth={openProductAuth}
                             sites={sites}
                             handleEdit={handleEdit}
+                            remoteAuth={remoteAuth}
+                            isRemoteAuthButtonVisible={isRemoteAuthButtonVisible}
                         />
                     ) : (
                         <LegacyAuthContainer
@@ -46,6 +57,8 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
                             openProductAuth={openProductAuth}
                             sites={sites}
                             handleEdit={handleEdit}
+                            remoteAuth={remoteAuth}
+                            isRemoteAuthButtonVisible={isRemoteAuthButtonVisible}
                         />
                     )}
                 </Grid>
@@ -60,9 +73,19 @@ interface AuthContainerProps {
     openProductAuth: () => void;
     sites: SiteWithAuthInfo[];
     handleEdit: (swa: SiteWithAuthInfo) => void;
+    remoteAuth: () => void;
+    isRemoteAuthButtonVisible: boolean;
 }
 
-const LegacyAuthContainer = ({ isRemote, product, openProductAuth, sites, handleEdit }: AuthContainerProps) => (
+const LegacyAuthContainer = ({
+    isRemote,
+    product,
+    openProductAuth,
+    sites,
+    handleEdit,
+    remoteAuth,
+    isRemoteAuthButtonVisible,
+}: AuthContainerProps) => (
     <React.Fragment>
         <Grid item hidden={isRemote === false}>
             <Typography>
@@ -95,6 +118,11 @@ const LegacyAuthContainer = ({ isRemote, product, openProductAuth, sites, handle
                                 {`Add Custom ${product.name} Site`}
                             </Button>
                         </Grid>
+                        {isRemoteAuthButtonVisible && (
+                            <Grid item>
+                                <Button onClick={remoteAuth}>Remote Auth</Button>
+                            </Grid>
+                        )}
                     </Grid>
                 </Grid>
                 <Grid item>
@@ -105,7 +133,15 @@ const LegacyAuthContainer = ({ isRemote, product, openProductAuth, sites, handle
     </React.Fragment>
 );
 
-const AuthContainer = ({ isRemote, product, openProductAuth, sites, handleEdit }: AuthContainerProps) => (
+const AuthContainer = ({
+    isRemote,
+    product,
+    openProductAuth,
+    sites,
+    handleEdit,
+    remoteAuth,
+    isRemoteAuthButtonVisible,
+}: AuthContainerProps) => (
     <React.Fragment>
         <Grid item>
             <Grid container direction="column" spacing={2}>
@@ -121,6 +157,11 @@ const AuthContainer = ({ isRemote, product, openProductAuth, sites, handleEdit }
                                         {`Other options...`}
                                     </Button>
                                 </Grid>
+                                {isRemoteAuthButtonVisible && (
+                                    <Grid item>
+                                        <Button onClick={remoteAuth}>Remote Auth</Button>
+                                    </Grid>
+                                )}
                             </React.Fragment>
                         )}
                         {isRemote && (

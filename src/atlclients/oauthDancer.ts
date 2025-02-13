@@ -96,6 +96,38 @@ export class OAuthDancer implements Disposable {
         return app;
     }
 
+    public async doInitRemoteDance(state: any) {
+        const provider = OAuthProvider.JiraCloudRemote;
+        const strategy = strategyForProvider(provider);
+
+        const stateBase64 = Buffer.from(JSON.stringify(state)).toString('base64');
+        const uri = vscode.Uri.parse(strategy.authorizeUrl(stateBase64));
+        vscode.window.showInformationMessage(`Opening browser to ${uri.toString(true)}`);
+        vscode.env.openExternal(uri);
+    }
+
+    public async doFinishRemoteDance(provider: OAuthProvider, site: SiteInfo, code: string): Promise<OAuthResponse> {
+        const strategy = strategyForProvider(provider);
+        const agent = getAgent(site);
+        const responseHandler = responseHandlerForStrategy(strategy!, agent, this._axios);
+        const tokens = await responseHandler.tokens(code as string);
+        const accessibleResources = await responseHandler.accessibleResources(tokens.accessToken);
+        if (accessibleResources.length === 0) {
+            throw new Error(`No accessible resources found for ${provider}`);
+        }
+        const user = await responseHandler.user(tokens.accessToken, accessibleResources[0]);
+
+        return {
+            access: tokens.accessToken,
+            refresh: tokens.refreshToken!,
+            expirationDate: tokens.expiration,
+            iat: tokens.iat,
+            receivedAt: tokens.receivedAt,
+            user: user,
+            accessibleResources: accessibleResources,
+        };
+    }
+
     public async doDance(provider: OAuthProvider, site: SiteInfo, callback: string): Promise<OAuthResponse> {
         const currentlyInflight = this._authsInFlight.get(provider);
         if (currentlyInflight) {

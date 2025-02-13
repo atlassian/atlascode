@@ -41,6 +41,7 @@ export enum OAuthProvider {
     BitbucketCloudStaging = 'bbcloudstaging',
     JiraCloud = 'jiracloud',
     JiraCloudStaging = 'jiracloudstaging',
+    JiraCloudRemote = 'jiracloudremote',
 }
 export interface AuthInfoV1 {
     access: string;

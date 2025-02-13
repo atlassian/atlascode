@@ -13,6 +13,13 @@ import { Logger } from '../../../logger';
 import { WebViewID } from '../../../ipc/models/common';
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { formatError } from '../../formatError';
+import uuid from 'uuid';
+
+// TODO AXON-46 - figure out why linter is mad here
+// This is most likely a configuration error, since it makes sense to prevent imports of
+// `vscode` and `container` in react files - but this is NOT a react file :thinking:
+import vscode from 'vscode'; // eslint-disable-line
+import { Container } from '../../../../container'; //eslint-disable-line
 
 export const id: string = 'atlascodeSettingsV2';
 
@@ -136,6 +143,14 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                     this._api.authenticateCloud(msg.siteInfo, this._settingsUrl);
                 }
                 this._analytics.fireAuthenticateButtonEvent(id, msg.siteInfo, isCloud);
+                break;
+            }
+            case ConfigActionType.RemoteLogin: {
+                const uri = vscode.Uri.parse('vscode://atlassian.atlascode/auth');
+                vscode.env.asExternalUri(uri).then((uri) => {
+                    const state = { deeplink: uri.toString(true), attemptId: uuid.v4() };
+                    Container.loginManager.initRemoteAuth(state);
+                });
                 break;
             }
             case ConfigActionType.Logout: {

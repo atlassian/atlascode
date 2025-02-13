@@ -60,7 +60,7 @@ const expectedData = {
         },
         tokenRefreshData:
             '{"grant_type":"refresh_token","client_id":"bJChVgBQd0aNUPuFZ8YzYBVZz3X4QTe2","refresh_token":"refreshToken"}',
-        profileUrl: '',
+        profileUrl: 'https://api.atlassian.com/me',
         emailsUrl: '',
     },
     jiracloudstaging: {
@@ -77,7 +77,7 @@ const expectedData = {
         },
         tokenRefreshData:
             '{"grant_type":"refresh_token","client_id":"pmzXmUav3Rr5XEL0Sie7Biec0WGU8BKg","refresh_token":"refreshToken"}',
-        profileUrl: '',
+        profileUrl: 'https://api.stg.atlassian.com/me',
         emailsUrl: '',
     },
 };

@@ -53,6 +53,23 @@ export class LoginManager {
         this.saveDetails(provider, site, resp, isOnboarding);
     }
 
+    public async initRemoteAuth(state: Object) {
+        this._dancer.doInitRemoteDance(state);
+    }
+
+    public async finishRemoteAuth(code: string): Promise<void> {
+        const provider = OAuthProvider.JiraCloudRemote;
+        const site = {
+            host: 'https://jira.atlassian.com',
+            product: ProductJira,
+        };
+
+        const resp = await this._dancer.doFinishRemoteDance(provider, site, code);
+
+        // TODO: change false here when this is reachable from the onboarding flow
+        this.saveDetails(provider, site, resp, false);
+    }
+
     private async saveDetails(provider: OAuthProvider, site: SiteInfo, resp: OAuthResponse, isOnboarding?: boolean) {
         try {
             const oauthInfo: OAuthInfo = {
