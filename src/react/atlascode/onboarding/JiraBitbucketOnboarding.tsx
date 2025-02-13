@@ -1,6 +1,9 @@
 import React, { useCallback } from 'react';
-import { Container, Typography, Radio, Button, Box, Card, CardActionArea, CardContent } from '@material-ui/core';
+import { Container, Typography, Box, Card, CardActionArea, CardContent } from '@material-ui/core';
 import { Product } from '../common/types';
+import { VSCodeRadio, VSCodeButton } from '@vscode/webview-ui-toolkit/react';
+import { BitbucketOnboardingLogo } from '../icons/BitbucketOnboardingLogo';
+import { JiraOnboardingLogo } from '../icons/JiraOnboardingLogo';
 
 type Props = {
     product: Product;
@@ -36,7 +39,7 @@ const OnboardingRadio = ({
                 }}
             >
                 <CardContent style={formControlStyles}>
-                    <Radio size="small" checked={checked === value} />
+                    <VSCodeRadio checked={checked === value} />
                     <Box flexDirection={'column'}>
                         <Typography style={{ fontWeight: 'bold' }}>{title}</Typography>
                         {description && <Typography>{description}</Typography>}
@@ -56,7 +59,7 @@ export const JiraBitbucketOnboarding: React.FC<Props> = ({
     signInText,
     valueSet,
 }) => {
-    const [checked, setChecked] = React.useState('');
+    const [checked, setChecked] = React.useState(valueSet.cloud);
 
     const handleValueChange = useCallback(
         (value: string) => {
@@ -67,11 +70,10 @@ export const JiraBitbucketOnboarding: React.FC<Props> = ({
     );
 
     return (
-        <Container maxWidth="xs">
+        <Container style={{ justifyContent: 'center' }} maxWidth="xs">
             <Box style={wrapperStyles} flexDirection="column">
-                <Typography style={{ fontWeight: 'bold' }} variant="h2">
-                    What version of {product} do you use?
-                </Typography>
+                {product === 'Jira' ? <JiraOnboardingLogo /> : <BitbucketOnboardingLogo />}
+                <Typography variant="h2">What version of {product} do you use?</Typography>
                 <Box flexDirection="column" style={radioGroupStyles}>
                     <OnboardingRadio
                         checked={checked}
@@ -102,25 +104,23 @@ export const JiraBitbucketOnboarding: React.FC<Props> = ({
                         alignSelf: 'stretch',
                     }}
                 >
-                    <Button
+                    <VSCodeButton
                         disabled={!handleBack}
                         onClick={() => {
                             handleBack && handleBack();
                         }}
-                        size="small"
+                        appearance="secondary"
                     >
                         Back
-                    </Button>
-                    <Button
-                        size="small"
-                        variant="contained"
+                    </VSCodeButton>
+                    <VSCodeButton
                         onClick={() => {
                             executeSetup();
                             handleNext();
                         }}
                     >
                         {signInText}
-                    </Button>
+                    </VSCodeButton>
                 </Box>
             </Box>
         </Container>
@@ -141,8 +141,6 @@ const formControlStyles = {
     gap: '8px',
     alignSelf: 'stretch',
     borderRadius: '4px',
-    border: '1px solid token(color.border)',
-    backgroundColor: 'token(color.background)',
 };
 
 const radioGroupStyles = {

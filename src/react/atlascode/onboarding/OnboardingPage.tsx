@@ -1,4 +1,4 @@
-import { Button, Container, lighten, makeStyles, Step, StepLabel, Stepper, Theme } from '@material-ui/core';
+import { Box, Button, Container, lighten, makeStyles, Step, StepLabel, Stepper, Theme } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     AuthInfo,
@@ -339,7 +339,17 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                     );
                                 })}
                             </Stepper>
-                            <div>{useAuthUI ? authUI_v1 : oldAuthUI}</div>
+                            <Box
+                                style={{
+                                    display: 'flex',
+                                    flex: '1 0 0',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '24px',
+                                }}
+                            >
+                                {useAuthUI ? authUI_v1 : oldAuthUI}
+                            </Box>
                         </div>
                     </Container>
                     <AuthDialog
