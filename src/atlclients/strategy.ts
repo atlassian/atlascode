@@ -1,5 +1,5 @@
 import { OAuthProvider } from './authInfo';
-import crypto from 'crypto';
+import { createVerifier, base64URLEncode, sha256, basicAuth } from './strategyCrypto';
 
 const JiraProdStrategyData = {
     clientID: 'bJChVgBQd0aNUPuFZ8YzYBVZz3X4QTe2',
@@ -90,7 +90,7 @@ class PKCEJiraProdStrategy extends Strategy {
 
     public constructor() {
         super();
-        this.verifier = base64URLEncode(crypto.randomBytes(32));
+        this.verifier = createVerifier();
     }
 
     public provider(): OAuthProvider {
@@ -151,20 +151,12 @@ class PKCEJiraProdStrategy extends Strategy {
     }
 }
 
-function base64URLEncode(str: Buffer): string {
-    return str.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-}
-
-function sha256(buffer: any) {
-    return crypto.createHash('sha256').update(buffer).digest();
-}
-
 class PKCEJiraStagingStrategy extends Strategy {
     private verifier: string;
 
     public constructor() {
         super();
-        this.verifier = base64URLEncode(crypto.randomBytes(32));
+        this.verifier = createVerifier();
     }
 
     public provider(): OAuthProvider {
@@ -258,12 +250,9 @@ class BitbucketProdStrategy extends Strategy {
 
     // We kinda abuse refreshHeaders for bitbucket. Maybe have a authorizationHeaders as well? Just rename?
     public refreshHeaders() {
-        const basicAuth = Buffer.from(
-            `${BitbucketProdStrategyData.clientID}:${BitbucketProdStrategyData.clientSecret}`,
-        ).toString('base64');
         return {
             'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: `Basic ${basicAuth}`,
+            Authorization: basicAuth(BitbucketProdStrategyData.clientID, BitbucketProdStrategyData.clientSecret),
         };
     }
 
@@ -311,12 +300,9 @@ class BitbucketStagingStrategy extends Strategy {
     }
 
     public refreshHeaders() {
-        const basicAuth = Buffer.from(
-            `${BitbucketStagingStrategyData.clientID}:${BitbucketStagingStrategyData.clientSecret}`,
-        ).toString('base64');
         return {
             'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: `Basic ${basicAuth}`,
+            Authorization: basicAuth(BitbucketStagingStrategyData.clientID, BitbucketStagingStrategyData.clientSecret),
         };
     }
 
