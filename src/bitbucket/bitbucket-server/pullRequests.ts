@@ -6,7 +6,7 @@ import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';
 import { getFileNameFromPaths } from '../../views/pullrequest/diffViewHelper';
 import { clientForSite } from '../bbUtils';
-import { HTTPClient } from '../httpClient';
+import { IHTTPClient } from '../httpClient';
 import {
     ApprovalStatus,
     BitbucketSite,
@@ -32,7 +32,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     private defaultReviewersCache: CacheMap = new CacheMap();
     private fileContentCache: CacheMap = new CacheMap();
 
-    constructor(private client: HTTPClient) {}
+    constructor(private client: IHTTPClient) {}
 
     async getList(workspaceRepo: WorkspaceRepo, queryParams?: any): Promise<PaginatedPullRequests> {
         const site = workspaceRepo.mainSiteRemote.site;
