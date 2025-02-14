@@ -70,7 +70,6 @@ export const OnboardingPage: React.FunctionComponent = () => {
             const message = event.data;
             if (message.command === CommonMessageType.UpdateFeatureFlags) {
                 const featureValue = message.featureFlags[Features.EnableAuthUI];
-                console.log(`FeatureGates: received by OnboardingPage - ${Features.EnableAuthUI} -> ${featureValue}`);
                 setUseAuthUI(featureValue);
             }
         });
@@ -167,8 +166,6 @@ export const OnboardingPage: React.FunctionComponent = () => {
     }, [bitbucketSignInFlow, controller, handleCloudSignIn, handleNext, handleServerSignIn]);
 
     const executeJiraSignInFlow = useCallback(() => {
-        console.log(jiraSignInFlow);
-
         switch (jiraSignInFlow) {
             case 'jira-setup-radio-cloud':
                 handleCloudSignIn(ProductJira);
