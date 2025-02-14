@@ -102,7 +102,7 @@ export class JiraActiveIssueStatusBar implements Disposable {
             try {
                 const issue = (await getCachedIssue(parsedIssueKeys[0])) || (await issueForKey(parsedIssueKeys[0]));
                 this.updateStatusBarItem(issue);
-            } catch (e) {
+            } catch {
                 // do nothing
             }
         }
@@ -122,7 +122,7 @@ export class JiraActiveIssueStatusBar implements Disposable {
             try {
                 const uriPath = fs.realpathSync(editor.document.uri.fsPath);
                 return uriPath.startsWith(repo.rootUri.fsPath);
-            } catch (e) {
+            } catch {
                 return false;
             }
         });

@@ -1,3 +1,3 @@
-interface BitbucketActivityMonitor {
+export interface BitbucketActivityMonitor {
     checkForNewActivity(): void;
 }

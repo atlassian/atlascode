@@ -5,6 +5,7 @@ import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { Pipeline, PipelineTarget } from '../../pipelines/model';
 import { descriptionForState, generatePipelineTitle, shouldDisplay } from './Helpers';
+import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 
 export class PipelinesMonitor implements BitbucketActivityMonitor {
     private _previousResults: Map<string, Pipeline[]> = new Map();

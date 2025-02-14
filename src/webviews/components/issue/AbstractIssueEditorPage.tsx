@@ -277,7 +277,7 @@ export abstract class AbstractIssueEditorPage<
                         nonce,
                     );
                     resolve((listEvent as IssueSuggestionsList).issues);
-                } catch (e) {
+                } catch {
                     resolve([]);
                 }
             })();
@@ -322,7 +322,7 @@ export abstract class AbstractIssueEditorPage<
 
                     this.setState({ isSomethingLoading: false });
                     resolve(listEvent.options);
-                } catch (e) {
+                } catch {
                     this.setState({ isSomethingLoading: false });
                     resolve([]);
                 }
@@ -364,7 +364,7 @@ export abstract class AbstractIssueEditorPage<
                             ...createEvent.selectFieldOptions,
                         },
                     });
-                } catch (e) {
+                } catch {
                     this.setState({ isSomethingLoading: false });
                 }
             })();

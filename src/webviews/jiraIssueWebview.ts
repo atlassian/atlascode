@@ -946,7 +946,7 @@ export class JiraIssueWebview
                                 imgData: imgData,
                                 nonce: msg.nonce,
                             });
-                        } catch (e) {
+                        } catch {
                             Logger.error(new Error(`error fetching image: ${msg.url}`));
                             this.postMessage({
                                 type: 'getImageDone',

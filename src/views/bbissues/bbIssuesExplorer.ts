@@ -13,6 +13,7 @@ import { BitbucketIssuesDataProvider } from '../bitbucketIssuesDataProvider';
 import { BaseTreeDataProvider } from '../Explorer';
 import { BitbucketIssuesMonitor } from './bbIssuesMonitor';
 import { BitbucketSite } from '../../bitbucket/model';
+import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 
 export class BitbucketIssuesExplorer extends BitbucketExplorer {
     constructor(ctx: BitbucketContext) {

@@ -13,6 +13,7 @@ import { createVSCodeTheme } from './vscode/theme/vscodeTheme';
 // @ts-ignore
 // __webpack_public_path__ is used to set the public path for the js files - https://webpack.js.org/guides/public-path/
 declare var __webpack_public_path__: string;
+// eslint-disable-next-line no-unused-vars
 __webpack_public_path__ = `${document.baseURI!}build/`;
 
 const routes = {
@@ -73,7 +74,7 @@ class VsCodeApi {
             try {
                 var json = JSON.parse(message.data);
                 window.postMessage(json.data, '*');
-            } catch (e) {
+            } catch {
                 console.error('Invalid JSON: ', message.data);
                 return;
             }

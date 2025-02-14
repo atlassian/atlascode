@@ -353,7 +353,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
 
             return accumulatedTasks.map((task: any) => this.convertDataToTask(task, pr.site));
-        } catch (e) {
+        } catch {
             return [];
         }
     }
@@ -624,7 +624,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 });
 
                 return (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer.user));
-            } catch (e) {
+            } catch {
                 return [];
             }
         }
@@ -648,7 +648,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
 
             return teamMembers.map((m: any) => CloudPullRequestApi.toUserModel(m.user));
-        } catch (e) {
+        } catch {
             return [];
         }
     }

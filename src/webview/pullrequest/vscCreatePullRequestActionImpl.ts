@@ -103,7 +103,7 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
             if (jiraIssueKeys.length > 0) {
                 try {
                     return await issueForKey(jiraIssueKeys[0]);
-                } catch (e) {
+                } catch {
                     //not found
                 }
             }
@@ -125,7 +125,7 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
         try {
             const bbApi = await clientForSite(site);
             commits = await bbApi.repositories.getCommitsForRefs(site, sourceBranchName, destinationBranchName);
-        } catch (e) {}
+        } catch {}
 
         const shell = new Shell(Uri.parse(wsRepo.rootUri).fsPath);
         const diff = await shell.output(

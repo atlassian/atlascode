@@ -11,6 +11,7 @@ import { BitbucketExplorer } from '../BitbucketExplorer';
 import { BaseTreeDataProvider } from '../Explorer';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { PullRequestCreatedMonitor } from './pullRequestCreatedMonitor';
+import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 
 export class PullRequestsExplorer extends BitbucketExplorer {
     constructor(ctx: BitbucketContext) {
