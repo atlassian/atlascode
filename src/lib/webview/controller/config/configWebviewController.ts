@@ -119,7 +119,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 break;
             }
             case ConfigActionType.Login: {
-                var isCloud = true;
+                let isCloud = true;
                 if (isBasicAuthInfo(msg.authInfo) || isPATAuthInfo(msg.authInfo)) {
                     isCloud = false;
                     try {

@@ -85,7 +85,7 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
     async fetchUsers(site: BitbucketSite, query: string, abortKey?: string | undefined): Promise<User[]> {
         const client = await Container.clientManager.bbClient(site.details);
 
-        var cancelToken: CancelToken | undefined = undefined;
+        let cancelToken: CancelToken | undefined = undefined;
 
         if (abortKey) {
             const signal: CancelTokenSource = axios.CancelToken.source();

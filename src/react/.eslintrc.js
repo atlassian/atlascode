@@ -1,5 +1,6 @@
 module.exports = {
     rules: {
+        'no-var': 'error',
         'no-restricted-imports': [
             'error',
             {

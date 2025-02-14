@@ -45,7 +45,7 @@ export function descriptionForState(
         pipeline_state_completed_stopped: 'has been stopped',
     };
 
-    var words = 'has done something';
+    let words = 'has done something';
     switch (result.state!.type) {
         case 'pipeline_state_completed':
             words = descriptionForResult[result.state!.result!.type];

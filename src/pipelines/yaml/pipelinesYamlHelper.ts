@@ -29,7 +29,7 @@ async function addPipelinesSchemaToConfigAtScope(
         newValue = Object.assign({}, valueAtScope);
     }
     Object.keys(newValue).forEach((configKey) => {
-        var configValue = newValue[configKey];
+        let configValue = newValue[configKey];
         if (value === configValue) {
             delete newValue[configKey];
         }

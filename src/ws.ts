@@ -27,9 +27,9 @@ export class UIWebsocket implements Disposable {
 
         this._ws.on('request', function (request) {
             console.log(new Date() + ` Connection from origin ${request.origin}.`);
-            var connection = request.accept(undefined, request.origin);
+            let connection = request.accept(undefined, request.origin);
             // we need to know client index to remove them on 'close' event
-            var index = clients.push(connection) - 1;
+            let index = clients.push(connection) - 1;
             console.log(new Date() + ' Connection accepted.');
 
             // user sent some message
@@ -54,7 +54,7 @@ export class UIWebsocket implements Disposable {
     }
 
     public send(message: any) {
-        var json = JSON.stringify({ type: 'message', data: message });
+        let json = JSON.stringify({ type: 'message', data: message });
         this._clients.forEach((client) => {
             client.sendUTF(json);
         });

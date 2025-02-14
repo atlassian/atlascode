@@ -94,7 +94,7 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
                 break;
             }
             case OnboardingActionType.Login: {
-                var isCloud = true;
+                let isCloud = true;
                 if (isBasicAuthInfo(msg.authInfo)) {
                     isCloud = false;
                     try {

@@ -93,7 +93,7 @@ export class NewIssueMonitor {
         }
 
         const issueNames = newIssues.map((issue) => `[${issue.key}] "${issue.summary}"`);
-        var message = '';
+        let message = '';
         if (newIssues.length === 1) {
             message = `${issueNames[0]} added to explorer`;
         } else if (newIssues.length <= 3) {

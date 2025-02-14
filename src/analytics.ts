@@ -623,7 +623,7 @@ async function tenantTrackEvent(
 }
 
 function event(action: string, actionSubject: string, attributes: any): any {
-    var event = {
+    let event = {
         origin: 'desktop',
         platform: AnalyticsPlatform.for(process.platform),
         action: action,

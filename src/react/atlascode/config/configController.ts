@@ -356,7 +356,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             return new Promise<Suggestion[]>((resolve, reject) => {
                 (async () => {
                     try {
-                        var abortKey: string = '';
+                        let abortKey: string = '';
 
                         if (abortSignal) {
                             abortKey = v4();
@@ -402,7 +402,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             return new Promise<FilterSearchResults>((resolve, reject) => {
                 (async () => {
                     try {
-                        var abortKey: string = '';
+                        let abortKey: string = '';
 
                         if (abortSignal) {
                             abortKey = v4();
@@ -442,7 +442,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             return new Promise<JQLErrors>((resolve, reject) => {
                 (async () => {
                     try {
-                        var abortKey: string = '';
+                        let abortKey: string = '';
 
                         if (abortSignal) {
                             abortKey = v4();
