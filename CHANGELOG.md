@@ -3,7 +3,7 @@
 ### Features
 
 - Cleaned up feature flag for Jira Cloud authentication from Remote Development Environments
-- Placed in code to start Auth UI experiment. Still needs additional work before we turn this on.
+- Placed code for Auth UI experiment. Still needs additional work before we turn this on.
 
 ### Engineeering Excellence 
 - Cleaned up some of our code with new lint rules
