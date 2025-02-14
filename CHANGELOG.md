@@ -1,3 +1,9 @@
+## What's new in 3.4.5
+
+### Bug Fixes
+
+- Fixed bitbucket PR erroring out due to deprecated API being used
+
 ## What's new in 3.4.4
 
 ### Bug Fixes
