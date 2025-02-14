@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketIssue, WorkspaceRepo } from '../../bitbucket/model';
 import { Commands } from '../../commands';
+import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 
 export class BitbucketIssuesMonitor implements BitbucketActivityMonitor {
     private _lastCheckedTime = new Map<String, Date>();

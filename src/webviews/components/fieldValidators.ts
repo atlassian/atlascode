@@ -55,7 +55,7 @@ export function validateUrl(value: string, state?: any): string | undefined {
         if (url.hostname === '') {
             err = 'NOT_URL';
         }
-    } catch (e) {
+    } catch {
         err = 'NOT_URL';
     }
 

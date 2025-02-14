@@ -71,7 +71,7 @@ export class UIWebsocket implements Disposable {
                 console.log(new Date() + ` shutting down websocket http`);
                 this._srv.close();
             }
-        } catch (e) {
+        } catch {
             //ignore
         }
     }

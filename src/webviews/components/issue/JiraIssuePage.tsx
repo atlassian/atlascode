@@ -859,7 +859,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         try {
             created = `Created ${formatDistanceToNow(parseISO(this.state.fieldValues['created']))} ago`;
             updated = `Updated ${formatDistanceToNow(parseISO(this.state.fieldValues['updated']))} ago`;
-        } catch (e) {
+        } catch {
             created = this.state.fieldValues['created.rendered'] || this.state.fieldValues['created'];
             updated = this.state.fieldValues['updated.rendered'] || this.state.fieldValues['updated'];
         }

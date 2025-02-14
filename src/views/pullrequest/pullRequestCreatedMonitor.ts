@@ -4,6 +4,7 @@ import { BitbucketContext } from '../../bitbucket/bbContext';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { Commands } from '../../commands';
 import { Logger } from '../../logger';
+import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 
 export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
     private _lastCheckedTime = new Map<String, Date>();

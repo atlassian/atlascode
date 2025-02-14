@@ -250,7 +250,7 @@ const StartWorkPage: React.FunctionComponent = () => {
             setSubmitState('submit-success');
             setSubmitResponse(response);
             setSuccessSnackbarOpen(true);
-        } catch (e) {
+        } catch {
             setSubmitState('initial');
         }
     }, [

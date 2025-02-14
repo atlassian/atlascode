@@ -21,7 +21,7 @@ export class IssueHoverProvider implements HoverProvider {
         let issue = undefined;
         try {
             issue = await issueForKey(key);
-        } catch (e) {
+        } catch {
             return Promise.reject(`issue not found ${key}`);
         }
 

@@ -41,7 +41,7 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
                     const absolutePath = pathlib.join(scm.rootUri.fsPath, path);
                     try {
                         return await scm.show(commitHash, absolutePath);
-                    } catch (err) {
+                    } catch {
                         await scm.fetch(wsRepo!.mainSiteRemote.remote.name, branchName);
                         return await scm.show(commitHash, absolutePath);
                     }
@@ -52,7 +52,7 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
                     return fileContent;
                 })(),
             ]);
-        } catch (err) {
+        } catch {
             vscode.window.showErrorMessage(
                 `We couldn't find ${path} at commit ${commitHash}. You may want to sync the branch with remote. Sometimes commits can disappear after a force-push.`,
             );

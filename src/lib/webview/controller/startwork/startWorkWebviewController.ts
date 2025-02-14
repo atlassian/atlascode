@@ -193,7 +193,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                         imgData: imgData,
                         nonce: msg.nonce,
                     } as any);
-                } catch (e) {
+                } catch {
                     this.logger.error(new Error(`error fetching image: ${msg.url}`));
                     this.postMessage({
                         type: 'getImageDone',

@@ -158,14 +158,14 @@ export class StartWorkOnIssueWebview
             await repo.getBranch(destBranch);
             await repo.checkout(destBranch);
             return;
-        } catch (_) {}
+        } catch {}
 
         // checkout if there's a matching remote branch (checkout will track remote branch automatically)
         try {
             await repo.getBranch(`remotes/${remote}/${destBranch}`);
             await repo.checkout(destBranch);
             return;
-        } catch (_) {}
+        } catch {}
 
         // no existing branches, create a new one
         await repo.createBranch(

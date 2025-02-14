@@ -13,7 +13,6 @@ interface VsCodeApi {
 
 declare function acquireVsCodeApi(): VsCodeApi;
 
-export interface WebviewComponent<A extends Action, R, P = {}, S = {}> extends React.Component<P, S> {}
 // WebviewComponent is the base React component for creating a webview in vscode.
 // This handles comms between vscode and react.
 // Generic Types:

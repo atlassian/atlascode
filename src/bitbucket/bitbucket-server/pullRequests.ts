@@ -639,7 +639,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                         } else {
                             return 1;
                         }
-                    } catch (e) {
+                    } catch {
                         return a.ts!! ? 1 : -1;
                     }
                 }),
