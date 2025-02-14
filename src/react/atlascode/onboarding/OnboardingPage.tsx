@@ -19,6 +19,7 @@ import { AnalyticsView } from 'src/analyticsTypes';
 import { Features } from 'src/util/featureFlags';
 import { CommonMessageType } from 'src/lib/ipc/toUI/common';
 import { JiraBitbucketOnboarding } from './JiraBitbucketOnboarding';
+import { OnboardingActionType } from 'src/lib/ipc/fromUI/onboarding';
 
 const useStyles = makeStyles((theme: Theme) => ({
     root: {
@@ -61,7 +62,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
     const [useAuthUI, setUseAuthUI] = React.useState(false);
     const [jiraSignInText, setJiraSignInText] = useState('Sign In to Jira Cloud');
     const [bitbucketSignInText, setBitbucketSignInText] = useState('Sign In to Bitbucket Cloud');
-    const [jiraSignInFlow, setJiraSignInFlow] = useState('jira-setup-radio-cloud');
+    const [jiraSignInFlow, setJiraSignInFlow] = useState('error');
     const [bitbucketSignInFlow, setBitbucketSignInFlow] = useState('bitbucket-setup-radio-cloud');
 
     React.useEffect(() => {
@@ -157,10 +158,13 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 handleNext();
                 break;
             default:
-                console.log('Invalid Bitbucket sign in flow: %s', bitbucketSignInFlow);
+                controller.postMessage({
+                    type: OnboardingActionType.Error,
+                    error: new Error(`Invalid Bitbucket sign in flow ${bitbucketSignInFlow}`),
+                });
                 break;
         }
-    }, [bitbucketSignInFlow, handleCloudSignIn, handleNext, handleServerSignIn]);
+    }, [bitbucketSignInFlow, controller, handleCloudSignIn, handleNext, handleServerSignIn]);
 
     const executeJiraSignInFlow = useCallback(() => {
         console.log(jiraSignInFlow);
@@ -176,10 +180,13 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 handleNext();
                 break;
             default:
-                console.log('Invalid Jira sign in flow: %s', jiraSignInFlow);
+                controller.postMessage({
+                    type: OnboardingActionType.Error,
+                    error: new Error(`Invalid Jira sign in flow ${jiraSignInFlow}`),
+                });
                 break;
         }
-    }, [jiraSignInFlow, handleCloudSignIn, handleServerSignIn, handleNext]);
+    }, [jiraSignInFlow, handleCloudSignIn, handleServerSignIn, handleNext, controller]);
 
     const handleJiraOptionChange = useCallback((value: string) => {
         setJiraSignInFlow(value);

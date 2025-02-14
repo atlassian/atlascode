@@ -13,6 +13,7 @@ export enum OnboardingActionType {
     ViewPullRequest = 'viewPullRequest',
     ClosePage = 'closePage',
     OpenSettings = 'openSettings',
+    Error = 'error',
 }
 
 export type OnboardingAction =
@@ -25,6 +26,7 @@ export type OnboardingAction =
     | ReducerAction<OnboardingActionType.ViewPullRequest>
     | ReducerAction<OnboardingActionType.ClosePage>
     | ReducerAction<OnboardingActionType.OpenSettings, OpenSettingsAction>
+    | ReducerAction<OnboardingActionType.Error, { error: Error }>
     | CommonAction;
 
 export interface AuthAction {
