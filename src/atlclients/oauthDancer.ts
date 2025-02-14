@@ -77,7 +77,7 @@ export class OAuthDancer implements Disposable {
     }
 
     private createApp(): any {
-        let app = express();
+        const app = express();
 
         this.addPathForProvider(app, OAuthProvider.BitbucketCloud);
         this.addPathForProvider(app, OAuthProvider.BitbucketCloudStaging);

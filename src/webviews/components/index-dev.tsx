@@ -7,6 +7,7 @@ import './App.css';
 // @ts-ignore
 // __webpack_public_path__ is used to set the public path for the js files - https://webpack.js.org/guides/public-path/
 declare let __webpack_public_path__: string;
+// eslint-disable-next-line prefer-const
 __webpack_public_path__ = `${document.baseURI!}build/`;
 
 const routes = {
@@ -33,7 +34,7 @@ class VsCodeApi {
         // most important part - incoming messages
         this.conn.onmessage = function (message) {
             try {
-                let json = JSON.parse(message.data);
+                const json = JSON.parse(message.data);
                 window.postMessage(json.data, '*');
             } catch (e) {
                 return;

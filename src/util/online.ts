@@ -104,7 +104,7 @@ export class OnlineDetector extends Disposable {
         if (!this._checksInFlight) {
             this._checksInFlight = true;
 
-            let newIsOnline = await this.runOnlineChecks();
+            const newIsOnline = await this.runOnlineChecks();
 
             this._checksInFlight = false;
 

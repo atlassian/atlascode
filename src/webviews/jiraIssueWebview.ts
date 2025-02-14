@@ -146,7 +146,7 @@ export class JiraIssueWebview
             this._editUIData.recentPullRequests = [];
             this._editUIData.currentUser = emptyUser;
 
-            let msg = this._editUIData;
+            const msg = this._editUIData;
 
             msg.type = 'update';
 
@@ -159,7 +159,7 @@ export class JiraIssueWebview
             this.updateVoters();
             this.updateRelatedPullRequests();
         } catch (e) {
-            let err = new Error(`error updating issue: ${e}`);
+            const err = new Error(`error updating issue: ${e}`);
             Logger.error(err);
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
@@ -247,7 +247,7 @@ export class JiraIssueWebview
         const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
         await client.editIssue(this._issue!.key, { [fieldKey]: this._editUIData.fieldValues[fieldKey] });
 
-        let optionMessage = {
+        const optionMessage = {
             type: 'optionCreated',
             fieldValues: { [fieldKey]: this._editUIData.fieldValues[fieldKey] },
             selectFieldOptions: { [fieldKey]: this._editUIData.selectFieldOptions[fieldKey] },
@@ -401,7 +401,7 @@ export class JiraIssueWebview
                     if (isCreateIssue(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jiraClient(msg.site);
+                            const client = await Container.clientManager.jiraClient(msg.site);
                             const resp = await client.createIssue(msg.issueData);
 
                             const createdIssue = await client.getIssue(resp.key, IssueLinkIssueKeys, '');
@@ -435,7 +435,7 @@ export class JiraIssueWebview
                     if (isCreateIssueLink(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jiraClient(msg.site);
+                            const client = await Container.clientManager.jiraClient(msg.site);
                             const resp = await client.createIssueLink(this._issue.key, msg.issueLinkData);
 
                             this._editUIData.fieldValues['issuelinks'] = resp;
@@ -472,7 +472,7 @@ export class JiraIssueWebview
                     if (isDeleteByIDAction(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jiraClient(msg.site);
+                            const client = await Container.clientManager.jiraClient(msg.site);
 
                             // We wish we could just call the delete issuelink endpoint, but it doesn't support OAuth 2.0
                             //await client.deleteIssuelink(msg.objectWithId.id);
@@ -524,7 +524,7 @@ export class JiraIssueWebview
                     if (isCreateWorklog(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jiraClient(msg.site);
+                            const client = await Container.clientManager.jiraClient(msg.site);
                             let queryParams: any = { adjustEstimate: msg.worklogData.adjustEstimate };
                             delete msg.worklogData.adjustEstimate;
                             if (queryParams.adjustEstimate === 'new') {
@@ -565,7 +565,7 @@ export class JiraIssueWebview
                     if (isUpdateWatcherAction(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jiraClient(msg.site);
+                            const client = await Container.clientManager.jiraClient(msg.site);
                             await client.addWatcher(msg.issueKey, msg.watcher.accountId);
 
                             if (
@@ -610,7 +610,7 @@ export class JiraIssueWebview
                     if (isUpdateWatcherAction(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jiraClient(msg.site);
+                            const client = await Container.clientManager.jiraClient(msg.site);
                             await client.removeWatcher(msg.issueKey, msg.watcher.accountId);
                             if (
                                 !this._editUIData.fieldValues['watches'] ||
@@ -660,7 +660,7 @@ export class JiraIssueWebview
                     if (isUpdateVoteAction(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jiraClient(msg.site);
+                            const client = await Container.clientManager.jiraClient(msg.site);
                             await client.addVote(msg.issueKey);
 
                             if (
@@ -703,7 +703,7 @@ export class JiraIssueWebview
                     if (isUpdateVoteAction(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jiraClient(msg.site);
+                            const client = await Container.clientManager.jiraClient(msg.site);
                             await client.removeVote(msg.issueKey);
                             if (
                                 !this._editUIData.fieldValues['votes'] ||
@@ -750,7 +750,7 @@ export class JiraIssueWebview
                     if (isAddAttachmentsAction(msg)) {
                         handled = true;
                         try {
-                            let formData = new FormData();
+                            const formData = new FormData();
                             msg.files.forEach((file: any) => {
                                 if (!file.fileContent) {
                                     throw new Error(`Unable to read the file '${file.name}'`);
@@ -805,7 +805,7 @@ export class JiraIssueWebview
                     if (isDeleteByIDAction(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jiraClient(msg.site);
+                            const client = await Container.clientManager.jiraClient(msg.site);
                             await client.deleteAttachment(msg.objectWithId.id);
 
                             if (

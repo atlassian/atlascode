@@ -40,7 +40,7 @@ describe('Atlassian Extension SideBar', async () => {
     after(async () => {});
 
     it('should have a login action suggestion', async () => {
-        let atlasDrawer = sideBarView.findElement(By.id('workbench.view.extension.atlascode-drawer'));
+        const atlasDrawer = sideBarView.findElement(By.id('workbench.view.extension.atlascode-drawer'));
         expect(atlasDrawer).to.not.be.undefined;
 
         // find element by aria-label: "Please login to Jira"

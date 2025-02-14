@@ -89,11 +89,11 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
 
     const handleSave = useCallback(
         (data: FormFields) => {
-            let entry: JQLEntry = jqlEntry
+            const entry: JQLEntry = jqlEntry
                 ? jqlEntry
                 : { id: v4(), siteId: '', name: '', query: '', enabled: true, monitor: true };
 
-            let newEntry = Object.assign({}, entry, {
+            const newEntry = Object.assign({}, entry, {
                 siteId: data.site,
                 name: data.name,
                 // [VSCODE-1282] Having to revert to jqlEntry as there's a bug with how default values are handled currently
@@ -113,7 +113,7 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
 
     useEffect(() => {
         if (jqlEntry) {
-            let foundSite = sites.find((s) => s.id === jqlEntry.siteId);
+            const foundSite = sites.find((s) => s.id === jqlEntry.siteId);
             if (foundSite) {
                 setSite(foundSite);
             }

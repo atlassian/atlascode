@@ -81,7 +81,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
-        let query = {
+        const query = {
             'username.1': await this.userName(workspaceRepo),
             'role.1': 'REVIEWER',
         };
@@ -397,7 +397,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             return [];
         }
 
-        let accumulatedDiffStats = data.diffs as any[];
+        const accumulatedDiffStats = data.diffs as any[];
         while (data.isLastPage === false) {
             const nextPage = await this.client.get(
                 this.client.generateUrl(
@@ -546,7 +546,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         The Bitbucket Server API can not delete a comment unless the comment's version is provided as a query parameter.
         In order to get the comment's version, a call must be made to the Bitbucket Server API.
         */
-        let { data } = await this.client.get(
+        const { data } = await this.client.get(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/comments/${commentId}`,
         );
 
@@ -649,8 +649,8 @@ export class ServerPullRequestApi implements PullRequestApi {
 
     private shouldDisplayComment(comment: Comment): boolean {
         let hasUndeletedChild: boolean = false;
-        let filteredChildren = [];
-        for (let child of comment.children) {
+        const filteredChildren = [];
+        for (const child of comment.children) {
             if (this.shouldDisplayComment(child)) {
                 filteredChildren.push(child);
                 hasUndeletedChild = true;
@@ -662,7 +662,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     private async toNestedCommentModel(site: BitbucketSite, comment: any, commentAnchor: any): Promise<Comment> {
-        let commentModel: Comment = await this.convertDataToComment(site, comment, commentAnchor);
+        const commentModel: Comment = await this.convertDataToComment(site, comment, commentAnchor);
         commentModel.children = await Promise.all(
             (comment.comments || []).map((c: any) => this.toNestedCommentModel(site, c, commentAnchor)),
         );
@@ -739,7 +739,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         const bbApi = await clientForSite(site);
         const repo = await bbApi.repositories.get(site);
 
-        let { data } = await this.client.get(
+        const { data } = await this.client.get(
             `/rest/default-reviewers/1.0/projects/${ownerSlug}/repos/${repoSlug}/reviewers`,
             {
                 markup: true,
@@ -802,7 +802,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     async update(pr: PullRequest, title: string, summary: string, reviewerAccountIds: string[]): Promise<PullRequest> {
         const { ownerSlug, repoSlug } = pr.site;
 
-        let prBody = {
+        const prBody = {
             version: pr.data.version,
             title: title,
             description: summary,

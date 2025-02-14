@@ -77,7 +77,7 @@ export class PipelineApiImpl {
             cleanedPipelines = responseBody.values.map((pipeline: any) => this.cleanPipelineData(site, pipeline));
         }
 
-        let cleanedPaginatedPipelines: PaginatedPipelines = {
+        const cleanedPaginatedPipelines: PaginatedPipelines = {
             pagelen: responseBody.pagelen,
             page: responseBody.page,
             size: responseBody.size,
@@ -252,7 +252,7 @@ export class PipelineApiImpl {
             }
         }
 
-        let target: PipelineTarget = this.readTarget(pipeline.target);
+        const target: PipelineTarget = this.readTarget(pipeline.target);
 
         const cleanedPipeline: Pipeline = {
             site: site,

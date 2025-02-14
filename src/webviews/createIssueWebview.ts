@@ -196,7 +196,7 @@ export class CreateIssueWebview
 
         this._screenData.issueTypeUIs[this._selectedIssueTypeId] = issueTypeUI;
 
-        let optionMessage = {
+        const optionMessage = {
             type: 'optionCreated',
             fieldValues: { [fieldKey]: issueTypeUI.fieldValues[fieldKey] },
             selectFieldOptions: { [fieldKey]: issueTypeUI.selectFieldOptions[fieldKey] },
@@ -277,7 +277,7 @@ export class CreateIssueWebview
                 this.postMessage(createData);
             }
         } catch (e) {
-            let err = new Error(`error updating issue fields: ${e}`);
+            const err = new Error(`error updating issue fields: ${e}`);
             Logger.error(err);
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
@@ -364,7 +364,7 @@ export class CreateIssueWebview
     }
 
     formatCreatePayload(a: CreateIssueAction): [any, any, any, any] {
-        let payload: any = { ...a.issueData };
+        const payload: any = { ...a.issueData };
         let issuelinks: any = undefined;
         let attachments: any = undefined;
         let worklog: any = undefined;
@@ -448,7 +448,7 @@ export class CreateIssueWebview
                             });
                             const [payload, worklog, issuelinks, attachments] = this.formatCreatePayload(msg);
 
-                            let client = await Container.clientManager.jiraClient(msg.site);
+                            const client = await Container.clientManager.jiraClient(msg.site);
                             const resp = await client.createIssue({ fields: payload, update: worklog });
 
                             issueCreatedEvent(msg.site, resp.key).then((e) => {
@@ -462,7 +462,7 @@ export class CreateIssueWebview
                             }
 
                             if (attachments && attachments.length > 0) {
-                                let formData = new FormData();
+                                const formData = new FormData();
                                 attachments.forEach((file: any) => {
                                     if (!file.fileContent) {
                                         throw new Error(`Unable to read the file '${file.name}'`);

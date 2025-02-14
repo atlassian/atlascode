@@ -241,7 +241,7 @@ export class PullRequestCommentController implements vscode.Disposable {
                     return [new vscode.Range(0, 0, document.lineCount - 1, 0)];
                 }
 
-                let result: vscode.Range[] = [];
+                const result: vscode.Range[] = [];
 
                 const contextLines = lhs ? Object.values(lineContextMap) : Object.keys(lineContextMap).map(parseInt);
 
@@ -279,7 +279,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             case SaveContexts.EDITINGCOMMENT:
                 if (isPRComment(comment)) {
                     const bbApi = await clientForSite(comment.site);
-                    let newComment: Comment = await bbApi.pullrequests.editComment(
+                    const newComment: Comment = await bbApi.pullrequests.editComment(
                         comment.site,
                         comment.prId,
                         comment.body.toString(),
@@ -356,7 +356,7 @@ export class PullRequestCommentController implements vscode.Disposable {
     }
 
     getDataForAddingComment(thread: CommentThread) {
-        let {
+        const {
             site,
             prHref,
             prId,
@@ -416,7 +416,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             lineType,
         );
 
-        let newComments: PullRequestComment[] = [];
+        const newComments: PullRequestComment[] = [];
         //The new comment should be pushed to the bottom of the children of the comment it was a reply to, but because we have no notion of comment depth currently
         //(and we don't preserve the comment tree), it would be very messy to place the comment correctly. The comment is placed immediately after the comment it's
         //a reply to because this guarantees it's at least in the same depth range. A future PR may introduce a notion of depth to comments, which may make placing
@@ -479,7 +479,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             return;
         }
 
-        let newComments = commentData.parent!.comments.map((comment) => {
+        const newComments = commentData.parent!.comments.map((comment) => {
             if (isPRComment(comment)) {
                 comment.temporaryTask = undefined;
                 comment.temporaryReply = undefined;
@@ -589,7 +589,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             return; //We don't want to call createOrUpdateThread() if newComments isn't defined because this will wipe all the comments.
         }
 
-        let commentThread = await this.createOrUpdateThread(
+        const commentThread = await this.createOrUpdateThread(
             commentData.prCommentThreadId!,
             commentData.parent.uri,
             commentData.parent.range,
@@ -686,7 +686,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             let comments: vscode.Comment[];
             if (isPRComment(commentData)) {
                 const bbApi = await clientForSite(commentData.site);
-                let newComment: Comment = await bbApi.pullrequests.editComment(
+                const newComment: Comment = await bbApi.pullrequests.editComment(
                     commentData.site,
                     commentData.prId,
                     commentData.body.toString(),
@@ -728,7 +728,7 @@ export class PullRequestCommentController implements vscode.Disposable {
                 commentData.commitHash,
             );
 
-            let comments = commentData.parent.comments.filter(
+            const comments = commentData.parent.comments.filter(
                 (comment: PullRequestComment) => comment.id !== commentData.id,
             );
 
@@ -749,7 +749,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             await bbApi.pullrequests.deleteTask(taskData.site, taskData.prId, taskData.task);
 
             //Remove the deleted task from the list of tasks in the associated comment's task list
-            let comments = taskData.parent.comments.map((comment: PullRequestComment) => {
+            const comments = taskData.parent.comments.map((comment: PullRequestComment) => {
                 if (comment.id === taskData.task.commentId) {
                     return {
                         ...comment,
@@ -787,7 +787,7 @@ export class PullRequestCommentController implements vscode.Disposable {
                 range = new vscode.Range(commentThread[0].inline!.to! - 1, 0, commentThread[0].inline!.to! - 1, 0);
             }
 
-            let comments: PullRequestComment[] = [];
+            const comments: PullRequestComment[] = [];
             for (const comment of commentThread) {
                 comments.push(await this.createVSCodeComment(site, commentThread[0].id!, comment, prHref, prId));
             }
@@ -799,7 +799,7 @@ export class PullRequestCommentController implements vscode.Disposable {
     }
 
     private async insertTasks(comments: PullRequestComment[]): Promise<vscode.Comment[]> {
-        let commentsWithTasks = [];
+        const commentsWithTasks = [];
         for (const comment of comments) {
             commentsWithTasks.push(comment);
             for (const task of comment.tasks) {
@@ -818,7 +818,7 @@ export class PullRequestCommentController implements vscode.Disposable {
     }
 
     private async insertTemporaryEntities(comments: EnhancedComment[]): Promise<vscode.Comment[]> {
-        let commentsWithTemporaryEntities = [];
+        const commentsWithTemporaryEntities = [];
         for (const comment of comments) {
             commentsWithTemporaryEntities.push(comment);
             if (isPRComment(comment)) {
@@ -868,7 +868,7 @@ export class PullRequestCommentController implements vscode.Disposable {
         const newThread = this._commentController.createCommentThread(uri, range, commentsWithTemporaryEntities);
         newThread.label = '';
         newThread.collapsibleState = vscode.CommentThreadCollapsibleState.Expanded;
-        for (let comment of newThread.comments) {
+        for (const comment of newThread.comments) {
             if ((comment as PullRequestComment).id) {
                 (comment as PullRequestComment).parent = newThread;
             }
@@ -886,7 +886,7 @@ export class PullRequestCommentController implements vscode.Disposable {
         prHref: string,
         prId: string,
     ): Promise<PullRequestTask> {
-        let contextValueList: string[] = [];
+        const contextValueList: string[] = [];
         if (task.editable) {
             contextValueList.push('canModifyTask');
         }

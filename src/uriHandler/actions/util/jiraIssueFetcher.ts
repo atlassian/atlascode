@@ -25,7 +25,7 @@ export class JiraIssueFetcher {
     }
 
     async findIssueOnSite(issueKey: string, site: DetailedSiteInfo) {
-        let foundIssue = await Container.jiraExplorer.findIssue(issueKey);
+        const foundIssue = await Container.jiraExplorer.findIssue(issueKey);
         if (foundIssue) {
             return await fetchMinimalIssue(issueKey, site);
         }

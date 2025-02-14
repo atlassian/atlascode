@@ -32,7 +32,7 @@ export class PullRequestHeaderNode extends AbstractBaseNode {
     }
 
     getTreeItem(): TreeItem {
-        let treeItem = new TreeItem('', TreeItemCollapsibleState.None);
+        const treeItem = new TreeItem('', TreeItemCollapsibleState.None);
         treeItem.label = getPullRequestFilterDescription(this.filterType);
         treeItem.description = 'click to change filter';
         treeItem.iconPath = Resources.icons.get('preferences');
@@ -48,7 +48,7 @@ export class PullRequestHeaderNode extends AbstractBaseNode {
 
 export class CreatePullRequestNode extends AbstractBaseNode {
     getTreeItem(): TreeItem {
-        let treeItem = new TreeItem('Create pull request...', TreeItemCollapsibleState.None);
+        const treeItem = new TreeItem('Create pull request...', TreeItemCollapsibleState.None);
         treeItem.iconPath = Resources.icons.get('pullrequests');
 
         treeItem.command = {

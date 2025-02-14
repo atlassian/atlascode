@@ -87,7 +87,7 @@ export class LegacyAtlascodeUriHandler implements Disposable, UriHandler {
             }
 
             const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
-            let site = jiraSitesAvailable.find(
+            const site = jiraSitesAvailable.find(
                 (availableSite) => availableSite.isCloud && availableSite.baseLinkUrl.includes(siteBaseURL),
             );
             if (!site) {
@@ -135,7 +135,7 @@ export class LegacyAtlascodeUriHandler implements Disposable, UriHandler {
             }
 
             const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
-            let site = jiraSitesAvailable.find(
+            const site = jiraSitesAvailable.find(
                 (availableSite) => availableSite.isCloud && availableSite.baseLinkUrl.includes(siteBaseURL),
             );
             if (!site) {

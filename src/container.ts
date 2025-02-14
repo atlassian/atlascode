@@ -77,7 +77,7 @@ const ConfigTargetKey = 'configurationTarget';
 
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig, version: string) {
-        let analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
+        const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
 
         this._analyticsClient = analyticsClient({
             origin: 'desktop',
@@ -188,8 +188,7 @@ export class Container {
         if (config.jira.explorer.enabled) {
             context.subscriptions.push((this._jiraExplorer = new JiraContext()));
         } else {
-            let disposable: Disposable;
-            disposable = configuration.onDidChange((e) => {
+            const disposable = configuration.onDidChange((e) => {
                 if (configuration.changed(e, 'jira.explorer.enabled')) {
                     disposable.dispose();
                     context.subscriptions.push((this._jiraExplorer = new JiraContext()));

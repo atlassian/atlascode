@@ -47,7 +47,7 @@ export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
         }
         if (!this._children) {
             const bbApi = await clientForSite(this.workspaceRepo.mainSiteRemote.site!);
-            let issues = await bbApi.issues!.getList(this.workspaceRepo);
+            const issues = await bbApi.issues!.getList(this.workspaceRepo);
             if (issues.data.length === 0) {
                 return [new SimpleNode('No open issues for this repository')];
             }
@@ -88,7 +88,7 @@ class NextPageNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        let item = new vscode.TreeItem('Load next page', vscode.TreeItemCollapsibleState.None);
+        const item = new vscode.TreeItem('Load next page', vscode.TreeItemCollapsibleState.None);
         item.iconPath = Resources.icons.get('more');
 
         item.command = {

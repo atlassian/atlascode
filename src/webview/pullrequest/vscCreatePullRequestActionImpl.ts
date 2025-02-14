@@ -228,7 +228,7 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
         //git diff-index --name-status will return lines in the form {status}        {name of file}
         //It's important to note that the order of the files will be identical to git diff --numstat, and we can use that to our advantage
         const namestatusLines = await shell.lines(`git diff --name-status -C -M50 ${forkPoint} ${sourceBranch.commit}`);
-        let fileDiffs: FileDiff[] = [];
+        const fileDiffs: FileDiff[] = [];
         for (let i = 0; i < numstatLines.length; i++) {
             const numstatWords = numstatLines[i].split(/\s+/);
             const namestatusWords = namestatusLines[i].split(/\s+/);

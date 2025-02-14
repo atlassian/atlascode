@@ -93,8 +93,8 @@ export default class VotesForm extends React.Component<MyProps, MyState> {
             return this.getEmptyVoters();
         }
 
-        let voterList = this.props.votes.voters.map((voter) => {
-            let avatar = voter.avatarUrls && voter.avatarUrls['24x24'] ? voter.avatarUrls['24x24'] : '';
+        const voterList = this.props.votes.voters.map((voter) => {
+            const avatar = voter.avatarUrls && voter.avatarUrls['24x24'] ? voter.avatarUrls['24x24'] : '';
             return (
                 <div className="ac-inline-watcher ac-inline-watcher-hover">
                     <Avatar size="small" src={avatar} />

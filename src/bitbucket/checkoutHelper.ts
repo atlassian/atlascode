@@ -39,7 +39,7 @@ export class BitbucketCheckoutHelper implements CheckoutHelper {
         sourceCloneUrl?: string,
     ): Promise<boolean> {
         sourceCloneUrl = sourceCloneUrl || '';
-        let wsRepo = this.findRepoInCurrentWorkspace(cloneUrl);
+        const wsRepo = this.findRepoInCurrentWorkspace(cloneUrl);
         if (!wsRepo) {
             this.globalState.update(BitbucketRefInfoKey, {
                 timestamp: new Date().getTime(),
@@ -90,7 +90,7 @@ export class BitbucketCheckoutHelper implements CheckoutHelper {
         if (refInfo.refName && refInfo.timestamp) {
             const now = new Date().getTime();
             if (now - refInfo.timestamp < RefInfoLifespanMs) {
-                let wsRepo = this.findRepoInCurrentWorkspace(refInfo.cloneUrl);
+                const wsRepo = this.findRepoInCurrentWorkspace(refInfo.cloneUrl);
                 if (!wsRepo) {
                     this.showLoginMessage(
                         `Could not find repo in current workspace after attempting to clone. Are you authenticated with Bitbucket?`,

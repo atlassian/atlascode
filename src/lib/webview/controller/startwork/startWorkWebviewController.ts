@@ -107,7 +107,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 ...this.api.getStartWorkConfig(),
             });
         } catch (e) {
-            let err = new Error(`error updating start work page: ${e}`);
+            const err = new Error(`error updating start work page: ${e}`);
             this.logger.error(err);
             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
         } finally {

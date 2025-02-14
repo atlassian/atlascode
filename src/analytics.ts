@@ -57,7 +57,7 @@ export async function launchedEvent(location: string): Promise<TrackEvent> {
 }
 
 export async function featureChangeEvent(featureId: string, enabled: boolean): Promise<TrackEvent> {
-    let action = enabled ? 'enabled' : 'disabled';
+    const action = enabled ? 'enabled' : 'disabled';
     return trackEvent(action, 'feature', { actionSubjectId: featureId });
 }
 
@@ -164,7 +164,7 @@ export async function prCommentEvent(site: DetailedSiteInfo): Promise<TrackEvent
 }
 
 export async function prTaskEvent(site: DetailedSiteInfo, source: string): Promise<TrackEvent> {
-    let attributesObject: any = instanceType({}, site);
+    const attributesObject: any = instanceType({}, site);
     attributesObject.attributes.source = source;
     return trackEvent('created', 'pullRequestComment', attributesObject);
 }
@@ -590,7 +590,7 @@ async function instanceTrackEvent(
     actionSubject: string,
     eventProps: any = {},
 ): Promise<TrackEvent> {
-    let event: TrackEvent =
+    const event: TrackEvent =
         site.isCloud && site.product.key === ProductJira.key
             ? await tenantTrackEvent(site.id, action, actionSubject, instanceType(eventProps, site))
             : await trackEvent(action, actionSubject, instanceType(eventProps, site));
@@ -623,7 +623,7 @@ async function tenantTrackEvent(
 }
 
 function event(action: string, actionSubject: string, attributes: any): any {
-    let event = {
+    const event = {
         origin: 'desktop',
         platform: AnalyticsPlatform.for(process.platform),
         action: action,
@@ -648,19 +648,18 @@ function anyUserOrAnonymous<T>(e: Object): T {
 
 function tenantOrNull<T>(e: Object, tenantId?: string): T {
     let tenantType: string | null = 'cloudId';
-    let newObj: Object;
 
     if (!tenantId) {
         tenantType = null;
     }
-    newObj = { ...e, ...{ tenantIdType: tenantType, tenantId: tenantId } };
 
+    const newObj: Object = { ...e, ...{ tenantIdType: tenantType, tenantId: tenantId } };
     return newObj as T;
 }
 
 function instanceType(eventProps: Object, site?: DetailedSiteInfo, product?: Product): Object {
     let attrs: Object | undefined = undefined;
-    let newObj = eventProps;
+    const newObj = eventProps;
 
     if (product) {
         attrs = { hostProduct: product.name };
@@ -679,7 +678,7 @@ function instanceType(eventProps: Object, site?: DetailedSiteInfo, product?: Pro
 }
 
 function excludeFromActivity(eventProps: Object): Object {
-    let newObj = eventProps;
+    const newObj = eventProps;
 
     if (newObj['attributes']) {
         newObj['attributes'] = { ...newObj['attributes'], ...{ excludeFromActivity: true } };

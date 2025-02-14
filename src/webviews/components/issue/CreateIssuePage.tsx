@@ -135,9 +135,9 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     }
 
     handleSubmit = async (e: any) => {
-        let requiredFields = Object.values(this.state.fields).filter((field) => field.required);
+        const requiredFields = Object.values(this.state.fields).filter((field) => field.required);
 
-        let errs = {};
+        const errs = {};
         requiredFields.forEach((field: FieldUI) => {
             if (field.uiType === UIType.Worklog && this.state.fieldValues[`${field.key}.enabled`]) {
                 const timeSpent = this.state.fieldValues[`${field.key}.timeSpent`];

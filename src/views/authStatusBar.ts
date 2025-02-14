@@ -38,7 +38,7 @@ export class AuthStatusBar extends Disposable {
     }
 
     async generateStatusbarItem(product: Product): Promise<void> {
-        let site: DetailedSiteInfo | undefined = Container.siteManager.getFirstSite(product.key);
+        const site: DetailedSiteInfo | undefined = Container.siteManager.getFirstSite(product.key);
         let authInfo: AuthInfo | undefined = undefined;
 
         if (!isEmptySiteInfo(site)) {
@@ -139,8 +139,8 @@ export class AuthStatusBar extends Disposable {
                     text = `$(person) ${product.name}: ${authInfo.user.displayName}`;
 
                     if (template) {
-                        let data = { product: product.name, user: authInfo.user.displayName };
-                        let context = { ...Container.config.bitbucket.statusbar, ...data };
+                        const data = { product: product.name, user: authInfo.user.displayName };
+                        const context = { ...Container.config.bitbucket.statusbar, ...data };
                         command = Commands.ShowBitbucketAuth;
                         text = Mustache.render(template, context);
                     }

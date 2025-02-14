@@ -16,7 +16,7 @@ import { CreateJiraIssueNode } from './headerNode';
 import { SearchJiraIssuesNode } from './searchJiraIssueNode';
 
 const createJiraIssueNode = new CreateJiraIssueNode();
-let searchJiraIssuesNode = new SearchJiraIssuesNode();
+const searchJiraIssuesNode = new SearchJiraIssuesNode();
 interface QuickPickIssue extends QuickPickItem {
     issue: MinimalORIssueLink<DetailedSiteInfo>;
 }
@@ -81,7 +81,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
         const children = await this.getChildren(undefined);
 
         let firstJQLTree: CustomJQLTree | undefined;
-        for (let child of children) {
+        for (const child of children) {
             if (child instanceof CustomJQLTree) {
                 firstJQLTree = child;
                 const issueNodes = await firstJQLTree.getChildren();

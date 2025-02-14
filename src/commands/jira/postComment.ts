@@ -9,7 +9,7 @@ export async function postComment(
     commentId?: string,
     restriction?: CommentVisibility,
 ): Promise<Comment> {
-    let client = await Container.clientManager.jiraClient(issue.siteDetails);
+    const client = await Container.clientManager.jiraClient(issue.siteDetails);
 
     const resp =
         commentId === undefined

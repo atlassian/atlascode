@@ -48,7 +48,7 @@ export class JiraPKCEResponseHandler extends ResponseHandler {
 
     async user(accessToken: string, resource: AccessibleResource): Promise<UserInfo> {
         try {
-            let apiUri = this.strategy.apiUrl();
+            const apiUri = this.strategy.apiUrl();
             const url = `https://${apiUri}/ex/jira/${resource.id}/rest/api/2/myself`;
 
             const userResponse = await this.axios(url, {

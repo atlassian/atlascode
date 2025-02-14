@@ -11,7 +11,7 @@ export class ConfigureJQLNode extends AbstractBaseNode {
     }
 
     getTreeItem(): TreeItem {
-        let treeItem = new TreeItem(this._label, TreeItemCollapsibleState.None);
+        const treeItem = new TreeItem(this._label, TreeItemCollapsibleState.None);
 
         treeItem.command = {
             command: Commands.ShowJiraIssueSettings,

@@ -43,7 +43,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             .map((approver) => `Approved-by: ${approver.displayName}`)
             .join('\n');
 
-        let item = new vscode.TreeItem(
+        const item = new vscode.TreeItem(
             `#${this.pr.data.id!} ${this.pr.data.title!}`,
             vscode.TreeItemCollapsibleState.Collapsed,
         );
@@ -82,7 +82,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         }
 
         const bbApi = await clientForSite(this.pr.site);
-        let promises = Promise.all([
+        const promises = Promise.all([
             bbApi.pullrequests.getChangedFiles(this.pr),
             bbApi.pullrequests.getCommits(this.pr),
             bbApi.pullrequests.getComments(this.pr),
@@ -91,7 +91,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
         return promises.then(
             async (result) => {
-                let [fileDiffs, commits, allComments, tasks] = result;
+                const [fileDiffs, commits, allComments, tasks] = result;
 
                 const children: AbstractBaseNode[] = [new DescriptionNode(this.pr, this)];
 
@@ -154,7 +154,7 @@ export class DescriptionNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        let item = new vscode.TreeItem('Details', vscode.TreeItemCollapsibleState.None);
+        const item = new vscode.TreeItem('Details', vscode.TreeItemCollapsibleState.None);
         item.tooltip = 'Open pull request details';
         item.iconPath = Resources.icons.get('detail');
 
@@ -181,7 +181,7 @@ export class NextPageNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        let item = new vscode.TreeItem('Load next page', vscode.TreeItemCollapsibleState.None);
+        const item = new vscode.TreeItem('Load next page', vscode.TreeItemCollapsibleState.None);
         item.iconPath = Resources.icons.get('more');
 
         item.command = {

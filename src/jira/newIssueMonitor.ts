@@ -55,7 +55,7 @@ export class NewIssueMonitor {
 
             const foundIssues: MinimalIssue<DetailedSiteInfo>[] = [];
 
-            let jqlResults = await pSettle<JQLSettleResult>(jqlPromises);
+            const jqlResults = await pSettle<JQLSettleResult>(jqlPromises);
             jqlResults.forEach((result) => {
                 if (result.isFulfilled) {
                     const newIssues = result.value.issues.filter((issue) => issue.created! > this._timestamp);

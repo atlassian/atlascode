@@ -82,7 +82,7 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
                 comments: comments,
             });
         } catch (e) {
-            let err = new Error(`error updating bitbucket issue: ${e}`);
+            const err = new Error(`error updating bitbucket issue: ${e}`);
             this._logger.error(err);
             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
         } finally {

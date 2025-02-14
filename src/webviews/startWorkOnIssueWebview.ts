@@ -241,7 +241,7 @@ export class StartWorkOnIssueWebview
                     }),
             );
 
-            let issueClone: MinimalIssue<DetailedSiteInfo> = JSON.parse(JSON.stringify(issue));
+            const issueClone: MinimalIssue<DetailedSiteInfo> = JSON.parse(JSON.stringify(issue));
             // best effort to set issue to in-progress
             if (!issueClone.status.name.toLowerCase().includes('progress')) {
                 const inProgressTransition = issueClone.transitions.find(
@@ -263,7 +263,7 @@ export class StartWorkOnIssueWebview
             };
             this.postMessage(msg);
         } catch (e) {
-            let err = new Error(`error updating issue: ${e}`);
+            const err = new Error(`error updating issue: ${e}`);
             Logger.error(err);
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
@@ -272,10 +272,10 @@ export class StartWorkOnIssueWebview
     }
 
     private async forceUpdateIssue() {
-        let key = this._state.key;
+        const key = this._state.key;
         if (key !== '') {
             try {
-                let issue = await fetchMinimalIssue(key, this._state.siteDetails);
+                const issue = await fetchMinimalIssue(key, this._state.siteDetails);
                 this.updateIssue(issue);
             } catch (e) {
                 Logger.error(e);

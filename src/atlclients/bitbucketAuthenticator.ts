@@ -14,7 +14,7 @@ export class BitbucketAuthenticator implements Authenticator {
         let newSites: DetailedSiteInfo[] = [];
 
         if (resources.length > 0) {
-            let resource = resources[0];
+            const resource = resources[0];
             const hostname = provider === OAuthProvider.BitbucketCloud ? 'bitbucket.org' : 'staging.bb-inf.net';
             const baseApiUrl =
                 provider === OAuthProvider.BitbucketCloud

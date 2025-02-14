@@ -71,7 +71,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                         handled = true;
                         if (isFetchQueryAndSite(msg)) {
                             try {
-                                let client = await Container.clientManager.jiraClient(msg.site);
+                                const client = await Container.clientManager.jiraClient(msg.site);
                                 let suggestions: IssuePickerIssue[] = [];
                                 if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
                                     const result: IssuePickerResult = await client.getAutocompleteDataFromUrl(
@@ -107,7 +107,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                         handled = true;
                         if (isFetchQueryAndSite(msg)) {
                             try {
-                                let client = await Container.clientManager.jiraClient(msg.site);
+                                const client = await Container.clientManager.jiraClient(msg.site);
                                 let suggestions: any[] = [];
                                 if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
                                     const result = await client.getAutocompleteDataFromUrl(
@@ -139,7 +139,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                         handled = true;
                         if (isCreateSelectOption(msg)) {
                             try {
-                                let client = await Container.clientManager.jiraClient(msg.siteDetails);
+                                const client = await Container.clientManager.jiraClient(msg.siteDetails);
                                 const result = await client.postCreateUrl(msg.createUrl, msg.createData);
                                 await this.handleSelectOptionCreated(msg.fieldKey, result, msg.nonce);
                             } catch (e) {

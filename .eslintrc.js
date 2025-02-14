@@ -56,6 +56,7 @@ module.exports = {
         'brace-style': 'off',
         'no-throw-literal': 'error',
         'no-var': 'error',
+        'prefer-const': 'error',
         curly: 'error',
         eqeqeq: ['error', 'always'],
         semi: 'off',

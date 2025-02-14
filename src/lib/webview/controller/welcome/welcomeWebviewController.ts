@@ -45,7 +45,7 @@ export class WelcomeWebviewController implements WebviewController<WelcomeInitMe
                 ...this.initData!,
             });
         } catch (e) {
-            let err = new Error(`error updating welcome page: ${e}`);
+            const err = new Error(`error updating welcome page: ${e}`);
             this.logger.error(err);
             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
         } finally {

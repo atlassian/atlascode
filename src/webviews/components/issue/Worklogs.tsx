@@ -12,7 +12,7 @@ const Created = (data: ItemData) => (
 const Comment = (data: ItemData) => <p style={{ display: 'inline' }}>{data.worklog.comment}</p>;
 const TimeSpent = (data: ItemData) => <p style={{ display: 'inline' }}>{data.worklog.timeSpent}</p>;
 const Author = (data: ItemData) => {
-    let avatar =
+    const avatar =
         data.worklog.author.avatarUrls && data.worklog.author.avatarUrls['16x16']
             ? data.worklog.author.avatarUrls['16x16']
             : '';

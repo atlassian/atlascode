@@ -62,7 +62,7 @@ export class RepositoriesNode extends AbstractBaseNode {
             .filter((child) => child instanceof PullRequestTitlesNode)
             .map((child) => (child as PullRequestTitlesNode).prHref);
 
-        let prs = await this.fetcher(this.workspaceRepo);
+        const prs = await this.fetcher(this.workspaceRepo);
         this.children = this.createChildNodes(prs.data, this.children);
         if (prs.next) {
             this.children!.push(new NextPageNode(prs));

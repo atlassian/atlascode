@@ -92,7 +92,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     onMessageReceived(e: any): boolean {
-        let handled = super.onMessageReceived(e);
+        const handled = super.onMessageReceived(e);
 
         if (!handled) {
             switch (e.type) {
@@ -272,7 +272,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     protected handleCreateComment = (commentBody: string, restriction?: CommentVisibility) => {
         this.setState({ isSomethingLoading: true, loadingField: 'comment' });
-        let commentAction: IssueCommentAction = {
+        const commentAction: IssueCommentAction = {
             action: 'comment',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
             commentBody: commentBody,
@@ -793,7 +793,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     advancedSidebar(): any {
-        let markups: any[] = [];
+        const markups: any[] = [];
 
         this.advancedSidebarFields.forEach((field) => {
             if (field.advanced && field.uiType !== UIType.NonEditable) {
@@ -838,7 +838,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     advancedMain(): any {
-        let markups: any[] = [];
+        const markups: any[] = [];
 
         this.advancedMainFields.forEach((field) => {
             if (field.advanced && field.uiType !== UIType.NonEditable) {

@@ -25,10 +25,10 @@ export class BitbucketIssuesMonitor implements BitbucketActivityMonitor {
                     : new Date();
                 this._lastCheckedTime.set(wsRepo.rootUri, new Date());
 
-                let newIssues = issuesList.data.filter((i) => Date.parse(i.data.created_on!) > lastChecked.getTime());
+                const newIssues = issuesList.data.filter((i) => Date.parse(i.data.created_on!) > lastChecked.getTime());
 
                 if (newIssues.length > 0) {
-                    let repoName = path.basename(wsRepo.rootUri);
+                    const repoName = path.basename(wsRepo.rootUri);
                     return [{ repo: repoName, issues: newIssues }];
                 }
                 return [];
@@ -38,7 +38,7 @@ export class BitbucketIssuesMonitor implements BitbucketActivityMonitor {
             .then((result) => result.reduce((prev, curr) => prev.concat(curr), []))
             .then((notifiableRepos) => {
                 if (notifiableRepos.length === 1 && notifiableRepos[0].issues.length === 1) {
-                    let issue: BitbucketIssue = notifiableRepos[0].issues[0];
+                    const issue: BitbucketIssue = notifiableRepos[0].issues[0];
                     vscode.window
                         .showInformationMessage(
                             `New Bitbucket issue "${issue.data.title}" was created for repo "${notifiableRepos[0].repo}"`,

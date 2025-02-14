@@ -136,7 +136,7 @@ export function useFormValidation<FieldTypes>(watch?: Partial<FieldTypes>): Form
                 }
 
                 //TODO: add an option to validate all fields before submitting.
-                let fieldValues: Partial<FieldTypes> = {};
+                const fieldValues: Partial<FieldTypes> = {};
                 try {
                     for (const field of Object.values<FieldDescriptor>(fields)) {
                         if (field) {

@@ -31,7 +31,7 @@ export abstract class AbstractMultiViewManager<T> implements Disposable {
         this._listeners.set(
             key,
             view.onDidPanelDispose()(() => {
-                let view = this._viewMap.get(key);
+                const view = this._viewMap.get(key);
 
                 if (view) {
                     view.dispose();

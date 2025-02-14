@@ -123,7 +123,7 @@ const MultiIconValue = (props: any) => {
 };
 
 const AvatarOption = (props: any) => {
-    let avatar = props.data.avatarUrls && props.data.avatarUrls['24x24'] ? props.data.avatarUrls['24x24'] : '';
+    const avatar = props.data.avatarUrls && props.data.avatarUrls['24x24'] ? props.data.avatarUrls['24x24'] : '';
     return (
         <components.Option {...props}>
             <div ref={props.innerRef} {...props.innerProps} className="ac-flex">
@@ -145,7 +145,7 @@ const SingleAvatarValue = (props: any) => {
     if (typeof props.data === 'string') {
         label = props.data;
     }
-    let avatar = props.data.avatarUrls && props.data.avatarUrls['24x24'] ? props.data.avatarUrls['24x24'] : '';
+    const avatar = props.data.avatarUrls && props.data.avatarUrls['24x24'] ? props.data.avatarUrls['24x24'] : '';
     return (
         <components.SingleValue {...props}>
             <div ref={props.innerRef} {...props.innerProps} className="ac-flex">
@@ -168,7 +168,7 @@ const MultiAvatarValue = (props: any) => {
         label = props.data;
     }
 
-    let avatar = props.data.avatarUrls && props.data.avatarUrls['24x24'] ? props.data.avatarUrls['24x24'] : '';
+    const avatar = props.data.avatarUrls && props.data.avatarUrls['24x24'] ? props.data.avatarUrls['24x24'] : '';
     return (
         <components.MultiValueLabel {...props}>
             <div ref={props.innerRef} {...props.innerProps} className="ac-flex">
