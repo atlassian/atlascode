@@ -9,7 +9,6 @@ type Props = {
     product: Product;
     handleOptionChange: (value: string) => void;
     executeSetup: () => void;
-    handleNext: () => void;
     handleBack?: () => void;
     signInText: string;
     valueSet: {
@@ -54,7 +53,6 @@ export const JiraBitbucketOnboarding: React.FC<Props> = ({
     product,
     handleOptionChange,
     executeSetup,
-    handleNext,
     handleBack,
     signInText,
     valueSet,
@@ -116,7 +114,6 @@ export const JiraBitbucketOnboarding: React.FC<Props> = ({
                     <VSCodeButton
                         onClick={() => {
                             executeSetup();
-                            handleNext();
                         }}
                     >
                         {signInText}

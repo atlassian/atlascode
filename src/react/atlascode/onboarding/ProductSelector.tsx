@@ -21,7 +21,6 @@ export type ProductSelectorProps = {
 };
 
 export const ProductSelector: React.FunctionComponent<ProductSelectorProps> = ({
-    // bwieger
     bitbucketToggleHandler,
     jiraToggleHandler,
     jiraEnabled,

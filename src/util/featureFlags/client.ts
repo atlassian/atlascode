@@ -54,7 +54,7 @@ export class FeatureFlagClient {
             });
     }
 
-    public static checkGate(gate: string) {
+    public static checkGate(gate: string): boolean {
         var gateValue = false;
         if (FeatureGates === null) {
             console.warn('FeatureGates: FeatureGates is not initialized. Defaulting to False');

@@ -108,8 +108,9 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
                         });
                     }
                 } else {
-                    this._api.authenticateCloud(msg.siteInfo, this._onboardingUrl);
+                    await this._api.authenticateCloud(msg.siteInfo, this._onboardingUrl);
                 }
+                this.postMessage({ type: OnboardingMessageType.LoginResponse });
                 this._analytics.fireAuthenticateButtonEvent(id, msg.siteInfo, isCloud);
                 break;
             }

@@ -87,14 +87,6 @@ export const OnboardingPage: React.FunctionComponent = () => {
         setActiveStep((prevActiveStep) => prevActiveStep + 1);
     }, []);
 
-    const handleBack = useCallback(() => {
-        if (activeStep === 2) {
-            setActiveStep((prevActiveStep) => prevActiveStep - 2);
-        } else {
-            setActiveStep((prevActiveStep) => prevActiveStep - 1);
-        }
-    }, [activeStep]);
-
     const handleJiraToggle = useCallback((enabled: boolean): void => {
         const changes = Object.create(null);
         changes['jira.enabled'] = enabled;
@@ -152,7 +144,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
         [controller],
     );
 
-    const executeBitbucketSignInFlow = () => {
+    const executeBitbucketSignInFlow = useCallback(() => {
         console.log(bitbucketSignInFlow);
         switch (bitbucketSignInFlow) {
             case 'bitbucket-setup-radio-cloud':
@@ -162,15 +154,17 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 handleServerSignIn(ProductBitbucket);
                 break;
             case 'bitbucket-setup-radio-none':
+                handleNext();
                 break;
             default:
                 console.log('Invalid Bitbucket sign in flow: %s', bitbucketSignInFlow);
                 break;
         }
-    };
+    }, [bitbucketSignInFlow, handleCloudSignIn, handleNext, handleServerSignIn]);
 
     const executeJiraSignInFlow = useCallback(() => {
         console.log(jiraSignInFlow);
+
         switch (jiraSignInFlow) {
             case 'jira-setup-radio-cloud':
                 handleCloudSignIn(ProductJira);
@@ -179,12 +173,13 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 handleServerSignIn(ProductJira);
                 break;
             case 'jira-setup-radio-none':
+                handleNext();
                 break;
             default:
                 console.log('Invalid Jira sign in flow: %s', jiraSignInFlow);
                 break;
         }
-    }, [jiraSignInFlow, handleCloudSignIn, handleServerSignIn]);
+    }, [jiraSignInFlow, handleCloudSignIn, handleServerSignIn, handleNext]);
 
     const handleJiraOptionChange = useCallback((value: string) => {
         setJiraSignInFlow(value);
@@ -207,6 +202,24 @@ export const OnboardingPage: React.FunctionComponent = () => {
             setBitbucketSignInText('Next');
         }
     }, []);
+
+    const handleBack = useCallback(() => {
+        handleJiraOptionChange('jira-setup-radio-cloud');
+        handleBitbucketOptionChange('bitbucket-setup-radio-cloud');
+
+        if (activeStep === 2) {
+            setActiveStep((prevActiveStep) => prevActiveStep - 2);
+        } else {
+            setActiveStep((prevActiveStep) => prevActiveStep - 1);
+        }
+    }, [activeStep, handleBitbucketOptionChange, handleJiraOptionChange]);
+
+    useEffect(() => {
+        if (controller.isLoginComplete) {
+            controller.setIsLoginComplete(false);
+            handleNext();
+        }
+    }, [controller, handleNext]);
 
     const getStepContent = (step: number) => {
         switch (step) {
@@ -293,7 +306,6 @@ export const OnboardingPage: React.FunctionComponent = () => {
                     product="Jira"
                     handleOptionChange={handleJiraOptionChange}
                     executeSetup={executeJiraSignInFlow}
-                    handleNext={handleNext}
                     signInText={jiraSignInText}
                 />
             )}
@@ -303,7 +315,6 @@ export const OnboardingPage: React.FunctionComponent = () => {
                     product="Bitbucket"
                     handleOptionChange={handleBitbucketOptionChange}
                     executeSetup={executeBitbucketSignInFlow}
-                    handleNext={handleNext}
                     handleBack={handleBack}
                     signInText={bitbucketSignInText}
                 />

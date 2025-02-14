@@ -28,6 +28,8 @@ export interface OnboardingControllerApi {
     viewJiraIssue: () => void;
     closePage: () => void;
     openSettings: (section?: ConfigSection, subsection?: ConfigSubSection) => void;
+    setIsLoginComplete: React.Dispatch<React.SetStateAction<boolean>>;
+    isLoginComplete: boolean;
 }
 
 export const emptyApi: OnboardingControllerApi = {
@@ -67,6 +69,10 @@ export const emptyApi: OnboardingControllerApi = {
     openSettings: (section?, subsection?): void => {
         return;
     },
+    setIsLoginComplete: (): boolean => {
+        return false;
+    },
+    isLoginComplete: false,
 };
 
 export const OnboardingControllerContext = React.createContext(emptyApi);
@@ -151,6 +157,8 @@ function onboardingReducer(state: OnboardingState, action: OnboardingUIAction): 
 export function useOnboardingController(): [OnboardingState, OnboardingControllerApi] {
     const [state, dispatch] = useReducer(onboardingReducer, emptyState);
 
+    const [isLoginComplete, setIsLoginComplete] = React.useState(false);
+
     const onMessageHandler = useCallback((message: OnboardingMessage): void => {
         switch (message.type) {
             case OnboardingMessageType.Init: {
@@ -169,7 +177,10 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
                 });
                 break;
             }
-
+            case OnboardingMessageType.LoginResponse: {
+                setIsLoginComplete(true);
+                break;
+            }
             default: {
                 defaultActionGuard(message);
             }
@@ -205,6 +216,7 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
     const login = useCallback(
         (site: SiteInfo, auth: AuthInfo) => {
             dispatch({ type: OnboardingUIActionType.Loading });
+            setIsLoginComplete(false);
             postMessage({ type: OnboardingActionType.Login, siteInfo: site, authInfo: auth });
         },
         [postMessage],
@@ -265,6 +277,8 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
             viewJiraIssue: viewJiraIssue,
             closePage: closePage,
             openSettings: openSettings,
+            setIsLoginComplete: setIsLoginComplete,
+            isLoginComplete: isLoginComplete,
         };
     }, [
         handleConfigChange,
@@ -279,6 +293,8 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
         viewJiraIssue,
         closePage,
         openSettings,
+        setIsLoginComplete,
+        isLoginComplete,
     ]);
 
     return [state, controllerApi];
