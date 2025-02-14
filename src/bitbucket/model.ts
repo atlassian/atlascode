@@ -81,6 +81,7 @@ export type Task = {
     editable: boolean;
     deletable: boolean;
     content: string;
+    version?: number;
 };
 
 export type Comment = {
