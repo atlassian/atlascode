@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Container, Typography, Box, Card, CardActionArea, CardContent } from '@material-ui/core';
-import { Product } from '../common/types';
+import { Product } from './types';
 import { VSCodeRadio, VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import { BitbucketOnboardingLogo } from '../icons/BitbucketOnboardingLogo';
 import { JiraOnboardingLogo } from '../icons/JiraOnboardingLogo';

@@ -18,8 +18,9 @@ import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
 import { Features } from 'src/util/featureFlags';
 import { CommonMessageType } from 'src/lib/ipc/toUI/common';
-import { JiraBitbucketOnboarding } from './JiraBitbucketOnboarding';
 import { OnboardingActionType } from 'src/lib/ipc/fromUI/onboarding';
+import { JiraOnboarding } from './JiraOnboarding';
+import { BitbucketOnboarding } from './BitbucketOnboarding';
 
 const useStyles = makeStyles((theme: Theme) => ({
     root: {
@@ -62,8 +63,8 @@ export const OnboardingPage: React.FunctionComponent = () => {
     const [useAuthUI, setUseAuthUI] = React.useState(false);
     const [jiraSignInText, setJiraSignInText] = useState('Sign In to Jira Cloud');
     const [bitbucketSignInText, setBitbucketSignInText] = useState('Sign In to Bitbucket Cloud');
-    const [jiraSignInFlow, setJiraSignInFlow] = useState('error');
-    const [bitbucketSignInFlow, setBitbucketSignInFlow] = useState('bitbucket-setup-radio-cloud');
+    const [jiraSignInFlow, setJiraSignInFlow] = useState(jiraValueSet.cloud);
+    const [bitbucketSignInFlow, setBitbucketSignInFlow] = useState(bitbucketValueSet.cloud);
 
     React.useEffect(() => {
         window.addEventListener('message', (event) => {
@@ -147,13 +148,13 @@ export const OnboardingPage: React.FunctionComponent = () => {
     const executeBitbucketSignInFlow = useCallback(() => {
         console.log(bitbucketSignInFlow);
         switch (bitbucketSignInFlow) {
-            case 'bitbucket-setup-radio-cloud':
+            case bitbucketValueSet.cloud:
                 handleCloudSignIn(ProductBitbucket);
                 break;
-            case 'bitbucket-setup-radio-server':
+            case bitbucketValueSet.server:
                 handleServerSignIn(ProductBitbucket);
                 break;
-            case 'bitbucket-setup-radio-none':
+            case bitbucketValueSet.none:
                 handleNext();
                 break;
             default:
@@ -167,13 +168,13 @@ export const OnboardingPage: React.FunctionComponent = () => {
 
     const executeJiraSignInFlow = useCallback(() => {
         switch (jiraSignInFlow) {
-            case 'jira-setup-radio-cloud':
+            case jiraValueSet.cloud:
                 handleCloudSignIn(ProductJira);
                 break;
-            case 'jira-setup-radio-server':
+            case jiraValueSet.server:
                 handleServerSignIn(ProductJira);
                 break;
-            case 'jira-setup-radio-none':
+            case jiraValueSet.none:
                 handleNext();
                 break;
             default:
@@ -187,9 +188,9 @@ export const OnboardingPage: React.FunctionComponent = () => {
 
     const handleJiraOptionChange = useCallback((value: string) => {
         setJiraSignInFlow(value);
-        if (value === 'jira-setup-radio-cloud') {
+        if (value === jiraValueSet.cloud) {
             setJiraSignInText('Sign in to Jira Cloud');
-        } else if (value === 'jira-setup-radio-server') {
+        } else if (value === jiraValueSet.server) {
             setJiraSignInText('Sign in to Jira Server');
         } else {
             setJiraSignInText('Next');
@@ -198,9 +199,9 @@ export const OnboardingPage: React.FunctionComponent = () => {
 
     const handleBitbucketOptionChange = useCallback((value: string) => {
         setBitbucketSignInFlow(value);
-        if (value === 'bitbucket-setup-radio-cloud') {
+        if (value === bitbucketValueSet.cloud) {
             setBitbucketSignInText('Sign in to Bitbucket Cloud');
-        } else if (value === 'bitbucket-setup-radio-server') {
+        } else if (value === bitbucketValueSet.server) {
             setBitbucketSignInText('Sign in to Bitbucket Server');
         } else {
             setBitbucketSignInText('Next');
@@ -208,8 +209,8 @@ export const OnboardingPage: React.FunctionComponent = () => {
     }, []);
 
     const handleBack = useCallback(() => {
-        handleJiraOptionChange('jira-setup-radio-cloud');
-        handleBitbucketOptionChange('bitbucket-setup-radio-cloud');
+        handleJiraOptionChange(jiraValueSet.cloud);
+        handleBitbucketOptionChange(bitbucketValueSet.cloud);
 
         if (activeStep === 2) {
             setActiveStep((prevActiveStep) => prevActiveStep - 2);
@@ -305,18 +306,16 @@ export const OnboardingPage: React.FunctionComponent = () => {
     const authUI_v1 = (
         <div>
             {activeStep === 0 && (
-                <JiraBitbucketOnboarding //jira
+                <JiraOnboarding
                     valueSet={jiraValueSet}
-                    product="Jira"
                     handleOptionChange={handleJiraOptionChange}
                     executeSetup={executeJiraSignInFlow}
                     signInText={jiraSignInText}
                 />
             )}
             {activeStep === 1 && (
-                <JiraBitbucketOnboarding //bitbucket
+                <BitbucketOnboarding
                     valueSet={bitbucketValueSet}
-                    product="Bitbucket"
                     handleOptionChange={handleBitbucketOptionChange}
                     executeSetup={executeBitbucketSignInFlow}
                     handleBack={handleBack}
