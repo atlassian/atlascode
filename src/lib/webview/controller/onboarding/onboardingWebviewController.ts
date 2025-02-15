@@ -95,23 +95,23 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
             }
             case OnboardingActionType.Login: {
                 let isCloud = true;
-                if (isBasicAuthInfo(msg.authInfo)) {
-                    isCloud = false;
-                    try {
-                        await this._api.authenticateServer(msg.siteInfo, msg.authInfo);
-                    } catch (e) {
-                        const err = new Error(`Authentication error: ${e}`);
-                        this._logger.error(err);
-                        this.postMessage({
-                            type: CommonMessageType.Error,
-                            reason: formatError(e, 'Authentication error'),
-                        });
-                    }
-                } else {
-                    await this._api.authenticateCloud(msg.siteInfo, this._onboardingUrl);
-                }
-                this.postMessage({ type: OnboardingMessageType.LoginResponse });
                 this._analytics.fireAuthenticateButtonEvent(id, msg.siteInfo, isCloud);
+                try {
+                    if (isBasicAuthInfo(msg.authInfo)) {
+                        isCloud = false;
+                        await this._api.authenticateServer(msg.siteInfo, msg.authInfo);
+                    } else {
+                        await this._api.authenticateCloud(msg.siteInfo, this._onboardingUrl);
+                    }
+                    this.postMessage({ type: OnboardingMessageType.LoginResponse });
+                } catch (e) {
+                    const env = isCloud ? 'cloud' : 'server';
+                    this._logger.error(new Error(`${env} onboarding authentication error: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, `${env} onboarding authentication error`),
+                    });
+                }
                 break;
             }
             case OnboardingActionType.SaveSettings: {
