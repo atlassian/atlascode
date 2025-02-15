@@ -134,7 +134,7 @@ export class ClientManager implements Disposable {
             } else {
                 result = {
                     repositories:
-                        isBasicAuthInfo(info) || isPATAuthInfo(info) // bwieger - this is the missing piece
+                        isBasicAuthInfo(info) || isPATAuthInfo(info)
                             ? new ServerRepositoriesApi(this.createHTTPClient(site, info))
                             : undefined!,
                     pullrequests:
