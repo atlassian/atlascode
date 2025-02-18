@@ -50,7 +50,7 @@ export const PMFDialog: React.FunctionComponent<PMFDialogProps> = ({ open, onCan
     return (
         <Dialog fullWidth maxWidth="md" open={open} onClose={onCancel}>
             <DialogTitle>
-                <Typography variant="h4">How Are We Doing?</Typography>
+                <Typography variant="h4">Tell us about your experience</Typography>
             </DialogTitle>
             <DialogContent>
                 <Grid container direction="column" spacing={2}>
@@ -59,7 +59,8 @@ export const PMFDialog: React.FunctionComponent<PMFDialogProps> = ({ open, onCan
                             as={
                                 <FormControl component="fieldset" onBlur={handleLevelBlur}>
                                     <FormLabel component="legend" required error={errors.level !== undefined}>
-                                        How would you feel if you could no longer use this extension?
+                                        How disappointed would you feel if you could no longer use Atlassian for VS Code
+                                        extension?
                                     </FormLabel>
                                     <RadioGroup aria-label="level" name="level">
                                         <FormControlLabel
