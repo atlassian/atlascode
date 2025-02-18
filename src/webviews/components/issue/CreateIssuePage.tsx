@@ -286,10 +286,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     }
 
     public render() {
-        if (
-            !this.state.fieldValues['issuetype'] ||
-            (this.state.fieldValues['issuetype'].id === '' && !this.state.isErrorBannerOpen && this.state.isOnline)
-        ) {
+        if (!this.state.fieldValues['issuetype']?.id && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refresh' });
             return <AtlLoader />;
         }

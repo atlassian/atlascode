@@ -6,6 +6,7 @@ import {
     isScreensForSite,
     isSetIssueType,
 } from '../ipc/issueActions';
+import { WebViewID } from '../lib/ipc/models/common';
 import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { DetailedSiteInfo, Product, ProductJira, emptySiteInfo } from '../atlclients/authInfo';
 import { IssueType, Project, emptyIssueType } from '@atlassianlabs/jira-pi-common-models';
@@ -74,7 +75,7 @@ export class CreateIssueWebview
         return 'Create Jira Issue';
     }
     public get id(): string {
-        return 'atlascodeCreateIssueScreen';
+        return WebViewID.CreateJiraIssueWebview;
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
@@ -266,16 +267,14 @@ export class CreateIssueWebview
                 };
             }
 
-            if (this._screenData) {
-                const createData: CreateIssueData = this._screenData.issueTypeUIs[
-                    this._selectedIssueTypeId
-                ] as CreateIssueData;
-                createData.type = 'update';
-                createData.transformerProblems = Container.config.jira.showCreateIssueProblems
-                    ? this._screenData.problems
-                    : {};
-                this.postMessage(createData);
-            }
+            const createData: CreateIssueData = this._screenData.issueTypeUIs[
+                this._selectedIssueTypeId
+            ] as CreateIssueData;
+            createData.type = 'update';
+            createData.transformerProblems = Container.config.jira.showCreateIssueProblems
+                ? this._screenData.problems
+                : {};
+            this.postMessage(createData);
         } catch (e) {
             const err = new Error(`error updating issue fields: ${e}`);
             Logger.error(err);
