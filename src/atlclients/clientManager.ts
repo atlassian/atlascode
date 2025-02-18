@@ -133,12 +133,14 @@ export class ClientManager implements Disposable {
                 };
             } else {
                 result = {
-                    repositories: isBasicAuthInfo(info)
-                        ? new ServerRepositoriesApi(this.createHTTPClient(site, info))
-                        : undefined!,
-                    pullrequests: isBasicAuthInfo(info)
-                        ? new ServerPullRequestApi(this.createHTTPClient(site, info))
-                        : undefined!,
+                    repositories:
+                        isBasicAuthInfo(info) || isPATAuthInfo(info)
+                            ? new ServerRepositoriesApi(this.createHTTPClient(site, info))
+                            : undefined!,
+                    pullrequests:
+                        isBasicAuthInfo(info) || isPATAuthInfo(info)
+                            ? new ServerPullRequestApi(this.createHTTPClient(site, info))
+                            : undefined!,
                     issues: undefined,
                     pipelines: undefined,
                 };
