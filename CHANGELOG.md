@@ -1,3 +1,9 @@
+## What's new in 3.4.7
+
+### Bug Fixes
+
+- Fixed 'Create Jira issue' page getting stuck on the loader when the first Jira server is unreachable.
+
 ## What's new in 3.4.6
 
 ### Features
