@@ -61,9 +61,9 @@ export async function featureChangeEvent(featureId: string, enabled: boolean): P
     return trackEvent(action, 'feature', { actionSubjectId: featureId });
 }
 
-export async function authenticatedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
+export async function authenticatedEvent(site: DetailedSiteInfo, isOnboarding?: boolean): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'authenticated', 'atlascode', {
-        attributes: { machineId: Container.machineId, hostProduct: site.product.name },
+        attributes: { machineId: Container.machineId, hostProduct: site.product.name, onboarding: isOnboarding },
     });
 }
 

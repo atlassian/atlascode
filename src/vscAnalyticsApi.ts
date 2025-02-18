@@ -88,8 +88,8 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
-    public async fireAuthenticatedEvent(site: DetailedSiteInfo): Promise<void> {
-        return authenticatedEvent(site).then((e) => {
+    public async fireAuthenticatedEvent(site: DetailedSiteInfo, isOnboarding?: boolean): Promise<void> {
+        return authenticatedEvent(site, isOnboarding).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

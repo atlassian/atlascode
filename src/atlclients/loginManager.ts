@@ -44,16 +44,16 @@ export class LoginManager {
     }
 
     // this is *only* called when login buttons are clicked by the user
-    public async userInitiatedOAuthLogin(site: SiteInfo, callback: string): Promise<void> {
+    public async userInitiatedOAuthLogin(site: SiteInfo, callback: string, isOnboarding?: boolean): Promise<void> {
         const provider = oauthProviderForSite(site)!;
         if (!provider) {
             throw new Error(`No provider found for ${site.host}`);
         }
         const resp = await this._dancer.doDance(provider, site, callback);
-        this.saveDetails(provider, site, resp);
+        this.saveDetails(provider, site, resp, isOnboarding);
     }
 
-    private async saveDetails(provider: OAuthProvider, site: SiteInfo, resp: OAuthResponse) {
+    private async saveDetails(provider: OAuthProvider, site: SiteInfo, resp: OAuthResponse, isOnboarding?: boolean) {
         try {
             const oauthInfo: OAuthInfo = {
                 access: resp.access,
@@ -75,7 +75,7 @@ export class LoginManager {
             siteDetails.forEach(async (siteInfo) => {
                 await this._credentialManager.saveAuthInfo(siteInfo, oauthInfo);
                 this._siteManager.addSites([siteInfo]);
-                authenticatedEvent(siteInfo).then((e) => {
+                authenticatedEvent(siteInfo, isOnboarding).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
             });
@@ -101,11 +101,12 @@ export class LoginManager {
         return [];
     }
 
-    public async userInitiatedServerLogin(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
+    public async userInitiatedServerLogin(site: SiteInfo, authInfo: AuthInfo, isOnboarding?: boolean): Promise<void> {
         if (isBasicAuthInfo(authInfo) || isPATAuthInfo(authInfo)) {
             try {
                 const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
-                authenticatedEvent(siteDetails).then((e) => {
+
+                authenticatedEvent(siteDetails, isOnboarding).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
             } catch (err) {
