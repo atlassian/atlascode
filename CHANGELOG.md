@@ -3,6 +3,7 @@
 ### Bug Fixes
 
 - Fixed 'Create Jira issue' page getting stuck on the loader when the first Jira server is unreachable.
+- Fixed 'Start work' not working when another 'Start work' tab is open.
 
 ## What's new in 3.4.6
 
