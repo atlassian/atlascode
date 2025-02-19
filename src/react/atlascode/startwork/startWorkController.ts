@@ -75,7 +75,7 @@ export type StartWorkChanges = { [key: string]: any };
 function reducer(state: StartWorkState, action: StartWorkUIAction): StartWorkState {
     switch (action.type) {
         case StartWorkUIActionType.Init: {
-            console.log(`JS-1324 start work controller init repo count: ${action.data.repoData.length}`);
+            console.log(`JS-1324 start work controller init repo count: ${action.data.repoData?.length}`);
             const newstate = {
                 ...state,
                 ...action.data,
