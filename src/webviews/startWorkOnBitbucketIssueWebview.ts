@@ -105,6 +105,7 @@ export class StartWorkOnBitbucketIssueWebview
                                     e.targetBranchName,
                                     e.sourceBranch,
                                     e.remoteName,
+                                    e.pushBranchToOrigin,
                                 );
                             }
 
@@ -138,6 +139,7 @@ export class StartWorkOnBitbucketIssueWebview
         destBranch: string,
         sourceBranch: Branch,
         remote: string,
+        pushBranchToOrigin: boolean,
     ): Promise<void> {
         // checkout if a branch exists already
         try {
@@ -160,7 +162,11 @@ export class StartWorkOnBitbucketIssueWebview
             true,
             `${sourceBranch.type === RefType.RemoteHead ? 'remotes/' : ''}${sourceBranch.name}`,
         );
-        await repo.push(remote, destBranch, true);
+
+        if (pushBranchToOrigin) {
+            await repo.push(remote, destBranch, true);
+        }
+
         return;
     }
 
