@@ -30,7 +30,7 @@ export interface StartWorkControllerApi {
         sourceBranch: Branch,
         targetBranch: string,
         upstream: string,
-        pushBranchToOrigin: boolean,
+        pushBranchToRemote: boolean,
     ) => Promise<{ transistionStatus?: string; branch?: string; upstream?: string }>;
     closePage: () => void;
     openJiraIssue: () => void;
@@ -123,7 +123,7 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
             sourceBranch: Branch,
             targetBranch: string,
             upstream: string,
-            pushBranchToOrigin: boolean,
+            pushBranchToRemote: boolean,
         ): Promise<StartWorkResponseMessage> => {
             return new Promise<StartWorkResponseMessage>((resolve, reject) => {
                 (async () => {
@@ -138,7 +138,7 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
                                 sourceBranch,
                                 targetBranch,
                                 upstream,
-                                pushBranchToOrigin,
+                                pushBranchToRemote,
                             },
                             StartWorkMessageType.StartWorkResponse,
                             ConnectionTimeout,

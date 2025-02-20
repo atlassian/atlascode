@@ -134,7 +134,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                             msg.targetBranch,
                             msg.sourceBranch,
                             msg.upstream,
-                            msg.pushBranchToOrigin,
+                            msg.pushBranchToRemote,
                         );
                     }
                     this.postMessage({

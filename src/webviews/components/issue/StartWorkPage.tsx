@@ -261,7 +261,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
             transition: this.state.transition,
             setupJira: this.state.jiraSetupEnabled,
             setupBitbucket: this.isEmptyRepo(this.state.repo) ? false : this.state.bitbucketSetupEnabled,
-            pushBranchToOrigin: false,
+            pushBranchToRemote: false,
         });
     };
 

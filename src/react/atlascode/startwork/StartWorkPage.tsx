@@ -725,7 +725,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                 <Grid item>
                                                     <Typography variant="h4">
                                                         <Box fontWeight="fontWeightBold">
-                                                            Push the new branch to origin
+                                                            Push the new branch to remote
                                                         </Box>
                                                     </Typography>
                                                 </Grid>

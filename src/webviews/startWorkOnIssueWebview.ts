@@ -112,7 +112,7 @@ export class StartWorkOnIssueWebview
                                     e.targetBranchName,
                                     e.sourceBranch,
                                     e.remoteName,
-                                    e.pushBranchToOrigin,
+                                    e.pushBranchToRemote,
                                 );
                             }
                             const currentUserId = issue.siteDetails.userId;
@@ -151,7 +151,7 @@ export class StartWorkOnIssueWebview
         destBranch: string,
         sourceBranch: Branch,
         remote: string,
-        pushBranchToOrigin: boolean,
+        pushBranchToRemote: boolean,
     ): Promise<void> {
         // checkout if a branch exists already
         try {
@@ -175,7 +175,7 @@ export class StartWorkOnIssueWebview
             `${sourceBranch.type === RefType.RemoteHead ? 'remotes/' : ''}${sourceBranch.name}`,
         );
 
-        if (pushBranchToOrigin) {
+        if (pushBranchToRemote) {
             await repo.push(remote, destBranch, true);
         }
     }
