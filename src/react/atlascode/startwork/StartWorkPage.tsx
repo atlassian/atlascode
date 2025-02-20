@@ -181,6 +181,8 @@ const StartWorkPage: React.FunctionComponent = () => {
 
     const handleLocalBranchChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: string }>) => {
+            // spaces are not allowed in branch names
+            event.target.value = event.target.value.replace(/ /g, '-');
             setLocalBranch(event.target.value);
         },
         [setLocalBranch],
