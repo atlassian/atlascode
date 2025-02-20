@@ -12,6 +12,7 @@ import {
     UpdateAuthInfoEvent,
     emptyAuthInfo,
     getSecretForAuthInfo,
+    getSiteInfoKey,
     isOAuthInfo,
     oauthProviderForSite,
 } from './authInfo';
@@ -91,7 +92,7 @@ export class CredentialManager implements Disposable {
             }
         }
 
-        this._memStore.set(site.product.key, productAuths.set(site.credentialId, info));
+        this._memStore.set(site.product.key, productAuths.set(getSiteInfoKey(site), info));
 
         const hasNewInfo =
             !existingInfo ||
@@ -107,7 +108,7 @@ export class CredentialManager implements Disposable {
             }
 
             try {
-                this.addSiteInformationToSecretStorage(site.product.key, site.credentialId, info);
+                this.addSiteInformationToSecretStorage(site, info);
                 const updateEvent: UpdateAuthInfoEvent = { type: AuthChangeType.Update, site: site };
                 this._onDidAuthChange.fire(updateEvent);
             } catch (e) {
@@ -124,8 +125,8 @@ export class CredentialManager implements Disposable {
         let foundInfo: AuthInfo | undefined = undefined;
         const productAuths = this._memStore.get(site.product.key);
 
-        if (allowCache && productAuths && productAuths.has(site.credentialId)) {
-            foundInfo = productAuths.get(site.credentialId);
+        if (allowCache && productAuths && productAuths.has(getSiteInfoKey(site))) {
+            foundInfo = productAuths.get(getSiteInfoKey(site));
             if (foundInfo) {
                 // clone the object so editing it and saving it back doesn't trip up equality checks
                 // in saveAuthInfo
@@ -135,24 +136,20 @@ export class CredentialManager implements Disposable {
 
         if (!foundInfo) {
             try {
-                let infoEntry = await this.getAuthInfoFromSecretStorage(site.product.key, site.credentialId);
+                let infoEntry = await this.getAuthInfoFromSecretStorage(site);
                 // if no authinfo found in secretstorage
                 if (!infoEntry) {
                     // we first check if keychain exists and if it does then we migrate users from keychain to secretstorage
                     // without them having to relogin manually
                     if (keychain) {
-                        infoEntry = await this.getAuthInfoFromKeychain(site.product.key, site.credentialId);
+                        infoEntry = await this.getAuthInfoFromKeychain(site);
                         if (infoEntry) {
                             Logger.debug(
                                 `adding info from keychain to secretstorage for product: ${site.product.key} credentialID: ${site.credentialId}`,
                             );
-                            await this.addSiteInformationToSecretStorage(
-                                site.product.key,
-                                site.credentialId,
-                                infoEntry,
-                            );
+                            await this.addSiteInformationToSecretStorage(site, infoEntry);
                             // Once authinfo has been stored in the secretstorage, info in keychain is no longer needed so removing it
-                            await this.removeSiteInformationFromKeychain(site.product.key, site.credentialId);
+                            await this.removeSiteInformationFromKeychain(site);
                         } else if (Container.siteManager.getSiteForId(site.product, site.id)) {
                             // if keychain does not have any auth info for the current site but the site has been saved, we need to remove it
                             Logger.debug(
@@ -179,7 +176,7 @@ export class CredentialManager implements Disposable {
                     }
                 }
                 if (infoEntry && productAuths) {
-                    this._memStore.set(site.product.key, productAuths.set(site.credentialId, infoEntry));
+                    this._memStore.set(site.product.key, productAuths.set(getSiteInfoKey(site), infoEntry));
 
                     foundInfo = infoEntry;
                 }
@@ -209,11 +206,11 @@ export class CredentialManager implements Disposable {
         }
     }
 
-    private async addSiteInformationToSecretStorage(productKey: string, credentialId: string, info: AuthInfo) {
+    private async addSiteInformationToSecretStorage(site: DetailedSiteInfo, info: AuthInfo) {
         await this._queue.add(
             async () => {
                 try {
-                    await Container.context.secrets.store(`${productKey}-${credentialId}`, JSON.stringify(info));
+                    await Container.context.secrets.store(getSiteInfoKey(site), JSON.stringify(info));
                 } catch (e) {
                     Logger.error(e, `Error writing to secretstorage`);
                 }
@@ -221,26 +218,23 @@ export class CredentialManager implements Disposable {
             { priority: Priority.Write },
         );
     }
-    private async getSiteInformationFromSecretStorage(
-        productKey: string,
-        credentialId: string,
-    ): Promise<string | undefined> {
+    private async getSiteInformationFromSecretStorage(site: DetailedSiteInfo): Promise<string | undefined> {
         let info: string | undefined = undefined;
         await this._queue.add(
             async () => {
-                info = await Container.context.secrets.get(`${productKey}-${credentialId}`);
+                info = await Container.context.secrets.get(getSiteInfoKey(site));
             },
             { priority: Priority.Read },
         );
         return info;
     }
-    private async removeSiteInformationFromSecretStorage(productKey: string, credentialId: string): Promise<boolean> {
+    private async removeSiteInformationFromSecretStorage(site: DetailedSiteInfo): Promise<boolean> {
         let wasKeyDeleted = false;
         await this._queue.add(
             async () => {
-                const storedInfo = await Container.context.secrets.get(`${productKey}-${credentialId}`);
+                const storedInfo = await Container.context.secrets.get(getSiteInfoKey(site));
                 if (storedInfo) {
-                    await Container.context.secrets.delete(`${productKey}-${credentialId}`);
+                    await Container.context.secrets.delete(getSiteInfoKey(site));
                     wasKeyDeleted = true;
                 }
             },
@@ -248,15 +242,12 @@ export class CredentialManager implements Disposable {
         );
         return wasKeyDeleted;
     }
-    private async removeSiteInformationFromKeychain(productKey: string, credentialId: string): Promise<boolean> {
+    private async removeSiteInformationFromKeychain(site: DetailedSiteInfo): Promise<boolean> {
         let wasKeyDeleted = false;
         await this._queue.add(
             async () => {
                 if (keychain) {
-                    wasKeyDeleted = await keychain.deletePassword(
-                        keychainServiceNameV3,
-                        `${productKey}-${credentialId}`,
-                    );
+                    wasKeyDeleted = await keychain.deletePassword(keychainServiceNameV3, getSiteInfoKey(site));
                 }
             },
             { priority: Priority.Write },
@@ -265,13 +256,14 @@ export class CredentialManager implements Disposable {
     }
 
     private async getAuthInfoFromSecretStorage(
-        productKey: string,
-        credentialId: string,
+        site: DetailedSiteInfo,
         serviceName?: string,
     ): Promise<AuthInfo | undefined> {
-        Logger.debug(`Retrieving secretstorage info for product: ${productKey} credentialID: ${credentialId}`);
+        Logger.debug(
+            `Retrieving secretstorage info for product: ${site.product.key} credentialID: ${site.credentialId}`,
+        );
         let authInfo: string | undefined = undefined;
-        authInfo = await this.getSiteInformationFromSecretStorage(productKey, credentialId);
+        authInfo = await this.getSiteInformationFromSecretStorage(site);
         if (!authInfo) {
             return undefined;
         }
@@ -283,12 +275,8 @@ export class CredentialManager implements Disposable {
         }
         return info;
     }
-    private async getAuthInfoFromKeychain(
-        productKey: string,
-        credentialId: string,
-        serviceName?: string,
-    ): Promise<AuthInfo | undefined> {
-        Logger.debug(`Retrieving keychain info for product: ${productKey} credentialID: ${credentialId}`);
+    private async getAuthInfoFromKeychain(site: DetailedSiteInfo, serviceName?: string): Promise<AuthInfo | undefined> {
+        Logger.debug(`Retrieving keychain info for product: ${site.product.key} credentialID: ${site.credentialId}`);
         let svcName = keychainServiceNameV3;
 
         if (serviceName) {
@@ -299,7 +287,7 @@ export class CredentialManager implements Disposable {
         await this._queue.add(
             async () => {
                 if (keychain) {
-                    authInfo = await keychain.getPassword(svcName, `${productKey}-${credentialId}`);
+                    authInfo = await keychain.getPassword(svcName, getSiteInfoKey(site));
                 }
             },
             { priority: Priority.Read },
@@ -360,11 +348,11 @@ export class CredentialManager implements Disposable {
         let wasKeyDeleted = false;
         let wasMemDeleted = false;
         if (productAuths) {
-            wasMemDeleted = productAuths.delete(site.credentialId);
+            wasMemDeleted = productAuths.delete(getSiteInfoKey(site));
             this._memStore.set(site.product.key, productAuths);
         }
 
-        wasKeyDeleted = await this.removeSiteInformationFromSecretStorage(site.product.key, site.credentialId);
+        wasKeyDeleted = await this.removeSiteInformationFromSecretStorage(site);
         if (wasMemDeleted || wasKeyDeleted) {
             const cmdctx = this.commandContextFor(site.product);
             if (cmdctx) {
@@ -377,6 +365,7 @@ export class CredentialManager implements Disposable {
                 type: AuthChangeType.Remove,
                 product: site.product,
                 credentialId: site.credentialId,
+                host: site.host,
             };
             this._onDidAuthChange.fire(removeEvent);
 
