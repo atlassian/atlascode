@@ -27,6 +27,7 @@ import {
     WorkspaceRepo,
 } from '../model';
 import { CloudRepositoriesApi } from './repositories';
+import { encodePathParts } from '../bbUtils';
 
 export const maxItemsSupported = {
     commits: 100,
@@ -794,7 +795,8 @@ export class CloudPullRequestApi implements PullRequestApi {
             return cachedValue;
         }
 
-        const { data } = await this.client.getRaw(`/repositories/${ownerSlug}/${repoSlug}/src/${commitHash}/${path}`);
+        const url = `/repositories/${ownerSlug}/${repoSlug}/src/${commitHash}/${encodePathParts(path)}`;
+        const { data } = await this.client.getRaw(url);
 
         this.fileContentCache.setItem(cacheKey, data, 5 * Time.MINUTES);
 
