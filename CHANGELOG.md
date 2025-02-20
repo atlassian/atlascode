@@ -1,5 +1,9 @@
 ## What's new in 3.4.7
 
+### Features
+
+- Finalized code for Auth UI experiment.
+
 ### Bug Fixes
 
 - Fixed 'Create Jira issue' page getting stuck on the loader when the first Jira server is unreachable.
@@ -13,6 +17,7 @@
 - Placed code for Auth UI experiment. Still needs additional work before we turn this on.
 
 ### Engineeering Excellence 
+
 - Cleaned up some of our code with new lint rules
 - Added some unit tests around authentication 
 
