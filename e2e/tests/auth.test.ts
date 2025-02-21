@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { before, after, EditorView, Workbench, By, ActivityBar, SideBarView } from 'vscode-extension-tester';
 
 describe('Auth User', async () => {
@@ -27,11 +26,11 @@ describe('Auth User', async () => {
 
     it('in SideBarView should see Create issue... button', async () => {
         const atlasDrawer = sideBarView.findElement(By.id('workbench.view.extension.atlascode-drawer'));
-        expect(atlasDrawer).to.not.be.undefined;
+        expect(atlasDrawer).toBeDefined();
 
         const createIssueButton = atlasDrawer.findElement(By.css('[aria-label="Create issue..."]'));
-        expect(createIssueButton).to.not.be.undefined;
-        expect(await createIssueButton.getText()).to.equal('Create issue...');
+        expect(createIssueButton).toBeDefined();
+        expect(await createIssueButton.getText()).toEqual('Create issue...');
     });
 
     it('in SideBarView should see a assigned JIRA issues', async () => {});

@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { before, ActivityBar, after, SideBarView, By, EditorView, Workbench } from 'vscode-extension-tester';
 
 describe('Atlassian Extension Activity Bar', async () => {
@@ -15,7 +14,7 @@ describe('Atlassian Extension Activity Bar', async () => {
         // Get title from every control
         const titles = await Promise.all(controls.map(async (control) => control.getTitle()));
 
-        expect('Atlassian').to.be.oneOf(titles);
+        expect(titles).toContain('Atlassian');
     });
 });
 
@@ -41,12 +40,12 @@ describe('Atlassian Extension SideBar', async () => {
 
     it('should have a login action suggestion', async () => {
         const atlasDrawer = sideBarView.findElement(By.id('workbench.view.extension.atlascode-drawer'));
-        expect(atlasDrawer).to.not.be.undefined;
+        expect(atlasDrawer).toBeDefined();
 
         // find element by aria-label: "Please login to Jira"
         const loginButton = atlasDrawer.findElement(By.css('[aria-label="Please login to Jira"]'));
-        expect(loginButton).to.not.be.undefined;
-        expect(await loginButton.getText()).to.equal('Please login to Jira');
+        expect(loginButton).toBeDefined();
+        expect(await loginButton.getText()).toEqual('Please login to Jira');
     });
 });
 
