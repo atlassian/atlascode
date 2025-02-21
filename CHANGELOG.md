@@ -1,3 +1,9 @@
+## What's new in 3.4.8
+
+### Features
+
+- Added a new toggle switch in 'Start work' page to choose if the new branch should be automatically pushed to remote.
+
 ## What's new in 3.4.7
 
 ### Features

@@ -95,6 +95,7 @@ const StartWorkPage: React.FunctionComponent = () => {
 
     const [transitionIssueEnabled, setTransitionIssueEnabled] = useState(true);
     const [branchSetupEnabled, setbranchSetupEnabled] = useState(true);
+    const [pushBranchEnabled, setPushBranchEnabled] = useState(true);
     const [transition, setTransition] = useState<Transition>(emptyTransition);
     const [repository, setRepository] = useState<RepoData>(emptyRepoData);
     const [branchType, setBranchType] = useState<BranchType>(emptyPrefix);
@@ -119,6 +120,8 @@ const StartWorkPage: React.FunctionComponent = () => {
         () => setbranchSetupEnabled(!branchSetupEnabled),
         [branchSetupEnabled],
     );
+
+    const togglePushBranchEnabled = useCallback(() => setPushBranchEnabled(!pushBranchEnabled), [pushBranchEnabled]);
 
     const handleTransitionChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
@@ -248,6 +251,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                 sourceBranch,
                 localBranch,
                 upstream,
+                pushBranchEnabled,
             );
             setSubmitState('submit-success');
             setSubmitResponse(response);
@@ -264,6 +268,7 @@ const StartWorkPage: React.FunctionComponent = () => {
         sourceBranch,
         localBranch,
         upstream,
+        pushBranchEnabled,
     ]);
 
     const handleOpenSettings = useCallback(() => {
@@ -703,6 +708,28 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                     </Grid>
                                                 </Grid>
                                             </Collapse>
+                                        </Grid>
+                                        <Grid item hidden={submitState === 'submit-success'}>
+                                            <Divider />
+                                        </Grid>
+                                        <Grid item hidden={submitState === 'submit-success'}>
+                                            <Grid container spacing={1} direction="row">
+                                                <Grid item>
+                                                    <Switch
+                                                        color="primary"
+                                                        size="small"
+                                                        checked={pushBranchEnabled}
+                                                        onClick={togglePushBranchEnabled}
+                                                    />
+                                                </Grid>
+                                                <Grid item>
+                                                    <Typography variant="h4">
+                                                        <Box fontWeight="fontWeightBold">
+                                                            Push the new branch to remote
+                                                        </Box>
+                                                    </Typography>
+                                                </Grid>
+                                            </Grid>
                                         </Grid>
                                         <Grid item hidden={submitState === 'submit-success'}>
                                             <Button

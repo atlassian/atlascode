@@ -120,6 +120,7 @@ export interface StartWorkAction extends Action {
     remoteName: string;
     setupJira: boolean;
     setupBitbucket: boolean;
+    pushBranchToRemote: boolean;
 }
 
 export interface OpenStartWorkPageAction extends Action {

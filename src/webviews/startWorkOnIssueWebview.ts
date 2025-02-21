@@ -69,7 +69,6 @@ export class StartWorkOnIssueWebview
             });
         }
         this.updateIssue(data);
-        return;
     }
 
     public async invalidate() {
@@ -113,6 +112,7 @@ export class StartWorkOnIssueWebview
                                     e.targetBranchName,
                                     e.sourceBranch,
                                     e.remoteName,
+                                    e.pushBranchToRemote,
                                 );
                             }
                             const currentUserId = issue.siteDetails.userId;
@@ -132,7 +132,7 @@ export class StartWorkOnIssueWebview
                                         : ''
                                 }</ul>`,
                             });
-                            issueWorkStartedEvent(issue.siteDetails).then((e) => {
+                            issueWorkStartedEvent(issue.siteDetails, e.pushBranchToRemote).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
@@ -151,6 +151,7 @@ export class StartWorkOnIssueWebview
         destBranch: string,
         sourceBranch: Branch,
         remote: string,
+        pushBranchToRemote: boolean,
     ): Promise<void> {
         // checkout if a branch exists already
         try {
@@ -173,8 +174,10 @@ export class StartWorkOnIssueWebview
             true,
             `${sourceBranch.type === RefType.RemoteHead ? 'remotes/' : ''}${sourceBranch.name}`,
         );
-        await repo.push(remote, destBranch, true);
-        return;
+
+        if (pushBranchToRemote) {
+            await repo.push(remote, destBranch, true);
+        }
     }
 
     public async updateIssue(issue: MinimalIssue<DetailedSiteInfo>) {

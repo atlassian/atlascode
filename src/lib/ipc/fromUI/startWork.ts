@@ -27,6 +27,7 @@ export interface StartRequestAction {
     sourceBranch: Branch;
     targetBranch: string;
     upstream: string;
+    pushBranchToRemote: boolean;
 }
 
 export interface OpenSettingsAction {

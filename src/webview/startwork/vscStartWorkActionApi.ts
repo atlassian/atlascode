@@ -50,6 +50,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         destinationBranch: string,
         sourceBranch: Branch,
         remote: string,
+        pushBranchToRemote: boolean,
     ): Promise<void> {
         const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
 
@@ -74,8 +75,10 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
             true,
             `${sourceBranch.type === RefType.RemoteHead ? 'remotes/' : ''}${sourceBranch.name}`,
         );
-        await scm.push(remote, destinationBranch, true);
-        return;
+
+        if (pushBranchToRemote) {
+            await scm.push(remote, destinationBranch, true);
+        }
     }
 
     getStartWorkConfig(): StartWorkBranchTemplate {

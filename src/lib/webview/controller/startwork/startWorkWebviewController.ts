@@ -134,6 +134,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                             msg.targetBranch,
                             msg.sourceBranch,
                             msg.upstream,
+                            msg.pushBranchToRemote,
                         );
                     }
                     this.postMessage({
@@ -142,7 +143,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                         branch: msg.branchSetupEnabled ? msg.targetBranch : undefined,
                         upstream: msg.branchSetupEnabled ? msg.upstream : undefined,
                     });
-                    this.analytics.fireIssueWorkStartedEvent(this.initData.issue.siteDetails);
+                    this.analytics.fireIssueWorkStartedEvent(this.initData.issue.siteDetails, msg.pushBranchToRemote);
                 } catch (e) {
                     this.logger.error(new Error(`error executing start work action: ${e}`));
                     this.postMessage({

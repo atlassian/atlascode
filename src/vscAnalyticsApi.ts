@@ -124,8 +124,8 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
-    public async fireIssueWorkStartedEvent(site: DetailedSiteInfo): Promise<void> {
-        return issueWorkStartedEvent(site).then((e) => {
+    public async fireIssueWorkStartedEvent(site: DetailedSiteInfo, pushBranchToRemoteChecked: boolean): Promise<void> {
+        return issueWorkStartedEvent(site, pushBranchToRemoteChecked).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

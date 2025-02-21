@@ -12,7 +12,7 @@ export interface AnalyticsApi {
     fireIssueTransitionedEvent(site: DetailedSiteInfo, issueKey: string): Promise<void>;
     fireIssueUrlCopiedEvent(): Promise<void>;
     fireIssueCommentEvent(site: DetailedSiteInfo): Promise<void>;
-    fireIssueWorkStartedEvent(site: DetailedSiteInfo): Promise<void>;
+    fireIssueWorkStartedEvent(site: DetailedSiteInfo, pushBranchToRemoteChecked: boolean): Promise<void>;
     fireIssueUpdatedEvent(site: DetailedSiteInfo, issueKey: string, fieldName: string, fieldKey: string): Promise<void>;
     fireStartIssueCreationEvent(source: string, product: Product): Promise<void>;
     fireBBIssueCreatedEvent(site: DetailedSiteInfo): Promise<void>;
