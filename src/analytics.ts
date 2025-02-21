@@ -667,13 +667,13 @@ function instanceType(
     site?: DetailedSiteInfo,
     product?: Product,
 ): Record<string, any> {
-    eventProps.attributes = eventProps.attributes || {};
-
     if (product) {
+        eventProps.attributes = eventProps.attributes || {};
         eventProps.attributes.hostProduct = product.name;
     }
 
     if (site && !isEmptySiteInfo(site)) {
+        eventProps.attributes = eventProps.attributes || {};
         eventProps.attributes.instanceType = site.isCloud ? 'cloud' : 'server';
         eventProps.attributes.hostProduct = site.product.name;
     }
