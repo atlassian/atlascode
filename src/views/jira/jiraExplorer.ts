@@ -62,7 +62,7 @@ export class JiraExplorer extends Explorer implements Refreshable {
                 dpchildren = await dp.getChildren(undefined);
             }
 
-            for (let child of dpchildren) {
+            for (const child of dpchildren) {
                 if (child instanceof IssueNode) {
                     if (child.issue.key === issueKey) {
                         issue = child.issue;
@@ -117,7 +117,7 @@ export class JiraExplorer extends Explorer implements Refreshable {
         let issue: MinimalORIssueLink<DetailedSiteInfo> | undefined = undefined;
         const children = await parent.getChildren();
 
-        for (let child of children) {
+        for (const child of children) {
             if (child.issue.key === issueKey) {
                 issue = child.issue;
                 break;

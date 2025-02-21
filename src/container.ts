@@ -1,6 +1,6 @@
 import { LegacyAtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler/legacyUriHandler';
 import { BitbucketIssue, BitbucketSite, PullRequest, WorkspaceRepo } from './bitbucket/model';
-import { Disposable, ExtensionContext, env, workspace, UIKind, window } from 'vscode';
+import { ExtensionContext, env, workspace, UIKind, window } from 'vscode';
 import { IConfig, configuration } from './config/configuration';
 
 import { analyticsClient } from './analytics-node-client/src/client.min.js';
@@ -77,7 +77,7 @@ const ConfigTargetKey = 'configurationTarget';
 
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig, version: string) {
-        let analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
+        const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
 
         this._analyticsClient = analyticsClient({
             origin: 'desktop',
@@ -188,8 +188,7 @@ export class Container {
         if (config.jira.explorer.enabled) {
             context.subscriptions.push((this._jiraExplorer = new JiraContext()));
         } else {
-            let disposable: Disposable;
-            disposable = configuration.onDidChange((e) => {
+            const disposable = configuration.onDidChange((e) => {
                 if (configuration.changed(e, 'jira.explorer.enabled')) {
                     disposable.dispose();
                     context.subscriptions.push((this._jiraExplorer = new JiraContext()));
@@ -220,20 +219,12 @@ export class Container {
         analyticsApi: VSCAnalyticsApi,
         bitbucketHelper: CheckoutHelper,
     ) {
-        FeatureFlagClient.checkGate(Features.EnableNewUriHandler)
-            .then((enabled) => {
-                if (enabled) {
-                    console.log('Using new URI handler');
-                    context.subscriptions.push(AtlascodeUriHandler.create(analyticsApi, bitbucketHelper));
-                } else {
-                    context.subscriptions.push(new LegacyAtlascodeUriHandler(analyticsApi, bitbucketHelper));
-                }
-            })
-            .catch((err) => {
-                // Not likely that we'd land here - but if anything goes wrong, default to legacy handler
-                console.error(`Error checking feature flag ${Features.EnableNewUriHandler}: ${err}`);
-                context.subscriptions.push(new LegacyAtlascodeUriHandler(analyticsApi, bitbucketHelper));
-            });
+        if (FeatureFlagClient.checkGate(Features.EnableNewUriHandler)) {
+            console.log('Using new URI handler');
+            context.subscriptions.push(AtlascodeUriHandler.create(analyticsApi, bitbucketHelper));
+        } else {
+            context.subscriptions.push(new LegacyAtlascodeUriHandler(analyticsApi, bitbucketHelper));
+        }
     }
 
     static initializeBitbucket(bbCtx: BitbucketContext) {

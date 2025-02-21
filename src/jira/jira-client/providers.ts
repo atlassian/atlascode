@@ -14,7 +14,7 @@ import { Container } from '../../container';
 import { Resources } from '../../resources';
 import { ConnectionTimeout } from '../../util/time';
 
-var tunnel = require('tunnel');
+const tunnel = require('tunnel');
 
 export function getAxiosInstance(): AxiosInstance {
     const instance = axios.create({
@@ -123,7 +123,7 @@ export const getAgent: AgentProvider = (site?: SiteInfo) => {
                             certPath = Resources.charlesCert;
                         }
 
-                        let pemFile = fs.readFileSync(certPath);
+                        const pemFile = fs.readFileSync(certPath);
 
                         agent = {
                             httpsAgent: tunnel.httpsOverHttp({

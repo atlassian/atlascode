@@ -72,7 +72,7 @@ describe('FeatureFlagClient', () => {
 
     describe('checkGate', () => {
         it('should check the feature flag gate', async () => {
-            await FeatureFlagClient.checkGate(MockFeatures.TestFeature);
+            FeatureFlagClient.checkGate(MockFeatures.TestFeature);
             expect(FeatureGates.checkGate).toHaveBeenCalled();
         });
     });

@@ -14,7 +14,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             const { data } = await this.client.get(`/rest/mirroring/1.0/mirrorServers?limit=100`);
 
             return data.values.map((val: any) => new URL(val.baseUrl).hostname);
-        } catch (e) {
+        } catch {
             // ignore
         }
         return [];

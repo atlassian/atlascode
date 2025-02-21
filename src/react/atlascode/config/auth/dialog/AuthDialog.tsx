@@ -237,7 +237,7 @@ function isCustomUrl(url: string): boolean {
     try {
         const urlObj = new URL(url);
         return cloudHostnames.every((host) => !urlObj.hostname.endsWith(host));
-    } catch (e) {
+    } catch {
         return false;
     }
 }

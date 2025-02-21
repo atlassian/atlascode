@@ -70,7 +70,7 @@ export async function showIssueForKey(issueKey?: string) {
     if (issueKey) {
         try {
             issue = await issueForKey(issueKey);
-        } catch (e) {
+        } catch {
             //not found
         }
     }

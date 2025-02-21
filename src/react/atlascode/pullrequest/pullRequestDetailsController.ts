@@ -376,7 +376,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             return new Promise<User[]>((resolve, reject) => {
                 (async () => {
                     try {
-                        var abortKey: string = '';
+                        let abortKey: string = '';
 
                         if (abortSignal) {
                             abortKey = v4();

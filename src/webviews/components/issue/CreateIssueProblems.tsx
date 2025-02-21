@@ -51,10 +51,10 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
     };
 
     public render() {
-        let issueTypeProblems: any[] = [];
+        const issueTypeProblems: any[] = [];
         Object.keys(this.state.problems).forEach((problemKey) => {
             const problem = this.state.problems[problemKey];
-            let issueTypeFields: any[] = [];
+            const issueTypeFields: any[] = [];
             problem.nonRenderableFields.forEach((fieldProblem) => {
                 issueTypeFields.push(
                     <tr>

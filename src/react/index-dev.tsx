@@ -11,6 +11,7 @@ import { computeStyles, VSCodeStylesContext } from './vscode/theme/styles';
 import { createVSCodeTheme } from './vscode/theme/vscodeTheme';
 
 declare global {
+    // eslint-disable-next-line no-unused-vars
     interface Window {
         acquireVsCodeApi: () => any;
     }
@@ -18,7 +19,9 @@ declare global {
 
 // @ts-ignore
 // __webpack_public_path__ is used to set the public path for the js files - https://webpack.js.org/guides/public-path/
+// eslint-disable-next-line no-var
 declare var __webpack_public_path__: string;
+// eslint-disable-next-line no-unused-vars
 __webpack_public_path__ = `${document.baseURI!}build/`;
 
 const routes: Record<string, any> = {
@@ -77,9 +80,9 @@ class VsCodeApi {
         // most important part - incoming messages
         this.conn.onmessage = function (message): void {
             try {
-                var json = JSON.parse(message.data);
+                const json = JSON.parse(message.data);
                 window.postMessage(json.data, '*');
-            } catch (e) {
+            } catch {
                 console.error('Invalid JSON: ', message.data);
                 return;
             }

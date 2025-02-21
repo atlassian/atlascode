@@ -17,7 +17,7 @@ export class SearchJiraIssuesNode extends AbstractBaseNode {
     }
 
     getTreeItem(): TreeItem {
-        let treeItem = new TreeItem('Search issue results', TreeItemCollapsibleState.None);
+        const treeItem = new TreeItem('Search issue results', TreeItemCollapsibleState.None);
         treeItem.iconPath = Resources.icons.get('search');
 
         treeItem.command = {

@@ -353,7 +353,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
 
             return accumulatedTasks.map((task: any) => this.convertDataToTask(task, pr.site));
-        } catch (e) {
+        } catch {
             return [];
         }
     }
@@ -490,8 +490,8 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     private shouldDisplayComment(comment: Comment): boolean {
         let hasUndeletedChild: boolean = false;
-        let filteredChildren = [];
-        for (let child of comment.children) {
+        const filteredChildren = [];
+        for (const child of comment.children) {
             if (this.shouldDisplayComment(child)) {
                 filteredChildren.push(child);
                 hasUndeletedChild = true;
@@ -624,7 +624,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 });
 
                 return (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer.user));
-            } catch (e) {
+            } catch {
                 return [];
             }
         }
@@ -648,7 +648,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
 
             return teamMembers.map((m: any) => CloudPullRequestApi.toUserModel(m.user));
-        } catch (e) {
+        } catch {
             return [];
         }
     }
@@ -667,7 +667,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         workspaceRepo: WorkspaceRepo,
         createPrData: CreatePullRequestData,
     ): Promise<PullRequest> {
-        let prBody = {
+        const prBody = {
             type: 'pullrequest',
             title: createPrData.title,
             summary: {
@@ -703,7 +703,7 @@ export class CloudPullRequestApi implements PullRequestApi {
     async update(pr: PullRequest, title: string, summary: string, reviewerAccountIds: string[]): Promise<PullRequest> {
         const { ownerSlug, repoSlug } = pr.site;
 
-        let prBody = {
+        const prBody = {
             title: title,
             summary: {
                 raw: summary,

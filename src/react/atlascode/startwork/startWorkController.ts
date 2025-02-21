@@ -30,6 +30,7 @@ export interface StartWorkControllerApi {
         sourceBranch: Branch,
         targetBranch: string,
         upstream: string,
+        pushBranchToRemote: boolean,
     ) => Promise<{ transistionStatus?: string; branch?: string; upstream?: string }>;
     closePage: () => void;
     openJiraIssue: () => void;
@@ -75,7 +76,7 @@ export type StartWorkChanges = { [key: string]: any };
 function reducer(state: StartWorkState, action: StartWorkUIAction): StartWorkState {
     switch (action.type) {
         case StartWorkUIActionType.Init: {
-            console.log(`JS-1324 start work controller init repo count: ${action.data.repoData.length}`);
+            console.log(`JS-1324 start work controller init repo count: ${action.data.repoData?.length}`);
             const newstate = {
                 ...state,
                 ...action.data,
@@ -122,6 +123,7 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
             sourceBranch: Branch,
             targetBranch: string,
             upstream: string,
+            pushBranchToRemote: boolean,
         ): Promise<StartWorkResponseMessage> => {
             return new Promise<StartWorkResponseMessage>((resolve, reject) => {
                 (async () => {
@@ -136,6 +138,7 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
                                 sourceBranch,
                                 targetBranch,
                                 upstream,
+                                pushBranchToRemote,
                             },
                             StartWorkMessageType.StartWorkResponse,
                             ConnectionTimeout,

@@ -46,6 +46,11 @@ import { PrepareCommitTip } from '../common/PrepareCommitTip';
 import { StartWorkControllerContext, useStartWorkController } from './startWorkController';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
+import { RenderedContent } from '../../../webviews/components/RenderedContent';
+import { StartWorkAction, StartWorkActionType } from '../../../lib/ipc/fromUI/startWork';
+import { OnMessageEventPromise } from '../../../util/reactpromise';
+import { ConnectionTimeout } from '../../../util/time';
+import uuid from 'uuid';
 
 const useStyles = makeStyles((theme: Theme) => ({
     title: {
@@ -90,6 +95,7 @@ const StartWorkPage: React.FunctionComponent = () => {
 
     const [transitionIssueEnabled, setTransitionIssueEnabled] = useState(true);
     const [branchSetupEnabled, setbranchSetupEnabled] = useState(true);
+    const [pushBranchEnabled, setPushBranchEnabled] = useState(true);
     const [transition, setTransition] = useState<Transition>(emptyTransition);
     const [repository, setRepository] = useState<RepoData>(emptyRepoData);
     const [branchType, setBranchType] = useState<BranchType>(emptyPrefix);
@@ -114,6 +120,8 @@ const StartWorkPage: React.FunctionComponent = () => {
         () => setbranchSetupEnabled(!branchSetupEnabled),
         [branchSetupEnabled],
     );
+
+    const togglePushBranchEnabled = useCallback(() => setPushBranchEnabled(!pushBranchEnabled), [pushBranchEnabled]);
 
     const handleTransitionChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
@@ -176,6 +184,8 @@ const StartWorkPage: React.FunctionComponent = () => {
 
     const handleLocalBranchChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: string }>) => {
+            // spaces are not allowed in branch names
+            event.target.value = event.target.value.replace(/ /g, '-');
             setLocalBranch(event.target.value);
         },
         [setLocalBranch],
@@ -241,11 +251,12 @@ const StartWorkPage: React.FunctionComponent = () => {
                 sourceBranch,
                 localBranch,
                 upstream,
+                pushBranchEnabled,
             );
             setSubmitState('submit-success');
             setSubmitResponse(response);
             setSuccessSnackbarOpen(true);
-        } catch (e) {
+        } catch {
             setSubmitState('initial');
         }
     }, [
@@ -257,6 +268,7 @@ const StartWorkPage: React.FunctionComponent = () => {
         sourceBranch,
         localBranch,
         upstream,
+        pushBranchEnabled,
     ]);
 
     const handleOpenSettings = useCallback(() => {
@@ -307,6 +319,33 @@ const StartWorkPage: React.FunctionComponent = () => {
             emptyTransition;
         setTransition(inProgressTransitionGuess);
     }, [state.issue]);
+
+    const postMessageWithEventPromise = (
+        send: StartWorkAction,
+        waitForEvent: string,
+        timeout: number,
+        nonce?: string,
+    ): Promise<any> => {
+        controller.postMessage(send);
+        return OnMessageEventPromise(waitForEvent, timeout, nonce);
+    };
+
+    const fetchImage = async (url: string): Promise<any> => {
+        const nonce = uuid.v4();
+        return (
+            await postMessageWithEventPromise(
+                {
+                    type: StartWorkActionType.GetImage,
+                    nonce: nonce,
+                    url: url,
+                    siteDetailsStringified: JSON.stringify(state.issue.siteDetails),
+                },
+                'getImageDone',
+                ConnectionTimeout,
+                nonce,
+            )
+        ).imgData;
+    };
 
     return (
         <StartWorkControllerContext.Provider value={controller}>
@@ -380,10 +419,12 @@ const StartWorkPage: React.FunctionComponent = () => {
                                             </Grid>
                                         </Grid>
                                         <Grid item>
-                                            <Typography
-                                                variant="body2"
-                                                dangerouslySetInnerHTML={{ __html: state.issue.descriptionHtml }}
-                                            ></Typography>
+                                            {state.issue.siteDetails.baseApiUrl && (
+                                                <RenderedContent
+                                                    html={state.issue.descriptionHtml}
+                                                    fetchImage={(url) => fetchImage(url)}
+                                                />
+                                            )}
                                         </Grid>
                                         <Grid item>
                                             <Divider />
@@ -667,6 +708,28 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                     </Grid>
                                                 </Grid>
                                             </Collapse>
+                                        </Grid>
+                                        <Grid item hidden={submitState === 'submit-success'}>
+                                            <Divider />
+                                        </Grid>
+                                        <Grid item hidden={submitState === 'submit-success'}>
+                                            <Grid container spacing={1} direction="row">
+                                                <Grid item>
+                                                    <Switch
+                                                        color="primary"
+                                                        size="small"
+                                                        checked={pushBranchEnabled}
+                                                        onClick={togglePushBranchEnabled}
+                                                    />
+                                                </Grid>
+                                                <Grid item>
+                                                    <Typography variant="h4">
+                                                        <Box fontWeight="fontWeightBold">
+                                                            Push the new branch to remote
+                                                        </Box>
+                                                    </Typography>
+                                                </Grid>
+                                            </Grid>
                                         </Grid>
                                         <Grid item hidden={submitState === 'submit-success'}>
                                             <Button

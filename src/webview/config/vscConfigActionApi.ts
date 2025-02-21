@@ -66,7 +66,7 @@ export class VSCConfigActionApi implements ConfigActionApi {
     ): Promise<AutocompleteSuggestion[]> {
         const client = await Container.clientManager.jiraClient(site);
 
-        var cancelToken: CancelToken | undefined = undefined;
+        let cancelToken: CancelToken | undefined = undefined;
 
         if (abortKey) {
             const signal: CancelTokenSource = axios.CancelToken.source();
@@ -86,7 +86,7 @@ export class VSCConfigActionApi implements ConfigActionApi {
     ): Promise<FilterSearchResults> {
         const client = await Container.clientManager.jiraClient(site);
 
-        var cancelToken: CancelToken | undefined = undefined;
+        let cancelToken: CancelToken | undefined = undefined;
 
         if (abortKey) {
             const signal: CancelTokenSource = axios.CancelToken.source();
@@ -100,7 +100,7 @@ export class VSCConfigActionApi implements ConfigActionApi {
     public async validateJql(site: DetailedSiteInfo, jql: string, abortKey?: string): Promise<JQLErrors> {
         const client = await Container.clientManager.jiraClient(site);
 
-        var cancelToken: CancelToken | undefined = undefined;
+        let cancelToken: CancelToken | undefined = undefined;
 
         if (abortKey) {
             const signal: CancelTokenSource = axios.CancelToken.source();

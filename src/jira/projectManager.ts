@@ -32,7 +32,7 @@ export class JiraProjectManager extends Disposable {
         try {
             const client = await Container.clientManager.jiraClient(site);
             return await client.getProject(projectKey);
-        } catch (e) {
+        } catch {
             //continue
         }
 
@@ -45,7 +45,7 @@ export class JiraProjectManager extends Disposable {
             if (projects.length > 0) {
                 return projects[0];
             }
-        } catch (e) {
+        } catch {
             //continue
         }
 

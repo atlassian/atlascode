@@ -1,3 +1,44 @@
+## What's new in 3.4.8
+
+### Features
+
+- Added a new toggle switch in 'Start work' page to choose if the new branch should be automatically pushed to remote.
+
+## What's new in 3.4.7
+
+### Features
+
+- Finalized code for Auth UI experiment.
+
+### Bug Fixes
+
+- Fixed 'Create Jira issue' page getting stuck on the loader when the first Jira server is unreachable.
+- Fixed 'Start work' not working when another 'Start work' tab is open.
+
+## What's new in 3.4.6
+
+### Features
+
+- Cleaned up feature flag for Jira Cloud authentication from Remote Development Environments
+- Placed code for Auth UI experiment. Still needs additional work before we turn this on.
+
+### Engineeering Excellence 
+
+- Cleaned up some of our code with new lint rules
+- Added some unit tests around authentication 
+
+## What's new in 3.4.5
+
+### Bug Fixes
+
+- Fixed bitbucket PR erroring out due to deprecated API being used
+
+## What's new in 3.4.4
+
+### Bug Fixes
+
+- Fixed images not showing up in Jira tickets' description and comments
+
 ## What's new in 3.4.3
 
 ### Bug Fixes

@@ -1,5 +1,7 @@
 module.exports = {
     rules: {
+        'no-var': 'error',
+        'prefer-const': 'error',
         'no-restricted-imports': [
             'error',
             {

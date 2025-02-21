@@ -50,7 +50,7 @@ export class PipelinesYamlCompletionProvider implements CompletionItemProvider {
     }
 
     private showPipes(doc: TextDocument, pos: Position): boolean {
-        let wordOnLine = this.getFirstWord(doc, pos);
+        const wordOnLine = this.getFirstWord(doc, pos);
 
         if (
             wordOnLine === 'pipe' ||
@@ -63,7 +63,7 @@ export class PipelinesYamlCompletionProvider implements CompletionItemProvider {
     }
 
     private findParentWord(doc: TextDocument, pos: Position): string | undefined {
-        let line = doc.lineAt(pos.line);
+        const line = doc.lineAt(pos.line);
 
         if (pos.line < 1) {
             return undefined;
@@ -73,8 +73,8 @@ export class PipelinesYamlCompletionProvider implements CompletionItemProvider {
             return this.findParentWord(doc, pos.with(pos.line - 1, 0));
         }
 
-        let wordRange = doc.getWordRangeAtPosition(pos.with(pos.line, line.firstNonWhitespaceCharacterIndex));
-        let text = doc.getText(wordRange);
+        const wordRange = doc.getWordRangeAtPosition(pos.with(pos.line, line.firstNonWhitespaceCharacterIndex));
+        const text = doc.getText(wordRange);
 
         if (text === '-' || text.startsWith('#')) {
             return this.findParentWord(doc, pos.with(pos.line - 1, 0));
@@ -84,7 +84,7 @@ export class PipelinesYamlCompletionProvider implements CompletionItemProvider {
     }
 
     private getFirstWord(doc: TextDocument, pos: Position): string | undefined {
-        let line = doc.lineAt(pos.line);
+        const line = doc.lineAt(pos.line);
 
         if (line.isEmptyOrWhitespace) {
             return undefined;

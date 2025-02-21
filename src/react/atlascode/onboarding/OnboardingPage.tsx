@@ -1,6 +1,13 @@
-import { Button, Container, lighten, makeStyles, Step, StepLabel, Stepper, Theme, Typography } from '@material-ui/core';
+import { Box, Button, Container, lighten, makeStyles, Step, StepLabel, Stepper, Theme } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
-import { AuthInfo, SiteInfo } from '../../../atlclients/authInfo';
+import {
+    AuthInfo,
+    AuthInfoState,
+    emptyUserInfo,
+    ProductBitbucket,
+    ProductJira,
+    SiteInfo,
+} from '../../../atlclients/authInfo';
 import { AuthDialog } from '../config/auth/dialog/AuthDialog';
 import { AuthDialogControllerContext, useAuthDialog } from '../config/auth/useAuthDialog';
 import LandingPage from './LandingPage';
@@ -9,6 +16,11 @@ import ProductSelector from './ProductSelector';
 import { SimpleSiteAuthenticator } from './SimpleSiteAuthenticator';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
+import { Features } from 'src/util/featureFlags';
+import { CommonMessageType } from 'src/lib/ipc/toUI/common';
+import { OnboardingActionType } from 'src/lib/ipc/fromUI/onboarding';
+import { JiraOnboarding } from './JiraOnboarding';
+import { BitbucketOnboarding } from './BitbucketOnboarding';
 
 const useStyles = makeStyles((theme: Theme) => ({
     root: {
@@ -31,33 +43,49 @@ const useStyles = makeStyles((theme: Theme) => ({
     },
 }));
 
-function getSteps() {
-    return ['Select Products', 'Authenticate', 'Explore'];
-}
+const jiraValueSet = {
+    cloud: 'jira-setup-radio-cloud',
+    server: 'jira-setup-radio-server',
+    none: 'jira-setup-radio-none',
+};
+const bitbucketValueSet = {
+    cloud: 'bitbucket-setup-radio-cloud',
+    server: 'bitbucket-setup-radio-server',
+    none: 'bitbucket-setup-radio-none',
+};
 
 export const OnboardingPage: React.FunctionComponent = () => {
     const classes = useStyles();
     const [changes, setChanges] = useState<{ [key: string]: any }>({});
     const [state, controller] = useOnboardingController();
     const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry } = useAuthDialog();
-
     const [activeStep, setActiveStep] = React.useState(0);
+    const [useAuthUI, setUseAuthUI] = React.useState(false);
+    const [jiraSignInText, setJiraSignInText] = useState('Sign In to Jira Cloud');
+    const [bitbucketSignInText, setBitbucketSignInText] = useState('Sign In to Bitbucket Cloud');
+    const [jiraSignInFlow, setJiraSignInFlow] = useState(jiraValueSet.cloud);
+    const [bitbucketSignInFlow, setBitbucketSignInFlow] = useState(bitbucketValueSet.cloud);
+
+    React.useEffect(() => {
+        window.addEventListener('message', (event) => {
+            const message = event.data;
+            if (message.command === CommonMessageType.UpdateFeatureFlags) {
+                const featureValue = message.featureFlags[Features.EnableAuthUI];
+                setUseAuthUI(featureValue);
+            }
+        });
+    }, []);
+    function getSteps() {
+        if (useAuthUI) {
+            return ['Setup Jira', 'Setup BitBucket', 'Explore'];
+        }
+
+        return ['Select Products', 'Authenticate', 'Explore'];
+    }
     const steps = getSteps();
 
     const handleNext = useCallback(() => {
         setActiveStep((prevActiveStep) => prevActiveStep + 1);
-    }, []);
-
-    const handleBack = useCallback(() => {
-        if (activeStep === 2) {
-            setActiveStep((prevActiveStep) => prevActiveStep - 2);
-        } else {
-            setActiveStep((prevActiveStep) => prevActiveStep - 1);
-        }
-    }, [activeStep]);
-
-    const handleReset = useCallback(() => {
-        setActiveStep(0);
     }, []);
 
     const handleJiraToggle = useCallback((enabled: boolean): void => {
@@ -102,6 +130,102 @@ export const OnboardingPage: React.FunctionComponent = () => {
         }
     }, [changes, controller]);
 
+    const handleServerSignIn = useCallback(
+        (product) => {
+            authDialogController.openDialog(product, undefined);
+        },
+        [authDialogController],
+    );
+
+    const handleCloudSignIn = useCallback(
+        (product) => {
+            const hostname = product.key === ProductJira.key ? 'atlassian.net' : 'bitbucket.org';
+            controller.login({ host: hostname, product: product }, { user: emptyUserInfo, state: AuthInfoState.Valid });
+        },
+        [controller],
+    );
+
+    const executeBitbucketSignInFlow = useCallback(() => {
+        console.log(bitbucketSignInFlow);
+        switch (bitbucketSignInFlow) {
+            case bitbucketValueSet.cloud:
+                handleCloudSignIn(ProductBitbucket);
+                break;
+            case bitbucketValueSet.server:
+                handleServerSignIn(ProductBitbucket);
+                break;
+            case bitbucketValueSet.none:
+                handleNext();
+                break;
+            default:
+                controller.postMessage({
+                    type: OnboardingActionType.Error,
+                    error: new Error(`Invalid Bitbucket sign in flow ${bitbucketSignInFlow}`),
+                });
+                break;
+        }
+    }, [bitbucketSignInFlow, controller, handleCloudSignIn, handleNext, handleServerSignIn]);
+
+    const executeJiraSignInFlow = useCallback(() => {
+        switch (jiraSignInFlow) {
+            case jiraValueSet.cloud:
+                handleCloudSignIn(ProductJira);
+                break;
+            case jiraValueSet.server:
+                handleServerSignIn(ProductJira);
+                break;
+            case jiraValueSet.none:
+                handleNext();
+                break;
+            default:
+                controller.postMessage({
+                    type: OnboardingActionType.Error,
+                    error: new Error(`Invalid Jira sign in flow ${jiraSignInFlow}`),
+                });
+                break;
+        }
+    }, [jiraSignInFlow, handleCloudSignIn, handleServerSignIn, handleNext, controller]);
+
+    const handleJiraOptionChange = useCallback((value: string) => {
+        setJiraSignInFlow(value);
+        if (value === jiraValueSet.cloud) {
+            setJiraSignInText('Sign in to Jira Cloud');
+        } else if (value === jiraValueSet.server) {
+            setJiraSignInText('Sign in to Jira Server');
+        } else {
+            setJiraSignInText('Next');
+        }
+    }, []);
+
+    const handleBitbucketOptionChange = useCallback((value: string) => {
+        setBitbucketSignInFlow(value);
+        if (value === bitbucketValueSet.cloud) {
+            setBitbucketSignInText('Sign in to Bitbucket Cloud');
+        } else if (value === bitbucketValueSet.server) {
+            setBitbucketSignInText('Sign in to Bitbucket Server');
+        } else {
+            setBitbucketSignInText('Next');
+        }
+    }, []);
+
+    const handleBack = useCallback(() => {
+        handleJiraOptionChange(jiraValueSet.cloud);
+        handleBitbucketOptionChange(bitbucketValueSet.cloud);
+
+        if (activeStep === 2) {
+            setActiveStep((prevActiveStep) => prevActiveStep - 2);
+        } else {
+            setActiveStep((prevActiveStep) => prevActiveStep - 1);
+        }
+    }, [activeStep, handleBitbucketOptionChange, handleJiraOptionChange]);
+
+    useEffect(() => {
+        if (controller.isLoginComplete) {
+            controller.setIsLoginComplete(false);
+            handleNext();
+        }
+    }, [controller, handleNext]);
+
     const getStepContent = (step: number) => {
         switch (step) {
             case 0:
@@ -137,6 +261,78 @@ export const OnboardingPage: React.FunctionComponent = () => {
         }
     };
 
+    const oldAuthUI = (
+        <div>
+            <div className={classes.pageContent}>{getStepContent(activeStep)}</div>
+            <div style={{ float: 'right', marginBottom: '30px' }}>
+                <Button disabled={activeStep === 0} onClick={handleBack} className={classes.backButton}>
+                    Back
+                </Button>
+                {activeStep !== 2 && (
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleNext}
+                        className={classes.button}
+                        disabled={!state.config['bitbucket.enabled'] && !state.config['jira.enabled']}
+                    >
+                        {activeStep === 1 ? 'Skip' : 'Next'}
+                    </Button>
+                )}
+                {activeStep === 2 && (
+                    <React.Fragment>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleOpenSettings}
+                            className={classes.button}
+                        >
+                            Open Extension Settings
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleClosePage}
+                            className={classes.button}
+                        >
+                            Finish
+                        </Button>
+                    </React.Fragment>
+                )}
+            </div>
+        </div>
+    );
+
+    const authUI_v1 = (
+        <div>
+            {activeStep === 0 && (
+                <JiraOnboarding
+                    valueSet={jiraValueSet}
+                    handleOptionChange={handleJiraOptionChange}
+                    executeSetup={executeJiraSignInFlow}
+                    signInText={jiraSignInText}
+                />
+            )}
+            {activeStep === 1 && (
+                <BitbucketOnboarding
+                    valueSet={bitbucketValueSet}
+                    handleOptionChange={handleBitbucketOptionChange}
+                    executeSetup={executeBitbucketSignInFlow}
+                    handleBack={handleBack}
+                    signInText={bitbucketSignInText}
+                />
+            )}
+            {activeStep === 2 && (
+                <LandingPage
+                    bitbucketEnabled={state.config['bitbucket.enabled']}
+                    jiraEnabled={state.config['jira.enabled']}
+                    bitbucketSites={state.bitbucketSites}
+                    jiraSites={state.jiraSites}
+                />
+            )}
+        </div>
+    );
+
     return (
         <OnboardingControllerContext.Provider value={controller}>
             <AuthDialogControllerContext.Provider value={authDialogController}>
@@ -157,65 +353,17 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                     );
                                 })}
                             </Stepper>
-                            <div>
-                                {activeStep === steps.length ? (
-                                    <div>
-                                        <Typography className={classes.pageContent}>
-                                            All steps completed - you&apos;re finished
-                                        </Typography>
-                                        <Button onClick={handleReset} className={classes.button}>
-                                            Reset
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <div>
-                                        <div className={classes.pageContent}>{getStepContent(activeStep)}</div>
-                                        <div style={{ float: 'right', marginBottom: '30px' }}>
-                                            <Button
-                                                disabled={activeStep === 0}
-                                                onClick={handleBack}
-                                                className={classes.backButton}
-                                            >
-                                                Back
-                                            </Button>
-                                            {activeStep !== 2 && (
-                                                <Button
-                                                    variant="contained"
-                                                    color="primary"
-                                                    onClick={handleNext}
-                                                    className={classes.button}
-                                                    disabled={
-                                                        !state.config['bitbucket.enabled'] &&
-                                                        !state.config['jira.enabled']
-                                                    }
-                                                >
-                                                    {activeStep === 1 ? 'Skip' : 'Next'}
-                                                </Button>
-                                            )}
-                                            {activeStep === 2 && (
-                                                <React.Fragment>
-                                                    <Button
-                                                        variant="contained"
-                                                        color="primary"
-                                                        onClick={handleOpenSettings}
-                                                        className={classes.button}
-                                                    >
-                                                        Open Extension Settings
-                                                    </Button>
-                                                    <Button
-                                                        variant="contained"
-                                                        color="primary"
-                                                        onClick={handleClosePage}
-                                                        className={classes.button}
-                                                    >
-                                                        Finish
-                                                    </Button>
-                                                </React.Fragment>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            <Box
+                                style={{
+                                    display: 'flex',
+                                    flex: '1 0 0',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '24px',
+                                }}
+                            >
+                                {useAuthUI ? authUI_v1 : oldAuthUI}
+                            </Box>
                         </div>
                     </Container>
                     <AuthDialog

@@ -105,6 +105,7 @@ export class StartWorkOnBitbucketIssueWebview
                                     e.targetBranchName,
                                     e.sourceBranch,
                                     e.remoteName,
+                                    e.pushBranchToRemote,
                                 );
                             }
 
@@ -138,6 +139,7 @@ export class StartWorkOnBitbucketIssueWebview
         destBranch: string,
         sourceBranch: Branch,
         remote: string,
+        pushBranchToRemote: boolean,
     ): Promise<void> {
         // checkout if a branch exists already
         try {
@@ -145,14 +147,14 @@ export class StartWorkOnBitbucketIssueWebview
             await repo.getBranch(destBranch);
             await repo.checkout(destBranch);
             return;
-        } catch (_) {}
+        } catch {}
 
         // checkout if there's a matching remote branch (checkout will track remote branch automatically)
         try {
             await repo.getBranch(`remotes/${remote}/${destBranch}`);
             await repo.checkout(destBranch);
             return;
-        } catch (_) {}
+        } catch {}
 
         // no existing branches, create a new one
         await repo.createBranch(
@@ -160,7 +162,11 @@ export class StartWorkOnBitbucketIssueWebview
             true,
             `${sourceBranch.type === RefType.RemoteHead ? 'remotes/' : ''}${sourceBranch.name}`,
         );
-        await repo.push(remote, destBranch, true);
+
+        if (pushBranchToRemote) {
+            await repo.push(remote, destBranch, true);
+        }
+
         return;
     }
 

@@ -15,8 +15,8 @@ export class IssueNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        let title = isMinimalIssue(this.issue) && this.issue.isEpic ? this.issue.epicName : this.issue.summary;
-        let treeItem = new vscode.TreeItem(
+        const title = isMinimalIssue(this.issue) && this.issue.isEpic ? this.issue.epicName : this.issue.summary;
+        const treeItem = new vscode.TreeItem(
             `${this.issue.key} ${title}`,
             isMinimalIssue(this.issue) && (this.issue.subtasks.length > 0 || this.issue.epicChildren.length > 0)
                 ? vscode.TreeItemCollapsibleState.Expanded

@@ -73,7 +73,7 @@ export function getInlineComments(allComments: Comment[]): Map<string, Comment[]
 }
 
 function traverse(n: Comment): Comment[] {
-    let result: Comment[] = [];
+    const result: Comment[] = [];
     result.push(n);
     for (let i = 0; i < n.children.length; i++) {
         result.push(...traverse(n.children[i]));
@@ -128,8 +128,8 @@ export async function getArgsForDiffView(
         fileDisplayName = `⚠️ CONFLICTED: ${fileDisplayName}`;
     }
 
-    let lhsCommentThreads: Comment[][] = [];
-    let rhsCommentThreads: Comment[][] = [];
+    const lhsCommentThreads: Comment[][] = [];
+    const rhsCommentThreads: Comment[][] = [];
 
     comments.forEach((c: Comment[]) => {
         const parentComment = c[0];
@@ -278,7 +278,7 @@ export async function createFileChangesNodes(
 
     if (configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')) {
         //Create a dummy root directory data structure to hold the files
-        let rootDirectory: PRDirectory = {
+        const rootDirectory: PRDirectory = {
             name: '',
             files: [],
             subdirs: new Map<string, PRDirectory>(),
@@ -287,11 +287,11 @@ export async function createFileChangesNodes(
         flattenFileStructure(rootDirectory);
 
         //While creating the directory, we actually put all the files/folders inside of a root directory. We now want to go one level in.
-        let directoryNodes: DirectoryNode[] = Array.from(
+        const directoryNodes: DirectoryNode[] = Array.from(
             rootDirectory.subdirs.values(),
             (subdir) => new DirectoryNode(subdir),
         );
-        let childNodes: AbstractBaseNode[] = rootDirectory.files.map(
+        const childNodes: AbstractBaseNode[] = rootDirectory.files.map(
             (diffViewArg) => new PullRequestFilesNode(diffViewArg),
         );
         return childNodes.concat(directoryNodes);

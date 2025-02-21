@@ -9,6 +9,7 @@ import { PipelinesMonitor } from './PipelinesMonitor';
 import { Commands } from '../../commands';
 import { BitbucketExplorer } from '../BitbucketExplorer';
 import { BaseTreeDataProvider } from '../Explorer';
+import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 
 export class PipelinesExplorer extends BitbucketExplorer {
     constructor(ctx: BitbucketContext) {

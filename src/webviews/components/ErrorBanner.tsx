@@ -20,7 +20,7 @@ export default class ErrorBanner extends React.Component<
     }
 
     render() {
-        let errorMarkup = [];
+        const errorMarkup = [];
         if (isErrorCollection(this.state.errorDetails)) {
             Object.keys(this.state.errorDetails.errors).forEach((key) => {
                 errorMarkup.push(

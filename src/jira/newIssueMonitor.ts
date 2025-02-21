@@ -55,7 +55,7 @@ export class NewIssueMonitor {
 
             const foundIssues: MinimalIssue<DetailedSiteInfo>[] = [];
 
-            let jqlResults = await pSettle<JQLSettleResult>(jqlPromises);
+            const jqlResults = await pSettle<JQLSettleResult>(jqlPromises);
             jqlResults.forEach((result) => {
                 if (result.isFulfilled) {
                     const newIssues = result.value.issues.filter((issue) => issue.created! > this._timestamp);
@@ -93,7 +93,7 @@ export class NewIssueMonitor {
         }
 
         const issueNames = newIssues.map((issue) => `[${issue.key}] "${issue.summary}"`);
-        var message = '';
+        let message = '';
         if (newIssues.length === 1) {
             message = `${issueNames[0]} added to explorer`;
         } else if (newIssues.length <= 3) {

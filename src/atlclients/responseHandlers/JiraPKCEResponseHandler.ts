@@ -5,7 +5,6 @@ import { Logger } from '../../logger';
 import { ResponseHandler } from './ResponseHandler';
 import { Strategy } from '../strategy';
 import { Tokens } from '../tokens';
-import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
 
 export class JiraPKCEResponseHandler extends ResponseHandler {
     constructor(
@@ -18,13 +17,6 @@ export class JiraPKCEResponseHandler extends ResponseHandler {
 
     async tokens(code: string): Promise<Tokens> {
         try {
-            const [proxyHost, proxyPort] = getProxyHostAndPort();
-            if (proxyHost.trim() !== '') {
-                Logger.debug(`using proxy: ${proxyHost}:${proxyPort}`);
-            } else {
-                Logger.debug(`no proxy configured in environment`);
-            }
-
             const tokenResponse = await this.axios(this.strategy.tokenUrl(), {
                 method: 'POST',
                 headers: {
@@ -48,7 +40,7 @@ export class JiraPKCEResponseHandler extends ResponseHandler {
 
     async user(accessToken: string, resource: AccessibleResource): Promise<UserInfo> {
         try {
-            let apiUri = this.strategy.apiUrl();
+            const apiUri = this.strategy.apiUrl();
             const url = `https://${apiUri}/ex/jira/${resource.id}/rest/api/2/myself`;
 
             const userResponse = await this.axios(url, {

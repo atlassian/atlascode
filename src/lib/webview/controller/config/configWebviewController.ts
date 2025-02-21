@@ -13,6 +13,13 @@ import { Logger } from '../../../logger';
 import { WebViewID } from '../../../ipc/models/common';
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { formatError } from '../../formatError';
+import uuid from 'uuid';
+
+// TODO AXON-46 - figure out why linter is mad here
+// This is most likely a configuration error, since it makes sense to prevent imports of
+// `vscode` and `container` in react files - but this is NOT a react file :thinking:
+import vscode from 'vscode'; // eslint-disable-line
+import { Container } from '../../../../container'; //eslint-disable-line
 
 export const id: string = 'atlascodeSettingsV2';
 
@@ -92,7 +99,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 this._initialSection = undefined;
             }
         } catch (e) {
-            let err = new Error(`error updating configuration: ${e}`);
+            const err = new Error(`error updating configuration: ${e}`);
             this._logger.error(err);
             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
         } finally {
@@ -119,13 +126,13 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 break;
             }
             case ConfigActionType.Login: {
-                var isCloud = true;
+                let isCloud = true;
                 if (isBasicAuthInfo(msg.authInfo) || isPATAuthInfo(msg.authInfo)) {
                     isCloud = false;
                     try {
                         await this._api.authenticateServer(msg.siteInfo, msg.authInfo);
                     } catch (e) {
-                        let err = new Error(`Authentication error: ${e}`);
+                        const err = new Error(`Authentication error: ${e}`);
                         this._logger.error(err);
                         this.postMessage({
                             type: CommonMessageType.Error,
@@ -136,6 +143,14 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                     this._api.authenticateCloud(msg.siteInfo, this._settingsUrl);
                 }
                 this._analytics.fireAuthenticateButtonEvent(id, msg.siteInfo, isCloud);
+                break;
+            }
+            case ConfigActionType.RemoteLogin: {
+                const uri = vscode.Uri.parse('vscode://atlassian.atlascode/auth');
+                vscode.env.asExternalUri(uri).then((uri) => {
+                    const state = { deeplink: uri.toString(true), attemptId: uuid.v4() };
+                    Container.loginManager.initRemoteAuth(state);
+                });
                 break;
             }
             case ConfigActionType.Logout: {
@@ -174,7 +189,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                         if (Axios.isCancel(e)) {
                             this._logger.warn(formatError(e));
                         } else {
-                            let err = new Error(`JQL fetch error: ${e}`);
+                            const err = new Error(`JQL fetch error: ${e}`);
                             this._logger.error(err);
                             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                         }
@@ -191,7 +206,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                             data: data,
                         });
                     } catch (e) {
-                        let err = new Error(`JQL fetch error: ${e}`);
+                        const err = new Error(`JQL fetch error: ${e}`);
                         this._logger.error(err);
                         this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                     }
@@ -216,7 +231,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                         if (Axios.isCancel(e)) {
                             this._logger.warn(formatError(e));
                         } else {
-                            let err = new Error(`Filter fetch error: ${e}`);
+                            const err = new Error(`Filter fetch error: ${e}`);
                             this._logger.error(err);
                             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                         }
@@ -236,7 +251,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                         if (Axios.isCancel(e)) {
                             this._logger.warn(formatError(e));
                         } else {
-                            let err = new Error(`JQL Validate network error: ${e}`);
+                            const err = new Error(`JQL Validate network error: ${e}`);
                             this._logger.error(err);
                             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                         }
@@ -248,7 +263,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 try {
                     this._api.updateSettings(msg.target, msg.changes, msg.removes);
                 } catch (e) {
-                    let err = new Error(`error updating configuration: ${e}`);
+                    const err = new Error(`error updating configuration: ${e}`);
                     this._logger.error(err);
                     this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                 }

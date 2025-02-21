@@ -48,7 +48,7 @@ export class VSCBitbucketIssueActionApi implements BitbucketIssueActionApi {
     async fetchUsers(issue: BitbucketIssue, query: string, abortKey?: string): Promise<User[]> {
         const bbApi = await clientForSite(issue.site);
 
-        var cancelToken: CancelToken | undefined = undefined;
+        let cancelToken: CancelToken | undefined = undefined;
 
         if (abortKey) {
             const signal: CancelTokenSource = axios.CancelToken.source();

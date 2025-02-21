@@ -85,7 +85,7 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
     async fetchUsers(site: BitbucketSite, query: string, abortKey?: string | undefined): Promise<User[]> {
         const client = await Container.clientManager.bbClient(site.details);
 
-        var cancelToken: CancelToken | undefined = undefined;
+        let cancelToken: CancelToken | undefined = undefined;
 
         if (abortKey) {
             const signal: CancelTokenSource = axios.CancelToken.source();
@@ -103,7 +103,7 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
             if (jiraIssueKeys.length > 0) {
                 try {
                     return await issueForKey(jiraIssueKeys[0]);
-                } catch (e) {
+                } catch {
                     //not found
                 }
             }
@@ -125,7 +125,7 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
         try {
             const bbApi = await clientForSite(site);
             commits = await bbApi.repositories.getCommitsForRefs(site, sourceBranchName, destinationBranchName);
-        } catch (e) {}
+        } catch {}
 
         const shell = new Shell(Uri.parse(wsRepo.rootUri).fsPath);
         const diff = await shell.output(
@@ -228,7 +228,7 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
         //git diff-index --name-status will return lines in the form {status}        {name of file}
         //It's important to note that the order of the files will be identical to git diff --numstat, and we can use that to our advantage
         const namestatusLines = await shell.lines(`git diff --name-status -C -M50 ${forkPoint} ${sourceBranch.commit}`);
-        let fileDiffs: FileDiff[] = [];
+        const fileDiffs: FileDiff[] = [];
         for (let i = 0; i < numstatLines.length; i++) {
             const numstatWords = numstatLines[i].split(/\s+/);
             const namestatusWords = namestatusLines[i].split(/\s+/);

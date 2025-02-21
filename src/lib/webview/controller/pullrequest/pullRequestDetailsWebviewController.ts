@@ -203,7 +203,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             this.inlineComments = tasksAndComments.inlineComments;
             this.tasks = tasksAndComments.tasks;
         } catch (e) {
-            let err = new Error(`error updating pull request: ${e}`);
+            const err = new Error(`error updating pull request: ${e}`);
             this.logger.error(err);
             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
         } finally {

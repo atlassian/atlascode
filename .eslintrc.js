@@ -53,12 +53,20 @@ module.exports = {
                 ],
             },
         ],
+        "no-unused-vars": ["error", {
+            "vars": "all",
+            "args": "none",
+            "caughtErrors": "all",
+            "ignoreRestSiblings": false,
+        }],        
         'brace-style': 'off',
+        'no-throw-literal': 'error',
+        'no-var': 'error',
+        'prefer-const': 'error',
         curly: 'error',
         eqeqeq: ['error', 'always'],
         semi: 'off',
         '@stylistic/js/semi': ['error', 'always'],
-        'no-throw-literal': 'error',
     },
     settings: {
         react: {

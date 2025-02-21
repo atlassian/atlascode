@@ -88,8 +88,8 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
-    public async fireAuthenticatedEvent(site: DetailedSiteInfo): Promise<void> {
-        return authenticatedEvent(site).then((e) => {
+    public async fireAuthenticatedEvent(site: DetailedSiteInfo, isOnboarding?: boolean): Promise<void> {
+        return authenticatedEvent(site, isOnboarding).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }
@@ -124,8 +124,8 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
-    public async fireIssueWorkStartedEvent(site: DetailedSiteInfo): Promise<void> {
-        return issueWorkStartedEvent(site).then((e) => {
+    public async fireIssueWorkStartedEvent(site: DetailedSiteInfo, pushBranchToRemoteChecked: boolean): Promise<void> {
+        return issueWorkStartedEvent(site, pushBranchToRemoteChecked).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

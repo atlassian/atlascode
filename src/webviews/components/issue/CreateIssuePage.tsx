@@ -135,9 +135,9 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     }
 
     handleSubmit = async (e: any) => {
-        let requiredFields = Object.values(this.state.fields).filter((field) => field.required);
+        const requiredFields = Object.values(this.state.fields).filter((field) => field.required);
 
-        let errs: Record<string, string> = {};
+        const errs: Record<string, string> = {};
         requiredFields.forEach((field: FieldUI) => {
             if (field.uiType === UIType.Worklog && this.state.fieldValues[`${field.key}.enabled`]) {
                 const timeSpent = this.state.fieldValues[`${field.key}.timeSpent`];
@@ -286,10 +286,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     }
 
     public render() {
-        if (
-            !this.state.fieldValues['issuetype'] ||
-            (this.state.fieldValues['issuetype'].id === '' && !this.state.isErrorBannerOpen && this.state.isOnline)
-        ) {
+        if (!this.state.fieldValues['issuetype']?.id && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refresh' });
             return <AtlLoader />;
         }

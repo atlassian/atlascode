@@ -13,14 +13,14 @@ export class ParticipantList extends React.Component<Props, State> {
     }
 
     userList(): any[] {
-        let result: any[] = [];
+        const result: any[] = [];
         if (Array.isArray(this.props.users)) {
             // depending on GDPR settings, the user list could be strings or user objects :facepalm:
             this.props.users.forEach((user: any) => {
                 if (typeof user === 'string') {
                     result.push(<div>{user}</div>);
                 } else if (user.displayName) {
-                    let avatar = user.avatarUrls && user.avatarUrls['24x24'] ? user.avatarUrls['24x24'] : '';
+                    const avatar = user.avatarUrls && user.avatarUrls['24x24'] ? user.avatarUrls['24x24'] : '';
                     result.push(
                         <div className="ac-inline-watcher">
                             <Avatar size="small" src={avatar} />

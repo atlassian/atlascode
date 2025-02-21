@@ -94,30 +94,31 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
                 break;
             }
             case OnboardingActionType.Login: {
-                var isCloud = true;
-                if (isBasicAuthInfo(msg.authInfo)) {
-                    isCloud = false;
-                    try {
-                        await this._api.authenticateServer(msg.siteInfo, msg.authInfo);
-                    } catch (e) {
-                        let err = new Error(`Authentication error: ${e}`);
-                        this._logger.error(err);
-                        this.postMessage({
-                            type: CommonMessageType.Error,
-                            reason: formatError(e, 'Authentication error'),
-                        });
-                    }
-                } else {
-                    this._api.authenticateCloud(msg.siteInfo, this._onboardingUrl);
-                }
+                let isCloud = true;
                 this._analytics.fireAuthenticateButtonEvent(id, msg.siteInfo, isCloud);
+                try {
+                    if (isBasicAuthInfo(msg.authInfo)) {
+                        isCloud = false;
+                        await this._api.authenticateServer(msg.siteInfo, msg.authInfo);
+                    } else {
+                        await this._api.authenticateCloud(msg.siteInfo, this._onboardingUrl);
+                    }
+                    this.postMessage({ type: OnboardingMessageType.LoginResponse });
+                } catch (e) {
+                    const env = isCloud ? 'cloud' : 'server';
+                    this._logger.error(new Error(`${env} onboarding authentication error: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, `${env} onboarding authentication error`),
+                    });
+                }
                 break;
             }
             case OnboardingActionType.SaveSettings: {
                 try {
                     this._api.updateSettings(msg.target, msg.changes, msg.removes);
                 } catch (e) {
-                    let err = new Error(`error updating configuration: ${e}`);
+                    const err = new Error(`error updating configuration: ${e}`);
                     this._logger.error(err);
                     this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                 }
@@ -158,7 +159,11 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
                 this._analytics.fireMoreSettingsButtonEvent(id);
                 break;
             }
-
+            case OnboardingActionType.Error: {
+                this._logger.error(msg.error);
+                this.postMessage({ type: CommonMessageType.Error, reason: formatError(msg.error, 'Onboarding Error') });
+                break;
+            }
             case CommonActionType.SendAnalytics:
             case CommonActionType.CopyLink:
             case CommonActionType.OpenJiraIssue:

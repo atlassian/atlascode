@@ -20,7 +20,7 @@ export class CacheMap {
     private _data: Map<string, ICacheItem> = new Map<string, ICacheItem>();
 
     public getItem<T>(key: string): T | undefined {
-        let item = this._data.get(key);
+        const item = this._data.get(key);
         if (item && this.isItemExpired(item)) {
             this._data.delete(key);
             return undefined;
@@ -42,7 +42,7 @@ export class CacheMap {
     }
 
     public setItem(key: string, content: any, ttl: number = Infinity) {
-        let meta = {
+        const meta = {
             ttl: ttl,
             createdAt: Date.now(),
         };
@@ -54,7 +54,7 @@ export class CacheMap {
     }
 
     public updateItem(key: string, content: any) {
-        let item = this._data.get(key);
+        const item = this._data.get(key);
 
         if (item) {
             item.content = content;

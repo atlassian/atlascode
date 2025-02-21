@@ -8,12 +8,14 @@ export enum OnboardingMessageType {
     Init = 'init',
     Update = 'configUpdate',
     SitesUpdate = 'sitesAvailableUpdate',
+    LoginResponse = 'loginResponse',
 }
 
 export type OnboardingMessage =
     | ReducerAction<OnboardingMessageType.Init, OnboardingInitMessage>
     | ReducerAction<OnboardingMessageType.Update, OnboardingInitMessage>
-    | ReducerAction<OnboardingMessageType.SitesUpdate, SitesUpdateMessage>;
+    | ReducerAction<OnboardingMessageType.SitesUpdate, SitesUpdateMessage>
+    | ReducerAction<OnboardingMessageType.LoginResponse>;
 
 export type OnboardingResponse = any;
 

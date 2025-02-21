@@ -80,7 +80,7 @@ const buildInputRules = (schema: any) => {
     return rules;
 };
 
-var schema = new Schema({
+const schema = new Schema({
     nodes: addMentionNodes(markdownSchema.spec.nodes),
     marks: markdownSchema.spec.marks,
 });
@@ -105,7 +105,7 @@ const mdParser = new MarkdownParser(schema, defaultMarkdownParser.tokenizer, {
  * IMPORTANT: outer div's "suggestion-item-list" class is mandatory. The plugin uses this class for querying.
  * IMPORTANT: inner div's "suggestion-item" class is mandatory too for the same reasons
  */
-var getMentionSuggestionsHTML = (items: any[]) =>
+const getMentionSuggestionsHTML = (items: any[]) =>
     '<div class="suggestion-item-list">' +
     items.map((i) => '<div class="suggestion-item">' + i.name + '</div>').join('') +
     '</div>';

@@ -277,7 +277,7 @@ export abstract class AbstractIssueEditorPage<
                         nonce,
                     );
                     resolve((listEvent as IssueSuggestionsList).issues);
-                } catch (e) {
+                } catch {
                     resolve([]);
                 }
             })();
@@ -322,7 +322,7 @@ export abstract class AbstractIssueEditorPage<
 
                     this.setState({ isSomethingLoading: false });
                     resolve(listEvent.options);
-                } catch (e) {
+                } catch {
                     this.setState({ isSomethingLoading: false });
                     resolve([]);
                 }
@@ -364,7 +364,7 @@ export abstract class AbstractIssueEditorPage<
                             ...createEvent.selectFieldOptions,
                         },
                     });
-                } catch (e) {
+                } catch {
                     this.setState({ isSomethingLoading: false });
                 }
             })();
@@ -374,9 +374,9 @@ export abstract class AbstractIssueEditorPage<
     protected getInputMarkup(field: FieldUI, editmode: boolean = false): any {
         switch (field.uiType) {
             case UIType.Input: {
-                let validateFunc = this.getValidateFunction(field, editmode);
+                const validateFunc = this.getValidateFunction(field, editmode);
                 let validationFailMessage = '';
-                let valType = field.valueType;
+                const valType = field.valueType;
 
                 const defaultVal =
                     this.state.fieldValues[field.key] === undefined ? '' : this.state.fieldValues[field.key];
@@ -417,21 +417,7 @@ export abstract class AbstractIssueEditorPage<
                                 onSave={async (val: string) => {
                                     await this.handleInlineEdit(field, val);
                                 }}
-                                fetchImage={async (url: string) => {
-                                    const nonce = uuid.v4();
-                                    return (
-                                        await this.postMessageWithEventPromise(
-                                            {
-                                                action: 'getImage',
-                                                nonce: nonce,
-                                                url: url,
-                                            },
-                                            'getImageDone',
-                                            ConnectionTimeout,
-                                            nonce,
-                                        )
-                                    ).imgData;
-                                }}
+                                fetchImage={(img) => this.fetchImage(img)}
                             />
                         );
                     } else {
@@ -515,7 +501,7 @@ export abstract class AbstractIssueEditorPage<
             }
             case UIType.Date: {
                 let markup = <div></div>;
-                let validateFunc = this.getValidateFunction(field, editmode);
+                const validateFunc = this.getValidateFunction(field, editmode);
                 if (editmode) {
                     markup = (
                         <DatePicker
@@ -574,7 +560,7 @@ export abstract class AbstractIssueEditorPage<
             }
             case UIType.DateTime: {
                 let markup = <div></div>;
-                let validateFunc = this.getValidateFunction(field, editmode);
+                const validateFunc = this.getValidateFunction(field, editmode);
                 if (editmode) {
                     markup = (
                         <DateTimePicker
@@ -676,7 +662,7 @@ export abstract class AbstractIssueEditorPage<
                         />
                     );
                 } else {
-                    let validateFunc = field.required ? FieldValidators.validateSingleSelect : undefined;
+                    const validateFunc = field.required ? FieldValidators.validateSingleSelect : undefined;
                     return (
                         <React.Fragment>
                             <Field
@@ -1166,7 +1152,7 @@ export abstract class AbstractIssueEditorPage<
                     );
                 }
 
-                let checkboxItems: any[] = [];
+                const checkboxItems: any[] = [];
                 const checkField = field as OptionableFieldUI;
                 checkField.allowedValues.forEach((value) => {
                     checkboxItems.push(
@@ -1219,13 +1205,13 @@ export abstract class AbstractIssueEditorPage<
                     );
                 }
 
-                let radioItems: any[] = [];
+                const radioItems: any[] = [];
                 const radioField = field as OptionableFieldUI;
                 radioField.allowedValues.forEach((value) => {
                     radioItems.push({ name: field.key, label: value.value, value: value.id });
                 });
 
-                let validateFunc = field.required ? FieldValidators.validateMultiSelect : undefined;
+                const validateFunc = field.required ? FieldValidators.validateMultiSelect : undefined;
                 return (
                     <Field
                         label={field.name}
@@ -1249,7 +1235,7 @@ export abstract class AbstractIssueEditorPage<
                 );
             }
             case UIType.Timetracking: {
-                let validateFunc = this.getValidateFunction(field, editmode);
+                const validateFunc = this.getValidateFunction(field, editmode);
                 if (editmode) {
                     const hasValue: boolean =
                         this.state.fieldValues[field.key] &&
@@ -1353,7 +1339,7 @@ export abstract class AbstractIssueEditorPage<
                 if (editmode) {
                     return <div>don't call getInputMarkup for worklog in editmode</div>;
                 }
-                let validateFunc = FieldValidators.validateString;
+                const validateFunc = FieldValidators.validateString;
                 return (
                     <React.Fragment>
                         <div style={{ display: field.required ? 'none' : 'block' }}>
@@ -1545,7 +1531,7 @@ export abstract class AbstractIssueEditorPage<
         }
 
         // catch-all for unknown field types
-        let validateFunc = field.required ? FieldValidators.validateString : undefined;
+        const validateFunc = field.required ? FieldValidators.validateString : undefined;
 
         if (editmode) {
             return (
@@ -1694,7 +1680,7 @@ export abstract class AbstractIssueEditorPage<
     }
 
     private getValidateFunction(field: FieldUI, editmode: boolean = false): FuncOrUndefined {
-        let valType = field.valueType;
+        const valType = field.valueType;
         let valfunc = undefined;
 
         switch (valType) {

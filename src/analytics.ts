@@ -21,7 +21,7 @@ export const Registry = {
 };
 
 class AnalyticsPlatform {
-    private static nodeJsPlatformMapping: Record<string, string> = {
+    private static nodeJsPlatformMapping: Record<NodeJS.Platform, string> = {
         aix: 'desktop',
         android: 'android',
         darwin: 'mac',
@@ -31,9 +31,11 @@ class AnalyticsPlatform {
         sunos: 'desktop',
         win32: 'windows',
         cygwin: 'windows',
+        haiku: 'unknown',
+        netbsd: 'unknown',
     };
 
-    static for(p: string): string {
+    static for(p: NodeJS.Platform): string {
         return this.nodeJsPlatformMapping[p] || 'unknown';
     }
 }
@@ -57,13 +59,13 @@ export async function launchedEvent(location: string): Promise<TrackEvent> {
 }
 
 export async function featureChangeEvent(featureId: string, enabled: boolean): Promise<TrackEvent> {
-    let action = enabled ? 'enabled' : 'disabled';
+    const action = enabled ? 'enabled' : 'disabled';
     return trackEvent(action, 'feature', { actionSubjectId: featureId });
 }
 
-export async function authenticatedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
+export async function authenticatedEvent(site: DetailedSiteInfo, isOnboarding?: boolean): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'authenticated', 'atlascode', {
-        attributes: { machineId: Container.machineId, hostProduct: site.product.name },
+        attributes: { machineId: Container.machineId, hostProduct: site.product.name, onboarding: isOnboarding },
     });
 }
 
@@ -107,8 +109,13 @@ export async function issueCommentEvent(site: DetailedSiteInfo): Promise<TrackEv
     return instanceTrackEvent(site, 'created', 'issueComment');
 }
 
-export async function issueWorkStartedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'workStarted', 'issue');
+export async function issueWorkStartedEvent(
+    site: DetailedSiteInfo,
+    pushBranchToRemoteChecked: boolean,
+): Promise<TrackEvent> {
+    const attributesObject = instanceType({}, site);
+    attributesObject.attributes.pushBranchToRemoteChecked = pushBranchToRemoteChecked;
+    return instanceTrackEvent(site, 'workStarted', 'issue', attributesObject);
 }
 
 export async function issueUpdatedEvent(
@@ -164,7 +171,7 @@ export async function prCommentEvent(site: DetailedSiteInfo): Promise<TrackEvent
 }
 
 export async function prTaskEvent(site: DetailedSiteInfo, source: string): Promise<TrackEvent> {
-    let attributesObject: any = instanceType({}, site);
+    const attributesObject = instanceType({}, site);
     attributesObject.attributes.source = source;
     return trackEvent('created', 'pullRequestComment', attributesObject);
 }
@@ -590,7 +597,7 @@ async function instanceTrackEvent(
     actionSubject: string,
     eventProps: any = {},
 ): Promise<TrackEvent> {
-    let event: TrackEvent =
+    const event: TrackEvent =
         site.isCloud && site.product.key === ProductJira.key
             ? await tenantTrackEvent(site.id, action, actionSubject, instanceType(eventProps, site))
             : await trackEvent(action, actionSubject, instanceType(eventProps, site));
@@ -623,7 +630,7 @@ async function tenantTrackEvent(
 }
 
 function event(action: string, actionSubject: string, attributes: any): any {
-    var event = {
+    const event = {
         origin: 'desktop',
         platform: AnalyticsPlatform.for(process.platform),
         action: action,
@@ -648,43 +655,36 @@ function anyUserOrAnonymous<T>(e: Object): T {
 
 function tenantOrNull<T>(e: Object, tenantId?: string): T {
     let tenantType: string | null = 'cloudId';
-    let newObj: Object;
 
     if (!tenantId) {
         tenantType = null;
     }
-    newObj = { ...e, ...{ tenantIdType: tenantType, tenantId: tenantId } };
 
+    const newObj: Object = { ...e, ...{ tenantIdType: tenantType, tenantId: tenantId } };
     return newObj as T;
 }
 
-function instanceType(eventProps: Object, site?: DetailedSiteInfo, product?: Product): Object {
-    let attrs: Object | undefined = undefined;
-    let newObj = eventProps as Record<string, object>;
-
+function instanceType(
+    eventProps: Record<string, any>,
+    site?: DetailedSiteInfo,
+    product?: Product,
+): Record<string, any> {
     if (product) {
-        attrs = { hostProduct: product.name };
+        eventProps.attributes = eventProps.attributes || {};
+        eventProps.attributes.hostProduct = product.name;
     }
 
     if (site && !isEmptySiteInfo(site)) {
-        const instanceType: string = site.isCloud ? 'cloud' : 'server';
-        attrs = { instanceType: instanceType, hostProduct: site.product.name };
+        eventProps.attributes = eventProps.attributes || {};
+        eventProps.attributes.instanceType = site.isCloud ? 'cloud' : 'server';
+        eventProps.attributes.hostProduct = site.product.name;
     }
 
-    if (attrs) {
-        newObj['attributes'] = { ...newObj['attributes'], ...attrs };
-    }
-
-    return newObj;
+    return eventProps;
 }
 
-function excludeFromActivity(eventProps: Object): Object {
-    let newObj = eventProps as Record<string, object>;
-
-    if (newObj['attributes']) {
-        newObj['attributes'] = { ...newObj['attributes'], ...{ excludeFromActivity: true } };
-    } else {
-        Object.assign(newObj, { attributes: { excludeFromActivity: true } });
-    }
-    return newObj;
+function excludeFromActivity(eventProps: Record<string, any>): Record<string, any> {
+    eventProps.attributes = eventProps.attributes || {};
+    eventProps.attributes.excludeFromActivity = true;
+    return eventProps;
 }

@@ -86,7 +86,7 @@ export function useFormValidation<FieldTypes>(watch?: Partial<FieldTypes>): Form
     const watchDefaults = useRef<Partial<FieldTypes>>(watch ? watch : {});
     const watches = useRef<Partial<FieldTypes>>(watch ? watch : {});
     const errors = useRef<Partial<Errors<FieldTypes>>>({});
-    const [_toggle, reRender] = useState(false);
+    const [, reRender] = useState(false);
 
     const handleChange = useConstant(() => async (e: Event) => {
         const field = fields[(e.target as InputElement).name];
@@ -136,7 +136,7 @@ export function useFormValidation<FieldTypes>(watch?: Partial<FieldTypes>): Form
                 }
 
                 //TODO: add an option to validate all fields before submitting.
-                let fieldValues: any = {};
+                const fieldValues: any = {};
                 try {
                     for (const field of Object.values<FieldDescriptor>(fields)) {
                         if (field) {

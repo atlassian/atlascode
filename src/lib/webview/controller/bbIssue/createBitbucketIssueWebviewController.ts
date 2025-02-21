@@ -53,7 +53,7 @@ export class CreateBitbucketIssueWebviewController implements WebviewController<
                 site: this.site,
             });
         } catch (e) {
-            let err = new Error(`error updating the view: ${e}`);
+            const err = new Error(`error updating the view: ${e}`);
             this.logger.error(err);
             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
         } finally {

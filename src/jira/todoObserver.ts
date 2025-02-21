@@ -41,8 +41,8 @@ function findTodos(document: TextDocument) {
 
         Regex string will have form: (^|\W)((trigger1)|(trigger2)|...|(triggerN))
     */
-    let regexTrigger: string = triggers.map((t) => `(${t.replace(/(\W)/g, '\\$1')})`).join('|'); //Creates string of form (trigger1)|(trigger2)|...|(triggerN)
-    let regexString: string = `(^|\\W)(${regexTrigger})`;
+    const regexTrigger: string = triggers.map((t) => `(${t.replace(/(\W)/g, '\\$1')})`).join('|'); //Creates string of form (trigger1)|(trigger2)|...|(triggerN)
+    const regexString: string = `(^|\\W)(${regexTrigger})`;
     const masterRegex = new RegExp(regexString);
 
     //Search through the document line by line

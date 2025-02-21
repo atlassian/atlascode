@@ -17,6 +17,7 @@ export interface StartWorkActionApi {
         destinationBranch: string,
         sourceBranch: Branch,
         remote: string,
+        pushBranchToRemote: boolean,
     ): Promise<void>;
     closePage(): void;
     getStartWorkConfig(): StartWorkBranchTemplate;

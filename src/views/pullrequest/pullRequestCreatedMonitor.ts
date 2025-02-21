@@ -4,6 +4,7 @@ import { BitbucketContext } from '../../bitbucket/bbContext';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { Commands } from '../../commands';
 import { Logger } from '../../logger';
+import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 
 export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
     private _lastCheckedTime = new Map<String, Date>();
@@ -28,7 +29,7 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                         : new Date();
                     this._lastCheckedTime.set(wsRepo.rootUri, new Date());
 
-                    let newPRs = prList.data.filter((i) => {
+                    const newPRs = prList.data.filter((i) => {
                         const timestamp = typeof i.data.ts === 'number' ? i.data.ts : Date.parse(i.data.ts!);
                         return timestamp > lastChecked.getTime();
                     });
@@ -43,7 +44,7 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
             .then((result) => result.reduce((prev, curr) => prev.concat(curr), []))
             .then((allPRs) => {
                 if (allPRs.length === 1) {
-                    let repoName = path.basename(allPRs[0].site.repoSlug);
+                    const repoName = path.basename(allPRs[0].site.repoSlug);
                     vscode.window
                         .showInformationMessage(
                             `New pull request "${allPRs[0].data.title}" for repo "${repoName}"`,
@@ -55,7 +56,7 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                             }
                         });
                 } else if (allPRs.length > 0) {
-                    let repoNames = [...new Set(allPRs.map((r) => path.basename(r.site.repoSlug)))].join(', ');
+                    const repoNames = [...new Set(allPRs.map((r) => path.basename(r.site.repoSlug)))].join(', ');
                     vscode.window
                         .showInformationMessage(
                             `New pull requests found for the following repositories: ${repoNames}`,

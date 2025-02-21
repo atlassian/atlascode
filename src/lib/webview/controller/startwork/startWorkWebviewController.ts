@@ -6,6 +6,8 @@ import { CommonActionType } from '../../../ipc/fromUI/common';
 import { StartWorkAction, StartWorkActionType } from '../../../ipc/fromUI/startWork';
 import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
+// eslint-disable-next-line no-restricted-imports
+import { Container } from '../../../../container';
 import {
     BranchType,
     emptyStartWorkIssueMessage,
@@ -105,7 +107,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 ...this.api.getStartWorkConfig(),
             });
         } catch (e) {
-            let err = new Error(`error updating start work page: ${e}`);
+            const err = new Error(`error updating start work page: ${e}`);
             this.logger.error(err);
             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
         } finally {
@@ -132,6 +134,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                             msg.targetBranch,
                             msg.sourceBranch,
                             msg.upstream,
+                            msg.pushBranchToRemote,
                         );
                     }
                     this.postMessage({
@@ -140,7 +143,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                         branch: msg.branchSetupEnabled ? msg.targetBranch : undefined,
                         upstream: msg.branchSetupEnabled ? msg.upstream : undefined,
                     });
-                    this.analytics.fireIssueWorkStartedEvent(this.initData.issue.siteDetails);
+                    this.analytics.fireIssueWorkStartedEvent(this.initData.issue.siteDetails, msg.pushBranchToRemote);
                 } catch (e) {
                     this.logger.error(new Error(`error executing start work action: ${e}`));
                     this.postMessage({
@@ -156,6 +159,49 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
             }
             case StartWorkActionType.OpenSettings: {
                 this.api.openSettings(msg.section, msg.subsection);
+                break;
+            }
+            case StartWorkActionType.GetImage: {
+                try {
+                    const siteDetails = JSON.parse(msg.siteDetailsStringified);
+                    const baseApiUrl = new URL(
+                        siteDetails.baseApiUrl.slice(0, siteDetails.baseApiUrl.lastIndexOf('/rest')),
+                    );
+                    // Prefix base URL for a relative URL
+                    const href = msg.url.startsWith('/') ? new URL(baseApiUrl.href + msg.url) : new URL(msg.url);
+                    // Skip fetching external images (that do not belong to the site)
+                    if (href.hostname !== baseApiUrl.hostname) {
+                        this.postMessage({
+                            type: 'getImageDone',
+                            imgData: '',
+                            nonce: msg.nonce,
+                        } as any);
+                    }
+
+                    const url = href.toString();
+
+                    const client = await Container.clientManager.jiraClient(siteDetails);
+                    const response = await client.transportFactory().get(url, {
+                        method: 'GET',
+                        headers: {
+                            Authorization: await client.authorizationProvider('GET', url),
+                        },
+                        responseType: 'arraybuffer',
+                    });
+                    const imgData = Buffer.from(response.data, 'binary').toString('base64');
+                    this.postMessage({
+                        type: 'getImageDone',
+                        imgData: imgData,
+                        nonce: msg.nonce,
+                    } as any);
+                } catch {
+                    this.logger.error(new Error(`error fetching image: ${msg.url}`));
+                    this.postMessage({
+                        type: 'getImageDone',
+                        imgData: '',
+                        nonce: msg.nonce,
+                    } as any);
+                }
                 break;
             }
             case CommonActionType.Refresh: {

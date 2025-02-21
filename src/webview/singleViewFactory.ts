@@ -119,15 +119,17 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
             const { id, site, product } = this._controller.screenDetails();
             this._analyticsApi.fireViewScreenEvent(id, site, product);
         } else {
+            if (this._controller) {
+                this._controller.update(factoryData);
+                this._panel.title = this._controller.title();
+            }
+
             this._panel.webview.html = this._controllerFactory.webviewHtml(
                 this._extensionPath,
                 this._panel.webview.asWebviewUri(Uri.file(this._extensionPath)),
                 this._panel.webview.cspSource,
             );
             this._panel.reveal(column ? column : ViewColumn.Active); // , false);
-            if (this._controller) {
-                this._controller.update(factoryData);
-            }
         }
 
         // Send feature gates to the panel in a message

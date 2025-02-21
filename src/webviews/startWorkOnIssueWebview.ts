@@ -69,7 +69,6 @@ export class StartWorkOnIssueWebview
             });
         }
         this.updateIssue(data);
-        return;
     }
 
     public async invalidate() {
@@ -113,6 +112,7 @@ export class StartWorkOnIssueWebview
                                     e.targetBranchName,
                                     e.sourceBranch,
                                     e.remoteName,
+                                    e.pushBranchToRemote,
                                 );
                             }
                             const currentUserId = issue.siteDetails.userId;
@@ -132,7 +132,7 @@ export class StartWorkOnIssueWebview
                                         : ''
                                 }</ul>`,
                             });
-                            issueWorkStartedEvent(issue.siteDetails).then((e) => {
+                            issueWorkStartedEvent(issue.siteDetails, e.pushBranchToRemote).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
@@ -151,6 +151,7 @@ export class StartWorkOnIssueWebview
         destBranch: string,
         sourceBranch: Branch,
         remote: string,
+        pushBranchToRemote: boolean,
     ): Promise<void> {
         // checkout if a branch exists already
         try {
@@ -158,14 +159,14 @@ export class StartWorkOnIssueWebview
             await repo.getBranch(destBranch);
             await repo.checkout(destBranch);
             return;
-        } catch (_) {}
+        } catch {}
 
         // checkout if there's a matching remote branch (checkout will track remote branch automatically)
         try {
             await repo.getBranch(`remotes/${remote}/${destBranch}`);
             await repo.checkout(destBranch);
             return;
-        } catch (_) {}
+        } catch {}
 
         // no existing branches, create a new one
         await repo.createBranch(
@@ -173,8 +174,10 @@ export class StartWorkOnIssueWebview
             true,
             `${sourceBranch.type === RefType.RemoteHead ? 'remotes/' : ''}${sourceBranch.name}`,
         );
-        await repo.push(remote, destBranch, true);
-        return;
+
+        if (pushBranchToRemote) {
+            await repo.push(remote, destBranch, true);
+        }
     }
 
     public async updateIssue(issue: MinimalIssue<DetailedSiteInfo>) {
@@ -241,7 +244,7 @@ export class StartWorkOnIssueWebview
                     }),
             );
 
-            let issueClone: MinimalIssue<DetailedSiteInfo> = JSON.parse(JSON.stringify(issue));
+            const issueClone: MinimalIssue<DetailedSiteInfo> = JSON.parse(JSON.stringify(issue));
             // best effort to set issue to in-progress
             if (!issueClone.status.name.toLowerCase().includes('progress')) {
                 const inProgressTransition = issueClone.transitions.find(
@@ -263,7 +266,7 @@ export class StartWorkOnIssueWebview
             };
             this.postMessage(msg);
         } catch (e) {
-            let err = new Error(`error updating issue: ${e}`);
+            const err = new Error(`error updating issue: ${e}`);
             Logger.error(err);
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
@@ -272,10 +275,10 @@ export class StartWorkOnIssueWebview
     }
 
     private async forceUpdateIssue() {
-        let key = this._state.key;
+        const key = this._state.key;
         if (key !== '') {
             try {
-                let issue = await fetchMinimalIssue(key, this._state.siteDetails);
+                const issue = await fetchMinimalIssue(key, this._state.siteDetails);
                 this.updateIssue(issue);
             } catch (e) {
                 Logger.error(e);

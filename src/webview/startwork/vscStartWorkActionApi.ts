@@ -50,6 +50,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         destinationBranch: string,
         sourceBranch: Branch,
         remote: string,
+        pushBranchToRemote: boolean,
     ): Promise<void> {
         const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
 
@@ -59,14 +60,14 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
             await scm.getBranch(destinationBranch);
             await scm.checkout(destinationBranch);
             return;
-        } catch (_) {}
+        } catch {}
 
         // checkout if there's a matching remote branch (checkout will track remote branch automatically)
         try {
             await scm.getBranch(`remotes/${remote}/${destinationBranch}`);
             await scm.checkout(destinationBranch);
             return;
-        } catch (_) {}
+        } catch {}
 
         // no existing branches, create a new one
         await scm.createBranch(
@@ -74,8 +75,10 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
             true,
             `${sourceBranch.type === RefType.RemoteHead ? 'remotes/' : ''}${sourceBranch.name}`,
         );
-        await scm.push(remote, destinationBranch, true);
-        return;
+
+        if (pushBranchToRemote) {
+            await scm.push(remote, destinationBranch, true);
+        }
     }
 
     getStartWorkConfig(): StartWorkBranchTemplate {

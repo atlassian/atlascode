@@ -64,7 +64,7 @@ export class BitbucketResponseHandler extends ResponseHandler {
                         email = primary[0].email;
                     }
                 }
-            } catch (e) {
+            } catch {
                 //ignore
             }
 

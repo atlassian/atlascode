@@ -6,6 +6,7 @@ import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 
 export enum ConfigActionType {
     Login = 'login',
+    RemoteLogin = 'remoteLogin',
     Logout = 'logout',
     SaveSettings = 'saveSettings',
     OpenJSON = 'openJson',
@@ -22,6 +23,7 @@ export enum ConfigActionType {
 
 export type ConfigAction =
     | ReducerAction<ConfigActionType.Login, LoginAuthAction>
+    | ReducerAction<ConfigActionType.RemoteLogin>
     | ReducerAction<ConfigActionType.Logout, LogoutAuthAction>
     | ReducerAction<ConfigActionType.SaveSettings, SaveSettingsAction>
     | ReducerAction<ConfigActionType.OpenJSON, OpenJsonAction>

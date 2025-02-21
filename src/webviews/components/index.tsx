@@ -4,7 +4,9 @@ import './App.css';
 
 // @ts-ignore
 // __webpack_public_path__ is used to set the public path for the js files - https://webpack.js.org/guides/public-path/
+// eslint-disable-next-line no-var
 declare var __webpack_public_path__: string;
+// eslint-disable-next-line no-unused-vars
 __webpack_public_path__ = `${document.baseURI!}build/`;
 
 const routes: Record<string, any> = {
