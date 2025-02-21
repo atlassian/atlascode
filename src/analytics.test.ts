@@ -20,11 +20,8 @@ function setProcessPlatform(platform: NodeJS.Platform) {
 describe('viewScreenEvent', () => {
     const originalPlatform = process.platform;
 
-    beforeAll(() => {
-        setProcessPlatform('win32');
-    });
-
     beforeEach(() => {
+        setProcessPlatform('win32');
         mockedData.getFirstAAID_value = true;
     });
 

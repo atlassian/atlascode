@@ -21,7 +21,7 @@ export const Registry = {
 };
 
 class AnalyticsPlatform {
-    private static nodeJsPlatformMapping: Record<string, any> = {
+    private static nodeJsPlatformMapping: Record<NodeJS.Platform, string> = {
         aix: 'desktop',
         android: 'android',
         darwin: 'mac',
@@ -31,9 +31,11 @@ class AnalyticsPlatform {
         sunos: 'desktop',
         win32: 'windows',
         cygwin: 'windows',
+        haiku: 'unknown',
+        netbsd: 'unknown',
     };
 
-    static for(p: string): string {
+    static for(p: NodeJS.Platform): string {
         return this.nodeJsPlatformMapping[p] || 'unknown';
     }
 }
