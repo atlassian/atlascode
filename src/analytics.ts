@@ -674,7 +674,7 @@ function instanceType(
     }
 
     if (site && !isEmptySiteInfo(site)) {
-        eventProps.attributes.instanceType = instanceType;
+        eventProps.attributes.instanceType = site.isCloud ? 'cloud' : 'server';
         eventProps.attributes.hostProduct = site.product.name;
     }
 
