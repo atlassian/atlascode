@@ -133,9 +133,20 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
         }
 
         // Send feature gates to the panel in a message
-        const featureFlags = await FeatureFlagClient.evaluateFeatures();
-        console.log(`FeatureGates: sending ${JSON.stringify(featureFlags)}`);
-        this.postMessage({ command: CommonMessageType.UpdateFeatureFlags, featureFlags: featureFlags });
+        this.fireFeatureGates();
+        this.fireExperimentGates();
+    }
+
+    private async fireFeatureGates() {
+        const featureGates = await FeatureFlagClient.evaluateFeatures();
+        console.log(`FeatureGates: sending ${JSON.stringify(featureGates)}`);
+        this.postMessage({ command: CommonMessageType.UpdateFeatureFlags, featureFlags: featureGates });
+    }
+
+    private async fireExperimentGates() {
+        const experimentValues = await FeatureFlagClient.evaluateExperiments();
+        console.log(`ExperimentValues: sending ${JSON.stringify(experimentValues)}`);
+        this.postMessage({ command: CommonMessageType.UpdateExperimentValues, experimentValues });
     }
 
     private onViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {

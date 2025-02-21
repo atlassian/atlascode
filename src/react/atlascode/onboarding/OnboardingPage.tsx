@@ -21,6 +21,7 @@ import { CommonMessageType } from 'src/lib/ipc/toUI/common';
 import { OnboardingActionType } from 'src/lib/ipc/fromUI/onboarding';
 import { JiraOnboarding } from './JiraOnboarding';
 import { BitbucketOnboarding } from './BitbucketOnboarding';
+import { Experiments } from 'src/util/featureFlags/features';
 
 const useStyles = makeStyles((theme: Theme) => ({
     root: {
@@ -61,6 +62,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
     const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry } = useAuthDialog();
     const [activeStep, setActiveStep] = React.useState(0);
     const [useAuthUI, setUseAuthUI] = React.useState(false);
+    const [useAuthExperiment, setUseAuthExperiment] = React.useState(false);
     const [jiraSignInText, setJiraSignInText] = useState('Sign In to Jira Cloud');
     const [bitbucketSignInText, setBitbucketSignInText] = useState('Sign In to Bitbucket Cloud');
     const [jiraSignInFlow, setJiraSignInFlow] = useState(jiraValueSet.cloud);
@@ -72,9 +74,21 @@ export const OnboardingPage: React.FunctionComponent = () => {
             if (message.command === CommonMessageType.UpdateFeatureFlags) {
                 const featureValue = message.featureFlags[Features.EnableAuthUI];
                 setUseAuthUI(featureValue);
+            } else if (message.command === CommonMessageType.UpdateExperimentValues) {
+                let experimentValue: boolean;
+                try {
+                    experimentValue = message.experimentValues[Experiments.NewAuthUIAA] as boolean;
+                } catch {
+                    controller.postMessage({
+                        type: OnboardingActionType.Error,
+                        error: new Error(`Experiment value not found`),
+                    });
+                    experimentValue = false;
+                }
+                setUseAuthExperiment(experimentValue);
             }
         });
-    }, []);
+    }, [controller]);
     function getSteps() {
         if (useAuthUI) {
             return ['Setup Jira', 'Setup BitBucket', 'Explore'];
@@ -362,7 +376,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                     padding: '24px',
                                 }}
                             >
-                                {useAuthUI ? authUI_v1 : oldAuthUI}
+                                {useAuthUI && useAuthExperiment ? authUI_v1 : oldAuthUI}
                             </Box>
                         </div>
                     </Container>

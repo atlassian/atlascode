@@ -2,7 +2,7 @@ import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
 
 import FeatureGates, { FeatureGateEnvironment, Identifiers } from '@atlaskit/feature-gate-js-client';
 import { AnalyticsClientMapper, EventBuilderInterface } from './analytics';
-import { Features } from './features';
+import { ExperimentGates, Experiments, Features } from './features';
 
 export type FeatureFlagClientOptions = {
     analyticsClient: AnalyticsClient;
@@ -66,6 +66,22 @@ export class FeatureFlagClient {
         return gateValue;
     }
 
+    public static checkExperimentValue(experiment: string): any {
+        let gateValue: any = undefined;
+        if (FeatureGates === null) {
+            console.warn('FeatureGates: FeatureGates is not initialized. Defaulting to Undefined');
+        } else {
+            console.log(ExperimentGates[experiment]);
+            gateValue = FeatureGates.getExperimentValue(
+                ExperimentGates[experiment].gate,
+                ExperimentGates[experiment].parameter,
+                ExperimentGates[experiment].defaultValue,
+            );
+        }
+        console.log(`ExperimentGateValue: ${experiment} -> ${gateValue}`);
+        return gateValue;
+    }
+
     public static async evaluateFeatures() {
         const featureFlags = await Promise.all(
             Object.values(Features).map(async (feature) => {
@@ -77,5 +93,17 @@ export class FeatureFlagClient {
         );
 
         return featureFlags.reduce((acc, val) => ({ ...acc, ...val }), {});
+    }
+
+    public static async evaluateExperiments() {
+        const experimentGates = await Promise.all(
+            Object.values(Experiments).map(async (experiment) => {
+                return {
+                    [experiment]: await this.checkExperimentValue(experiment),
+                };
+            }),
+        );
+
+        return experimentGates.reduce((acc, val) => ({ ...acc, ...val }), {});
     }
 }
