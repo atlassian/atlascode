@@ -95,7 +95,7 @@ const StartWorkPage: React.FunctionComponent = () => {
 
     const [transitionIssueEnabled, setTransitionIssueEnabled] = useState(true);
     const [branchSetupEnabled, setbranchSetupEnabled] = useState(true);
-    const [pushBranchEnabled, setPushBranchEnabled] = useState(false);
+    const [pushBranchEnabled, setPushBranchEnabled] = useState(true);
     const [transition, setTransition] = useState<Transition>(emptyTransition);
     const [repository, setRepository] = useState<RepoData>(emptyRepoData);
     const [branchType, setBranchType] = useState<BranchType>(emptyPrefix);

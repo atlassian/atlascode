@@ -132,7 +132,7 @@ export class StartWorkOnIssueWebview
                                         : ''
                                 }</ul>`,
                             });
-                            issueWorkStartedEvent(issue.siteDetails).then((e) => {
+                            issueWorkStartedEvent(issue.siteDetails, e.pushBranchToRemote).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
