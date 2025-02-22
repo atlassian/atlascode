@@ -207,7 +207,7 @@ export interface FileDiff {
         newPathDeletions: number[];
         // maps destination file line number to source file line number to support Bitbucket server comments
         // NOT using Map here as Map does not serialize to JSON
-        newPathContextMap: Object;
+        newPathContextMap: Record<string, number>;
     };
 
     // Indicates whether or not the file has a conflict. Only defined on topic diffs - recent (approx 2022 and forward) BB server diffs.

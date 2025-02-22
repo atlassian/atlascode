@@ -137,7 +137,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     handleSubmit = async (e: any) => {
         const requiredFields = Object.values(this.state.fields).filter((field) => field.required);
 
-        const errs = {};
+        const errs: Record<string, string> = {};
         requiredFields.forEach((field: FieldUI) => {
             if (field.uiType === UIType.Worklog && this.state.fieldValues[`${field.key}.enabled`]) {
                 const timeSpent = this.state.fieldValues[`${field.key}.timeSpent`];
@@ -232,7 +232,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         }
 
         if (field.key.indexOf('.') > -1) {
-            let valObj = {};
+            let valObj: Record<string, string> = {};
             const splits = field.key.split('.');
             fieldkey = splits[0];
             if (this.state.fieldValues[splits[0]]) {

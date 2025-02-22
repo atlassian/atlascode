@@ -8,7 +8,7 @@ import { descriptionForState, generatePipelineTitle, shouldDisplay } from './Hel
 import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 
 export class PipelinesMonitor implements BitbucketActivityMonitor {
-    private _previousResults: Map<string, Pipeline[]> = new Map();
+    private _previousResults: Record<string, Pipeline[]> = {};
 
     constructor(private _repositories: WorkspaceRepo[]) {}
 

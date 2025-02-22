@@ -110,7 +110,7 @@ export class HTTPClient {
         let url = `${this.baseUrl}${urlSlug}`;
         url = HTTPClient.addQueryParams(url, queryParams);
 
-        const headers = {
+        const headers: Record<string, string> = {
             accept: 'application/octet-stream',
         };
 

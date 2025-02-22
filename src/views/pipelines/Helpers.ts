@@ -38,7 +38,7 @@ export function descriptionForState(
     truncateCommitMessage: boolean,
     excludePipelinePrefix?: boolean,
 ): string {
-    const descriptionForResult = {
+    const descriptionForResult: Record<string, string> = {
         pipeline_state_completed_successful: 'was successful',
         pipeline_state_completed_failed: 'has failed',
         pipeline_state_completed_error: 'has failed',

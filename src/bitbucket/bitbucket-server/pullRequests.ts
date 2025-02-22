@@ -81,7 +81,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
-        const query = {
+        const query: Record<string, any> = {
             'username.1': await this.userName(workspaceRepo),
             'role.1': 'REVIEWER',
         };

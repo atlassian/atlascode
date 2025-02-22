@@ -57,7 +57,7 @@ export interface PRFileDiffQueryParams extends FileDiffQueryParams {
     commentThreads: Comment[][];
     addedLines: number[];
     deletedLines: number[];
-    lineContextMap: Object;
+    lineContextMap: Record<string, number>;
 }
 
 export function getInlineComments(allComments: Comment[]): Map<string, Comment[][]> {

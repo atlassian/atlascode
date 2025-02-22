@@ -13,7 +13,7 @@ import { strategyForProvider } from './strategy';
 // it.each is not found without this:
 import { it } from '@jest/globals';
 
-const expectedData = {
+const expectedData: any = {
     bbcloud: {
         provider: 'bbcloud',
         authorizeUrl:

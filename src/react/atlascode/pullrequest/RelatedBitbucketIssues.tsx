@@ -14,7 +14,7 @@ import React from 'react';
 import { BitbucketIssue } from '../../../bitbucket/model';
 import Lozenge from '../common/Lozenge';
 
-const StatusRenderer = {
+const StatusRenderer: Record<string, JSX.Element> = {
     new: <Lozenge appearance="new" label="new" />,
     open: <Lozenge appearance="inprogress" label="open" />,
     resolved: <Lozenge appearance="success" label="resolved" />,

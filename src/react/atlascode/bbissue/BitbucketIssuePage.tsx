@@ -40,7 +40,7 @@ import UserPicker from './UserPicker';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
 
-const priorityIcon = {
+const priorityIcon: Record<string, JSX.Element> = {
     trivial: <RadioButtonUncheckedIcon />,
     minor: <ArrowDownwardIcon />,
     major: <KeyboardArrowUpIcon />,
@@ -48,7 +48,7 @@ const priorityIcon = {
     blocker: <BlockIcon />,
 };
 
-const typeIcon = {
+const typeIcon: Record<string, JSX.Element> = {
     bug: <BugReportIcon />,
     enhancement: <ArrowUpwardIcon />,
     proposal: <EmojiObjectsIcon />,

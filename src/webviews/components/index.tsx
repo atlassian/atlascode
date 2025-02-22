@@ -9,7 +9,7 @@ declare var __webpack_public_path__: string;
 // eslint-disable-next-line no-unused-vars
 __webpack_public_path__ = `${document.baseURI!}build/`;
 
-const routes = {
+const routes: Record<string, any> = {
     viewIssueScreen: React.lazy(() => import(/* webpackChunkName: "viewIssueScreen" */ './issue/JiraIssuePage')),
     atlascodeCreateIssueScreen: React.lazy(
         () => import(/* webpackChunkName: "atlascodeCreateIssueScreen" */ './issue/CreateIssuePage'),
