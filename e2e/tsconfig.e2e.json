@@ -23,5 +23,5 @@
         "noUnusedLocals": true,
         "typeRoots": ["node_modules/@types", "src/typings/"]
     },
-    "include": ["tests/**/*"]
+    "include": ["tests/**/*", "jest.config.js"]
 }

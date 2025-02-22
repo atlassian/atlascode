@@ -1,4 +1,3 @@
-import { expect } from '@jest/globals';
 import { before, ActivityBar, after, SideBarView, By, EditorView, Workbench } from 'vscode-extension-tester';
 
 describe('Atlassian Extension Activity Bar', async () => {
