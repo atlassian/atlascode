@@ -17,7 +17,7 @@ export const ExperimentGates: ExperimentGate = {
     [Experiments.NewAuthUIAA]: {
         gate: 'atlascode_new_auth_ui_aa',
         parameter: 'isEnabled',
-        defaultValue: `bruh`,
+        defaultValue: false,
     },
 };
 

@@ -67,15 +67,18 @@ export class FeatureFlagClient {
     }
 
     public static checkExperimentValue(experiment: string): any {
-        let gateValue: any = undefined;
+        let gateValue: any;
+        const experimentGate = ExperimentGates[experiment];
         if (FeatureGates === null) {
-            console.warn('FeatureGates: FeatureGates is not initialized. Defaulting to Undefined');
+            console.warn(
+                `FeatureGates: FeatureGates is not initialized. Returning default value: ${experimentGate.defaultValue}`,
+            );
         } else {
             console.log(ExperimentGates[experiment]);
             gateValue = FeatureGates.getExperimentValue(
-                ExperimentGates[experiment].gate,
-                ExperimentGates[experiment].parameter,
-                ExperimentGates[experiment].defaultValue,
+                experimentGate.gate,
+                experimentGate.parameter,
+                experimentGate.defaultValue,
             );
         }
         console.log(`ExperimentGateValue: ${experiment} -> ${gateValue}`);
