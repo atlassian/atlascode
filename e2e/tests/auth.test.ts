@@ -1,3 +1,4 @@
+import { expect } from '@jest/globals';
 import { before, after, EditorView, Workbench, By, ActivityBar, SideBarView } from 'vscode-extension-tester';
 
 describe('Auth User', async () => {
