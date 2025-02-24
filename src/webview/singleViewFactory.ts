@@ -16,7 +16,6 @@ import { CommonMessageType } from '../lib/ipc/toUI/common';
 import { WebviewController } from '../lib/webview/controller/webviewController';
 import { UIWebsocket } from '../ws';
 import { VSCWebviewControllerFactory } from './vscWebviewControllerFactory';
-import { FeatureFlagClient } from '../util/featureFlags';
 
 // ReactWebview is the interface for all basic webviews.
 // It takes FD as a generic type parameter that represents the type of "Factory Data" that will be
@@ -138,13 +137,13 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
     }
 
     private async fireFeatureGates() {
-        const featureGates = await FeatureFlagClient.evaluateFeatures();
+        const featureGates = Container.featureGates;
         console.log(`FeatureGates: sending ${JSON.stringify(featureGates)}`);
         this.postMessage({ command: CommonMessageType.UpdateFeatureFlags, featureFlags: featureGates });
     }
 
     private async fireExperimentGates() {
-        const experimentValues = await FeatureFlagClient.evaluateExperiments();
+        const experimentValues = Container.experimentGates;
         console.log(`ExperimentValues: sending ${JSON.stringify(experimentValues)}`);
         this.postMessage({ command: CommonMessageType.UpdateExperimentValues, experimentValues });
     }
