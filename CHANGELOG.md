@@ -4,6 +4,10 @@
 
 - Added a new toggle switch in 'Start work' page to choose if the new branch should be automatically pushed to remote.
 
+### Engineeering Excellence 
+
+- Updated the TypeScript compiler to 5.7.3.
+
 ## What's new in 3.4.7
 
 ### Features
