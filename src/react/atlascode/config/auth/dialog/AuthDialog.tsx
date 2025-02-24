@@ -196,7 +196,12 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                     </Grid>
                 </DialogContent>
                 <DialogActions>
-                    <Button disabled={!isValid} onClick={handleSubmit(handleSave)} variant="contained" color="primary">
+                    <Button
+                        disabled={!isValid && authFormType !== AuthFormType.None}
+                        onClick={handleSubmit(handleSave)}
+                        variant="contained"
+                        color="primary"
+                    >
                         Save Site
                     </Button>
                     <Button onClick={doClose} color="primary">
