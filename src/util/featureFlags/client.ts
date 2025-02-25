@@ -2,7 +2,7 @@ import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
 
 import FeatureGates, { FeatureGateEnvironment, Identifiers } from '@atlaskit/feature-gate-js-client';
 import { AnalyticsClientMapper, EventBuilderInterface } from './analytics';
-import { ExperimentGates, Experiments, Features } from './features';
+import { ExperimentGates, ExperimentGateValues, Experiments, FeatureGateValues, Features } from './features';
 
 export type FeatureFlagClientOptions = {
     analyticsClient: AnalyticsClient;
@@ -13,6 +13,15 @@ export type FeatureFlagClientOptions = {
 export class FeatureFlagClient {
     private static analyticsClient: AnalyticsClientMapper;
     private static eventBuilder: EventBuilderInterface;
+    private static _featureGates: FeatureGateValues;
+    static get featureGates(): FeatureGateValues {
+        return this._featureGates;
+    }
+
+    private static _experimentValues: ExperimentGateValues;
+    static get experimentValues(): ExperimentGateValues {
+        return this._experimentValues;
+    }
 
     public static async initialize(options: FeatureFlagClientOptions): Promise<void> {
         const targetApp = process.env.ATLASCODE_FX3_TARGET_APP || '';
@@ -45,6 +54,10 @@ export class FeatureFlagClient {
                     console.log(`FeatureGates: ${feat} -> ${FeatureGates.checkGate(feat)}`);
                 }
             })
+            .then(async () => {
+                this._featureGates = await this.evaluateFeatures();
+                this._experimentValues = await this.evaluateExperiments();
+            })
             .catch((err) => {
                 console.warn(`FeatureGates: Failed to initialize client. ${err}`);
                 console.warn('FeatureGates: Disabling feature flags');
@@ -68,18 +81,22 @@ export class FeatureFlagClient {
 
     public static checkExperimentValue(experiment: string): any {
         let gateValue: any;
-        const experimentGate = ExperimentGates[experiment];
-        if (FeatureGates === null) {
-            console.warn(
-                `FeatureGates: FeatureGates is not initialized. Returning default value: ${experimentGate.defaultValue}`,
-            );
-        } else {
-            console.log(ExperimentGates[experiment]);
-            gateValue = FeatureGates.getExperimentValue(
-                experimentGate.gate,
-                experimentGate.parameter,
-                experimentGate.defaultValue,
-            );
+        try {
+            const experimentGate = ExperimentGates[experiment];
+            if (FeatureGates === null) {
+                console.warn(
+                    `FeatureGates: FeatureGates is not initialized. Returning default value: ${experimentGate.defaultValue}`,
+                );
+            } else {
+                gateValue = FeatureGates.getExperimentValue(
+                    experimentGate.gate,
+                    experimentGate.parameter,
+                    experimentGate.defaultValue,
+                );
+            }
+        } catch {
+            console.warn(`FeatureGates: Failed to get experiment value for ${experiment}. Defaulting to undefined`);
+            gateValue = undefined;
         }
         console.log(`ExperimentGateValue: ${experiment} -> ${gateValue}`);
         return gateValue;
@@ -108,5 +125,9 @@ export class FeatureFlagClient {
         );
 
         return experimentGates.reduce((acc, val) => ({ ...acc, ...val }), {});
+    }
+
+    static dispose() {
+        FeatureGates.shutdownStatsig();
     }
 }

@@ -15,8 +15,9 @@ export const ExperimentGates: ExperimentGate = {
     },
 };
 
-type ExperimentGate = { [key: string]: { gate: string; parameter: string; defaultValue: any } };
+type ExperimentPayload = { gate: string; parameter: string; defaultValue: any };
+type ExperimentGate = Record<string, ExperimentPayload>;
 
-export type FeatureGates = { [key: string]: boolean };
+export type FeatureGateValues = Record<string, boolean>;
 
-export type ExperimentGateValues = { [key: string]: any };
+export type ExperimentGateValues = Record<string, any>;

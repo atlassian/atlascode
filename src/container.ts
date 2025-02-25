@@ -71,7 +71,6 @@ import { AtlascodeUriHandler } from './uriHandler';
 import { CheckoutHelper } from './bitbucket/interfaces';
 import { ProductJira } from './atlclients/authInfo';
 import { ATLASCODE_TEST_USER_EMAIL, ATLASCODE_TEST_HOST } from './constants';
-import { ExperimentGateValues, FeatureGates } from './util/featureFlags/features';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -205,13 +204,9 @@ export class Container {
                 analyticsAnonymousId: env.machineId,
             },
             eventBuilder: new EventBuilder(),
-        })
-            .then(() => {
-                this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
-            })
-            .then(() => {
-                this.checkGates();
-            });
+        }).then(() => {
+            this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
+        });
     }
 
     static getAnalyticsEnable(): boolean {
@@ -224,7 +219,7 @@ export class Container {
         analyticsApi: VSCAnalyticsApi,
         bitbucketHelper: CheckoutHelper,
     ) {
-        if (FeatureFlagClient.checkGate(Features.EnableNewUriHandler)) {
+        if (FeatureFlagClient.featureGates[Features.EnableNewUriHandler]) {
             console.log('Using new URI handler');
             context.subscriptions.push(AtlascodeUriHandler.create(analyticsApi, bitbucketHelper));
         } else {
@@ -389,10 +384,6 @@ export class Container {
         await Container.loginManager.userInitiatedServerLogin(site, authInfo);
     }
 
-    static async checkGates() {
-        this._featureGates = await FeatureFlagClient.evaluateFeatures();
-        this._experimentGates = await FeatureFlagClient.evaluateExperiments();
-    }
     private static _pullRequestDetailsWebviewFactory: MultiWebview<any, PullRequestDetailsAction>;
     static get pullRequestDetailsWebviewFactory() {
         return this._pullRequestDetailsWebviewFactory;
@@ -536,15 +527,5 @@ export class Container {
     private static _bitbucketHelper: CheckoutHelper;
     static get bitbucketHelper() {
         return this._bitbucketHelper;
-    }
-
-    private static _featureGates: FeatureGates;
-    static get featureGates() {
-        return this._featureGates;
-    }
-
-    private static _experimentGates: ExperimentGateValues;
-    static get experimentGates() {
-        return this._experimentGates;
     }
 }
