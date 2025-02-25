@@ -5,6 +5,7 @@ import { BitbucketContext } from '../bitbucket/bbContext';
 import { clientForSite } from '../bitbucket/bbUtils';
 import { Container } from '../container';
 import { PRFileDiffQueryParams } from './pullrequest/diffViewHelper';
+import { normalize } from 'src/normalize';
 
 //This class is responsible for fetching the text of a specific version of a file which may not be on your machine
 //Everytime the vscode.diff is invoked in this extension, it's using this file to fetch the data for both files.
@@ -58,6 +59,6 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
             );
         }
 
-        return content || '';
+        return normalize(content || '', uri);
     }
 }
