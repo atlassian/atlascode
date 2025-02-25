@@ -110,13 +110,13 @@ export function useFormValidation<FieldTypes>(watch?: Partial<FieldTypes>): Form
 
             if (field.validator) {
                 const errString = await field.validator(field.inputRef.name, field.inputRef.value);
-                if ((watches.current as any)[field.inputRef.name] !== errString) {
+                if ((errors.current as any)[field.inputRef.name] !== errString) {
                     needsReRender = true;
 
                     if (errString) {
                         errors.current = { ...errors.current, [field.inputRef.name]: errString };
                     } else {
-                        delete (watches.current as any)[field.inputRef.name];
+                        delete (errors.current as any)[field.inputRef.name];
                     }
                 }
             }
