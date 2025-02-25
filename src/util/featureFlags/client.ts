@@ -81,22 +81,21 @@ export class FeatureFlagClient {
 
     public static checkExperimentValue(experiment: string): any {
         let gateValue: any;
-        try {
-            const experimentGate = ExperimentGates[experiment];
-            if (FeatureGates === null) {
-                console.warn(
-                    `FeatureGates: FeatureGates is not initialized. Returning default value: ${experimentGate.defaultValue}`,
-                );
-            } else {
-                gateValue = FeatureGates.getExperimentValue(
-                    experimentGate.gate,
-                    experimentGate.parameter,
-                    experimentGate.defaultValue,
-                );
-            }
-        } catch {
-            console.warn(`FeatureGates: Failed to get experiment value for ${experiment}. Defaulting to undefined`);
-            gateValue = undefined;
+        const experimentGate = ExperimentGates[experiment];
+        if (!experimentGate) {
+            return undefined;
+        }
+        if (FeatureGates === null) {
+            console.warn(
+                `FeatureGates: FeatureGates is not initialized. Returning default value: ${experimentGate.defaultValue}`,
+            );
+            gateValue = experimentGate.defaultValue;
+        } else {
+            gateValue = FeatureGates.getExperimentValue(
+                experimentGate.gate,
+                experimentGate.parameter,
+                experimentGate.defaultValue,
+            );
         }
         console.log(`ExperimentGateValue: ${experiment} -> ${gateValue}`);
         return gateValue;
