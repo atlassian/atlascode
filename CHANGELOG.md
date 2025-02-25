@@ -1,3 +1,15 @@
+## What's new in 3.4.10
+
+### Bug Fixes
+
+- Forward fixed the bug in 3.4.8 for Server / Data Center users on Authentication
+
+## What's new in 3.4.9
+
+### Bug Fixes 
+
+- Rolled back 3.4.8 release as it contained a breaking bug for Server / Data Center users on Authentication
+
 ## What's new in 3.4.8
 
 ### Features
