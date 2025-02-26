@@ -1,0 +1,726 @@
+metadata:
+    product: externalProductIntegrations
+    subproduct: atlascode
+
+attributes:
+    - name: machineId
+      type: string
+      description: "the user's device id from vscode"
+      required: true
+    - name: hostProduct
+      type: string
+      description: 'which product'
+      required: true
+    - name: version
+      type: string
+      description: 'the version they installed'
+      required: true
+    - name: instanceType
+      type: string
+      description: 'the type of instance. (server | cloud)'
+
+# Extension lifecycle events
+track:
+    - id: 14545
+      action: installed
+      subject: atlascode
+      library: server
+      description: |
+          event when a user installs atlascode for the first time
+      attributes:
+          - name: machineId
+          - name: version
+    - id: 14546
+      action: upgraded
+      subject: atlascode
+      library: server
+      description: |
+          event when a user upgrades atlascode
+      attributes:
+          - name: machineId
+          - name: version
+          - name: previousVersion
+            type: string
+            description: 'the version they upgraded from'
+            required: true
+    - id: 16146
+      action: uninstalled
+      subject: atlascode
+      library: server
+      description: |
+          when a user uninstalls atlascode
+      attributes:
+          - name: machineId
+          - name: version
+    - id: 14547
+      action: enabled
+      subject: feature
+      library: server
+      description: |
+          event when a user enables a feature
+      attributes:
+
+    - id: 14549
+      action: disabled
+      subject: feature
+      library: server
+      description: |
+          event when a user disables a feature
+      attributes:
+    - id: 14550
+      action: authenticated
+      subject: atlascode
+      library: server
+      description: |
+          event when a user authenticates
+      attributes:
+          - name: machineId
+          - name: hostProduct
+          - name: instanceType
+    - id: 14544
+      action: unauthenticated
+      subject: atlascode
+      library: server
+      description: |
+          event when a user logs out
+      attributes:
+          - name: machineId
+          - name: hostProduct
+          - name: instanceType
+    - id: 14553
+      action: selected
+      subject: defaultJiraSite
+      library: server
+      description: |
+          event when a user chooses a default jira site
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 14551
+      action: selected
+      subject: defaultJiraProject
+      library: server
+      description: |
+          event when a user shooses a default jira project
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 18825
+      action: launched
+      subject: atlascode
+      library: server
+      description: |
+          event when a user launches the extension
+      attributes:
+          - name: machineId
+          - name: extensionLocation
+            type: string
+            description: 'The location in which the extension is running (local, docker, etc.)'
+            required: true
+    # Jira issue events
+    - id: 15628
+      action: created
+      subject: issue
+      library: server
+      description: |
+          when a user creates an issue
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 15629
+      action: transitioned
+      subject: issue
+      library: server
+      description: |
+          when an issue is transitioned
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 15630
+      action: copied
+      subject: issueUrl
+      library: server
+      description: |
+          when an issue url is copied to clipboard
+      attributes:
+    - id: 15631
+      action: created
+      subject: issueComment
+      library: server
+      description: |
+          when an issue is commented on
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 15632
+      action: workStarted
+      subject: issue
+      library: server
+      description: |
+          when work is started on an issue
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 18460
+      action: updated
+      subject: issue
+      library: server
+      description: |
+          when an issue field is updated
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+          - name: fieldName
+            type: string
+            description: 'the name of the updated field'
+          - name: fieldKey
+            type: string
+            description: 'the key of the updated field'
+    # Bitbucket issue events
+    - id: 16217
+      action: created
+      subject: bbIssue
+      library: server
+      description: |
+          Bitbucket Issue created in VS Code.
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 16201
+      action: workStarted
+      subject: bbIssue
+      library: server
+      description: |
+          when work is started on a Bitbucket issue
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 16215
+      action: transitioned
+      subject: bbIssue
+      library: server
+      description: |
+          Bitbucket Issue transitioned to a new state.
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 16216
+      action: created
+      subject: bbIssueComment
+      library: server
+      description: |
+          Comment added to Bitbucket issue in VS Code.
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 16202
+      action: bbIssueUrl
+      subject: copied
+      library: server
+      description: |
+          when an Bitbucket issue url is copied to clipboard
+      attributes:
+    # Pull Request Events
+    - id: 15634
+      action: created
+      subject: pullRequest
+      library: server
+      description: |
+          when a PR is created
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 15635
+      action: created
+      subject: pullRequestComment
+      library: server
+      description: |
+          when a PR is commented on
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 20102
+      action: created
+      subject: pullRequestTask
+      library: server
+      description: |
+          when a task is created for a PR
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+          - name: source
+            type: string
+            description: 'Source UI from which the action originated'
+    - id: 15636
+      action: checkedOut
+      subject: pullRequestBranch
+      library: server
+      description: |
+          when a PR branch is checked out
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 20496
+      action: fileCheckedOut
+      subject: pullRequestBranch
+      library: server
+      description: |
+          when 'Edit this File' action is taken and associated branch is checked out
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 15637
+      action: approved
+      subject: pullRequest
+      library: server
+      description: |
+          when a PR is approved
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 15638
+      action: merged
+      subject: pullRequest
+      library: server
+      description: |
+          when a PR is merged
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 15639
+      action: copied
+      subject: pullRequestUrl
+      library: server
+      description: |
+          when PR url copied to clipboard
+      attributes:
+    # Misc Track Events
+    - id: 15633
+      action: created
+      subject: customJql
+      library: server
+      description: |
+          when a custom JQL query is added
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 15640
+      action: start
+      subject: pipeline
+      library: server
+      description: |
+          when a user starts a pipelines build
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 24289
+      action: rerun
+      subject: pipeline
+      library: server
+      description: |
+          when a user reruns a pipeline build
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+          - name: source
+            type: string
+            description: 'Source from which the action was triggered'
+    - id: 18461
+      action: submitted
+      subject: atlascodePmf
+      library: server
+      description: |
+          when the user submits a PMF survey
+      attributes:
+          - name: level
+            type: enum
+            description: 'disappointment level'
+            enumeration:
+                - '0'
+                - '1'
+                - '2'
+    - id: 18464
+      action: snoozed
+      subject: atlascodePmf
+      library: server
+      description: |
+          when the user snooze the pmf survey
+      attributes:
+    - id: 18465
+      action: closed
+      subject: atlascodePmf
+      library: server
+      description: |
+          when the user says "not now" to the pmf survey
+      attributes:
+    - id: 23429
+      action: opened
+      subject: externalUri
+      library: server
+      description: |
+          when the user opens an extension screen from external URI
+      attributes:
+          - name: source
+            type: string
+            description: 'Source from which the URI was opened e.g. browser'
+          - name: target
+            type: string
+            description: 'Target view to be opened in VS Code e.g. pullRequest'
+    - id: 24348
+      action: opened
+      subject: deepLink
+      library: server
+      description: |
+          when the user opens an extension screen from external URI
+      attributes:
+          - name: source
+            type: string
+            description: 'Source from which the URI was opened e.g. browser'
+          - name: target
+            type: string
+            description: 'Target view to be opened in VS Code e.g. pullRequest'
+    - id: 18466
+      action: createFromSource
+      subject: issue
+      library: server
+      description: |
+          when a user starts an issue create from a ui source
+      attributes:
+          - name: source
+            type: string
+            description: "The method used to start the create.\n* explorer\n* contextMenu\n* todoComment"
+    - id: 20659
+      action: searchIssues
+      subject: issue
+      library: server
+      description: |
+          when a user clicks to search for issues
+    - id: 24448
+      action: opened
+      subject: externalLink
+      library: server
+      description: |
+          When an external link is opened from within VS Code
+      attributes:
+          - name: source
+            type: string
+            description: Source from which the link was opened e.g. bitbucketIssueScreen
+          - name: linkType
+            type: string
+            description: The type of link being opened e.g. atlascodeRepoLink
+screen:
+    - id: 14476
+      name: atlascode.views.jira.assignedIssues
+      description: |
+          event when user views assigned issues explorer
+      attributes:
+          - name: hostProduct
+    - id: 14477
+      name: atlascode.views.jira.openIssues
+      description: |
+          event when user views open issues explorer
+      attributes:
+          - name: hostProduct
+    - id: 14478
+      name: atlascode.views.bb.pullrequestsTreeView
+      description: |
+          event when user views pull requests explorer
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 14447
+      name: atlascodeSettings
+      description: |
+          Event when the user views the atlascode configuration page
+      attributes:
+    - id: 14449
+      name: pullRequestDetailsScreen
+      description: |
+          Event when a user views a pull request deatils (summary) screen
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 14450
+      name: feedbackForm
+      description: |
+          Event when a user views a feedback form
+      attributes:
+    - id: 14448
+      name: viewIssueScreen
+      description: |
+          Event when a user views an issue view screen
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 14453
+      name: atlascodeWelcomeScreen
+      description: |
+          Event when a user views the atlascode welcome screen
+      attributes:
+          - name: excludeFromActivity
+            type: boolean
+            description: 'Flag to exclude from user activity count'
+    - id: 14454
+      name: pullRequestDiffScreen
+      description: |
+          Event when a user views a pull request diff screen
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 18768
+      name: pullRequestPreviewDiffScreen
+      description: |
+          Event when a user views a pull request preview diff screen
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 14459
+      name: issueHover
+      description: |
+          Event when a user sees an issue popup when hovering
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 15622
+      name: atlascode.views.jira.customJql
+      description: |
+          custom JQL tree view
+      attributes:
+          - name: hostProduct
+    - id: 15623
+      name: atlascodeCreateIssueScreen
+      description: |
+          jira issue create screen
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 15624
+      name: pipelineSummaryScreen
+      description: |
+          pipeline build details screen
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 15625
+      name: createPullRequestScreen
+      description: |
+          create BB PR screen
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 15626
+      name: startWorkOnIssueScreen
+      description: |
+          start work on issue screen
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 15627
+      name: atlascode.views.bb.pipelinesTreeView
+      description: |
+          pipelines tree view
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 18462
+      name: atlascodePmf
+      description: |
+          when the atlascode PMF survey is viewed
+      attributes:
+    - id: 18463
+      name: atlascodePmfBanner
+      description: |
+          when we show the pmf banner
+      attributes:
+    - id: 16143
+      name: createBitbucketIssueScreen
+      description: |
+          viewed createBitbucketIssueScreen
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 16144
+      name: atlascode.views.bb.issuesTreeView
+      description: |
+          viewed atlascode.views.bb.issuesTreeView
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 16145
+      name: bitbucketIssueScreen
+      description: |
+          viewed bitbucketIssueScreen
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 19122
+      name: atlascodeOnboardingScreen
+      description: |
+          Event when a user views a the onboarding screen
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+    - id: 19998
+      name: pullRequestsTreeViewUnauthenticatedMessage
+      description: |
+          Event when a user views unauthenticated message in pull requests tree view
+      attributes:
+          - name: hostProduct
+    - id: 19999
+      name: pullRequestsTreeViewNoReposFoundMessage
+      description: |
+          Event when a user views no repos found message in pull requests tree view
+      attributes:
+          - name: hostProduct
+ui:
+    - id: 20888
+      action: clicked
+      subject: button
+      subjectId: editCredentialsButton
+      description: |
+          Event when a user clicks the edit credentials button
+      attributes:
+    - id: 14444
+      action: clicked
+      subject: button
+      subjectId: authenticateButton
+      description: |
+          Event when a user clicks an authenticate button
+      attributes:
+          - name: hostProduct
+          - name: instanceType
+    - id: 14445
+      action: clicked
+      subject: button
+      subjectId: logoutButton
+      description: |
+          Event when a user clicks a logout button
+      attributes:
+    - id: 27846
+      action: clicked
+      subject: button
+      subjectId: saveCodeButton
+      description: |
+          Event when user clicks button to save manually added code
+    - id: 20840
+      action: clicked
+      subject: button
+      subjectId: configureJQLButton
+      description: |
+          Event when a user clicks a configure JQL button
+      attributes:
+    - id: 14446
+      action: clicked
+      subject: button
+      subjectId: feedbackButton
+      description: |
+          Event when the user clicks a send feedback button
+      attributes:
+    - id: 14451
+      action: button
+      subject: clicked
+      subjectId: cancelFeedbackButton
+      description: |
+          Event when a user clicks cancel on a feedback form
+      attributes:
+    - id: 14452
+      action: button
+      subject: clicked
+      subjectId: submitFeedbackButton
+      description: |
+          Event when user clicks submit on a feedback form
+      attributes:
+    - id: 14463
+      action: selected
+      subject: dropdownValue
+      description: |
+          Event when a user selects a value from a dropdown box.
+          Object/Container will be used to identify the dropdown.
+
+      attributes:
+          - name: selectedValue
+            type: string
+            description: 'The value the user selected'
+            required: true
+    - id: 14443
+      action: clicked
+      subject: button
+      description: |
+          Event when a user clicks a button
+      attributes:
+    - id: 19073
+      action: clicked
+      subject: button
+      subjectId: doneButton
+      description: |
+          Event when a user clicks the done button on the Onboarding page
+      attributes:
+    - id: 19074
+      action: clicked
+      subject: button
+      subjectId: moreSettingsButton
+      description: |
+          Event when a user clicks on the more settings button on the Onboarding page
+    - id: 26449
+      action: clicked
+      subject: button
+      subjectId: exploreFeaturesButton
+      description: |
+          Event when a user clicks on the explore features button in the Help explorer
+    - id: 24344
+      action: clicked
+      subject: button
+      subjectId: focusCreateIssue
+      description: |
+          Event when the create issue node is focused
+      attributes:
+    - id: 24345
+      action: clicked
+      subject: button
+      subjectId: focusIssue
+      description: |
+          Event when an issue node is focused
+      attributes:
+    - id: 24346
+      action: clicked
+      subject: button
+      subjectId: focusCreatePullRequest
+      description: |
+          Event when the create pull request node is focused
+      attributes:
+    - id: 24347
+      action: clicked
+      subject: button
+      subjectId: focusPullRequest
+      description: |
+          Event when a pull request node is focused
+      attributes:
+
+    - id: 20000
+      action: clicked
+      subject: button
+      subjectId: openWorkbenchRepository
+      description: |
+          Event when a user clicks on the open repository button
+      attributes:
+    - id: 20001
+      action: clicked
+      subject: button
+      subjectId: openWorkbenchWorkspace
+      description: |
+          Event when a user clicks on the open workspace button
+      attributes:
+    - id: 20002
+      action: clicked
+      subject: button
+      subjectId: cloneRepository
+      description: |
+          Event when a user clicks on the clone repository button
+      attributes:
+    - id: 20841
+      action: clicked
+      subject: button
+      subjectId: openActiveIssue
+      description: |
+          Event when a user clicks on active issue id in status bar
+      attributes:
