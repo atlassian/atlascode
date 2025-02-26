@@ -110,6 +110,10 @@
             {
                 "command": "atlascode.jira.searchIssues",
                 "title": "Search Jira Issue Results",
+                "icon": {
+                    "dark": "resources/dark/search.svg",
+                    "light": "resources/light/search.svg"
+                },
                 "category": "Atlassian"
             },
             {
@@ -441,6 +445,11 @@
                     "when": "atlascode:jiraExplorerEnabled && config.atlascode.jira.enabled"
                 },
                 {
+                    "id": "atlascode.views.jira.customJqlTreeView",
+                    "name": "Custom Jql Filters",
+                    "when": "config.atlascode.jira.enabled"
+                },
+                {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
                     "when": "atlascode:bitbucketExplorerEnabled && config.atlascode.bitbucket.enabled"
@@ -536,9 +545,14 @@
                     "group": "navigation@2"
                 },
                 {
+                    "command": "atlascode.jira.searchIssues",
+                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
+                    "group": "navigation@3"
+                },
+                {
                     "command": "atlascode.jira.showJiraIssueSettings",
                     "when": "view =~ /(atlascode.views.jira.customJql)/",
-                    "group": "navigation@3"
+                    "group": "navigation@4"
                 },
                 {
                     "command": "atlascode.bb.createPullRequest",
@@ -937,6 +951,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enables the Jira Issue Explorer",
+                    "scope": "window"
+                },
+                "atlascode.jira.explorer.showCustomJql": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables Custom Jql Explorer",
                     "scope": "window"
                 },
                 "atlascode.jira.explorer.showOpenIssues": {
