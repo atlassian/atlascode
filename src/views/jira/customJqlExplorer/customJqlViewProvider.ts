@@ -1,8 +1,8 @@
-import { DetailedSiteInfo, Product, ProductJira } from 'src/atlclients/authInfo';
-import { JQLEntry } from 'src/config/model';
+import { DetailedSiteInfo, Product, ProductJira } from '../../../atlclients/authInfo';
+import { JQLEntry } from '../../../config/model';
 import { Container } from '../../../container';
-import { AbstractBaseNode } from 'src/views/nodes/abstractBaseNode';
-import { BaseTreeDataProvider } from 'src/views/Explorer';
+import { AbstractBaseNode } from '../../../views/nodes/abstractBaseNode';
+import { BaseTreeDataProvider } from '../../../views/Explorer';
 import { CustomJQLTree } from '../customJqlTree';
 import { ConfigureJQLNode } from '../configureJQLNode';
 import { CONFIGURE_JQL_STRING, CUSTOM_JQL_VIEW_PROVIDER_ID } from './constants';
