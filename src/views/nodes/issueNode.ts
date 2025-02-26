@@ -17,11 +17,12 @@ export class IssueNode extends AbstractBaseNode {
     getTreeItem(): vscode.TreeItem {
         const title = isMinimalIssue(this.issue) && this.issue.isEpic ? this.issue.epicName : this.issue.summary;
         const treeItem = new vscode.TreeItem(
-            `${this.issue.key} ${title}`,
+            this.issue.key,
             isMinimalIssue(this.issue) && (this.issue.subtasks.length > 0 || this.issue.epicChildren.length > 0)
                 ? vscode.TreeItemCollapsibleState.Expanded
                 : vscode.TreeItemCollapsibleState.None,
         );
+        treeItem.description = title;
         treeItem.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [this.issue] };
         treeItem.iconPath = vscode.Uri.parse(this.issue.issuetype.iconUrl);
         treeItem.contextValue = IssueNodeContextValue;

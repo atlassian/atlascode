@@ -206,6 +206,25 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.jira.createNewJql",
+                "title": "Create new JQL filter",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.jira.removeFromSidebar",
+                "title": "Remove from sidebar",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.jira.refreshCustomJqlExplorer",
+                "title": "Refresh Custom JQL Filters",
+                "icon": {
+                    "dark": "resources/dark/refresh.svg",
+                    "light": "resources/light/refresh.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.jira.showJiraIssueSettings",
                 "title": "Jira Issue Settings",
                 "icon": {
@@ -541,7 +560,7 @@
                 },
                 {
                     "command": "atlascode.jira.refreshExplorer",
-                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
+                    "when": "view == atlascode.views.jira.customJql && atlascode:isJiraAuthenticated",
                     "group": "navigation@2"
                 },
                 {
@@ -550,8 +569,21 @@
                     "group": "navigation@3"
                 },
                 {
+                    "command": "atlascode.jira.refreshCustomJqlExplorer",
+                    "when": "view == atlascode.views.jira.customJqlTreeView && atlascode:isJiraAuthenticated",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "atlascode.jira.removeFromSidebar",
+                    "when": "view =~ /(atlascode.views.jira.customJqlTreeView)/ && atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.jira.createNewJql",
+                    "when": "view =~ /(atlascode.views.jira.customJqlTreeView)/ && atlascode:isJiraAuthenticated"
+                },
+                {
                     "command": "atlascode.jira.showJiraIssueSettings",
-                    "when": "view =~ /(atlascode.views.jira.customJql)/",
+                    "when": "view == atlascode.views.jira.customJql",
                     "group": "navigation@4"
                 },
                 {
