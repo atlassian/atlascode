@@ -7,9 +7,12 @@ import { CustomJQLTree } from '../customJqlTree';
 import { ConfigureJQLNode } from '../configureJQLNode';
 import { CONFIGURE_JQL_STRING, CUSTOM_JQL_VIEW_PROVIDER_ID } from './constants';
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
-import { Disposable, window } from 'vscode';
+import { commands, Disposable, EventEmitter, Event, window } from 'vscode';
 import { SearchJiraIssuesNode } from '../searchJiraIssueNode';
 import { Logger } from '../../../logger';
+import { CommandContext, setCommandContext } from '../../../commandContext';
+import { Commands } from '../../../commands';
+import { NewIssueMonitor } from '../../../jira/newIssueMonitor';
 
 const searchJiraIssuesNode = new SearchJiraIssuesNode();
 
@@ -18,16 +21,25 @@ export class CustomJQLViewProvider extends BaseTreeDataProvider {
     private _id: string = CUSTOM_JQL_VIEW_PROVIDER_ID;
     private _jqlEntries: JQLEntry[];
     private _children: CustomJQLTree[];
-
+    private _newIssueMonitor: NewIssueMonitor;
+    private _onDidChangeTreeData = new EventEmitter<AbstractBaseNode | null>();
+    public get onDidChangeTreeData(): Event<AbstractBaseNode | null> {
+        return this._onDidChangeTreeData.event;
+    }
     constructor() {
         super();
+
         this._jqlEntries = Container.jqlManager.enabledJQLEntries();
+        this._newIssueMonitor = new NewIssueMonitor();
         this._children = [];
         this._disposable = Disposable.from(
             Container.jqlManager.onDidJQLChange(this.refresh, this),
             Container.siteManager.onDidSitesAvailableChange(this.refresh, this),
+            commands.registerCommand(Commands.RefreshCustomJqlExplorer, this.refresh, this),
         );
+
         window.createTreeView(this.viewId(), { treeDataProvider: this });
+        setCommandContext(CommandContext.CustomJQLExplorer, true);
     }
 
     viewId(): string {
@@ -45,12 +57,17 @@ export class CustomJQLViewProvider extends BaseTreeDataProvider {
         this._disposable.dispose();
     }
 
-    refresh() {
+    async refresh() {
+        await Container.jqlManager.updateFilters();
         this._children.forEach((child) => {
             child.dispose();
         });
         this._children = [];
         this._jqlEntries = Container.jqlManager.enabledJQLEntries();
+
+        this._onDidChangeTreeData.fire(null);
+
+        this._newIssueMonitor.checkForNewIssues();
     }
 
     getTreeItem(element: AbstractBaseNode) {
