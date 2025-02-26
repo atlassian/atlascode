@@ -4,7 +4,18 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { AbstractBaseNode } from './abstractBaseNode';
 
-const IssueNodeContextValue = 'jiraIssue';
+const IssueNodeContextValue = (statusCategory: string) => {
+    switch (statusCategory) {
+        case 'To Do':
+            return 'toDoItem';
+        case 'In Progress':
+            return 'inProgressItem';
+        case 'Done':
+            return 'doneItem';
+        default:
+            return 'jiraIssue';
+    }
+};
 
 export class IssueNode extends AbstractBaseNode {
     public issue: MinimalORIssueLink<DetailedSiteInfo>;
@@ -25,7 +36,7 @@ export class IssueNode extends AbstractBaseNode {
         treeItem.description = title;
         treeItem.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [this.issue] };
         treeItem.iconPath = vscode.Uri.parse(this.issue.issuetype.iconUrl);
-        treeItem.contextValue = IssueNodeContextValue;
+        treeItem.contextValue = IssueNodeContextValue(this.issue.status.statusCategory.name);
         treeItem.tooltip = `${this.issue.key} - ${this.issue.summary}\n\n${this.issue.priority.name}    |    ${this.issue.status.name}`;
         treeItem.resourceUri = vscode.Uri.parse(`${this.issue.siteDetails.baseLinkUrl}/browse/${this.issue.key}`);
         return treeItem;
