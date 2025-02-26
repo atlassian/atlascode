@@ -71,6 +71,7 @@ import { AtlascodeUriHandler } from './uriHandler';
 import { CheckoutHelper } from './bitbucket/interfaces';
 import { ProductJira } from './atlclients/authInfo';
 import { ATLASCODE_TEST_USER_EMAIL, ATLASCODE_TEST_HOST } from './constants';
+import { CustomJQLViewProvider } from './views/jira/customJqlExplorer/customJqlViewProvider';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -195,7 +196,7 @@ export class Container {
                 }
             });
         }
-
+        context.subscriptions.push((this._customJqlViewProvider = new CustomJQLViewProvider()));
         context.subscriptions.push((this._helpExplorer = new HelpExplorer()));
 
         FeatureFlagClient.initialize({
@@ -527,5 +528,10 @@ export class Container {
     private static _bitbucketHelper: CheckoutHelper;
     static get bitbucketHelper() {
         return this._bitbucketHelper;
+    }
+
+    private static _customJqlViewProvider: CustomJQLViewProvider;
+    static get customJqlViewProvider() {
+        return this._customJqlViewProvider;
     }
 }
