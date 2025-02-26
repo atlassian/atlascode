@@ -9,6 +9,7 @@ import { CONFIGURE_JQL_STRING, CUSTOM_JQL_VIEW_PROVIDER_ID } from './constants';
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { Disposable, window } from 'vscode';
 import { SearchJiraIssuesNode } from '../searchJiraIssueNode';
+import { Logger } from '../../../logger';
 
 const searchJiraIssuesNode = new SearchJiraIssuesNode();
 
@@ -71,7 +72,7 @@ export class CustomJQLViewProvider extends BaseTreeDataProvider {
                 this._jqlEntries.map(async (jql: JQLEntry) => {
                     const childTree = new CustomJQLTree(jql);
                     const flattenedIssueList = await childTree.executeQuery().catch((e) => {
-                        // Logger.error(new Error(`Error executing JQL: ${e}`));
+                        Logger.error(new Error(`Error executing JQL: ${e}`));
                         return [];
                     });
                     childTree.setNumIssues(flattenedIssueList.length);
