@@ -72,6 +72,7 @@ import { CheckoutHelper } from './bitbucket/interfaces';
 import { ProductJira } from './atlclients/authInfo';
 import { ATLASCODE_TEST_USER_EMAIL, ATLASCODE_TEST_HOST } from './constants';
 import { CustomJQLViewProvider } from './views/jira/customJqlExplorer/customJqlViewProvider';
+import { Logger } from './logger';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -185,7 +186,16 @@ export class Container {
 
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
         this._bitbucketHelper = new BitbucketCheckoutHelper(context.globalState);
-
+        FeatureFlagClient.initialize({
+            analyticsClient: this._analyticsClient,
+            identifiers: {
+                analyticsAnonymousId: env.machineId,
+            },
+            eventBuilder: new EventBuilder(),
+        }).then(() => {
+            this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
+            this.initializeCustomJqlView(context);
+        });
         if (config.jira.explorer.enabled) {
             context.subscriptions.push((this._jiraExplorer = new JiraContext()));
         } else {
@@ -196,18 +206,8 @@ export class Container {
                 }
             });
         }
-        context.subscriptions.push((this._customJqlViewProvider = new CustomJQLViewProvider()));
-        context.subscriptions.push((this._helpExplorer = new HelpExplorer()));
 
-        FeatureFlagClient.initialize({
-            analyticsClient: this._analyticsClient,
-            identifiers: {
-                analyticsAnonymousId: env.machineId,
-            },
-            eventBuilder: new EventBuilder(),
-        }).then(() => {
-            this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
-        });
+        context.subscriptions.push((this._helpExplorer = new HelpExplorer()));
     }
 
     static getAnalyticsEnable(): boolean {
@@ -221,13 +221,18 @@ export class Container {
         bitbucketHelper: CheckoutHelper,
     ) {
         if (FeatureFlagClient.featureGates[Features.EnableNewUriHandler]) {
-            console.log('Using new URI handler');
+            Logger.debug('Using new URI handler');
             context.subscriptions.push(AtlascodeUriHandler.create(analyticsApi, bitbucketHelper));
         } else {
             context.subscriptions.push(new LegacyAtlascodeUriHandler(analyticsApi, bitbucketHelper));
         }
     }
-
+    static initializeCustomJqlView(context: ExtensionContext) {
+        if (FeatureFlagClient.featureGates[Features.NewSidebarTreeView]) {
+            Logger.debug('Using new custom JQL view');
+            context.subscriptions.push((this._customJqlViewProvider = new CustomJQLViewProvider()));
+        }
+    }
     static initializeBitbucket(bbCtx: BitbucketContext) {
         this._bitbucketContext = bbCtx;
         this._pipelinesExplorer = new PipelinesExplorer(bbCtx);
