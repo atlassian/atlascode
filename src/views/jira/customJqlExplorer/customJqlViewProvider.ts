@@ -97,7 +97,7 @@ export class CustomJQLViewProvider extends BaseTreeDataProvider {
                     return childTree;
                 }),
             );
-            allIssues = [...new Map(allIssues.map((issue) => [issue.key, issue])).values()]; //dedupe
+            allIssues = [...new Map(allIssues.map((issue) => [issue.key, issue])).values()];
             searchJiraIssuesNode.setIssues(allIssues);
             return [...this._children];
         }

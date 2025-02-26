@@ -99,6 +99,21 @@
     "contributes": {
         "commands": [
             {
+                "command": "atlascode.jira.toDoIssue",
+                "title": "TO DO",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.jira.inProgressIssue",
+                "title": "IN PROGRESS",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.jira.doneIssue",
+                "title": "DONE",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.jira.createIssue",
                 "title": "Create Jira Issue",
                 "icon": {
@@ -466,7 +481,7 @@
                 {
                     "id": "atlascode.views.jira.customJqlTreeView",
                     "name": "Custom Jql Filters",
-                    "when": "config.atlascode.jira.enabled"
+                    "when": "config.atlascode.jira.enabled && atlascode:customJQLExplorerEnabled"
                 },
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
@@ -643,23 +658,38 @@
             ],
             "view/item/context": [
                 {
+                    "command": "atlascode.jira.toDoIssue",
+                    "when": "viewItem == toDoItem && atlascode:isJiraAuthenticated",
+                    "group": "inline"
+                },
+                {
+                    "command": "atlascode.jira.inProgressIssue",
+                    "when": "viewItem == inProgressItem && atlascode:isJiraAuthenticated",
+                    "group": "inline"
+                },
+                {
+                    "command": "atlascode.jira.doneIssue",
+                    "when": "viewItem == doneItem && atlascode:isJiraAuthenticated",
+                    "group": "inline"
+                },
+                {
                     "command": "atlascode.jira.assignIssueToMe",
-                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue|toDoItem|inProgressItem|doneIssue)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.jira.startWorkOnIssue",
-                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue|toDoItem|inProgressItem|doneIssue)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.viewInWebBrowser",
-                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue|toDoItem|inProgressItem|doneIssue)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.jira.createIssue",
-                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue|toDoItem|inProgressItem|doneIssue)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup2"
                 },
                 {
