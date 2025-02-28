@@ -18,7 +18,7 @@ import { AxiosResponse } from 'axios';
 
 describe('ServerPullRequestApi', () => {
     let api: ServerPullRequestApi;
-    let mockClient: HTTPClient = new HTTPClient('', '', '', async (errJson: AxiosResponse) => Error('some error'));
+    const mockClient: HTTPClient = new HTTPClient('', '', '', async (errJson: AxiosResponse) => Error('some error'));
     let site: BitbucketSite;
 
     beforeEach(() => {
