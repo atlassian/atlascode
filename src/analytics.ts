@@ -6,12 +6,9 @@ import { UIErrorInfo } from './analyticsTypes';
 
 // IMPORTANT
 // Make sure there is a corresponding event with the correct attributes in the Data Portal for any event created here.
-// Add your event to dataportal.yaml
-// Go to https://bitbucket.org/atlassianlabs/dataportal-cli/src/master/ and follow the instructions there.
-
-// Performing the above allows us to keep the analytics metatdata in source control. Therefore editing metadata directly
-// in the data-portal is discourage. However, the cannonical place for the metadata is
-// https://data-portal.us-east-1.prod.public.atl-paas.net/analytics/registry?filter=externalProductIntegrations
+// 1. Go to go/dataportal
+// 2. Open the Measure menu (on top) -> Event Registry
+// 3. Add or update the new/changed event
 
 export const Registry = {
     screen: {
