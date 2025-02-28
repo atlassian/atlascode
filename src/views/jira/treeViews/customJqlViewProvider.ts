@@ -1,20 +1,18 @@
 import { DetailedSiteInfo, Product, ProductJira } from '../../../atlclients/authInfo';
 import { JQLEntry } from '../../../config/model';
 import { Container } from '../../../container';
-import { AbstractBaseNode } from '../../../views/nodes/abstractBaseNode';
-import { BaseTreeDataProvider } from '../../../views/Explorer';
+import { AbstractBaseNode } from '../../nodes/abstractBaseNode';
+import { BaseTreeDataProvider } from '../../Explorer';
 import { CustomJQLTree } from '../customJqlTree';
 import { ConfigureJQLNode } from '../configureJQLNode';
 import { CONFIGURE_JQL_STRING, CUSTOM_JQL_VIEW_PROVIDER_ID } from './constants';
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { commands, Disposable, EventEmitter, Event, window } from 'vscode';
-import { SearchJiraIssuesNode } from '../searchJiraIssueNode';
 import { Logger } from '../../../logger';
 import { CommandContext, setCommandContext } from '../../../commandContext';
 import { Commands } from '../../../commands';
 import { NewIssueMonitor } from '../../../jira/newIssueMonitor';
-
-const searchJiraIssuesNode = new SearchJiraIssuesNode();
+import { SearchJiraHelper } from '../searchJiraHelper';
 
 export class CustomJQLViewProvider extends BaseTreeDataProvider {
     private _disposable: Disposable;
@@ -26,6 +24,7 @@ export class CustomJQLViewProvider extends BaseTreeDataProvider {
     public get onDidChangeTreeData(): Event<AbstractBaseNode | null> {
         return this._onDidChangeTreeData.event;
     }
+
     constructor() {
         super();
 
@@ -37,7 +36,6 @@ export class CustomJQLViewProvider extends BaseTreeDataProvider {
             Container.siteManager.onDidSitesAvailableChange(this.refresh, this),
             commands.registerCommand(Commands.RefreshCustomJqlExplorer, this.refresh, this),
         );
-
         window.createTreeView(this.viewId(), { treeDataProvider: this });
         setCommandContext(CommandContext.CustomJQLExplorer, true);
     }
@@ -66,7 +64,7 @@ export class CustomJQLViewProvider extends BaseTreeDataProvider {
         this._jqlEntries = Container.jqlManager.enabledJQLEntries();
 
         this._onDidChangeTreeData.fire(null);
-
+        SearchJiraHelper.clearIssues(this.viewId()); // so no duplicates
         this._newIssueMonitor.checkForNewIssues();
     }
 
@@ -98,7 +96,7 @@ export class CustomJQLViewProvider extends BaseTreeDataProvider {
                 }),
             );
             allIssues = [...new Map(allIssues.map((issue) => [issue.key, issue])).values()];
-            searchJiraIssuesNode.setIssues(allIssues);
+            SearchJiraHelper.setIssues(allIssues, this.viewId());
             return [...this._children];
         }
 

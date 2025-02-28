@@ -96,16 +96,10 @@ export enum Commands {
     DisableHelpExplorer = 'atlascode.disableHelpExplorer',
     CreateNewJql = 'atlascode.jira.createNewJql',
     RemoveFromSidebar = 'atlascode.jira.removeFromSidebar',
-    ToDoIssue = 'atlascode.jira.toDoIssue',
-    InProgressIssue = 'atlascode.jira.inProgressIssue',
-    DoneIssue = 'atlascode.jira.doneIssue',
 }
 
 export function registerCommands(vscodeContext: ExtensionContext) {
     vscodeContext.subscriptions.push(
-        commands.registerCommand(Commands.ToDoIssue, () => null),
-        commands.registerCommand(Commands.InProgressIssue, () => null),
-        commands.registerCommand(Commands.DoneIssue, () => null),
         commands.registerCommand(Commands.RemoveFromSidebar, () =>
             setCommandContext(CommandContext.CustomJQLExplorer, false),
         ),

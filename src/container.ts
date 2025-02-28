@@ -71,8 +71,9 @@ import { AtlascodeUriHandler } from './uriHandler';
 import { CheckoutHelper } from './bitbucket/interfaces';
 import { ProductJira } from './atlclients/authInfo';
 import { ATLASCODE_TEST_USER_EMAIL, ATLASCODE_TEST_HOST } from './constants';
-import { CustomJQLViewProvider } from './views/jira/customJqlExplorer/customJqlViewProvider';
+import { CustomJQLViewProvider } from './views/jira/treeViews/customJqlViewProvider';
 import { Logger } from './logger';
+import { SearchJiraHelper } from './views/jira/searchJiraHelper';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -192,20 +193,15 @@ export class Container {
                 analyticsAnonymousId: env.machineId,
             },
             eventBuilder: new EventBuilder(),
-        }).then(() => {
-            this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
-            this.initializeCustomJqlView(context);
-        });
-        if (config.jira.explorer.enabled) {
-            context.subscriptions.push((this._jiraExplorer = new JiraContext()));
-        } else {
-            const disposable = configuration.onDidChange((e) => {
-                if (configuration.changed(e, 'jira.explorer.enabled')) {
-                    disposable.dispose();
-                    context.subscriptions.push((this._jiraExplorer = new JiraContext()));
-                }
+        })
+            .then(() => {
+                this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
+                this.initializeNewSidebarView(context, config);
+            })
+            .catch((err) => {
+                Logger.error(Error(`Failed to initialize feature flags: ${err}`));
+                this.initializeLegacySidebarView(context, config);
             });
-        }
 
         context.subscriptions.push((this._helpExplorer = new HelpExplorer()));
     }
@@ -227,10 +223,26 @@ export class Container {
             context.subscriptions.push(new LegacyAtlascodeUriHandler(analyticsApi, bitbucketHelper));
         }
     }
-    static initializeCustomJqlView(context: ExtensionContext) {
+    static initializeNewSidebarView(context: ExtensionContext, config: IConfig) {
         if (FeatureFlagClient.featureGates[Features.NewSidebarTreeView]) {
             Logger.debug('Using new custom JQL view');
+            SearchJiraHelper.initialize();
             context.subscriptions.push((this._customJqlViewProvider = new CustomJQLViewProvider()));
+        } else {
+            this.initializeLegacySidebarView(context, config);
+        }
+    }
+
+    static initializeLegacySidebarView(context: ExtensionContext, config: IConfig) {
+        if (config.jira.explorer.enabled) {
+            context.subscriptions.push((this._jiraExplorer = new JiraContext()));
+        } else {
+            const disposable = configuration.onDidChange((e) => {
+                if (configuration.changed(e, 'jira.explorer.enabled')) {
+                    disposable.dispose();
+                    context.subscriptions.push((this._jiraExplorer = new JiraContext()));
+                }
+            });
         }
     }
     static initializeBitbucket(bbCtx: BitbucketContext) {
