@@ -56,14 +56,18 @@ export class SearchJiraHelper {
         searchIssuesEvent(ProductJira).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
-        const quickPickIssues: QuickPickIssue[] = Object.values(this._searchableIssueMap).flatMap((issueArray) =>
-            issueArray.map((issue) => {
-                return {
-                    label: issue.key,
-                    description: issue.summary,
-                    issue: issue,
-                };
-            }),
+        const quickPickIssues: QuickPickIssue[] = Array.from(
+            new Set(
+                Object.values(this._searchableIssueMap).flatMap((issueArray) =>
+                    issueArray.map((issue) => {
+                        return {
+                            label: issue.key,
+                            description: issue.summary,
+                            issue: issue,
+                        };
+                    }),
+                ),
+            ),
         );
         window
             .showQuickPick<QuickPickIssue>(quickPickIssues, {
