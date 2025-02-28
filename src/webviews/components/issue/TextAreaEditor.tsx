@@ -15,7 +15,8 @@ export const TextAreaEditor: React.FC<Props> = ({ value, disabled, placeholder, 
 
     useEffect(() => {
         if (inputTextAreaRef.current && cursorPosition > 0) {
-            inputTextAreaRef.current.selectionStart = inputTextAreaRef.current.selectionEnd = cursorPosition;
+            inputTextAreaRef.current.selectionEnd = cursorPosition;
+            inputTextAreaRef.current.selectionStart = cursorPosition;
             inputTextAreaRef.current.focus();
         }
     }, [inputTextAreaRef, cursorPosition]);
