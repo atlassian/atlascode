@@ -6,11 +6,17 @@ export enum Features {
 
 export enum Experiments {
     NewAuthUI = 'atlascode_new_auth_ui',
+    AA = 'atlascode_aa_experiment',
 }
 
 export const ExperimentGates: ExperimentGate = {
     [Experiments.NewAuthUI]: {
         gate: 'atlascode_new_auth_ui',
+        parameter: 'isEnabled',
+        defaultValue: false,
+    },
+    [Experiments.AA]: {
+        gate: 'atlascode_aa_experiment',
         parameter: 'isEnabled',
         defaultValue: false,
     },
