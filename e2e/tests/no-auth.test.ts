@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import { expect } from 'chai';
 import { before, ActivityBar, after, SideBarView, By, EditorView, Workbench } from 'vscode-extension-tester';
 
