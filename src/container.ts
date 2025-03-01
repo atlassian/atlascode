@@ -194,13 +194,12 @@ export class Container {
             },
             eventBuilder: new EventBuilder(),
         })
-            .then(() => {
-                this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
-                this.initializeNewSidebarView(context, config);
-            })
             .catch((err) => {
                 Logger.error(Error(`Failed to initialize feature flags: ${err}`));
-                this.initializeLegacySidebarView(context, config);
+            })
+            .finally(() => {
+                this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
+                this.initializeNewSidebarView(context, config);
             });
 
         context.subscriptions.push((this._helpExplorer = new HelpExplorer()));
