@@ -107,7 +107,6 @@ export class FeatureFlagClient {
     private static evaluateFeatures(): FeatureGateValues {
         const featureFlags = Object.values(Features).map(async (feature) => {
             return {
-                // eslint-disable-next-line @typescript-eslint/await-thenable
                 [feature]: this.checkGate(feature),
             };
         });
