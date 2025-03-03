@@ -24,20 +24,27 @@ export class FeatureFlagClient {
     }
 
     public static async initialize(options: FeatureFlagClientOptions): Promise<void> {
-        const targetApp = process.env.ATLASCODE_FX3_TARGET_APP || '';
-        const environment =
-            (process.env.ATLASCODE_FX3_ENVIRONMENT as FeatureGateEnvironment) || FeatureGateEnvironment.Production;
+        const targetApp = process.env.ATLASCODE_FX3_TARGET_APP;
+        const environment = process.env.ATLASCODE_FX3_ENVIRONMENT as FeatureGateEnvironment;
+        const apiKey = process.env.ATLASCODE_FX3_API_KEY;
+        const timeout = process.env.ATLASCODE_FX3_TIMEOUT;
+
+        if (!targetApp || !environment || !apiKey || !timeout) {
+            this._featureGates = this.evaluateFeatures();
+            this._experimentValues = this.evaluateExperiments();
+            return;
+        }
 
         console.log(`FeatureGates: initializing, target: ${targetApp}, environment: ${environment}`);
         this.analyticsClient = new AnalyticsClientMapper(options.analyticsClient, options.identifiers);
         this.eventBuilder = options.eventBuilder;
 
-        return FeatureGates.initialize(
+        await FeatureGates.initialize(
             {
-                apiKey: process.env.ATLASCODE_FX3_API_KEY || '',
+                apiKey,
                 environment,
                 targetApp,
-                fetchTimeoutMs: Number.parseInt(process.env.ATLASCODE_FX3_TIMEOUT || '2000'),
+                fetchTimeoutMs: Number.parseInt(timeout),
                 analyticsWebClient: Promise.resolve(this.analyticsClient),
             },
             options.identifiers,
@@ -47,29 +54,27 @@ export class FeatureFlagClient {
                 this.eventBuilder.featureFlagClientInitializedEvent().then((e) => {
                     options.analyticsClient.sendTrackEvent(e);
                 });
-            })
-            .then(() => {
+
                 // console log all feature gates and values
                 for (const feat of Object.values(Features)) {
                     console.log(`FeatureGates: ${feat} -> ${FeatureGates.checkGate(feat)}`);
                 }
             })
-            .then(async () => {
-                this._featureGates = await this.evaluateFeatures();
-                this._experimentValues = await this.evaluateExperiments();
-            })
             .catch((err) => {
                 console.warn(`FeatureGates: Failed to initialize client. ${err}`);
-                console.warn('FeatureGates: Disabling feature flags');
                 this.eventBuilder
                     .featureFlagClientInitializationFailedEvent()
                     .then((e) => options.analyticsClient.sendTrackEvent(e));
+            })
+            .finally(async () => {
+                this._featureGates = this.evaluateFeatures();
+                this._experimentValues = this.evaluateExperiments();
             });
     }
 
-    public static checkGate(gate: string): boolean {
+    private static checkGate(gate: Features): boolean {
         let gateValue = false;
-        if (FeatureGates === null) {
+        if (!FeatureGates) {
             console.warn('FeatureGates: FeatureGates is not initialized. Defaulting to False');
         } else {
             // FeatureGates.checkGate returns false if any errors
@@ -79,20 +84,18 @@ export class FeatureFlagClient {
         return gateValue;
     }
 
-    public static checkExperimentValue(experiment: string): any {
-        let gateValue: any;
+    private static checkExperimentValue(experiment: Experiments): any {
         const experimentGate = ExperimentGates[experiment];
         if (!experimentGate) {
             return undefined;
         }
-        if (FeatureGates === null) {
-            console.warn(
-                `FeatureGates: FeatureGates is not initialized. Returning default value: ${experimentGate.defaultValue}`,
-            );
-            gateValue = experimentGate.defaultValue;
+
+        let gateValue = experimentGate.defaultValue;
+        if (!FeatureGates) {
+            console.warn(`FeatureGates: FeatureGates is not initialized. Returning default value: ${gateValue}`);
         } else {
             gateValue = FeatureGates.getExperimentValue(
-                experimentGate.gate,
+                experiment,
                 experimentGate.parameter,
                 experimentGate.defaultValue,
             );
@@ -101,29 +104,25 @@ export class FeatureFlagClient {
         return gateValue;
     }
 
-    public static async evaluateFeatures() {
-        const featureFlags = await Promise.all(
-            Object.values(Features).map(async (feature) => {
-                return {
-                    // eslint-disable-next-line @typescript-eslint/await-thenable
-                    [feature]: await this.checkGate(feature),
-                };
-            }),
-        );
+    private static evaluateFeatures(): FeatureGateValues {
+        const featureFlags = Object.values(Features).map(async (feature) => {
+            return {
+                // eslint-disable-next-line @typescript-eslint/await-thenable
+                [feature]: this.checkGate(feature),
+            };
+        });
 
-        return featureFlags.reduce((acc, val) => ({ ...acc, ...val }), {});
+        return featureFlags.reduce((acc, val) => ({ ...acc, ...val }), {}) as FeatureGateValues;
     }
 
-    public static async evaluateExperiments() {
-        const experimentGates = await Promise.all(
-            Object.values(Experiments).map(async (experiment) => {
-                return {
-                    [experiment]: await this.checkExperimentValue(experiment),
-                };
-            }),
-        );
+    private static evaluateExperiments(): ExperimentGateValues {
+        const experimentGates = Object.values(Experiments).map(async (experiment) => {
+            return {
+                [experiment]: this.checkExperimentValue(experiment),
+            };
+        });
 
-        return experimentGates.reduce((acc, val) => ({ ...acc, ...val }), {});
+        return experimentGates.reduce((acc, val) => ({ ...acc, ...val }), {}) as ExperimentGateValues;
     }
 
     static dispose() {

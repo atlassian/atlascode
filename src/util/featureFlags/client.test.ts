@@ -2,9 +2,23 @@
 enum MockFeatures {
     TestFeature = 'some-very-real-feature',
 }
+
+enum MockExperiments {
+    TestExperiment = 'some-very-real-experiment',
+}
+
+const MockExperimentGates = {
+    [MockExperiments.TestExperiment]: {
+        parameter: 'isEnabled',
+        defaultValue: false,
+    },
+};
+
 jest.mock('./features', () => {
     return {
         Features: MockFeatures,
+        Experiments: MockExperiments,
+        ExperimentGates: MockExperimentGates,
     };
 });
 
@@ -14,11 +28,12 @@ jest.mock('@atlaskit/feature-gate-js-client', () => {
         default: {
             initialize: jest.fn(() => Promise.resolve()),
             checkGate: jest.fn(() => Promise.resolve(false)),
+            getExperimentValue: jest.fn(() => Promise.resolve(false)),
         },
     };
 });
-import FeatureGates from '@atlaskit/feature-gate-js-client';
 
+import FeatureGates from '@atlaskit/feature-gate-js-client';
 import { FeatureFlagClient, FeatureFlagClientOptions } from './client';
 import { EventBuilderInterface } from './analytics';
 
@@ -61,29 +76,14 @@ describe('FeatureFlagClient', () => {
         it('should initialize the feature flag client', async () => {
             await FeatureFlagClient.initialize(options);
             expect(FeatureGates.initialize).toHaveBeenCalled();
+            expect(FeatureGates.checkGate).toHaveBeenCalled();
+            expect(FeatureGates.getExperimentValue).toHaveBeenCalled();
         });
 
         it('should catch an error when the feature flag client fails to initialize', async () => {
             FeatureGates.initialize = jest.fn(() => Promise.reject('error'));
             await FeatureFlagClient.initialize(options);
             expect(FeatureGates.initialize).toHaveBeenCalled();
-        });
-    });
-
-    describe('checkGate', () => {
-        it('should check the feature flag gate', async () => {
-            FeatureFlagClient.checkGate(MockFeatures.TestFeature);
-            expect(FeatureGates.checkGate).toHaveBeenCalled();
-        });
-    });
-
-    describe('evaluateFeatures', () => {
-        it('should return all evaluated feature flags', async () => {
-            const map = await FeatureFlagClient.evaluateFeatures();
-            expect(map).toEqual({
-                [MockFeatures.TestFeature]: false,
-            });
-            expect(FeatureGates.checkGate).toHaveBeenCalled();
         });
     });
 });
