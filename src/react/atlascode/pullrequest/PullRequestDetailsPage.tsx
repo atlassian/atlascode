@@ -184,7 +184,8 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                 <Grid item>
                                                     <Button
                                                         disabled={
-                                                            state.pr.data.source.branchName === state.currentBranchName
+                                                            state.pr.data.source.branchName ===
+                                                                state.currentBranchName || state.isCheckingOutBranch
                                                         }
                                                         onClick={controller.checkoutBranch}
                                                         color={'primary'}
@@ -192,7 +193,9 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                         <Typography variant="button" noWrap>
                                                             {state.pr.data.source.branchName === state.currentBranchName
                                                                 ? 'Source branch checked out'
-                                                                : 'Checkout source branch'}
+                                                                : state.isCheckingOutBranch
+                                                                  ? 'Checking out...'
+                                                                  : 'Checkout source branch'}
                                                         </Typography>
                                                     </Button>
                                                 </Grid>
