@@ -66,7 +66,7 @@ export class FeatureFlagClient {
                     .featureFlagClientInitializationFailedEvent()
                     .then((e) => options.analyticsClient.sendTrackEvent(e));
             })
-            .finally(async () => {
+            .finally(() => {
                 this._featureGates = this.evaluateFeatures();
                 this._experimentValues = this.evaluateExperiments();
             });
