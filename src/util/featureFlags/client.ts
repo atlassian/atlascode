@@ -1,6 +1,5 @@
-import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
-
 import FeatureGates, { FeatureGateEnvironment, Identifiers } from '@atlaskit/feature-gate-js-client';
+import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
 import { AnalyticsClientMapper, EventBuilderInterface } from './analytics';
 import { ExperimentGates, ExperimentGateValues, Experiments, FeatureGateValues, Features } from './features';
 
@@ -13,6 +12,7 @@ export type FeatureFlagClientOptions = {
 export class FeatureFlagClient {
     private static analyticsClient: AnalyticsClientMapper;
     private static eventBuilder: EventBuilderInterface;
+
     private static _featureGates: FeatureGateValues;
     static get featureGates(): FeatureGateValues {
         return this._featureGates;
@@ -30,8 +30,7 @@ export class FeatureFlagClient {
         const timeout = process.env.ATLASCODE_FX3_TIMEOUT;
 
         if (!targetApp || !environment || !apiKey || !timeout) {
-            this._featureGates = this.evaluateFeatures();
-            this._experimentValues = this.evaluateExperiments();
+            this.finalizeInit();
             return;
         }
 
@@ -54,11 +53,6 @@ export class FeatureFlagClient {
                 this.eventBuilder.featureFlagClientInitializedEvent().then((e) => {
                     options.analyticsClient.sendTrackEvent(e);
                 });
-
-                // console log all feature gates and values
-                for (const feat of Object.values(Features)) {
-                    console.log(`FeatureGates: ${feat} -> ${FeatureGates.checkGate(feat)}`);
-                }
             })
             .catch((err) => {
                 console.warn(`FeatureGates: Failed to initialize client. ${err}`);
@@ -67,9 +61,67 @@ export class FeatureFlagClient {
                     .then((e) => options.analyticsClient.sendTrackEvent(e));
             })
             .finally(() => {
-                this._featureGates = this.evaluateFeatures();
-                this._experimentValues = this.evaluateExperiments();
+                this.finalizeInit();
+
+                // console log all feature gates and values
+                for (const feat of Object.values(Features)) {
+                    console.log(`FeatureGates: ${feat} -> ${FeatureGates.checkGate(feat)}`);
+                }
             });
+    }
+
+    private static finalizeInit(): void {
+        this._featureGates = this.evaluateFeatures();
+        this._experimentValues = this.evaluateExperiments();
+
+        const ffSplit = (process.env.ATLASCODE_FF_OVERRIDES || '')
+            .split(',')
+            .map(this.parseBoolOverride<Features>)
+            .filter((x) => !!x);
+        for (const { key, value } of ffSplit) {
+            this._featureGates[key] = value;
+        }
+
+        const boolExpSplit = (process.env.ATLASCODE_EXP_OVERRIDES_BOOL || '')
+            .split(',')
+            .map(this.parseBoolOverride<Experiments>)
+            .filter((x) => !!x);
+        for (const { key, value } of boolExpSplit) {
+            this._experimentValues[key] = value;
+        }
+
+        const strExpSplit = (process.env.ATLASCODE_EXP_OVERRIDES_STRING || '')
+            .split(',')
+            .map(this.parseStringOverride)
+            .filter((x) => !!x);
+        for (const { key, value } of strExpSplit) {
+            this._experimentValues[key] = value;
+        }
+    }
+
+    private static parseBoolOverride<T>(setting: string): { key: T; value: boolean } | undefined {
+        const [key, valueRaw] = setting
+            .trim()
+            .split('=', 2)
+            .map((x) => x.trim());
+        if (key) {
+            const value = valueRaw.toLowerCase() === 'true';
+            return { key: key as T, value };
+        } else {
+            return undefined;
+        }
+    }
+
+    private static parseStringOverride(setting: string): { key: Experiments; value: string } | undefined {
+        const [key, value] = setting
+            .trim()
+            .split('=', 2)
+            .map((x) => x.trim());
+        if (key) {
+            return { key: key as Experiments, value };
+        } else {
+            return undefined;
+        }
     }
 
     private static checkGate(gate: Features): boolean {

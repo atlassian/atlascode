@@ -8,7 +8,7 @@ export enum Experiments {
     AtlascodeAA = 'atlascode_aa_experiment',
 }
 
-export const ExperimentGates: ExperimentGate = {
+export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
     [Experiments.NewAuthUI]: {
         parameter: 'isEnabled',
         defaultValue: false,
@@ -20,8 +20,6 @@ export const ExperimentGates: ExperimentGate = {
 };
 
 type ExperimentPayload = { parameter: string; defaultValue: any };
-type ExperimentGate = Record<Experiments, ExperimentPayload>;
 
 export type FeatureGateValues = Record<Features, boolean>;
-
 export type ExperimentGateValues = Record<Experiments, any>;
