@@ -208,16 +208,34 @@ export class CloudPullRequestApi implements PullRequestApi {
         const diffUrl = spec
             ? `/repositories/${ownerSlug}/${repoSlug}/diffstat/${spec}`
             : `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/diffstat`;
-        let { data } = await this.client.get(diffUrl);
+        let data = { values: undefined, next: undefined };
+        try {
+            const response = await this.client.get(diffUrl);
+            data = response.data;
+        } catch (ex) {
+            const error = new Error(`Fetching diffStat failed for the PR: ${pr.data.id} with error ${ex}`);
+            Logger.error(error);
+        }
 
         const conflictUrl = `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/conflicts`;
-        let resp = await this.client.get(conflictUrl);
+        let resp = { data: [] };
+        try {
+            resp = await this.client.get(conflictUrl);
+        } catch (ex) {
+            const error = new Error(`Fetching conflict data failed for the PR: ${pr.data.id}} with error: ${ex}`);
+            Logger.error(error);
+        }
         const conflictData = resp.data;
-
         const prTypeUrl = `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`;
-        resp = await this.client.get(prTypeUrl);
-        const diffType = resp.data.diff_type;
+        let prTypeData = { data: { diff_type: '' } };
+        try {
+            prTypeData = await this.client.get(prTypeUrl);
+        } catch (ex) {
+            const error = new Error(`Fetching prTypeData failed for the PR: ${pr.data.id}} with error: ${ex}`);
+            Logger.error(error);
+        }
 
+        const diffType = prTypeData.data.diff_type;
         if (!data.values) {
             return [];
         }
