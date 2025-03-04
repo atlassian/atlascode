@@ -26,13 +26,15 @@ describe('Auth User', async () => {
 
     after(async () => {});
 
-    it('in SideBarView should see Create issue... button', async () => {
+    it('in Custom JQL  Filters SideBarView should see Configure JQL entries in settings to view Jira issues button', async () => {
         const atlasDrawer = sideBarView.findElement(By.id('workbench.view.extension.atlascode-drawer'));
         expect(atlasDrawer).to.not.be.undefined;
 
-        const createIssueButton = atlasDrawer.findElement(By.css('[aria-label="Create issue..."]'));
+        const createIssueButton = atlasDrawer.findElement(
+            By.css('[aria-label="Configure JQL entries in settings to view Jira issues"]'),
+        );
         expect(createIssueButton).to.not.be.undefined;
-        expect(await createIssueButton.getText()).to.equal('Create issue...');
+        expect(await createIssueButton.getText()).to.equal('Configure JQL entries in settings to view Jira issues');
     });
 
     it('in SideBarView should see a assigned JIRA issues', async () => {});

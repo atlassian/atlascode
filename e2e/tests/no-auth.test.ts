@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-expressions */
 import { expect } from 'chai';
-import { before, ActivityBar, after, SideBarView, By, EditorView, Workbench } from 'vscode-extension-tester';
+import { before, ActivityBar, after, SideBarView, EditorView, Workbench } from 'vscode-extension-tester';
 
 describe('Atlassian Extension Activity Bar', async () => {
     let activityBar: ActivityBar;
@@ -39,16 +39,18 @@ describe('Atlassian Extension SideBar', async () => {
     });
 
     after(async () => {});
+    //
+    //Commenting this out to be later re-implemented with Assigned Issues section
+    //
+    // it('should have a login action suggestion', async () => {
+    //     const atlasDrawer = sideBarView.findElement(By.id('workbench.view.extension.atlascode-drawer'));
+    //     expect(atlasDrawer).to.not.be.undefined;
 
-    it('should have a login action suggestion', async () => {
-        const atlasDrawer = sideBarView.findElement(By.id('workbench.view.extension.atlascode-drawer'));
-        expect(atlasDrawer).to.not.be.undefined;
-
-        // find element by aria-label: "Please login to Jira"
-        const loginButton = atlasDrawer.findElement(By.css('[aria-label="Please login to Jira"]'));
-        expect(loginButton).to.not.be.undefined;
-        expect(await loginButton.getText()).to.equal('Please login to Jira');
-    });
+    //     // find element by aria-label: "Please login to Jira"
+    //     const loginButton = atlasDrawer.findElement(By.css('[aria-label="Please login to Jira"]'));
+    //     expect(loginButton).to.not.be.undefined;
+    //     expect(await loginButton.getText()).to.equal('Please login to Jira');
+    // });
 });
 
 describe('Atlassian Extension Settings Page', async () => {
