@@ -409,6 +409,12 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.bb.togglediffNormalize",
+                "title": "Normalize files",
+                "icon": "$(law)",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.debug.bitbucketSites",
                 "title": "Show Bitbucket sites info",
                 "category": "Atlassian"
@@ -480,6 +486,11 @@
                     "command": "atlascode.bb.editThisFile",
                     "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled",
                     "group": "navigation"
+                },
+                {
+                    "command": "atlascode.bb.togglediffNormalize",
+                    "group": "navigation",
+                    "when": "isInDiffEditor && resourceScheme == atlascode.bbpr && atlascode:IsNormalizerEnabled"
                 }
             ],
             "editor/context": [
@@ -809,6 +820,10 @@
                 },
                 {
                     "command": "atlascode.bb.toggleCommentsVisibility",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.togglediffNormalize",
                     "when": "false"
                 },
                 {
