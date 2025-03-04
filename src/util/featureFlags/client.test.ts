@@ -13,8 +13,6 @@ const MockExperimentGates: Record<string, any> = {
     },
 };
 
-import { Experiments, Features } from './features';
-
 jest.mock('./features', () => {
     return {
         Features: MockFeatures,
@@ -22,10 +20,6 @@ jest.mock('./features', () => {
         ExperimentGates: MockExperimentGates,
     };
 });
-
-import FeatureGates from '@atlaskit/feature-gate-js-client';
-import { FeatureFlagClient, FeatureFlagClientOptions } from './client';
-import { EventBuilderInterface } from './analytics';
 
 jest.mock('@atlaskit/feature-gate-js-client', () => {
     return {
@@ -37,6 +31,11 @@ jest.mock('@atlaskit/feature-gate-js-client', () => {
         },
     };
 });
+
+import FeatureGates from '@atlaskit/feature-gate-js-client';
+import { FeatureFlagClient, FeatureFlagClientOptions } from './client';
+import { EventBuilderInterface } from './analytics';
+import { Experiments, Features } from './features';
 
 class MockEventBuilder implements EventBuilderInterface {
     public featureFlagClientInitializedEvent = jest.fn(() => Promise.resolve({}));
