@@ -157,23 +157,15 @@ export class FeatureFlagClient {
     }
 
     private static evaluateFeatures(): FeatureGateValues {
-        const featureFlags = Object.values(Features).map(async (feature) => {
-            return {
-                [feature]: this.checkGate(feature),
-            };
-        });
-
-        return featureFlags.reduce((acc, val) => ({ ...acc, ...val }), {}) as FeatureGateValues;
+        const featureFlags = {} as FeatureGateValues;
+        Object.values(Features).forEach((feature) => (featureFlags[feature] = this.checkGate(feature)));
+        return featureFlags;
     }
 
     private static evaluateExperiments(): ExperimentGateValues {
-        const experimentGates = Object.values(Experiments).map(async (experiment) => {
-            return {
-                [experiment]: this.checkExperimentValue(experiment),
-            };
-        });
-
-        return experimentGates.reduce((acc, val) => ({ ...acc, ...val }), {}) as ExperimentGateValues;
+        const experimentGates = {} as ExperimentGateValues;
+        Object.values(Experiments).forEach((exp) => (experimentGates[exp] = this.checkExperimentValue(exp)));
+        return experimentGates;
     }
 
     static dispose() {
