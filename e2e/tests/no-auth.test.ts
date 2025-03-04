@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-expressions */
 import { expect } from 'chai';
-import { before, ActivityBar, after, SideBarView, By, EditorView, Workbench } from 'vscode-extension-tester';
+import { before, ActivityBar, after, SideBarView, EditorView, Workbench, By } from 'vscode-extension-tester';
 
 describe('Atlassian Extension Activity Bar', async () => {
     let activityBar: ActivityBar;
@@ -23,8 +23,16 @@ describe('Atlassian Extension Activity Bar', async () => {
 describe('Atlassian Extension SideBar', async () => {
     let activityBar: ActivityBar;
     let sideBarView: SideBarView;
+    const originalEnv = process.env;
 
     before(async () => {
+        process.env = {
+            ...originalEnv,
+            ATLASCODE_FX3_TARGET_APP: 'some-app',
+            ATLASCODE_FX3_API_KEY: 'some-key',
+            ATLASCODE_FX3_ENVIRONMENT: 'Production',
+            ATLASCODE_FX3_TIMEOUT: '2000',
+        };
         activityBar = new ActivityBar();
         (await activityBar.getViewControl('Atlassian'))?.openView();
         sideBarView = new SideBarView();
@@ -38,7 +46,9 @@ describe('Atlassian Extension SideBar', async () => {
         await new Workbench().executeCommand('Atlassian: Test Logout');
     });
 
-    after(async () => {});
+    after(async () => {
+        process.env = originalEnv;
+    });
 
     it('should have a login action suggestion', async () => {
         const atlasDrawer = sideBarView.findElement(By.id('workbench.view.extension.atlascode-drawer'));

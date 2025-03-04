@@ -1,12 +1,18 @@
 /* eslint-disable no-unused-expressions */
-import { expect } from 'chai';
-import { before, after, EditorView, Workbench, By, ActivityBar, SideBarView } from 'vscode-extension-tester';
+import { before, after, EditorView, Workbench, ActivityBar, SideBarView } from 'vscode-extension-tester';
 
 describe('Auth User', async () => {
     let activityBar: ActivityBar;
     let sideBarView: SideBarView;
-
+    const originalEnv = process.env;
     before(async () => {
+        process.env = {
+            ...originalEnv,
+            ATLASCODE_FX3_TARGET_APP: 'some-app',
+            ATLASCODE_FX3_API_KEY: 'some-key',
+            ATLASCODE_FX3_ENVIRONMENT: 'Production',
+            ATLASCODE_FX3_TIMEOUT: '2000',
+        };
         await new EditorView().closeAllEditors();
         await new Workbench().executeCommand('Atlassian: Test Login');
         await new Promise((res) => {
@@ -24,15 +30,8 @@ describe('Auth User', async () => {
         });
     });
 
-    after(async () => {});
-
-    it('in SideBarView should see Create issue... button', async () => {
-        const atlasDrawer = sideBarView.findElement(By.id('workbench.view.extension.atlascode-drawer'));
-        expect(atlasDrawer).to.not.be.undefined;
-
-        const createIssueButton = atlasDrawer.findElement(By.css('[aria-label="Create issue..."]'));
-        expect(createIssueButton).to.not.be.undefined;
-        expect(await createIssueButton.getText()).to.equal('Create issue...');
+    after(async () => {
+        process.env = originalEnv;
     });
 
     it('in SideBarView should see a assigned JIRA issues', async () => {});

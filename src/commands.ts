@@ -24,6 +24,7 @@ import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
+import { CommandContext, setCommandContext } from './commandContext';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -54,6 +55,7 @@ export enum Commands {
     EditThisFile = 'atlascode.bb.editThisFile',
     CreateIssue = 'atlascode.jira.createIssue',
     RefreshJiraExplorer = 'atlascode.jira.refreshExplorer',
+    RefreshCustomJqlExplorer = 'atlascode.jira.refreshCustomJqlExplorer',
     ShowJiraIssueSettings = 'atlascode.jira.showJiraIssueSettings',
     ShowPullRequestSettings = 'atlascode.bb.showPullRequestSettings',
     ShowPipelineSettings = 'atlascode.bb.showPipelineSettings',
@@ -92,10 +94,21 @@ export enum Commands {
     WorkbenchOpenWorkspace = 'atlascode.workbenchOpenWorkspace',
     CloneRepository = 'atlascode.cloneRepository',
     DisableHelpExplorer = 'atlascode.disableHelpExplorer',
+    CreateNewJql = 'atlascode.jira.createNewJql',
+    RemoveFromSidebar = 'atlascode.jira.removeFromSidebar',
 }
 
 export function registerCommands(vscodeContext: ExtensionContext) {
     vscodeContext.subscriptions.push(
+        commands.registerCommand(Commands.RemoveFromSidebar, () =>
+            setCommandContext(CommandContext.CustomJQLExplorer, false),
+        ),
+        commands.registerCommand(Commands.CreateNewJql, () =>
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Jira,
+                subSection: ConfigSubSection.Issues,
+            }),
+        ),
         commands.registerCommand(Commands.ShowConfigPage, () =>
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Jira,

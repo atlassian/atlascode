@@ -71,6 +71,9 @@ import { AtlascodeUriHandler } from './uriHandler';
 import { CheckoutHelper } from './bitbucket/interfaces';
 import { ProductJira } from './atlclients/authInfo';
 import { ATLASCODE_TEST_USER_EMAIL, ATLASCODE_TEST_HOST } from './constants';
+import { CustomJQLViewProvider } from './views/jira/treeViews/customJqlViewProvider';
+import { Logger } from './logger';
+import { SearchJiraHelper } from './views/jira/searchJiraHelper';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -184,29 +187,22 @@ export class Container {
 
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
         this._bitbucketHelper = new BitbucketCheckoutHelper(context.globalState);
-
-        if (config.jira.explorer.enabled) {
-            context.subscriptions.push((this._jiraExplorer = new JiraContext()));
-        } else {
-            const disposable = configuration.onDidChange((e) => {
-                if (configuration.changed(e, 'jira.explorer.enabled')) {
-                    disposable.dispose();
-                    context.subscriptions.push((this._jiraExplorer = new JiraContext()));
-                }
-            });
-        }
-
-        context.subscriptions.push((this._helpExplorer = new HelpExplorer()));
-
         FeatureFlagClient.initialize({
             analyticsClient: this._analyticsClient,
             identifiers: {
                 analyticsAnonymousId: env.machineId,
             },
             eventBuilder: new EventBuilder(),
-        }).then(() => {
-            this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
-        });
+        })
+            .catch((err) => {
+                Logger.error(Error(`Failed to initialize feature flags: ${err}`));
+            })
+            .finally(() => {
+                this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
+                this.initializeNewSidebarView(context, config);
+            });
+
+        context.subscriptions.push((this._helpExplorer = new HelpExplorer()));
     }
 
     static getAnalyticsEnable(): boolean {
@@ -220,13 +216,34 @@ export class Container {
         bitbucketHelper: CheckoutHelper,
     ) {
         if (FeatureFlagClient.featureGates[Features.EnableNewUriHandler]) {
-            console.log('Using new URI handler');
+            Logger.debug('Using new URI handler');
             context.subscriptions.push(AtlascodeUriHandler.create(analyticsApi, bitbucketHelper));
         } else {
             context.subscriptions.push(new LegacyAtlascodeUriHandler(analyticsApi, bitbucketHelper));
         }
     }
+    static initializeNewSidebarView(context: ExtensionContext, config: IConfig) {
+        if (FeatureFlagClient.featureGates[Features.NewSidebarTreeView]) {
+            Logger.debug('Using new custom JQL view');
+            SearchJiraHelper.initialize();
+            context.subscriptions.push((this._customJqlViewProvider = new CustomJQLViewProvider()));
+        } else {
+            this.initializeLegacySidebarView(context, config);
+        }
+    }
 
+    static initializeLegacySidebarView(context: ExtensionContext, config: IConfig) {
+        if (config.jira.explorer.enabled) {
+            context.subscriptions.push((this._jiraExplorer = new JiraContext()));
+        } else {
+            const disposable = configuration.onDidChange((e) => {
+                if (configuration.changed(e, 'jira.explorer.enabled')) {
+                    disposable.dispose();
+                    context.subscriptions.push((this._jiraExplorer = new JiraContext()));
+                }
+            });
+        }
+    }
     static initializeBitbucket(bbCtx: BitbucketContext) {
         this._bitbucketContext = bbCtx;
         this._pipelinesExplorer = new PipelinesExplorer(bbCtx);
@@ -527,5 +544,10 @@ export class Container {
     private static _bitbucketHelper: CheckoutHelper;
     static get bitbucketHelper() {
         return this._bitbucketHelper;
+    }
+
+    private static _customJqlViewProvider: CustomJQLViewProvider;
+    static get customJqlViewProvider() {
+        return this._customJqlViewProvider;
     }
 }
