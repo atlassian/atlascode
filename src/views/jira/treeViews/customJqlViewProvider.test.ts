@@ -18,6 +18,7 @@ const mockJqlEntries = [
 ];
 
 const mockEnabledJqlEntries = jest.fn().mockReturnValue(mockJqlEntries);
+const mockProductHasAtLeastOneSite = jest.fn().mockReturnValue(true);
 jest.mock('../../../container', () => ({
     Container: {
         jqlManager: {
@@ -27,6 +28,12 @@ jest.mock('../../../container', () => ({
         },
         siteManager: {
             onDidSitesAvailableChange: jest.fn(),
+            productHasAtLeastOneSite: mockProductHasAtLeastOneSite,
+        },
+        context: {
+            subscriptions: {
+                push: jest.fn(),
+            },
         },
     },
 }));
@@ -63,6 +70,7 @@ import { ConfigureJQLNode } from '../configureJQLNode';
 import { CustomJQLTree } from '../customJqlTree';
 import { SearchJiraHelper } from '../searchJiraHelper';
 import { CustomJQLViewProvider } from './customJqlViewProvider';
+import { SimpleJiraIssueNode } from '../../../views/nodes/simpleJiraIssueNode';
 
 describe('CustomJqlViewProvider', () => {
     it('should grab JQL entries', () => {
@@ -88,6 +96,14 @@ describe('CustomJqlViewProvider', () => {
             const children = await provider.getChildren();
             expect(children).toHaveLength(1);
             expect(children[0]).toBeInstanceOf(ConfigureJQLNode);
+        });
+
+        it('should return a Login to Jira node if no sites are available', async () => {
+            mockProductHasAtLeastOneSite.mockReturnValue(false);
+            const provider = new CustomJQLViewProvider();
+            const children = await provider.getChildren();
+            expect(children).toHaveLength(1);
+            expect(children[0]).toBeInstanceOf(SimpleJiraIssueNode);
         });
     });
 

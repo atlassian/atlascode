@@ -7,13 +7,14 @@ import { CustomJQLTree } from '../customJqlTree';
 import { ConfigureJQLNode } from '../configureJQLNode';
 import { CONFIGURE_JQL_STRING, CUSTOM_JQL_VIEW_PROVIDER_ID } from './constants';
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
-import { commands, Disposable, EventEmitter, Event, window } from 'vscode';
+import { commands, Disposable, EventEmitter, Event, window, ConfigurationChangeEvent } from 'vscode';
 import { Logger } from '../../../logger';
 import { CommandContext, setCommandContext } from '../../../commandContext';
 import { Commands } from '../../../commands';
 import { NewIssueMonitor } from '../../../jira/newIssueMonitor';
 import { SearchJiraHelper } from '../searchJiraHelper';
-
+import { configuration } from '../../../config/configuration';
+import { SimpleJiraIssueNode } from '../../../views/nodes/simpleJiraIssueNode';
 export class CustomJQLViewProvider extends BaseTreeDataProvider {
     private _disposable: Disposable;
     private _id: string = CUSTOM_JQL_VIEW_PROVIDER_ID;
@@ -38,6 +39,14 @@ export class CustomJQLViewProvider extends BaseTreeDataProvider {
         );
         window.createTreeView(this.viewId(), { treeDataProvider: this });
         setCommandContext(CommandContext.CustomJQLExplorer, true);
+
+        Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
+    }
+
+    onConfigurationChanged(e: ConfigurationChangeEvent) {
+        if (configuration.changed(e, 'jira.jqlList') || configuration.changed(e, 'jira.explorer')) {
+            this.refresh();
+        }
     }
 
     viewId(): string {
@@ -65,7 +74,7 @@ export class CustomJQLViewProvider extends BaseTreeDataProvider {
 
         this._onDidChangeTreeData.fire(null);
         SearchJiraHelper.clearIssues(this.viewId()); // so no duplicates
-        this._newIssueMonitor.checkForNewIssues();
+        await this._newIssueMonitor.checkForNewIssues();
     }
 
     getTreeItem(element: AbstractBaseNode) {
@@ -73,6 +82,19 @@ export class CustomJQLViewProvider extends BaseTreeDataProvider {
     }
 
     async getChildren(element?: AbstractBaseNode | undefined) {
+        if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+            return Promise.resolve([
+                new SimpleJiraIssueNode(
+                    'Please login to Jira',
+                    {
+                        command: Commands.ShowConfigPage,
+                        title: 'Login to Jira',
+                        arguments: [ProductJira],
+                    },
+                    undefined,
+                ),
+            ]);
+        }
         let allIssues: MinimalORIssueLink<DetailedSiteInfo>[] = [];
         if (element) {
             return element.getChildren();
@@ -97,9 +119,8 @@ export class CustomJQLViewProvider extends BaseTreeDataProvider {
             );
             allIssues = [...new Map(allIssues.map((issue) => [issue.key, issue])).values()];
             SearchJiraHelper.setIssues(allIssues, this.viewId());
-            return [...this._children];
         }
 
-        return [];
+        return [...this._children];
     }
 }
