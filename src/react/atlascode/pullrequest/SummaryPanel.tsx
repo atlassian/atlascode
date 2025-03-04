@@ -1,4 +1,4 @@
-import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
+import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary, CircularProgress } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import React, { memo, useCallback, useState } from 'react';
 import { User } from '../../../bitbucket/model';
@@ -9,10 +9,11 @@ type SummaryPanelProps = {
     htmlSummary: string;
     fetchUsers: (input: string) => Promise<User[]>;
     summaryChange: (text: string) => void;
+    isLoading: boolean;
 };
 
 export const SummaryPanel: React.FunctionComponent<SummaryPanelProps> = memo(
-    ({ rawSummary, htmlSummary, fetchUsers, summaryChange }) => {
+    ({ rawSummary, htmlSummary, fetchUsers, summaryChange, isLoading }) => {
         const [internalExpanded, setInternalExpanded] = useState(true);
 
         const expansionHandler = useCallback((event: React.ChangeEvent<{}>, expanded: boolean) => {
@@ -39,12 +40,16 @@ export const SummaryPanel: React.FunctionComponent<SummaryPanelProps> = memo(
                     <PanelTitle>Summary</PanelTitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
-                    <InlineRenderedTextEditor
-                        rawContent={rawSummary}
-                        htmlContent={htmlSummary}
-                        onSave={handleSummaryChange}
-                        fetchUsers={handleFetchUsers}
-                    />
+                    {isLoading ? (
+                        <CircularProgress />
+                    ) : (
+                        <InlineRenderedTextEditor
+                            rawContent={rawSummary}
+                            htmlContent={htmlSummary}
+                            onSave={handleSummaryChange}
+                            fetchUsers={handleFetchUsers}
+                        />
+                    )}
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
