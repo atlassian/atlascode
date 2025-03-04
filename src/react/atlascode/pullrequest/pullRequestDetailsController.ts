@@ -107,10 +107,13 @@ export const emptyApi: PullRequestDetailsControllerApi = {
 
 export const PullRequestDetailsControllerContext = React.createContext(emptyApi);
 
-export interface PullRequestDetailsState extends PullRequestDetailsInitMessage {}
+export interface PullRequestDetailsState extends PullRequestDetailsInitMessage {
+    isCheckingOutBranch: boolean;
+}
 
 const emptyState: PullRequestDetailsState = {
     ...emptyPullRequestDetailsInitMessage,
+    isCheckingOutBranch: false,
 };
 
 export enum PullRequestDetailsUIActionType {
@@ -131,6 +134,7 @@ export enum PullRequestDetailsUIActionType {
     UpdateMergeStrategies = 'updateMergeStrategies',
     UpdateRelatedJiraIssues = 'updateRelatedJiraIssues',
     UpdateRelatedBitbucketIssues = 'updateRelatedBitbucketIssues',
+    SetCheckoutLoading = 'setCheckoutLoading',
 }
 
 export type PullRequestDetailsUIAction =
@@ -160,7 +164,8 @@ export type PullRequestDetailsUIAction =
           PullRequestDetailsUIActionType.UpdateRelatedBitbucketIssues,
           { data: PullRequestDetailsRelatedBitbucketIssuesMessage }
       >
-    | ReducerAction<PullRequestDetailsUIActionType.Loading>;
+    | ReducerAction<PullRequestDetailsUIActionType.Loading>
+    | ReducerAction<PullRequestDetailsUIActionType.SetCheckoutLoading, { data: { isLoading: boolean } }>;
 
 function pullRequestDetailsReducer(
     state: PullRequestDetailsState,
@@ -281,6 +286,12 @@ function pullRequestDetailsReducer(
                 ...state,
                 relatedBitbucketIssues: action.data.relatedIssues,
                 loadState: { ...state.loadState, relatedBitbucketIssues: false },
+            };
+        }
+        case PullRequestDetailsUIActionType.SetCheckoutLoading: {
+            return {
+                ...state,
+                isCheckingOutBranch: action.data.isLoading,
             };
         }
         default:
@@ -459,8 +470,16 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
 
     const checkoutBranch = useCallback(() => {
         dispatch({ type: PullRequestDetailsUIActionType.Loading });
-        postMessage({ type: PullRequestDetailsActionType.CheckoutBranch });
-    }, [postMessage]);
+        dispatch({ type: PullRequestDetailsUIActionType.SetCheckoutLoading, data: { isLoading: true } });
+
+        postMessagePromise(
+            { type: PullRequestDetailsActionType.CheckoutBranch },
+            PullRequestDetailsMessageType.CheckoutBranch,
+            ConnectionTimeout,
+        ).finally(() => {
+            dispatch({ type: PullRequestDetailsUIActionType.SetCheckoutLoading, data: { isLoading: false } });
+        });
+    }, [postMessagePromise]);
 
     const postComment = useCallback(
         (rawText: string, parentId?: string): Promise<void> => {
