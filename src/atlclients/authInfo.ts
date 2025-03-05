@@ -19,7 +19,6 @@ export interface RemoveAuthInfoEvent extends AuthInfoEvent {
     type: AuthChangeType.Remove;
     product: Product;
     credentialId: string;
-    host: string;
 }
 
 export interface Product {
@@ -120,10 +119,6 @@ export interface DetailedSiteInfo extends SiteInfo {
     isCloud: boolean;
     userId: string;
     credentialId: string;
-}
-
-export function getSiteInfoKey(site: DetailedSiteInfo): string {
-    return `${site.product.key} - ${site.host} - ${site.credentialId}`;
 }
 
 // You MUST send source
