@@ -90,11 +90,7 @@ export class LoginManager {
 
             siteDetails.forEach(async (siteInfo) => {
                 await this._credentialManager.saveAuthInfo(siteInfo, oauthInfo);
-
-                const client = await Container.clientManager.jiraClient(siteInfo);
-                const fields = await client.getFields();
-                siteInfo.hasResolutionField = fields.some((f) => f.id === 'resolution');
-
+                await this.updateHasResolutionField(siteInfo);
                 this._siteManager.addSites([siteInfo]);
 
                 authenticatedEvent(siteInfo, isOnboarding).then((e) => {
@@ -258,13 +254,17 @@ export class LoginManager {
         await this._credentialManager.saveAuthInfo(siteDetails, credentials);
 
         if (site.product.key === ProductJira.key) {
-            const client = await Container.clientManager.jiraClient(siteDetails);
-            const fields = await client.getFields();
-            siteDetails.hasResolutionField = fields.some((f) => f.id === 'resolution');
+            await this.updateHasResolutionField(siteDetails);
         }
 
         this._siteManager.addOrUpdateSite(siteDetails);
 
         return siteDetails;
+    }
+
+    private async updateHasResolutionField(siteInfo: DetailedSiteInfo): Promise<void> {
+        const client = await Container.clientManager.jiraClient(siteInfo);
+        const fields = await client.getFields();
+        siteInfo.hasResolutionField = fields.some((f) => f.id === 'resolution');
     }
 }
