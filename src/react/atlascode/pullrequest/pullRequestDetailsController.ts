@@ -37,6 +37,7 @@ import {
     PullRequestDetailsSummaryMessage,
     PullRequestDetailsTasksMessage,
     PullRequestDetailsTitleMessage,
+    PullRequestDetailsConflictedFilesMessage,
 } from '../../../lib/ipc/toUI/pullRequestDetails';
 import { ConnectionTimeout } from '../../../util/time';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
@@ -127,6 +128,7 @@ export enum PullRequestDetailsUIActionType {
     UpdateTasks = 'updateTasks',
     AddComment = 'addComment',
     UpdateFileDiffs = 'updateFileDiffs',
+    UpdateConflictedFiles = 'updateConflictedFiles',
     UpdateBuildStatuses = 'updateBuildStatuses',
     UpdateMergeStrategies = 'updateMergeStrategies',
     UpdateRelatedJiraIssues = 'updateRelatedJiraIssues',
@@ -144,6 +146,10 @@ export type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.UpdateComments, { data: PullRequestDetailsCommentsMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateTasks, { data: PullRequestDetailsTasksMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateFileDiffs, { data: PullRequestDetailsFileDiffsMessage }>
+    | ReducerAction<
+          PullRequestDetailsUIActionType.UpdateConflictedFiles,
+          { data: PullRequestDetailsConflictedFilesMessage }
+      >
     | ReducerAction<
           PullRequestDetailsUIActionType.UpdateBuildStatuses,
           { data: PullRequestDetailsBuildStatusesMessage }
@@ -255,6 +261,13 @@ function pullRequestDetailsReducer(
         case PullRequestDetailsUIActionType.UpdateFileDiffs: {
             return { ...state, fileDiffs: action.data.fileDiffs, loadState: { ...state.loadState, diffs: false } };
         }
+        case PullRequestDetailsUIActionType.UpdateConflictedFiles: {
+            return {
+                ...state,
+                conflictedFiles: action.data.conflictedFiles,
+                loadState: { ...state.loadState, diffs: false },
+            };
+        }
         case PullRequestDetailsUIActionType.UpdateBuildStatuses: {
             return {
                 ...state,
@@ -331,6 +344,10 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             }
             case PullRequestDetailsMessageType.UpdateFileDiffs: {
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateFileDiffs, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.UpdateConflictedFiles: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateConflictedFiles, data: message });
                 break;
             }
             case PullRequestDetailsMessageType.UpdateBuildStatuses: {

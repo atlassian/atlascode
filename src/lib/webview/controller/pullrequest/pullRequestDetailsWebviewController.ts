@@ -167,6 +167,13 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 });
             });
 
+            this.api.getConflictedFiles(this.pr).then((conflictedFiles: string[]) => {
+                this.postMessage({
+                    type: PullRequestDetailsMessageType.UpdateConflictedFiles,
+                    conflictedFiles,
+                });
+            });
+
             //In order to get related issues, we need comments and commits. We already have comments,
             //so now we wait for commits. These two promises can be launched concurrently.
             this.commits = await commitPromise;

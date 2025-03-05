@@ -209,10 +209,6 @@ export interface FileDiff {
         // NOT using Map here as Map does not serialize to JSON
         newPathContextMap: Record<string, number>;
     };
-
-    // Indicates whether or not the file has a conflict. Only defined on topic diffs - recent (approx 2022 and forward) BB server diffs.
-    // If it's undefined fall back to looking for FileStatus.CONFLICT
-    isConflicted?: boolean;
 }
 
 export type CreatePullRequestData = {
@@ -349,6 +345,7 @@ export interface PullRequestApi {
     get(site: BitbucketSite, prId: string, workspaceRepo?: WorkspaceRepo): Promise<PullRequest>;
     getById(site: BitbucketSite, prId: number): Promise<PullRequest>;
     getChangedFiles(pr: PullRequest, spec?: string): Promise<FileDiff[]>;
+    getConflictedFiles(pr: PullRequest): Promise<string[]>;
     getCommits(pr: PullRequest): Promise<Commit[]>;
     getComments(pr: PullRequest, commitHash?: string): Promise<PaginatedComments>;
     editComment(

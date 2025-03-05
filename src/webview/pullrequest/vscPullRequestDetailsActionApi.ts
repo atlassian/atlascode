@@ -183,10 +183,18 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         return fileDiffs;
     }
 
+    async getConflictedFiles(pr: PullRequest): Promise<string[]> {
+        const bbApi = await clientForSite(pr.site);
+        const conflictedFiles = await bbApi.pullrequests.getConflictedFiles(pr);
+        return conflictedFiles;
+    }
+
     async openDiffViewForFile(pr: PullRequest, fileDiff: FileDiff, comments: Comment[]): Promise<void> {
+        const conflictedFiles = await this.getConflictedFiles(pr);
         const diffViewArgs = await getArgsForDiffView(
             { data: comments },
             fileDiff,
+            conflictedFiles,
             pr,
             Container.bitbucketContext.prCommentController,
         );

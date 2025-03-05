@@ -516,6 +516,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                             <DiffList
                                                 fileDiffs={state.fileDiffs}
                                                 openDiffHandler={controller.openDiff}
+                                                conflictedFiles={[]}
                                             />
                                         </Grid>
                                     </Grid>

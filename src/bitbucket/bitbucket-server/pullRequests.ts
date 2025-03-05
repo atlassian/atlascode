@@ -487,6 +487,16 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         return result;
     }
+    /**
+     *
+     * @param pr The Pull request for which conflict data is to be calculated
+     * @returns [''] -> Empty String Array
+     * We don't seem to have the concept of conflicted Files in Server from the getChangedFiles method above
+     * but this has been implemented here because Server extends the common interface PullRequestApi which has this method
+     */
+    async getConflictedFiles(pr: PullRequest): Promise<string[]> {
+        return [];
+    }
 
     async getCurrentUser(site: DetailedSiteInfo): Promise<User> {
         const userSlug = site.userId;

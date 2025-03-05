@@ -84,6 +84,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         const bbApi = await clientForSite(this.pr.site);
         const promises = Promise.all([
             bbApi.pullrequests.getChangedFiles(this.pr),
+            bbApi.pullrequests.getConflictedFiles(this.pr),
             bbApi.pullrequests.getCommits(this.pr),
             bbApi.pullrequests.getComments(this.pr),
             bbApi.pullrequests.getTasks(this.pr),
@@ -91,7 +92,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
         return promises.then(
             async (result) => {
-                const [fileDiffs, commits, allComments, tasks] = result;
+                const [fileDiffs, conflictedFiles, commits, allComments, tasks] = result;
 
                 const children: AbstractBaseNode[] = [new DescriptionNode(this.pr, this)];
 
@@ -102,7 +103,9 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
                 children.push(...(await this.createRelatedJiraIssueNode(commits, allComments)));
                 children.push(...(await this.createRelatedBitbucketIssueNode(commits, allComments)));
-                children.push(...(await createFileChangesNodes(this.pr, allComments, fileDiffs, tasks)));
+                children.push(
+                    ...(await createFileChangesNodes(this.pr, allComments, fileDiffs, conflictedFiles, tasks)),
+                );
                 return children;
             },
             (reason) => {

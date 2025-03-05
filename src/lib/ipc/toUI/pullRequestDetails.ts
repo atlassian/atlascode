@@ -40,6 +40,7 @@ export enum PullRequestDetailsMessageType {
     UpdateRelatedJiraIssues = 'updateRelatedJiraIssues',
     UpdateRelatedBitbucketIssues = 'updateRelatedBitbucketIssues',
     UpdateTasks = 'updateTasks',
+    UpdateConflictedFiles = 'updateConflictedFiles',
 }
 
 export type PullRequestDetailsMessage =
@@ -52,6 +53,7 @@ export type PullRequestDetailsMessage =
     | ReducerAction<PullRequestDetailsMessageType.CheckoutBranch, PullRequestDetailsCheckoutBranchMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateComments, PullRequestDetailsCommentsMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateFileDiffs, PullRequestDetailsFileDiffsMessage>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateConflictedFiles, PullRequestDetailsConflictedFilesMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateBuildStatuses, PullRequestDetailsBuildStatusesMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateMergeStrategies, PullRequestDetailsMergeStrategiesMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateRelatedJiraIssues, PullRequestDetailsRelatedJiraIssuesMessage>
@@ -79,6 +81,7 @@ export interface PullRequestDetailsInitMessage {
     comments: Comment[];
     tasks: Task[];
     fileDiffs: FileDiff[];
+    conflictedFiles: string[];
     mergeStrategies: MergeStrategy[];
     buildStatuses: BuildStatus[];
     relatedJiraIssues: MinimalIssue<DetailedSiteInfo>[];
@@ -135,6 +138,10 @@ export interface PullRequestDetailsFileDiffsMessage {
     fileDiffs: FileDiff[];
 }
 
+export interface PullRequestDetailsConflictedFilesMessage {
+    conflictedFiles: string[];
+}
+
 export interface PullRequestDetailsMergeStrategiesMessage {
     mergeStrategies: MergeStrategy[];
 }
@@ -180,4 +187,5 @@ export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage =
         mergeStrategies: true,
         buildStatuses: true,
     },
+    conflictedFiles: [],
 };
