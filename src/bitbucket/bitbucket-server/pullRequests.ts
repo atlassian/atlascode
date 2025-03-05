@@ -5,7 +5,7 @@ import { Container } from '../../container';
 import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';
 import { getFileNameFromPaths } from '../../views/pullrequest/diffViewHelper';
-import { clientForSite } from '../bbUtils';
+import { clientForSite, encodePathParts } from '../bbUtils';
 import { HTTPClient } from '../httpClient';
 import {
     ApprovalStatus,
@@ -909,7 +909,8 @@ export class ServerPullRequestApi implements PullRequestApi {
             return cachedValue;
         }
 
-        const { data } = await this.client.getRaw(`/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/raw/${path}`, {
+        const url = `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/raw/${encodePathParts(path)}`;
+        const { data } = await this.client.getRaw(url, {
             at: commitHash,
         });
 
