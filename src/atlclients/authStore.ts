@@ -319,7 +319,7 @@ export class CredentialManager implements Disposable {
 
         const provider: OAuthProvider | undefined = oauthProviderForSite(site);
         const newTokens = undefined;
-        if (provider && credentials) {
+        if (provider && credentials && credentials.refresh) {
             const tokenResponse = await this._refresher.getNewTokens(provider, credentials.refresh);
             if (tokenResponse.tokens) {
                 const newTokens = tokenResponse.tokens;

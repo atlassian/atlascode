@@ -219,7 +219,7 @@ export class Container {
         analyticsApi: VSCAnalyticsApi,
         bitbucketHelper: CheckoutHelper,
     ) {
-        if (FeatureFlagClient.featureGates[Features.EnableNewUriHandler]) {
+        if (FeatureFlagClient.featureGates && FeatureFlagClient.featureGates[Features.EnableNewUriHandler]) {
             console.log('Using new URI handler');
             context.subscriptions.push(AtlascodeUriHandler.create(analyticsApi, bitbucketHelper));
         } else {

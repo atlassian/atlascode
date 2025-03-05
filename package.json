@@ -1378,6 +1378,12 @@
                     "default": true,
                     "description": "Shows the help explorer treeview",
                     "scope": "window"
+                },
+                "atlascode.bitbucket.readAuthToken": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Use auth token from environment variable for Bitbucket authentication",
+                    "scope": "application"
                 }
             }
         }
