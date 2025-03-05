@@ -202,21 +202,47 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
+    async getConflictedFiles(pr: PullRequest): Promise<string[]> {
+        const { ownerSlug, repoSlug } = pr.site;
+
+        // get PRType
+        const prTypeUrl = `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`;
+        let prTypeData = { data: { diff_type: '' } };
+        try {
+            prTypeData = await this.client.get(prTypeUrl);
+        } catch (ex) {
+            const error = new Error(`Fetching prTypeData failed for the PR: ${pr.data.id}} with error: ${ex}`);
+            Logger.error(error);
+        }
+        const conflictedFiles: string[] = [];
+        if (prTypeData.data.diff_type === 'TOPIC') {
+            const conflictUrl = `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/conflicts`;
+            let resp = { data: [] };
+            try {
+                resp = await this.client.get(conflictUrl);
+            } catch (ex) {
+                const error = new Error(`Fetching conflict data failed for the PR: ${pr.data.id}} with error: ${ex}`);
+                Logger.error(error);
+            }
+            resp.data.forEach((data: { path: '' }) => conflictedFiles.push(data.path));
+        }
+        return conflictedFiles;
+    }
+
     async getChangedFiles(pr: PullRequest, spec?: string): Promise<FileDiff[]> {
         const { ownerSlug, repoSlug } = pr.site;
 
         const diffUrl = spec
             ? `/repositories/${ownerSlug}/${repoSlug}/diffstat/${spec}`
             : `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/diffstat`;
-        let { data } = await this.client.get(diffUrl);
-
-        const conflictUrl = `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/conflicts`;
-        let resp = await this.client.get(conflictUrl);
-        const conflictData = resp.data;
-
-        const prTypeUrl = `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`;
-        resp = await this.client.get(prTypeUrl);
-        const diffType = resp.data.diff_type;
+        let data = { values: undefined, next: undefined };
+        try {
+            const response = await this.client.get(diffUrl);
+            data = response.data;
+        } catch (ex) {
+            const error = new Error(`Fetching diffStat failed for the PR: ${pr.data.id} with error ${ex}`);
+            Logger.error(error);
+        }
 
         if (!data.values) {
             return [];
@@ -243,15 +269,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 newPathDeletions: [],
                 newPathContextMap: {},
             },
-            isConflicted: this.isFileConflicted(diffType, diffStat, conflictData),
         }));
-    }
-
-    // Topic diffs no longer indicate a conflict in the status field so we have to check the results of the conflict endpoint.
-    private isFileConflicted(diffType: string, diffStat: any, conflictData: any[]): boolean | undefined {
-        const oldPath = diffStat.old?.path;
-        const newPath = diffStat.new?.path;
-        return diffType === 'TOPIC' && conflictData.some((c) => c.path === newPath || oldPath);
     }
 
     private mapStatusWordsToFileStatus(status: string): FileStatus {

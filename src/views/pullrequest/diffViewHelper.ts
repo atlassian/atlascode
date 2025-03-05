@@ -84,6 +84,7 @@ function traverse(n: Comment): Comment[] {
 export async function getArgsForDiffView(
     allComments: PaginatedComments,
     fileDiff: FileDiff,
+    conflictedFiles: string[],
     pr: PullRequest,
     commentController: PullRequestCommentController,
     commitRange?: { lhs: string; rhs: string },
@@ -203,7 +204,8 @@ export async function getArgsForDiffView(
             fileDisplayName: fileDisplayName,
             fileDiffStatus: fileDiff.status,
             numberOfComments: comments.length ? comments.length : 0,
-            isConflicted: fileDiff.isConflicted,
+            isConflicted:
+                conflictedFiles.includes(fileDiff.newPath || '') || conflictedFiles.includes(fileDiff.oldPath || ''),
         },
     };
 }
@@ -260,6 +262,7 @@ export async function createFileChangesNodes(
     pr: PullRequest,
     allComments: PaginatedComments,
     fileDiffs: FileDiff[],
+    conflictedFiles: string[],
     tasks: Task[],
     commitRange?: { lhs: string; rhs: string },
 ): Promise<AbstractBaseNode[]> {
@@ -269,6 +272,7 @@ export async function createFileChangesNodes(
             return await getArgsForDiffView(
                 commentsWithTasks,
                 fileDiff,
+                conflictedFiles,
                 pr,
                 Container.bitbucketContext.prCommentController,
                 commitRange,
