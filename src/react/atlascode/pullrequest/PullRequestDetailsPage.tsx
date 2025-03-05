@@ -210,6 +210,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                 rawSummary={state.pr.data.rawSummary}
                                                 htmlSummary={state.pr.data.htmlSummary}
                                                 fetchUsers={handleFetchUsers}
+                                                isLoading={state.loadState.basicData}
                                                 summaryChange={controller.updateSummary}
                                             />
                                         </Grid>
