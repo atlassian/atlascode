@@ -31,7 +31,7 @@ export async function activate(context: ExtensionContext) {
     const start = process.hrtime();
     const atlascode = extensions.getExtension('atlassian.atlascode')!;
     const atlascodeVersion = atlascode.packageJSON.version;
-    const previousVersion = undefined;
+    const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
     registerResources(context);
 
     Configuration.configure(context);
@@ -66,12 +66,12 @@ export async function activate(context: ExtensionContext) {
     // new user for auth exp
     if (previousVersion === undefined) {
         let onboardingFlow = FeatureFlagClient.checkExperimentValue(Experiments.NewAuthUI);
-        console.log(onboardingFlow);
+        Logger.debug(`Onboarding Experiment flow: ${onboardingFlow}`);
         if (!onboardingFlow) {
             onboardingFlow = 'control';
         }
 
-        switch (onboardingFlow as string) {
+        switch (onboardingFlow) {
             case 'settings': {
                 commands.executeCommand(Commands.ShowConfigPage);
                 break;
@@ -88,12 +88,12 @@ export async function activate(context: ExtensionContext) {
                 // control
                 if (window.state.focused) {
                     commands.executeCommand(Commands.ShowOnboardingPage);
-                } else {
-                    showWelcomePage(atlascodeVersion, previousVersion);
                 }
                 break;
             }
         }
+    } else {
+        showWelcomePage(atlascodeVersion, previousVersion);
     }
 
     const delay = Math.floor(Math.random() * Math.floor(AnalyticDelay));
