@@ -90,7 +90,13 @@ export class LoginManager {
 
             siteDetails.forEach(async (siteInfo) => {
                 await this._credentialManager.saveAuthInfo(siteInfo, oauthInfo);
+
+                const client = await Container.clientManager.jiraClient(siteInfo);
+                const fields = await client.getFields();
+                siteInfo.hasResolutionField = fields.some((f) => f.id === 'resolution');
+
                 this._siteManager.addSites([siteInfo]);
+
                 authenticatedEvent(siteInfo, isOnboarding).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
@@ -234,10 +240,6 @@ export class LoginManager {
         };
 
         if (site.product.key === ProductJira.key) {
-            const client = await Container.clientManager.jiraClient(siteDetails);
-            const fields = await client.getFields();
-            siteDetails.hasResolutionField = fields.some((f) => f.id === 'resolution');
-
             credentials.user = {
                 displayName: json.displayName,
                 id: userId,
@@ -254,6 +256,13 @@ export class LoginManager {
         }
 
         await this._credentialManager.saveAuthInfo(siteDetails, credentials);
+
+        if (site.product.key === ProductJira.key) {
+            const client = await Container.clientManager.jiraClient(siteDetails);
+            const fields = await client.getFields();
+            siteDetails.hasResolutionField = fields.some((f) => f.id === 'resolution');
+        }
+
         this._siteManager.addOrUpdateSite(siteDetails);
 
         return siteDetails;
