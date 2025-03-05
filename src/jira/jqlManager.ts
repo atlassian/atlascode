@@ -90,8 +90,9 @@ export class JQLManager extends Disposable {
     }
 
     private defaultJQLForSite(site: DetailedSiteInfo): JQLEntry {
-        const resolutionClause = site.hasResolutionField ? 'AND resolution = Unresolved ' : '';
-        const query = `assignee = currentUser() ${resolutionClause}ORDER BY lastViewed DESC`;
+        const query = site.hasResolutionField
+            ? 'assignee = currentUser() AND resolution = Unresolved ORDER BY lastViewed DESC'
+            : 'assignee = currentUser() ORDER BY lastViewed DESC';
 
         return {
             id: v4(),
