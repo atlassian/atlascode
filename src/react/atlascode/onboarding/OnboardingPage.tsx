@@ -15,10 +15,10 @@ import { OnboardingControllerContext, useOnboardingController } from './onboardi
 import ProductSelector from './ProductSelector';
 import { SimpleSiteAuthenticator } from './SimpleSiteAuthenticator';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
-import { AnalyticsView } from 'src/analyticsTypes';
-import { Features } from 'src/util/featureFlags';
-import { CommonMessageType } from 'src/lib/ipc/toUI/common';
-import { OnboardingActionType } from 'src/lib/ipc/fromUI/onboarding';
+import { AnalyticsView } from '../../../analyticsTypes';
+import { Experiments, Features } from '../../../util/featureFlags';
+import { CommonMessageType } from '../../../lib/ipc/toUI/common';
+import { OnboardingActionType } from '../../../lib/ipc/fromUI/onboarding';
 import { JiraOnboarding } from './JiraOnboarding';
 import { BitbucketOnboarding } from './BitbucketOnboarding';
 
@@ -60,6 +60,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
     const [state, controller] = useOnboardingController();
     const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry } = useAuthDialog();
     const [activeStep, setActiveStep] = React.useState(0);
+    const [authExpEnabled, setAuthExpEnabled] = React.useState(false);
     const [useAuthUI, setUseAuthUI] = React.useState(false);
     const [jiraSignInText, setJiraSignInText] = useState('Sign In to Jira Cloud');
     const [bitbucketSignInText, setBitbucketSignInText] = useState('Sign In to Bitbucket Cloud');
@@ -71,10 +72,13 @@ export const OnboardingPage: React.FunctionComponent = () => {
             const message = event.data;
             if (message.command === CommonMessageType.UpdateFeatureFlags) {
                 const featureValue = message.featureFlags[Features.EnableAuthUI];
-                setUseAuthUI(featureValue);
+                setAuthExpEnabled(featureValue);
+            } else if (message.command === CommonMessageType.UpdateExperimentValues) {
+                const experimentValue = message.experimentValues[Experiments.NewAuthUI];
+                setUseAuthUI(authExpEnabled && experimentValue === 'new');
             }
         });
-    }, [controller]);
+    }, [authExpEnabled, controller]);
     function getSteps() {
         if (useAuthUI) {
             return ['Setup Jira', 'Setup BitBucket', 'Explore'];

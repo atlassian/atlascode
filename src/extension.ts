@@ -23,7 +23,7 @@ import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
 import { pid } from 'process';
 import { startListening } from './atlclients/negotiate';
-import { FeatureFlagClient } from './util/featureFlags';
+import { Experiments, FeatureFlagClient } from './util/featureFlags';
 
 const AnalyticDelay = 5000;
 
@@ -31,8 +31,7 @@ export async function activate(context: ExtensionContext) {
     const start = process.hrtime();
     const atlascode = extensions.getExtension('atlassian.atlascode')!;
     const atlascodeVersion = atlascode.packageJSON.version;
-    const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
-
+    const previousVersion = undefined;
     registerResources(context);
 
     Configuration.configure(context);
@@ -42,7 +41,7 @@ export async function activate(context: ExtensionContext) {
     context.globalState.update('rulingPid', pid);
 
     try {
-        Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
+        await Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
 
         registerCommands(context);
         activateCodebucket(context);
@@ -63,11 +62,40 @@ export async function activate(context: ExtensionContext) {
         Container.clientManager.requestSite(site);
     });
 
-    if (previousVersion === undefined && window.state.focused) {
-        commands.executeCommand(Commands.ShowOnboardingPage); //This is shown to users who have never opened our extension before
-    } else {
-        showWelcomePage(atlascodeVersion, previousVersion);
+    FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeAA);
+    // new user for auth exp
+    if (previousVersion === undefined) {
+        let onboardingFlow = FeatureFlagClient.checkExperimentValue(Experiments.NewAuthUI);
+        console.log(onboardingFlow);
+        if (!onboardingFlow) {
+            onboardingFlow = 'control';
+        }
+
+        switch (onboardingFlow as string) {
+            case 'settings': {
+                commands.executeCommand(Commands.ShowConfigPage);
+                break;
+            }
+            case 'legacy': {
+                commands.executeCommand(Commands.ShowOnboardingPage);
+                break;
+            }
+            case 'new': {
+                commands.executeCommand(Commands.ShowOnboardingPage);
+                break;
+            }
+            default: {
+                // control
+                if (window.state.focused) {
+                    commands.executeCommand(Commands.ShowOnboardingPage);
+                } else {
+                    showWelcomePage(atlascodeVersion, previousVersion);
+                }
+                break;
+            }
+        }
     }
+
     const delay = Math.floor(Math.random() * Math.floor(AnalyticDelay));
     setTimeout(() => {
         sendAnalytics(atlascodeVersion, context.globalState);

@@ -79,7 +79,7 @@ const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
 
 export class Container {
-    static initialize(context: ExtensionContext, config: IConfig, version: string) {
+    static async initialize(context: ExtensionContext, config: IConfig, version: string) {
         const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
 
         this._analyticsClient = analyticsClient({
@@ -187,7 +187,7 @@ export class Container {
 
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
         this._bitbucketHelper = new BitbucketCheckoutHelper(context.globalState);
-        FeatureFlagClient.initialize({
+        await FeatureFlagClient.initialize({
             analyticsClient: this._analyticsClient,
             identifiers: {
                 analyticsAnonymousId: env.machineId,
