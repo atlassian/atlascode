@@ -110,6 +110,10 @@
             {
                 "command": "atlascode.jira.searchIssues",
                 "title": "Search Jira Issue Results",
+                "icon": {
+                    "dark": "resources/dark/search.svg",
+                    "light": "resources/light/search.svg"
+                },
                 "category": "Atlassian"
             },
             {
@@ -195,6 +199,25 @@
             {
                 "command": "atlascode.jira.refreshExplorer",
                 "title": "Refresh Jira Issues",
+                "icon": {
+                    "dark": "resources/dark/refresh.svg",
+                    "light": "resources/light/refresh.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.jira.createNewJql",
+                "title": "Create new JQL filter",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.jira.removeFromSidebar",
+                "title": "Remove from sidebar",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.jira.refreshCustomJqlExplorer",
+                "title": "Refresh Custom JQL Filters",
                 "icon": {
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
@@ -441,6 +464,11 @@
                     "when": "atlascode:jiraExplorerEnabled && config.atlascode.jira.enabled"
                 },
                 {
+                    "id": "atlascode.views.jira.customJqlTreeView",
+                    "name": "Custom Jql Filters",
+                    "when": "config.atlascode.jira.enabled && atlascode:customJQLExplorerEnabled"
+                },
+                {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
                     "when": "atlascode:bitbucketExplorerEnabled && config.atlascode.bitbucket.enabled"
@@ -532,13 +560,31 @@
                 },
                 {
                     "command": "atlascode.jira.refreshExplorer",
-                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
+                    "when": "view == atlascode.views.jira.customJql && atlascode:isJiraAuthenticated",
                     "group": "navigation@2"
                 },
                 {
-                    "command": "atlascode.jira.showJiraIssueSettings",
-                    "when": "view =~ /(atlascode.views.jira.customJql)/",
+                    "command": "atlascode.jira.searchIssues",
+                    "when": "view == atlascode.views.jira.customJqlTreeView && atlascode:isJiraAuthenticated",
                     "group": "navigation@3"
+                },
+                {
+                    "command": "atlascode.jira.refreshCustomJqlExplorer",
+                    "when": "view == atlascode.views.jira.customJqlTreeView && atlascode:isJiraAuthenticated",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "atlascode.jira.removeFromSidebar",
+                    "when": "view =~ /(atlascode.views.jira.customJqlTreeView)/ && atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.jira.createNewJql",
+                    "when": "view =~ /(atlascode.views.jira.customJqlTreeView)/ && atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.jira.showJiraIssueSettings",
+                    "when": "view == atlascode.views.jira.customJql",
+                    "group": "navigation@4"
                 },
                 {
                     "command": "atlascode.bb.createPullRequest",
@@ -937,6 +983,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enables the Jira Issue Explorer",
+                    "scope": "window"
+                },
+                "atlascode.jira.explorer.showCustomJql": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables Custom Jql Explorer",
                     "scope": "window"
                 },
                 "atlascode.jira.explorer.showOpenIssues": {

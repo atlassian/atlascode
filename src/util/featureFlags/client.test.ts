@@ -1,10 +1,23 @@
-// tests for client.ts
 enum MockFeatures {
     TestFeature = 'some-very-real-feature',
 }
+
+enum MockExperiments {
+    TestExperiment = 'some-very-real-experiment',
+}
+
+const MockExperimentGates: Record<string, any> = {
+    [MockExperiments.TestExperiment]: {
+        parameter: 'isEnabled',
+        defaultValue: 'a default value',
+    },
+};
+
 jest.mock('./features', () => {
     return {
         Features: MockFeatures,
+        Experiments: MockExperiments,
+        ExperimentGates: MockExperimentGates,
     };
 });
 
@@ -13,14 +26,16 @@ jest.mock('@atlaskit/feature-gate-js-client', () => {
         ...jest.requireActual('@atlaskit/feature-gate-js-client'),
         default: {
             initialize: jest.fn(() => Promise.resolve()),
-            checkGate: jest.fn(() => Promise.resolve(false)),
+            checkGate: jest.fn(() => false),
+            getExperimentValue: jest.fn((key) => MockExperimentGates[key].defaultValue),
         },
     };
 });
-import FeatureGates from '@atlaskit/feature-gate-js-client';
 
+import FeatureGates from '@atlaskit/feature-gate-js-client';
 import { FeatureFlagClient, FeatureFlagClientOptions } from './client';
 import { EventBuilderInterface } from './analytics';
+import { Experiments, Features } from './features';
 
 class MockEventBuilder implements EventBuilderInterface {
     public featureFlagClientInitializedEvent = jest.fn(() => Promise.resolve({}));
@@ -28,6 +43,9 @@ class MockEventBuilder implements EventBuilderInterface {
 }
 
 describe('FeatureFlagClient', () => {
+    const featureName = MockFeatures.TestFeature as unknown as Features;
+    const experimentName = MockExperiments.TestExperiment as unknown as Experiments;
+
     let analyticsClient: any;
     let options: FeatureFlagClientOptions;
     const originalEnv = process.env;
@@ -68,22 +86,35 @@ describe('FeatureFlagClient', () => {
             await FeatureFlagClient.initialize(options);
             expect(FeatureGates.initialize).toHaveBeenCalled();
         });
-    });
 
-    describe('checkGate', () => {
-        it('should check the feature flag gate', async () => {
-            FeatureFlagClient.checkGate(MockFeatures.TestFeature);
+        it('feature flags default values are correctly assigned', async () => {
+            await FeatureFlagClient.initialize(options);
             expect(FeatureGates.checkGate).toHaveBeenCalled();
+            expect(Object.keys(FeatureFlagClient.featureGates).length).toBe(1);
+            expect(FeatureFlagClient.featureGates[featureName]).toBeDefined();
+            expect(FeatureFlagClient.featureGates[featureName]).toBe(false);
         });
-    });
 
-    describe('evaluateFeatures', () => {
-        it('should return all evaluated feature flags', async () => {
-            const map = await FeatureFlagClient.evaluateFeatures();
-            expect(map).toEqual({
-                [MockFeatures.TestFeature]: false,
-            });
-            expect(FeatureGates.checkGate).toHaveBeenCalled();
+        it('feature flags overrides are correctly applied', async () => {
+            process.env.ATLASCODE_FF_OVERRIDES = `${featureName}=true`;
+            await FeatureFlagClient.initialize(options);
+            expect(FeatureFlagClient.featureGates[featureName]).toBeDefined();
+            expect(FeatureFlagClient.featureGates[featureName]).toBe(true);
+        });
+
+        it('experiments default values are correctly assigned', async () => {
+            await FeatureFlagClient.initialize(options);
+            expect(FeatureGates.getExperimentValue).toHaveBeenCalled();
+            expect(Object.keys(FeatureFlagClient.experimentValues).length).toBe(1);
+            expect(FeatureFlagClient.experimentValues[experimentName]).toBeDefined();
+            expect(FeatureFlagClient.experimentValues[experimentName]).toBe('a default value');
+        });
+
+        it('experiments overrides are correctly applied', async () => {
+            process.env.ATLASCODE_EXP_OVERRIDES_STRING = `${experimentName}=another value`;
+            await FeatureFlagClient.initialize(options);
+            expect(FeatureFlagClient.experimentValues[experimentName]).toBeDefined();
+            expect(FeatureFlagClient.experimentValues[experimentName]).toBe('another value');
         });
     });
 });

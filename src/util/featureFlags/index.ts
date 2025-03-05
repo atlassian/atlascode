@@ -1,4 +1,4 @@
 import { FeatureFlagClient } from './client';
-import { Features } from './features';
+import { Features, Experiments } from './features';
 
-export { FeatureFlagClient, Features };
+export { FeatureFlagClient, Features, Experiments };
