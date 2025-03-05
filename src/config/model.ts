@@ -129,6 +129,7 @@ export interface BitbucketConfig {
     pipelines: BitbucketPipelinesConfig;
     issues: BitbucketIssuesConfig;
     preferredRemotes: string[];
+    readAuthToken?: boolean;
 }
 
 export interface BitbucketPipelinesConfig {
@@ -317,6 +318,7 @@ export const emptyBitbucketConfig: BitbucketConfig = {
     pipelines: emptyPipelinesConfig,
     issues: emptyIssuesConfig,
     preferredRemotes: ['upstream', 'origin'],
+    readAuthToken: false,
 };
 
 export const emptyConfig: IConfig = {

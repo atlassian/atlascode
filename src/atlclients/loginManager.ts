@@ -28,11 +28,15 @@ import { JiraAuthentictor as JiraAuthenticator } from './jiraAuthenticator';
 import { Logger } from '../logger';
 import { OAuthDancer } from './oauthDancer';
 import { SiteManager } from '../siteManager';
+import { strategyForProvider } from './strategy';
+import { BitbucketResponseHandler } from './responseHandlers/BitbucketResponseHandler';
+import { CommandContext, setCommandContext } from '../commandContext';
 
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
     private _jiraAuthenticator: JiraAuthenticator;
     private _bitbucketAuthenticator: BitbucketAuthenticator;
+    private _bitbucketResponseHandler: BitbucketResponseHandler;
 
     constructor(
         private _credentialManager: CredentialManager,
@@ -41,6 +45,13 @@ export class LoginManager {
     ) {
         this._bitbucketAuthenticator = new BitbucketAuthenticator();
         this._jiraAuthenticator = new JiraAuthenticator();
+        // Initialize BitbucketResponseHandler
+        const axiosInstance = this._dancer.getAxiosInstance();
+        this._bitbucketResponseHandler = new BitbucketResponseHandler(
+            strategyForProvider(OAuthProvider.BitbucketCloud),
+            this._analyticsClient,
+            axiosInstance,
+        );
     }
 
     // this is *only* called when login buttons are clicked by the user
@@ -51,6 +62,66 @@ export class LoginManager {
         }
         const resp = await this._dancer.doDance(provider, site, callback);
         this.saveDetails(provider, site, resp, isOnboarding);
+    }
+
+    // Add a new method for token-based authentication
+    public async authenticateWithBitbucketToken(): Promise<boolean> {
+        try {
+            // Check if the environment variable is set
+            const token = process.env.BITBUCKET_AUTH_TOKEN;
+            if (!token) {
+                Logger.warn('BITBUCKET_AUTH_TOKEN environment variable is not set');
+                vscode.window.showErrorMessage('BITBUCKET_AUTH_TOKEN environment variable is not set');
+                return false;
+            }
+
+            Logger.debug('Authenticating with Bitbucket using auth token');
+
+            // Use the BitbucketResponseHandler to get user info
+            const userData = await this._bitbucketResponseHandler.user(token);
+
+            const [oAuthSiteDetails] = await this.getOAuthSiteDetails(
+                ProductBitbucket,
+                OAuthProvider.BitbucketCloud,
+                userData.id,
+                [
+                    {
+                        id: OAuthProvider.BitbucketCloud,
+                        name: ProductBitbucket.name,
+                        scopes: [],
+                        avatarUrl: '',
+                        url: 'https://api.bitbucket.org/2.0',
+                    },
+                ],
+            );
+
+            const oAuthInfo: OAuthInfo = {
+                access: token,
+                refresh: '',
+                recievedAt: Date.now(),
+                user: {
+                    id: userData.id,
+                    displayName: userData.displayName,
+                    email: userData.email,
+                    avatarUrl: userData.avatarUrl,
+                },
+                state: AuthInfoState.Valid,
+            };
+
+            await this._credentialManager.saveAuthInfo(oAuthSiteDetails, oAuthInfo);
+            this._siteManager.addSites([oAuthSiteDetails]);
+            await setCommandContext(CommandContext.IsBBAuthenticated, true);
+            // Fire authenticated event
+            authenticatedEvent(oAuthSiteDetails, false).then((e) => {
+                this._analyticsClient.sendTrackEvent(e);
+            });
+            Logger.info('Successfully authenticated with Bitbucket using auth token');
+            return true;
+        } catch (e) {
+            Logger.error(e, 'Error authenticating with Bitbucket token');
+            vscode.window.showErrorMessage(`Error authenticating with Bitbucket token: ${e}`);
+            return false;
+        }
     }
 
     public async initRemoteAuth(state: Object) {
@@ -102,7 +173,7 @@ export class LoginManager {
         }
     }
 
-    private async getOAuthSiteDetails(
+    public async getOAuthSiteDetails(
         product: Product,
         provider: OAuthProvider,
         userId: string,
