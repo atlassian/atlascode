@@ -120,6 +120,7 @@ export interface DetailedSiteInfo extends SiteInfo {
     isCloud: boolean;
     userId: string;
     credentialId: string;
+    hasResolutionField: boolean;
 }
 
 export function getSiteInfoKey(site: DetailedSiteInfo): string {
@@ -174,6 +175,7 @@ export const emptySiteInfo: DetailedSiteInfo = {
     isCloud: true,
     userId: '',
     credentialId: '',
+    hasResolutionField: false,
 };
 
 export const emptyAccessibleResource: AccessibleResource = {

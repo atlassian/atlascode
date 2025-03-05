@@ -80,7 +80,7 @@ export class JQLManager extends Disposable {
             for (const site of sites) {
                 if (!allList.some((j) => j.siteId === site.id)) {
                     // only initialize if there are no jql entries for this site
-                    const newEntry = await this.defaultJQLForSite(site);
+                    const newEntry = this.defaultJQLForSite(site);
                     allList.push(newEntry);
                 }
             }
@@ -89,13 +89,8 @@ export class JQLManager extends Disposable {
         });
     }
 
-    async defaultJQLForSite(site: DetailedSiteInfo): Promise<JQLEntry> {
-        const client = await Container.clientManager.jiraClient(site);
-
-        const fields = await client.getFields();
-        const resolutionEnabled = fields.some((f) => f.id === 'resolution');
-        const resolutionClause = resolutionEnabled ? 'AND resolution = Unresolved ' : '';
-
+    private defaultJQLForSite(site: DetailedSiteInfo): JQLEntry {
+        const resolutionClause = site.hasResolutionField ? 'AND resolution = Unresolved ' : '';
         const query = `assignee = currentUser() ${resolutionClause}ORDER BY lastViewed DESC`;
 
         return {
