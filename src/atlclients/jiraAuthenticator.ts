@@ -30,6 +30,7 @@ export class JiraAuthentictor implements Authenticator {
                 isCloud: true,
                 userId: userId,
                 credentialId: credentialId,
+                hasResolutionField: false, // this field is populated in loginManager.ts
             };
         });
 

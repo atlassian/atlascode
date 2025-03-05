@@ -119,6 +119,7 @@ export interface DetailedSiteInfo extends SiteInfo {
     isCloud: boolean;
     userId: string;
     credentialId: string;
+    hasResolutionField: boolean;
 }
 
 // You MUST send source
@@ -169,6 +170,7 @@ export const emptySiteInfo: DetailedSiteInfo = {
     isCloud: true,
     userId: '',
     credentialId: '',
+    hasResolutionField: false,
 };
 
 export const emptyAccessibleResource: AccessibleResource = {

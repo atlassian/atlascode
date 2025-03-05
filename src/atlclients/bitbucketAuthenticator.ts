@@ -1,11 +1,8 @@
 import { AccessibleResource, DetailedSiteInfo, OAuthProvider, ProductBitbucket } from './authInfo';
-
 import { Authenticator } from './authenticator';
 import { CredentialManager } from './authStore';
 
 export class BitbucketAuthenticator implements Authenticator {
-    constructor() {}
-
     public async getOAuthSiteDetails(
         provider: OAuthProvider,
         userId: string,
@@ -37,6 +34,7 @@ export class BitbucketAuthenticator implements Authenticator {
                     isCloud: true,
                     userId: userId,
                     credentialId: credentialId,
+                    hasResolutionField: false,
                 },
             ];
         }

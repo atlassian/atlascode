@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-
 import {
     AccessibleResource,
     AuthInfo,
@@ -21,13 +20,13 @@ import {
 import { authenticatedEvent, editedEvent } from '../analytics';
 import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
 import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
-
 import { BitbucketAuthenticator } from './bitbucketAuthenticator';
 import { CredentialManager } from './authStore';
 import { JiraAuthentictor as JiraAuthenticator } from './jiraAuthenticator';
 import { Logger } from '../logger';
 import { OAuthDancer } from './oauthDancer';
 import { SiteManager } from '../siteManager';
+import { Container } from '../container';
 
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
@@ -91,7 +90,9 @@ export class LoginManager {
 
             siteDetails.forEach(async (siteInfo) => {
                 await this._credentialManager.saveAuthInfo(siteInfo, oauthInfo);
+                await this.updateHasResolutionField(siteInfo);
                 this._siteManager.addSites([siteInfo]);
+
                 authenticatedEvent(siteInfo, isOnboarding).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
@@ -216,7 +217,7 @@ export class LoginManager {
         const username = isBasicAuthInfo(credentials) ? credentials.username : userId;
         const credentialId = CredentialManager.generateCredentialId(siteId, username);
 
-        const siteDetails = {
+        const siteDetails: DetailedSiteInfo = {
             product: site.product,
             isCloud: false,
             avatarUrl: avatarUrl,
@@ -231,6 +232,7 @@ export class LoginManager {
             customSSLCertPaths: site.customSSLCertPaths,
             pfxPath: site.pfxPath,
             pfxPassphrase: site.pfxPassphrase,
+            hasResolutionField: false,
         };
 
         if (site.product.key === ProductJira.key) {
@@ -250,8 +252,19 @@ export class LoginManager {
         }
 
         await this._credentialManager.saveAuthInfo(siteDetails, credentials);
+
+        if (site.product.key === ProductJira.key) {
+            await this.updateHasResolutionField(siteDetails);
+        }
+
         this._siteManager.addOrUpdateSite(siteDetails);
 
         return siteDetails;
+    }
+
+    private async updateHasResolutionField(siteInfo: DetailedSiteInfo): Promise<void> {
+        const client = await Container.clientManager.jiraClient(siteInfo);
+        const fields = await client.getFields();
+        siteInfo.hasResolutionField = fields.some((f) => f.id === 'resolution');
     }
 }

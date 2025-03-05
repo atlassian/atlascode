@@ -1,14 +1,25 @@
+## What's new in 3.4.12
+
+### Bug Fixes
+
+- Improved exception handling during Feature Flags and Experimentation initialization.
+
+## What's new in 3.4.11
+
+- Internal changes only.
+
 ## What's new in 3.4.10
 
 ### Bug Fixes
 
-- Forward fixed the bug in 3.4.8 for Server / Data Center users on Authentication
+- Fixed the bug in 3.4.8 for Server / Data Center users on Authentication.
 
 ## What's new in 3.4.9
 
-### Bug Fixes 
+### Rollback release
 
-- Rolled back 3.4.8 release as it contained a breaking bug for Server / Data Center users on Authentication
+- This release is the same as 3.4.7.
+- 3.4.8 was rolled back because it contains a breaking bug for Server / Data Center users on Authentication.
 
 ## What's new in 3.4.8
 
@@ -17,10 +28,6 @@
 - Added a new toggle switch in 'Start work' page to choose if the new branch should be automatically pushed to remote.
 
 ## What's new in 3.4.7
-
-### Features
-
-- Finalized code for Auth UI experiment.
 
 ### Bug Fixes
 
