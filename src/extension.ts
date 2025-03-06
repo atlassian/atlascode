@@ -23,7 +23,7 @@ import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
 import { pid } from 'process';
 import { startListening } from './atlclients/negotiate';
-import { FeatureFlagClient } from './util/featureFlags';
+import { Experiments, FeatureFlagClient } from './util/featureFlags';
 
 const AnalyticDelay = 5000;
 
@@ -32,7 +32,6 @@ export async function activate(context: ExtensionContext) {
     const atlascode = extensions.getExtension('atlassian.atlascode')!;
     const atlascodeVersion = atlascode.packageJSON.version;
     const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
-
     registerResources(context);
 
     Configuration.configure(context);
@@ -42,7 +41,7 @@ export async function activate(context: ExtensionContext) {
     context.globalState.update('rulingPid', pid);
 
     try {
-        Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
+        await Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
 
         registerCommands(context);
         activateCodebucket(context);
@@ -63,11 +62,13 @@ export async function activate(context: ExtensionContext) {
         Container.clientManager.requestSite(site);
     });
 
-    if (previousVersion === undefined && window.state.focused) {
-        commands.executeCommand(Commands.ShowOnboardingPage); //This is shown to users who have never opened our extension before
+    // new user for auth exp
+    if (previousVersion === undefined) {
+        initializeNewAuthExperiment();
     } else {
         showWelcomePage(atlascodeVersion, previousVersion);
     }
+
     const delay = Math.floor(Math.random() * Math.floor(AnalyticDelay));
     setTimeout(() => {
         sendAnalytics(atlascodeVersion, context.globalState);
@@ -165,6 +166,35 @@ async function sendAnalytics(version: string, globalState: Memento) {
     });
 }
 
+function initializeNewAuthExperiment() {
+    let onboardingFlow = FeatureFlagClient.checkExperimentValue(Experiments.NewAuthUI);
+    Logger.debug(`Onboarding Experiment flow: ${onboardingFlow}`);
+    if (!onboardingFlow) {
+        onboardingFlow = 'control';
+    }
+
+    switch (onboardingFlow) {
+        case 'settings': {
+            commands.executeCommand(Commands.ShowConfigPage);
+            break;
+        }
+        case 'legacy': {
+            commands.executeCommand(Commands.ShowOnboardingPage);
+            break;
+        }
+        case 'new': {
+            commands.executeCommand(Commands.ShowOnboardingPage);
+            break;
+        }
+        default: {
+            // control
+            if (window.state.focused) {
+                commands.executeCommand(Commands.ShowOnboardingPage);
+            }
+            break;
+        }
+    }
+}
 // this method is called when your extension is deactivated
 export function deactivate() {
     FeatureFlagClient.dispose();

@@ -11,8 +11,8 @@ export enum Experiments {
 
 export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
     [Experiments.NewAuthUI]: {
-        parameter: 'isEnabled',
-        defaultValue: false,
+        parameter: 'onboardingFlow',
+        defaultValue: 'control',
     },
     [Experiments.AtlascodeAA]: {
         parameter: 'isEnabled',

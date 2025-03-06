@@ -72,7 +72,7 @@ export class FeatureFlagClient {
 
     private static finalizeInit(): void {
         this._featureGates = this.evaluateFeatures();
-        this._experimentValues = this.evaluateExperiments();
+        this._experimentValues = {} as ExperimentGateValues;
 
         const ffSplit = (process.env.ATLASCODE_FF_OVERRIDES || '')
             .split(',')
@@ -136,7 +136,7 @@ export class FeatureFlagClient {
         return gateValue;
     }
 
-    private static checkExperimentValue(experiment: Experiments): any {
+    static checkExperimentValue(experiment: Experiments): any {
         const experimentGate = ExperimentGates[experiment];
         if (!experimentGate) {
             return undefined;
@@ -153,6 +153,7 @@ export class FeatureFlagClient {
             );
         }
         console.log(`ExperimentGateValue: ${experiment} -> ${gateValue}`);
+        this._experimentValues[experiment] = gateValue;
         return gateValue;
     }
 
@@ -160,12 +161,6 @@ export class FeatureFlagClient {
         const featureFlags = {} as FeatureGateValues;
         Object.values(Features).forEach((feature) => (featureFlags[feature] = this.checkGate(feature)));
         return featureFlags;
-    }
-
-    private static evaluateExperiments(): ExperimentGateValues {
-        const experimentGates = {} as ExperimentGateValues;
-        Object.values(Experiments).forEach((exp) => (experimentGates[exp] = this.checkExperimentValue(exp)));
-        return experimentGates;
     }
 
     static dispose() {

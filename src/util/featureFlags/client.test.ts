@@ -102,19 +102,21 @@ describe('FeatureFlagClient', () => {
             expect(FeatureFlagClient.featureGates[featureName]).toBe(true);
         });
 
-        it('experiments default values are correctly assigned', async () => {
-            await FeatureFlagClient.initialize(options);
-            expect(FeatureGates.getExperimentValue).toHaveBeenCalled();
-            expect(Object.keys(FeatureFlagClient.experimentValues).length).toBe(1);
-            expect(FeatureFlagClient.experimentValues[experimentName]).toBeDefined();
-            expect(FeatureFlagClient.experimentValues[experimentName]).toBe('a default value');
-        });
-
         it('experiments overrides are correctly applied', async () => {
             process.env.ATLASCODE_EXP_OVERRIDES_STRING = `${experimentName}=another value`;
             await FeatureFlagClient.initialize(options);
             expect(FeatureFlagClient.experimentValues[experimentName]).toBeDefined();
             expect(FeatureFlagClient.experimentValues[experimentName]).toBe('another value');
+        });
+    });
+
+    describe('checkExperimentValue', () => {
+        it('should return the value of the experiment and save value in client', async () => {
+            await FeatureFlagClient.initialize(options);
+            const value = FeatureFlagClient.checkExperimentValue(experimentName);
+            expect(FeatureFlagClient.experimentValues[experimentName]).toBeDefined();
+            expect(FeatureFlagClient.experimentValues[experimentName]).toBe('a default value');
+            expect(value).toBe('a default value');
         });
     });
 });

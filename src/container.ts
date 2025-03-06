@@ -65,7 +65,7 @@ import { VSCWelcomeActionApi } from './webview/welcome/vscWelcomeActionApi';
 import { VSCWelcomeWebviewControllerFactory } from './webview/welcome/vscWelcomeWebviewControllerFactory';
 import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
-import { FeatureFlagClient, Features } from './util/featureFlags';
+import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
 import { EventBuilder } from './util/featureFlags/eventBuilder';
 import { AtlascodeUriHandler } from './uriHandler';
 import { CheckoutHelper } from './bitbucket/interfaces';
@@ -79,7 +79,7 @@ const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
 
 export class Container {
-    static initialize(context: ExtensionContext, config: IConfig, version: string) {
+    static async initialize(context: ExtensionContext, config: IConfig, version: string) {
         const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
 
         this._analyticsClient = analyticsClient({
@@ -187,7 +187,7 @@ export class Container {
 
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
         this._bitbucketHelper = new BitbucketCheckoutHelper(context.globalState);
-        FeatureFlagClient.initialize({
+        await FeatureFlagClient.initialize({
             analyticsClient: this._analyticsClient,
             identifiers: {
                 analyticsAnonymousId: env.machineId,
@@ -200,6 +200,7 @@ export class Container {
             .finally(() => {
                 this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
                 this.initializeNewSidebarView(context, config);
+                this.initializeAAExperiment();
             });
 
         context.subscriptions.push((this._helpExplorer = new HelpExplorer()));
@@ -209,7 +210,9 @@ export class Container {
         const telemetryConfig = workspace.getConfiguration('telemetry');
         return telemetryConfig.get<boolean>('enableTelemetry', true);
     }
-
+    static initializeAAExperiment() {
+        FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeAA);
+    }
     static initializeUriHandler(
         context: ExtensionContext,
         analyticsApi: VSCAnalyticsApi,

@@ -15,10 +15,10 @@ import { OnboardingControllerContext, useOnboardingController } from './onboardi
 import ProductSelector from './ProductSelector';
 import { SimpleSiteAuthenticator } from './SimpleSiteAuthenticator';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
-import { AnalyticsView } from 'src/analyticsTypes';
-import { Features } from 'src/util/featureFlags';
-import { CommonMessageType } from 'src/lib/ipc/toUI/common';
-import { OnboardingActionType } from 'src/lib/ipc/fromUI/onboarding';
+import { AnalyticsView } from '../../../analyticsTypes';
+import { Experiments } from '../../../util/featureFlags';
+import { CommonMessageType } from '../../../lib/ipc/toUI/common';
+import { OnboardingActionType } from '../../../lib/ipc/fromUI/onboarding';
 import { JiraOnboarding } from './JiraOnboarding';
 import { BitbucketOnboarding } from './BitbucketOnboarding';
 
@@ -69,9 +69,11 @@ export const OnboardingPage: React.FunctionComponent = () => {
     React.useEffect(() => {
         window.addEventListener('message', (event) => {
             const message = event.data;
-            if (message.command === CommonMessageType.UpdateFeatureFlags) {
-                const featureValue = message.featureFlags[Features.EnableAuthUI];
-                setUseAuthUI(featureValue);
+            if (message.command === CommonMessageType.UpdateExperimentValues) {
+                const experimentValue = message.experimentValues[Experiments.NewAuthUI];
+                if (typeof experimentValue === 'string' && experimentValue !== undefined && experimentValue !== null) {
+                    setUseAuthUI(experimentValue === 'new');
+                }
             }
         });
     }, [controller]);
