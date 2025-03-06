@@ -55,11 +55,6 @@ export async function activate(context: ExtensionContext) {
             CommandContext.IsBBAuthenticated,
             Container.siteManager.productHasAtLeastOneSite(ProductBitbucket),
         );
-
-        if (Container.config.bitbucket.readAuthToken) {
-            Logger.debug('readAuthToken is enabled, attempting to authenticate with Bitbucket token');
-            await Container.loginManager.authenticateWithBitbucketToken();
-        }
     } catch (e) {
         Logger.error(e, 'Error initializing atlascode!');
     }
