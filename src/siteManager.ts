@@ -111,9 +111,7 @@ export class SiteManager extends Disposable {
 
     onDidAuthChange(e: AuthInfoEvent) {
         if (isRemoveAuthEvent(e)) {
-            const deadSites = this.getSitesAvailable(e.product).filter(
-                (site) => site.credentialId === e.credentialId && site.host === e.host,
-            );
+            const deadSites = this.getSitesAvailable(e.product).filter((site) => site.credentialId === e.credentialId);
             deadSites.forEach((s) => this.removeSite(s));
             if (deadSites.length > 0) {
                 this._onDidSitesAvailableChange.fire({

@@ -19,7 +19,6 @@ export interface RemoveAuthInfoEvent extends AuthInfoEvent {
     type: AuthChangeType.Remove;
     product: Product;
     credentialId: string;
-    host: string;
 }
 
 export interface Product {
@@ -121,10 +120,6 @@ export interface DetailedSiteInfo extends SiteInfo {
     userId: string;
     credentialId: string;
     hasResolutionField: boolean;
-}
-
-export function getSiteInfoKey(site: DetailedSiteInfo): string {
-    return `${site.product.key} - ${site.host} - ${site.credentialId}`;
 }
 
 // You MUST send source
