@@ -203,6 +203,10 @@ export class Container {
             });
 
         context.subscriptions.push((this._helpExplorer = new HelpExplorer()));
+
+        if (configuration.get<boolean>('bitbucket.readAuthToken')) {
+            this.loginManager.authenticateWithBitbucketToken();
+        }
     }
 
     static getAnalyticsEnable(): boolean {
