@@ -60,7 +60,6 @@ export const OnboardingPage: React.FunctionComponent = () => {
     const [state, controller] = useOnboardingController();
     const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry } = useAuthDialog();
     const [activeStep, setActiveStep] = React.useState(0);
-    // const [authExpEnabled, setAuthExpEnabled] = React.useState(false);
     const [useAuthUI, setUseAuthUI] = React.useState(false);
     const [jiraSignInText, setJiraSignInText] = useState('Sign In to Jira Cloud');
     const [bitbucketSignInText, setBitbucketSignInText] = useState('Sign In to Bitbucket Cloud');

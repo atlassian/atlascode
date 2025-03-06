@@ -62,36 +62,9 @@ export async function activate(context: ExtensionContext) {
         Container.clientManager.requestSite(site);
     });
 
-    FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeAA);
     // new user for auth exp
     if (previousVersion === undefined) {
-        let onboardingFlow = FeatureFlagClient.checkExperimentValue(Experiments.NewAuthUI);
-        Logger.debug(`Onboarding Experiment flow: ${onboardingFlow}`);
-        if (!onboardingFlow) {
-            onboardingFlow = 'control';
-        }
-
-        switch (onboardingFlow) {
-            case 'settings': {
-                commands.executeCommand(Commands.ShowConfigPage);
-                break;
-            }
-            case 'legacy': {
-                commands.executeCommand(Commands.ShowOnboardingPage);
-                break;
-            }
-            case 'new': {
-                commands.executeCommand(Commands.ShowOnboardingPage);
-                break;
-            }
-            default: {
-                // control
-                if (window.state.focused) {
-                    commands.executeCommand(Commands.ShowOnboardingPage);
-                }
-                break;
-            }
-        }
+        initializeNewAuthExperiment();
     } else {
         showWelcomePage(atlascodeVersion, previousVersion);
     }
@@ -193,6 +166,35 @@ async function sendAnalytics(version: string, globalState: Memento) {
     });
 }
 
+function initializeNewAuthExperiment() {
+    let onboardingFlow = FeatureFlagClient.checkExperimentValue(Experiments.NewAuthUI);
+    Logger.debug(`Onboarding Experiment flow: ${onboardingFlow}`);
+    if (!onboardingFlow) {
+        onboardingFlow = 'control';
+    }
+
+    switch (onboardingFlow) {
+        case 'settings': {
+            commands.executeCommand(Commands.ShowConfigPage);
+            break;
+        }
+        case 'legacy': {
+            commands.executeCommand(Commands.ShowOnboardingPage);
+            break;
+        }
+        case 'new': {
+            commands.executeCommand(Commands.ShowOnboardingPage);
+            break;
+        }
+        default: {
+            // control
+            if (window.state.focused) {
+                commands.executeCommand(Commands.ShowOnboardingPage);
+            }
+            break;
+        }
+    }
+}
 // this method is called when your extension is deactivated
 export function deactivate() {
     FeatureFlagClient.dispose();
