@@ -34,7 +34,7 @@ export class BitbucketResponseHandler extends ResponseHandler {
         }
     }
 
-    public async user(accessToken: string, resource: AccessibleResource): Promise<UserInfo> {
+    public async user(accessToken: string): Promise<UserInfo> {
         try {
             const userResponse = await this.axios(this.strategy.profileUrl(), {
                 method: 'GET',
