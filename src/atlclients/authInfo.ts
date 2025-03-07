@@ -119,6 +119,7 @@ export interface DetailedSiteInfo extends SiteInfo {
     isCloud: boolean;
     userId: string;
     credentialId: string;
+    /** Jira only -- Indicates if the site's schema contains a field named 'resolution' */
     hasResolutionField: boolean;
 }
 

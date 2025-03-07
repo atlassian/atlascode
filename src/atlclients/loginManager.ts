@@ -44,16 +44,16 @@ export class LoginManager {
 
     // this is *only* called when login buttons are clicked by the user
     public async userInitiatedOAuthLogin(site: SiteInfo, callback: string, isOnboarding?: boolean): Promise<void> {
-        const provider = oauthProviderForSite(site)!;
+        const provider = oauthProviderForSite(site);
         if (!provider) {
             throw new Error(`No provider found for ${site.host}`);
         }
         const resp = await this._dancer.doDance(provider, site, callback);
-        this.saveDetails(provider, site, resp, isOnboarding);
+        await this.saveDetails(provider, site, resp, isOnboarding);
     }
 
     public async initRemoteAuth(state: Object) {
-        this._dancer.doInitRemoteDance(state);
+        await this._dancer.doInitRemoteDance(state);
     }
 
     public async finishRemoteAuth(code: string): Promise<void> {
@@ -66,7 +66,7 @@ export class LoginManager {
         const resp = await this._dancer.doFinishRemoteDance(provider, site, code);
 
         // TODO: change false here when this is reachable from the onboarding flow
-        this.saveDetails(provider, site, resp, false);
+        await this.saveDetails(provider, site, resp, false);
     }
 
     private async saveDetails(provider: OAuthProvider, site: SiteInfo, resp: OAuthResponse, isOnboarding?: boolean) {
@@ -88,15 +88,21 @@ export class LoginManager {
                 resp.accessibleResources,
             );
 
-            siteDetails.forEach(async (siteInfo) => {
-                await this._credentialManager.saveAuthInfo(siteInfo, oauthInfo);
-                await this.updateHasResolutionField(siteInfo);
-                this._siteManager.addSites([siteInfo]);
+            await Promise.all(
+                siteDetails.map(async (siteInfo) => {
+                    await this._credentialManager.saveAuthInfo(siteInfo, oauthInfo);
 
-                authenticatedEvent(siteInfo, isOnboarding).then((e) => {
-                    this._analyticsClient.sendTrackEvent(e);
-                });
-            });
+                    if (site.product.key === ProductJira.key) {
+                        await this.updateHasResolutionField(siteInfo);
+                    }
+
+                    this._siteManager.addSites([siteInfo]);
+
+                    authenticatedEvent(siteInfo, isOnboarding).then((e) => {
+                        this._analyticsClient.sendTrackEvent(e);
+                    });
+                }),
+            );
         } catch (e) {
             Logger.error(e, 'Error authenticating');
             vscode.window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
