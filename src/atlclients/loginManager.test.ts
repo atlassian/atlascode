@@ -46,7 +46,7 @@ jest.mock('./oauthDancer', () => ({
     },
 }));
 
-jest.mock('../Container', () => ({
+jest.mock('../container', () => ({
     Container: {
         clientManager: {
             jiraClient: () => Promise.resolve(),
