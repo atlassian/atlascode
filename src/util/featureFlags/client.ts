@@ -163,19 +163,6 @@ export class FeatureFlagClient {
         return featureFlags;
     }
 
-    static areFeaturesInitialized(): boolean {
-        try {
-            for (const feature of Object.values(Features)) {
-                if (FeatureFlagClient.featureGates[feature] === undefined) {
-                    return false;
-                }
-            }
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
     static dispose() {
         FeatureGates.shutdownStatsig();
     }

@@ -100,15 +100,15 @@
         "commands": [
             {
                 "command": "atlascode.jira.todoIssue",
-                "title": "To Do"
+                "title": "TO DO"
             },
             {
                 "command": "atlascode.jira.inProgressIssue",
-                "title": "In Progress"
+                "title": "IN PROGRESS"
             },
             {
                 "command": "atlascode.jira.doneIssue",
-                "title": "Done"
+                "title": "DONE"
             },
             {
                 "command": "atlascode.jira.createIssue",

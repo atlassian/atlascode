@@ -27,30 +27,15 @@ const getIssueContextValue = (issue: MinimalORIssueLink<DetailedSiteInfo>) => {
 
 export class IssueNode extends AbstractBaseNode {
     public issue: MinimalORIssueLink<DetailedSiteInfo>;
-    private _newPanelFG: boolean = false;
+    private _isUsingNewPanelFG: boolean = false;
     constructor(_issue: MinimalORIssueLink<DetailedSiteInfo>, parent: AbstractBaseNode | undefined) {
         super(parent);
         this.issue = _issue;
-        this._newPanelFG = FeatureFlagClient.areFeaturesInitialized()
-            ? FeatureFlagClient.featureGates[Features.NewSidebarTreeView]
-            : false;
+        this._isUsingNewPanelFG = FeatureFlagClient.featureGates[Features.NewSidebarTreeView];
     }
 
     getTreeItem(): vscode.TreeItem {
-        let title: string;
-        let description: string | undefined;
-        let contextValue: string;
-        const summary = isMinimalIssue(this.issue) && this.issue.isEpic ? this.issue.epicName : this.issue.summary;
-
-        if (this._newPanelFG) {
-            title = this.issue.key;
-            description = summary;
-            contextValue = getIssueContextValue(this.issue);
-        } else {
-            title = `${this.issue.key} ${summary}`;
-            description = undefined;
-            contextValue = ISSUE_NODE_CONTEXT_VALUE;
-        }
+        const { title, description, contextValue } = this.prepareTreeItem();
 
         const treeItem = new vscode.TreeItem(
             title,
@@ -84,5 +69,20 @@ export class IssueNode extends AbstractBaseNode {
             return this.issue.epicChildren.map((epicChild) => new IssueNode(epicChild, this));
         }
         return [];
+    }
+    private prepareTreeItem() {
+        const summary = isMinimalIssue(this.issue) && this.issue.isEpic ? this.issue.epicName : this.issue.summary;
+
+        return this._isUsingNewPanelFG
+            ? {
+                  title: this.issue.key,
+                  description: summary,
+                  contextValue: getIssueContextValue(this.issue),
+              }
+            : {
+                  title: `${this.issue.key} ${summary}`,
+                  description: undefined,
+                  contextValue: ISSUE_NODE_CONTEXT_VALUE,
+              };
     }
 }

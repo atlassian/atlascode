@@ -37,7 +37,18 @@ jest.mock('../../../container', () => ({
         },
     },
 }));
-
+jest.mock('../../../util/featureFlags', () => {
+    return {
+        FeatureFlagClient: {
+            featureGates: {
+                NewSidebarTreeView: true,
+            },
+        },
+        Features: {
+            NewSidebarTreeView: 'atlascode-new-sidebar-treeview',
+        },
+    };
+});
 const mockExecuteQuery = jest.fn().mockReturnValue(Promise.resolve([]));
 jest.mock('../customJqlTree', () => {
     return {

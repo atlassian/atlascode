@@ -20,11 +20,9 @@ jest.mock('../../commands', () => {
         },
     };
 });
-const mockAreFeatureGatesEnabled = jest.fn().mockReturnValue(true);
 jest.mock('../../util/featureFlags', () => {
     return {
         FeatureFlagClient: {
-            areFeaturesInitialized: mockAreFeatureGatesEnabled,
             featureGates: mockFeatureGateValues,
         },
         Features: {
@@ -100,48 +98,45 @@ import * as vscode from 'vscode';
 describe('IssueNode', () => {
     describe('getTreeItem', () => {
         it('should return a TreeItem with the issue key and summary if the new sidebar tree view feature flag is enabled', () => {
-            mockAreFeatureGatesEnabled.mockReturnValue(true);
+            mockFeatureGateValues['atlascode-new-sidebar-treeview'] = true;
             const issueNode = new IssueNode(mockIssue, undefined);
             const treeItem = issueNode.getTreeItem();
             expect(treeItem.label).toBe(mockIssue.key);
             expect(treeItem.description).toBe(mockIssue.summary);
         });
         it('should return a TreeItem with the issue key and summary in title if the new sidebar tree view feature flag is disabled', () => {
-            mockAreFeatureGatesEnabled.mockReturnValue(false);
+            mockFeatureGateValues['atlascode-new-sidebar-treeview'] = false;
             const issueNode = new IssueNode(mockIssue, undefined);
             const treeItem = issueNode.getTreeItem();
             expect(treeItem.label).toBe(`${mockIssue.key} ${mockIssue.summary}`);
             expect(treeItem.description).toBeUndefined();
         });
         it('should return a TreeItem with a collapsible state of Expanded if the issue has subtasks or epic children', () => {
-            mockAreFeatureGatesEnabled.mockReturnValue(true);
+            mockFeatureGateValues['atlascode-new-sidebar-treeview'] = true;
             const issueNode = new IssueNode({ ...mockIssue, subtasks: [mockIssue] }, undefined);
             const treeItem = issueNode.getTreeItem();
             expect(treeItem.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
         });
 
         it('should return a TreeItem with a collapsible state of None if the issue does not have subtasks or epic children', () => {
-            mockAreFeatureGatesEnabled.mockReturnValue(true);
+            mockFeatureGateValues['atlascode-new-sidebar-treeview'] = true;
             const issueNode = new IssueNode(mockIssue, undefined);
             const treeItem = issueNode.getTreeItem();
             expect(treeItem.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
         });
 
         it('should return a TreeItem with a command to show the issue', () => {
-            mockAreFeatureGatesEnabled.mockReturnValue(true);
             const issueNode = new IssueNode(mockIssue, undefined);
             const treeItem = issueNode.getTreeItem();
             expect(treeItem.command).toEqual({ command: 'showIssue', title: 'Show Issue', arguments: [mockIssue] });
         });
 
         it('should return a TreeItem with Todo contextValue if the issue is a Todo statusCategory', () => {
-            mockAreFeatureGatesEnabled.mockReturnValue(true);
             const issueNode = new IssueNode(mockIssue, undefined);
             const treeItem = issueNode.getTreeItem();
             expect(treeItem.contextValue).toBe('todoJiraIssue');
         });
         it('should return a TreeItem with InProgress contextValue if the issue is an In Progress statusCategory', () => {
-            mockAreFeatureGatesEnabled.mockReturnValue(true);
             const issueNode = new IssueNode(
                 {
                     ...mockIssue,
@@ -156,7 +151,6 @@ describe('IssueNode', () => {
             expect(treeItem.contextValue).toBe('inProgressJiraIssue');
         });
         it('should return a TreeItem with Done contextValue if the issue is a Done statusCategory', () => {
-            mockAreFeatureGatesEnabled.mockReturnValue(true);
             const issueNode = new IssueNode(
                 {
                     ...mockIssue,
