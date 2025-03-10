@@ -24,6 +24,7 @@ import { GitExtension } from './typings/git';
 import { pid } from 'process';
 import { startListening } from './atlclients/negotiate';
 import { Experiments, FeatureFlagClient } from './util/featureFlags';
+import { JQLManager } from './jira/jqlManager';
 
 const AnalyticDelay = 5000;
 
@@ -42,6 +43,8 @@ export async function activate(context: ExtensionContext) {
 
     try {
         await Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
+
+        await JQLManager.backFillOldDetailedSiteInfo();
 
         registerCommands(context);
         activateCodebucket(context);

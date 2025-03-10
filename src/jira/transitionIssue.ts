@@ -40,6 +40,7 @@ async function performTransition(issueKey: string, transition: Transition, site:
         await client.transitionIssue(issueKey, transition.id);
 
         vscode.commands.executeCommand(Commands.RefreshJiraExplorer);
+        vscode.commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
         vscode.commands.executeCommand(Commands.RefreshCustomJqlExplorer);
 
         issueTransitionedEvent(site, issueKey).then((e) => {

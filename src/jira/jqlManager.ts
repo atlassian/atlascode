@@ -20,6 +20,22 @@ export class JQLManager extends Disposable {
         return this._onDidJQLChange.event;
     }
 
+    // In this PR: https://github.com/atlassian/atlascode/pull/169
+    // we have introduced a new field in DetailedSiteInfo that is populated at auth time.
+    // For those who already have this data saved before the introduction of the new logic,
+    // we need to backfill this field to avoid constructing a wrong default JQL query.
+    public static async backFillOldDetailedSiteInfo(): Promise<void> {
+        for (const site of Container.siteManager.getSitesAvailable(ProductJira)) {
+            if (site.hasResolutionField === undefined) {
+                const client = await Container.clientManager.jiraClient(site);
+                const fields = await client.getFields();
+                site.hasResolutionField = fields.some((f) => f.id === 'resolution');
+
+                Container.siteManager.addOrUpdateSite(site);
+            }
+        }
+    }
+
     constructor() {
         super(() => this.dispose());
 
@@ -73,13 +89,16 @@ export class JQLManager extends Disposable {
         return Container.config.jira.jqlList.filter((entry) => entry.enabled);
     }
 
+    public getAllDefaultJQLEntries(): JQLEntry[] {
+        const sites = Container.siteManager.getSitesAvailable(ProductJira);
+        return sites.map(this.defaultJQLForSite);
+    }
+
     public async initializeJQL(sites: DetailedSiteInfo[]) {
         this._queue.add(async () => {
             const allList = Container.config.jira.jqlList;
 
             for (const site of sites) {
-                await this.backFillOldDetailedSiteInfo(site);
-
                 if (!allList.some((j) => j.siteId === site.id)) {
                     // only initialize if there are no jql entries for this site
                     const newEntry = this.defaultJQLForSite(site);
@@ -89,20 +108,6 @@ export class JQLManager extends Disposable {
 
             await configuration.update('jira.jqlList', allList, ConfigurationTarget.Global);
         });
-    }
-
-    // In this PR: https://github.com/atlassian/atlascode/pull/169
-    // we have introduced a new field in DetailedSiteInfo that is populated at auth time.
-    // For those who already have this data saved before the introduction of the new logic,
-    // we need to backfill this field to avoid constructing a wrong default JQL query.
-    private async backFillOldDetailedSiteInfo(site: DetailedSiteInfo): Promise<void> {
-        if (site.hasResolutionField === undefined) {
-            const client = await Container.clientManager.jiraClient(site);
-            const fields = await client.getFields();
-            site.hasResolutionField = fields.some((f) => f.id === 'resolution');
-
-            Container.siteManager.addOrUpdateSite(site);
-        }
     }
 
     private defaultJQLForSite(site: DetailedSiteInfo): JQLEntry {
