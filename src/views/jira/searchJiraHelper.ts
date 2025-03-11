@@ -27,10 +27,18 @@ export class SearchJiraHelper {
      * @param dataProviderId - Id of the data provider (i.e. CustomJqlViewProvider.viewId())
      */
     static setIssues(flattenedIssueList: MinimalORIssueLink<DetailedSiteInfo>[], dataProviderId: string) {
-        if (!this._searchableIssueMap) {
-            return;
-        }
         this._searchableIssueMap[dataProviderId] = flattenedIssueList;
+    }
+
+    /***
+     * Append the issues for a specific data provider in the SearchJiraHelper.
+     * This is where `Commands.JiraSearchIssues` will look for issues to display
+     * @param flattenedIssueList - List of fetched issues
+     * @param dataProviderId - Id of the data provider (i.e. CustomJqlViewProvider.viewId())
+     */
+    static appendIssues(flattenedIssueList: MinimalORIssueLink<DetailedSiteInfo>[], dataProviderId: string) {
+        this._searchableIssueMap[dataProviderId] = this._searchableIssueMap[dataProviderId] || [];
+        this._searchableIssueMap[dataProviderId].push(...flattenedIssueList);
     }
 
     /***
@@ -39,10 +47,6 @@ export class SearchJiraHelper {
      * @param dataProviderId - Id of the data provider (i.e. CustomJqlViewProvider.viewId())
      */
     static clearIssues(dataProviderId?: string) {
-        if (!this._searchableIssueMap) {
-            return;
-        }
-
         if (dataProviderId) {
             this._searchableIssueMap[dataProviderId] = [];
             return;

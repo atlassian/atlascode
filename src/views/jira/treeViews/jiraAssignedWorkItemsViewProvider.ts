@@ -84,7 +84,7 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
                     continue;
                 }
 
-                SearchJiraHelper.setIssues(issues, AssignedWorkItemsViewProvider._id);
+                SearchJiraHelper.appendIssues(issues, AssignedWorkItemsViewProvider._id);
                 this._initChildren.push(...this.buildTreeItemsFromIssues(issues));
                 break;
             }
@@ -99,9 +99,13 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
         // this branch triggers when refresing an already rendered panel
         else {
             const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
-            return jqlEntries.length
-                ? (await Promise.all(jqlEntries.map(this.executeJqlQuery))).map(this.buildTreeItemsFromIssues).flat()
-                : [AssignedWorkItemsViewProvider._treeItemConfigureJiraMessage];
+            if (!jqlEntries.length) {
+                return [AssignedWorkItemsViewProvider._treeItemConfigureJiraMessage];
+            }
+
+            const allIssues = (await Promise.all(jqlEntries.map(this.executeJqlQuery))).flat();
+            SearchJiraHelper.setIssues(allIssues, AssignedWorkItemsViewProvider._id);
+            return this.buildTreeItemsFromIssues(allIssues);
         }
     }
 
