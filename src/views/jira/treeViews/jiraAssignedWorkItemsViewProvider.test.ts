@@ -126,10 +126,10 @@ describe('AssignedWorkItemsViewProvider', () => {
 
         expect(children[0].label).toBe(issue1.key);
         expect(children[0].description).toBe(issue1.summary);
-        expect(children[0].contextValue).toBe('jiraIssue');
+        expect(children[0].contextValue).toBe('assignedJiraIssue');
 
         expect(children[1].label).toBe(issue2.key);
         expect(children[1].description).toBe(issue2.summary);
-        expect(children[1].contextValue).toBe('jiraIssue');
+        expect(children[1].contextValue).toBe('assignedJiraIssue');
     });
 });
