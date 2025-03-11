@@ -11,6 +11,7 @@ function forceCastTo<T>(obj: any): T {
     return obj as unknown as T;
 }
 
+jest.mock('../searchJiraHelper');
 jest.mock('../../../container', () => ({
     Container: {
         jqlManager: {
