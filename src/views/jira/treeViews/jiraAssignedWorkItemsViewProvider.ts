@@ -13,6 +13,7 @@ import {
     TreeItem,
     TreeItemCollapsibleState,
     EventEmitter,
+    Command,
     commands,
     window,
     Uri,
@@ -22,8 +23,18 @@ const enum ViewStrings {
     ConfigureJiraMessage = 'Please login to Jira',
 }
 
+function createLabelItem(label: string, command?: Command): TreeItem {
+    const item = new TreeItem(label);
+    item.command = command;
+    return item;
+}
+
 export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>, Disposable {
-    private static readonly _treeItemConfigureJiraMessage = new TreeItem(ViewStrings.ConfigureJiraMessage);
+    private static readonly _treeItemConfigureJiraMessage = createLabelItem(ViewStrings.ConfigureJiraMessage, {
+        command: Commands.ShowConfigPage,
+        title: 'Login to Jira',
+        arguments: [ProductJira],
+    });
     private static readonly _id = 'atlascode.views.jira.assignedWorkItemsTreeView';
 
     private _onDidChangeTreeData = new EventEmitter<TreeItem | undefined | void>();
@@ -131,7 +142,7 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
 }
 
 class JiraIssueNode extends TreeItem {
-    constructor(issue: MinimalORIssueLink<DetailedSiteInfo>) {
+    constructor(public issue: MinimalORIssueLink<DetailedSiteInfo>) {
         super(issue.key, TreeItemCollapsibleState.None);
 
         this.id = `${issue.key}_${issue.siteDetails.id}`;
@@ -139,7 +150,7 @@ class JiraIssueNode extends TreeItem {
         this.description = isMinimalIssue(issue) && issue.isEpic ? issue.epicName : issue.summary;
         this.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [issue] };
         this.iconPath = Uri.parse(issue.issuetype.iconUrl);
-        this.contextValue = 'jiraIssue';
+        this.contextValue = 'assignedJiraIssue';
         this.tooltip = `${issue.key} - ${issue.summary}\n\n${issue.priority.name}    |    ${issue.status.name}`;
         this.resourceUri = Uri.parse(`${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`);
     }

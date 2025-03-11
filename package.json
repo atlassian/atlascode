@@ -695,17 +695,17 @@
                 },
                 {
                     "command": "atlascode.jira.startWorkOnIssue",
-                    "when": "viewItem =~ /(jiraIssue|todoJiraIssue|inProgressJiraIssue|doneJiraIssue)/ && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|todoJiraIssue|inProgressJiraIssue|doneJiraIssue)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.viewInWebBrowser",
-                    "when": "viewItem =~ /(jiraIssue|todoJiraIssue|inProgressJiraIssue|doneJiraIssue)/ && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|todoJiraIssue|inProgressJiraIssue|doneJiraIssue)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.jira.createIssue",
-                    "when": "viewItem =~ /(jiraIssue|todoJiraIssue|inProgressJiraIssue|doneJiraIssue)/ && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|todoJiraIssue|inProgressJiraIssue|doneJiraIssue)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup2"
                 },
                 {
