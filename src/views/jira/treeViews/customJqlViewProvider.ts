@@ -1,46 +1,62 @@
-import { DetailedSiteInfo, Product, ProductJira } from '../../../atlclients/authInfo';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { ProductJira } from '../../../atlclients/authInfo';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { JQLEntry } from '../../../config/model';
 import { Container } from '../../../container';
-import { AbstractBaseNode } from '../../nodes/abstractBaseNode';
-import { BaseTreeDataProvider } from '../../Explorer';
-import { CustomJQLTree } from '../customJqlTree';
-import { ConfigureJQLNode } from '../configureJQLNode';
-import { CONFIGURE_JQL_STRING, CUSTOM_JQL_VIEW_PROVIDER_ID } from './constants';
-import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
-import { commands, Disposable, EventEmitter, Event, window, ConfigurationChangeEvent } from 'vscode';
-import { Logger } from '../../../logger';
 import { CommandContext, setCommandContext } from '../../../commandContext';
 import { Commands } from '../../../commands';
-import { NewIssueMonitor } from '../../../jira/newIssueMonitor';
-import { SearchJiraHelper } from '../searchJiraHelper';
 import { configuration } from '../../../config/configuration';
-import { SimpleJiraIssueNode } from '../../../views/nodes/simpleJiraIssueNode';
-export class CustomJQLViewProvider extends BaseTreeDataProvider {
+import { fetchMinimalIssue } from '../../../jira/fetchIssue';
+import {
+    Disposable,
+    TreeDataProvider,
+    TreeItem,
+    TreeItemCollapsibleState,
+    ConfigurationChangeEvent,
+    EventEmitter,
+    commands,
+    window,
+} from 'vscode';
+import { JiraIssueNode, executeJqlQuery, createLabelItem } from './utils';
+
+const enum ViewStrings {
+    LoginToJiraMessage = 'Please login to Jira',
+    ConfigureJqlMessage = 'Configure JQL entries in settings to view Jira issues',
+    NoIssuesMessage = 'No issues match this query',
+}
+
+export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Disposable {
+    private static readonly _treeItemLoginToJiraMessage = createLabelItem(ViewStrings.LoginToJiraMessage, {
+        command: Commands.ShowConfigPage,
+        title: 'Login to Jira',
+        arguments: [ProductJira],
+    });
+    private static readonly _treeItemConfigureJqlMessage = createLabelItem(ViewStrings.ConfigureJqlMessage, {
+        command: Commands.ShowJiraIssueSettings,
+        title: 'Configure Filters',
+        arguments: ['ConfigureJQLNode'],
+    });
+    private static readonly _id = 'atlascode.views.jira.customJqlTreeView';
+
     private _disposable: Disposable;
-    private _id: string = CUSTOM_JQL_VIEW_PROVIDER_ID;
-    private _jqlEntries: JQLEntry[];
-    private _children: CustomJQLTree[];
-    private _newIssueMonitor: NewIssueMonitor;
-    private _onDidChangeTreeData = new EventEmitter<AbstractBaseNode | null>();
-    public get onDidChangeTreeData(): Event<AbstractBaseNode | null> {
-        return this._onDidChangeTreeData.event;
-    }
+
+    private _onDidChangeTreeData = new EventEmitter<TreeItem | undefined | void>();
+    readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
     constructor() {
-        super();
-
-        this._jqlEntries = Container.jqlManager.enabledJQLEntries();
-        this._newIssueMonitor = new NewIssueMonitor();
-        this._children = [];
         this._disposable = Disposable.from(
             Container.jqlManager.onDidJQLChange(this.refresh, this),
             Container.siteManager.onDidSitesAvailableChange(this.refresh, this),
             commands.registerCommand(Commands.RefreshCustomJqlExplorer, this.refresh, this),
         );
-        window.createTreeView(this.viewId(), { treeDataProvider: this });
+
+        window.createTreeView(CustomJQLViewProvider._id, { treeDataProvider: this });
+
         setCommandContext(CommandContext.CustomJQLExplorer, true);
 
         Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
+
+        this.refresh();
     }
 
     onConfigurationChanged(e: ConfigurationChangeEvent) {
@@ -49,78 +65,114 @@ export class CustomJQLViewProvider extends BaseTreeDataProvider {
         }
     }
 
-    viewId(): string {
-        return this._id;
-    }
-
-    product(): Product {
-        return ProductJira;
-    }
-
     dispose() {
-        this._children.forEach((child) => {
-            child.dispose();
-        });
         this._disposable.dispose();
     }
 
-    async refresh() {
-        await Container.jqlManager.updateFilters();
-        this._children.forEach((child) => {
-            child.dispose();
+    getTreeItem(element: TreeItem): TreeItem {
+        return element;
+    }
+
+    async getChildren(element?: TreeItem): Promise<TreeItem[]> {
+        if (element instanceof JiraIssueQueryNode || element instanceof JiraIssueNode) {
+            return await element.getChildren();
+        } else if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+            return [CustomJQLViewProvider._treeItemLoginToJiraMessage];
+        } else {
+            const jqlEntries = Container.jqlManager.getCustomJQLEntries();
+            return jqlEntries.length
+                ? jqlEntries.map((jqlEntry) => new JiraIssueQueryNode(jqlEntry))
+                : [CustomJQLViewProvider._treeItemConfigureJqlMessage];
+        }
+    }
+
+    private refresh() {
+        this._onDidChangeTreeData.fire();
+    }
+}
+
+class JiraIssueQueryNode extends TreeItem {
+    private static readonly _treeItemNoIssuesMessage = createLabelItem(ViewStrings.NoIssuesMessage);
+
+    constructor(private jqlEntry: JQLEntry) {
+        super(jqlEntry.name, TreeItemCollapsibleState.Collapsed);
+        this.id = jqlEntry.id;
+    }
+
+    public async getChildren(): Promise<TreeItem[]> {
+        let issues = await executeJqlQuery(this.jqlEntry);
+        if (!issues || !issues.length) {
+            return [JiraIssueQueryNode._treeItemNoIssuesMessage];
+        }
+
+        issues = Container.config.jira.explorer.nestSubtasks ? await this.constructIssueTree(issues) : issues;
+
+        return issues.map((issue) => new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, issue));
+    }
+
+    private async constructIssueTree(
+        jqlIssues: MinimalIssue<DetailedSiteInfo>[],
+    ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+        const parentIssues = await this.fetchMissingAncestorIssues(jqlIssues);
+        const jqlAndParents = [...jqlIssues, ...parentIssues];
+
+        const rootIssues: MinimalIssue<DetailedSiteInfo>[] = [];
+        jqlAndParents.forEach((i) => {
+            const parentKey = i.parentKey ?? i.epicLink;
+            if (parentKey) {
+                const parent = jqlAndParents.find((i2) => parentKey === i2.key);
+                if (parent) {
+                    parent.subtasks.push(i);
+                }
+            } else {
+                rootIssues.push(i);
+            }
         });
-        this._children = [];
-        this._jqlEntries = Container.jqlManager.enabledJQLEntries();
 
-        this._onDidChangeTreeData.fire(null);
-        SearchJiraHelper.clearIssues(this.viewId()); // so no duplicates
-        await this._newIssueMonitor.checkForNewIssues();
+        return [...rootIssues];
     }
 
-    getTreeItem(element: AbstractBaseNode) {
-        return element.getTreeItem();
+    // Fetch any parents and grandparents that might be missing from the set to ensure that the a path can be drawn all
+    // the way from a subtask to an epic.
+    private async fetchMissingAncestorIssues(
+        newIssues: MinimalIssue<DetailedSiteInfo>[],
+    ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+        if (!newIssues.length) {
+            return [];
+        }
+        const site = newIssues[0].siteDetails;
+
+        const missingParentKeys = this.calculateMissingParentKeys(newIssues);
+        const parentIssues = await this.fetchIssuesForKeys(site, missingParentKeys);
+
+        // If a jqlIssue is a sub-task we make a second call to make sure we get its parent's epic.
+        const missingGrandparentKeys = this.calculateMissingParentKeys([...newIssues, ...parentIssues]);
+        const grandparentIssues = await this.fetchIssuesForKeys(site, missingGrandparentKeys);
+
+        return [...parentIssues, ...grandparentIssues];
     }
 
-    async getChildren(element?: AbstractBaseNode | undefined) {
-        if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
-            return Promise.resolve([
-                new SimpleJiraIssueNode(
-                    'Please login to Jira',
-                    {
-                        command: Commands.ShowConfigPage,
-                        title: 'Login to Jira',
-                        arguments: [ProductJira],
-                    },
-                    undefined,
-                ),
-            ]);
-        }
-        let allIssues: MinimalORIssueLink<DetailedSiteInfo>[] = [];
-        if (element) {
-            return element.getChildren();
-        }
+    private calculateMissingParentKeys(issues: MinimalIssue<DetailedSiteInfo>[]): string[] {
+        // On NextGen projects epics are considered parents to issues and parentKey points to them. On classic projects
+        // issues parentKey doesn't point to its epic, but its epicLink does. In both cases parentKey points to the
+        // parent task for subtasks. Since they're disjoint we can just take both and treat them the same.
+        const parentKeys = issues.map((i) => i.parentKey).filter((x): x is string => !!x);
+        const epicKeys = issues.map((i) => i.epicLink).filter((x) => !!x);
+        const uniqueParentKeys = Array.from(new Set([...parentKeys, ...epicKeys]));
+        return uniqueParentKeys.filter((k) => !issues.some((i) => i.key === k));
+    }
 
-        if (this._jqlEntries.length === 0) {
-            return [new ConfigureJQLNode(CONFIGURE_JQL_STRING)];
-        }
-
-        if (this._children.length === 0) {
-            this._children = await Promise.all(
-                this._jqlEntries.map(async (jql: JQLEntry) => {
-                    const childTree = new CustomJQLTree(jql);
-                    const flattenedIssueList = await childTree.executeQuery().catch((e) => {
-                        Logger.error(new Error(`Error executing JQL: ${e}`));
-                        return [];
-                    });
-                    childTree.setNumIssues(flattenedIssueList.length);
-                    allIssues.push(...flattenedIssueList);
-                    return childTree;
-                }),
-            );
-            allIssues = [...new Map(allIssues.map((issue) => [issue.key, issue])).values()];
-            SearchJiraHelper.setIssues(allIssues, this.viewId());
-        }
-
-        return [...this._children];
+    private async fetchIssuesForKeys(
+        site: DetailedSiteInfo,
+        keys: string[],
+    ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+        return await Promise.all(
+            keys.map(async (issueKey) => {
+                const parent = await fetchMinimalIssue(issueKey, site);
+                // we only need the parent information here, we already have all the subtasks that satisfy the jql query
+                parent.subtasks = [];
+                return parent;
+            }),
+        );
     }
 }

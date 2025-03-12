@@ -1,32 +1,14 @@
-import { isMinimalIssue, MinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
-import { JQLEntry } from '../../../config/model';
 import { Container } from '../../../container';
 import { Commands } from '../../../commands';
-import { Logger } from '../../../logger';
-import { issuesForJQL } from '../../../jira/issuesForJql';
 import { SearchJiraHelper } from '../searchJiraHelper';
 import { PromiseRacer } from '../../../util/promises';
-import {
-    Disposable,
-    TreeDataProvider,
-    TreeItem,
-    TreeItemCollapsibleState,
-    EventEmitter,
-    Command,
-    commands,
-    window,
-    Uri,
-} from 'vscode';
+import { Disposable, TreeDataProvider, TreeItem, EventEmitter, commands, window } from 'vscode';
+import { JiraIssueNode, executeJqlQuery, createLabelItem } from './utils';
 
 const enum ViewStrings {
     ConfigureJiraMessage = 'Please login to Jira',
-}
-
-function createLabelItem(label: string, command?: Command): TreeItem {
-    const item = new TreeItem(label);
-    item.command = command;
-    return item;
 }
 
 export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>, Disposable {
@@ -55,7 +37,7 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
 
         const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
         if (jqlEntries.length) {
-            this._initPromises = new PromiseRacer(jqlEntries.map(this.executeJqlQuery));
+            this._initPromises = new PromiseRacer(jqlEntries.map(executeJqlQuery));
         }
 
         this._onDidChangeTreeData.fire();
@@ -114,50 +96,15 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
                 return [AssignedWorkItemsViewProvider._treeItemConfigureJiraMessage];
             }
 
-            const allIssues = (await Promise.all(jqlEntries.map(this.executeJqlQuery))).flat();
+            const allIssues = (await Promise.all(jqlEntries.map(executeJqlQuery))).flat();
             SearchJiraHelper.setIssues(allIssues, AssignedWorkItemsViewProvider._id);
             return this.buildTreeItemsFromIssues(allIssues);
         }
     }
 
-    /** This function returns a Promise that never rejects. */
-    private async executeJqlQuery(jqlEntry: JQLEntry): Promise<MinimalIssue<DetailedSiteInfo>[]> {
-        try {
-            if (jqlEntry) {
-                const jqlSite = Container.siteManager.getSiteForId(ProductJira, jqlEntry.siteId);
-                if (jqlSite) {
-                    return await issuesForJQL(jqlEntry.query, jqlSite);
-                }
-            }
-        } catch (e) {
-            Logger.error(new Error(`Failed to execute default JQL query for site "${jqlEntry.siteId}": ${e}`));
-        }
-
-        return [];
-    }
-
     private buildTreeItemsFromIssues(issues?: MinimalIssue<DetailedSiteInfo>[]): TreeItem[] {
-        return issues ? issues.map((issue) => new JiraIssueNode(issue)) : [];
-    }
-}
-
-class JiraIssueNode extends TreeItem {
-    constructor(public issue: MinimalORIssueLink<DetailedSiteInfo>) {
-        super(issue.key, TreeItemCollapsibleState.None);
-
-        this.id = `${issue.key}_${issue.siteDetails.id}`;
-
-        this.description = isMinimalIssue(issue) && issue.isEpic ? issue.epicName : issue.summary;
-        this.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [issue] };
-        this.iconPath = Uri.parse(issue.issuetype.iconUrl);
-        this.contextValue = 'assignedJiraIssue';
-        this.tooltip = `${issue.key} - ${issue.summary}\n\n${issue.priority.name}    |    ${issue.status.name}`;
-        this.resourceUri = Uri.parse(`${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`);
-    }
-
-    async getTreeItem(): Promise<any> {
-        return {
-            resourceUri: this.resourceUri,
-        };
+        return issues
+            ? issues.map((issue) => new JiraIssueNode(JiraIssueNode.NodeType.JiraAssignedIssuesNode, issue))
+            : [];
     }
 }

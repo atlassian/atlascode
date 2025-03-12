@@ -91,7 +91,15 @@ export class JQLManager extends Disposable {
 
     public getAllDefaultJQLEntries(): JQLEntry[] {
         const sites = Container.siteManager.getSitesAvailable(ProductJira);
-        return sites.map(this.defaultJQLForSite);
+        return sites.map((site) => this.defaultJQLEntryForSite(site));
+    }
+
+    public getCustomJQLEntries(): JQLEntry[] {
+        const enabledEntries = this.enabledJQLEntries();
+        return enabledEntries.filter((entry) => {
+            const site = Container.siteManager.getSiteForId(ProductJira, entry.siteId);
+            return site && entry.query !== this.defaultJQLQueryForSite(site);
+        });
     }
 
     public async initializeJQL(sites: DetailedSiteInfo[]) {
@@ -101,8 +109,7 @@ export class JQLManager extends Disposable {
             for (const site of sites) {
                 if (!allList.some((j) => j.siteId === site.id)) {
                     // only initialize if there are no jql entries for this site
-                    const newEntry = this.defaultJQLForSite(site);
-                    allList.push(newEntry);
+                    allList.push(this.defaultJQLEntryForSite(site));
                 }
             }
 
@@ -110,16 +117,18 @@ export class JQLManager extends Disposable {
         });
     }
 
-    private defaultJQLForSite(site: DetailedSiteInfo): JQLEntry {
-        const query = site.hasResolutionField
+    private defaultJQLQueryForSite(site: DetailedSiteInfo): string {
+        return site.hasResolutionField
             ? 'assignee = currentUser() AND resolution = Unresolved ORDER BY lastViewed DESC'
             : 'assignee = currentUser() ORDER BY lastViewed DESC';
+    }
 
+    private defaultJQLEntryForSite(site: DetailedSiteInfo): JQLEntry {
         return {
             id: v4(),
             enabled: true,
             name: `My ${site.name} Issues`,
-            query: query,
+            query: this.defaultJQLQueryForSite(site),
             siteId: site.id,
             monitor: true,
         };

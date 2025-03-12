@@ -1,3 +1,9 @@
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { Container } from '../../../container';
+import { CustomJQLViewProvider } from './customJqlViewProvider';
+import * as utils from './utils';
+
 const mockJqlEntries = [
     {
         id: '1',
@@ -17,38 +23,54 @@ const mockJqlEntries = [
     },
 ];
 
-const mockEnabledJqlEntries = jest.fn().mockReturnValue(mockJqlEntries);
-const mockProductHasAtLeastOneSite = jest.fn().mockReturnValue(true);
+const mockedIssue1 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
+    key: 'AXON-1',
+    isEpic: false,
+    summary: 'summary1',
+    status: { name: 'statusName' },
+    priority: { name: 'priorityName' },
+    siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
+    issuetype: { iconUrl: '/issueType/' },
+    subtasks: [],
+});
+
+const mockedIssue2 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
+    key: 'AXON-2',
+    isEpic: false,
+    summary: 'summary2',
+    status: { name: 'statusName' },
+    priority: { name: 'priorityName' },
+    siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
+    issuetype: { iconUrl: '/issueType/' },
+    subtasks: [],
+});
+
 jest.mock('../../../container', () => ({
     Container: {
         jqlManager: {
-            enabledJQLEntries: mockEnabledJqlEntries,
+            getCustomJQLEntries: jest.fn(() => mockJqlEntries),
             onDidJQLChange: jest.fn(),
             updateFilters: jest.fn(),
         },
         siteManager: {
             onDidSitesAvailableChange: jest.fn(),
-            productHasAtLeastOneSite: mockProductHasAtLeastOneSite,
+            productHasAtLeastOneSite: jest.fn(() => true),
         },
         context: {
             subscriptions: {
                 push: jest.fn(),
             },
         },
-    },
-}));
-jest.mock('../../../util/featureFlags', () => {
-    return {
-        FeatureFlagClient: {
-            featureGates: {
-                NewSidebarTreeView: true,
+        config: {
+            jira: {
+                explorer: {
+                    nestSubtasks: false,
+                },
             },
         },
-        Features: {
-            NewSidebarTreeView: 'atlascode-new-sidebar-treeview',
-        },
-    };
-});
+    },
+}));
+
 const mockExecuteQuery = jest.fn().mockReturnValue(Promise.resolve([]));
 jest.mock('../customJqlTree', () => {
     return {
@@ -76,57 +98,84 @@ jest.mock('../../../jira/newIssueMonitor', () => {
     };
 });
 
-import { Container } from '../../../container';
-import { ConfigureJQLNode } from '../configureJQLNode';
-import { CustomJQLTree } from '../customJqlTree';
-import { SearchJiraHelper } from '../searchJiraHelper';
-import { CustomJQLViewProvider } from './customJqlViewProvider';
-import { SimpleJiraIssueNode } from '../../../views/nodes/simpleJiraIssueNode';
+function forceCastTo<T>(obj: any): T {
+    return obj as unknown as T;
+}
 
 describe('CustomJqlViewProvider', () => {
-    it('should grab JQL entries', () => {
-        new CustomJQLViewProvider();
-        expect(Container.jqlManager.enabledJQLEntries).toHaveBeenCalled();
+    afterEach(() => {
+        jest.restoreAllMocks();
     });
 
     describe('getChildren', () => {
-        it('should execute each jql and return 2 custom jql trees', async () => {
+        it('should return the list of custom JQLs as tree nodes', async () => {
             const provider = new CustomJQLViewProvider();
             const children = await provider.getChildren();
-            mockJqlEntries.forEach((jql) => {
-                expect(CustomJQLTree).toHaveBeenCalledWith(jql);
-            });
-            expect(mockExecuteQuery).toHaveBeenCalledTimes(2);
-            expect(SearchJiraHelper.setIssues).toHaveBeenCalled();
+
+            expect(Container.jqlManager.getCustomJQLEntries).toHaveBeenCalled();
             expect(children).toHaveLength(2);
+
+            expect(children[0].label).toBe('Test JQL Entry');
+            expect(children[1].label).toBe('Test JQL Entry 2');
         });
 
-        it('should return a ConfigureJQLNode if no jql entries are enabled', async () => {
-            mockEnabledJqlEntries.mockReturnValue([]);
+        it('should return a the list of issues under a jql node', async () => {
+            jest.spyOn(utils, 'executeJqlQuery').mockResolvedValue([mockedIssue1, mockedIssue2]);
+
             const provider = new CustomJQLViewProvider();
             const children = await provider.getChildren();
-            expect(children).toHaveLength(1);
-            expect(children[0]).toBeInstanceOf(ConfigureJQLNode);
+
+            const jqlNode = children[0];
+            expect(jqlNode).toBeDefined();
+
+            const issues = await provider.getChildren(jqlNode);
+            expect(issues).toHaveLength(2);
+
+            expect(issues[0].label).toBe(mockedIssue1.key);
+            expect(issues[0].description).toBe(mockedIssue1.summary);
+            expect(issues[0].contextValue).toBe('jiraIssue');
+
+            expect(issues[1].label).toBe(mockedIssue2.key);
+            expect(issues[1].description).toBe(mockedIssue2.summary);
+            expect(issues[1].contextValue).toBe('jiraIssue');
         });
 
-        it('should return a Login to Jira node if no sites are available', async () => {
-            mockProductHasAtLeastOneSite.mockReturnValue(false);
+        it("should return a 'No issues' node under a jql node without results", async () => {
             const provider = new CustomJQLViewProvider();
             const children = await provider.getChildren();
-            expect(children).toHaveLength(1);
-            expect(children[0]).toBeInstanceOf(SimpleJiraIssueNode);
-        });
-    });
 
-    describe('refresh', () => {
-        it('should update the jql entries and refresh the tree', async () => {
+            const jqlNode = children[0];
+            expect(jqlNode).toBeDefined();
+
+            const issues = await provider.getChildren(jqlNode);
+            expect(issues).toHaveLength(1);
+
+            expect(issues[0].label).toEqual('No issues match this query');
+            expect(issues[0].command).toBeUndefined();
+        });
+
+        it("should return a 'Configure JQL entries' node if no jql entries are enabled", async () => {
+            (Container.jqlManager.getCustomJQLEntries as jest.Mock).mockReturnValue([]);
             const provider = new CustomJQLViewProvider();
-            await provider.refresh();
-            expect(Container.jqlManager.updateFilters).toHaveBeenCalled();
-            expect(SearchJiraHelper.clearIssues).toHaveBeenCalled();
-            expect(provider['_children']).toEqual([]);
-            expect(Container.jqlManager.enabledJQLEntries).toHaveBeenCalled();
-            expect(mockCheckForNewIssues).toHaveBeenCalled();
+            const children = await provider.getChildren();
+
+            expect(Container.jqlManager.getCustomJQLEntries).toHaveBeenCalled();
+            expect(children).toHaveLength(1);
+
+            expect(children[0].label).toEqual('Configure JQL entries in settings to view Jira issues');
+            expect(children[0].command).toBeDefined();
+        });
+
+        it("should return a 'Login to Jira' node if no sites are available", async () => {
+            (Container.siteManager.productHasAtLeastOneSite as jest.Mock).mockReturnValue(false);
+            const provider = new CustomJQLViewProvider();
+            const children = await provider.getChildren();
+
+            expect(Container.jqlManager.getCustomJQLEntries).toHaveBeenCalled();
+            expect(children).toHaveLength(1);
+
+            expect(children[0].label).toEqual('Please login to Jira');
+            expect(children[0].command).toBeDefined();
         });
     });
 });
