@@ -11,13 +11,14 @@ const enum ViewStrings {
     ConfigureJiraMessage = 'Please login to Jira',
 }
 
+const AssignedWorkItemsViewProviderId = 'atlascode.views.jira.assignedWorkItemsTreeView';
+
 export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>, Disposable {
     private static readonly _treeItemConfigureJiraMessage = createLabelItem(ViewStrings.ConfigureJiraMessage, {
         command: Commands.ShowConfigPage,
         title: 'Login to Jira',
         arguments: [ProductJira],
     });
-    private static readonly _id = 'atlascode.views.jira.assignedWorkItemsTreeView';
 
     private _onDidChangeTreeData = new EventEmitter<TreeItem | undefined | void>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -33,7 +34,7 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
             commands.registerCommand(Commands.RefreshAssignedWorkItemsExplorer, this.refresh, this),
         );
 
-        window.createTreeView(AssignedWorkItemsViewProvider._id, { treeDataProvider: this });
+        window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
 
         const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
         if (jqlEntries.length) {
@@ -77,7 +78,7 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
                     continue;
                 }
 
-                SearchJiraHelper.appendIssues(issues, AssignedWorkItemsViewProvider._id);
+                SearchJiraHelper.appendIssues(issues, AssignedWorkItemsViewProviderId);
                 this._initChildren.push(...this.buildTreeItemsFromIssues(issues));
                 break;
             }
@@ -97,7 +98,7 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
             }
 
             const allIssues = (await Promise.all(jqlEntries.map(executeJqlQuery))).flat();
-            SearchJiraHelper.setIssues(allIssues, AssignedWorkItemsViewProvider._id);
+            SearchJiraHelper.setIssues(allIssues, AssignedWorkItemsViewProviderId);
             return this.buildTreeItemsFromIssues(allIssues);
         }
     }

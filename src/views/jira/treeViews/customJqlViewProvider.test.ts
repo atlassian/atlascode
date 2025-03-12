@@ -27,7 +27,7 @@ const mockedIssue1 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     key: 'AXON-1',
     isEpic: false,
     summary: 'summary1',
-    status: { name: 'statusName' },
+    status: { name: 'statusName', statusCategory: { name: 'To Do' } },
     priority: { name: 'priorityName' },
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
@@ -38,7 +38,18 @@ const mockedIssue2 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     key: 'AXON-2',
     isEpic: false,
     summary: 'summary2',
-    status: { name: 'statusName' },
+    status: { name: 'statusName', statusCategory: { name: 'In Progress' } },
+    priority: { name: 'priorityName' },
+    siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
+    issuetype: { iconUrl: '/issueType/' },
+    subtasks: [],
+});
+
+const mockedIssue3 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
+    key: 'AXON-3',
+    isEpic: false,
+    summary: 'summary3',
+    status: { name: 'statusName', statusCategory: { name: 'Done' } },
     priority: { name: 'priorityName' },
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
@@ -82,25 +93,27 @@ jest.mock('../customJqlTree', () => {
     };
 });
 
-jest.mock('../searchJiraHelper', () => ({
-    SearchJiraHelper: {
-        clearIssues: jest.fn(),
-        setIssues: jest.fn(),
-    },
-}));
+jest.mock('../searchJiraHelper');
 
 function forceCastTo<T>(obj: any): T {
     return obj as unknown as T;
 }
 
 describe('CustomJqlViewProvider', () => {
+    let provider: CustomJQLViewProvider | undefined;
+
+    beforeEach(() => {
+        provider = undefined;
+    });
+
     afterEach(() => {
+        provider?.dispose();
         jest.restoreAllMocks();
     });
 
     describe('getChildren', () => {
         it('should return the list of custom JQLs as tree nodes', async () => {
-            const provider = new CustomJQLViewProvider();
+            provider = new CustomJQLViewProvider();
             const children = await provider.getChildren();
 
             expect(Container.jqlManager.getCustomJQLEntries).toHaveBeenCalled();
@@ -111,28 +124,32 @@ describe('CustomJqlViewProvider', () => {
         });
 
         it('should return a the list of issues under a jql node', async () => {
-            jest.spyOn(utils, 'executeJqlQuery').mockResolvedValue([mockedIssue1, mockedIssue2]);
+            jest.spyOn(utils, 'executeJqlQuery').mockResolvedValue([mockedIssue1, mockedIssue2, mockedIssue3]);
 
-            const provider = new CustomJQLViewProvider();
+            provider = new CustomJQLViewProvider();
             const children = await provider.getChildren();
 
             const jqlNode = children[0];
             expect(jqlNode).toBeDefined();
 
             const issues = await provider.getChildren(jqlNode);
-            expect(issues).toHaveLength(2);
+            expect(issues).toHaveLength(3);
 
             expect(issues[0].label).toBe(mockedIssue1.key);
             expect(issues[0].description).toBe(mockedIssue1.summary);
-            expect(issues[0].contextValue).toBe('jiraIssue');
+            expect(issues[0].contextValue).toBe('jiraIssue_todo');
 
             expect(issues[1].label).toBe(mockedIssue2.key);
             expect(issues[1].description).toBe(mockedIssue2.summary);
-            expect(issues[1].contextValue).toBe('jiraIssue');
+            expect(issues[1].contextValue).toBe('jiraIssue_inProgress');
+
+            expect(issues[2].label).toBe(mockedIssue3.key);
+            expect(issues[2].description).toBe(mockedIssue3.summary);
+            expect(issues[2].contextValue).toBe('jiraIssue_done');
         });
 
         it("should return a 'No issues' node under a jql node without results", async () => {
-            const provider = new CustomJQLViewProvider();
+            provider = new CustomJQLViewProvider();
             const children = await provider.getChildren();
 
             const jqlNode = children[0];
@@ -147,7 +164,7 @@ describe('CustomJqlViewProvider', () => {
 
         it("should return a 'Configure JQL entries' node if no jql entries are enabled", async () => {
             (Container.jqlManager.getCustomJQLEntries as jest.Mock).mockReturnValue([]);
-            const provider = new CustomJQLViewProvider();
+            provider = new CustomJQLViewProvider();
             const children = await provider.getChildren();
 
             expect(Container.jqlManager.getCustomJQLEntries).toHaveBeenCalled();
@@ -159,7 +176,7 @@ describe('CustomJqlViewProvider', () => {
 
         it("should return a 'Login to Jira' node if no sites are available", async () => {
             (Container.siteManager.productHasAtLeastOneSite as jest.Mock).mockReturnValue(false);
-            const provider = new CustomJQLViewProvider();
+            provider = new CustomJQLViewProvider();
             const children = await provider.getChildren();
 
             expect(Container.jqlManager.getCustomJQLEntries).toHaveBeenCalled();

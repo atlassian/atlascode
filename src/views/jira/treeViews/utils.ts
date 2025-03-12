@@ -54,11 +54,29 @@ export class JiraIssueNode extends TreeItem {
         this.description = isMinimalIssue(issue) && issue.isEpic ? issue.epicName : issue.summary;
         this.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [issue] };
         this.iconPath = Uri.parse(issue.issuetype.iconUrl);
-        this.contextValue = nodeType;
+        this.contextValue = this.getIssueContextValue(nodeType, issue);
         this.tooltip = `${issue.key} - ${issue.summary}\n\n${issue.priority.name}    |    ${issue.status.name}`;
         this.resourceUri = Uri.parse(`${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`);
 
         this.children = issue.subtasks.map((x: MinimalIssue<DetailedSiteInfo>) => new JiraIssueNode(nodeType, x));
+    }
+
+    private getIssueContextValue(nodeType: JiraIssueNode.NodeType, issue: MinimalIssue<DetailedSiteInfo>): string {
+        const TO_DO_ISSUE_POSTFIX = '_todo';
+        const IN_PROGRESS_ISSUE_POSTFIX = '_inProgress';
+        const DONE_ISSUE_POSTFIX = '_done';
+
+        const statusCategory = issue.status.statusCategory.name;
+        switch (statusCategory.toLowerCase()) {
+            case 'to do':
+                return nodeType + TO_DO_ISSUE_POSTFIX;
+            case 'in progress':
+                return nodeType + IN_PROGRESS_ISSUE_POSTFIX;
+            case 'done':
+                return nodeType + DONE_ISSUE_POSTFIX;
+            default:
+                return nodeType;
+        }
     }
 
     async getTreeItem(): Promise<any> {

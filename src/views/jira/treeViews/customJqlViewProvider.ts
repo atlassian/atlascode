@@ -18,12 +18,15 @@ import {
     window,
 } from 'vscode';
 import { JiraIssueNode, executeJqlQuery, createLabelItem } from './utils';
+import { SearchJiraHelper } from '../searchJiraHelper';
 
 const enum ViewStrings {
     LoginToJiraMessage = 'Please login to Jira',
     ConfigureJqlMessage = 'Configure JQL entries in settings to view Jira issues',
     NoIssuesMessage = 'No issues match this query',
 }
+
+const CustomJQLViewProviderId = 'atlascode.views.jira.customJqlTreeView';
 
 export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Disposable {
     private static readonly _treeItemLoginToJiraMessage = createLabelItem(ViewStrings.LoginToJiraMessage, {
@@ -36,7 +39,6 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
         title: 'Configure Filters',
         arguments: ['ConfigureJQLNode'],
     });
-    private static readonly _id = 'atlascode.views.jira.customJqlTreeView';
 
     private _disposable: Disposable;
 
@@ -50,7 +52,7 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
             commands.registerCommand(Commands.RefreshCustomJqlExplorer, this.refresh, this),
         );
 
-        window.createTreeView(CustomJQLViewProvider._id, { treeDataProvider: this });
+        window.createTreeView(CustomJQLViewProviderId, { treeDataProvider: this });
 
         setCommandContext(CommandContext.CustomJQLExplorer, true);
 
@@ -79,6 +81,8 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
         } else if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             return [CustomJQLViewProvider._treeItemLoginToJiraMessage];
         } else {
+            SearchJiraHelper.clearIssues(CustomJQLViewProviderId);
+
             const jqlEntries = Container.jqlManager.getCustomJQLEntries();
             return jqlEntries.length
                 ? jqlEntries.map((jqlEntry) => new JiraIssueQueryNode(jqlEntry))
@@ -94,20 +98,27 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
 class JiraIssueQueryNode extends TreeItem {
     private static readonly _treeItemNoIssuesMessage = createLabelItem(ViewStrings.NoIssuesMessage);
 
+    private readonly children: Promise<TreeItem[]>;
+
     constructor(private jqlEntry: JQLEntry) {
         super(jqlEntry.name, TreeItemCollapsibleState.Collapsed);
         this.id = jqlEntry.id;
+
+        this.children = (async () => {
+            let issues = await executeJqlQuery(this.jqlEntry);
+            if (!issues || !issues.length) {
+                return [JiraIssueQueryNode._treeItemNoIssuesMessage];
+            }
+
+            issues = Container.config.jira.explorer.nestSubtasks ? await this.constructIssueTree(issues) : issues;
+            SearchJiraHelper.appendIssues(issues, CustomJQLViewProviderId);
+
+            return issues.map((issue) => new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, issue));
+        })();
     }
 
-    public async getChildren(): Promise<TreeItem[]> {
-        let issues = await executeJqlQuery(this.jqlEntry);
-        if (!issues || !issues.length) {
-            return [JiraIssueQueryNode._treeItemNoIssuesMessage];
-        }
-
-        issues = Container.config.jira.explorer.nestSubtasks ? await this.constructIssueTree(issues) : issues;
-
-        return issues.map((issue) => new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, issue));
+    public getChildren(): Promise<TreeItem[]> {
+        return this.children;
     }
 
     private async constructIssueTree(

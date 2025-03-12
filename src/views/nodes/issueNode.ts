@@ -4,26 +4,6 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { AbstractBaseNode } from './abstractBaseNode';
 import { Features, FeatureFlagClient } from '../../util/featureFlags';
-import {
-    DONE_ISSUE_ID,
-    IN_PROGRESS_ISSUE_ID,
-    ISSUE_NODE_CONTEXT_VALUE,
-    TO_DO_ISSUE_ID,
-} from '../jira/treeViews/constants';
-
-const getIssueContextValue = (issue: MinimalORIssueLink<DetailedSiteInfo>) => {
-    const statusCategory = issue.status.statusCategory.name;
-    switch (statusCategory.toLowerCase()) {
-        case 'to do':
-            return TO_DO_ISSUE_ID;
-        case 'in progress':
-            return IN_PROGRESS_ISSUE_ID;
-        case 'done':
-            return DONE_ISSUE_ID;
-        default:
-            return ISSUE_NODE_CONTEXT_VALUE;
-    }
-};
 
 export class IssueNode extends AbstractBaseNode {
     public issue: MinimalORIssueLink<DetailedSiteInfo>;
@@ -77,12 +57,12 @@ export class IssueNode extends AbstractBaseNode {
             ? {
                   title: this.issue.key,
                   description: summary,
-                  contextValue: getIssueContextValue(this.issue),
+                  contextValue: 'jiraIssue',
               }
             : {
                   title: `${this.issue.key} ${summary}`,
                   description: undefined,
-                  contextValue: ISSUE_NODE_CONTEXT_VALUE,
+                  contextValue: 'jiraIssue',
               };
     }
 }

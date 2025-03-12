@@ -677,37 +677,37 @@
             "view/item/context": [
                 {
                     "command": "atlascode.jira.todoIssue",
-                    "when": "viewItem == todoJiraIssue && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue_todo|assignedJiraIssue_todo)/ && atlascode:isJiraAuthenticated",
                     "group": "inline"
                 },
                 {
                     "command": "atlascode.jira.inProgressIssue",
-                    "when": "viewItem == inProgressJiraIssue && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue_inProgress|assignedJiraIssue_inProgress)/ && atlascode:isJiraAuthenticated",
                     "group": "inline"
                 },
                 {
                     "command": "atlascode.jira.doneIssue",
-                    "when": "viewItem == doneJiraIssue && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue_done|assignedJiraIssue_done)/ && atlascode:isJiraAuthenticated",
                     "group": "inline"
                 },
                 {
                     "command": "atlascode.jira.assignIssueToMe",
-                    "when": "viewItem =~ /(jiraIssue|todoJiraIssue|inProgressJiraIssue|doneJiraIssue)/ && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue|jiraIssue_.+)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.jira.startWorkOnIssue",
-                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|todoJiraIssue|inProgressJiraIssue|doneJiraIssue)/ && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.viewInWebBrowser",
-                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|todoJiraIssue|inProgressJiraIssue|doneJiraIssue)/ && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.jira.createIssue",
-                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|todoJiraIssue|inProgressJiraIssue|doneJiraIssue)/ && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup2"
                 },
                 {

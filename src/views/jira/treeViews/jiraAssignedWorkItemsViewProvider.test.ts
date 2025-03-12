@@ -15,7 +15,7 @@ const mockedIssue1 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     key: 'AXON-1',
     isEpic: false,
     summary: 'summary1',
-    status: { name: 'statusName' },
+    status: { name: 'statusName', statusCategory: { name: 'To Do' } },
     priority: { name: 'priorityName' },
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
@@ -26,7 +26,18 @@ const mockedIssue2 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     key: 'AXON-2',
     isEpic: false,
     summary: 'summary2',
-    status: { name: 'statusName' },
+    status: { name: 'statusName', statusCategory: { name: 'In Progress' } },
+    priority: { name: 'priorityName' },
+    siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
+    issuetype: { iconUrl: '/issueType/' },
+    subtasks: [],
+});
+
+const mockedIssue3 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
+    key: 'AXON-3',
+    isEpic: false,
+    summary: 'summary3',
+    status: { name: 'statusName', statusCategory: { name: 'Done' } },
     priority: { name: 'priorityName' },
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
@@ -122,19 +133,23 @@ describe('AssignedWorkItemsViewProvider', () => {
 
         expect(PromiseRacerMockClass.LastInstance).toBeDefined();
 
-        PromiseRacerMockClass.LastInstance?.mockData([mockedIssue1, mockedIssue2]);
+        PromiseRacerMockClass.LastInstance?.mockData([mockedIssue1, mockedIssue2, mockedIssue3]);
         const children = await provider.getChildren();
 
         expect(PromiseRacerMockClass.LastInstance?.isEmpty).toHaveBeenCalled();
         expect(PromiseRacerMockClass.LastInstance?.next).toHaveBeenCalled();
-        expect(children).toHaveLength(2);
+        expect(children).toHaveLength(3);
 
         expect(children[0].label).toBe(mockedIssue1.key);
         expect(children[0].description).toBe(mockedIssue1.summary);
-        expect(children[0].contextValue).toBe('assignedJiraIssue');
+        expect(children[0].contextValue).toBe('assignedJiraIssue_todo');
 
         expect(children[1].label).toBe(mockedIssue2.key);
         expect(children[1].description).toBe(mockedIssue2.summary);
-        expect(children[1].contextValue).toBe('assignedJiraIssue');
+        expect(children[1].contextValue).toBe('assignedJiraIssue_inProgress');
+
+        expect(children[2].label).toBe(mockedIssue3.key);
+        expect(children[2].description).toBe(mockedIssue3.summary);
+        expect(children[2].contextValue).toBe('assignedJiraIssue_done');
     });
 });
