@@ -86,7 +86,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             return;
         }
         this.isLoading = true;
-        this.loadedChildren = [new DescriptionNode(this.pr, this)];
+        this.loadedChildren = [new DescriptionNode(this.pr, this), new SimpleNode('Loading...')];
         const bbApi = await clientForSite(this.pr.site);
         let fileDiffs: FileDiff[] = [];
         let allComments: PaginatedComments = { data: [] };
@@ -95,6 +95,8 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             fileDiffs = await bbApi.pullrequests.getChangedFiles(this.pr);
             allComments = await bbApi.pullrequests.getComments(this.pr);
             const fileChangedNodes = await createFileChangesNodes(this.pr, allComments, fileDiffs, [], []);
+            this.loadedChildren = [];
+            this.loadedChildren.push(new DescriptionNode(this.pr, this));
             this.loadedChildren.push(...fileChangedNodes);
             this.refresh();
         } catch (error) {
