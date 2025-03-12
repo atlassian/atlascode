@@ -2,7 +2,7 @@ import { parseISO } from 'date-fns';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import * as vscode from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { Commit, PaginatedComments, PaginatedPullRequests, PullRequest } from '../../bitbucket/model';
+import { Commit, PaginatedComments, PaginatedPullRequests, PullRequest, type FileDiff } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { Logger } from '../../logger';
 import { Resources } from '../../resources';
@@ -17,7 +17,8 @@ export const PullRequestContextValue = 'pullrequest';
 export class PullRequestTitlesNode extends AbstractBaseNode {
     private treeItem: vscode.TreeItem;
     public prHref: string;
-    private childrenPromises: Promise<AbstractBaseNode[]>;
+    private loadedChildren: AbstractBaseNode[] = [];
+    private isLoading = false;
 
     constructor(
         private pr: PullRequest,
@@ -33,7 +34,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         //grabbing all the PR data. Due to rate limits imposed by BBServer admins, mass preloading of all nodes is not feasible without
         //caching.
         if (shouldPreload) {
-            this.childrenPromises = this.fetchDataAndProcessChildren();
+            this.fetchDataAndProcessChildren();
         }
     }
 
@@ -76,51 +77,65 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         return this.pr;
     }
 
-    async fetchDataAndProcessChildren(): Promise<AbstractBaseNode[] | [SimpleNode]> {
-        if (!this.pr) {
-            return [];
-        }
+    refresh(): void {
+        vscode.commands.executeCommand(Commands.RefreshPullRequestExplorerNode, this.treeItem.resourceUri);
+    }
 
+    async fetchDataAndProcessChildren(): Promise<void> {
+        if (this.isLoading || !this.pr) {
+            return;
+        }
+        this.isLoading = true;
+        this.loadedChildren = [new DescriptionNode(this.pr, this)];
         const bbApi = await clientForSite(this.pr.site);
-        const promises = Promise.all([
-            bbApi.pullrequests.getChangedFiles(this.pr),
+        let fileDiffs: FileDiff[] = [];
+        let allComments: PaginatedComments = { data: [] };
+        // critical flow APIs
+        try {
+            fileDiffs = await bbApi.pullrequests.getChangedFiles(this.pr);
+            allComments = await bbApi.pullrequests.getComments(this.pr);
+            const fileChangedNodes = await createFileChangesNodes(this.pr, allComments, fileDiffs, [], []);
+            this.loadedChildren.push(...fileChangedNodes);
+            this.refresh();
+        } catch (error) {
+            Logger.debug('error fetching pull request details', error);
+            this.loadedChildren = [new SimpleNode('⚠️ Error: fetching pull request details failed')];
+        }
+        // non-critical flow APIs
+        Promise.all([
             bbApi.pullrequests.getConflictedFiles(this.pr),
             bbApi.pullrequests.getCommits(this.pr),
-            bbApi.pullrequests.getComments(this.pr),
             bbApi.pullrequests.getTasks(this.pr),
-        ]);
-
-        return promises.then(
-            async (result) => {
-                const [fileDiffs, conflictedFiles, commits, allComments, tasks] = result;
-
-                const children: AbstractBaseNode[] = [new DescriptionNode(this.pr, this)];
-
-                //Only enable commit-level review nodes for BB Cloud (at least for now)
-                if (this.pr.site.details.isCloud) {
-                    children.push(new CommitSectionNode(this.pr, commits));
-                }
-
-                children.push(...(await this.createRelatedJiraIssueNode(commits, allComments)));
-                children.push(...(await this.createRelatedBitbucketIssueNode(commits, allComments)));
-                children.push(
-                    ...(await createFileChangesNodes(this.pr, allComments, fileDiffs, conflictedFiles, tasks)),
-                );
-                return children;
-            },
-            (reason) => {
-                Logger.debug('error fetching pull request details', reason);
-                return [new SimpleNode('⚠️ Error: fetching pull request details failed')];
-            },
-        );
+        ]).then((result) => {
+            const [conflictedFiles, commits, tasks] = result;
+            this.loadedChildren = [];
+            this.loadedChildren.push(new DescriptionNode(this.pr, this));
+            if (this.pr.site.details.isCloud) {
+                this.loadedChildren.push(new CommitSectionNode(this.pr, commits));
+            }
+            Promise.all([
+                this.createRelatedJiraIssueNode(commits, allComments),
+                this.createRelatedBitbucketIssueNode(commits, allComments),
+                createFileChangesNodes(this.pr, allComments, fileDiffs, conflictedFiles, tasks),
+            ]).then((nodes) => {
+                const [jiraIssueNodes, bbIssueNodes, fileNodes] = nodes;
+                this.loadedChildren.push(...jiraIssueNodes);
+                this.loadedChildren.push(...bbIssueNodes);
+                this.loadedChildren.push(...fileNodes);
+                this.isLoading = false;
+                this.refresh();
+            });
+        });
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
-        if (!element) {
-            //If the promise is undefined, we didn't begin preloading in the constructor, so we need to make the full call here
-            return await (this.childrenPromises ?? this.fetchDataAndProcessChildren());
+        if (element) {
+            return element.getChildren();
         }
-        return element.getChildren();
+        if (!this.loadedChildren.length && !this.isLoading) {
+            this.fetchDataAndProcessChildren();
+        }
+        return this.loadedChildren;
     }
 
     private async createRelatedJiraIssueNode(
