@@ -89,15 +89,6 @@ jest.mock('../searchJiraHelper', () => ({
     },
 }));
 
-const mockCheckForNewIssues = jest.fn();
-jest.mock('../../../jira/newIssueMonitor', () => {
-    return {
-        NewIssueMonitor: jest.fn().mockImplementation(() => ({
-            checkForNewIssues: mockCheckForNewIssues,
-        })),
-    };
-});
-
 function forceCastTo<T>(obj: any): T {
     return obj as unknown as T;
 }
