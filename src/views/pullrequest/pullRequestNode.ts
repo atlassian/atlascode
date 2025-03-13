@@ -102,14 +102,14 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
             const fileChangedNodes = await createFileChangesNodes(this.pr, allComments, fileDiffs, [], []);
             this.loadedChildren = [new DescriptionNode(this.pr, this), ...fileChangedNodes];
-            this.refresh();
         } catch (error) {
             Logger.debug('error fetching pull request details', error);
             this.loadedChildren = [new SimpleNode('⚠️ Error: fetching pull request details failed')];
             this.isLoading = false;
             return;
+        } finally {
+            this.refresh();
         }
-
         // Additional data - conflicts, commits, tasks
         try {
             const [conflictedFiles, commits, tasks] = await Promise.all([
