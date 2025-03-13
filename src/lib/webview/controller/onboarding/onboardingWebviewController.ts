@@ -14,7 +14,7 @@ import { MessagePoster, WebviewController } from '../webviewController';
 import { OnboardingActionApi } from './onboardingActionApi';
 
 export const id: string = 'atlascodeOnboardingV2';
-export const title: string = 'Getting Started';
+const title: string = 'Getting Started';
 
 export class OnboardingWebviewController implements WebviewController<SectionChangeMessage> {
     private _messagePoster: MessagePoster;
