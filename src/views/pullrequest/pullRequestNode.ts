@@ -82,52 +82,62 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     }
 
     async fetchDataAndProcessChildren(): Promise<void> {
+        // Return early if already loading or no PR
         if (this.isLoading || !this.pr) {
             return;
         }
+
         this.isLoading = true;
         this.loadedChildren = [new DescriptionNode(this.pr, this), new SimpleNode('Loading...')];
-        const bbApi = await clientForSite(this.pr.site);
         let fileDiffs: FileDiff[] = [];
         let allComments: PaginatedComments = { data: [] };
-        // critical flow APIs
+        const bbApi = await clientForSite(this.pr.site);
+
+        // Critical data - files and comments
         try {
-            fileDiffs = await bbApi.pullrequests.getChangedFiles(this.pr);
-            allComments = await bbApi.pullrequests.getComments(this.pr);
+            [fileDiffs, allComments] = await Promise.all([
+                bbApi.pullrequests.getChangedFiles(this.pr),
+                bbApi.pullrequests.getComments(this.pr),
+            ]);
+
             const fileChangedNodes = await createFileChangesNodes(this.pr, allComments, fileDiffs, [], []);
-            this.loadedChildren = [];
-            this.loadedChildren.push(new DescriptionNode(this.pr, this));
-            this.loadedChildren.push(...fileChangedNodes);
+            this.loadedChildren = [new DescriptionNode(this.pr, this), ...fileChangedNodes];
             this.refresh();
         } catch (error) {
             Logger.debug('error fetching pull request details', error);
             this.loadedChildren = [new SimpleNode('⚠️ Error: fetching pull request details failed')];
+            this.isLoading = false;
+            return;
         }
-        // non-critical flow APIs
-        Promise.all([
-            bbApi.pullrequests.getConflictedFiles(this.pr),
-            bbApi.pullrequests.getCommits(this.pr),
-            bbApi.pullrequests.getTasks(this.pr),
-        ]).then((result) => {
-            const [conflictedFiles, commits, tasks] = result;
-            this.loadedChildren = [];
-            this.loadedChildren.push(new DescriptionNode(this.pr, this));
-            if (this.pr.site.details.isCloud) {
-                this.loadedChildren.push(new CommitSectionNode(this.pr, commits));
-            }
-            Promise.all([
-                this.createRelatedJiraIssueNode(commits, allComments),
-                this.createRelatedBitbucketIssueNode(commits, allComments),
-                createFileChangesNodes(this.pr, allComments, fileDiffs, conflictedFiles, tasks),
-            ]).then((nodes) => {
-                const [jiraIssueNodes, bbIssueNodes, fileNodes] = nodes;
-                this.loadedChildren.push(...jiraIssueNodes);
-                this.loadedChildren.push(...bbIssueNodes);
-                this.loadedChildren.push(...fileNodes);
-                this.isLoading = false;
-                this.refresh();
-            });
-        });
+
+        // Additional data - conflicts, commits, tasks
+        try {
+            const [conflictedFiles, commits, tasks] = await Promise.all([
+                bbApi.pullrequests.getConflictedFiles(this.pr),
+                bbApi.pullrequests.getCommits(this.pr),
+                bbApi.pullrequests.getTasks(this.pr),
+            ]);
+
+            const [jiraIssueNodes, bbIssueNodes, fileNodes] = await Promise.all([
+                this.createRelatedJiraIssueNode(commits, { data: [] }),
+                this.createRelatedBitbucketIssueNode(commits, { data: [] }),
+                createFileChangesNodes(this.pr, { data: [] }, fileDiffs, conflictedFiles, tasks),
+            ]);
+
+            this.loadedChildren = [
+                new DescriptionNode(this.pr, this),
+                ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, commits)] : []),
+                ...jiraIssueNodes,
+                ...bbIssueNodes,
+                ...fileNodes,
+            ];
+        } catch (error) {
+            Logger.debug('error fetching additional pull request details', error);
+            // Keep existing nodes if additional data fetch fails
+        }
+
+        this.isLoading = false;
+        this.refresh();
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
