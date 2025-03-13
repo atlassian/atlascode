@@ -95,17 +95,17 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
         // Critical data - files and comments
         try {
-            [fileDiffs, allComments] = await Promise.all([
+            const [files, comments] = await Promise.all([
                 bbApi.pullrequests.getChangedFiles(this.pr),
                 bbApi.pullrequests.getComments(this.pr),
             ]);
-
-            const fileChangedNodes = await createFileChangesNodes(this.pr, allComments, fileDiffs, [], []);
             this.loadedChildren = [
                 new DescriptionNode(this.pr, this),
                 ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, [], true)] : []),
-                ...fileChangedNodes,
+                ...(await createFileChangesNodes(this.pr, comments, files, [], [])),
             ];
+            fileDiffs = files;
+            allComments = comments;
         } catch (error) {
             Logger.debug('error fetching pull request details', error);
             this.loadedChildren = [new SimpleNode('⚠️ Error: fetching pull request details failed')];
@@ -123,9 +123,9 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             ]);
 
             const [jiraIssueNodes, bbIssueNodes, fileNodes] = await Promise.all([
-                this.createRelatedJiraIssueNode(commits, { data: [] }),
-                this.createRelatedBitbucketIssueNode(commits, { data: [] }),
-                createFileChangesNodes(this.pr, { data: [] }, fileDiffs, conflictedFiles, tasks),
+                this.createRelatedJiraIssueNode(commits, allComments),
+                this.createRelatedBitbucketIssueNode(commits, allComments),
+                createFileChangesNodes(this.pr, allComments, fileDiffs, conflictedFiles, tasks),
             ]);
 
             this.loadedChildren = [
