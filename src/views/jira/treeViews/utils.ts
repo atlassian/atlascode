@@ -42,6 +42,7 @@ export const loginToJiraMessageNode = createLabelItem('Please login to Jira', {
     title: 'Login to Jira',
     arguments: [ProductJira],
 });
+
 export class JiraIssueNode extends TreeItem {
     private children: JiraIssueNode[];
 

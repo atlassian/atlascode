@@ -40,8 +40,6 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
     private _onDidChangeTreeData = new EventEmitter<TreeItem | undefined | void>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-    private _jqlEntries: JQLEntry[] = [];
-
     constructor() {
         this._disposable = Disposable.from(
             Container.jqlManager.onDidJQLChange(this.refresh, this),
@@ -49,11 +47,11 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
             commands.registerCommand(Commands.RefreshCustomJqlExplorer, this.refresh, this),
         );
 
-        this._jqlEntries = Container.jqlManager.getCustomJQLEntries();
-
         window.createTreeView(CustomJQLViewProviderId, { treeDataProvider: this });
 
-        if (this._jqlEntries.length > 0) {
+        const jqlEntries = Container.jqlManager.getCustomJQLEntries();
+
+        if (jqlEntries.length > 0) {
             setCommandContext(CommandContext.CustomJQLExplorer, Container.config.jira.explorer.enabled);
         }
 
@@ -64,8 +62,8 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
         if (configuration.changed(e, 'jira.jqlList') || configuration.changed(e, 'jira.explorer')) {
-            this._jqlEntries = Container.jqlManager.getCustomJQLEntries();
-            if (this._jqlEntries.length > 0) {
+            const jqlEntries = Container.jqlManager.getCustomJQLEntries();
+            if (jqlEntries.length > 0) {
                 setCommandContext(CommandContext.CustomJQLExplorer, Container.config.jira.explorer.enabled);
             } else {
                 setCommandContext(CommandContext.CustomJQLExplorer, false);
@@ -90,9 +88,9 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
         } else {
             SearchJiraHelper.clearIssues(CustomJQLViewProviderId);
 
-            this._jqlEntries = Container.jqlManager.getCustomJQLEntries();
-            return this._jqlEntries.length
-                ? this._jqlEntries.map((jqlEntry) => new JiraIssueQueryNode(jqlEntry))
+            const jqlEntries = Container.jqlManager.getCustomJQLEntries();
+            return jqlEntries.length
+                ? jqlEntries.map((jqlEntry) => new JiraIssueQueryNode(jqlEntry))
                 : [CustomJQLViewProvider._treeItemConfigureJqlMessage];
         }
     }

@@ -54,7 +54,7 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
         if (configuration.changed(e, 'jira.explorer.enabled')) {
             setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
             this.refresh();
-        } else if (configuration.changed(e, 'jira.explorer.showIssueIcons')) {
+        } else if (configuration.changed(e, 'jira.explorer')) {
             this.refresh();
         }
     }
