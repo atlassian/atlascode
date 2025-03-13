@@ -1065,7 +1065,7 @@
                 },
                 "atlascode.jira.explorer.monitorEnabled": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Show notifications when new issues are created for default site and project",
                     "scope": "window"
                 },
@@ -1336,7 +1336,7 @@
                 },
                 "atlascode.bitbucket.pipelines.monitorEnabled": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Show notifications for new Bitbucket Pipelines build statuses",
                     "scope": "window"
                 },
@@ -1383,7 +1383,7 @@
                 },
                 "atlascode.bitbucket.issues.monitorEnabled": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Show notifications when new Bitbucket Issues are created",
                     "scope": "window"
                 },
@@ -1413,7 +1413,7 @@
                 },
                 "atlascode.bitbucket.explorer.notifications.pullRequestCreated": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Show notifications when new pull requests are created",
                     "scope": "window"
                 },
