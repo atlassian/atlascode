@@ -90,9 +90,9 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
         } else {
             SearchJiraHelper.clearIssues(CustomJQLViewProviderId);
 
-            const jqlEntries = Container.jqlManager.getCustomJQLEntries();
-            return jqlEntries.length
-                ? jqlEntries.map((jqlEntry) => new JiraIssueQueryNode(jqlEntry))
+            this._jqlEntries = Container.jqlManager.getCustomJQLEntries();
+            return this._jqlEntries.length
+                ? this._jqlEntries.map((jqlEntry) => new JiraIssueQueryNode(jqlEntry))
                 : [CustomJQLViewProvider._treeItemConfigureJqlMessage];
         }
     }

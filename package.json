@@ -61,7 +61,7 @@
         "extension:package:prerelease": "npm run extension:clean && vsce package --pre-release --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",
         "extension:package": "npm run extension:clean && vsce package --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",
         "extension:install": "npm run extension:package && code --install-extension ./atlascode-*.vsix --force",
-        "test": "jest",
+        "test": "jest --config jest.config.js",
         "test:unit": "jest --selectProjects unit",
         "test:react": "jest --selectProjects react",
         "test:e2e": "echo 'token length' && echo ${#ATLASCODE_TEST_USER_API_TOKEN} && npm run test:e2e:compile && e2e/scripts/run",
