@@ -2,7 +2,6 @@ import { LegacyAtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHa
 import { BitbucketIssue, BitbucketSite, PullRequest, WorkspaceRepo } from './bitbucket/model';
 import { ExtensionContext, env, workspace, UIKind, window } from 'vscode';
 import { IConfig, configuration } from './config/configuration';
-
 import { analyticsClient } from './analytics-node-client/src/client.min.js';
 import { AnalyticsClient } from './analytics-node-client/src/client.min.js';
 import { AuthStatusBar } from './views/authStatusBar';
@@ -66,6 +65,7 @@ import { VSCWelcomeWebviewControllerFactory } from './webview/welcome/vscWelcome
 import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
 import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
+import { EventBuilder } from './util/featureFlags/eventBuilder';
 import { AtlascodeUriHandler } from './uriHandler';
 import { CheckoutHelper } from './bitbucket/interfaces';
 import { ProductJira } from './atlclients/authInfo';
@@ -191,6 +191,16 @@ export class Container {
         this._bitbucketHelper = new BitbucketCheckoutHelper(context.globalState);
 
         context.subscriptions.push(new HelpExplorer());
+
+        await FeatureFlagClient.initialize({
+            analyticsClient: this._analyticsClient,
+            identifiers: {
+                analyticsAnonymousId: this.machineId,
+            },
+            eventBuilder: new EventBuilder(),
+        }).catch((err) => {
+            Logger.error(Error(`Failed to initialize feature flags: ${err}`));
+        });
 
         this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
         this.initializeNewSidebarView(context, config);
