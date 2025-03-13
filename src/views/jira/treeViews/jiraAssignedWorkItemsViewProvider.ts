@@ -44,6 +44,7 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
             this._initPromises = new PromiseRacer(jqlEntries.map(executeJqlQuery));
         }
         Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
+        this._onDidChangeTreeData.fire();
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
