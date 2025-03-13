@@ -50,10 +50,6 @@ export interface LogoutAuthAction extends AuthAction {
     siteInfo: DetailedSiteInfo;
 }
 
-export interface SaveCodeAction {
-    code: string;
-}
-
 export interface SaveSettingsAction {
     target: ConfigTarget;
     changes: {

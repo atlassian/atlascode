@@ -43,12 +43,6 @@ export interface IssueDeleteCommentAction extends Action {
     commentId: string;
 }
 
-export interface IssueAssignAction extends Action {
-    action: 'assign';
-    issue: MinimalIssue<DetailedSiteInfo>;
-    userId?: string;
-}
-
 export interface SetIssueTypeAction extends Action {
     action: 'setIssueType';
     issueType: IssueType;
@@ -69,16 +63,6 @@ export interface FetchQueryAction extends Action {
     site: DetailedSiteInfo;
     autocompleteUrl?: string;
     valueType: ValueType;
-}
-
-export interface FetchByProjectQueryAction extends Action {
-    query: string;
-    project: string;
-}
-
-export interface FetchIssueFieldOptionsByJQLAction extends Action {
-    jql: string;
-    fieldId: string;
 }
 
 export interface ScreensForProjectsAction extends Action {
@@ -190,30 +174,12 @@ export function isIssueDeleteComment(a: Action): a is IssueDeleteCommentAction {
     return (<IssueDeleteCommentAction>a).commentId !== undefined && (<IssueDeleteCommentAction>a).issue !== undefined;
 }
 
-export function isIssueAssign(a: Action): a is IssueAssignAction {
-    return (<IssueAssignAction>a).issue !== undefined;
-}
 export function isOpenJiraIssue(a: Action): a is OpenJiraIssueAction {
     return (<OpenJiraIssueAction>a).issueOrKey !== undefined;
 }
 
 export function isFetchQueryAndSite(a: Action): a is FetchQueryAction {
     return a && (<FetchQueryAction>a).query !== undefined && (<FetchQueryAction>a).site !== undefined;
-}
-
-export function isFetchQuery(a: Action): a is FetchQueryAction {
-    return a && (<FetchQueryAction>a).query !== undefined;
-}
-
-export function isFetchByProjectQuery(a: Action): a is FetchByProjectQueryAction {
-    return (<FetchByProjectQueryAction>a).query !== undefined && (<FetchByProjectQueryAction>a).project !== undefined;
-}
-
-export function isFetchOptionsJQL(a: Action): a is FetchIssueFieldOptionsByJQLAction {
-    return (
-        (<FetchIssueFieldOptionsByJQLAction>a).jql !== undefined &&
-        (<FetchIssueFieldOptionsByJQLAction>a).fieldId !== undefined
-    );
 }
 
 export function isScreensForProjects(a: Action): a is ScreensForProjectsAction {

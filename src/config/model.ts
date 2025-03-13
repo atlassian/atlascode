@@ -1,5 +1,3 @@
-'use strict';
-
 import { AccessibleResourceV1, emptyAccessibleResourceV1 } from '../atlclients/authInfo';
 
 export enum SettingSource {

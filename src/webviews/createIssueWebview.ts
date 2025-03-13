@@ -47,7 +47,7 @@ export interface BBData {
     issueKey: string;
 }
 
-export const emptyCreateMetaResult: CreateMetaTransformerResult<DetailedSiteInfo> = {
+const emptyCreateMetaResult: CreateMetaTransformerResult<DetailedSiteInfo> = {
     selectedIssueType: emptyIssueType,
     issueTypeUIs: {},
     problems: {},

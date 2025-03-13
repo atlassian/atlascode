@@ -8,38 +8,39 @@ export enum PMFDismissal {
     LATER = 'later',
     NEVER = 'never',
 }
-export interface PMFControllerApi {
+
+interface PMFControllerApi {
     showPMFBanner: () => void;
     dismissPMFBanner: (howLong: PMFDismissal, postMessageFunc: PostMessageFunc<CommonAction>) => void;
     showPMFSurvey: (postMessageFunc: PostMessageFunc<CommonAction>) => void;
     submitPMFSurvey: (pmfData: PMFData, postMessageFunc: PostMessageFunc<CommonAction>) => void;
 }
 
-export const emptyPMFController: PMFControllerApi = {
+const emptyPMFController: PMFControllerApi = {
     showPMFBanner: () => {},
     showPMFSurvey: (postMessageFunc: PostMessageFunc<CommonAction>) => {},
     submitPMFSurvey: (pmfData: PMFData, postMessageFunc: PostMessageFunc<CommonAction>) => {},
     dismissPMFBanner: (howLong: PMFDismissal, postMessageFunc: PostMessageFunc<CommonAction>) => {},
 };
 
-export type PMFState = {
+type PMFState = {
     isPMFBannerOpen: boolean;
     isPMFSurveyOpen: boolean;
 };
 
-export const emptyPMFState: PMFState = {
+const emptyPMFState: PMFState = {
     isPMFBannerOpen: false,
     isPMFSurveyOpen: false,
 };
 
-export enum PMFActionType {
+enum PMFActionType {
     ShowPMFBanner = 'showPMFBanner',
     ShowPMFSurvey = 'showPMFSurvey',
     SubmitPMFSurvey = 'submitPMFSurvey',
     DismissPMFBanner = 'dismissPMFBanner',
 }
 
-export type PMFAction =
+type PMFAction =
     | ReducerAction<PMFActionType.ShowPMFBanner>
     | ReducerAction<PMFActionType.ShowPMFSurvey>
     | ReducerAction<PMFActionType.SubmitPMFSurvey>

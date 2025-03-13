@@ -95,7 +95,7 @@ export class PipelinesTree extends BaseTreeDataProvider {
     }
 }
 
-export class PipelinesRepoNode extends AbstractBaseNode {
+class PipelinesRepoNode extends AbstractBaseNode {
     private _pipelines: Pipeline[];
     private _page = 1;
     private _morePages = true;

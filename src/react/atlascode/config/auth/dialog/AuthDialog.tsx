@@ -247,7 +247,7 @@ function isCustomUrl(url: string): boolean {
     }
 }
 
-export const normalizeContextPath = (cPath: string): string | undefined => {
+const normalizeContextPath = (cPath: string): string | undefined => {
     if (!cPath || cPath.trim() === '' || cPath.trim() === '/') {
         return undefined;
     }

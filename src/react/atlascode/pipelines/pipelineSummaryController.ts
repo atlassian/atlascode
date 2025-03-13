@@ -19,7 +19,7 @@ export interface PipelineSummaryControllerApi {
     postMessage: (a: PipelineSummaryAction) => void;
 }
 
-export const emptyApi: PipelineSummaryControllerApi = {
+const emptyApi: PipelineSummaryControllerApi = {
     refresh: (): void => {
         return;
     },
@@ -32,13 +32,13 @@ export const emptyApi: PipelineSummaryControllerApi = {
     postMessage: () => {},
 };
 
-export enum PipelineSummaryUIActionType {
+enum PipelineSummaryUIActionType {
     Update = 'update',
     StepsUpdate = 'stepsUpdate',
     Refreshing = 'refreshing',
 }
 
-export type PipelineSummaryUIAction =
+type PipelineSummaryUIAction =
     | ReducerAction<PipelineSummaryUIActionType.Update, { data: any }>
     | ReducerAction<PipelineSummaryUIActionType.StepsUpdate, { steps: PipelineStep[] }>
     | ReducerAction<PipelineSummaryUIActionType.Refreshing, { data: any }>;
