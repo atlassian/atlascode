@@ -118,8 +118,11 @@ class JiraIssueQueryNode extends TreeItem {
                 return [JiraIssueQueryNode._treeItemNoIssuesMessage];
             }
 
-            issues = Container.config.jira.explorer.nestSubtasks ? await this.constructIssueTree(issues) : issues;
+            // index only issues that are directly retrieved with the JQL queries, and not
+            // the extra parent items retrieved to rebuild the issues hierarchy
             SearchJiraHelper.appendIssues(issues, CustomJQLViewProviderId);
+
+            issues = Container.config.jira.explorer.nestSubtasks ? await this.constructIssueTree(issues) : issues;
 
             return issues.map((issue) => new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, issue));
         })();
