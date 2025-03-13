@@ -1,24 +1,26 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { Container } from '../../../container';
 import { Commands } from '../../../commands';
 import { SearchJiraHelper } from '../searchJiraHelper';
 import { PromiseRacer } from '../../../util/promises';
-import { Disposable, TreeDataProvider, TreeItem, EventEmitter, commands, window } from 'vscode';
-import { JiraIssueNode, executeJqlQuery, createLabelItem } from './utils';
-
-const enum ViewStrings {
-    ConfigureJiraMessage = 'Please login to Jira',
-}
+import {
+    Disposable,
+    TreeDataProvider,
+    TreeItem,
+    EventEmitter,
+    commands,
+    window,
+    ConfigurationChangeEvent,
+} from 'vscode';
+import { JiraIssueNode, executeJqlQuery, loginToJiraMessageNode } from './utils';
+import { configuration } from '../../../config/configuration';
+import { CommandContext, setCommandContext } from '../../../commandContext';
 
 const AssignedWorkItemsViewProviderId = 'atlascode.views.jira.assignedWorkItemsTreeView';
 
 export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>, Disposable {
-    private static readonly _treeItemConfigureJiraMessage = createLabelItem(ViewStrings.ConfigureJiraMessage, {
-        command: Commands.ShowConfigPage,
-        title: 'Login to Jira',
-        arguments: [ProductJira],
-    });
+    private static readonly _treeItemConfigureJiraMessage = loginToJiraMessageNode;
 
     private _onDidChangeTreeData = new EventEmitter<TreeItem | undefined | void>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -36,12 +38,21 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
 
         window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
 
+        setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
         const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
         if (jqlEntries.length) {
             this._initPromises = new PromiseRacer(jqlEntries.map(executeJqlQuery));
         }
+        Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
+    }
 
-        this._onDidChangeTreeData.fire();
+    private onConfigurationChanged(e: ConfigurationChangeEvent) {
+        if (configuration.changed(e, 'jira.explorer.enabled')) {
+            setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
+            this.refresh();
+        } else if (configuration.changed(e, 'jira.explorer')) {
+            this.refresh();
+        }
     }
 
     dispose() {

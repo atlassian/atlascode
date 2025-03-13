@@ -17,11 +17,10 @@ import {
     commands,
     window,
 } from 'vscode';
-import { JiraIssueNode, executeJqlQuery, createLabelItem } from './utils';
+import { JiraIssueNode, executeJqlQuery, createLabelItem, loginToJiraMessageNode } from './utils';
 import { SearchJiraHelper } from '../searchJiraHelper';
 
 const enum ViewStrings {
-    LoginToJiraMessage = 'Please login to Jira',
     ConfigureJqlMessage = 'Configure JQL entries in settings to view Jira issues',
     NoIssuesMessage = 'No issues match this query',
 }
@@ -29,11 +28,7 @@ const enum ViewStrings {
 const CustomJQLViewProviderId = 'atlascode.views.jira.customJqlTreeView';
 
 export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Disposable {
-    private static readonly _treeItemLoginToJiraMessage = createLabelItem(ViewStrings.LoginToJiraMessage, {
-        command: Commands.ShowConfigPage,
-        title: 'Login to Jira',
-        arguments: [ProductJira],
-    });
+    private static readonly _treeItemLoginToJiraMessage = loginToJiraMessageNode;
     private static readonly _treeItemConfigureJqlMessage = createLabelItem(ViewStrings.ConfigureJqlMessage, {
         command: Commands.ShowJiraIssueSettings,
         title: 'Configure Filters',
@@ -45,6 +40,8 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
     private _onDidChangeTreeData = new EventEmitter<TreeItem | undefined | void>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
+    private _jqlEntries: JQLEntry[] = [];
+
     constructor() {
         this._disposable = Disposable.from(
             Container.jqlManager.onDidJQLChange(this.refresh, this),
@@ -52,17 +49,27 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
             commands.registerCommand(Commands.RefreshCustomJqlExplorer, this.refresh, this),
         );
 
+        this._jqlEntries = Container.jqlManager.getCustomJQLEntries();
+
         window.createTreeView(CustomJQLViewProviderId, { treeDataProvider: this });
 
-        setCommandContext(CommandContext.CustomJQLExplorer, true);
+        if (this._jqlEntries.length > 0) {
+            setCommandContext(CommandContext.CustomJQLExplorer, Container.config.jira.explorer.enabled);
+        }
 
         Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
 
         this.refresh();
     }
 
-    onConfigurationChanged(e: ConfigurationChangeEvent) {
+    private onConfigurationChanged(e: ConfigurationChangeEvent) {
         if (configuration.changed(e, 'jira.jqlList') || configuration.changed(e, 'jira.explorer')) {
+            this._jqlEntries = Container.jqlManager.getCustomJQLEntries();
+            if (this._jqlEntries.length > 0) {
+                setCommandContext(CommandContext.CustomJQLExplorer, Container.config.jira.explorer.enabled);
+            } else {
+                setCommandContext(CommandContext.CustomJQLExplorer, false);
+            }
             this.refresh();
         }
     }
@@ -91,6 +98,7 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
     }
 
     private refresh() {
+        SearchJiraHelper.clearIssues(CustomJQLViewProviderId);
         this._onDidChangeTreeData.fire();
     }
 }

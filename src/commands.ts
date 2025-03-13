@@ -24,7 +24,6 @@ import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
-import { CommandContext, setCommandContext } from './commandContext';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -57,6 +56,7 @@ export enum Commands {
     RefreshJiraExplorer = 'atlascode.jira.refreshExplorer',
     RefreshAssignedWorkItemsExplorer = 'atlascode.jira.refreshAssignedWorkItemsExplorer',
     RefreshCustomJqlExplorer = 'atlascode.jira.refreshCustomJqlExplorer',
+    AddJiraSite = 'atlascode.jira.addJiraSite',
     ShowJiraIssueSettings = 'atlascode.jira.showJiraIssueSettings',
     ShowPullRequestSettings = 'atlascode.bb.showPullRequestSettings',
     ShowPipelineSettings = 'atlascode.bb.showPipelineSettings',
@@ -96,7 +96,6 @@ export enum Commands {
     CloneRepository = 'atlascode.cloneRepository',
     DisableHelpExplorer = 'atlascode.disableHelpExplorer',
     CreateNewJql = 'atlascode.jira.createNewJql',
-    RemoveFromSidebar = 'atlascode.jira.removeFromSidebar',
     ToDoIssue = 'atlascode.jira.todoIssue',
     InProgressIssue = 'atlascode.jira.inProgressIssue',
     DoneIssue = 'atlascode.jira.doneIssue',
@@ -104,8 +103,11 @@ export enum Commands {
 
 export function registerCommands(vscodeContext: ExtensionContext) {
     vscodeContext.subscriptions.push(
-        commands.registerCommand(Commands.RemoveFromSidebar, () =>
-            setCommandContext(CommandContext.CustomJQLExplorer, false),
+        commands.registerCommand(Commands.AddJiraSite, () =>
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Jira,
+                subSection: ConfigSubSection.Auth,
+            }),
         ),
         commands.registerCommand(Commands.CreateNewJql, () =>
             Container.settingsWebviewFactory.createOrShow({

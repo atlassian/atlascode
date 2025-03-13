@@ -225,9 +225,10 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.jira.removeFromSidebar",
-                "title": "Remove from sidebar",
-                "category": "Atlassian"
+                "command": "atlascode.jira.addJiraSite",
+                "title": "Add Jira Site",
+                "category": "Atlassian",
+                "shortTitle": "Add another Jira site"
             },
             {
                 "command": "atlascode.jira.refreshAssignedWorkItemsExplorer",
@@ -254,7 +255,9 @@
                     "dark": "resources/dark/settings.svg",
                     "light": "resources/light/settings.svg"
                 },
-                "category": "Atlassian"
+                "category": "Atlassian",
+                "shortTitle": "View settings"
+                
             },
             {
                 "command": "atlascode.jira.showIssueForKey",
@@ -489,12 +492,12 @@
                 {
                     "id": "atlascode.views.jira.assignedWorkItemsTreeView",
                     "name": "Assigned Jira Work Items",
-                    "when": "config.atlascode.jira.enabled && atlascode:customJQLExplorerEnabled"
+                    "when": "atlascode:assignedIssueExplorerEnabled && config.atlascode.jira.enabled"
                 },
                 {
                     "id": "atlascode.views.jira.customJqlTreeView",
                     "name": "Custom Jql Filters",
-                    "when": "config.atlascode.jira.enabled && atlascode:customJQLExplorerEnabled"
+                    "when": "atlascode:assignedIssueExplorerEnabled && config.atlascode.jira.enabled && atlascode:customJQLExplorerEnabled"
                 },
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
@@ -583,7 +586,7 @@
             "view/title": [
                 {
                     "command": "atlascode.jira.createIssue",
-                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
+                    "when": "view =~ /(atlascode.views.jira.customJql|atlascode.views.jira.assignedWorkItemsTreeView)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation@1"
                 },
                 {
@@ -593,7 +596,7 @@
                 },
                 {
                     "command": "atlascode.jira.searchIssues",
-                    "when": "view == atlascode.views.jira.customJqlTreeView && atlascode:isJiraAuthenticated",
+                    "when": "view =~ /(atlascode.views.jira.customJqlTreeView|atlascode.views.jira.assignedWorkItemsTreeView)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation@3"
                 },
                 {
@@ -607,10 +610,6 @@
                     "group": "navigation@2"
                 },
                 {
-                    "command": "atlascode.jira.removeFromSidebar",
-                    "when": "view =~ /(atlascode.views.jira.customJqlTreeView)/ && atlascode:isJiraAuthenticated"
-                },
-                {
                     "command": "atlascode.jira.createNewJql",
                     "when": "view =~ /(atlascode.views.jira.customJqlTreeView)/ && atlascode:isJiraAuthenticated"
                 },
@@ -618,6 +617,14 @@
                     "command": "atlascode.jira.showJiraIssueSettings",
                     "when": "view == atlascode.views.jira.customJql",
                     "group": "navigation@4"
+                },
+                {
+                    "command": "atlascode.jira.addJiraSite",
+                    "when": "view == atlascode.views.jira.assignedWorkItemsTreeView && atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.jira.showJiraIssueSettings",
+                    "when": "view =~ /(atlascode.views.jira.assignedWorkItemsTreeView|atlascode.views.jira.customJqlTreeView)/"
                 },
                 {
                     "command": "atlascode.bb.createPullRequest",

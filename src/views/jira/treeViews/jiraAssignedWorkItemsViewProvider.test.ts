@@ -1,11 +1,11 @@
 import { AssignedWorkItemsViewProvider } from './jiraAssignedWorkItemsViewProvider';
 import { Container } from '../../../container';
-import { JQLManager } from 'src/jira/jqlManager';
-import { SiteManager } from 'src/siteManager';
+import { JQLManager } from '../../../jira/jqlManager';
+import { SiteManager } from '../../../siteManager';
 import { Disposable } from 'vscode';
 import { JQLEntry } from '../../../config/model';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 
 function forceCastTo<T>(obj: any): T {
     return obj as unknown as T;
@@ -55,6 +55,18 @@ jest.mock('../../../container', () => ({
         siteManager: {
             onDidSitesAvailableChange: () => new Disposable(() => {}),
         } as Partial<SiteManager>,
+        context: {
+            subscriptions: {
+                push: jest.fn(),
+            },
+        },
+        config: {
+            jira: {
+                explorer: {
+                    enabled: true,
+                },
+            },
+        },
     },
 }));
 

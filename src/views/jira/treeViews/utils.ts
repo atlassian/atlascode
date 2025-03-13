@@ -37,6 +37,11 @@ export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<MinimalIssue<
     return [];
 }
 
+export const loginToJiraMessageNode = createLabelItem('Please login to Jira', {
+    command: Commands.ShowConfigPage,
+    title: 'Login to Jira',
+    arguments: [ProductJira],
+});
 export class JiraIssueNode extends TreeItem {
     private children: JiraIssueNode[];
 

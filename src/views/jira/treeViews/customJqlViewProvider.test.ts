@@ -82,17 +82,6 @@ jest.mock('../../../container', () => ({
     },
 }));
 
-const mockExecuteQuery = jest.fn().mockReturnValue(Promise.resolve([]));
-jest.mock('../customJqlTree', () => {
-    return {
-        CustomJQLTree: jest.fn().mockImplementation(() => ({
-            dispose: jest.fn(),
-            executeQuery: mockExecuteQuery,
-            setNumIssues: jest.fn(),
-        })),
-    };
-});
-
 jest.mock('../searchJiraHelper');
 
 function forceCastTo<T>(obj: any): T {
