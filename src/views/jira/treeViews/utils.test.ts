@@ -73,9 +73,11 @@ const mockedIssue3 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
 });
-beforeEach(() => {
+
+afterEach(() => {
     jest.clearAllMocks();
 });
+
 describe('utils', () => {
     describe('JiraIssueNode', () => {
         it('should create a JiraIssueNode', () => {

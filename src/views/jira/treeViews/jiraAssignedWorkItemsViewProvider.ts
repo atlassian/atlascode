@@ -39,10 +39,13 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
         window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
 
         setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
+
         const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
+
         if (jqlEntries.length) {
             this._initPromises = new PromiseRacer(jqlEntries.map(executeJqlQuery));
         }
+
         Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
         this._onDidChangeTreeData.fire();
     }
@@ -50,6 +53,8 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
         if (configuration.changed(e, 'jira.explorer.enabled')) {
             setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
+            this.refresh();
+        } else if (configuration.changed(e, 'jira.explorer.showIssueIcons')) {
             this.refresh();
         }
     }
