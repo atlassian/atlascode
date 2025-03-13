@@ -101,7 +101,11 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             ]);
 
             const fileChangedNodes = await createFileChangesNodes(this.pr, allComments, fileDiffs, [], []);
-            this.loadedChildren = [new DescriptionNode(this.pr, this), ...fileChangedNodes];
+            this.loadedChildren = [
+                new DescriptionNode(this.pr, this),
+                ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, [], true)] : []),
+                ...fileChangedNodes,
+            ];
         } catch (error) {
             Logger.debug('error fetching pull request details', error);
             this.loadedChildren = [new SimpleNode('⚠️ Error: fetching pull request details failed')];
