@@ -12,7 +12,7 @@
 
 ## What's new in 3.4.12
 
-### Rollback Release
+### Rollback Release !!
 
 - Same as 3.4.7
 - Rolled back several releases as we investigate a possible regression in the authentication flow.
@@ -29,7 +29,7 @@
 
 ## What's new in 3.4.9
 
-### Rollback Release
+### Rollback Release !!
 
 - Same as 3.4.7
 - Rolled back 3.4.8 release as it contained a breaking bug for Server / Data Center users on Authentication.
@@ -41,10 +41,6 @@
 - Added a new toggle switch in 'Start work' page to choose if the new branch should be automatically pushed to remote.
 
 ## What's new in 3.4.7
-
-### Features
-
-- Finalized code for Auth UI experiment.
 
 ### Bug Fixes
 
