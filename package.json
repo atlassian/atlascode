@@ -496,7 +496,7 @@
                 {
                     "id": "atlascode.views.jira.customJqlTreeView",
                     "name": "Custom Jql Filters",
-                    "when": "atlascode:assignedIssueExplorerEnabled && config.atlascode.jira.enabled && atlascode:customJQLExplorerEnabled"
+                    "when": "atlascode:assignedIssueExplorerEnabled && config.atlascode.jira.enabled && atlascode:customJQLExplorerEnabled && atlascode:isJiraAuthenticated"
                 },
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",

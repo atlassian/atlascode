@@ -61,7 +61,11 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
-        if (configuration.changed(e, 'jira.jqlList') || configuration.changed(e, 'jira.explorer')) {
+        if (
+            configuration.changed(e, 'jira.jqlList') ||
+            configuration.changed(e, 'jira.explorer') ||
+            configuration.changed(e, 'jira.explorer.enabled')
+        ) {
             const jqlEntries = Container.jqlManager.getCustomJQLEntries();
             if (jqlEntries.length > 0) {
                 setCommandContext(CommandContext.CustomJQLExplorer, Container.config.jira.explorer.enabled);
