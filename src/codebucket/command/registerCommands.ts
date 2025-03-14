@@ -4,7 +4,7 @@ import { OpenInBitbucketCommand } from './command-open';
 import { OpenBitbucketChangesetCommand } from './command-open-changeset';
 import { OpenBitbucketPullRequestCommand } from './command-open-pullrequest';
 
-export enum CodebucketCommands {
+enum CodebucketCommands {
     OpenInBitbucket = 'atlascode.bb.openInBitbucket',
     OpenChangeset = 'atlascode.bb.openChangeset',
     ViewPullRequest = 'atlascode.bb.viewPullRequest',

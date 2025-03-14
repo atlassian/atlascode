@@ -14,7 +14,7 @@ import {
 import { CloudPullRequestApi } from './pullRequests';
 
 const defaultPageLength = 25;
-export const maxItemsSupported = {
+const maxItemsSupported = {
     comments: 100,
     changes: 100,
 };

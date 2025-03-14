@@ -17,7 +17,7 @@ export interface WelcomeControllerApi {
     openLink: (linkId: KnownLinkID) => void;
 }
 
-export const emptyApi: WelcomeControllerApi = {
+const emptyApi: WelcomeControllerApi = {
     postMessage: () => {},
     openSettings: () => {},
     openLink: () => {},
@@ -26,15 +26,15 @@ export const emptyApi: WelcomeControllerApi = {
 export const WelcomeControllerContext = React.createContext(emptyApi);
 
 export interface WelcomeState extends WelcomeInitMessage {}
-export const emptyState = {
+const emptyState = {
     ...emptyWelcomeInitMessage,
 };
 
-export enum WelcomeUIActionType {
+enum WelcomeUIActionType {
     Init = 'init',
 }
 
-export type WelcomeUIAction = ReducerAction<WelcomeUIActionType.Init, { data: WelcomeInitMessage }>;
+type WelcomeUIAction = ReducerAction<WelcomeUIActionType.Init, { data: WelcomeInitMessage }>;
 
 function welcomeReducer(state: WelcomeState, action: WelcomeUIAction): WelcomeState {
     switch (action.type) {

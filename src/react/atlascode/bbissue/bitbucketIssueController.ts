@@ -35,7 +35,7 @@ export interface BitbucketIssueControllerApi {
     createJiraIssue: () => void;
 }
 
-export const emptyApi: BitbucketIssueControllerApi = {
+const emptyApi: BitbucketIssueControllerApi = {
     postMessage: () => {},
     refresh: () => {},
     openLink: () => {},
@@ -62,7 +62,7 @@ const emptyState: BitbucketIssueState = {
     isSomethingLoading: false,
 };
 
-export enum BitbucketIssueUIActionType {
+enum BitbucketIssueUIActionType {
     Init = 'init',
     InitComments = 'initComments',
     UpdateComments = 'updateComments',
@@ -70,14 +70,12 @@ export enum BitbucketIssueUIActionType {
     Loading = 'loading',
 }
 
-export type BitbucketIssueUIAction =
+type BitbucketIssueUIAction =
     | ReducerAction<BitbucketIssueUIActionType.Init, { data: BitbucketIssueInitMessage }>
     | ReducerAction<BitbucketIssueUIActionType.InitComments, { data: BitbucketIssueCommentsMessage }>
     | ReducerAction<BitbucketIssueUIActionType.UpdateComments, { data: BitbucketIssueCommentsMessage }>
     | ReducerAction<BitbucketIssueUIActionType.LocalChange, { data: BitbucketIssueChangesMessage }>
     | ReducerAction<BitbucketIssueUIActionType.Loading, {}>;
-
-export type BitbucketIssueChanges = { [key: string]: any };
 
 function reducer(state: BitbucketIssueState, action: BitbucketIssueUIAction): BitbucketIssueState {
     switch (action.type) {

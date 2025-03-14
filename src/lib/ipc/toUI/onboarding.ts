@@ -35,11 +35,6 @@ export const emptyOnboardingInitMessage: OnboardingInitMessage = {
     target: ConfigTarget.User,
 };
 
-export interface ConfigUpdateMessage {
-    config: FlattenedConfig;
-    target: ConfigTarget;
-}
-
 export interface SitesUpdateMessage {
     jiraSites: SiteWithAuthInfo[];
     bitbucketSites: SiteWithAuthInfo[];

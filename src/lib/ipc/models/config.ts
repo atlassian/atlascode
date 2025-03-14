@@ -1,10 +1,3 @@
-export enum ConfigMessages {
-    Init = 'init',
-    ConfigUpdate = 'configUpdate',
-    JQLOptionsResponse = 'jqlOptionsResponse',
-    SitesUpdate = 'sitesUpdate',
-}
-
 export enum ConfigTarget {
     User = 'user',
     Workspace = 'workspace',
@@ -34,29 +27,6 @@ export enum ConfigSubSection {
     JiraFeatures = 'jiraFeatures',
     BitbucketFeatures = 'bitbucketFeatures',
     StartWork = 'startWork',
-}
-
-export function configTargetForString(target: string): ConfigTarget {
-    switch (target.toLowerCase()) {
-        case 'user': {
-            return ConfigTarget.User;
-        }
-        case 'workspace': {
-            return ConfigTarget.Workspace;
-        }
-        case 'workspacefolder': {
-            return ConfigTarget.WorkspaceFolder;
-        }
-
-        default: {
-            return ConfigTarget.User;
-        }
-    }
-}
-
-export interface ConfigWorkspaceFolder {
-    name: string;
-    uri: string;
 }
 
 export type FlattenedConfig = { [key: string]: any };

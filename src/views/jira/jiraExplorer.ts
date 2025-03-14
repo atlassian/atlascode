@@ -9,10 +9,7 @@ import { CustomJQLRoot } from './customJqlRoot';
 import { CustomJQLTree } from './customJqlTree';
 import { CreateJiraIssueNode } from './headerNode';
 
-export interface Refreshable {
-    refresh(): void;
-}
-export class JiraExplorer extends Explorer implements Refreshable {
+export class JiraExplorer extends Explorer {
     private _disposables: Disposable[] = [];
 
     constructor(

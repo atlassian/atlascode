@@ -259,7 +259,7 @@ export interface PullRequest {
     // sourceRemote: sourceRemote,
 }
 
-export const emptyPullRequestData: PullRequestData = {
+const emptyPullRequestData: PullRequestData = {
     siteDetails: emptySiteInfo,
     id: '',
     version: 0,
@@ -306,11 +306,6 @@ export interface PaginatedBitbucketIssues {
     workspaceRepo: WorkspaceRepo;
     site: BitbucketSite;
     data: BitbucketIssue[];
-    next?: string;
-}
-
-export interface PaginatedBranchNames {
-    data: string[];
     next?: string;
 }
 

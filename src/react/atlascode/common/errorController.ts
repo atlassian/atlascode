@@ -1,32 +1,32 @@
 import { defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { createContext, useCallback, useMemo, useReducer } from 'react';
 
-export interface ErrorControllerApi {
+interface ErrorControllerApi {
     showError: (details: any) => void;
     dismissError: () => void;
 }
 
-export const emptyErrorController: ErrorControllerApi = {
+const emptyErrorController: ErrorControllerApi = {
     showError: (details: any) => {},
     dismissError: () => {},
 };
 
-export type ErrorState = {
+type ErrorState = {
     isErrorBannerOpen: boolean;
     errorDetails: any;
 };
 
-export const emptyErrorState: ErrorState = {
+const emptyErrorState: ErrorState = {
     isErrorBannerOpen: false,
     errorDetails: undefined,
 };
 
-export enum ErrorActionType {
+enum ErrorActionType {
     ShowError = 'showError',
     DismissError = 'dismissError',
 }
 
-export type ErrorAction =
+type ErrorAction =
     | ReducerAction<ErrorActionType.ShowError, { data: any }>
     | ReducerAction<ErrorActionType.DismissError>;
 

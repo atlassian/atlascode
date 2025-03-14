@@ -31,8 +31,6 @@ import { CommonActionMessageHandler } from '../common/commonActionMessageHandler
 import { MessagePoster, WebviewController } from '../webviewController';
 import { PullRequestDetailsActionApi } from './pullRequestDetailsActionApi';
 
-export const title: string = 'Pull Request'; //TODO: Needs the pull request ID as well...
-
 export class PullRequestDetailsWebviewController implements WebviewController<PullRequest> {
     private pr: PullRequest;
     private commits: Commit[] = [];

@@ -23,7 +23,3 @@ export interface PipelineSummaryUpdateMessage {
 export interface PipelineSummaryStepsUpdateMessage {
     steps: PipelineStep[];
 }
-
-export interface PipelineSummaryLogUpdateMessage {
-    logs: string;
-}

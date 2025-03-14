@@ -12,10 +12,6 @@ export enum StartWorkMessageType {
 export type StartWorkMessage = ReducerAction<StartWorkMessageType.Init, StartWorkInitMessage>;
 export type StartWorkResponse = ReducerAction<StartWorkMessageType.StartWorkResponse, StartWorkResponseMessage>;
 
-export interface ComputedBranchNameMessage {
-    branchName: string;
-}
-
 export interface StartWorkIssueMessage {
     issue: MinimalIssue<DetailedSiteInfo>;
 }

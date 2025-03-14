@@ -24,7 +24,7 @@ export interface CreateBitbucketIssueControllerApi {
     submit: (data: SubmitCreateRequestAction) => Promise<BitbucketIssue>;
 }
 
-export const emptyApi: CreateBitbucketIssueControllerApi = {
+const emptyApi: CreateBitbucketIssueControllerApi = {
     postMessage: () => {},
     refresh: () => {},
     submit: () => {
@@ -43,16 +43,14 @@ const emptyState: CreateBitbucketIssueState = {
     isSomethingLoading: false,
 };
 
-export enum CreateBitbucketIssueUIActionType {
+enum CreateBitbucketIssueUIActionType {
     Init = 'init',
     Loading = 'loading',
 }
 
-export type CreateBitbucketIssueUIAction =
+type CreateBitbucketIssueUIAction =
     | ReducerAction<CreateBitbucketIssueUIActionType.Init, { data: CreateBitbucketIssueInitMessage }>
     | ReducerAction<CreateBitbucketIssueUIActionType.Loading, {}>;
-
-export type BitbucketIssueChanges = { [key: string]: any };
 
 function reducer(state: CreateBitbucketIssueState, action: CreateBitbucketIssueUIAction): CreateBitbucketIssueState {
     switch (action.type) {

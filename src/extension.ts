@@ -1,5 +1,3 @@
-'use strict';
-
 import * as semver from 'semver';
 import { commands, env, ExtensionContext, extensions, languages, Memento, window } from 'vscode';
 import { installedEvent, launchedEvent, upgradedEvent } from './analytics';
@@ -198,6 +196,7 @@ function initializeNewAuthExperiment() {
         }
     }
 }
+
 // this method is called when your extension is deactivated
 export function deactivate() {
     FeatureFlagClient.dispose();

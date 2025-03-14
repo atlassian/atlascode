@@ -46,7 +46,7 @@ export function opacity(color: string, percentage: number) {
     return `rgba(${r}, ${g}, ${b}, ${a * (percentage / 100)})`;
 }
 
-export function toRgba(color: string) {
+function toRgba(color: string) {
     color = color.trim();
 
     const result = cssColorRegEx.exec(color);

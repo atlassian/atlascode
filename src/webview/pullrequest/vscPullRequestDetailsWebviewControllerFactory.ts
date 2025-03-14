@@ -10,7 +10,8 @@ import { iconSet, Resources } from '../../resources';
 import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
 
-export const id: string = 'pullRequestDetailsPageV2';
+const id: string = 'pullRequestDetailsPageV2';
+
 export class VSCPullRequestDetailsWebviewControllerFactory implements VSCWebviewControllerFactory<{}> {
     private api: PullRequestDetailsActionApi;
     private commonHandler: CommonActionMessageHandler;

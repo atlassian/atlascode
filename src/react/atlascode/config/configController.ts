@@ -128,7 +128,7 @@ export const emptyApi: ConfigControllerApi = {
     },
 };
 
-export const emptyFilterSearchResults: FilterSearchResults = {
+const emptyFilterSearchResults: FilterSearchResults = {
     filters: [],
     isLast: true,
     maxResults: 25,
@@ -151,7 +151,7 @@ const emptyState: ConfigState = {
     openSubSections: [],
 };
 
-export enum ConfigUIActionType {
+enum ConfigUIActionType {
     Init = 'init',
     SectionChange = 'sectionChange',
     ConfigChange = 'configChange',
@@ -160,7 +160,7 @@ export enum ConfigUIActionType {
     LocalChange = 'localChange',
 }
 
-export type ConfigUIAction =
+type ConfigUIAction =
     | ReducerAction<CommonActionType.SendAnalytics, { errorInfo: UIErrorInfo }>
     | ReducerAction<ConfigUIActionType.Init, { data: ConfigInitMessage }>
     | ReducerAction<ConfigUIActionType.ConfigChange, { config: FlattenedConfig; target: ConfigTarget }>

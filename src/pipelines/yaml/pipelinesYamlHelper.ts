@@ -1,9 +1,9 @@
 import { workspace, Uri, ConfigurationTarget, window, Extension, extensions, commands } from 'vscode';
 import { Resources } from '../../resources';
 
-export const VSCODE_YAML_EXTENSION_ID = 'redhat.vscode-yaml';
+const VSCODE_YAML_EXTENSION_ID = 'redhat.vscode-yaml';
 
-export const YAML_SCHEMA_CONFIG_NAME_OF_VSCODE_YAML_EXTENSION = 'yaml.schemas';
+const YAML_SCHEMA_CONFIG_NAME_OF_VSCODE_YAML_EXTENSION = 'yaml.schemas';
 
 export const BB_PIPELINES_FILENAME = 'bitbucket-pipelines.yml';
 
