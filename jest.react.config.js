@@ -1,7 +1,7 @@
 module.exports = {
     displayName: 'react',
     roots: ['<rootDir>'],
-    testMatch: ['**/react/**/*.test.tsx'],
+    testMatch: ['**/react/**/*.test.+(ts|tsx)'],
     transform: {
         '^.+\\.(min.js|js|ts|tsx)$': [
             'ts-jest',
