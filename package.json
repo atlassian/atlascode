@@ -61,7 +61,7 @@
         "extension:package:prerelease": "npm run extension:clean && vsce package --pre-release --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",
         "extension:package": "npm run extension:clean && vsce package --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",
         "extension:install": "npm run extension:package && code --install-extension ./atlascode-*.vsix --force",
-        "test": "rm -rf coverage && npm run test:unit && npm run test:react && istanbul-merge --out coverage/coverage-final.json coverage/react/coverage-final.json coverage/unit/coverage-final.json && nyc report --reporter lcov --reporter html --reporter text --reporter text-summary -t coverage/ --report-dir coverage/",
+        "test": "rm -rf coverage && npm run test:unit && npm run test:react && istanbul-merge --out coverage/coverage-final.json coverage/react/coverage-final.json coverage/unit/coverage-final.json && echo '\n\nTotal test coverage:' && nyc report --reporter clover --reporter lcov --reporter html --reporter text-summary -t coverage/ --report-dir coverage/",
         "test:unit": "jest -c jest.unit.config.js",
         "test:react": "jest -c jest.react.config.js",
         "test:e2e": "echo 'token length' && echo ${#ATLASCODE_TEST_USER_API_TOKEN} && npm run test:e2e:compile && e2e/scripts/run",
