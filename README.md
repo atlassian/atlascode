@@ -13,7 +13,7 @@ Stay in the flow by using Atlassian for VSCode to start work on a JIRA issue, ra
 
 ### Getting Started
 
--   Make sure you have VS Code version 1.40.0 or above
+-   Make sure you have VS Code version 1.77.0 or above
 -   Download the extension from the marketplace
 -   Authenticate with Jira and/or Bitbucket from the 'Atlassian: Open Settings' page available in the command palette
 -   From the command palette, type 'Atlassian:' to see all of the extensions available commands
