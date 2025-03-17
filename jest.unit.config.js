@@ -1,5 +1,4 @@
 module.exports = {
-    preset: 'ts-jest',
     displayName: 'unit',
     roots: ['<rootDir>'],
     testMatch: ['**/test/**/*.+(ts|ts|js)', '**/?(*.)+(spec|test).+(ts|ts|js)'],
@@ -12,6 +11,15 @@ module.exports = {
         ],
     },
     transformIgnorePatterns: ['/node_modules/'],
-    testPathIgnorePatterns: ['/node_modules/', '/e2e/', 'src/react'],
+    testPathIgnorePatterns: ['/node_modules/', '/e2e/', '/src/react/'],
     setupFilesAfterEnv: ['<rootDir>/setupTests.js'],
+    collectCoverage: true,
+    collectCoverageFrom: [
+        'src/**/*.{ts,tsx}',
+        '!src/**/*.d.ts',
+        '!src/**/*.{spec,test}.{ts,tsx,js,jsx}', // Exclude test files
+        '!src/react/**/*.{ts,tsx}',
+    ],
+    coverageDirectory: 'coverage/unit',
+    coverageReporters: ['json', 'lcov', 'text-summary', 'clover'],
 };
