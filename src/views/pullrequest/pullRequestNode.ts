@@ -91,18 +91,25 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         this.loadedChildren = [new DescriptionNode(this.pr, this), new SimpleNode('Loading...')];
         let fileDiffs: FileDiff[] = [];
         let allComments: PaginatedComments = { data: [] };
+        let fileChangedNodes: AbstractBaseNode[] = [];
         const bbApi = await clientForSite(this.pr.site);
-
+        const criticalPromise = Promise.all([
+            bbApi.pullrequests.getChangedFiles(this.pr),
+            bbApi.pullrequests.getComments(this.pr),
+        ]);
+        const commitsPromise = bbApi.pullrequests.getCommits(this.pr);
+        const nonCriticalPromise = Promise.all([
+            bbApi.pullrequests.getConflictedFiles(this.pr),
+            bbApi.pullrequests.getTasks(this.pr),
+        ]);
         // Critical data - files and comments
         try {
-            const [files, comments] = await Promise.all([
-                bbApi.pullrequests.getChangedFiles(this.pr),
-                bbApi.pullrequests.getComments(this.pr),
-            ]);
+            const [files, comments] = await criticalPromise;
+            fileChangedNodes = await createFileChangesNodes(this.pr, comments, files, [], []);
             this.loadedChildren = [
                 new DescriptionNode(this.pr, this),
                 ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, [], true)] : []),
-                ...(await createFileChangesNodes(this.pr, comments, files, [], [])),
+                ...fileChangedNodes,
             ];
             fileDiffs = files;
             allComments = comments;
@@ -114,14 +121,16 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         } finally {
             this.refresh();
         }
+        const commits = await commitsPromise;
+        this.loadedChildren = [
+            new DescriptionNode(this.pr, this),
+            ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, commits)] : []),
+            ...fileChangedNodes,
+        ];
+        this.refresh();
         // Additional data - conflicts, commits, tasks
         try {
-            const [conflictedFiles, commits, tasks] = await Promise.all([
-                bbApi.pullrequests.getConflictedFiles(this.pr),
-                bbApi.pullrequests.getCommits(this.pr),
-                bbApi.pullrequests.getTasks(this.pr),
-            ]);
-
+            const [conflictedFiles, tasks] = await nonCriticalPromise;
             const [jiraIssueNodes, bbIssueNodes, fileNodes] = await Promise.all([
                 this.createRelatedJiraIssueNode(commits, allComments),
                 this.createRelatedBitbucketIssueNode(commits, allComments),
