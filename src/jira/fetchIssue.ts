@@ -3,6 +3,7 @@ import { MinimalIssue, minimalIssueFromJsonObject, MinimalORIssueLink } from '@a
 import { CreateMetaTransformerResult } from '@atlassianlabs/jira-pi-meta-models';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Container } from '../container';
+import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
 
 export async function fetchCreateIssueUI(
     siteDetails: DetailedSiteInfo,
@@ -27,7 +28,7 @@ export async function getCachedOrFetchMinimalIssue(
 }
 
 export async function getCachedIssue(issueKey: string): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
-    return await Container.jiraExplorer.findIssue(issueKey);
+    return SearchJiraHelper.findIssue(issueKey) ?? (await Container.jiraExplorer?.findIssue(issueKey));
 }
 
 export async function fetchMinimalIssue(
