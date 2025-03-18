@@ -65,7 +65,7 @@ const IconValue = (props: any) => (
 export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
     private advancedFields: FieldUI[] = [];
     private commonFields: FieldUI[] = [];
-    private attachingInProgress: boolean;
+    private attachingInProgress = false;
 
     getProjectKey(): string {
         return this.state.fieldValues['project'].key;

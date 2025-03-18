@@ -23,7 +23,7 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
     private _logger: Logger;
     private _analytics: AnalyticsApi;
     private _commonHandler: CommonActionMessageHandler;
-    private _isRefreshing: boolean;
+    private _isRefreshing = false;
     private _participants: Map<string, User> = new Map();
 
     constructor(

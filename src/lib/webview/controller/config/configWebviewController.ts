@@ -29,7 +29,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
     private _logger: Logger;
     private _analytics: AnalyticsApi;
     private _commonHandler: CommonActionMessageHandler;
-    private _isRefreshing: boolean;
+    private _isRefreshing = false;
     private _settingsUrl: string;
     private _initialSection?: SectionChangeMessage;
 

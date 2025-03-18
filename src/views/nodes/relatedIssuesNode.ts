@@ -8,7 +8,7 @@ import { extractIssueKeys } from '../../bitbucket/issueKeysExtractor';
 import { ProductJira } from '../../atlclients/authInfo';
 
 export class RelatedIssuesNode extends AbstractBaseNode {
-    private _delegate: StaticIssuesNode;
+    private _delegate: StaticIssuesNode | undefined;
 
     private constructor() {
         super();
@@ -37,10 +37,10 @@ export class RelatedIssuesNode extends AbstractBaseNode {
     }
 
     async getTreeItem(): Promise<vscode.TreeItem> {
-        return this._delegate.getTreeItem();
+        return this._delegate!.getTreeItem();
     }
 
     getChildren(element?: IssueNode): Promise<IssueNode[]> {
-        return this._delegate.getChildren(element);
+        return this._delegate!.getChildren(element);
     }
 }

@@ -17,7 +17,7 @@ export const PullRequestContextValue = 'pullrequest';
 export class PullRequestTitlesNode extends AbstractBaseNode {
     private treeItem: vscode.TreeItem;
     public prHref: string;
-    private childrenPromises: Promise<AbstractBaseNode[]>;
+    private childrenPromises: Promise<AbstractBaseNode[]> | undefined;
 
     constructor(
         private pr: PullRequest,

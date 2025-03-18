@@ -18,8 +18,8 @@ const offlinePolling: number = 5 * Time.SECONDS;
 
 export class OnlineDetector extends Disposable {
     private _disposable: Disposable;
-    private _isOnline: boolean;
-    private _isOfflineMode: boolean;
+    private _isOnline: boolean | undefined;
+    private _isOfflineMode: boolean | undefined;
     private _onlineTimer: any | undefined;
     private _offlineTimer: any | undefined;
     private _transport: AxiosInstance;

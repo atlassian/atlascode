@@ -6,14 +6,14 @@ import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 
 export class SearchJiraIssuesNode extends AbstractBaseNode {
-    private _searchableIssueList: MinimalORIssueLink<DetailedSiteInfo>[];
+    private _searchableIssueList: MinimalORIssueLink<DetailedSiteInfo>[] | undefined;
 
     setIssues(searchableIssueList: MinimalORIssueLink<DetailedSiteInfo>[]) {
         this._searchableIssueList = searchableIssueList;
     }
 
     getIssues() {
-        return this._searchableIssueList;
+        return this._searchableIssueList!;
     }
 
     getTreeItem(): TreeItem {

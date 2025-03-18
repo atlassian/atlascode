@@ -7,7 +7,7 @@ import { StaticBitbucketIssuesNode } from '../bbissues/staticBbIssuesNode';
 import { AbstractBaseNode } from './abstractBaseNode';
 
 export class RelatedBitbucketIssuesNode extends AbstractBaseNode {
-    private _delegate: StaticBitbucketIssuesNode;
+    private _delegate: StaticBitbucketIssuesNode | undefined;
 
     private constructor() {
         super();
@@ -35,10 +35,10 @@ export class RelatedBitbucketIssuesNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        return this._delegate.getTreeItem();
+        return this._delegate!.getTreeItem();
     }
 
     getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
-        return this._delegate.getChildren(element);
+        return this._delegate!.getChildren(element);
     }
 }

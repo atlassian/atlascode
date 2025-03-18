@@ -69,7 +69,7 @@ const emptyState: ViewState = {
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
     private advancedSidebarFields: FieldUI[] = [];
     private advancedMainFields: FieldUI[] = [];
-    private attachingInProgress: boolean;
+    private attachingInProgress = false;
 
     constructor(props: any) {
         super(props);

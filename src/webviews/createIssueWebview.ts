@@ -61,7 +61,7 @@ export class CreateIssueWebview
     private _partialIssue: PartialIssue | undefined;
     private _currentProject: Project | undefined;
     private _screenData: CreateMetaTransformerResult<DetailedSiteInfo>;
-    private _selectedIssueTypeId: string;
+    private _selectedIssueTypeId: string | undefined;
     private _relatedBBIssue: BitbucketIssue | undefined;
     private _siteDetails: DetailedSiteInfo;
 
@@ -174,7 +174,7 @@ export class CreateIssueWebview
     }
 
     async handleSelectOptionCreated(fieldKey: string, newValue: any, nonce?: string): Promise<void> {
-        const issueTypeUI: IssueTypeUI<DetailedSiteInfo> = this._screenData.issueTypeUIs[this._selectedIssueTypeId];
+        const issueTypeUI: IssueTypeUI<DetailedSiteInfo> = this._screenData.issueTypeUIs[this._selectedIssueTypeId!];
 
         if (!Array.isArray(issueTypeUI.fieldValues[fieldKey])) {
             issueTypeUI.fieldValues[fieldKey] = [];
@@ -195,7 +195,7 @@ export class CreateIssueWebview
 
         issueTypeUI.fieldValues[fieldKey].push(newValue);
 
-        this._screenData.issueTypeUIs[this._selectedIssueTypeId] = issueTypeUI;
+        this._screenData.issueTypeUIs[this._selectedIssueTypeId!] = issueTypeUI;
 
         const optionMessage = {
             type: 'optionCreated',
@@ -293,7 +293,7 @@ export class CreateIssueWebview
 
         const selectOverrides = this.getValuesForExisitngKeys(
             this._screenData.issueTypeUIs[issueType.id],
-            this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions,
+            this._screenData.issueTypeUIs[this._selectedIssueTypeId!].selectFieldOptions,
         );
         this._screenData.issueTypeUIs[issueType.id].selectFieldOptions = {
             ...this._screenData.issueTypeUIs[issueType.id].selectFieldOptions,
@@ -502,6 +502,7 @@ export class CreateIssueWebview
                         this._siteDetails,
                         this._currentProject,
                     );
+                    break;
                 }
                 default: {
                     break;

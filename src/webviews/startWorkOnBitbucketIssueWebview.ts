@@ -20,7 +20,7 @@ export class StartWorkOnBitbucketIssueWebview
     extends AbstractReactWebview
     implements InitializingWebview<BitbucketIssue>
 {
-    private _state: BitbucketIssue;
+    private _state: BitbucketIssue | undefined;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -87,7 +87,7 @@ export class StartWorkOnBitbucketIssueWebview
                 }
                 case 'copyBitbucketIssueLink': {
                     handled = true;
-                    const linkUrl = this._state.data.links!.html!.href!;
+                    const linkUrl = this._state!.data.links!.html!.href!;
                     await vscode.env.clipboard.writeText(linkUrl);
                     bbIssueUrlCopiedEvent().then((e) => {
                         Container.analyticsClient.sendTrackEvent(e);
@@ -97,7 +97,7 @@ export class StartWorkOnBitbucketIssueWebview
                 case 'startWork': {
                     if (isStartWork(e)) {
                         try {
-                            const issue = this._state;
+                            const issue = this._state!;
                             if (e.setupBitbucket) {
                                 const scm = Container.bitbucketContext.getRepositoryScm(e.repoUri)!;
                                 await this.createOrCheckoutBranch(
@@ -228,8 +228,8 @@ export class StartWorkOnBitbucketIssueWebview
 
         this.isRefeshing = true;
         try {
-            const bbApi = await clientForSite(this._state.site);
-            const updatedIssue = await bbApi.issues!.refetch(this._state);
+            const bbApi = await clientForSite(this._state!.site);
+            const updatedIssue = await bbApi.issues!.refetch(this._state!);
             this.updateIssue(updatedIssue);
         } catch (e) {
             Logger.error(e);

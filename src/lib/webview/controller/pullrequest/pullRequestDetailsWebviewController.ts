@@ -41,10 +41,10 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     private logger: Logger;
     private analytics: AnalyticsApi;
     private commonHandler: CommonActionMessageHandler;
-    private isRefreshing: boolean;
-    private pageComments: Comment[];
-    private inlineComments: Comment[];
-    private tasks: Task[];
+    private isRefreshing = false;
+    private pageComments: Comment[] | undefined;
+    private inlineComments: Comment[] | undefined;
+    private tasks: Task[] | undefined;
 
     constructor(
         pr: PullRequest,
@@ -354,7 +354,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 try {
                     this.analytics.firePrCommentEvent(this.pr.site.details);
                     this.pageComments = await this.api.postComment(
-                        this.pageComments,
+                        this.pageComments!,
                         this.pr,
                         msg.rawText,
                         msg.parentId,
@@ -380,7 +380,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             case PullRequestDetailsActionType.EditComment: {
                 try {
                     this.pageComments = await this.api.editComment(
-                        this.pageComments,
+                        this.pageComments!,
                         this.pr,
                         msg.rawContent,
                         msg.commentId,
@@ -429,8 +429,8 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 try {
                     this.analytics.firePrTaskEvent(this.pr.site.details, msg.commentId);
                     const { tasks, comments } = await this.api.createTask(
-                        this.tasks,
-                        [...this.pageComments, ...this.inlineComments],
+                        this.tasks!,
+                        [...this.pageComments!, ...this.inlineComments!],
                         this.pr,
                         msg.content,
                         msg.commentId,
@@ -458,8 +458,8 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             case PullRequestDetailsActionType.EditTask: {
                 try {
                     const { tasks, comments } = await this.api.editTask(
-                        this.tasks,
-                        [...this.pageComments, ...this.inlineComments],
+                        this.tasks!,
+                        [...this.pageComments!, ...this.inlineComments!],
                         this.pr,
                         msg.task,
                     );
@@ -509,7 +509,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             case PullRequestDetailsActionType.OpenDiffRequest:
                 try {
                     //Inline comments are passed in to avoid refetching them.
-                    await this.api.openDiffViewForFile(this.pr, msg.fileDiff, this.inlineComments);
+                    await this.api.openDiffViewForFile(this.pr, msg.fileDiff, this.inlineComments!);
                 } catch (e) {
                     this.logger.error(new Error(`error opening diff: ${e}`));
                     this.postMessage({

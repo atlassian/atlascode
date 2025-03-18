@@ -8,7 +8,7 @@ import { JQLTreeDataProvider } from './jqlTreeDataProvider';
 
 export class CustomJQLTree extends JQLTreeDataProvider implements AbstractBaseNode {
     public readonly disposables: Disposable[] = [];
-    private _numIssues: number;
+    private _numIssues: number | undefined;
 
     constructor(readonly jqlEntry: JQLEntry) {
         super(undefined, 'No issues match this query');

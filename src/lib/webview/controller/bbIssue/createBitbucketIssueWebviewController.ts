@@ -18,7 +18,7 @@ import { MessagePoster, WebviewController } from '../webviewController';
 import { CreateBitbucketIssueActionApi } from './createbitbucketIssueActionApi';
 
 export class CreateBitbucketIssueWebviewController implements WebviewController<BitbucketSite> {
-    private isRefreshing: boolean;
+    private isRefreshing = false;
 
     constructor(
         private site: BitbucketSite,

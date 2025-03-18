@@ -11,7 +11,7 @@ import { MessagePoster, WebviewController } from '../webviewController';
 import { WelcomeActionApi } from './welcomeActionApi';
 
 export class WelcomeWebviewController implements WebviewController<WelcomeInitMessage> {
-    private _isRefreshing: boolean;
+    private _isRefreshing = false;
 
     constructor(
         private messagePoster: MessagePoster,
