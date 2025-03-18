@@ -18,12 +18,26 @@ const _baseConfig = (project, testExtension) => ({
 
     collectCoverage: true,
     collectCoverageFrom: [
-        'src/**/*.{ts,tsx}',
+        `src/**/*.${testExtension}`,
         '!src/**/*.d.ts',
         '!src/**/*.{spec,test}.{ts,tsx,js,jsx}', // Exclude test files
     ],
     coverageDirectory: `coverage/${project}`,
     coverageReporters: ['json', 'lcov', 'text-summary', 'clover'],
+
+    coverageThreshold: {
+        global: testExtension === 'ts' ? {            
+            statements: 20,
+            branches: 7,
+            functions: 7,
+            lines: 20,
+        } : /* tsx */{            
+            statements: 0,
+            branches: 0,
+            functions: 0,
+            lines: 0,
+        },
+    },
 });
 
 module.exports = {
