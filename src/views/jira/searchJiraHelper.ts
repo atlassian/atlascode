@@ -10,14 +10,10 @@ interface QuickPickIssue extends QuickPickItem {
 }
 
 export class SearchJiraHelper {
-    static initialize() {
-        this._searchableIssueMap = {};
-        commands.registerCommand(Commands.JiraSearchIssues, () => this.createIssueQuickPick());
-    }
+    private static _searchableIssueMap: Record<string, MinimalORIssueLink<DetailedSiteInfo>[]> = {};
 
-    private static _searchableIssueMap: Record<string, MinimalORIssueLink<DetailedSiteInfo>[]>;
-    static get searchableIssueMap() {
-        return this._searchableIssueMap;
+    static initialize() {
+        commands.registerCommand(Commands.JiraSearchIssues, () => this.createIssueQuickPick());
     }
 
     /***
@@ -53,6 +49,18 @@ export class SearchJiraHelper {
         }
 
         this._searchableIssueMap = {};
+    }
+
+    static findIssue(issueKey: string): MinimalORIssueLink<DetailedSiteInfo> | undefined {
+        for (const issuesList of Object.values(this._searchableIssueMap)) {
+            for (const issue of issuesList) {
+                if (issue.key === issueKey) {
+                    return issue;
+                }
+            }
+        }
+
+        return undefined;
     }
 
     // This method is called when the user clicks on the "Search Jira" button in the Jira Tree View

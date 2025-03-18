@@ -37,7 +37,7 @@ export interface StartWorkControllerApi {
     openSettings: (section?: ConfigSection, subsection?: ConfigSubSection) => void;
 }
 
-export const emptyApi: StartWorkControllerApi = {
+const emptyApi: StartWorkControllerApi = {
     postMessage: () => {},
     refresh: () => {},
     openLink: () => {},
@@ -62,16 +62,14 @@ const emptyState: StartWorkState = {
     customPrefixes: [],
 };
 
-export enum StartWorkUIActionType {
+enum StartWorkUIActionType {
     Init = 'init',
     Loading = 'loading',
 }
 
-export type StartWorkUIAction =
+type StartWorkUIAction =
     | ReducerAction<StartWorkUIActionType.Init, { data: StartWorkInitMessage }>
     | ReducerAction<StartWorkUIActionType.Loading, {}>;
-
-export type StartWorkChanges = { [key: string]: any };
 
 function reducer(state: StartWorkState, action: StartWorkUIAction): StartWorkState {
     switch (action.type) {

@@ -32,7 +32,7 @@ export interface OnboardingControllerApi {
     isLoginComplete: boolean;
 }
 
-export const emptyApi: OnboardingControllerApi = {
+const emptyApi: OnboardingControllerApi = {
     postMessage: (s) => {
         return;
     },
@@ -86,7 +86,7 @@ const emptyState: OnboardingState = {
     isSomethingLoading: false,
 };
 
-export enum OnboardingUIActionType {
+enum OnboardingUIActionType {
     Init = 'init',
     ConfigChange = 'configChange',
     Loading = 'loading',
@@ -94,7 +94,7 @@ export enum OnboardingUIActionType {
     LocalChange = 'localChange',
 }
 
-export type OnboardingUIAction =
+type OnboardingUIAction =
     | ReducerAction<OnboardingUIActionType.Init, { data: OnboardingInitMessage }>
     | ReducerAction<OnboardingUIActionType.ConfigChange, { config: FlattenedConfig; target: ConfigTarget }>
     | ReducerAction<OnboardingUIActionType.LocalChange, { changes: { [key: string]: any } }>

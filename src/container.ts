@@ -2,7 +2,6 @@ import { LegacyAtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHa
 import { BitbucketIssue, BitbucketSite, PullRequest, WorkspaceRepo } from './bitbucket/model';
 import { ExtensionContext, env, workspace, UIKind, window } from 'vscode';
 import { IConfig, configuration } from './config/configuration';
-
 import { analyticsClient } from './analytics-node-client/src/client.min.js';
 import { AnalyticsClient } from './analytics-node-client/src/client.min.js';
 import { AuthStatusBar } from './views/authStatusBar';
@@ -80,6 +79,10 @@ const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
 
 export class Container {
+    private static _cancellationManager: CancellationManager;
+    private static _commonMessageHandler: CommonActionMessageHandler;
+    private static _bitbucketHelper: CheckoutHelper;
+
     static async initialize(context: ExtensionContext, config: IConfig, version: string) {
         const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
 
@@ -99,6 +102,7 @@ export class Container {
 
         this._context = context;
         this._version = version;
+
         context.subscriptions.push((this._credentialManager = new CredentialManager(this._analyticsClient)));
         context.subscriptions.push((this._siteManager = new SiteManager(context.globalState)));
         context.subscriptions.push((this._clientManager = new ClientManager(context)));
@@ -110,16 +114,13 @@ export class Container {
             (this._createIssueProblemsWebview = new CreateIssueProblemsWebview(context.extensionPath)),
         );
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
-        context.subscriptions.push(
-            (this._startWorkOnIssueWebview = new StartWorkOnIssueWebview(context.extensionPath)),
-        );
+        context.subscriptions.push(new StartWorkOnIssueWebview(context.extensionPath));
         context.subscriptions.push(
             (this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath)),
         );
         context.subscriptions.push(new IssueHoverProviderManager());
-        context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
+        context.subscriptions.push(new AuthStatusBar());
         context.subscriptions.push((this._jqlManager = new JQLManager()));
-
         context.subscriptions.push((this._explorerFocusManager = new ExplorerFocusManager()));
 
         const settingsV2ViewFactory = new SingleWebview<SectionChangeMessage, ConfigAction>(
@@ -189,33 +190,33 @@ export class Container {
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
         this._bitbucketHelper = new BitbucketCheckoutHelper(context.globalState);
 
+        context.subscriptions.push(new HelpExplorer());
+
         await FeatureFlagClient.initialize({
             analyticsClient: this._analyticsClient,
             identifiers: {
                 analyticsAnonymousId: this.machineId,
             },
             eventBuilder: new EventBuilder(),
-        })
-            .catch((err) => {
-                Logger.error(Error(`Failed to initialize feature flags: ${err}`));
-            })
-            .finally(() => {
-                this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
-                this.initializeNewSidebarView(context, config);
-                this.initializeAAExperiment();
-            });
+        }).catch((err) => {
+            Logger.error(Error(`Failed to initialize feature flags: ${err}`));
+        });
 
-        context.subscriptions.push((this._helpExplorer = new HelpExplorer()));
+        this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
+        this.initializeNewSidebarView(context, config);
+        this.initializeAAExperiment();
     }
 
-    static getAnalyticsEnable(): boolean {
+    private static getAnalyticsEnable(): boolean {
         const telemetryConfig = workspace.getConfiguration('telemetry');
         return telemetryConfig.get<boolean>('enableTelemetry', true);
     }
-    static initializeAAExperiment() {
+
+    private static initializeAAExperiment() {
         FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeAA);
     }
-    static initializeUriHandler(
+
+    private static initializeUriHandler(
         context: ExtensionContext,
         analyticsApi: VSCAnalyticsApi,
         bitbucketHelper: CheckoutHelper,
@@ -228,7 +229,7 @@ export class Container {
         }
     }
 
-    static initializeNewSidebarView(context: ExtensionContext, config: IConfig) {
+    private static initializeNewSidebarView(context: ExtensionContext, config: IConfig) {
         if (FeatureFlagClient.featureGates[Features.NewSidebarTreeView]) {
             Logger.debug('Using new custom JQL view');
             SearchJiraHelper.initialize();
@@ -239,7 +240,7 @@ export class Container {
         }
     }
 
-    static initializeLegacySidebarView(context: ExtensionContext, config: IConfig) {
+    private static initializeLegacySidebarView(context: ExtensionContext, config: IConfig) {
         if (config.jira.explorer.enabled) {
             context.subscriptions.push((this._jiraExplorer = new JiraContext()));
         } else {
@@ -254,7 +255,7 @@ export class Container {
 
     static initializeBitbucket(bbCtx: BitbucketContext) {
         this._bitbucketContext = bbCtx;
-        this._pipelinesExplorer = new PipelinesExplorer(bbCtx);
+        new PipelinesExplorer(bbCtx);
         this._context.subscriptions.push(
             (this._bitbucketIssueWebviewFactory = new MultiWebview<BitbucketIssue, BitbucketIssueAction>(
                 this._context.extensionPath,
@@ -298,11 +299,11 @@ export class Container {
         return env.machineId;
     }
 
-    static get isRemote() {
+    private static get isRemote() {
         return env.remoteName !== undefined;
     }
 
-    static get isWebUI() {
+    private static get isWebUI() {
         return env.uiKind === UIKind.Web;
     }
 
@@ -328,58 +329,53 @@ export class Container {
     }
 
     private static _version: string;
-    static get version() {
+    public static get version() {
         return this._version;
     }
 
-    static get config() {
+    public static get config() {
         // always return the latest
         return configuration.get<IConfig>();
     }
 
     private static _jqlManager: JQLManager;
-    static get jqlManager() {
+    public static get jqlManager() {
         return this._jqlManager;
     }
 
     private static _context: ExtensionContext;
-    static get context() {
+    public static get context() {
         return this._context;
     }
 
     private static _bitbucketContext: BitbucketContext;
-    static get bitbucketContext() {
+    public static get bitbucketContext() {
         return this._bitbucketContext;
     }
 
-    private static _helpExplorer: HelpExplorer;
-    static get helpExplorer() {
-        return this._helpExplorer;
-    }
-
     private static _explorerFocusManager: ExplorerFocusManager;
-    static get explorerFocusManager() {
+    public static get explorerFocusManager() {
         return this._explorerFocusManager;
     }
 
     private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;
-    static get settingsWebviewFactory() {
+    public static get settingsWebviewFactory() {
         return this._settingsWebviewFactory;
     }
 
     private static _onboardingWebviewFactory: SingleWebview<any, OnboardingAction>;
-    static get onboardingWebviewFactory() {
+    public static get onboardingWebviewFactory() {
         return this._onboardingWebviewFactory;
     }
 
-    static async testLogout() {
+    public static async testLogout() {
         Container.siteManager.getSitesAvailable(ProductJira).forEach(async (site) => {
             await Container.clientManager.removeClient(site);
             Container.siteManager.removeSite(site);
         });
     }
 
-    static async testLogin() {
+    public static async testLogin() {
         if (!process.env.ATLASCODE_TEST_USER_API_TOKEN) {
             // vscode notify user that this is for testing only
             window.showInformationMessage(
@@ -410,147 +406,117 @@ export class Container {
     }
 
     private static _pullRequestDetailsWebviewFactory: MultiWebview<any, PullRequestDetailsAction>;
-    static get pullRequestDetailsWebviewFactory() {
+    public static get pullRequestDetailsWebviewFactory() {
         return this._pullRequestDetailsWebviewFactory;
     }
 
     private static _pipelinesSummaryWebview: MultiWebview<Pipeline, PipelineSummaryAction>;
-    static get pipelinesSummaryWebview() {
+    public static get pipelinesSummaryWebview() {
         return this._pipelinesSummaryWebview;
     }
 
     private static _welcomeWebviewFactory: SingleWebview<WelcomeInitMessage, WelcomeAction>;
-    static get welcomeWebviewFactory() {
+    public static get welcomeWebviewFactory() {
         return this._welcomeWebviewFactory;
     }
 
     private static _startWorkWebviewFactory: SingleWebview<StartWorkIssueMessage, StartWorkAction>;
-    static get startWorkWebviewFactory() {
+    public static get startWorkWebviewFactory() {
         return this._startWorkWebviewFactory;
     }
 
     private static _createPullRequestWebviewFactory: SingleWebview<WorkspaceRepo, StartWorkAction>;
-    static get createPullRequestWebviewFactory() {
+    public static get createPullRequestWebviewFactory() {
         return this._createPullRequestWebviewFactory;
     }
 
     private static _bitbucketIssueWebviewFactory: MultiWebview<BitbucketIssue, BitbucketIssueAction>;
-    static get bitbucketIssueWebviewFactory() {
+    public static get bitbucketIssueWebviewFactory() {
         return this._bitbucketIssueWebviewFactory;
     }
 
     private static _createBitbucketIssueWebviewFactory: SingleWebview<BitbucketSite, CreateBitbucketIssueAction>;
-    static get createBitbucketIssueWebviewFactory() {
+    public static get createBitbucketIssueWebviewFactory() {
         return this._createBitbucketIssueWebviewFactory;
     }
 
     private static _createIssueWebview: CreateIssueWebview;
-    static get createIssueWebview() {
+    public static get createIssueWebview() {
         return this._createIssueWebview;
     }
 
     private static _createIssueProblemsWebview: CreateIssueProblemsWebview;
-    static get createIssueProblemsWebview() {
+    public static get createIssueProblemsWebview() {
         return this._createIssueProblemsWebview;
     }
 
-    private static _startWorkOnIssueWebview: StartWorkOnIssueWebview;
-    static get startWorkOnIssueWebview() {
-        return this._startWorkOnIssueWebview;
-    }
-
     private static _startWorkOnBitbucketIssueWebview: StartWorkOnBitbucketIssueWebview;
-    static get startWorkOnBitbucketIssueWebview() {
+    public static get startWorkOnBitbucketIssueWebview() {
         return this._startWorkOnBitbucketIssueWebview;
     }
 
     private static _jiraExplorer: JiraContext | undefined;
-    static get jiraExplorer(): JiraContext {
+    public static get jiraExplorer(): JiraContext {
         return this._jiraExplorer!;
     }
 
-    private static _pipelinesExplorer: PipelinesExplorer | undefined;
-    static get pipelinesExplorer(): PipelinesExplorer {
-        return this._pipelinesExplorer!;
-    }
-
     private static _jiraIssueViewManager: JiraIssueViewManager;
-    static get jiraIssueViewManager() {
+    public static get jiraIssueViewManager() {
         return this._jiraIssueViewManager;
     }
 
     private static _clientManager: ClientManager;
-    static get clientManager() {
+    public static get clientManager() {
         return this._clientManager;
     }
 
     private static _loginManager: LoginManager;
-    static get loginManager() {
+    public static get loginManager() {
         return this._loginManager;
     }
 
     private static _credentialManager: CredentialManager;
-    static get credentialManager() {
+    public static get credentialManager() {
         return this._credentialManager;
     }
 
     private static _onlineDetector: OnlineDetector;
-    static get onlineDetector() {
+    public static get onlineDetector() {
         return this._onlineDetector;
     }
 
-    private static _authStatusBar: AuthStatusBar;
-    static get authStatusBar() {
-        return this._authStatusBar;
-    }
-
     private static _jiraActiveIssueStatusBar: JiraActiveIssueStatusBar;
-    static get jiraActiveIssueStatusBar() {
+    public static get jiraActiveIssueStatusBar() {
         return this._jiraActiveIssueStatusBar;
     }
 
     private static _siteManager: SiteManager;
-    static get siteManager() {
+    public static get siteManager() {
         return this._siteManager;
     }
 
     private static _jiraSettingsManager: JiraSettingsManager;
-    static get jiraSettingsManager() {
+    public static get jiraSettingsManager() {
         return this._jiraSettingsManager;
     }
 
     private static _jiraProjectManager: JiraProjectManager;
-    static get jiraProjectManager() {
+    public static get jiraProjectManager() {
         return this._jiraProjectManager;
     }
 
     private static _analyticsClient: AnalyticsClient;
-    static get analyticsClient() {
+    public static get analyticsClient() {
         return this._analyticsClient;
     }
 
     private static _analyticsApi: VSCAnalyticsApi;
-    static get analyticsApi() {
+    public static get analyticsApi() {
         return this._analyticsApi;
     }
 
-    private static _commonMessageHandler: CommonActionMessageHandler;
-    static get commonMessageHandler() {
-        return this._commonMessageHandler;
-    }
-
-    private static _cancellationManager: CancellationManager;
-    static get cancellationManager() {
-        return this._cancellationManager;
-    }
-
     private static _pmfStats: PmfStats;
-    static get pmfStats() {
+    public static get pmfStats() {
         return this._pmfStats;
-    }
-
-    private static _bitbucketHelper: CheckoutHelper;
-    static get bitbucketHelper() {
-        return this._bitbucketHelper;
     }
 }

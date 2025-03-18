@@ -60,7 +60,7 @@ export interface PRFileDiffQueryParams extends FileDiffQueryParams {
     lineContextMap: Record<string, number>;
 }
 
-export function getInlineComments(allComments: Comment[]): Map<string, Comment[][]> {
+function getInlineComments(allComments: Comment[]): Map<string, Comment[][]> {
     const inlineComments = allComments.filter((c) => c.inline && c.inline.path);
     const threads: Map<string, Comment[][]> = new Map();
     inlineComments.forEach((val) => {
@@ -227,7 +227,7 @@ export function getFileNameFromPaths(oldPath: string | undefined, newPath: strin
  * "A/B/{C/D/file.txt -> E/D/file.txt}". It does not attempt to convert it to:
  * "A/B/{C -> E}/D/file.txt", though this behavior could be implemented in the future if it's desired.
  */
-export function mergePaths(oldPath: string, newPath: string): string {
+function mergePaths(oldPath: string, newPath: string): string {
     //In this case there is nothing to do
     if (oldPath === newPath) {
         return oldPath;
@@ -313,7 +313,7 @@ export async function createFileChangesNodes(
     return result;
 }
 
-export function createdNestedFileStructure(diffViewData: DiffViewArgs, directory: PRDirectory) {
+function createdNestedFileStructure(diffViewData: DiffViewArgs, directory: PRDirectory) {
     const baseName = path.basename(diffViewData.fileDisplayData.fileDisplayName);
     const dirName = path.dirname(diffViewData.fileDisplayData.fileDisplayName);
     //If we just have a file, the dirName will be '.', but we don't want to tuck that in the '.' directory, so there's a ternary operation to deal with that
@@ -337,7 +337,7 @@ export function createdNestedFileStructure(diffViewData: DiffViewArgs, directory
 }
 
 //Directories that contain only one child which is also a directory should be flattened. E.g A > B > C > D.txt => A/B/C/D.txt
-export function flattenFileStructure(directory: PRDirectory) {
+function flattenFileStructure(directory: PRDirectory) {
     // Keep flattening until there's nothing left to flatten, and only then move on to children.
     // The initial input is a dummy root directory with empty string as the name, which is ignored to maintain it as the root node.
     while (directory.name !== '' && directory.subdirs.size === 1 && directory.files.length === 0) {

@@ -38,17 +38,7 @@ export function lighten(color: string, percentage: number): string {
     return `rgba(${adjustLight(r, percentage)}, ${adjustLight(g, percentage)}, ${adjustLight(b, percentage)}, ${a})`;
 }
 
-export function opacity(color: string, percentage: number): string {
-    const rgba = toRgba(color);
-    if (rgba === null) {
-        return color;
-    }
-
-    const [r, g, b, a] = rgba;
-    return `rgba(${r}, ${g}, ${b}, ${a * (percentage / 100)})`;
-}
-
-export function toRgba(color: string): number[] | null {
+function toRgba(color: string): number[] | null {
     color = color.trim();
 
     const result = cssColorRegEx.exec(color);

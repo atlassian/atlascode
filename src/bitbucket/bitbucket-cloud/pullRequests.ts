@@ -34,7 +34,7 @@ export const maxItemsSupported = {
     reviewers: 100,
     buildStatuses: 100,
 };
-export const defaultPagelen = 25;
+const defaultPagelen = 25;
 
 const mergeStrategyLabels: Record<string, string> = {
     merge_commit: 'Merge commit',

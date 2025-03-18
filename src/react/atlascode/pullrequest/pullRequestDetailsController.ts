@@ -71,7 +71,7 @@ export interface PullRequestDetailsControllerApi {
     openBuildStatus: (buildStatus: BuildStatus) => void;
 }
 
-export const emptyApi: PullRequestDetailsControllerApi = {
+const emptyApi: PullRequestDetailsControllerApi = {
     postMessage: (s) => {
         return;
     },
@@ -117,7 +117,7 @@ const emptyState: PullRequestDetailsState = {
     isCheckingOutBranch: false,
 };
 
-export enum PullRequestDetailsUIActionType {
+enum PullRequestDetailsUIActionType {
     Init = 'init',
     ConfigChange = 'configChange',
     Loading = 'loading',
@@ -139,7 +139,7 @@ export enum PullRequestDetailsUIActionType {
     SetCheckoutLoading = 'setCheckoutLoading',
 }
 
-export type PullRequestDetailsUIAction =
+type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.Init, { data: PullRequestDetailsInitMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateSummary, { data: PullRequestDetailsSummaryMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateTitle, { data: PullRequestDetailsTitleMessage }>

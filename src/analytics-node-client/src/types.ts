@@ -1,17 +1,3 @@
-export interface AnalyticsClientInit {
-    env: any;
-    product: any;
-    subproduct?: any;
-    datacenter?: any;
-    version?: any;
-    origin: any;
-    flushAt?: number;
-    flushInterval?: number;
-    baseUrl?: string;
-    enable?: boolean;
-    deviceId?: string;
-}
-
 export interface BaseEvent {
     userIdType: any;
     userId: any;

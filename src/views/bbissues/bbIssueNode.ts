@@ -60,7 +60,7 @@ export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
     }
 }
 
-export class BitbucketIssueNode extends AbstractBaseNode {
+class BitbucketIssueNode extends AbstractBaseNode {
     constructor(readonly issue: BitbucketIssue) {
         super();
     }
