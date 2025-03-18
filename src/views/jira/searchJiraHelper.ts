@@ -10,10 +10,9 @@ interface QuickPickIssue extends QuickPickItem {
 }
 
 export class SearchJiraHelper {
-    private static _searchableIssueMap: Record<string, MinimalORIssueLink<DetailedSiteInfo>[]>;
+    private static _searchableIssueMap: Record<string, MinimalORIssueLink<DetailedSiteInfo>[]> = {};
 
     static initialize() {
-        this._searchableIssueMap = {};
         commands.registerCommand(Commands.JiraSearchIssues, () => this.createIssueQuickPick());
     }
 
