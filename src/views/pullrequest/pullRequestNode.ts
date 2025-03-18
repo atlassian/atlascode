@@ -2,7 +2,14 @@ import { parseISO } from 'date-fns';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import * as vscode from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { Commit, PaginatedComments, PaginatedPullRequests, PullRequest, type FileDiff } from '../../bitbucket/model';
+import {
+    Commit,
+    PaginatedComments,
+    PaginatedPullRequests,
+    PullRequest,
+    Task,
+    type FileDiff,
+} from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { Logger } from '../../logger';
 import { Resources } from '../../resources';
@@ -81,6 +88,58 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         vscode.commands.executeCommand(Commands.RefreshPullRequestExplorerNode, this.treeItem.resourceUri);
     }
 
+    async criticalData(
+        criticalPromise: Promise<[FileDiff[], PaginatedComments]>,
+    ): Promise<[FileDiff[], PaginatedComments, AbstractBaseNode[]]> {
+        let fileChangedNodes: AbstractBaseNode[] = [];
+        let files: FileDiff[] = [];
+        let comments: PaginatedComments = { data: [] };
+        try {
+            [files, comments] = await criticalPromise;
+            fileChangedNodes = await createFileChangesNodes(this.pr, comments, files, [], []);
+            // update loadedChildren with critical data without commits
+            this.loadedChildren = [
+                new DescriptionNode(this.pr, this),
+                ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, [], true)] : []),
+                ...fileChangedNodes,
+            ];
+        } catch (error) {
+            Logger.debug('error fetching pull request details', error);
+            this.loadedChildren = [new SimpleNode('⚠️ Error: fetching pull request details failed')];
+            this.isLoading = false;
+        } finally {
+            this.refresh();
+            return [files, comments, fileChangedNodes];
+        }
+    }
+
+    async nonCriticalData(
+        nonCriticalPromise: Promise<[string[], Task[]]>,
+        fileDiffs: FileDiff[],
+        allComments: PaginatedComments,
+        commits: Commit[],
+    ): Promise<void> {
+        try {
+            const [conflictedFiles, tasks] = await nonCriticalPromise;
+            const [jiraIssueNodes, bbIssueNodes, fileNodes] = await Promise.all([
+                this.createRelatedJiraIssueNode(commits, allComments),
+                this.createRelatedBitbucketIssueNode(commits, allComments),
+                createFileChangesNodes(this.pr, allComments, fileDiffs, conflictedFiles, tasks),
+            ]);
+            // update loadedChildren with additional data
+            this.loadedChildren = [
+                new DescriptionNode(this.pr, this),
+                ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, commits)] : []),
+                ...jiraIssueNodes,
+                ...bbIssueNodes,
+                ...fileNodes,
+            ];
+        } catch (error) {
+            Logger.debug('error fetching additional pull request details', error);
+            // Keep existing nodes if additional data fetch fails
+        }
+    }
+
     async fetchDataAndProcessChildren(): Promise<void> {
         // Return early if already loading or no PR
         if (this.isLoading || !this.pr) {
@@ -102,54 +161,23 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             bbApi.pullrequests.getConflictedFiles(this.pr),
             bbApi.pullrequests.getTasks(this.pr),
         ]);
-        // Critical data - files and comments
-        try {
-            const [files, comments] = await criticalPromise;
-            fileChangedNodes = await createFileChangesNodes(this.pr, comments, files, [], []);
-            this.loadedChildren = [
-                new DescriptionNode(this.pr, this),
-                ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, [], true)] : []),
-                ...fileChangedNodes,
-            ];
-            fileDiffs = files;
-            allComments = comments;
-        } catch (error) {
-            Logger.debug('error fetching pull request details', error);
-            this.loadedChildren = [new SimpleNode('⚠️ Error: fetching pull request details failed')];
-            this.isLoading = false;
-            return;
-        } finally {
-            this.refresh();
-        }
+        // Critical data - files, comments, and fileChangedNodes
+        [fileDiffs, allComments, fileChangedNodes] = await this.criticalData(criticalPromise);
+        // get commitsData
         const commits = await commitsPromise;
+        // update loadedChildren with commits data
         this.loadedChildren = [
             new DescriptionNode(this.pr, this),
             ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, commits)] : []),
             ...fileChangedNodes,
         ];
+        // refresh TreeView
         this.refresh();
         // Additional data - conflicts, commits, tasks
-        try {
-            const [conflictedFiles, tasks] = await nonCriticalPromise;
-            const [jiraIssueNodes, bbIssueNodes, fileNodes] = await Promise.all([
-                this.createRelatedJiraIssueNode(commits, allComments),
-                this.createRelatedBitbucketIssueNode(commits, allComments),
-                createFileChangesNodes(this.pr, allComments, fileDiffs, conflictedFiles, tasks),
-            ]);
-
-            this.loadedChildren = [
-                new DescriptionNode(this.pr, this),
-                ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, commits)] : []),
-                ...jiraIssueNodes,
-                ...bbIssueNodes,
-                ...fileNodes,
-            ];
-        } catch (error) {
-            Logger.debug('error fetching additional pull request details', error);
-            // Keep existing nodes if additional data fetch fails
-        }
-
+        await this.nonCriticalData(nonCriticalPromise, fileDiffs, allComments, commits);
+        // update Loading to false
         this.isLoading = false;
+        // refresh TreeView
         this.refresh();
     }
 
