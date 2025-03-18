@@ -322,6 +322,8 @@ export class JiraIssueWebview
                         });
 
                         commands.executeCommand(Commands.RefreshJiraExplorer);
+                        commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
+                        commands.executeCommand(Commands.RefreshCustomJqlExplorer);
                     } catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));
                         this.postMessage({

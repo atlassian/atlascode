@@ -61,9 +61,9 @@
         "extension:package:prerelease": "npm run extension:clean && vsce package --pre-release --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",
         "extension:package": "npm run extension:clean && vsce package --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",
         "extension:install": "npm run extension:package && code --install-extension ./atlascode-*.vsix --force",
-        "test": "jest",
-        "test:unit": "jest --selectProjects unit",
-        "test:react": "jest --selectProjects react",
+        "test": "rm -rf coverage && npm run test:unit && npm run test:react && istanbul-merge --out coverage/coverage-final.json coverage/react/coverage-final.json coverage/unit/coverage-final.json && echo '\n\nTotal test coverage:' && nyc report --reporter clover --reporter lcov --reporter html --reporter text-summary -t coverage/ --report-dir coverage/",
+        "test:unit": "jest -c jest.unit.config.js",
+        "test:react": "jest -c jest.react.config.js",
         "test:e2e": "echo 'token length' && echo ${#ATLASCODE_TEST_USER_API_TOKEN} && npm run test:e2e:compile && e2e/scripts/run",
         "test:e2e:compile": "tsc --project e2e/tsconfig.e2e.json",
         "test:e2e:rerun": "npm run test:e2e:compile && e2e/scripts/run --rerun",
@@ -225,8 +225,18 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.jira.removeFromSidebar",
-                "title": "Remove from sidebar",
+                "command": "atlascode.jira.addJiraSite",
+                "title": "Add Jira Site",
+                "category": "Atlassian",
+                "shortTitle": "Add another Jira site"
+            },
+            {
+                "command": "atlascode.jira.refreshAssignedWorkItemsExplorer",
+                "title": "Refresh Assigned Work Items",
+                "icon": {
+                    "dark": "resources/dark/refresh.svg",
+                    "light": "resources/light/refresh.svg"
+                },
                 "category": "Atlassian"
             },
             {
@@ -245,7 +255,8 @@
                     "dark": "resources/dark/settings.svg",
                     "light": "resources/light/settings.svg"
                 },
-                "category": "Atlassian"
+                "category": "Atlassian",
+                "shortTitle": "View settings"
             },
             {
                 "command": "atlascode.jira.showIssueForKey",
@@ -478,9 +489,14 @@
                     "when": "atlascode:jiraExplorerEnabled && config.atlascode.jira.enabled"
                 },
                 {
+                    "id": "atlascode.views.jira.assignedWorkItemsTreeView",
+                    "name": "Assigned Jira Work Items",
+                    "when": "atlascode:assignedIssueExplorerEnabled && config.atlascode.jira.enabled"
+                },
+                {
                     "id": "atlascode.views.jira.customJqlTreeView",
                     "name": "Custom Jql Filters",
-                    "when": "config.atlascode.jira.enabled && atlascode:customJQLExplorerEnabled"
+                    "when": "atlascode:assignedIssueExplorerEnabled && config.atlascode.jira.enabled && atlascode:customJQLExplorerEnabled && atlascode:isJiraAuthenticated"
                 },
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
@@ -569,7 +585,7 @@
             "view/title": [
                 {
                     "command": "atlascode.jira.createIssue",
-                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
+                    "when": "view =~ /(atlascode.views.jira.customJql|atlascode.views.jira.assignedWorkItemsTreeView)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation@1"
                 },
                 {
@@ -579,17 +595,18 @@
                 },
                 {
                     "command": "atlascode.jira.searchIssues",
-                    "when": "view == atlascode.views.jira.customJqlTreeView && atlascode:isJiraAuthenticated",
+                    "when": "view =~ /(atlascode.views.jira.customJqlTreeView|atlascode.views.jira.assignedWorkItemsTreeView)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation@3"
+                },
+                {
+                    "command": "atlascode.jira.refreshAssignedWorkItemsExplorer",
+                    "when": "view == atlascode.views.jira.assignedWorkItemsTreeView && atlascode:isJiraAuthenticated",
+                    "group": "navigation@2"
                 },
                 {
                     "command": "atlascode.jira.refreshCustomJqlExplorer",
                     "when": "view == atlascode.views.jira.customJqlTreeView && atlascode:isJiraAuthenticated",
                     "group": "navigation@2"
-                },
-                {
-                    "command": "atlascode.jira.removeFromSidebar",
-                    "when": "view =~ /(atlascode.views.jira.customJqlTreeView)/ && atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.createNewJql",
@@ -599,6 +616,14 @@
                     "command": "atlascode.jira.showJiraIssueSettings",
                     "when": "view == atlascode.views.jira.customJql",
                     "group": "navigation@4"
+                },
+                {
+                    "command": "atlascode.jira.addJiraSite",
+                    "when": "view == atlascode.views.jira.assignedWorkItemsTreeView && atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.jira.showJiraIssueSettings",
+                    "when": "view =~ /(atlascode.views.jira.assignedWorkItemsTreeView|atlascode.views.jira.customJqlTreeView)/"
                 },
                 {
                     "command": "atlascode.bb.createPullRequest",
@@ -658,37 +683,37 @@
             "view/item/context": [
                 {
                     "command": "atlascode.jira.todoIssue",
-                    "when": "viewItem == todoJiraIssue && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue_todo|assignedJiraIssue_todo)/ && atlascode:isJiraAuthenticated",
                     "group": "inline"
                 },
                 {
                     "command": "atlascode.jira.inProgressIssue",
-                    "when": "viewItem == inProgressJiraIssue && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue_inProgress|assignedJiraIssue_inProgress)/ && atlascode:isJiraAuthenticated",
                     "group": "inline"
                 },
                 {
                     "command": "atlascode.jira.doneIssue",
-                    "when": "viewItem == doneJiraIssue && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue_done|assignedJiraIssue_done)/ && atlascode:isJiraAuthenticated",
                     "group": "inline"
                 },
                 {
                     "command": "atlascode.jira.assignIssueToMe",
-                    "when": "viewItem =~ /(jiraIssue|todoJiraIssue|inProgressJiraIssue|doneJiraIssue)/ && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue|jiraIssue_.+)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.jira.startWorkOnIssue",
-                    "when": "viewItem =~ /(jiraIssue|todoJiraIssue|inProgressJiraIssue|doneJiraIssue)/ && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.viewInWebBrowser",
-                    "when": "viewItem =~ /(jiraIssue|todoJiraIssue|inProgressJiraIssue|doneJiraIssue)/ && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.jira.createIssue",
-                    "when": "viewItem =~ /(jiraIssue|todoJiraIssue|inProgressJiraIssue|doneJiraIssue)/ && atlascode:isJiraAuthenticated",
+                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup2"
                 },
                 {
@@ -1618,11 +1643,13 @@
         "fork-ts-checker-notifier-webpack-plugin": "^9.0.0",
         "fork-ts-checker-webpack-plugin": "^9.0.2",
         "html-webpack-plugin": "^5.6.0",
+        "istanbul-merge": "^2.0.0",
         "jest": "^29.7.0",
         "jest-environment-jsdom": "^29.7.0",
         "jest-mock-vscode": "^4.0.4",
         "mini-css-extract-plugin": "^2.9.1",
         "npm-run-all": "^4.1.5",
+        "nyc": "^17.1.0",
         "ovsx": "^0.10.1",
         "patch-package": "^6.2.2",
         "postcss-flexbugs-fixes": "^5.0.2",

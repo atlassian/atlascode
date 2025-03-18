@@ -1,14 +1,38 @@
+## What's new in 3.4.13
+
+## Features
+
+- Added a loading state for the 'Checkout source Branch' button in BitBucket pull requests.
+- Added a loading icon for the BitBucket pull request summary section.
+
+## Bug Fixes
+
+- Fixed exceptions thrown during a failed stat-sig initialization for experimentations.
+- Fixed the time-out error that prevented the BitBucket pull request to load for large repos.
+
+## What's new in 3.4.12
+
+### Rollback Release !!
+
+- Same as 3.4.7
+- Rolled back several releases as we investigate a possible regression in the authentication flow.
+
+## What's new in 3.4.11
+
+- Internal changes only.
+
 ## What's new in 3.4.10
 
 ### Bug Fixes
 
-- Forward fixed the bug in 3.4.8 for Server / Data Center users on Authentication
+- Fixed the bug introduced in 3.4.8 for Server / Data Center users on Authentication.
 
 ## What's new in 3.4.9
 
-### Bug Fixes 
+### Rollback Release !!
 
-- Rolled back 3.4.8 release as it contained a breaking bug for Server / Data Center users on Authentication
+- Same as 3.4.7
+- Rolled back 3.4.8 release as it contained a breaking bug for Server / Data Center users on Authentication.
 
 ## What's new in 3.4.8
 
@@ -17,10 +41,6 @@
 - Added a new toggle switch in 'Start work' page to choose if the new branch should be automatically pushed to remote.
 
 ## What's new in 3.4.7
-
-### Features
-
-- Finalized code for Auth UI experiment.
 
 ### Bug Fixes
 

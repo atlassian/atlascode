@@ -27,10 +27,18 @@ export class SearchJiraHelper {
      * @param dataProviderId - Id of the data provider (i.e. CustomJqlViewProvider.viewId())
      */
     static setIssues(flattenedIssueList: MinimalORIssueLink<DetailedSiteInfo>[], dataProviderId: string) {
-        if (!this._searchableIssueMap) {
-            return;
-        }
         this._searchableIssueMap[dataProviderId] = flattenedIssueList;
+    }
+
+    /***
+     * Append the issues for a specific data provider in the SearchJiraHelper.
+     * This is where `Commands.JiraSearchIssues` will look for issues to display
+     * @param flattenedIssueList - List of fetched issues
+     * @param dataProviderId - Id of the data provider (i.e. CustomJqlViewProvider.viewId())
+     */
+    static appendIssues(flattenedIssueList: MinimalORIssueLink<DetailedSiteInfo>[], dataProviderId: string) {
+        this._searchableIssueMap[dataProviderId] = this._searchableIssueMap[dataProviderId] || [];
+        this._searchableIssueMap[dataProviderId].push(...flattenedIssueList);
     }
 
     /***
@@ -39,10 +47,6 @@ export class SearchJiraHelper {
      * @param dataProviderId - Id of the data provider (i.e. CustomJqlViewProvider.viewId())
      */
     static clearIssues(dataProviderId?: string) {
-        if (!this._searchableIssueMap) {
-            return;
-        }
-
         if (dataProviderId) {
             this._searchableIssueMap[dataProviderId] = [];
             return;
@@ -56,19 +60,23 @@ export class SearchJiraHelper {
         searchIssuesEvent(ProductJira).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
-        const quickPickIssues: QuickPickIssue[] = Array.from(
-            new Set(
-                Object.values(this._searchableIssueMap).flatMap((issueArray) =>
-                    issueArray.map((issue) => {
-                        return {
-                            label: issue.key,
-                            description: issue.summary,
-                            issue: issue,
-                        };
-                    }),
-                ),
-            ),
-        );
+
+        const issueSet = new Set<string>();
+        const quickPickIssues: QuickPickIssue[] = [];
+
+        Object.values(this._searchableIssueMap).forEach((issueArray) => {
+            issueArray.forEach((issue) => {
+                if (!issueSet.has(issue.key)) {
+                    issueSet.add(issue.key);
+                    quickPickIssues.push({
+                        label: issue.key,
+                        description: issue.summary,
+                        issue: issue,
+                    });
+                }
+            });
+        });
+
         window
             .showQuickPick<QuickPickIssue>(quickPickIssues, {
                 matchOnDescription: true,

@@ -131,40 +131,6 @@ describe('IssueNode', () => {
             const treeItem = issueNode.getTreeItem();
             expect(treeItem.command).toEqual({ command: 'showIssue', title: 'Show Issue', arguments: [mockIssue] });
         });
-
-        it('should return a TreeItem with Todo contextValue if the issue is a Todo statusCategory', () => {
-            const issueNode = new IssueNode(mockIssue, undefined);
-            const treeItem = issueNode.getTreeItem();
-            expect(treeItem.contextValue).toBe('todoJiraIssue');
-        });
-        it('should return a TreeItem with InProgress contextValue if the issue is an In Progress statusCategory', () => {
-            const issueNode = new IssueNode(
-                {
-                    ...mockIssue,
-                    status: {
-                        ...mockIssue.status,
-                        statusCategory: { ...mockIssue.status.statusCategory, name: 'In Progress' },
-                    },
-                },
-                undefined,
-            );
-            const treeItem = issueNode.getTreeItem();
-            expect(treeItem.contextValue).toBe('inProgressJiraIssue');
-        });
-        it('should return a TreeItem with Done contextValue if the issue is a Done statusCategory', () => {
-            const issueNode = new IssueNode(
-                {
-                    ...mockIssue,
-                    status: {
-                        ...mockIssue.status,
-                        statusCategory: { ...mockIssue.status.statusCategory, name: 'Done' },
-                    },
-                },
-                undefined,
-            );
-            const treeItem = issueNode.getTreeItem();
-            expect(treeItem.contextValue).toBe('doneJiraIssue');
-        });
     });
 
     describe('getChildren', () => {

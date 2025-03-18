@@ -4,6 +4,8 @@ import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { IssueNode } from '../../views/nodes/issueNode';
 import { currentUserJira } from './currentUser';
+import { Commands } from '../../commands';
+import { commands } from 'vscode';
 
 export async function assignIssue(param: MinimalIssue<DetailedSiteInfo> | IssueNode, accountId?: string) {
     const issue = isMinimalIssue(param) ? param : param.issue;
@@ -16,7 +18,10 @@ export async function assignIssue(param: MinimalIssue<DetailedSiteInfo> | IssueN
 
     const response = await client.assignIssue(issue.id, accountId);
     Logger.info(response);
-    Container.jiraExplorer.refresh();
+
+    commands.executeCommand(Commands.RefreshJiraExplorer);
+    commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
+    commands.executeCommand(Commands.RefreshCustomJqlExplorer);
 }
 
 export async function unassignIssue(issue: MinimalIssue<DetailedSiteInfo>) {
@@ -24,5 +29,8 @@ export async function unassignIssue(issue: MinimalIssue<DetailedSiteInfo>) {
 
     const response = await client.assignIssue(issue.id, undefined);
     Logger.info(response);
-    Container.jiraExplorer.refresh();
+
+    commands.executeCommand(Commands.RefreshJiraExplorer);
+    commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
+    commands.executeCommand(Commands.RefreshCustomJqlExplorer);
 }
