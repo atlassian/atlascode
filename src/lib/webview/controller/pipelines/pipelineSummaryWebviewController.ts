@@ -23,6 +23,9 @@ export const id: string = 'pipelineSummaryV2';
 export const title: string = 'Pipeline Summary';
 
 export class PipelineSummaryWebviewController implements WebviewController<Pipeline> {
+    public readonly requiredFeatureFlags = [];
+    public readonly requiredExperiments = [];
+
     private steps: PipelineStep[];
 
     constructor(

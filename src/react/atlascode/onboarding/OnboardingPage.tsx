@@ -20,6 +20,7 @@ import { CommonMessageType } from '../../../lib/ipc/toUI/common';
 import { OnboardingActionType } from '../../../lib/ipc/fromUI/onboarding';
 import { JiraOnboarding } from './JiraOnboarding';
 import { BitbucketOnboarding } from './BitbucketOnboarding';
+import { Experiments } from '../../../util/featureFlags/features';
 
 const useStyles = makeStyles((theme: Theme) => ({
     root: {
@@ -69,7 +70,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
         window.addEventListener('message', (event) => {
             const message = event.data;
             if (message.command === CommonMessageType.UpdateExperimentValues) {
-                const experimentValue = message.experimentValues['atlascode_new_auth_ui'];
+                const experimentValue = message.experimentValues[Experiments.NewAuthUI];
                 if (typeof experimentValue === 'string' && experimentValue.trim().toLowerCase() === 'new') {
                     setUseAuthUI(true);
                 } else {
@@ -78,6 +79,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
             }
         });
     }, [controller]);
+
     function getSteps() {
         if (useAuthUI) {
             return ['Setup Jira', 'Setup BitBucket', 'Explore'];

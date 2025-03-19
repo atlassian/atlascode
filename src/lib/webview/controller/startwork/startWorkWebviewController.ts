@@ -27,6 +27,9 @@ import { StartWorkActionApi } from './startWorkActionApi';
 const customBranchType: BranchType = { kind: 'Custom', prefix: '' };
 
 export class StartWorkWebviewController implements WebviewController<StartWorkIssueMessage> {
+    public readonly requiredFeatureFlags = [];
+    public readonly requiredExperiments = [];
+
     private isRefreshing = false;
     private initData: StartWorkIssueMessage;
 

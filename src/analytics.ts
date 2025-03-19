@@ -80,12 +80,25 @@ export async function loggedOutEvent(site: DetailedSiteInfo): Promise<TrackEvent
 
 // Feature Flag Events
 
-export async function featureFlagClientInitializedEvent(): Promise<TrackEvent> {
-    return trackEvent('initialized', 'featureFlagClient');
+export const enum ClientInitializedErrorType {
+    // NoError = 0, // Don't expose this, only used internally
+    Failed = 1,
+    Skipped = 2,
+    IdMissing = 3,
 }
 
-export async function featureFlagClientInitializationFailedEvent(): Promise<TrackEvent> {
-    return trackEvent('initializationFailed', 'featureFlagClient');
+export async function featureFlagClientInitializedEvent(success: true): Promise<TrackEvent>;
+export async function featureFlagClientInitializedEvent(
+    success: false,
+    errorType: ClientInitializedErrorType,
+): Promise<TrackEvent>;
+export async function featureFlagClientInitializedEvent(
+    success: boolean,
+    errorType?: ClientInitializedErrorType,
+): Promise<TrackEvent> {
+    return trackEvent('initialized', 'featureFlagClient', {
+        attributes: { success, errorType: errorType ?? 0 },
+    });
 }
 
 // Jira issue events

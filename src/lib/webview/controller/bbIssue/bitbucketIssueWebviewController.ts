@@ -17,6 +17,9 @@ import { BitbucketIssueActionApi } from './bitbucketIssueActionApi';
 export const id: string = 'bitbucketIssuePageV2';
 
 export class BitbucketIssueWebviewController implements WebviewController<BitbucketIssue> {
+    public readonly requiredFeatureFlags = [];
+    public readonly requiredExperiments = [];
+
     private _issue: BitbucketIssue;
     private _messagePoster: MessagePoster;
     private _api: BitbucketIssueActionApi;

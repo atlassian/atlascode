@@ -11,6 +11,9 @@ import { MessagePoster, WebviewController } from '../webviewController';
 import { WelcomeActionApi } from './welcomeActionApi';
 
 export class WelcomeWebviewController implements WebviewController<WelcomeInitMessage> {
+    public readonly requiredFeatureFlags = [];
+    public readonly requiredExperiments = [];
+
     private _isRefreshing = false;
 
     constructor(

@@ -32,6 +32,9 @@ import { MessagePoster, WebviewController } from '../webviewController';
 import { PullRequestDetailsActionApi } from './pullRequestDetailsActionApi';
 
 export class PullRequestDetailsWebviewController implements WebviewController<PullRequest> {
+    public readonly requiredFeatureFlags = [];
+    public readonly requiredExperiments = [];
+
     private pr: PullRequest;
     private commits: Commit[] = [];
     private messagePoster: MessagePoster;

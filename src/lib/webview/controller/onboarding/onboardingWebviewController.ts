@@ -12,11 +12,15 @@ import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
 import { OnboardingActionApi } from './onboardingActionApi';
+import { Experiments } from 'src/util/featureFlags';
 
 export const id: string = 'atlascodeOnboardingV2';
 const title: string = 'Getting Started';
 
 export class OnboardingWebviewController implements WebviewController<SectionChangeMessage> {
+    public readonly requiredFeatureFlags = [];
+    public readonly requiredExperiments = [Experiments.NewAuthUI];
+
     private _messagePoster: MessagePoster;
     private _api: OnboardingActionApi;
     private _logger: Logger;
