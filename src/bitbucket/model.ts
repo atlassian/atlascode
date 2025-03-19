@@ -221,7 +221,7 @@ export type CreatePullRequestData = {
     closeSourceBranch: boolean;
 };
 
-export type ApprovalStatus = 'APPROVED' | 'UNAPPROVED' | 'NEEDS_WORK';
+export type ApprovalStatus = 'APPROVED' | 'UNAPPROVED' | 'CHANGES_REQUESTED' | 'REQUEST_CHANGES';
 
 export type PullRequestData = {
     siteDetails: DetailedSiteInfo;

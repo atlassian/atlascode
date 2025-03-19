@@ -747,11 +747,21 @@ export class CloudPullRequestApi implements PullRequestApi {
                       `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
                       {},
                   )
-                : await this.client.delete(
-                      `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
-                      {},
-                  );
-        return data.approved ? 'APPROVED' : 'UNAPPROVED';
+                : status === 'CHANGES_REQUESTED'
+                  ? await this.client.post(
+                        `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/request-changes`,
+                        {},
+                    )
+                  : status === 'REQUEST_CHANGES'
+                    ? await this.client.delete(
+                          `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/request-changes`,
+                          {},
+                      )
+                    : await this.client.delete(
+                          `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
+                          {},
+                      );
+        return data && data?.state ? data.state.toUpperCase() : 'UNAPPROVED';
     }
 
     async merge(
@@ -856,7 +866,12 @@ export class CloudPullRequestApi implements PullRequestApi {
                 participants: (pr.participants || [])!.map((participant: any) => ({
                     ...CloudPullRequestApi.toUserModel(participant.user!),
                     role: participant.role!,
-                    status: !!participant.approved ? 'APPROVED' : 'UNAPPROVED',
+                    status:
+                        participant.state !== null
+                            ? participant.state.toUpperCase()
+                            : !!participant.approved
+                              ? 'APPROVED'
+                              : 'UNAPPROVED',
                 })),
                 source: source,
                 destination: destination,
