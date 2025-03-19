@@ -19,3 +19,12 @@ coverage
 .generated/
 e2e/.resources/
 e2e/.test-extensions/
+
+# Yarn Berry
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*

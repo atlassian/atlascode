@@ -63,7 +63,7 @@ Please read our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 Running and debugging the extension:
 
--   Atlassian for VS Code is a node project, as such you'll need to run `npm install` before building.
+-   Atlassian for VS Code is a node project, as such you'll need to run `yarn install` before building.
 -   To debug the extension from within VS Code you'll need a `launch.json`.
     ** An example `launch.json` that will be suitable for most users is included as `.vscode/launch.json.example`.
     ** To use the example file simply copy it to `launch.json`.

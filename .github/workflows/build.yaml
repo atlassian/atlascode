@@ -25,16 +25,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm install
+        run: yarn install
 
       - name: Run linter
-        run: npm run lint
+        run: yarn lint
 
       - name: Run unit tests
-        run: npm run test
+        run: yarn test
 
       - name: Fetch E2E image
         run: |
@@ -44,4 +44,4 @@ jobs:
       - name: Run E2E tests
         env:
             ATLASCODE_TEST_USER_API_TOKEN: ${{ secrets.ATLASCODE_TEST_USER_API_TOKEN }}
-        run: npm run test:e2e:docker
+        run: yarn test:e2e:docker

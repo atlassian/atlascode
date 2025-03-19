@@ -13,7 +13,10 @@ RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     && apt update \
     && apt install -y code \
     && rm -rf /var/lib/apt/lists/* \
-    && npm install -g npm@latest
+    && npm install -g yarn
+
+# Install corepack to enable Yarn
+RUN corepack enable
 
 # Running vscode as root is not recommended, so let's create a user.
 # We need that user's $HOME to exist for the test process to work properly.

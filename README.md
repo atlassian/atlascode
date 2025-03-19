@@ -55,7 +55,7 @@ Please use the in-app feedback form to tell us what you think! It's available fr
 
 Running and debugging the extension:
 
--   Atlassian for VS Code is a node project, as such you'll need to run `npm install` before building.
+-   Atlassian for VS Code is a node project, as such you'll need to run `yarn install` before building.
 -   To debug the extension from within VS Code you'll need a `launch.json`.
     ** An example `launch.json` that will be suitable for most users is included as `.vscode/launch.json.example`.
     ** To use the example file simply copy it to `launch.json`.
@@ -86,7 +86,7 @@ VSCode provides some very helpful [documentation](https://code.visualstudio.com/
 To run `atlascode` in such a way, please follow the VSCode documentation:
 
 -   Install [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) VSCode Extension
--   Run `npm install` like you normally would
+-   Run `yarn install` like you normally would
 -   In VSCode, choose `Dev Containers: Rebuild and Reopen in Container` from the command pallette
 -   Wait for the VSCode to re-open in the container evnironment - you'll be able to see the difference in the header/search bar
 -   Proceed to run or debug the extension as usual - it will now be running as it would in remote execution
@@ -100,7 +100,7 @@ Note: for advanced use-cases, it is possible to run scripts in dev containers vi
 ## Tests
 
 ```
-npm run test
+yarn test
 ```
 
 ## Contributions

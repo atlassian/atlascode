@@ -26,5 +26,5 @@ In particular, if you're making changes not covered by tests - please describe t
 
 Basic checks:
 
-- [ ] `npm run lint`
-- [ ] `npm run test`
+- [ ] `yarn lint`
+- [ ] `yarn test`
