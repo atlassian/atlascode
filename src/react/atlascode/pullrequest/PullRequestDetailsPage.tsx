@@ -118,7 +118,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                             <Box marginLeft={1} hidden={state.loadState.basicData}>
                                 <RequestChangesButton
                                     hidden={
-                                        !state.pr.site.details.isCloud ||
+                                        !state.pr.site.details.isCloud &&
                                         state.currentUser.accountId === state.pr.data.author.accountId
                                     }
                                     status={currentUserApprovalStatus}

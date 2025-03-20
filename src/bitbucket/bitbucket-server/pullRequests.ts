@@ -843,10 +843,18 @@ export class ServerPullRequestApi implements PullRequestApi {
         const { data } = await this.client.put(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/participants/${userSlug}`,
             {
-                status: status,
+                status:
+                    status === 'CHANGES_REQUESTED'
+                        ? 'NEEDS_WORK'
+                        : status === 'REQUEST_CHANGES'
+                          ? 'UNAPPROVED'
+                          : status,
             },
         );
 
+        if (data.status === 'NEEDS_WORK') {
+            return 'CHANGES_REQUESTED';
+        }
         return data.status;
     }
 
@@ -992,7 +1000,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 participants: data.reviewers.map((reviewer: any) => ({
                     ...this.toUser(site.details, reviewer.user),
                     role: reviewer.role,
-                    status: reviewer.status,
+                    status: reviewer.status === 'NEEDS_WORK' ? 'CHANGES_REQUESTED' : reviewer.status,
                 })),
                 source: source,
                 destination: destination,
