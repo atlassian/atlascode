@@ -13,22 +13,18 @@ export function createLabelItem(label: string, command?: Command): TreeItem {
     return item;
 }
 
-export interface TreeViewIssue extends MinimalIssue<DetailedSiteInfo> {
-    jqlSource: JQLEntry;
-    children: TreeViewIssue[];
-}
-
 /** This function returns a Promise that never rejects. */
-export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<TreeViewIssue[]> {
+export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<MinimalIssue<DetailedSiteInfo>[]> {
     try {
         if (jqlEntry) {
             const jqlSite = Container.siteManager.getSiteForId(ProductJira, jqlEntry.siteId);
             if (jqlSite) {
-                const issues = (await issuesForJQL(jqlEntry.query, jqlSite)) as TreeViewIssue[];
+                const issues = await issuesForJQL(jqlEntry.query, jqlSite);
 
+                // We already have everything that matches the JQL. The subtasks likely include things that
+                // don't match the query so we get rid of them.
                 issues.forEach((i) => {
-                    i.jqlSource = jqlEntry;
-                    i.children = [];
+                    i.subtasks = [];
                 });
 
                 return issues;
@@ -52,14 +48,14 @@ export class JiraIssueNode extends TreeItem {
 
     constructor(
         nodeType: JiraIssueNode.NodeType,
-        public issue: TreeViewIssue,
+        public issue: MinimalIssue<DetailedSiteInfo>,
     ) {
-        const collapsibleState = issue.children.length
+        const collapsibleState = issue.subtasks.length
             ? TreeItemCollapsibleState.Expanded
             : TreeItemCollapsibleState.None;
         super(issue.key, collapsibleState);
 
-        this.id = `${issue.key}_${issue.siteDetails.id}_${issue.jqlSource.id}`;
+        this.id = `${issue.key}_${issue.siteDetails.id}`;
 
         this.description = isMinimalIssue(issue) && issue.isEpic ? issue.epicName : issue.summary;
         this.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [issue] };
@@ -68,7 +64,7 @@ export class JiraIssueNode extends TreeItem {
         this.tooltip = `${issue.key} - ${issue.summary}\n\n${issue.priority.name}    |    ${issue.status.name}`;
         this.resourceUri = Uri.parse(`${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`);
 
-        this.children = issue.children.map((x) => new JiraIssueNode(nodeType, x));
+        this.children = issue.subtasks.map((x: MinimalIssue<DetailedSiteInfo>) => new JiraIssueNode(nodeType, x));
     }
 
     private getIssueContextValue(nodeType: JiraIssueNode.NodeType, issue: MinimalIssue<DetailedSiteInfo>): string {

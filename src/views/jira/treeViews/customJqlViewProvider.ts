@@ -1,3 +1,4 @@
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
 import { JQLEntry } from '../../../config/model';
 import { Container } from '../../../container';
@@ -15,7 +16,7 @@ import {
     commands,
     window,
 } from 'vscode';
-import { JiraIssueNode, TreeViewIssue, executeJqlQuery, createLabelItem, loginToJiraMessageNode } from './utils';
+import { JiraIssueNode, executeJqlQuery, createLabelItem, loginToJiraMessageNode } from './utils';
 import { SearchJiraHelper } from '../searchJiraHelper';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
 
@@ -143,17 +144,19 @@ class JiraIssueQueryNode extends TreeItem {
         return this.children;
     }
 
-    private async constructIssueTree(jqlIssues: TreeViewIssue[]): Promise<TreeViewIssue[]> {
+    private async constructIssueTree(
+        jqlIssues: MinimalIssue<DetailedSiteInfo>[],
+    ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         const parentIssues = await this.fetchMissingAncestorIssues(jqlIssues);
         const jqlAndParents = [...jqlIssues, ...parentIssues];
 
-        const rootIssues: TreeViewIssue[] = [];
+        const rootIssues: MinimalIssue<DetailedSiteInfo>[] = [];
         jqlAndParents.forEach((i) => {
             const parentKey = i.parentKey ?? i.epicLink;
             if (parentKey) {
                 const parent = jqlAndParents.find((i2) => parentKey === i2.key);
                 if (parent) {
-                    parent.children.push(i);
+                    parent.subtasks.push(i);
                 }
             } else {
                 rootIssues.push(i);
@@ -165,7 +168,9 @@ class JiraIssueQueryNode extends TreeItem {
 
     // Fetch any parents and grandparents that might be missing from the set to ensure that the a path can be drawn all
     // the way from a subtask to an epic.
-    private async fetchMissingAncestorIssues(newIssues: TreeViewIssue[]): Promise<TreeViewIssue[]> {
+    private async fetchMissingAncestorIssues(
+        newIssues: MinimalIssue<DetailedSiteInfo>[],
+    ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         if (!newIssues.length) {
             return [];
         }
@@ -181,7 +186,7 @@ class JiraIssueQueryNode extends TreeItem {
         return [...parentIssues, ...grandparentIssues];
     }
 
-    private calculateMissingParentKeys(issues: TreeViewIssue[]): string[] {
+    private calculateMissingParentKeys(issues: MinimalIssue<DetailedSiteInfo>[]): string[] {
         // On NextGen projects epics are considered parents to issues and parentKey points to them. On classic projects
         // issues parentKey doesn't point to its epic, but its epicLink does. In both cases parentKey points to the
         // parent task for subtasks. Since they're disjoint we can just take both and treat them the same.
@@ -191,12 +196,15 @@ class JiraIssueQueryNode extends TreeItem {
         return uniqueParentKeys.filter((k) => !issues.some((i) => i.key === k));
     }
 
-    private async fetchIssuesForKeys(site: DetailedSiteInfo, keys: string[]): Promise<TreeViewIssue[]> {
+    private async fetchIssuesForKeys(
+        site: DetailedSiteInfo,
+        keys: string[],
+    ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         return await Promise.all(
             keys.map(async (issueKey) => {
-                const parent = (await fetchMinimalIssue(issueKey, site)) as TreeViewIssue;
-                parent.jqlSource = this.jqlEntry;
-                parent.children = [];
+                const parent = await fetchMinimalIssue(issueKey, site);
+                // we only need the parent information here, we already have all the subtasks that satisfy the jql query
+                parent.subtasks = [];
                 return parent;
             }),
         );

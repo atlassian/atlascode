@@ -11,10 +11,6 @@ function forceCastTo<T>(obj: any): T {
     return obj as unknown as T;
 }
 
-const mockedJqlEntry = forceCastTo<JQLEntry>({
-    id: 'jqlId',
-});
-
 const mockedIssue1 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     key: 'AXON-1',
     isEpic: false,
@@ -24,8 +20,6 @@ const mockedIssue1 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockedJqlEntry,
-    children: [],
 });
 
 const mockedIssue2 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
@@ -37,8 +31,6 @@ const mockedIssue2 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockedJqlEntry,
-    children: [],
 });
 
 const mockedIssue3 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
@@ -50,8 +42,6 @@ const mockedIssue3 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockedJqlEntry,
-    children: [],
 });
 
 jest.mock('../searchJiraHelper');

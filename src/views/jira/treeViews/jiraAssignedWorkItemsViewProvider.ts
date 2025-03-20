@@ -1,4 +1,5 @@
-import { ProductJira } from '../../../atlclients/authInfo';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
 import { Container } from '../../../container';
 import { Commands } from '../../../commands';
 import { SearchJiraHelper } from '../searchJiraHelper';
@@ -12,7 +13,7 @@ import {
     window,
     ConfigurationChangeEvent,
 } from 'vscode';
-import { JiraIssueNode, TreeViewIssue, executeJqlQuery, loginToJiraMessageNode } from './utils';
+import { JiraIssueNode, executeJqlQuery, loginToJiraMessageNode } from './utils';
 import { configuration } from '../../../config/configuration';
 import { CommandContext, setCommandContext } from '../../../commandContext';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
@@ -26,7 +27,7 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
     private _disposable: Disposable;
-    private _initPromises: PromiseRacer<TreeViewIssue[]> | undefined;
+    private _initPromises: PromiseRacer<MinimalIssue<DetailedSiteInfo>[]> | undefined;
     private _initChildren: TreeItem[] = [];
 
     constructor() {
@@ -124,7 +125,7 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
         }
     }
 
-    private buildTreeItemsFromIssues(issues?: TreeViewIssue[]): TreeItem[] {
+    private buildTreeItemsFromIssues(issues?: MinimalIssue<DetailedSiteInfo>[]): TreeItem[] {
         return issues
             ? issues.map((issue) => new JiraIssueNode(JiraIssueNode.NodeType.JiraAssignedIssuesNode, issue))
             : [];

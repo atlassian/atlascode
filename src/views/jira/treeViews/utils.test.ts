@@ -1,12 +1,11 @@
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
-import { JiraIssueNode, TreeViewIssue } from './utils';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { JiraIssueNode } from './utils';
 import { Uri } from 'vscode';
-import { JQLEntry } from 'src/config/model';
 
 function forceCastTo<T>(obj: any): T {
     return obj as unknown as T;
 }
-
 jest.mock('vscode', () => {
     return {
         TreeItem: class {
@@ -42,12 +41,7 @@ jest.mock('../../../logger', () => ({
         error: jest.fn(),
     },
 }));
-
-const mockedJqlEntry = forceCastTo<JQLEntry>({
-    id: 'jqlId',
-});
-
-const mockedIssue1 = forceCastTo<TreeViewIssue>({
+const mockedIssue1 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     key: 'AXON-1',
     isEpic: false,
     summary: 'summary1',
@@ -56,11 +50,9 @@ const mockedIssue1 = forceCastTo<TreeViewIssue>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockedJqlEntry,
-    children: [],
 });
 
-const mockedIssue2 = forceCastTo<TreeViewIssue>({
+const mockedIssue2 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     key: 'AXON-2',
     isEpic: false,
     summary: 'summary2',
@@ -68,12 +60,10 @@ const mockedIssue2 = forceCastTo<TreeViewIssue>({
     priority: { name: 'priorityName' },
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails' },
     issuetype: { iconUrl: '/issueType/' },
-    subtasks: [],
-    jqlSource: mockedJqlEntry,
-    children: [mockedIssue1],
+    subtasks: [mockedIssue1],
 });
 
-const mockedIssue3 = forceCastTo<TreeViewIssue>({
+const mockedIssue3 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     key: 'AXON-3',
     isEpic: false,
     summary: 'summary3',
@@ -82,8 +72,6 @@ const mockedIssue3 = forceCastTo<TreeViewIssue>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockedJqlEntry,
-    children: [],
 });
 
 afterEach(() => {
@@ -96,7 +84,6 @@ describe('utils', () => {
             const jiraIssueNode = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue1);
             expect(jiraIssueNode).toBeDefined();
         });
-
         it('should append correct contextValues', () => {
             const jiraIssueNode1 = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue1);
             const jiraIssueNode2 = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue2);
@@ -105,13 +92,11 @@ describe('utils', () => {
             expect(jiraIssueNode2.contextValue).toBe('jiraIssue_inProgress');
             expect(jiraIssueNode3.contextValue).toBe('jiraIssue_done');
         });
-
         it('getChildren should return children', async () => {
             const jiraIssueNode = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue2);
             const children = await jiraIssueNode.getChildren();
             expect(children).toHaveLength(1);
         });
-
         it('getTreeItem should return resourceUri', async () => {
             const jiraIssueNode = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue1);
             const treeItem = await jiraIssueNode.getTreeItem();
