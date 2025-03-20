@@ -741,27 +741,31 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async updateApproval(pr: PullRequest, status: string): Promise<ApprovalStatus> {
         const { ownerSlug, repoSlug } = pr.site;
-        const { data } =
-            status === 'APPROVED'
-                ? await this.client.post(
-                      `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
-                      {},
-                  )
-                : status === 'CHANGES_REQUESTED'
-                  ? await this.client.post(
-                        `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/request-changes`,
-                        {},
-                    )
-                  : status === 'REQUEST_CHANGES'
-                    ? await this.client.delete(
-                          `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/request-changes`,
-                          {},
-                      )
-                    : await this.client.delete(
-                          `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
-                          {},
-                      );
-        return data && data?.state ? data.state.toUpperCase() : 'UNAPPROVED';
+        switch (status) {
+            case 'APPROVED':
+                await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`, {});
+                return 'APPROVED';
+            case 'CHANGES_REQUESTED':
+                await this.client.post(
+                    `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/request-changes`,
+                    {},
+                );
+                return 'CHANGES_REQUESTED';
+            case 'NO_CHANGES_REQUESTED':
+                await this.client.delete(
+                    `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/request-changes`,
+                    {},
+                );
+                return 'UNAPPROVED';
+            case 'UNAPPROVED':
+                await this.client.delete(
+                    `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
+                    {},
+                );
+                return 'UNAPPROVED';
+            default:
+                return 'UNAPPROVED';
+        }
     }
 
     async merge(

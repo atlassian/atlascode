@@ -840,18 +840,22 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         const userSlug = pr.site.details.userId;
 
+        // The API uses different status values than the model
+        // CHANGES_REQUESTED -> NEEDS_WORK
         const { data } = await this.client.put(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/participants/${userSlug}`,
             {
                 status:
                     status === 'CHANGES_REQUESTED'
                         ? 'NEEDS_WORK'
-                        : status === 'REQUEST_CHANGES'
+                        : status === 'NO_CHANGES_REQUESTED'
                           ? 'UNAPPROVED'
                           : status,
             },
         );
 
+        // The API returns the new status of the user,So this api call will return NEEDS_WORK
+        // which is the status stored as CHANGES_REQUESTED in the model
         if (data.status === 'NEEDS_WORK') {
             return 'CHANGES_REQUESTED';
         }

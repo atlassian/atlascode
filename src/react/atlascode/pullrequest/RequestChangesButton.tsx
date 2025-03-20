@@ -13,7 +13,7 @@ export const RequestChangesButton: React.FunctionComponent<RequestChangesButtonP
     onApprove,
 }) => {
     const handleOnApprove = useCallback(() => {
-        onApprove(status === 'CHANGES_REQUESTED' ? 'REQUEST_CHANGES' : 'CHANGES_REQUESTED');
+        onApprove(status === 'CHANGES_REQUESTED' ? 'NO_CHANGES_REQUESTED' : 'CHANGES_REQUESTED');
     }, [onApprove, status]);
     return (
         <Box hidden={hidden}>
