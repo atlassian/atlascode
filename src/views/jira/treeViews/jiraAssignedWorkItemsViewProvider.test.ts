@@ -112,56 +112,86 @@ describe('AssignedWorkItemsViewProvider', () => {
         jest.restoreAllMocks();
     });
 
-    it('should initialize with configure Jira message if no JQL entries', async () => {
-        jest.spyOn(Container.jqlManager, 'getAllDefaultJQLEntries').mockReturnValue([]);
-        provider = new AssignedWorkItemsViewProvider();
+    describe('getAllDefaultJQLEntries', () => {
+        it('should initialize with configure Jira message if no JQL entries', async () => {
+            jest.spyOn(Container.jqlManager, 'getAllDefaultJQLEntries').mockReturnValue([]);
+            provider = new AssignedWorkItemsViewProvider();
 
-        const children = await provider.getChildren();
-        expect(children).toHaveLength(1);
-        expect(children[0].label).toBe('Please login to Jira');
-        expect(children[0].command).toBeDefined();
+            const children = await provider.getChildren();
+            expect(children).toHaveLength(1);
+            expect(children[0].label).toBe('Please login to Jira');
+            expect(children[0].command).toBeDefined();
 
-        expect(PromiseRacerMockClass.LastInstance).toBeUndefined();
+            expect(PromiseRacerMockClass.LastInstance).toBeUndefined();
+        });
+
+        it('should initialize with JQL promises if JQL entries exist, returns empty', async () => {
+            const jqlEntries = [forceCastTo<JQLEntry>({ siteId: 'site1', query: 'query1' })];
+            jest.spyOn(Container.jqlManager, 'getAllDefaultJQLEntries').mockReturnValue(jqlEntries);
+            provider = new AssignedWorkItemsViewProvider();
+
+            expect(PromiseRacerMockClass.LastInstance).toBeDefined();
+
+            const children = await provider.getChildren();
+
+            expect(PromiseRacerMockClass.LastInstance?.isEmpty).toHaveBeenCalled();
+            expect(PromiseRacerMockClass.LastInstance?.next).toHaveBeenCalled();
+            expect(children).toHaveLength(0);
+        });
+
+        it('should initialize with JQL promises if JQL entries exist, returns issues', async () => {
+            const jqlEntries = [forceCastTo<JQLEntry>({ siteId: 'site1', query: 'query1' })];
+            jest.spyOn(Container.jqlManager, 'getAllDefaultJQLEntries').mockReturnValue(jqlEntries);
+            provider = new AssignedWorkItemsViewProvider();
+
+            expect(PromiseRacerMockClass.LastInstance).toBeDefined();
+
+            PromiseRacerMockClass.LastInstance?.mockData([mockedIssue1, mockedIssue2, mockedIssue3]);
+            const children = await provider.getChildren();
+
+            expect(PromiseRacerMockClass.LastInstance?.isEmpty).toHaveBeenCalled();
+            expect(PromiseRacerMockClass.LastInstance?.next).toHaveBeenCalled();
+            expect(children).toHaveLength(3);
+
+            expect(children[0].label).toBe(mockedIssue1.key);
+            expect(children[0].description).toBe(mockedIssue1.summary);
+            expect(children[0].contextValue).toBe('assignedJiraIssue_todo');
+
+            expect(children[1].label).toBe(mockedIssue2.key);
+            expect(children[1].description).toBe(mockedIssue2.summary);
+            expect(children[1].contextValue).toBe('assignedJiraIssue_inProgress');
+
+            expect(children[2].label).toBe(mockedIssue3.key);
+            expect(children[2].description).toBe(mockedIssue3.summary);
+            expect(children[2].contextValue).toBe('assignedJiraIssue_done');
+        });
     });
 
-    it('should initialize with JQL promises if JQL entries exist, returns empty', async () => {
-        const jqlEntries = [forceCastTo<JQLEntry>({ siteId: 'site1', query: 'query1' })];
-        jest.spyOn(Container.jqlManager, 'getAllDefaultJQLEntries').mockReturnValue(jqlEntries);
-        provider = new AssignedWorkItemsViewProvider();
+    describe('onDidJQLChange', () => {
+        it('onDidJQLChange is registered during construction', async () => {
+            let onDidJQLChangeCallback = undefined;
+            jest.spyOn(Container.jqlManager, 'onDidJQLChange').mockImplementation((func: any, parent: any): any => {
+                onDidJQLChangeCallback = (...args: any[]) => func.apply(parent, args);
+            });
 
-        expect(PromiseRacerMockClass.LastInstance).toBeDefined();
+            provider = new AssignedWorkItemsViewProvider();
 
-        const children = await provider.getChildren();
-
-        expect(PromiseRacerMockClass.LastInstance?.isEmpty).toHaveBeenCalled();
-        expect(PromiseRacerMockClass.LastInstance?.next).toHaveBeenCalled();
-        expect(children).toHaveLength(0);
+            expect(onDidJQLChangeCallback).toBeDefined();
+        });
     });
 
-    it('should initialize with JQL promises if JQL entries exist, returns issues', async () => {
-        const jqlEntries = [forceCastTo<JQLEntry>({ siteId: 'site1', query: 'query1' })];
-        jest.spyOn(Container.jqlManager, 'getAllDefaultJQLEntries').mockReturnValue(jqlEntries);
-        provider = new AssignedWorkItemsViewProvider();
+    describe('onDidSitesAvailableChange', () => {
+        it('onDidSitesAvailableChange is registered during construction', async () => {
+            let onDidSitesAvailableChangeCallback = undefined;
+            jest.spyOn(Container.siteManager, 'onDidSitesAvailableChange').mockImplementation(
+                (func: any, parent: any): any => {
+                    onDidSitesAvailableChangeCallback = (...args: any[]) => func.apply(parent, args);
+                },
+            );
 
-        expect(PromiseRacerMockClass.LastInstance).toBeDefined();
+            provider = new AssignedWorkItemsViewProvider();
 
-        PromiseRacerMockClass.LastInstance?.mockData([mockedIssue1, mockedIssue2, mockedIssue3]);
-        const children = await provider.getChildren();
-
-        expect(PromiseRacerMockClass.LastInstance?.isEmpty).toHaveBeenCalled();
-        expect(PromiseRacerMockClass.LastInstance?.next).toHaveBeenCalled();
-        expect(children).toHaveLength(3);
-
-        expect(children[0].label).toBe(mockedIssue1.key);
-        expect(children[0].description).toBe(mockedIssue1.summary);
-        expect(children[0].contextValue).toBe('assignedJiraIssue_todo');
-
-        expect(children[1].label).toBe(mockedIssue2.key);
-        expect(children[1].description).toBe(mockedIssue2.summary);
-        expect(children[1].contextValue).toBe('assignedJiraIssue_inProgress');
-
-        expect(children[2].label).toBe(mockedIssue3.key);
-        expect(children[2].description).toBe(mockedIssue3.summary);
-        expect(children[2].contextValue).toBe('assignedJiraIssue_done');
+            expect(onDidSitesAvailableChangeCallback).toBeDefined();
+        });
     });
 });

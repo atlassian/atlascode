@@ -1,6 +1,5 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-import { ProductJira } from '../../../atlclients/authInfo';
-import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
 import { JQLEntry } from '../../../config/model';
 import { Container } from '../../../container';
 import { CommandContext, setCommandContext } from '../../../commandContext';
@@ -19,6 +18,7 @@ import {
 } from 'vscode';
 import { JiraIssueNode, executeJqlQuery, createLabelItem, loginToJiraMessageNode } from './utils';
 import { SearchJiraHelper } from '../searchJiraHelper';
+import { SitesAvailableUpdateEvent } from '../../../siteManager';
 
 const enum ViewStrings {
     ConfigureJqlMessage = 'Configure JQL entries in settings to view Jira issues',
@@ -43,7 +43,7 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
     constructor() {
         this._disposable = Disposable.from(
             Container.jqlManager.onDidJQLChange(this.refresh, this),
-            Container.siteManager.onDidSitesAvailableChange(this.refresh, this),
+            Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             commands.registerCommand(Commands.RefreshCustomJqlExplorer, this.refresh, this),
         );
 
@@ -72,6 +72,16 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
             } else {
                 setCommandContext(CommandContext.CustomJQLExplorer, false);
             }
+            this.refresh();
+        }
+    }
+
+    private async onSitesDidChange(e: SitesAvailableUpdateEvent) {
+        if (e.product.key === ProductJira.key) {
+            if (e.newSites) {
+                Container.jqlManager.initializeJQL(e.newSites);
+            }
+
             this.refresh();
         }
     }

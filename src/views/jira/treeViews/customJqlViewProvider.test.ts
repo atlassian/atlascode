@@ -1,7 +1,8 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { DetailedSiteInfo, ProductBitbucket, ProductJira } from '../../../atlclients/authInfo';
 import { Container } from '../../../container';
 import { CustomJQLViewProvider } from './customJqlViewProvider';
+import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import * as utils from './utils';
 
 const mockJqlEntries = [
@@ -60,11 +61,12 @@ jest.mock('../../../container', () => ({
     Container: {
         jqlManager: {
             getCustomJQLEntries: jest.fn(() => mockJqlEntries),
-            onDidJQLChange: jest.fn(),
+            onDidJQLChange: () => {},
             updateFilters: jest.fn(),
+            initializeJQL: () => {},
         },
         siteManager: {
-            onDidSitesAvailableChange: jest.fn(),
+            onDidSitesAvailableChange: () => {},
             productHasAtLeastOneSite: jest.fn(() => true),
         },
         context: {
@@ -173,6 +175,78 @@ describe('CustomJqlViewProvider', () => {
 
             expect(children[0].label).toEqual('Please login to Jira');
             expect(children[0].command).toBeDefined();
+        });
+    });
+
+    describe('onDidJQLChange', () => {
+        it('onDidJQLChange is registered during construction', async () => {
+            let onDidJQLChangeCallback = undefined;
+            jest.spyOn(Container.jqlManager, 'onDidJQLChange').mockImplementation((func: any, parent: any): any => {
+                onDidJQLChangeCallback = (...args: any[]) => func.apply(parent, args);
+            });
+
+            provider = new CustomJQLViewProvider();
+
+            expect(onDidJQLChangeCallback).toBeDefined();
+        });
+    });
+
+    describe('onDidSitesAvailableChange', () => {
+        it('onDidSitesAvailableChange is registered during construction', async () => {
+            let onDidSitesAvailableChangeCallback = undefined;
+            jest.spyOn(Container.siteManager, 'onDidSitesAvailableChange').mockImplementation(
+                (func: any, parent: any): any => {
+                    onDidSitesAvailableChangeCallback = (...args: any[]) => func.apply(parent, args);
+                },
+            );
+
+            provider = new CustomJQLViewProvider();
+
+            expect(onDidSitesAvailableChangeCallback).toBeDefined();
+        });
+
+        it('onDidSitesAvailableChange initializes the JQL query for the new Jira site', async () => {
+            let onDidSitesAvailableChangeCallback = (...args: any[]) => {};
+            jest.spyOn(Container.siteManager, 'onDidSitesAvailableChange').mockImplementation(
+                (func: any, parent: any): any => {
+                    onDidSitesAvailableChangeCallback = (...args: any[]) => func.apply(parent, args);
+                },
+            );
+
+            provider = new CustomJQLViewProvider();
+
+            const newSite = forceCastTo<DetailedSiteInfo>({ host: 'jira.atlassian.com', product: ProductJira });
+            const evt: SitesAvailableUpdateEvent = forceCastTo<SitesAvailableUpdateEvent>({
+                product: ProductJira,
+                newSites: [newSite],
+            });
+
+            jest.spyOn(Container.jqlManager, 'initializeJQL');
+            onDidSitesAvailableChangeCallback(evt);
+
+            expect(Container.jqlManager.initializeJQL).toHaveBeenCalled();
+        });
+
+        it("onDidSitesAvailableChange doesn't do anything for a non-Jira site", async () => {
+            let onDidSitesAvailableChangeCallback = (...args: any[]) => {};
+            jest.spyOn(Container.siteManager, 'onDidSitesAvailableChange').mockImplementation(
+                (func: any, parent: any): any => {
+                    onDidSitesAvailableChangeCallback = (...args: any[]) => func.apply(parent, args);
+                },
+            );
+
+            provider = new CustomJQLViewProvider();
+
+            const newSite = forceCastTo<DetailedSiteInfo>({ host: 'bb.atlassian.com', product: ProductBitbucket });
+            const evt: SitesAvailableUpdateEvent = forceCastTo<SitesAvailableUpdateEvent>({
+                product: ProductBitbucket,
+                newSites: [newSite],
+            });
+
+            jest.spyOn(Container.jqlManager, 'initializeJQL');
+            onDidSitesAvailableChangeCallback(evt);
+
+            expect(Container.jqlManager.initializeJQL).not.toHaveBeenCalled();
         });
     });
 });

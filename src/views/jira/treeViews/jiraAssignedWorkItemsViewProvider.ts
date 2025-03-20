@@ -1,5 +1,5 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
 import { Container } from '../../../container';
 import { Commands } from '../../../commands';
 import { SearchJiraHelper } from '../searchJiraHelper';
@@ -16,6 +16,7 @@ import {
 import { JiraIssueNode, executeJqlQuery, loginToJiraMessageNode } from './utils';
 import { configuration } from '../../../config/configuration';
 import { CommandContext, setCommandContext } from '../../../commandContext';
+import { SitesAvailableUpdateEvent } from '../../../siteManager';
 
 const AssignedWorkItemsViewProviderId = 'atlascode.views.jira.assignedWorkItemsTreeView';
 
@@ -32,7 +33,7 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
     constructor() {
         this._disposable = Disposable.from(
             Container.jqlManager.onDidJQLChange(this.refresh, this),
-            Container.siteManager.onDidSitesAvailableChange(this.refresh, this),
+            Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             commands.registerCommand(Commands.RefreshAssignedWorkItemsExplorer, this.refresh, this),
         );
 
@@ -50,7 +51,7 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
         this._onDidChangeTreeData.fire();
     }
 
-    private onConfigurationChanged(e: ConfigurationChangeEvent) {
+    private onConfigurationChanged(e: ConfigurationChangeEvent): void {
         if (configuration.changed(e, 'jira.explorer.enabled')) {
             setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
             this.refresh();
@@ -59,7 +60,13 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
         }
     }
 
-    dispose() {
+    private onSitesDidChange(e: SitesAvailableUpdateEvent): void {
+        if (e.product.key === ProductJira.key) {
+            this.refresh();
+        }
+    }
+
+    dispose(): void {
         this._disposable.dispose();
     }
 
