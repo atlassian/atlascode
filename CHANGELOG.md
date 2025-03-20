@@ -1,3 +1,11 @@
+## What's new in 3.4.15
+
+### Improvements
+
+### Bug Fixes
+
+- Editing comments in PRs work. 
+
 ## What's new in 3.4.14
 
 ### Improvements
