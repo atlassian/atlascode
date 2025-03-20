@@ -311,13 +311,13 @@ export class PullRequestCommentController implements vscode.Disposable {
     }
 
     private extractCommentText(comment: PullRequestComment): string {
-        return typeof comment.body === 'string'
-            ? comment.body
-            : comment.body instanceof MarkdownString
-              ? comment.body.value
-              : (() => {
-                    throw new Error('Invalid comment body type');
-                })();
+        if (comment.body instanceof MarkdownString) {
+            return comment.body.value;
+        }
+        if (typeof comment.body === 'string') {
+            return comment.body;
+        }
+        throw new Error('Invalid comment body type');
     }
 
     async toggleCommentsVisibility(uri: vscode.Uri) {
