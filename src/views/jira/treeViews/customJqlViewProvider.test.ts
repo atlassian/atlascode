@@ -1,8 +1,8 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo, ProductBitbucket, ProductJira } from '../../../atlclients/authInfo';
 import { Container } from '../../../container';
 import { CustomJQLViewProvider } from './customJqlViewProvider';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
+import { TreeViewIssue } from './utils';
 import * as utils from './utils';
 
 const mockJqlEntries = [
@@ -24,7 +24,7 @@ const mockJqlEntries = [
     },
 ];
 
-const mockedIssue1 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
+const mockedIssue1 = forceCastTo<TreeViewIssue>({
     key: 'AXON-1',
     isEpic: false,
     summary: 'summary1',
@@ -33,9 +33,11 @@ const mockedIssue1 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
+    jqlSource: mockJqlEntries[0],
+    children: [],
 });
 
-const mockedIssue2 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
+const mockedIssue2 = forceCastTo<TreeViewIssue>({
     key: 'AXON-2',
     isEpic: false,
     summary: 'summary2',
@@ -44,9 +46,11 @@ const mockedIssue2 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
+    jqlSource: mockJqlEntries[0],
+    children: [],
 });
 
-const mockedIssue3 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
+const mockedIssue3 = forceCastTo<TreeViewIssue>({
     key: 'AXON-3',
     isEpic: false,
     summary: 'summary3',
@@ -55,6 +59,8 @@ const mockedIssue3 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
+    jqlSource: mockJqlEntries[0],
+    children: [],
 });
 
 jest.mock('../../../container', () => ({

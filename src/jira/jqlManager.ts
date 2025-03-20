@@ -91,7 +91,7 @@ export class JQLManager extends Disposable {
 
     public getAllDefaultJQLEntries(): JQLEntry[] {
         const sites = Container.siteManager.getSitesAvailable(ProductJira);
-        return sites.map((site) => this.defaultJQLEntryForSite(site));
+        return sites.map((site) => this.defaultJQLEntryForSite(site, () => site.id));
     }
 
     public getCustomJQLEntries(): JQLEntry[] {
@@ -109,7 +109,7 @@ export class JQLManager extends Disposable {
             for (const site of sites) {
                 if (!allList.some((j) => j.siteId === site.id)) {
                     // only initialize if there are no jql entries for this site
-                    allList.push(this.defaultJQLEntryForSite(site));
+                    allList.push(this.defaultJQLEntryForSite(site, v4));
                 }
             }
 
@@ -123,9 +123,9 @@ export class JQLManager extends Disposable {
             : 'assignee = currentUser() ORDER BY lastViewed DESC';
     }
 
-    private defaultJQLEntryForSite(site: DetailedSiteInfo): JQLEntry {
+    private defaultJQLEntryForSite(site: DetailedSiteInfo, idFunc: () => string): JQLEntry {
         return {
-            id: v4(),
+            id: idFunc(),
             enabled: true,
             name: `My ${site.name} Issues`,
             query: this.defaultJQLQueryForSite(site),
