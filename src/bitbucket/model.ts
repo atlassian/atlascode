@@ -221,7 +221,9 @@ export type CreatePullRequestData = {
     closeSourceBranch: boolean;
 };
 
-export type ApprovalStatus = 'APPROVED' | 'UNAPPROVED' | 'NEEDS_WORK';
+// This is used to handle both bitbucket cloud and bitbucket server
+// The status is used to determine the state of the pull request
+export type ApprovalStatus = 'APPROVED' | 'UNAPPROVED' | 'CHANGES_REQUESTED' | 'NO_CHANGES_REQUESTED';
 
 export type PullRequestData = {
     siteDetails: DetailedSiteInfo;
