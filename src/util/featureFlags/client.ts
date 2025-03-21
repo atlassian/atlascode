@@ -2,7 +2,7 @@ import FeatureGates, { FeatureGateEnvironment, Identifiers } from '@atlaskit/fea
 import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
 import { AnalyticsClientMapper } from './analytics';
 import { ExperimentGates, ExperimentGateValues, Experiments, FeatureGateValues, Features } from './features';
-import { ClientInitializedErrorType } from '../../analytics';
+import { ClientInitializedErrorType, featureGateExposureBoolEvent } from '../../analytics';
 import { Logger } from '../../logger';
 
 export type FeatureFlagClientOptions = {
@@ -157,6 +157,26 @@ export abstract class FeatureFlagClient {
 
         Logger.debug(`Experiment ${experiment} -> ${gateValue}`);
         return gateValue;
+    }
+
+    static checkGateValueWithInstrumentation(gate: Features): any {
+        const value = this.checkGate(gate);
+
+        if (value && typeof value === 'boolean') {
+            featureGateExposureBoolEvent(gate, value);
+        }
+
+        return value;
+    }
+
+    static checkExperimentBooleanValueWithInstrumentation(experiment: Experiments): any {
+        const value = this.checkExperimentValue(experiment);
+
+        if (value && typeof value === 'boolean') {
+            featureGateExposureBoolEvent(experiment, value);
+        }
+
+        return value;
     }
 
     static dispose() {

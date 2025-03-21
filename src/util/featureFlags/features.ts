@@ -1,6 +1,7 @@
 export const enum Features {
     EnableNewUriHandler = 'atlascode-enable-new-uri-handler',
     NewSidebarTreeView = 'atlascode-new-sidebar-treeview',
+    NoOpFeature = 'atlascode-noop',
 }
 
 export const enum Experiments {
