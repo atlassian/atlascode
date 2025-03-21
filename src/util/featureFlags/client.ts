@@ -160,23 +160,55 @@ export abstract class FeatureFlagClient {
     }
 
     static checkGateValueWithInstrumentation(gate: Features): any {
-        const value = this.checkGate(gate);
-
-        if (value && typeof value === 'boolean') {
-            featureGateExposureBoolEvent(gate, value);
+        if (this.featureGateOverrides.hasOwnProperty(gate)) {
+            const value = this.featureGateOverrides[gate];
+            featureGateExposureBoolEvent(gate, false, value, 3);
+            return value;
         }
 
-        return value;
+        let gateValue = false;
+        if (FeatureGates.initializeCompleted()) {
+            // FeatureGates.checkGate returns false if any errors
+            gateValue = FeatureGates.checkGate(gate);
+            featureGateExposureBoolEvent(gate, true, gateValue, 0);
+        } else {
+            featureGateExposureBoolEvent(gate, false, gateValue, 1);
+        }
+
+        Logger.debug(`FeatureGates ${gate} -> ${gateValue}`);
+        return gateValue;
     }
 
     static checkExperimentBooleanValueWithInstrumentation(experiment: Experiments): any {
-        const value = this.checkExperimentValue(experiment);
-
-        if (value && typeof value === 'boolean') {
-            featureGateExposureBoolEvent(experiment, value);
+        // unknown experiment name
+        if (!ExperimentGates.hasOwnProperty(experiment)) {
+            featureGateExposureBoolEvent(experiment, false, false, 2);
+            return undefined;
         }
 
-        return value;
+        if (this.experimentValueOverride.hasOwnProperty(experiment)) {
+            const value = this.experimentValueOverride[experiment];
+            featureGateExposureBoolEvent(experiment, false, value, 3);
+            return value;
+        }
+
+        const experimentGate = ExperimentGates[experiment];
+        let gateValue = experimentGate.defaultValue;
+        if (FeatureGates.initializeCompleted()) {
+            gateValue = FeatureGates.getExperimentValue(experiment, experimentGate.parameter, 'N/A');
+
+            if (gateValue === 'N/A') {
+                gateValue = experimentGate.defaultValue;
+                featureGateExposureBoolEvent(experiment, false, gateValue, 4);
+            } else {
+                featureGateExposureBoolEvent(experiment, true, gateValue, 0);
+            }
+        } else {
+            featureGateExposureBoolEvent(experiment, false, gateValue, 1);
+        }
+
+        Logger.debug(`Experiment ${experiment} -> ${gateValue}`);
+        return gateValue;
     }
 
     static dispose() {

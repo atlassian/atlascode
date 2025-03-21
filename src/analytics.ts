@@ -102,9 +102,14 @@ export async function featureFlagClientInitializedEvent(
 }
 
 // debugging event, meant to measure the exposure rate of a feature flag or an experiment
-export async function featureGateExposureBoolEvent(ffName: string, value: boolean): Promise<TrackEvent> {
+export async function featureGateExposureBoolEvent(
+    ffName: string,
+    success: boolean,
+    value: boolean,
+    errorType: number,
+): Promise<TrackEvent> {
     return trackEvent('gateExposureBool', 'featureFlagClient', {
-        attributes: { ffName, value },
+        attributes: { ffName, success, value, errorType },
     });
 }
 
