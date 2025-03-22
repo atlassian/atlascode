@@ -38,8 +38,7 @@
         "onStartupFinished"
     ],
     "extensionDependencies": [
-        "vscode.git",
-        "redhat.vscode-yaml"
+        "vscode.git"
     ],
     "extensionKind": [
         "workspace"
