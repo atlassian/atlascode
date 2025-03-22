@@ -207,23 +207,21 @@ export class Container {
         } catch (err) {
             const error = err as FeatureFlagClientInitError;
             Logger.debug(`FeatureFlagClient: Failed to initialize the client: ${error.reason}`);
-            featureFlagClientInitializedEvent(false, error.errorType).then((e) => {
+            featureFlagClientInitializedEvent(false, error.errorType, error.reason).then((e) => {
                 this.analyticsClient.sendTrackEvent(e);
             });
         }
 
+        FeatureFlagClient.checkExperimentBooleanValueWithInstrumentation(Experiments.AtlascodeAA);
+        FeatureFlagClient.checkGateValueWithInstrumentation(Features.NoOpFeature);
+
         this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
         this.initializeNewSidebarView(context, config);
-        this.initializeAAExperiment();
     }
 
     private static getAnalyticsEnable(): boolean {
         const telemetryConfig = workspace.getConfiguration('telemetry');
         return telemetryConfig.get<boolean>('enableTelemetry', true);
-    }
-
-    private static initializeAAExperiment() {
-        FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeAA);
     }
 
     private static initializeUriHandler(

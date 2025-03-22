@@ -91,13 +91,27 @@ export async function featureFlagClientInitializedEvent(success: true): Promise<
 export async function featureFlagClientInitializedEvent(
     success: false,
     errorType: ClientInitializedErrorType,
+    reason: string,
 ): Promise<TrackEvent>;
 export async function featureFlagClientInitializedEvent(
     success: boolean,
     errorType?: ClientInitializedErrorType,
+    reason?: string,
 ): Promise<TrackEvent> {
     return trackEvent('initialized', 'featureFlagClient', {
-        attributes: { success, errorType: errorType ?? 0 },
+        attributes: { success, errorType: errorType ?? 0, reason },
+    });
+}
+
+// debugging event, meant to measure the exposure rate of a feature flag or an experiment
+export async function featureGateExposureBoolEvent(
+    ffName: string,
+    success: boolean,
+    value: boolean,
+    errorType: number,
+): Promise<TrackEvent> {
+    return trackEvent('gateExposureBool', 'featureFlagClient', {
+        attributes: { ffName, success, value, errorType },
     });
 }
 
