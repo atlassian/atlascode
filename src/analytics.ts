@@ -91,13 +91,15 @@ export async function featureFlagClientInitializedEvent(success: true): Promise<
 export async function featureFlagClientInitializedEvent(
     success: false,
     errorType: ClientInitializedErrorType,
+    reason: string,
 ): Promise<TrackEvent>;
 export async function featureFlagClientInitializedEvent(
     success: boolean,
     errorType?: ClientInitializedErrorType,
+    reason?: string,
 ): Promise<TrackEvent> {
     return trackEvent('initialized', 'featureFlagClient', {
-        attributes: { success, errorType: errorType ?? 0 },
+        attributes: { success, errorType: errorType ?? 0, reason },
     });
 }
 
