@@ -1,6 +1,12 @@
+## What's new in 3.4.16
+
+- Internal changes only.
+
 ## What's new in 3.4.15
 
 ### Improvements
+
+- 'Push the new branch to remote' toggle is now a child of the 'Set up git branch' toggle
 
 ### Bug Fixes
 
