@@ -2,7 +2,11 @@ import FeatureGates, { FeatureGateEnvironment, Identifiers } from '@atlaskit/fea
 import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
 import { AnalyticsClientMapper } from './analytics';
 import { ExperimentGates, ExperimentGateValues, Experiments, FeatureGateValues, Features } from './features';
-import { ClientInitializedErrorType, featureGateExposureBoolEvent } from '../../analytics';
+import {
+    ClientInitializedErrorType,
+    featureGateExposureBoolEvent,
+    featureGateExposureStringEvent,
+} from '../../analytics';
 import { Logger } from '../../logger';
 
 export type FeatureFlagClientOptions = {
@@ -162,7 +166,7 @@ export abstract class FeatureFlagClient {
         return gateValue;
     }
 
-    static checkGateValueWithInstrumentation(gate: Features): any {
+    static checkGateValueWithInstrumentation(gate: Features): boolean {
         if (this.featureGateOverrides.hasOwnProperty(gate)) {
             const value = this.featureGateOverrides[gate];
             featureGateExposureBoolEvent(gate, false, value, 3).then((e) => {
@@ -188,40 +192,43 @@ export abstract class FeatureFlagClient {
         return gateValue;
     }
 
-    static checkExperimentBooleanValueWithInstrumentation(experiment: Experiments): any {
+    static checkExperimentStringValueWithInstrumentation(experiment: Experiments): string | undefined {
         // unknown experiment name
         if (!ExperimentGates.hasOwnProperty(experiment)) {
-            featureGateExposureBoolEvent(experiment, false, false, 2).then((e) => {
+            featureGateExposureStringEvent(experiment, false, '', 2).then((e) => {
                 this.analyticsClient.sendTrackEvent(e);
             });
             return undefined;
         }
 
         if (this.experimentValueOverride.hasOwnProperty(experiment)) {
-            const value = this.experimentValueOverride[experiment];
-            featureGateExposureBoolEvent(experiment, false, value, 3).then((e) => {
+            const value = this.experimentValueOverride[experiment] as string;
+            featureGateExposureStringEvent(experiment, false, value, 3).then((e) => {
                 this.analyticsClient.sendTrackEvent(e);
             });
             return value;
         }
 
         const experimentGate = ExperimentGates[experiment];
-        let gateValue = experimentGate.defaultValue;
+        let gateValue = experimentGate.defaultValue as string;
         if (FeatureGates.initializeCompleted()) {
-            gateValue = FeatureGates.getExperimentValue(experiment, experimentGate.parameter, 'N/A');
+            gateValue = FeatureGates.getExperimentValue(
+                experiment,
+                experimentGate.parameter,
+                experimentGate.defaultValue,
+            );
 
-            if (gateValue === 'N/A') {
-                gateValue = experimentGate.defaultValue;
-                featureGateExposureBoolEvent(experiment, false, gateValue, 4).then((e) => {
+            if (gateValue === experimentGate.defaultValue) {
+                featureGateExposureStringEvent(experiment, false, gateValue, 4).then((e) => {
                     this.analyticsClient.sendTrackEvent(e);
                 });
             } else {
-                featureGateExposureBoolEvent(experiment, true, gateValue, 0).then((e) => {
+                featureGateExposureStringEvent(experiment, true, gateValue, 0).then((e) => {
                     this.analyticsClient.sendTrackEvent(e);
                 });
             }
         } else {
-            featureGateExposureBoolEvent(experiment, false, gateValue, 1).then((e) => {
+            featureGateExposureStringEvent(experiment, false, gateValue, 1).then((e) => {
                 this.analyticsClient.sendTrackEvent(e);
             });
         }

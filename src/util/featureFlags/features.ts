@@ -15,8 +15,8 @@ export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
         defaultValue: 'control',
     },
     [Experiments.AtlascodeAA]: {
-        parameter: 'isEnabled',
-        defaultValue: false,
+        parameter: 'isEnabled2',
+        defaultValue: 'Default',
     },
 };
 

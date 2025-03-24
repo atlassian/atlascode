@@ -115,6 +115,18 @@ export async function featureGateExposureBoolEvent(
     });
 }
 
+// debugging event, meant to measure the exposure rate of a feature flag or an experiment
+export async function featureGateExposureStringEvent(
+    ffName: string,
+    success: boolean,
+    value: string,
+    errorType: number,
+): Promise<TrackEvent> {
+    return trackEvent('gateExposureString', 'featureFlagClient', {
+        attributes: { ffName, success, value, errorType },
+    });
+}
+
 // Jira issue events
 
 export async function issueCreatedEvent(site: DetailedSiteInfo, issueKey: string): Promise<TrackEvent> {

@@ -212,7 +212,7 @@ export class Container {
             });
         }
 
-        FeatureFlagClient.checkExperimentBooleanValueWithInstrumentation(Experiments.AtlascodeAA);
+        FeatureFlagClient.checkExperimentStringValueWithInstrumentation(Experiments.AtlascodeAA);
         FeatureFlagClient.checkGateValueWithInstrumentation(Features.NoOpFeature);
 
         this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
