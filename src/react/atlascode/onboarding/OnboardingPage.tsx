@@ -60,11 +60,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
     const [bitbucketSignInText, setBitbucketSignInText] = useState('Sign In to Bitbucket Cloud');
     const [jiraSignInFlow, setJiraSignInFlow] = useState(jiraValueSet.cloud);
     const [bitbucketSignInFlow, setBitbucketSignInFlow] = useState(bitbucketValueSet.cloud);
-
-    function getSteps() {
-        return ['Setup Jira', 'Setup BitBucket', 'Explore'];
-    }
-    const steps = getSteps();
+    const steps = ['Setup Jira', 'Setup BitBucket', 'Explore'];
 
     const handleNext = useCallback(() => {
         setActiveStep((prevActiveStep) => prevActiveStep + 1);
