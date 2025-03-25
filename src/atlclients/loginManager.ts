@@ -50,7 +50,7 @@ export class LoginManager {
         }
 
         const resp = await this._dancer.doDance(provider, site, callback);
-        this.saveDetails(provider, site, resp, isOnboarding);
+        await this.saveDetails(provider, site, resp, isOnboarding);
     }
 
     public async initRemoteAuth(state: Object) {
@@ -94,11 +94,10 @@ export class LoginManager {
                     await this._credentialManager.saveAuthInfo(siteInfo, oauthInfo);
 
                     if (site.product.key === ProductJira.key) {
-                        await this.updateHasResolutionField(siteInfo);
+                        this.updateHasResolutionField(siteInfo).then(() => this._siteManager.addSites([siteInfo]));
+                    } else {
+                        this._siteManager.addSites([siteInfo]);
                     }
-
-                    this._siteManager.addSites([siteInfo]);
-
                     authenticatedEvent(siteInfo, isOnboarding).then((e) => {
                         this._analyticsClient.sendTrackEvent(e);
                     });
