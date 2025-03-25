@@ -98,14 +98,13 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
                 break;
             }
             case OnboardingActionType.Login: {
-                let isCloud = true;
+                const isCloud = !isBasicAuthInfo(msg.authInfo);
                 this._analytics.fireAuthenticateButtonEvent(id, msg.siteInfo, isCloud);
                 try {
-                    if (isBasicAuthInfo(msg.authInfo)) {
-                        isCloud = false;
-                        await this._api.authenticateServer(msg.siteInfo, msg.authInfo);
-                    } else {
+                    if (isCloud) {
                         await this._api.authenticateCloud(msg.siteInfo, this._onboardingUrl);
+                    } else {
+                        await this._api.authenticateServer(msg.siteInfo, msg.authInfo);
                     }
                     this.postMessage({ type: OnboardingMessageType.LoginResponse });
                 } catch (e) {

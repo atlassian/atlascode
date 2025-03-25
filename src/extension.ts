@@ -21,7 +21,7 @@ import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
 import { pid } from 'process';
 import { startListening } from './atlclients/negotiate';
-import { Experiments, FeatureFlagClient } from './util/featureFlags';
+import { FeatureFlagClient } from './util/featureFlags';
 import { JQLManager } from './jira/jqlManager';
 
 const AnalyticDelay = 5000;
@@ -65,7 +65,7 @@ export async function activate(context: ExtensionContext) {
 
     // new user for auth exp
     if (previousVersion === undefined) {
-        initializeNewAuthExperiment();
+        showOnboardingPage();
     } else {
         showWelcomePage(atlascodeVersion, previousVersion);
     }
@@ -167,34 +167,8 @@ async function sendAnalytics(version: string, globalState: Memento) {
     });
 }
 
-function initializeNewAuthExperiment() {
-    let onboardingFlow = FeatureFlagClient.checkExperimentValue(Experiments.NewAuthUI);
-    Logger.debug(`Onboarding Experiment flow: ${onboardingFlow}`);
-    if (!onboardingFlow) {
-        onboardingFlow = 'control';
-    }
-
-    switch (onboardingFlow) {
-        case 'settings': {
-            commands.executeCommand(Commands.ShowConfigPage);
-            break;
-        }
-        case 'legacy': {
-            commands.executeCommand(Commands.ShowOnboardingPage);
-            break;
-        }
-        case 'new': {
-            commands.executeCommand(Commands.ShowOnboardingPage);
-            break;
-        }
-        default: {
-            // control
-            if (window.state.focused) {
-                commands.executeCommand(Commands.ShowOnboardingPage);
-            }
-            break;
-        }
-    }
+function showOnboardingPage() {
+    commands.executeCommand(Commands.ShowOnboardingPage);
 }
 
 // this method is called when your extension is deactivated

@@ -48,8 +48,9 @@ export class LoginManager {
         if (!provider) {
             throw new Error(`No provider found for ${site.host}`);
         }
+
         const resp = await this._dancer.doDance(provider, site, callback);
-        await this.saveDetails(provider, site, resp, isOnboarding);
+        this.saveDetails(provider, site, resp, isOnboarding);
     }
 
     public async initRemoteAuth(state: Object) {
