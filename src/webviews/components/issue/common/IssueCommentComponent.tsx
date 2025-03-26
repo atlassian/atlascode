@@ -1,29 +1,38 @@
 import React from 'react';
 import Comment, { CommentAction } from '@atlaskit/comment';
 import TextArea from '@atlaskit/textarea';
+import TextField from '@atlaskit/textfield';
 import { CommentVisibility, Comment as JiraComment, User } from '@atlassianlabs/jira-pi-common-models';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
-import { Box, Typography } from '@material-ui/core';
+import { Box } from '@material-ui/core';
 import Avatar from '@atlaskit/avatar';
 import { CommentAuthor } from '@atlaskit/comment';
+import { RenderedContent } from '../../RenderedContent';
+import { CommentTime } from '@atlaskit/comment';
+import { formatDistanceToNow, parseISO } from 'date-fns';
 
 type IssueCommentComponentProps = {
     currentUser: User;
-    comments: any;
+    comments: JiraComment[];
     onSave: (commentBody: string, commentId?: string, restriction?: CommentVisibility) => void;
     onCreate: (commentBody: string, restriction?: CommentVisibility) => void;
 };
-
+const baseActions: JSX.Element[] = [<CommentAction>Edit</CommentAction>, <CommentAction>Reply</CommentAction>];
 const CommentComponent: React.FC<{
+    user: User;
     comment: JiraComment;
     onSave: (t: string, commentId?: string, restriction?: CommentVisibility) => void;
-}> = ({ comment, onSave }) => {
+}> = ({ user, comment, onSave }) => {
     const [isEditing, setIsEditing] = React.useState(false);
-    const bodyText = comment.renderedBody ?? comment.body;
+    const bodyText = comment.renderedBody ? comment.renderedBody : comment.body;
     const [commentText, setCommentText] = React.useState(bodyText);
+    const actions =
+        comment.author.accountId === user.accountId
+            ? [...baseActions, <CommentAction>Delete</CommentAction>]
+            : baseActions;
     return (
         <Comment
-            avatar={<Avatar src={comment.author.avatarUrls['24x24']} size={'small'} />}
+            avatar={<Avatar src={comment.author.avatarUrls['48x48']} size={'small'} />}
             author={
                 <CommentAuthor>
                     <div className="jira-comment-author">{comment.author.displayName}</div>
@@ -31,7 +40,7 @@ const CommentComponent: React.FC<{
             }
             content={
                 <>
-                    <Typography>{bodyText}</Typography>
+                    <RenderedContent html={bodyText} />
                     {isEditing && (
                         <>
                             <TextArea
@@ -39,10 +48,9 @@ const CommentComponent: React.FC<{
                                 onChange={(e) => {
                                     setCommentText(e.target.value);
                                 }}
-                                isReadOnly={!isEditing}
                                 defaultValue={bodyText}
                             />
-                            <Box style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                            <Box style={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <VSCodeButton
                                     appearance="primary"
                                     onClick={() => {
@@ -66,8 +74,8 @@ const CommentComponent: React.FC<{
                     )}
                 </>
             }
-            createdTime={new Date(comment.created).getTime()}
-            actions={[<CommentAction>Edit</CommentAction>, <CommentAction>Reply</CommentAction>]}
+            time={<CommentTime>{`${formatDistanceToNow(parseISO(comment.created))} ago`}</CommentTime>}
+            actions={actions}
         />
     );
 };
@@ -77,50 +85,71 @@ const AddCommentComponent: React.FC<{ user: User; onCreate: (t: string, restrict
     onCreate,
 }) => {
     const [commentText, setCommentText] = React.useState('');
-    const [isFocused, setIsFocused] = React.useState(false);
+    const [isEditing, setIsEditing] = React.useState(false);
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-            <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                <Box style={{ marginRight: '8px' }}>
-                    <Avatar src={user.avatarUrls['24x24']} size={'small'} />
+            <Box style={{ display: 'flex', flexDirection: 'row', alignItems: isEditing ? 'start' : 'center' }}>
+                <Box style={{ marginRight: '8px', marginTop: isEditing ? '4px' : '0px' }}>
+                    <Avatar src={user.avatarUrls['48x48']} size={'small'} />
                 </Box>
-                <TextArea
-                    isMonospaced
-                    onFocus={() => {
-                        setIsFocused(true);
-                    }}
-                    onBlur={() => {
-                        setIsFocused(false);
-                    }}
-                    onChange={(e) => {
-                        setCommentText(e.target.value);
-                    }}
-                    placeholder="Add a comment..."
-                />
+                {!isEditing ? (
+                    <TextField
+                        value={commentText}
+                        onClick={() => {
+                            setIsEditing(true);
+                        }}
+                        placeholder="Add a comment..."
+                    />
+                ) : (
+                    <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                        <TextArea
+                            value={commentText}
+                            autoFocus
+                            onFocus={() => {
+                                setIsEditing(true);
+                            }}
+                            onBlur={() => {
+                                if (commentText === '') {
+                                    setIsEditing(false);
+                                }
+                            }}
+                            onChange={(e) => {
+                                setCommentText(e.target.value);
+                            }}
+                            placeholder="Add a comment..."
+                        />
+                        <Box
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                paddingTop: '8px',
+                            }}
+                        >
+                            <VSCodeButton
+                                appearance="primary"
+                                onClick={() => {
+                                    if (commentText !== '') {
+                                        onCreate(commentText, undefined);
+                                        setCommentText('');
+                                        setIsEditing(false);
+                                    }
+                                }}
+                            >
+                                Add
+                            </VSCodeButton>
+                            <VSCodeButton
+                                appearance="secondary"
+                                onClick={() => {
+                                    setCommentText('');
+                                    setIsEditing(false);
+                                }}
+                            >
+                                Cancel
+                            </VSCodeButton>
+                        </Box>
+                    </Box>
+                )}
             </Box>
-            {(isFocused || commentText !== '') && (
-                <Box style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <VSCodeButton
-                        appearance="primary"
-                        onClick={() => {
-                            if (commentText !== '') {
-                                onCreate(commentText, undefined);
-                                setCommentText('');
-                            }
-                        }}
-                    >
-                        Add
-                    </VSCodeButton>
-                    <VSCodeButton
-                        appearance="secondary"
-                        onClick={() => {
-                            setCommentText('');
-                        }}
-                    >
-                        Cancel
-                    </VSCodeButton>
-                </Box>
-            )}
         </Box>
     );
 };
@@ -133,8 +162,13 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
     return (
         <Box style={{ display: 'flex', flexDirection: 'column' }}>
             <AddCommentComponent user={currentUser} onCreate={onCreate} />
-            {comments.map((comment: JiraComment) => (
-                <CommentComponent key={`${comment.id}::${comment.updated}`} comment={comment} onSave={onSave} />
+            {comments.reverse().map((comment: JiraComment) => (
+                <CommentComponent
+                    key={`${comment.id}::${comment.updated}`}
+                    user={currentUser}
+                    comment={comment}
+                    onSave={onSave}
+                />
             ))}
         </Box>
     );
