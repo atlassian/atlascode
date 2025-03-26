@@ -81,7 +81,6 @@ export abstract class JiraExplorer extends Disposable implements TreeDataProvide
 
     protected async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent): Promise<void> {
         if (event.visible && Container.siteManager.productHasAtLeastOneSite(this.product)) {
-            Logger.debug(`!!!! viewScreenEvent ${this.viewId}`);
             viewScreenEvent(this.viewId, undefined, this.product).then((e) => {
                 Container.analyticsClient.sendScreenEvent(e);
             });
