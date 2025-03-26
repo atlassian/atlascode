@@ -20,6 +20,9 @@ import { MessagePoster, WebviewController } from '../webviewController';
 import { CreatePullRequestActionApi } from './createPullRequestActionApi';
 
 export class CreatePullRequestWebviewController implements WebviewController<WorkspaceRepo> {
+    public readonly requiredFeatureFlags = [];
+    public readonly requiredExperiments = [];
+
     private isRefreshing = false;
     private initData: WorkspaceRepo;
 

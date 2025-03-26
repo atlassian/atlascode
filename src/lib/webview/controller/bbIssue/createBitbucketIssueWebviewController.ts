@@ -18,6 +18,9 @@ import { MessagePoster, WebviewController } from '../webviewController';
 import { CreateBitbucketIssueActionApi } from './createbitbucketIssueActionApi';
 
 export class CreateBitbucketIssueWebviewController implements WebviewController<BitbucketSite> {
+    public readonly requiredFeatureFlags = [];
+    public readonly requiredExperiments = [];
+
     private isRefreshing = false;
 
     constructor(

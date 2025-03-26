@@ -64,8 +64,7 @@ import { VSCWelcomeActionApi } from './webview/welcome/vscWelcomeActionApi';
 import { VSCWelcomeWebviewControllerFactory } from './webview/welcome/vscWelcomeWebviewControllerFactory';
 import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
-import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
-import { EventBuilder } from './util/featureFlags/eventBuilder';
+import { Experiments, FeatureFlagClient, Features, FeatureFlagClientInitError } from './util/featureFlags';
 import { AtlascodeUriHandler } from './uriHandler';
 import { CheckoutHelper } from './bitbucket/interfaces';
 import { ProductJira } from './atlclients/authInfo';
@@ -74,6 +73,7 @@ import { CustomJQLViewProvider } from './views/jira/treeViews/customJqlViewProvi
 import { AssignedWorkItemsViewProvider } from './views/jira/treeViews/jiraAssignedWorkItemsViewProvider';
 import { Logger } from './logger';
 import { SearchJiraHelper } from './views/jira/searchJiraHelper';
+import { featureFlagClientInitializedEvent } from './analytics';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -192,19 +192,31 @@ export class Container {
 
         context.subscriptions.push(new HelpExplorer());
 
-        await FeatureFlagClient.initialize({
-            analyticsClient: this._analyticsClient,
-            identifiers: {
-                analyticsAnonymousId: this.machineId,
-            },
-            eventBuilder: new EventBuilder(),
-        }).catch((err) => {
-            Logger.error(Error(`Failed to initialize feature flags: ${err}`));
-        });
+        try {
+            await FeatureFlagClient.initialize({
+                analyticsClient: this._analyticsClient,
+                identifiers: {
+                    analyticsAnonymousId: this.machineId,
+                },
+            });
+
+            Logger.debug(`FeatureFlagClient: Succesfully initialized the client.`);
+            featureFlagClientInitializedEvent(true).then((e) => {
+                this.analyticsClient.sendTrackEvent(e);
+            });
+        } catch (err) {
+            const error = err as FeatureFlagClientInitError;
+            Logger.debug(`FeatureFlagClient: Failed to initialize the client: ${error.reason}`);
+            featureFlagClientInitializedEvent(false, error.errorType, error.reason).then((e) => {
+                this.analyticsClient.sendTrackEvent(e);
+            });
+        }
+
+        FeatureFlagClient.checkExperimentStringValueWithInstrumentation(Experiments.AtlascodeAA);
+        FeatureFlagClient.checkGateValueWithInstrumentation(Features.NoOpFeature);
 
         this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
         this.initializeNewSidebarView(context, config);
-        this.initializeAAExperiment();
     }
 
     private static getAnalyticsEnable(): boolean {
@@ -212,16 +224,12 @@ export class Container {
         return telemetryConfig.get<boolean>('enableTelemetry', true);
     }
 
-    private static initializeAAExperiment() {
-        FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeAA);
-    }
-
     private static initializeUriHandler(
         context: ExtensionContext,
         analyticsApi: VSCAnalyticsApi,
         bitbucketHelper: CheckoutHelper,
     ) {
-        if (FeatureFlagClient.featureGates[Features.EnableNewUriHandler]) {
+        if (FeatureFlagClient.checkGate(Features.EnableNewUriHandler)) {
             Logger.debug('Using new URI handler');
             context.subscriptions.push(AtlascodeUriHandler.create(analyticsApi, bitbucketHelper));
         } else {
@@ -230,7 +238,7 @@ export class Container {
     }
 
     private static initializeNewSidebarView(context: ExtensionContext, config: IConfig) {
-        if (FeatureFlagClient.featureGates[Features.NewSidebarTreeView]) {
+        if (FeatureFlagClient.checkGate(Features.NewSidebarTreeView)) {
             Logger.debug('Using new custom JQL view');
             SearchJiraHelper.initialize();
             context.subscriptions.push(new CustomJQLViewProvider());

@@ -1,5 +1,4 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import { ProductJira } from '../../../atlclients/authInfo';
 import { Container } from '../../../container';
 import { Commands } from '../../../commands';
 import { SearchJiraHelper } from '../searchJiraHelper';
@@ -13,9 +12,10 @@ import {
     window,
     ConfigurationChangeEvent,
 } from 'vscode';
-import { JiraIssueNode, executeJqlQuery, loginToJiraMessageNode } from './utils';
+import { JiraIssueNode, TreeViewIssue, executeJqlQuery, loginToJiraMessageNode } from './utils';
 import { configuration } from '../../../config/configuration';
 import { CommandContext, setCommandContext } from '../../../commandContext';
+import { SitesAvailableUpdateEvent } from '../../../siteManager';
 
 const AssignedWorkItemsViewProviderId = 'atlascode.views.jira.assignedWorkItemsTreeView';
 
@@ -26,13 +26,13 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
     private _disposable: Disposable;
-    private _initPromises: PromiseRacer<MinimalIssue<DetailedSiteInfo>[]> | undefined;
+    private _initPromises: PromiseRacer<TreeViewIssue[]> | undefined;
     private _initChildren: TreeItem[] = [];
 
     constructor() {
         this._disposable = Disposable.from(
             Container.jqlManager.onDidJQLChange(this.refresh, this),
-            Container.siteManager.onDidSitesAvailableChange(this.refresh, this),
+            Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             commands.registerCommand(Commands.RefreshAssignedWorkItemsExplorer, this.refresh, this),
         );
 
@@ -50,7 +50,7 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
         this._onDidChangeTreeData.fire();
     }
 
-    private onConfigurationChanged(e: ConfigurationChangeEvent) {
+    private onConfigurationChanged(e: ConfigurationChangeEvent): void {
         if (configuration.changed(e, 'jira.explorer.enabled')) {
             setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
             this.refresh();
@@ -59,7 +59,13 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
         }
     }
 
-    dispose() {
+    private onSitesDidChange(e: SitesAvailableUpdateEvent): void {
+        if (e.product.key === ProductJira.key) {
+            this.refresh();
+        }
+    }
+
+    dispose(): void {
         this._disposable.dispose();
     }
 
@@ -118,7 +124,7 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
         }
     }
 
-    private buildTreeItemsFromIssues(issues?: MinimalIssue<DetailedSiteInfo>[]): TreeItem[] {
+    private buildTreeItemsFromIssues(issues?: TreeViewIssue[]): TreeItem[] {
         return issues
             ? issues.map((issue) => new JiraIssueNode(JiraIssueNode.NodeType.JiraAssignedIssuesNode, issue))
             : [];

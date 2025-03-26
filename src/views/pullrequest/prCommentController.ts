@@ -282,7 +282,7 @@ export class PullRequestCommentController implements vscode.Disposable {
                     const newComment: Comment = await bbApi.pullrequests.editComment(
                         comment.site,
                         comment.prId,
-                        comment.body.toString(),
+                        this.extractCommentText(comment),
                         comment.id,
                         comment.commitHash,
                     );
@@ -308,6 +308,16 @@ export class PullRequestCommentController implements vscode.Disposable {
 
         await this.createOrUpdateThread(commentThreadId!, comment.parent!.uri, comment.parent!.range, comments);
         vscode.commands.executeCommand(Commands.RefreshPullRequestExplorerNode, vscode.Uri.parse(comment.prHref));
+    }
+
+    private extractCommentText(comment: PullRequestComment): string {
+        if (comment.body instanceof MarkdownString) {
+            return comment.body.value;
+        }
+        if (typeof comment.body === 'string') {
+            return comment.body;
+        }
+        throw new Error('Invalid comment body type');
     }
 
     async toggleCommentsVisibility(uri: vscode.Uri) {

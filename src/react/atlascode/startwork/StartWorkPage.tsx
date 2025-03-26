@@ -706,30 +706,30 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                             </Grid>
                                                         </Grid>
                                                     </Grid>
+                                                    <Grid item>
+                                                        <Divider />
+                                                    </Grid>
+                                                    <Grid item>
+                                                        <Grid container spacing={1} direction="row">
+                                                            <Grid item>
+                                                                <Switch
+                                                                    color="primary"
+                                                                    size="small"
+                                                                    checked={pushBranchEnabled}
+                                                                    onClick={togglePushBranchEnabled}
+                                                                />
+                                                            </Grid>
+                                                            <Grid item>
+                                                                <Typography variant="h4">
+                                                                    <Box fontWeight="fontWeightBold">
+                                                                        Push the new branch to remote
+                                                                    </Box>
+                                                                </Typography>
+                                                            </Grid>
+                                                        </Grid>
+                                                    </Grid>
                                                 </Grid>
                                             </Collapse>
-                                        </Grid>
-                                        <Grid item hidden={submitState === 'submit-success'}>
-                                            <Divider />
-                                        </Grid>
-                                        <Grid item hidden={submitState === 'submit-success'}>
-                                            <Grid container spacing={1} direction="row">
-                                                <Grid item>
-                                                    <Switch
-                                                        color="primary"
-                                                        size="small"
-                                                        checked={pushBranchEnabled}
-                                                        onClick={togglePushBranchEnabled}
-                                                    />
-                                                </Grid>
-                                                <Grid item>
-                                                    <Typography variant="h4">
-                                                        <Box fontWeight="fontWeightBold">
-                                                            Push the new branch to remote
-                                                        </Box>
-                                                    </Typography>
-                                                </Grid>
-                                            </Grid>
                                         </Grid>
                                         <Grid item hidden={submitState === 'submit-success'}>
                                             <Button

@@ -80,12 +80,51 @@ export async function loggedOutEvent(site: DetailedSiteInfo): Promise<TrackEvent
 
 // Feature Flag Events
 
-export async function featureFlagClientInitializedEvent(): Promise<TrackEvent> {
-    return trackEvent('initialized', 'featureFlagClient');
+export const enum ClientInitializedErrorType {
+    // NoError = 0, // Don't expose this, only used internally
+    Failed = 1,
+    Skipped = 2,
+    IdMissing = 3,
 }
 
-export async function featureFlagClientInitializationFailedEvent(): Promise<TrackEvent> {
-    return trackEvent('initializationFailed', 'featureFlagClient');
+export async function featureFlagClientInitializedEvent(success: true): Promise<TrackEvent>;
+export async function featureFlagClientInitializedEvent(
+    success: false,
+    errorType: ClientInitializedErrorType,
+    reason: string,
+): Promise<TrackEvent>;
+export async function featureFlagClientInitializedEvent(
+    success: boolean,
+    errorType?: ClientInitializedErrorType,
+    reason?: string,
+): Promise<TrackEvent> {
+    return trackEvent('initialized', 'featureFlagClient', {
+        attributes: { success, errorType: errorType ?? 0, reason },
+    });
+}
+
+// debugging event, meant to measure the exposure rate of a feature flag or an experiment
+export async function featureGateExposureBoolEvent(
+    ffName: string,
+    success: boolean,
+    value: boolean,
+    errorType: number,
+): Promise<TrackEvent> {
+    return trackEvent('gateExposureBool', 'featureFlagClient', {
+        attributes: { ffName, success, value, errorType },
+    });
+}
+
+// debugging event, meant to measure the exposure rate of a feature flag or an experiment
+export async function featureGateExposureStringEvent(
+    ffName: string,
+    success: boolean,
+    value: string,
+    errorType: number,
+): Promise<TrackEvent> {
+    return trackEvent('gateExposureString', 'featureFlagClient', {
+        attributes: { ffName, success, value, errorType },
+    });
 }
 
 // Jira issue events

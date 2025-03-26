@@ -1,10 +1,10 @@
-export enum Features {
+export const enum Features {
     EnableNewUriHandler = 'atlascode-enable-new-uri-handler',
-    EnableAuthUI = 'atlascode-enable-auth-ui',
     NewSidebarTreeView = 'atlascode-new-sidebar-treeview',
+    NoOpFeature = 'atlascode-noop',
 }
 
-export enum Experiments {
+export const enum Experiments {
     NewAuthUI = 'atlascode_new_auth_ui',
     AtlascodeAA = 'atlascode_aa_experiment',
 }
@@ -15,8 +15,8 @@ export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
         defaultValue: 'control',
     },
     [Experiments.AtlascodeAA]: {
-        parameter: 'isEnabled',
-        defaultValue: false,
+        parameter: 'isEnabled2',
+        defaultValue: 'Default',
     },
 };
 

@@ -1,8 +1,3 @@
-import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
-import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
-const mockFeatureGateValues = {
-    'atlascode-new-sidebar-treeview': true,
-};
 jest.mock('./simpleJiraIssueNode', () => {
     return {
         SimpleJiraIssueNode: jest.fn().mockImplementation(() => {
@@ -20,21 +15,17 @@ jest.mock('../../commands', () => {
         },
     };
 });
-jest.mock('../../util/featureFlags', () => {
-    return {
-        FeatureFlagClient: {
-            featureGates: mockFeatureGateValues,
-        },
-        Features: {
-            NewSidebarTreeView: 'atlascode-new-sidebar-treeview',
-        },
-    };
-});
 jest.mock('@atlassianlabs/jira-pi-common-models', () => {
     return {
         isMinimalIssue: jest.fn(() => true),
     };
 });
+
+import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
+import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
+import { IssueNode } from './issueNode';
+import * as vscode from 'vscode';
+
 const mockIssue: MinimalORIssueLink<DetailedSiteInfo> = {
     descriptionHtml: '<p>This is a test issue description</p>',
     issuelinks: [],
@@ -94,33 +85,26 @@ const mockIssue: MinimalORIssueLink<DetailedSiteInfo> = {
     },
 };
 
-import { IssueNode } from './issueNode';
-import * as vscode from 'vscode';
 describe('IssueNode', () => {
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     describe('getTreeItem', () => {
-        it('should return a TreeItem with the issue key and summary if the new sidebar tree view feature flag is enabled', () => {
-            mockFeatureGateValues['atlascode-new-sidebar-treeview'] = true;
-            const issueNode = new IssueNode(mockIssue, undefined);
-            const treeItem = issueNode.getTreeItem();
-            expect(treeItem.label).toBe(mockIssue.key);
-            expect(treeItem.description).toBe(mockIssue.summary);
-        });
-        it('should return a TreeItem with the issue key and summary in title if the new sidebar tree view feature flag is disabled', () => {
-            mockFeatureGateValues['atlascode-new-sidebar-treeview'] = false;
+        it('should return a TreeItem with the issue key and summary in title', () => {
             const issueNode = new IssueNode(mockIssue, undefined);
             const treeItem = issueNode.getTreeItem();
             expect(treeItem.label).toBe(`${mockIssue.key} ${mockIssue.summary}`);
             expect(treeItem.description).toBeUndefined();
         });
+
         it('should return a TreeItem with a collapsible state of Expanded if the issue has subtasks or epic children', () => {
-            mockFeatureGateValues['atlascode-new-sidebar-treeview'] = true;
             const issueNode = new IssueNode({ ...mockIssue, subtasks: [mockIssue] }, undefined);
             const treeItem = issueNode.getTreeItem();
             expect(treeItem.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
         });
 
         it('should return a TreeItem with a collapsible state of None if the issue does not have subtasks or epic children', () => {
-            mockFeatureGateValues['atlascode-new-sidebar-treeview'] = true;
             const issueNode = new IssueNode(mockIssue, undefined);
             const treeItem = issueNode.getTreeItem();
             expect(treeItem.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);

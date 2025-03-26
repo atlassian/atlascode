@@ -24,6 +24,9 @@ import { Container } from '../../../../container'; //eslint-disable-line
 export const id: string = 'atlascodeSettingsV2';
 
 export class ConfigWebviewController implements WebviewController<SectionChangeMessage> {
+    public readonly requiredFeatureFlags = [];
+    public readonly requiredExperiments = [];
+
     private _messagePoster: MessagePoster;
     private _api: ConfigActionApi;
     private _logger: Logger;
