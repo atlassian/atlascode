@@ -7,21 +7,6 @@ function forceCastTo<T>(obj: any): T {
     return obj as unknown as T;
 }
 
-jest.mock('vscode', () => {
-    return {
-        TreeItem: class {
-            constructor(label: string) {}
-            command = { command: '', title: '' };
-        },
-        TreeItemCollapsibleState: {
-            None: 0,
-            Collapsed: 1,
-        },
-        Uri: {
-            parse: jest.fn((a) => a as Uri),
-        },
-    };
-});
 jest.mock('../../../container', () => ({
     Container: {
         siteManager: {

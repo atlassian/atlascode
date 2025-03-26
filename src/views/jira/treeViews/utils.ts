@@ -1,11 +1,21 @@
 import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
+import { DetailedSiteInfo, Product, ProductJira } from '../../../atlclients/authInfo';
 import { JQLEntry } from '../../../config/model';
 import { Container } from '../../../container';
 import { Commands } from '../../../commands';
 import { Logger } from '../../../logger';
 import { issuesForJQL } from '../../../jira/issuesForJql';
-import { TreeItem, TreeItemCollapsibleState, Command, Uri } from 'vscode';
+import {
+    Disposable,
+    TreeItem,
+    TreeItemCollapsibleState,
+    TreeViewVisibilityChangeEvent,
+    Command,
+    Uri,
+    TreeDataProvider,
+    window,
+} from 'vscode';
+import { viewScreenEvent } from '../../../analytics';
 
 export function createLabelItem(label: string, command?: Command): TreeItem {
     const item = new TreeItem(label);
@@ -47,6 +57,43 @@ export const loginToJiraMessageNode = createLabelItem('Please login to Jira', {
     arguments: [ProductJira],
 });
 
+export abstract class JiraExplorer extends Disposable implements TreeDataProvider<TreeItem> {
+    // in the future, this class can be used for BitBucket too. Keep this field for generalization.
+    private readonly product: Product = ProductJira;
+    private readonly disposable: Disposable;
+
+    constructor(private viewId: string) {
+        super(() => this.dispose());
+
+        const treeView = window.createTreeView(viewId, { treeDataProvider: this });
+        treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e));
+
+        this.disposable = Disposable.from(treeView);
+    }
+
+    protected abstract refresh(): void;
+
+    public getTreeItem(element: TreeItem): TreeItem {
+        return element;
+    }
+
+    public abstract getChildren(element?: TreeItem): Promise<TreeItem[]>;
+
+    protected async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent): Promise<void> {
+        if (event.visible && Container.siteManager.productHasAtLeastOneSite(this.product)) {
+            Logger.debug(`!!!! viewScreenEvent ${this.viewId}`);
+            viewScreenEvent(this.viewId, undefined, this.product).then((e) => {
+                Container.analyticsClient.sendScreenEvent(e);
+            });
+        }
+    }
+
+    public dispose(): void {
+        Logger.debug('explorer disposed');
+        this.disposable.dispose();
+    }
+}
+
 export class JiraIssueNode extends TreeItem {
     private children: JiraIssueNode[];
 
@@ -59,7 +106,7 @@ export class JiraIssueNode extends TreeItem {
             : TreeItemCollapsibleState.None;
         super(issue.key, collapsibleState);
 
-        this.id = `${issue.key}_${issue.siteDetails.id}_${issue.jqlSource.id}`;
+        this.id = `${issue.key}_${issue.siteDetails.id}_${issue.jqlSource.siteId}`;
 
         this.description = isMinimalIssue(issue) && issue.isEpic ? issue.epicName : issue.summary;
         this.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [issue] };

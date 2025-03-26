@@ -4,6 +4,7 @@ import { CustomJQLViewProvider } from './customJqlViewProvider';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { TreeViewIssue } from './utils';
 import * as utils from './utils';
+import * as vscode from 'vscode';
 
 const mockJqlEntries = [
     {
@@ -96,10 +97,15 @@ function forceCastTo<T>(obj: any): T {
     return obj as unknown as T;
 }
 
+const mockedTreeView = {
+    onDidChangeVisibility: () => {},
+};
+
 describe('CustomJqlViewProvider', () => {
     let provider: CustomJQLViewProvider | undefined;
 
     beforeEach(() => {
+        jest.spyOn(vscode.window, 'createTreeView').mockReturnValue(mockedTreeView as any);
         provider = undefined;
     });
 

@@ -6,6 +6,7 @@ import { Disposable } from 'vscode';
 import { JQLEntry } from '../../../config/model';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import * as vscode from 'vscode';
 
 function forceCastTo<T>(obj: any): T {
     return obj as unknown as T;
@@ -110,10 +111,15 @@ jest.mock('../../../util/promises', () => ({
     PromiseRacer: jest.fn().mockImplementation((promises) => new PromiseRacerMockClass(promises)),
 }));
 
+const mockedTreeView = {
+    onDidChangeVisibility: () => {},
+};
+
 describe('AssignedWorkItemsViewProvider', () => {
     let provider: AssignedWorkItemsViewProvider | undefined;
 
     beforeEach(() => {
+        jest.spyOn(vscode.window, 'createTreeView').mockReturnValue(mockedTreeView as any);
         provider = undefined;
     });
 

@@ -7,17 +7,23 @@ import { configuration } from '../../../config/configuration';
 import { fetchMinimalIssue } from '../../../jira/fetchIssue';
 import {
     Disposable,
-    TreeDataProvider,
     TreeItem,
     TreeItemCollapsibleState,
     ConfigurationChangeEvent,
     EventEmitter,
     commands,
-    window,
 } from 'vscode';
-import { JiraIssueNode, TreeViewIssue, executeJqlQuery, createLabelItem, loginToJiraMessageNode } from './utils';
+import {
+    JiraExplorer,
+    JiraIssueNode,
+    TreeViewIssue,
+    executeJqlQuery,
+    createLabelItem,
+    loginToJiraMessageNode,
+} from './utils';
 import { SearchJiraHelper } from '../searchJiraHelper';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
+import { RefreshTimer } from '../../RefreshTimer';
 
 const enum ViewStrings {
     ConfigureJqlMessage = 'Configure JQL entries in settings to view Jira issues',
@@ -26,7 +32,7 @@ const enum ViewStrings {
 
 const CustomJQLViewProviderId = 'atlascode.views.jira.customJqlTreeView';
 
-export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Disposable {
+export class CustomJQLViewProvider extends JiraExplorer {
     private static readonly _treeItemLoginToJiraMessage = loginToJiraMessageNode;
     private static readonly _treeItemConfigureJqlMessage = createLabelItem(ViewStrings.ConfigureJqlMessage, {
         command: Commands.ShowJiraIssueSettings,
@@ -40,13 +46,14 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
     constructor() {
+        super(CustomJQLViewProviderId);
+
         this._disposable = Disposable.from(
             Container.jqlManager.onDidJQLChange(this.refresh, this),
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
+            new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', this.refresh),
             commands.registerCommand(Commands.RefreshCustomJqlExplorer, this.refresh, this),
         );
-
-        window.createTreeView(CustomJQLViewProviderId, { treeDataProvider: this });
 
         const jqlEntries = Container.jqlManager.getCustomJQLEntries();
 
@@ -80,20 +87,16 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
             if (e.newSites) {
                 Container.jqlManager.initializeJQL(e.newSites);
             }
-
             this.refresh();
         }
     }
 
-    dispose() {
+    override dispose() {
+        super.dispose();
         this._disposable.dispose();
     }
 
-    getTreeItem(element: TreeItem): TreeItem {
-        return element;
-    }
-
-    async getChildren(element?: TreeItem): Promise<TreeItem[]> {
+    override async getChildren(element?: TreeItem): Promise<TreeItem[]> {
         if (element instanceof JiraIssueQueryNode || element instanceof JiraIssueNode) {
             return await element.getChildren();
         } else if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
@@ -108,7 +111,7 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
         }
     }
 
-    private refresh() {
+    override refresh() {
         SearchJiraHelper.clearIssues(CustomJQLViewProviderId);
         this._onDidChangeTreeData.fire();
     }

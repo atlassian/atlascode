@@ -3,23 +3,17 @@ import { Container } from '../../../container';
 import { Commands } from '../../../commands';
 import { SearchJiraHelper } from '../searchJiraHelper';
 import { PromiseRacer } from '../../../util/promises';
-import {
-    Disposable,
-    TreeDataProvider,
-    TreeItem,
-    EventEmitter,
-    commands,
-    window,
-    ConfigurationChangeEvent,
-} from 'vscode';
-import { JiraIssueNode, TreeViewIssue, executeJqlQuery, loginToJiraMessageNode } from './utils';
+import { Disposable, TreeItem, EventEmitter, commands, ConfigurationChangeEvent } from 'vscode';
+import { JiraExplorer, JiraIssueNode, TreeViewIssue, executeJqlQuery, loginToJiraMessageNode } from './utils';
 import { configuration } from '../../../config/configuration';
 import { CommandContext, setCommandContext } from '../../../commandContext';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
+import { NewIssueMonitor } from '../../../jira/newIssueMonitor';
+import { RefreshTimer } from '../../RefreshTimer';
 
 const AssignedWorkItemsViewProviderId = 'atlascode.views.jira.assignedWorkItemsTreeView';
 
-export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>, Disposable {
+export class AssignedWorkItemsViewProvider extends JiraExplorer {
     private static readonly _treeItemConfigureJiraMessage = loginToJiraMessageNode;
 
     private _onDidChangeTreeData = new EventEmitter<TreeItem | undefined | void>();
@@ -28,15 +22,17 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
     private _disposable: Disposable;
     private _initPromises: PromiseRacer<TreeViewIssue[]> | undefined;
     private _initChildren: TreeItem[] = [];
+    private _newIssueMonitor: NewIssueMonitor;
 
     constructor() {
+        super(AssignedWorkItemsViewProviderId);
+
         this._disposable = Disposable.from(
             Container.jqlManager.onDidJQLChange(this.refresh, this),
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
+            new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', this.refresh),
             commands.registerCommand(Commands.RefreshAssignedWorkItemsExplorer, this.refresh, this),
         );
-
-        window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
 
         setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
 
@@ -45,6 +41,8 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
         if (jqlEntries.length) {
             this._initPromises = new PromiseRacer(jqlEntries.map(executeJqlQuery));
         }
+
+        this._newIssueMonitor = new NewIssueMonitor();
 
         Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
         this._onDidChangeTreeData.fire();
@@ -65,19 +63,17 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
         }
     }
 
-    dispose(): void {
+    override dispose(): void {
+        super.dispose();
         this._disposable.dispose();
     }
 
-    private refresh(): void {
+    override refresh(): void {
+        this._newIssueMonitor.checkForNewIssues();
         this._onDidChangeTreeData.fire();
     }
 
-    getTreeItem(element: TreeItem): TreeItem {
-        return element;
-    }
-
-    async getChildren(element?: TreeItem): Promise<TreeItem[]> {
+    override async getChildren(element?: TreeItem): Promise<TreeItem[]> {
         // this branch should never be triggered
         if (element) {
             return [];

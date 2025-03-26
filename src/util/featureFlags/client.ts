@@ -23,13 +23,14 @@ export class FeatureFlagClientInitError {
 
 export abstract class FeatureFlagClient {
     private static analyticsClient: AnalyticsClient;
-    private static analyticsClientMapper: AnalyticsClientMapper;
 
     private static featureGateOverrides: FeatureGateValues;
     private static experimentValueOverride: ExperimentGateValues;
 
     public static async initialize(options: FeatureFlagClientOptions): Promise<void> {
         this.initializeOverrides();
+
+        this.analyticsClient = options.analyticsClient;
 
         const targetApp = process.env.ATLASCODE_FX3_TARGET_APP;
         const environment = process.env.ATLASCODE_FX3_ENVIRONMENT as FeatureGateEnvironment;
@@ -50,8 +51,7 @@ export abstract class FeatureFlagClient {
 
         Logger.debug(`FeatureGates: initializing, target: ${targetApp}, environment: ${environment}`);
 
-        this.analyticsClient = options.analyticsClient;
-        this.analyticsClientMapper = new AnalyticsClientMapper(options.analyticsClient, options.identifiers);
+        const analyticsClientMapper = new AnalyticsClientMapper(options.analyticsClient, options.identifiers);
 
         try {
             await FeatureGates.initialize(
@@ -60,7 +60,7 @@ export abstract class FeatureFlagClient {
                     environment,
                     targetApp,
                     fetchTimeoutMs: Number.parseInt(timeout),
-                    analyticsWebClient: Promise.resolve(this.analyticsClientMapper),
+                    analyticsWebClient: Promise.resolve(analyticsClientMapper),
                 },
                 options.identifiers,
             );
