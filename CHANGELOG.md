@@ -1,5 +1,7 @@
 ## What's new in 3.4.18 
 
+### Bug Fixes
+
 - Were you experiencing issues with commands not being found for the Atlassian extension? Please follow steps here after installing this version: 
     - Delete all auths under Settings > Jira > Authentication section
     - Re-authenticate. 
@@ -8,6 +10,7 @@
 ### Improvements
 
 - Improved new Onboarding authentication UI.
+
 ## What's new in 3.4.17
 
 - Internal changes only.
