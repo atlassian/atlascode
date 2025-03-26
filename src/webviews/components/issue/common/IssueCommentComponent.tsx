@@ -26,7 +26,6 @@ type IssueCommentComponentProps = {
     fetchImage: (url: string) => Promise<string>;
     onDelete: (commentId: string) => void;
 };
-
 const CommentComponent: React.FC<{
     siteDetails: DetailedSiteInfo;
     comment: JiraComment;
@@ -126,7 +125,6 @@ const AddCommentComponent: React.FC<{
 }> = ({ fetchUsers, user, onCreate, isServiceDeskProject }) => {
     const [commentText, setCommentText] = React.useState('');
     const [isEditing, setIsEditing] = React.useState(false);
-
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             <Box style={{ display: 'flex', flexDirection: 'row', alignItems: isEditing ? 'start' : 'center' }}>
