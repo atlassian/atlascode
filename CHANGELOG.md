@@ -1,3 +1,9 @@
+## What's new in 3.4.18
+
+### Features
+
+- Added new Onboarding authentication UI.
+
 ## What's new in 3.4.17
 
 - Internal changes only.
