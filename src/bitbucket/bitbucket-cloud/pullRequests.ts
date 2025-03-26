@@ -741,17 +741,31 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async updateApproval(pr: PullRequest, status: string): Promise<ApprovalStatus> {
         const { ownerSlug, repoSlug } = pr.site;
-        const { data } =
-            status === 'APPROVED'
-                ? await this.client.post(
-                      `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
-                      {},
-                  )
-                : await this.client.delete(
-                      `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
-                      {},
-                  );
-        return data.approved ? 'APPROVED' : 'UNAPPROVED';
+        switch (status) {
+            case 'APPROVED':
+                await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`, {});
+                return 'APPROVED';
+            case 'CHANGES_REQUESTED':
+                await this.client.post(
+                    `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/request-changes`,
+                    {},
+                );
+                return 'CHANGES_REQUESTED';
+            case 'NO_CHANGES_REQUESTED':
+                await this.client.delete(
+                    `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/request-changes`,
+                    {},
+                );
+                return 'UNAPPROVED';
+            case 'UNAPPROVED':
+                await this.client.delete(
+                    `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
+                    {},
+                );
+                return 'UNAPPROVED';
+            default:
+                return 'UNAPPROVED';
+        }
     }
 
     async merge(
@@ -856,7 +870,12 @@ export class CloudPullRequestApi implements PullRequestApi {
                 participants: (pr.participants || [])!.map((participant: any) => ({
                     ...CloudPullRequestApi.toUserModel(participant.user!),
                     role: participant.role!,
-                    status: !!participant.approved ? 'APPROVED' : 'UNAPPROVED',
+                    status:
+                        participant.state !== null
+                            ? participant.state.toUpperCase()
+                            : !!participant.approved
+                              ? 'APPROVED'
+                              : 'UNAPPROVED',
                 })),
                 source: source,
                 destination: destination,

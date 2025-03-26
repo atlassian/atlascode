@@ -28,7 +28,7 @@ import { BranchInfo } from './BranchInfo';
 import { Commits } from './Commits';
 import { DiffList } from './DiffList';
 import { MergeDialog } from './MergeDialog';
-import { NeedsWorkButton } from './NeedsWorkButton';
+import { RequestChangesButton } from './RequestChangesButton';
 import { NestedCommentList } from './NestedCommentList';
 import { PageTaskList } from './PageTaskList';
 import { PRBuildStatus } from './PRBuildStatus';
@@ -92,9 +92,9 @@ const PullRequestHeader: React.FC<PullRequestHeaderProps> = ({
                     onClick={controller.copyLink}
                 />
                 <Box marginLeft={1} hidden={state.loadState.basicData}>
-                    <NeedsWorkButton
+                    <RequestChangesButton
                         hidden={
-                            state.pr.site.details.isCloud ||
+                            !state.pr.site.details.isCloud &&
                             state.currentUser.accountId === state.pr.data.author.accountId
                         }
                         status={currentUserApprovalStatus}
