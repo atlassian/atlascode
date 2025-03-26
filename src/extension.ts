@@ -42,8 +42,6 @@ export async function activate(context: ExtensionContext) {
     try {
         await Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
 
-        await JQLManager.backFillOldDetailedSiteInfo();
-
         registerCommands(context);
         activateCodebucket(context);
 
@@ -55,6 +53,8 @@ export async function activate(context: ExtensionContext) {
             CommandContext.IsBBAuthenticated,
             Container.siteManager.productHasAtLeastOneSite(ProductBitbucket),
         );
+
+        await JQLManager.backFillOldDetailedSiteInfos();
     } catch (e) {
         Logger.error(e, 'Error initializing atlascode!');
     }

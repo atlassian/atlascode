@@ -1,8 +1,10 @@
-## What's new in 3.4.18
+## What's new in 3.4.18 
 
-### Features
+- Were you experiencing issues with commands not being found for the Atlassian extension? Please follow steps here after installing this version: 
+    - Delete all auths under Settings > Jira > Authentication section
+    - Re-authenticate. 
+    - If you are still experiencing issues, please comment on https://github.com/atlassian/atlascode/issues/219
 
-- Added new Onboarding authentication UI.
 
 ## What's new in 3.4.17
 
