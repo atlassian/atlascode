@@ -5,7 +5,9 @@
     - Re-authenticate. 
     - If you are still experiencing issues, please comment on https://github.com/atlassian/atlascode/issues/219
 
+### Improvements
 
+- Improved new Onboarding authentication UI.
 ## What's new in 3.4.17
 
 - Internal changes only.
