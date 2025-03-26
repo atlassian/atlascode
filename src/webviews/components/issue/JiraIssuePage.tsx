@@ -12,7 +12,7 @@ import InlineDialog from '@atlaskit/inline-dialog';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
-import { Comment as JiraComment, CommentVisibility, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { CommentVisibility, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
@@ -37,7 +37,6 @@ import {
 } from './AbstractIssueEditorPage';
 import { AttachmentList } from './AttachmentList';
 import { AttachmentsModal } from './AttachmentsModal';
-import { CommentComponent } from './CommentComponent';
 import IssueList from './IssueList';
 import { LinkedIssues } from './LinkedIssues';
 import NavItem from './NavItem';
@@ -50,6 +49,7 @@ import Worklogs from './Worklogs';
 import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
 import { readFilesContentAsync } from '../../../util/files';
+import { IssueCommentComponent } from './common/IssueCommentComponent';
 
 type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -581,7 +581,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.state.fields['comment'] && (
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{this.state.fields['comment'].name}</label>
-                        {this.state.fieldValues['comment'].comments.map((comment: JiraComment) => (
+                        {
+                            /* {this.state.fieldValues['comment'].comments.map((comment: JiraComment) => (
                             <CommentComponent
                                 key={`${comment.id}::${comment.updated}`}
                                 siteDetails={this.state.siteDetails}
@@ -596,7 +597,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 fetchImage={(img) => this.fetchImage(img)}
                             />
                         ))}
-                        {this.getInputMarkup(this.state.fields['comment'], true, 'comment')}
+                        {this.getInputMarkup(this.state.fields['comment'], true, 'comment')} */
+                            <IssueCommentComponent
+                                comments={this.state.fieldValues['comment'].comments}
+                                currentUser={this.state.currentUser}
+                                onCreate={this.handleCreateComment}
+                                onSave={this.handleUpdateComment}
+                            />
+                        }
                     </div>
                 )}
             </div>
