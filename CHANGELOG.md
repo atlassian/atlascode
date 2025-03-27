@@ -1,3 +1,7 @@
+## What's new in 3.4.19
+
+- Internal changes only.
+
 ## What's new in 3.4.18 
 
 ### Bug Fixes
