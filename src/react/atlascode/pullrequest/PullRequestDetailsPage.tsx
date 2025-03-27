@@ -107,20 +107,6 @@ const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
                 </Grid>
                 <Grid item>
                     <BasicPanel
-                        title={'Tasks'}
-                        subtitle={taskTitle()}
-                        isDefaultExpanded
-                        isLoading={state.loadState.tasks}
-                    >
-                        <PageTaskList
-                            tasks={state.tasks}
-                            onEdit={controller.editTask}
-                            onDelete={controller.deleteTask}
-                        />
-                    </BasicPanel>
-                </Grid>
-                <Grid item>
-                    <BasicPanel
                         title={'Files Changed'}
                         subtitle={'Click on file names to open diff in editor'}
                         isDefaultExpanded
@@ -162,9 +148,10 @@ const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
 interface PullRequestSidebarProps {
     state: PullRequestDetailsState;
     controller: PullRequestDetailsControllerApi;
+    taskTitle: () => string;
 }
 
-const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controller }) => {
+const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controller, taskTitle }) => {
     return (
         <Box margin={2}>
             <Grid container spacing={1} direction={'column'}>
@@ -194,6 +181,21 @@ const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controll
                         <PRBuildStatus
                             buildStatuses={state.buildStatuses}
                             openBuildStatus={controller.openBuildStatus}
+                        />
+                    </BasicPanel>
+                </Grid>
+
+                <Grid item>
+                    <BasicPanel
+                        title={'Tasks'}
+                        subtitle={taskTitle()}
+                        isDefaultExpanded
+                        isLoading={state.loadState.tasks}
+                    >
+                        <PageTaskList
+                            tasks={state.tasks}
+                            onEdit={controller.editTask}
+                            onDelete={controller.deleteTask}
                         />
                     </BasicPanel>
                 </Grid>
@@ -263,7 +265,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                         </Grid>
                         <Grid item xs={12} md={3} lg={3} xl={3}>
                             <Paper className={classes.paperOverflow}>
-                                <PullRequestSidebar state={state} controller={controller} />
+                                <PullRequestSidebar state={state} controller={controller} taskTitle={taskTitle} />
                             </Paper>
                         </Grid>
                     </Grid>

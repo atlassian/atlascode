@@ -6,7 +6,7 @@ import { formatDate } from './bitbucketDateFormatter';
 import { CommentTaskList } from './CommentTaskList';
 import { NestedCommentList } from './NestedCommentList';
 import { PullRequestDetailsControllerContext } from './pullRequestDetailsController';
-import { TaskAdder } from './TaskAdder';
+import { TaskAdder } from './CommentTaskAdder';
 
 type NestedCommentProps = {
     comment: Comment;
