@@ -238,13 +238,12 @@ export class Container {
     }
 
     private static initializeNewSidebarView(context: ExtensionContext, config: IConfig) {
-        if (FeatureFlagClient.checkGate(Features.NewSidebarTreeView)) {
-            Logger.debug('Using new custom JQL view');
+        if (FeatureFlagClient.checkGate(Features.OldSidebarTreeView)) {
+            this.initializeLegacySidebarView(context, config);
+        } else {
             SearchJiraHelper.initialize();
             context.subscriptions.push(new CustomJQLViewProvider());
             context.subscriptions.push(new AssignedWorkItemsViewProvider());
-        } else {
-            this.initializeLegacySidebarView(context, config);
         }
     }
 
