@@ -207,14 +207,12 @@ const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controll
                         hidden={state.buildStatuses.length === 0}
                         title={`Reviewers`}
                     >
-                        <Box marginLeft={2} marginTop={1}>
-                            <Reviewers
-                                site={state.pr.site}
-                                participants={state.pr.data.participants}
-                                onUpdateReviewers={controller.updateReviewers}
-                                isLoading={state.loadState.basicData}
-                            />
-                        </Box>
+                        <Reviewers
+                            site={state.pr.site}
+                            participants={state.pr.data.participants}
+                            onUpdateReviewers={controller.updateReviewers}
+                            isLoading={state.loadState.basicData}
+                        />
                     </BasicPanel>
                 </Grid>
 

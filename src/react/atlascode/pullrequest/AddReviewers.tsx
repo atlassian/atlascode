@@ -1,4 +1,4 @@
-import { Button, Tooltip, Typography } from '@material-ui/core';
+import { Typography, Tooltip, Button } from '@material-ui/core';
 import React, { useCallback, useState } from 'react';
 import { BitbucketSite, User } from '../../../bitbucket/model';
 import DialogUserPicker from './DialogUserPicker';
@@ -8,15 +8,17 @@ type AddReviewersProps = {
     reviewers: User[];
     updateReviewers: (user: User[]) => Promise<void>;
 };
+
 export const AddReviewers: React.FunctionComponent<AddReviewersProps> = ({ site, reviewers, updateReviewers }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const handleUpdateReviewers = useCallback(
-        async (newReviewers: User[]) => {
+        async (newUser: User) => {
             setIsOpen(false);
-            await updateReviewers(newReviewers);
+            const updatedReviewers = [...reviewers, newUser];
+            await updateReviewers(updatedReviewers);
         },
-        [updateReviewers],
+        [reviewers, updateReviewers],
     );
 
     const handleToggleOpen = useCallback(() => {
@@ -37,7 +39,6 @@ export const AddReviewers: React.FunctionComponent<AddReviewersProps> = ({ site,
             <DialogUserPicker
                 site={site}
                 users={reviewers}
-                defaultUsers={[]}
                 onChange={handleUpdateReviewers}
                 hidden={isOpen}
                 onClose={handleToggleClosed}
