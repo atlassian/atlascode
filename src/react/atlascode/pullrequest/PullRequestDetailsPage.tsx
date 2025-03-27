@@ -1,4 +1,4 @@
-import { Box, Container, Grid, makeStyles, Paper, Theme, Typography } from '@material-ui/core';
+import { Box, Container, Grid, makeStyles, Paper, Theme, Divider, useMediaQuery, useTheme } from '@material-ui/core';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ApprovalStatus, User } from '../../../bitbucket/model';
@@ -36,9 +36,24 @@ const useStyles = makeStyles((theme: Theme) => ({
     paper100: {
         overflow: 'hidden',
         height: '100%',
+        backgroundColor: 'transparent',
+        boxShadow: 'none',
+        border: 'none',
     },
     paperOverflow: {
         overflow: 'hidden',
+        backgroundColor: 'transparent',
+        boxShadow: 'none',
+        border: 'none',
+    },
+    verticalDivider: {
+        height: '100%',
+        marginLeft: theme.spacing(1),
+        marginRight: theme.spacing(1),
+        display: 'none',
+        [theme.breakpoints.up('md')]: {
+            display: 'block',
+        },
     },
 }));
 
@@ -69,32 +84,36 @@ const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
                         summaryChange={controller.updateSummary}
                     />
                 </Grid>
-                <Grid item>
-                    <BasicPanel
-                        title={'Related Jira Issues'}
-                        subtitle={`${state.relatedJiraIssues.length} issues`}
-                        isLoading={state.loadState.relatedJiraIssues}
-                        hidden={state.relatedJiraIssues.length === 0}
-                    >
-                        <RelatedJiraIssues
-                            relatedIssues={state.relatedJiraIssues}
-                            openJiraIssue={controller.openJiraIssue}
-                        />
-                    </BasicPanel>
-                </Grid>
-                <Grid item>
-                    <BasicPanel
-                        title={'Related Bitbucket Issues'}
-                        subtitle={`${state.relatedBitbucketIssues.length} issues`}
-                        isLoading={state.loadState.relatedBitbucketIssues}
-                        hidden={state.relatedBitbucketIssues.length === 0}
-                    >
-                        <RelatedBitbucketIssues
-                            relatedIssues={state.relatedBitbucketIssues}
-                            openBitbucketIssue={controller.openBitbucketIssue}
-                        />
-                    </BasicPanel>
-                </Grid>
+                {state.relatedJiraIssues.length > 0 && (
+                    <Grid item>
+                        <BasicPanel
+                            title={'Related Jira Issues'}
+                            subtitle={`${state.relatedJiraIssues.length} issues`}
+                            isLoading={state.loadState.relatedJiraIssues}
+                            hidden={state.relatedJiraIssues.length === 0}
+                        >
+                            <RelatedJiraIssues
+                                relatedIssues={state.relatedJiraIssues}
+                                openJiraIssue={controller.openJiraIssue}
+                            />
+                        </BasicPanel>
+                    </Grid>
+                )}
+                {state.relatedBitbucketIssues.length > 0 && (
+                    <Grid item>
+                        <BasicPanel
+                            title={'Related Bitbucket Issues'}
+                            subtitle={`${state.relatedBitbucketIssues.length} issues`}
+                            isLoading={state.loadState.relatedBitbucketIssues}
+                            hidden={state.relatedBitbucketIssues.length === 0}
+                        >
+                            <RelatedBitbucketIssues
+                                relatedIssues={state.relatedBitbucketIssues}
+                                openBitbucketIssue={controller.openBitbucketIssue}
+                            />
+                        </BasicPanel>
+                    </Grid>
+                )}
                 <Grid item>
                     <BasicPanel
                         title={'Commits'}
@@ -157,16 +176,64 @@ const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controll
             <Grid container spacing={1} direction={'column'}>
                 <Grid item>
                     <Typography variant="h6">
-                        <strong>Reviewers</strong>
+                        <strong>Author</strong>
                     </Typography>
-                    <Box marginLeft={2} marginTop={1}>
-                        <Reviewers
-                            site={state.pr.site}
-                            participants={state.pr.data.participants}
-                            onUpdateReviewers={controller.updateReviewers}
-                            isLoading={state.loadState.basicData}
-                        />
+                    <Box hidden={state.loadState.basicData}>
+                        <Grid container spacing={1} direction="row" alignItems="center">
+                            <Grid item>
+                                {' '}
+                                <Tooltip title={state.pr.data.author.displayName}>
+                                    <Avatar
+                                        alt={state.pr.data.author.displayName}
+                                        src={state.pr.data.author.avatarUrl}
+                                    />
+                                </Tooltip>
+                            </Grid>
+
+                            <Grid item>
+                                <Typography>{state.pr.data.author.displayName}</Typography>
+                            </Grid>
+                        </Grid>
                     </Box>
+                    <Box hidden={!state.loadState.basicData}>
+                        <CircularProgress />
+                    </Box>
+                </Grid>
+
+                <Grid item>
+                    <BasicPanel
+                        isLoading={state.loadState.basicData}
+                        isDefaultExpanded
+                        hidden={state.buildStatuses.length === 0}
+                        title={`Reviewers`}
+                    >
+                        <Box marginLeft={2} marginTop={1}>
+                            <Reviewers
+                                site={state.pr.site}
+                                participants={state.pr.data.participants}
+                                onUpdateReviewers={controller.updateReviewers}
+                                isLoading={state.loadState.basicData}
+                            />
+                        </Box>
+                    </BasicPanel>
+                </Grid>
+
+                <Grid item>
+                    <Typography variant="h6">
+                        <strong>Created</strong>
+                    </Typography>
+                    <Tooltip title={state.pr.data.ts || 'unknown'}>
+                        <Typography>{formatDate(state.pr.data.ts)}</Typography>
+                    </Tooltip>
+                </Grid>
+
+                <Grid item>
+                    <Typography variant="h6">
+                        <strong>Updated</strong>
+                    </Typography>
+                    <Tooltip title={state.pr.data.updatedTs || 'unknown'}>
+                        <Typography>{formatDate(state.pr.data.updatedTs)}</Typography>
+                    </Tooltip>
                 </Grid>
 
                 <Grid item>
@@ -206,6 +273,7 @@ const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controll
 
 export const PullRequestDetailsPage: React.FunctionComponent = () => {
     const classes = useStyles();
+    const theme = useTheme();
     const [state, controller] = usePullRequestDetailsController();
     const [currentUserApprovalStatus, setCurrentUserApprovalStatus] = useState<ApprovalStatus>('UNAPPROVED');
 
@@ -238,6 +306,8 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
         }
     }, [state.pr.data.participants, state.currentUser.accountId]);
 
+    const isWideScreen = useMediaQuery(theme.breakpoints.up('md'));
+
     return (
         <PullRequestDetailsControllerContext.Provider value={controller}>
             <AtlascodeErrorBoundary
@@ -251,8 +321,9 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                         currentUserApprovalStatus={currentUserApprovalStatus}
                         isSomethingLoading={isSomethingLoading}
                     />
+                    <Divider />
                     <Box marginTop={1} />
-                    <Grid container spacing={1} direction="row" wrap="wrap-reverse">
+                    <Grid container spacing={1} direction="row">
                         <Grid item xs={12} md={9} lg={9} xl={9}>
                             <Paper className={classes.paper100}>
                                 <PullRequestMainContent
@@ -263,7 +334,14 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                 />
                             </Paper>
                         </Grid>
-                        <Grid item xs={12} md={3} lg={3} xl={3}>
+                        <Grid
+                            item
+                            xs={12}
+                            md={3}
+                            lg={3}
+                            xl={3}
+                            style={{ borderLeft: isWideScreen ? '1px solid var(--vscode-input-border)' : 'none' }}
+                        >
                             <Paper className={classes.paperOverflow}>
                                 <PullRequestSidebar state={state} controller={controller} taskTitle={taskTitle} />
                             </Paper>
