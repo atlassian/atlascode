@@ -147,7 +147,7 @@ export class JQLManager extends Disposable {
             id: site.id,
             enabled: true,
             name: 'My issues',
-            query: 'assignee = currentUser() AND StatusCategory != Done ORDER BY lastViewed DESC',
+            query: 'assignee = currentUser() AND StatusCategory != Done ORDER BY updated DESC',
             siteId: site.id,
             monitor: true,
         };
