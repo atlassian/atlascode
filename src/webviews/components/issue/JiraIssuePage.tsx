@@ -580,31 +580,29 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (
                     <div className="ac-vpadding">
-                        <label className="ac-field-label">{this.state.fields['comment'].name}</label>
-                        {
-                            /* {this.state.fieldValues['comment'].comments.map((comment: JiraComment) => (
-                            <CommentComponent
-                                key={`${comment.id}::${comment.updated}`}
-                                siteDetails={this.state.siteDetails}
-                                isServiceDeskProject={
-                                    this.state.fieldValues['project'] &&
-                                    this.state.fieldValues['project'].projectTypeKey === 'service_desk'
-                                }
-                                comment={comment}
-                                fetchUsers={this.fetchUsers}
-                                onSave={this.handleUpdateComment}
-                                onDelete={this.handleDeleteComment}
-                                fetchImage={(img) => this.fetchImage(img)}
-                            />
-                        ))}
-                        {this.getInputMarkup(this.state.fields['comment'], true, 'comment')} */
-                            <IssueCommentComponent
-                                comments={this.state.fieldValues['comment'].comments}
-                                currentUser={this.state.currentUser}
-                                onCreate={this.handleCreateComment}
-                                onSave={this.handleUpdateComment}
-                            />
-                        }
+                        <label className="ac-field-label">Activity</label>
+                        <IssueCommentComponent
+                            comments={this.state.fieldValues['comment'].comments}
+                            currentUser={this.state.currentUser}
+                            siteDetails={this.state.siteDetails}
+                            onCreate={this.handleCreateComment}
+                            onSave={this.handleUpdateComment}
+                            fetchUsers={async (input: string) =>
+                                (await this.fetchUsers(input)).map((user) => ({
+                                    displayName: user.displayName,
+                                    avatarUrl: user.avatarUrls?.['48x48'],
+                                    mention: this.state.siteDetails.isCloud
+                                        ? `[~accountid:${user.accountId}]`
+                                        : `[~${user.name}]`,
+                                }))
+                            }
+                            fetchImage={(img) => this.fetchImage(img)}
+                            onDelete={this.handleDeleteComment}
+                            isServiceDeskProject={
+                                this.state.fieldValues['project'] &&
+                                this.state.fieldValues['project'].projectTypeKey === 'service_desk'
+                            }
+                        />
                     </div>
                 )}
             </div>
