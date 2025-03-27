@@ -2,7 +2,9 @@ import { Box } from '@material-ui/core';
 import TextArea from '@atlaskit/textarea';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
-import MentionPicker from './MentionPicker';
+import PopoutMentionPicker from '../../pullrequest/PopoutMentionPicker';
+import { ButtonAppearance } from '@atlaskit/button/dist/types/new-button/variants/types';
+import { Spacing } from '@atlaskit/button';
 
 type Props = {
     value: string;
@@ -26,7 +28,10 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
 }) => {
     const inputTextAreaRef = React.useRef<HTMLTextAreaElement>(null);
     const [cursorPosition, setCursorPosition] = React.useState(value?.length || 0);
-
+    const buttonProps = {
+        spacing: 'compact' as Spacing,
+        appearance: 'subtle' as ButtonAppearance,
+    };
     React.useEffect(() => {
         if (inputTextAreaRef.current && cursorPosition > 0) {
             inputTextAreaRef.current.selectionEnd = cursorPosition;
@@ -89,9 +94,10 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                         </VSCodeButton>
                     )}
                     {fetchUsers && (
-                        <MentionPicker
+                        <PopoutMentionPicker
                             targetButtonContent="@"
                             targetButtonTooltip="Mention @"
+                            targetButtonProps={buttonProps}
                             loadUserOptions={fetchUsers}
                             onUserMentioned={handleMention}
                         />
