@@ -32,7 +32,7 @@ const useStyles = makeStyles(
 type InlineTextEditorProps = {
     rawContent: string;
     htmlContent: string;
-    onSave?: (value: string) => Promise<void>;
+    onSave?: (value: string) => void;
     fetchUsers?: (input: string) => Promise<User[]>;
 };
 
@@ -49,7 +49,7 @@ const InlineRenderedTextEditor: React.FC<InlineTextEditorProps> = (props: Inline
 
     const handleSave = useCallback(
         async (value: string) => {
-            await props.onSave?.(value);
+            props.onSave?.(value);
             exitEditMode();
         },
         [exitEditMode, props.onSave], // eslint-disable-line react-hooks/exhaustive-deps
