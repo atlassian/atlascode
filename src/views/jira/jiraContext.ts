@@ -49,6 +49,9 @@ export class JiraContext extends Disposable {
                     this._explorer = new JiraExplorer(CustomJQLTreeId, new CustomJQLRoot());
                 }
             }
+
+            setCommandContext(CommandContext.AssignedIssueExplorer, false);
+            setCommandContext(CommandContext.CustomJQLExplorer, false);
             setCommandContext(CommandContext.JiraExplorer, Container.config.jira.explorer.enabled);
         }
 

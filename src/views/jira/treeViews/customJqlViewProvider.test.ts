@@ -5,6 +5,7 @@ import { CustomJQLViewProvider } from './customJqlViewProvider';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { TreeViewIssue } from './utils';
 import * as utils from './utils';
+import * as vscode from 'vscode';
 
 const mockJqlEntries = [
     {
@@ -93,10 +94,15 @@ jest.mock('../../../container', () => ({
 
 jest.mock('../searchJiraHelper');
 
+const mockedTreeView = {
+    onDidChangeVisibility: () => {},
+};
+
 describe('CustomJqlViewProvider', () => {
     let provider: CustomJQLViewProvider | undefined;
 
     beforeEach(() => {
+        jest.spyOn(vscode.window, 'createTreeView').mockReturnValue(mockedTreeView as any);
         provider = undefined;
     });
 

@@ -11,6 +11,7 @@ import {
     TreeItem,
     TreeItemCollapsibleState,
     ConfigurationChangeEvent,
+    TreeViewVisibilityChangeEvent,
     EventEmitter,
     commands,
     window,
@@ -18,6 +19,8 @@ import {
 import { JiraIssueNode, TreeViewIssue, executeJqlQuery, createLabelItem, loginToJiraMessageNode } from './utils';
 import { SearchJiraHelper } from '../searchJiraHelper';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
+import { RefreshTimer } from '../../RefreshTimer';
+import { viewScreenEvent } from '../../../analytics';
 
 const enum ViewStrings {
     ConfigureJqlMessage = 'Configure JQL entries in settings to view Jira issues',
@@ -26,7 +29,7 @@ const enum ViewStrings {
 
 const CustomJQLViewProviderId = 'atlascode.views.jira.customJqlTreeView';
 
-export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Disposable {
+export class CustomJQLViewProvider extends Disposable implements TreeDataProvider<TreeItem> {
     private static readonly _treeItemLoginToJiraMessage = loginToJiraMessageNode;
     private static readonly _treeItemConfigureJqlMessage = createLabelItem(ViewStrings.ConfigureJqlMessage, {
         command: Commands.ShowJiraIssueSettings,
@@ -40,23 +43,34 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
     constructor() {
+        super(() => this.dispose());
+
+        const treeView = window.createTreeView(CustomJQLViewProviderId, { treeDataProvider: this });
+        treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e));
+
         this._disposable = Disposable.from(
             Container.jqlManager.onDidJQLChange(this.refresh, this),
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
+            new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () => this.refresh()),
             commands.registerCommand(Commands.RefreshCustomJqlExplorer, this.refresh, this),
+            treeView,
         );
 
-        window.createTreeView(CustomJQLViewProviderId, { treeDataProvider: this });
-
         const jqlEntries = Container.jqlManager.getCustomJQLEntries();
-
-        if (jqlEntries.length > 0) {
+        if (jqlEntries.length) {
             setCommandContext(CommandContext.CustomJQLExplorer, Container.config.jira.explorer.enabled);
         }
 
         Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
+        this._onDidChangeTreeData.fire();
+    }
 
-        this.refresh();
+    private async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent): Promise<void> {
+        if (event.visible && Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+            viewScreenEvent(CustomJQLViewProviderId, undefined, ProductJira).then((e) => {
+                Container.analyticsClient.sendScreenEvent(e);
+            });
+        }
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
@@ -80,20 +94,24 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
             if (e.newSites) {
                 Container.jqlManager.initializeJQL(e.newSites);
             }
-
             this.refresh();
         }
     }
 
-    dispose() {
+    public dispose() {
         this._disposable.dispose();
     }
 
-    getTreeItem(element: TreeItem): TreeItem {
+    private refresh() {
+        SearchJiraHelper.clearIssues(CustomJQLViewProviderId);
+        this._onDidChangeTreeData.fire();
+    }
+
+    public getTreeItem(element: TreeItem): TreeItem {
         return element;
     }
 
-    async getChildren(element?: TreeItem): Promise<TreeItem[]> {
+    public async getChildren(element?: TreeItem): Promise<TreeItem[]> {
         if (element instanceof JiraIssueQueryNode || element instanceof JiraIssueNode) {
             return await element.getChildren();
         } else if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
@@ -106,11 +124,6 @@ export class CustomJQLViewProvider implements TreeDataProvider<TreeItem>, Dispos
                 ? jqlEntries.map((jqlEntry) => new JiraIssueQueryNode(jqlEntry))
                 : [CustomJQLViewProvider._treeItemConfigureJqlMessage];
         }
-    }
-
-    private refresh() {
-        SearchJiraHelper.clearIssues(CustomJQLViewProviderId);
-        this._onDidChangeTreeData.fire();
     }
 }
 

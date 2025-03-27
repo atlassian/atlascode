@@ -4,21 +4,6 @@ import { JiraIssueNode, TreeViewIssue } from './utils';
 import { Uri } from 'vscode';
 import { JQLEntry } from 'src/config/model';
 
-jest.mock('vscode', () => {
-    return {
-        TreeItem: class {
-            constructor(label: string) {}
-            command = { command: '', title: '' };
-        },
-        TreeItemCollapsibleState: {
-            None: 0,
-            Collapsed: 1,
-        },
-        Uri: {
-            parse: jest.fn((a) => a as Uri),
-        },
-    };
-});
 jest.mock('../../../container', () => ({
     Container: {
         siteManager: {

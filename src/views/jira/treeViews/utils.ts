@@ -59,7 +59,7 @@ export class JiraIssueNode extends TreeItem {
             : TreeItemCollapsibleState.None;
         super(issue.key, collapsibleState);
 
-        this.id = `${issue.key}_${issue.siteDetails.id}_${issue.jqlSource.id}`;
+        this.id = `${issue.key}_${issue.siteDetails.id}_${issue.jqlSource.siteId}`;
 
         this.description = isMinimalIssue(issue) && issue.isEpic ? issue.epicName : issue.summary;
         this.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [issue] };

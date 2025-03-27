@@ -8,18 +8,22 @@ import {
     TreeDataProvider,
     TreeItem,
     EventEmitter,
+    ConfigurationChangeEvent,
+    TreeViewVisibilityChangeEvent,
     commands,
     window,
-    ConfigurationChangeEvent,
 } from 'vscode';
 import { JiraIssueNode, TreeViewIssue, executeJqlQuery, loginToJiraMessageNode } from './utils';
 import { configuration } from '../../../config/configuration';
 import { CommandContext, setCommandContext } from '../../../commandContext';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
+import { NewIssueMonitor } from '../../../jira/newIssueMonitor';
+import { RefreshTimer } from '../../RefreshTimer';
+import { viewScreenEvent } from '../../../analytics';
 
 const AssignedWorkItemsViewProviderId = 'atlascode.views.jira.assignedWorkItemsTreeView';
 
-export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>, Disposable {
+export class AssignedWorkItemsViewProvider extends Disposable implements TreeDataProvider<TreeItem> {
     private static readonly _treeItemConfigureJiraMessage = loginToJiraMessageNode;
 
     private _onDidChangeTreeData = new EventEmitter<TreeItem | undefined | void>();
@@ -28,26 +32,42 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
     private _disposable: Disposable;
     private _initPromises: PromiseRacer<TreeViewIssue[]> | undefined;
     private _initChildren: TreeItem[] = [];
+    private _newIssueMonitor: NewIssueMonitor;
 
     constructor() {
+        super(() => this.dispose);
+
+        setCommandContext(CommandContext.JiraExplorer, false);
+        setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
+
+        const treeView = window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
+        treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e));
+
         this._disposable = Disposable.from(
             Container.jqlManager.onDidJQLChange(this.refresh, this),
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
+            new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () => this.refresh()),
             commands.registerCommand(Commands.RefreshAssignedWorkItemsExplorer, this.refresh, this),
+            treeView,
         );
 
-        window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
-
-        setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
+        this._newIssueMonitor = new NewIssueMonitor(() => Container.jqlManager.getAllDefaultJQLEntries());
 
         const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
-
         if (jqlEntries.length) {
             this._initPromises = new PromiseRacer(jqlEntries.map(executeJqlQuery));
         }
 
         Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
         this._onDidChangeTreeData.fire();
+    }
+
+    private async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent): Promise<void> {
+        if (event.visible && Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+            viewScreenEvent(AssignedWorkItemsViewProviderId, undefined, ProductJira).then((e) => {
+                Container.analyticsClient.sendScreenEvent(e);
+            });
+        }
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
@@ -65,19 +85,20 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
         }
     }
 
-    dispose(): void {
+    public dispose(): void {
         this._disposable.dispose();
     }
 
     private refresh(): void {
+        this._newIssueMonitor.checkForNewIssues();
         this._onDidChangeTreeData.fire();
     }
 
-    getTreeItem(element: TreeItem): TreeItem {
+    public getTreeItem(element: TreeItem): TreeItem {
         return element;
     }
 
-    async getChildren(element?: TreeItem): Promise<TreeItem[]> {
+    public async getChildren(element?: TreeItem): Promise<TreeItem[]> {
         // this branch should never be triggered
         if (element) {
             return [];

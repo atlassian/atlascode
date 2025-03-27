@@ -99,7 +99,7 @@ export class JQLManager extends Disposable {
 
     public getAllDefaultJQLEntries(): JQLEntry[] {
         const sites = Container.siteManager.getSitesAvailable(ProductJira);
-        return sites.map((site) => this.defaultJQLEntryForSite(site, () => site.id));
+        return sites.map((site) => this.defaultJQLEntryForJiraExplorer(site));
     }
 
     public getCustomJQLEntries(): JQLEntry[] {
@@ -117,7 +117,7 @@ export class JQLManager extends Disposable {
             for (const site of sites) {
                 if (!allList.some((j) => j.siteId === site.id)) {
                     // only initialize if there are no jql entries for this site
-                    allList.push(this.defaultJQLEntryForSite(site, v4));
+                    allList.push(this.defaultJQLEntryForSiteStorage(site));
                 }
             }
 
@@ -131,12 +131,23 @@ export class JQLManager extends Disposable {
             : 'assignee = currentUser() ORDER BY lastViewed DESC';
     }
 
-    private defaultJQLEntryForSite(site: DetailedSiteInfo, idFunc: () => string): JQLEntry {
+    private defaultJQLEntryForSiteStorage(site: DetailedSiteInfo): JQLEntry {
         return {
-            id: idFunc(),
+            id: v4(),
             enabled: true,
             name: `My ${site.name} Issues`,
             query: this.defaultJQLQueryForSite(site),
+            siteId: site.id,
+            monitor: true,
+        };
+    }
+
+    private defaultJQLEntryForJiraExplorer(site: DetailedSiteInfo): JQLEntry {
+        return {
+            id: site.id,
+            enabled: true,
+            name: 'My issues',
+            query: 'assignee = currentUser() AND StatusCategory != Done ORDER BY updated DESC',
             siteId: site.id,
             monitor: true,
         };
