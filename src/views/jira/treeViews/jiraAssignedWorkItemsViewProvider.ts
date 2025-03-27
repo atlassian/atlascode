@@ -37,6 +37,9 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
     constructor() {
         super(() => this.dispose);
 
+        setCommandContext(CommandContext.JiraExplorer, false);
+        setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
+
         const treeView = window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
         treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e));
 
@@ -48,15 +51,12 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
             treeView,
         );
 
-        setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
+        this._newIssueMonitor = new NewIssueMonitor(() => Container.jqlManager.getAllDefaultJQLEntries());
 
         const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
-
         if (jqlEntries.length) {
             this._initPromises = new PromiseRacer(jqlEntries.map(executeJqlQuery));
         }
-
-        this._newIssueMonitor = new NewIssueMonitor(() => Container.jqlManager.getAllDefaultJQLEntries());
 
         Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
         this._onDidChangeTreeData.fire();

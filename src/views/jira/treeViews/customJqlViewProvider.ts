@@ -53,17 +53,16 @@ export class CustomJQLViewProvider extends Disposable implements TreeDataProvide
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () => this.refresh()),
             commands.registerCommand(Commands.RefreshCustomJqlExplorer, this.refresh, this),
+            treeView,
         );
 
         const jqlEntries = Container.jqlManager.getCustomJQLEntries();
-
-        if (jqlEntries.length > 0) {
+        if (jqlEntries.length) {
             setCommandContext(CommandContext.CustomJQLExplorer, Container.config.jira.explorer.enabled);
         }
 
         Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
-
-        this.refresh();
+        this._onDidChangeTreeData.fire();
     }
 
     private async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent): Promise<void> {
