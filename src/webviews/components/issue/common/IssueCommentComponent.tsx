@@ -1,76 +1,114 @@
 import React from 'react';
-import Comment, { CommentAction } from '@atlaskit/comment';
-import TextArea from '@atlaskit/textarea';
+import Comment, { CommentAction, CommentEdited, CommentAuthor } from '@atlaskit/comment';
 import TextField from '@atlaskit/textfield';
-import { CommentVisibility, Comment as JiraComment, User } from '@atlassianlabs/jira-pi-common-models';
-import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
+import {
+    CommentVisibility,
+    Comment as JiraComment,
+    JsdInternalCommentVisibility,
+    User,
+} from '@atlassianlabs/jira-pi-common-models';
 import { Box } from '@material-ui/core';
 import Avatar from '@atlaskit/avatar';
-import { CommentAuthor } from '@atlaskit/comment';
 import { RenderedContent } from '../../RenderedContent';
 import { CommentTime } from '@atlaskit/comment';
 import { formatDistanceToNow, parseISO } from 'date-fns';
+import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import JiraIssueTextAreaEditor from './JiraIssueTextEditor';
 
 type IssueCommentComponentProps = {
+    siteDetails: DetailedSiteInfo;
     currentUser: User;
     comments: JiraComment[];
+    isServiceDeskProject: boolean;
     onSave: (commentBody: string, commentId?: string, restriction?: CommentVisibility) => void;
     onCreate: (commentBody: string, restriction?: CommentVisibility) => void;
+    fetchUsers: (input: string) => Promise<any[]>;
+    fetchImage: (url: string) => Promise<string>;
+    onDelete: (commentId: string) => void;
 };
-const baseActions: JSX.Element[] = [<CommentAction>Edit</CommentAction>, <CommentAction>Reply</CommentAction>];
+
 const CommentComponent: React.FC<{
-    user: User;
+    siteDetails: DetailedSiteInfo;
     comment: JiraComment;
     onSave: (t: string, commentId?: string, restriction?: CommentVisibility) => void;
-}> = ({ user, comment, onSave }) => {
+    fetchImage: (url: string) => Promise<string>;
+    onDelete: (commentId: string) => void;
+    fetchUsers: (input: string) => Promise<any[]>;
+    isServiceDeskProject?: boolean;
+}> = ({ siteDetails, comment, onSave, fetchImage, onDelete, fetchUsers, isServiceDeskProject }) => {
     const [isEditing, setIsEditing] = React.useState(false);
+    const [isSaving, setIsSaving] = React.useState(false);
     const bodyText = comment.renderedBody ? comment.renderedBody : comment.body;
-    const [commentText, setCommentText] = React.useState(bodyText);
+    const [commentText, setCommentText] = React.useState(comment.body);
+    const baseActions: JSX.Element[] = [
+        <CommentAction
+            onClick={() => {
+                setIsEditing(true);
+            }}
+        >
+            Edit
+        </CommentAction>,
+    ];
+
     const actions =
-        comment.author.accountId === user.accountId
-            ? [...baseActions, <CommentAction>Delete</CommentAction>]
+        comment.author.accountId === siteDetails.userId
+            ? [
+                  ...baseActions,
+                  <CommentAction
+                      onClick={() => {
+                          onDelete(comment.id);
+                          setIsSaving(true);
+                          setCommentText('');
+                      }}
+                  >
+                      Delete
+                  </CommentAction>,
+              ]
             : baseActions;
     return (
         <Comment
-            avatar={<Avatar src={comment.author.avatarUrls['48x48']} size={'small'} />}
+            avatar={
+                <Avatar
+                    src={comment.author.avatarUrls['48x48']}
+                    size={'small'}
+                    borderColor="var(--vscode-editor-background)!important"
+                />
+            }
             author={
                 <CommentAuthor>
                     <div className="jira-comment-author">{comment.author.displayName}</div>
                 </CommentAuthor>
             }
+            isSaving={isSaving}
+            edited={comment.created !== comment.updated ? <CommentEdited>Edited</CommentEdited> : null}
             content={
                 <>
-                    <RenderedContent html={bodyText} />
-                    {isEditing && (
-                        <>
-                            <TextArea
-                                isMonospaced
-                                onChange={(e) => {
-                                    setCommentText(e.target.value);
-                                }}
-                                defaultValue={bodyText}
-                            />
-                            <Box style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <VSCodeButton
-                                    appearance="primary"
-                                    onClick={() => {
-                                        setIsEditing(false);
-                                        onSave(commentText);
-                                    }}
-                                >
-                                    Save
-                                </VSCodeButton>
-                                <VSCodeButton
-                                    appearance="secondary"
-                                    onClick={() => {
-                                        setIsEditing(false);
-                                        setCommentText('');
-                                    }}
-                                >
-                                    Cancel
-                                </VSCodeButton>
-                            </Box>
-                        </>
+                    {isEditing && !isSaving ? (
+                        <JiraIssueTextAreaEditor
+                            value={commentText}
+                            onChange={(e: string) => {
+                                setCommentText(e);
+                            }}
+                            onSave={() => {
+                                setIsSaving(true);
+                                setIsEditing(false);
+                                onSave(commentText, comment.id, undefined);
+                            }}
+                            onCancel={() => {
+                                setIsSaving(false);
+                                setIsEditing(false);
+                                setCommentText(comment.body);
+                            }}
+                            fetchUsers={fetchUsers}
+                            isServiceDeskProject={isServiceDeskProject}
+                            onInternalCommentSave={() => {
+                                setIsSaving(false);
+                                setIsEditing(false);
+                                onSave(commentText, comment.id, JsdInternalCommentVisibility);
+                            }}
+                        />
+                    ) : (
+                        <RenderedContent html={bodyText} fetchImage={fetchImage} />
                     )}
                 </>
             }
@@ -80,20 +118,28 @@ const CommentComponent: React.FC<{
     );
 };
 
-const AddCommentComponent: React.FC<{ user: User; onCreate: (t: string, restriction?: CommentVisibility) => void }> = ({
-    user,
-    onCreate,
-}) => {
+const AddCommentComponent: React.FC<{
+    fetchUsers: (i: string) => Promise<any[]>;
+    user: User;
+    onCreate: (t: string, restriction?: CommentVisibility) => void;
+    isServiceDeskProject?: boolean;
+}> = ({ fetchUsers, user, onCreate, isServiceDeskProject }) => {
     const [commentText, setCommentText] = React.useState('');
     const [isEditing, setIsEditing] = React.useState(false);
+
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             <Box style={{ display: 'flex', flexDirection: 'row', alignItems: isEditing ? 'start' : 'center' }}>
                 <Box style={{ marginRight: '8px', marginTop: isEditing ? '4px' : '0px' }}>
-                    <Avatar src={user.avatarUrls['48x48']} size={'small'} />
+                    <Avatar
+                        src={user.avatarUrls['48x48']}
+                        size={'small'}
+                        borderColor="var(--vscode-editor-background)!important"
+                    />
                 </Box>
                 {!isEditing ? (
                     <TextField
+                        className="ac-inputField"
                         value={commentText}
                         onClick={() => {
                             setIsEditing(true);
@@ -101,75 +147,64 @@ const AddCommentComponent: React.FC<{ user: User; onCreate: (t: string, restrict
                         placeholder="Add a comment..."
                     />
                 ) : (
-                    <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                        <TextArea
-                            value={commentText}
-                            autoFocus
-                            onFocus={() => {
-                                setIsEditing(true);
-                            }}
-                            onBlur={() => {
-                                if (commentText === '') {
-                                    setIsEditing(false);
-                                }
-                            }}
-                            onChange={(e) => {
-                                setCommentText(e.target.value);
-                            }}
-                            placeholder="Add a comment..."
-                        />
-                        <Box
-                            style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                paddingTop: '8px',
-                            }}
-                        >
-                            <VSCodeButton
-                                appearance="primary"
-                                onClick={() => {
-                                    if (commentText !== '') {
-                                        onCreate(commentText, undefined);
-                                        setCommentText('');
-                                        setIsEditing(false);
-                                    }
-                                }}
-                            >
-                                Add
-                            </VSCodeButton>
-                            <VSCodeButton
-                                appearance="secondary"
-                                onClick={() => {
-                                    setCommentText('');
-                                    setIsEditing(false);
-                                }}
-                            >
-                                Cancel
-                            </VSCodeButton>
-                        </Box>
-                    </Box>
+                    <JiraIssueTextAreaEditor
+                        value={commentText}
+                        onChange={(e: string) => setCommentText(e)}
+                        onSave={() => {
+                            if (commentText !== '') {
+                                onCreate(commentText, undefined);
+                                setCommentText('');
+                                setIsEditing(false);
+                            }
+                        }}
+                        onCancel={() => {
+                            setCommentText('');
+                            setIsEditing(false);
+                        }}
+                        onEditorFocus={() => {
+                            setIsEditing(true);
+                        }}
+                        fetchUsers={fetchUsers}
+                        isServiceDeskProject={isServiceDeskProject}
+                        onInternalCommentSave={() => {
+                            onCreate(commentText, JsdInternalCommentVisibility);
+                            setCommentText('');
+                            setIsEditing(false);
+                        }}
+                    />
                 )}
             </Box>
         </Box>
     );
 };
 export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
+    siteDetails,
     currentUser,
     comments,
+    isServiceDeskProject,
     onCreate,
     onSave,
+    fetchUsers,
+    fetchImage,
+    onDelete,
 }) => {
     return (
-        <Box style={{ display: 'flex', flexDirection: 'column' }}>
-            <AddCommentComponent user={currentUser} onCreate={onCreate} />
-            {comments.reverse().map((comment: JiraComment) => (
-                <CommentComponent
-                    key={`${comment.id}::${comment.updated}`}
-                    user={currentUser}
-                    comment={comment}
-                    onSave={onSave}
-                />
-            ))}
+        <Box style={{ display: 'flex', flexDirection: 'column', paddingTop: '8px' }}>
+            <AddCommentComponent fetchUsers={fetchUsers} user={currentUser} onCreate={onCreate} />
+            {comments
+                .sort((a, b) => (a.created > b.created ? -1 : 1))
+                .map((comment: JiraComment) => (
+                    <CommentComponent
+                        key={`${comment.id}::${comment.updated}`}
+                        siteDetails={siteDetails}
+                        comment={comment}
+                        onSave={onSave}
+                        fetchImage={fetchImage}
+                        onDelete={onDelete}
+                        fetchUsers={fetchUsers}
+                        isServiceDeskProject={isServiceDeskProject}
+                    />
+                ))}
         </Box>
     );
 };
