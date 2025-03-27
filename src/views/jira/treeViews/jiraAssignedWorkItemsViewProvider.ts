@@ -3,17 +3,27 @@ import { Container } from '../../../container';
 import { Commands } from '../../../commands';
 import { SearchJiraHelper } from '../searchJiraHelper';
 import { PromiseRacer } from '../../../util/promises';
-import { Disposable, TreeItem, EventEmitter, commands, ConfigurationChangeEvent } from 'vscode';
-import { JiraExplorer, JiraIssueNode, TreeViewIssue, executeJqlQuery, loginToJiraMessageNode } from './utils';
+import {
+    Disposable,
+    TreeDataProvider,
+    TreeItem,
+    EventEmitter,
+    ConfigurationChangeEvent,
+    TreeViewVisibilityChangeEvent,
+    commands,
+    window,
+} from 'vscode';
+import { JiraIssueNode, TreeViewIssue, executeJqlQuery, loginToJiraMessageNode } from './utils';
 import { configuration } from '../../../config/configuration';
 import { CommandContext, setCommandContext } from '../../../commandContext';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { NewIssueMonitor } from '../../../jira/newIssueMonitor';
 import { RefreshTimer } from '../../RefreshTimer';
+import { viewScreenEvent } from '../../../analytics';
 
 const AssignedWorkItemsViewProviderId = 'atlascode.views.jira.assignedWorkItemsTreeView';
 
-export class AssignedWorkItemsViewProvider extends JiraExplorer {
+export class AssignedWorkItemsViewProvider extends Disposable implements TreeDataProvider<TreeItem> {
     private static readonly _treeItemConfigureJiraMessage = loginToJiraMessageNode;
 
     private _onDidChangeTreeData = new EventEmitter<TreeItem | undefined | void>();
@@ -25,13 +35,17 @@ export class AssignedWorkItemsViewProvider extends JiraExplorer {
     private _newIssueMonitor: NewIssueMonitor;
 
     constructor() {
-        super(AssignedWorkItemsViewProviderId);
+        super(() => this.dispose);
+
+        const treeView = window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
+        treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e));
 
         this._disposable = Disposable.from(
             Container.jqlManager.onDidJQLChange(this.refresh, this),
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
-            new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', this.refresh),
+            new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () => this.refresh()),
             commands.registerCommand(Commands.RefreshAssignedWorkItemsExplorer, this.refresh, this),
+            treeView,
         );
 
         setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
@@ -42,10 +56,18 @@ export class AssignedWorkItemsViewProvider extends JiraExplorer {
             this._initPromises = new PromiseRacer(jqlEntries.map(executeJqlQuery));
         }
 
-        this._newIssueMonitor = new NewIssueMonitor();
+        this._newIssueMonitor = new NewIssueMonitor(() => Container.jqlManager.getAllDefaultJQLEntries());
 
         Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
         this._onDidChangeTreeData.fire();
+    }
+
+    private async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent): Promise<void> {
+        if (event.visible && Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+            viewScreenEvent(AssignedWorkItemsViewProviderId, undefined, ProductJira).then((e) => {
+                Container.analyticsClient.sendScreenEvent(e);
+            });
+        }
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
@@ -63,17 +85,20 @@ export class AssignedWorkItemsViewProvider extends JiraExplorer {
         }
     }
 
-    override dispose(): void {
-        super.dispose();
+    public dispose(): void {
         this._disposable.dispose();
     }
 
-    override refresh(): void {
+    private refresh(): void {
         this._newIssueMonitor.checkForNewIssues();
         this._onDidChangeTreeData.fire();
     }
 
-    override async getChildren(element?: TreeItem): Promise<TreeItem[]> {
+    public getTreeItem(element: TreeItem): TreeItem {
+        return element;
+    }
+
+    public async getChildren(element?: TreeItem): Promise<TreeItem[]> {
         // this branch should never be triggered
         if (element) {
             return [];
