@@ -1,11 +1,8 @@
+import { forceCastTo } from '../../../../testsutil';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { JiraIssueNode, TreeViewIssue } from './utils';
 import { Uri } from 'vscode';
 import { JQLEntry } from 'src/config/model';
-
-function forceCastTo<T>(obj: any): T {
-    return obj as unknown as T;
-}
 
 jest.mock('vscode', () => {
     return {

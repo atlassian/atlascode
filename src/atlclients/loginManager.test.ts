@@ -1,3 +1,4 @@
+import { forceCastTo } from '../../testsutil';
 import { LoginManager } from './loginManager';
 import { CredentialManager } from './authStore';
 import { SiteManager } from '../siteManager';
@@ -22,10 +23,6 @@ import { JiraClient } from '@atlassianlabs/jira-pi-client';
 import * as authInfo from './authInfo';
 import * as analytics from '../analytics';
 import * as jira_client_providers from '../jira/jira-client/providers';
-
-function forceCastTo<T>(obj: any): T {
-    return obj as unknown as T;
-}
 
 jest.mock('./authStore');
 jest.mock('../siteManager');

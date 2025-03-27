@@ -1,7 +1,3 @@
-function forceCastTo<T>(obj: any): T {
-    return obj as unknown as T;
-}
-
 const MockedFeatureGates_Features: Record<any, boolean> = {
     'some-very-real-feature': true,
     'another-very-real-feature': true,
@@ -36,6 +32,7 @@ jest.mock('@atlaskit/feature-gate-js-client', () => {
     };
 });
 
+import { forceCastTo } from '../../../testsutil';
 import FeatureGates from '@atlaskit/feature-gate-js-client';
 import { FeatureFlagClient, FeatureFlagClientOptions, FeatureFlagClientInitError } from './client';
 import { ClientInitializedErrorType } from '../../analytics';

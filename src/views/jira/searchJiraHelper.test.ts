@@ -1,11 +1,8 @@
+import { forceCastTo } from '../../../testsutil';
 import { SearchJiraHelper } from './searchJiraHelper';
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import * as vscode from 'vscode';
-
-function forceCastTo<T>(obj: any): T {
-    return obj as unknown as T;
-}
 
 jest.mock('@atlassianlabs/jira-pi-common-models');
 jest.mock('../../analytics');
