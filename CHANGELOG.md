@@ -1,3 +1,15 @@
+## What's new in 3.4.20
+
+### Features
+
+- New 'Assigned Jira work items' side panel, showing all and only the Jira issues assigned to the user
+- Note: the above feature is controlled under an experiment flag that could be turned off server side.
+
+### Improvements
+
+- The existing 'Jira issues' panel is being renamed to 'Custom JQL filters' and now it only shows the customized JQL queries. If there are no customized JQLs, the panel will stay hidden.
+- Note: the above change is controlled under an experiment flag that could be turned off server side.
+
 ## What's new in 3.4.19
 
 - Internal changes only.
