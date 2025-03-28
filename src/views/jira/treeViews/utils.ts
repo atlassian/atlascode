@@ -59,6 +59,8 @@ export class JiraIssueNode extends TreeItem {
             : TreeItemCollapsibleState.None;
         super(issue.key, collapsibleState);
 
+        // this id is constructed to ensure unique values for the same jira issue across multiple jql queries.
+        // therefore, multiple jql entries must have a unique id for the same site.
         this.id = `${issue.key}_${issue.siteDetails.id}_${issue.jqlSource.id}`;
 
         this.description = isMinimalIssue(issue) && issue.isEpic ? issue.epicName : issue.summary;

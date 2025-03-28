@@ -1,14 +1,15 @@
-import { forceCastTo } from '../../../../testsutil';
+import { expansionCastTo, forceCastTo } from '../../../../testsutil';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { JiraIssueNode, TreeViewIssue } from './utils';
 import { Uri } from 'vscode';
 import { JQLEntry } from 'src/config/model';
+import { cloneDeep } from 'lodash';
 
 jest.mock('../../../container', () => ({
     Container: {
         siteManager: {
             getSiteForId: jest.fn(() =>
-                forceCastTo<DetailedSiteInfo>({ id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' }),
+                expansionCastTo<DetailedSiteInfo>({ id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' }),
             ),
         },
     },
@@ -25,8 +26,9 @@ jest.mock('../../../logger', () => ({
     },
 }));
 
-const mockedJqlEntry = forceCastTo<JQLEntry>({
+const mockedJqlEntry = expansionCastTo<JQLEntry>({
     id: 'jqlId',
+    siteId: 'siteDetailsId',
 });
 
 const mockedIssue1 = forceCastTo<TreeViewIssue>({
@@ -98,6 +100,25 @@ describe('utils', () => {
             const jiraIssueNode = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue1);
             const treeItem = await jiraIssueNode.getTreeItem();
             expect(treeItem.resourceUri).toEqual(Uri.parse('/siteDetails/browse/AXON-1'));
+        });
+
+        it('JiraIssueNode id is unique for the same Jira issue across different JQL entries', () => {
+            const _mockedIssue1 = cloneDeep(mockedIssue1);
+            _mockedIssue1.jqlSource = expansionCastTo<JQLEntry>({
+                id: 'jqlId1',
+                siteId: 'siteDetailsId',
+            });
+
+            const _mockedIssue2 = cloneDeep(mockedIssue1);
+            _mockedIssue2.jqlSource = expansionCastTo<JQLEntry>({
+                id: 'jqlId2',
+                siteId: 'siteDetailsId',
+            });
+
+            const jiraIssueNode1 = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, _mockedIssue1);
+            const jiraIssueNode2 = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, _mockedIssue2);
+
+            expect(jiraIssueNode1.id).not.toEqual(jiraIssueNode2.id);
         });
     });
 });
