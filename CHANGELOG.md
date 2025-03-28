@@ -1,3 +1,9 @@
+## What's new in 3.4.21
+
+### Bug Fixes
+
+- Fixed a bug introduced in 3.4.20 causing the same issue being retrieved by different JQL queries in the 'Custom JQL filters panel' fail to render.
+
 ## What's new in 3.4.20
 
 ### Features
