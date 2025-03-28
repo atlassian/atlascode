@@ -6,16 +6,6 @@ interface ICacheItem {
     };
 }
 
-export enum Interval {
-    SECOND = 10000,
-    MINUTE = 60000,
-    HOUR = 3600000,
-    DAY = 86400000,
-    WEEK = 604800000,
-    MONTH = 2592000000,
-    FOREVER = Infinity,
-}
-
 export class CacheMap {
     private _data: Map<string, ICacheItem> = new Map<string, ICacheItem>();
 

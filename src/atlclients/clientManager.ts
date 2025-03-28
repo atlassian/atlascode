@@ -7,7 +7,8 @@ import {
     isOAuthInfo,
     isPATAuthInfo,
 } from './authInfo';
-import { CacheMap, Interval } from '../util/cachemap';
+import { CacheMap } from '../util/cachemap';
+import { Time } from '../util/time';
 import { ClientError, HTTPClient } from '../bitbucket/httpClient';
 import { ConfigurationChangeEvent, Disposable, ExtensionContext } from 'vscode';
 import { JiraClient, JiraCloudClient, JiraServerClient } from '@atlassianlabs/jira-pi-client';
@@ -38,9 +39,9 @@ import { cannotGetClientFor } from '../constants';
 import { configuration } from '../config/configuration';
 import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
 
-const oauthTTL: number = 45 * Interval.MINUTE;
-const serverTTL: number = Interval.FOREVER;
-const GRACE_PERIOD = 10 * Interval.MINUTE;
+const oauthTTL: number = 45 * Time.MINUTES;
+const serverTTL: number = Time.FOREVER;
+const GRACE_PERIOD = 10 * Time.MINUTES;
 
 function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));

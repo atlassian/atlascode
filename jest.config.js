@@ -27,10 +27,10 @@ const _baseConfig = (project, testExtension) => ({
 
     coverageThreshold: {
         global: testExtension === 'ts' ? {            
-            statements: 20,
-            branches: 7,
-            functions: 7,
-            lines: 20,
+            statements: 21,
+            branches: 8,
+            functions: 8,
+            lines: 21,
         } : /* tsx */{            
             statements: 0,
             branches: 0,
