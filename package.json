@@ -1497,6 +1497,7 @@
         "@atlaskit/checkbox": "^12.3.4",
         "@atlaskit/comment": "^10.3.0",
         "@atlaskit/datetime-picker": "^11.1.1",
+        "@atlaskit/dropdown-menu": "^12.26.5",
         "@atlaskit/feature-gate-js-client": "^4.20.0",
         "@atlaskit/form": "^8.4.4",
         "@atlaskit/icon": "^21.9.3",

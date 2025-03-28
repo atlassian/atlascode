@@ -35,21 +35,18 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from './AbstractIssueEditorPage';
-import { AttachmentList } from './AttachmentList';
 import { AttachmentsModal } from './AttachmentsModal';
-import IssueList from './IssueList';
-import { LinkedIssues } from './LinkedIssues';
 import NavItem from './NavItem';
 import PullRequests from './PullRequests';
 import { TransitionMenu } from './TransitionMenu';
 import VotesForm from './VotesForm';
 import WatchesForm from './WatchesForm';
 import WorklogForm from './WorklogForm';
-import Worklogs from './Worklogs';
 import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
 import { readFilesContentAsync } from '../../../util/files';
 import { IssueCommentComponent } from './common/IssueCommentComponent';
+import IssueMainPanel from './IssueMainPanel';
 
 type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -501,7 +498,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             />
                         </Tooltip>
                     </div>
-                    <h2>{this.getInputMarkup(this.state.fields['summary'], true, 'summary')}</h2>
+                    <h1>{this.getInputMarkup(this.state.fields['summary'], true, 'summary')}</h1>
                 </div>
                 {this.state.isErrorBannerOpen && (
                     <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
@@ -513,70 +510,18 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     getMainPanelBodyMarkup(): any {
         return (
             <div>
-                {this.state.fields['description'] && (
-                    <div className="ac-vpadding">
-                        <label className="ac-field-label">{this.state.fields['description'].name}</label>
-                        {this.getInputMarkup(this.state.fields['description'], true, 'description')}
-                    </div>
-                )}
-                {this.state.fields['attachment'] &&
-                    this.state.fieldValues['attachment'] &&
-                    this.state.fieldValues['attachment'].length > 0 && (
-                        <div className="ac-vpadding">
-                            <label className="ac-field-label">{this.state.fields['attachment'].name}</label>
-                            <AttachmentList
-                                baseLinkUrl={this.state.siteDetails.baseLinkUrl}
-                                onDelete={this.handleDeleteAttachment}
-                                attachments={this.state.fieldValues['attachment']}
-                                fetchImage={(img) => this.fetchImage(img)}
-                            />
-                        </div>
-                    )}
-
-                {this.state.fields['environment'] &&
-                    this.state.fieldValues['environment'] &&
-                    this.state.fieldValues['environment'].trim() !== '' && (
-                        <div className="ac-vpadding">
-                            <label className="ac-field-label">{this.state.fields['environment'].name}</label>
-                            {this.getInputMarkup(this.state.fields['environment'], true, 'environment')}
-                        </div>
-                    )}
-
-                {this.state.isEpic && this.state.epicChildren.length > 0 && (
-                    <div className="ac-vpadding">
-                        <label className="ac-field-label">Issues in this epic</label>
-                        <IssueList issues={this.state.epicChildren} onIssueClick={this.handleOpenIssue} />
-                    </div>
-                )}
-
-                {this.state.fields['subtasks'] &&
-                    this.state.fieldValues['subtasks'] &&
-                    !this.state.isEpic &&
-                    !this.state.fieldValues['issuetype'].subtask && (
-                        <div className="ac-vpadding">
-                            {this.getInputMarkup(this.state.fields['subtasks'], true, 'subtasks')}
-                            <IssueList
-                                issues={this.state.fieldValues['subtasks']}
-                                onIssueClick={this.handleOpenIssue}
-                            />
-                        </div>
-                    )}
-                {this.state.fields['issuelinks'] && (
-                    <div className="ac-vpadding">
-                        {this.getInputMarkup(this.state.fields['issuelinks'], true, 'issuelinks')}
-                        <LinkedIssues
-                            issuelinks={this.state.fieldValues['issuelinks']}
-                            onIssueClick={this.handleOpenIssue}
-                            onDelete={this.handleDeleteIssuelink}
-                        />
-                    </div>
-                )}
-                {this.state.fields['worklog'] && Array.isArray(this.state.fieldValues['worklog']?.worklogs) && (
-                    <div className="ac-vpadding">
-                        <label className="ac-field-label">{this.state.fields['worklog'].name}</label>
-                        <Worklogs worklogs={this.state.fieldValues['worklog']} />
-                    </div>
-                )}
+                <IssueMainPanel
+                    fields={this.state.fields}
+                    fieldValues={this.state.fieldValues}
+                    handleAddAttachments={this.handleAddAttachments}
+                    siteDetails={this.state.siteDetails}
+                    onDeleteAttachment={this.handleDeleteAttachment}
+                    loadingField={this.state.loadingField}
+                    subtaskTypes={this.state.selectFieldOptions['subtasks']}
+                    isEpic={this.state.isEpic}
+                    handleInlineEdit={this.handleInlineEdit}
+                    handleOpenIssue={this.handleOpenIssue}
+                />
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (
                     <div className="ac-vpadding">
