@@ -53,7 +53,7 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
         this.state = {
             subtaskTypes: props.subtaskTypes,
             label: props.label,
-            isEditing: false,
+            isEditing: true,
             isLoading: false,
             inputValue: '',
             editorContainerClassname: 'ac-hidden',
