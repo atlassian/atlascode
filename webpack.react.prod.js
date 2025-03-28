@@ -48,7 +48,6 @@ module.exports = {
         splitChunks: {
             cacheGroups: {
                 styles: {
-                    name: 'main',
                     test: /\.css$/,
                     chunks: 'all',
                     enforce: true,

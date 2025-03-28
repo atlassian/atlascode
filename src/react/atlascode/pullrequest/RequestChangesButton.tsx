@@ -1,32 +1,36 @@
-import { Box, Button, Typography } from '@material-ui/core';
 import React, { useCallback } from 'react';
 import { ApprovalStatus } from '../../../bitbucket/model';
-import StoppedIcon from '../icons/StoppedIcon';
+import { ReviewerActionButton } from './ReviewActionButton';
+import RequestedChangesIcon from './RequestedChangesIcon';
+import { token } from '@atlaskit/tokens';
+
 type RequestChangesButtonProps = {
-    hidden?: boolean;
     status: ApprovalStatus;
     onApprove: (status: ApprovalStatus) => void;
+    isDisabled: boolean;
 };
 export const RequestChangesButton: React.FunctionComponent<RequestChangesButtonProps> = ({
-    hidden,
     status,
     onApprove,
+    isDisabled,
 }) => {
     const handleOnApprove = useCallback(() => {
         onApprove(status === 'CHANGES_REQUESTED' ? 'NO_CHANGES_REQUESTED' : 'CHANGES_REQUESTED');
     }, [onApprove, status]);
     return (
-        <Box hidden={hidden}>
-            <Button
-                startIcon={<StoppedIcon htmlColor={'#FFAB00'} />}
-                color={'primary'}
-                variant={'contained'}
-                onClick={handleOnApprove}
-            >
-                <Typography variant={'button'} noWrap>
-                    {status === 'CHANGES_REQUESTED' ? 'Changes Requested' : 'Request Changes'}
-                </Typography>
-            </Button>
-        </Box>
+        <ReviewerActionButton
+            mainIcon={
+                <RequestedChangesIcon
+                    primaryColor={status === 'CHANGES_REQUESTED' ? token('color.icon.warning') : 'default'}
+                    label=""
+                />
+            }
+            label={status === 'CHANGES_REQUESTED' ? 'Changes Requested' : 'Request Changes'}
+            isSelected={status === 'CHANGES_REQUESTED'}
+            onClick={handleOnApprove}
+            isLoading={false}
+            isDisabled={isDisabled}
+            isError={false}
+        />
     );
 };
