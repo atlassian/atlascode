@@ -133,7 +133,7 @@ export class JQLManager extends Disposable {
 
     private defaultJQLEntryForSiteStorage(site: DetailedSiteInfo): JQLEntry {
         return {
-            id: v4(),
+            id: v4(), // In Custom JQL filters we can have multiple queries per site, so we need something unique
             enabled: true,
             name: `My ${site.name} Issues`,
             query: this.defaultJQLQueryForSite(site),
@@ -144,7 +144,7 @@ export class JQLManager extends Disposable {
 
     private defaultJQLEntryForJiraExplorer(site: DetailedSiteInfo): JQLEntry {
         return {
-            id: site.id,
+            id: site.id, // in Assigned Jira Work Items we only have 1 query per site, so this id works well
             enabled: true,
             name: 'My issues',
             query: 'assignee = currentUser() AND StatusCategory != Done ORDER BY updated DESC',

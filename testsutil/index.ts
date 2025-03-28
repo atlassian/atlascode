@@ -1,3 +1,3 @@
-import { forceCastTo } from './miscFunctions';
+import { expansionCastTo, forceCastTo } from './miscFunctions';
 
-export { forceCastTo };
+export { expansionCastTo, forceCastTo };
