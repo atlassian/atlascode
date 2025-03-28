@@ -21,6 +21,7 @@ import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
 import { pid } from 'process';
 import { startListening } from './atlclients/negotiate';
+import { api } from './normalize';
 import { FeatureFlagClient } from './util/featureFlags';
 import { JQLManager } from './jira/jqlManager';
 
@@ -89,6 +90,7 @@ export async function activate(context: ExtensionContext) {
             duration[0] * 1000 + Math.floor(duration[1] / 1000000)
         } ms`,
     );
+    return api;
 }
 
 async function activateBitbucketFeatures() {
