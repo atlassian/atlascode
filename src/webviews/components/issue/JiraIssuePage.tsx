@@ -45,9 +45,6 @@ import WorklogForm from './WorklogForm';
 import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
 import { readFilesContentAsync } from '../../../util/files';
-import { IssueCommentComponent } from './common/IssueCommentComponent';
-import IssueMainPanel from './IssueMainPanel';
-
 type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
 
