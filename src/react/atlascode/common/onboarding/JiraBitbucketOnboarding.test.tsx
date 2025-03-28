@@ -32,7 +32,7 @@ const MockJiraComponent = ({ callback }: { callback?: () => void }) => {
 describe('JiraBitbucketOnboarding', () => {
     it('should render with correct title', async () => {
         render(<MockJiraComponent />);
-        expect(screen.getByText('What version of Jira do you use?')).toBeTruthy();
+        expect(screen.getByText('Sign in to Jira')).toBeTruthy();
     });
     it('should render with correct radio options', async () => {
         render(<MockJiraComponent />);
