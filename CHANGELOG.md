@@ -1,3 +1,8 @@
+## What's new in 3.4.22
+
+### Improvements 
+- Changed text in the onboarding flow to "Sign in to ____." Used to be "What version of {product} do you use?"
+
 ## What's new in 3.4.21
 
 ### Bug Fixes
