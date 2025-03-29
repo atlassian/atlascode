@@ -33,21 +33,12 @@ import PullRequests from './PullRequests';
 import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
 import { readFilesContentAsync } from '../../../util/files';
-<<<<<<< HEAD
 import { IssueCommentComponent } from './common/IssueCommentComponent';
 import IssueMainPanel from './IssueMainPanel';
-
-=======
-import IssueMainPanel from './IssueMainPanel';
-import { IssueCommentComponent } from './common/IssueCommentComponent';
-<<<<<<< HEAD
->>>>>>> a7604034 (merge)
-=======
 import { IssueSidebarCollapsible, SidebarItem } from './common/IssueSidebarCollapsible';
 import { Box } from '@material-ui/core';
 import { IssueSidebarButtonGroup } from './common/IssueSidebarButtonGroup';
 import { TransitionMenu } from './TransitionMenu';
->>>>>>> 2b2b3cc4 (AXON-249: add sidebar)
 type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
 
