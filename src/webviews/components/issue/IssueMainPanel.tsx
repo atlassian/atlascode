@@ -134,7 +134,7 @@ const IssueMainPanel: React.FC<Props> = ({
             )}
 
             {fields['description'] && (
-                <div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div style={{ display: 'flex', gap: '8px', flexDirection: 'row', alignItems: 'flex-start' }}>
                         <label className="ac-field-label">Description</label>
                         {loadingField === 'description' ? <p>Saving...</p> : null}
