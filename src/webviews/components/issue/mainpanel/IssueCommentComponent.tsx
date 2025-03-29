@@ -13,7 +13,7 @@ import { RenderedContent } from '../../RenderedContent';
 import { CommentTime } from '@atlaskit/comment';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
-import JiraIssueTextAreaEditor from './JiraIssueTextArea';
+import JiraIssueTextAreaEditor from '../common/JiraIssueTextArea';
 
 type IssueCommentComponentProps = {
     siteDetails: DetailedSiteInfo;
