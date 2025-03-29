@@ -15,6 +15,8 @@ type Props = {
     fetchUsers?: (input: string) => Promise<{ displayName: string; mention: string; avatarUrl?: string }[]>;
     isServiceDeskProject?: boolean;
     onInternalCommentSave?: () => void;
+    isDescription?: boolean;
+    saving?: boolean;
 };
 const JiraIssueTextAreaEditor: React.FC<Props> = ({
     value,
@@ -25,6 +27,8 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
     fetchUsers,
     isServiceDeskProject,
     onInternalCommentSave,
+    isDescription,
+    saving,
 }) => {
     const inputTextAreaRef = React.useRef<HTMLTextAreaElement>(null);
     const [cursorPosition, setCursorPosition] = React.useState(value?.length || 0);
@@ -61,7 +65,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                     color: 'var(--vscode-input-foreground)',
                     border: '1px solid var(--vscode-input-border)',
                     caretColor: 'var(--vscode-editorCursor-background)',
-                    minHeight: '100px',
+                    minHeight: isDescription ? '175px' : '100px',
                     overflow: 'auto',
                 }}
                 value={value}
@@ -69,6 +73,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                 autoFocus
                 onFocus={onEditorFocus ? onEditorFocus : undefined}
                 onChange={(e) => onChange(e.target.value)}
+                isDisabled={saving}
             />
             <Box
                 style={{
@@ -85,11 +90,11 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                         gap: '8px',
                     }}
                 >
-                    <VSCodeButton appearance="primary" onClick={onSave} disabled={value === ''}>
+                    <VSCodeButton appearance="primary" onClick={onSave} disabled={saving}>
                         {isServiceDeskProject ? 'Reply' : 'Save'}
                     </VSCodeButton>
                     {isServiceDeskProject && onInternalCommentSave && (
-                        <VSCodeButton appearance="secondary" onClick={onInternalCommentSave} disabled={value === ''}>
+                        <VSCodeButton appearance="secondary" onClick={onInternalCommentSave} disabled={saving}>
                             Add internal note
                         </VSCodeButton>
                     )}
@@ -103,7 +108,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                         />
                     )}
                 </Box>
-                <VSCodeButton appearance="secondary" onClick={onCancel}>
+                <VSCodeButton appearance="secondary" onClick={onCancel} disabled={saving}>
                     Cancel
                 </VSCodeButton>
             </Box>

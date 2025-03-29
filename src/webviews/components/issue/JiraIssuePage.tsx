@@ -13,7 +13,7 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
 import { CommentVisibility, Transition } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI, InputFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { FieldUI, InputFieldUI, SelectFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
 // NOTE: for now we have to use react-collapsible and NOT Panel because panel uses display:none
@@ -523,9 +523,24 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     onDeleteAttachment={this.handleDeleteAttachment}
                     loadingField={this.state.loadingField}
                     subtaskTypes={this.state.selectFieldOptions['subtasks']}
+                    linkTypes={this.state.selectFieldOptions['issuelinks']}
                     isEpic={this.state.isEpic}
                     handleInlineEdit={this.handleInlineEdit}
                     handleOpenIssue={this.handleOpenIssue}
+                    onFetchIssues={async (input: string) =>
+                        await this.loadIssueOptions(this.state.fields['issuelinks'] as SelectFieldUI, input)
+                    }
+                    onDelete={this.handleDeleteIssuelink}
+                    fetchUsers={async (input: string) =>
+                        (await this.fetchUsers(input)).map((user) => ({
+                            displayName: user.displayName,
+                            avatarUrl: user.avatarUrls?.['48x48'],
+                            mention: this.state.siteDetails.isCloud
+                                ? `[~accountid:${user.accountId}]`
+                                : `[~${user.name}]`,
+                        }))
+                    }
+                    fetchImage={(img) => this.fetchImage(img)}
                 />
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (

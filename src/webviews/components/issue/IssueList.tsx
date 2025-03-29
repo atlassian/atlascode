@@ -6,7 +6,6 @@ import { IssueLinkIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi
 import * as React from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { colorToLozengeAppearanceMap } from '../colors';
-import { Box } from '@material-ui/core';
 
 type ItemData = {
     issue: IssueLinkIssue<DetailedSiteInfo>;
@@ -28,16 +27,12 @@ const IssueKey = (data: ItemData) => (
         </Button>
     </div>
 );
-const Summary = (data: ItemData) => (
-    <Box style={{ display: 'inline-block', textAlign: 'center', alignContent: 'center' }}>
-        <p>{data.issue.summary}</p>
-    </Box>
-);
+const Summary = (data: ItemData) => <p style={{ display: 'inline' }}>{data.issue.summary}</p>;
 
 const Priority = (data: ItemData) => {
     if (data.issue.priority && data.issue.priority.name && data.issue.priority.iconUrl) {
         return (
-            <div style={{ alignItems: 'center', width: '16px', height: '16px' }}>
+            <div style={{ width: '16px', height: '16px' }}>
                 <Tooltip content={data.issue.priority.name}>
                     <img src={data.issue.priority.iconUrl} />
                 </Tooltip>
