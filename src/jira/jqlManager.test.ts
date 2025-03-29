@@ -158,13 +158,11 @@ describe('JQLManager', () => {
         expect(entries).toHaveLength(2);
 
         entries.forEach((entry) => {
+            expect(entry.id).toEqual('default');
             expect(entry.query).toEqual('assignee = currentUser() AND StatusCategory != Done ORDER BY updated DESC');
             expect(entry.enabled).toBeTruthy();
             expect(entry.monitor).toBeTruthy();
         });
-
-        expect(entries[0].id).toEqual('siteDetailsId1');
-        expect(entries[1].id).toEqual('siteDetailsId2');
     });
 
     it('getCustomJQLEntries retrieves the list of customized and enabled JQL entries', () => {

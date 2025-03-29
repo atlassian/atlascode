@@ -5,10 +5,20 @@ import { Container } from './container';
 
 const ConsolePrefix = `[${extensionOutputChannelName}]`;
 
+function safeCall(func: Function, ...args: any[]) {
+    try {
+        func(...args);
+    } catch {}
+}
+
+export type OnErrorEventListener = (error: Error) => void;
+
 export class Logger {
     private static _instance: Logger;
     private level: OutputLevel = OutputLevel.Info;
     private output: OutputChannel | undefined;
+
+    private errorEventListeners: OnErrorEventListener[] = [];
 
     private constructor() {}
 
@@ -38,6 +48,25 @@ export class Logger {
             }
         } else {
             this.output = this.output || window.createOutputChannel(extensionOutputChannelName);
+        }
+    }
+
+    public static addListener(event: 'error', listener: OnErrorEventListener) {
+        this.Instance.addListener(event, listener);
+    }
+
+    public static removeListener(event: 'error', listener: OnErrorEventListener) {
+        this.Instance.removeListener(event, listener);
+    }
+
+    public addListener(event: 'error', listener: OnErrorEventListener) {
+        this.errorEventListeners.push(listener);
+    }
+
+    public removeListener(event: 'error', listener: OnErrorEventListener) {
+        const index = this.errorEventListeners.indexOf(listener);
+        if (index > -1) {
+            this.errorEventListeners.splice(index, 1);
         }
     }
 
@@ -78,6 +107,8 @@ export class Logger {
     }
 
     public error(ex: Error, classOrMethod?: string, ...params: any[]): void {
+        this.errorEventListeners.forEach((listener) => safeCall(listener, ex));
+
         if (this.level === OutputLevel.Silent) {
             return;
         }

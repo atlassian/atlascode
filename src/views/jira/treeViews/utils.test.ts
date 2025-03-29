@@ -102,6 +102,11 @@ describe('utils', () => {
             expect(treeItem.resourceUri).toEqual(Uri.parse('/siteDetails/browse/AXON-1'));
         });
 
+        it("JiraIssueNode id starts with 'atlascode_'", () => {
+            const jiraIssueNode = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue1);
+            expect(jiraIssueNode.id?.startsWith('atlascode_')).toBeTruthy();
+        });
+
         it('JiraIssueNode id is unique for the same Jira issue across different JQL entries', () => {
             const _mockedIssue1 = cloneDeep(mockedIssue1);
             _mockedIssue1.jqlSource = expansionCastTo<JQLEntry>({
