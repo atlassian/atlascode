@@ -19,7 +19,7 @@ const Author = (data: ItemData) => {
     return (
         <div className="ac-flex">
             <Avatar size="small" borderColor="var(--vscode-editor-background)!important" src={avatar} />
-            <span style={{ marginLeft: '4px' }}>{data.worklog.author.displayName}</span>
+            <p style={{ marginLeft: '4px' }}>{data.worklog.author.displayName}</p>
         </div>
     );
 };

@@ -84,6 +84,7 @@ export const ChildIssuesComponent: React.FC<Props> = ({
             <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label className="ac-field-label">{label}</label>
                 <Button
+                    className="ac-button-secondary"
                     appearance="subtle"
                     iconBefore={<AddIcon size="small" label="Add" />}
                     onClick={() => setIsEditing(true)}

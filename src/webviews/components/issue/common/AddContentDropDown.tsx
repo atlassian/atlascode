@@ -21,7 +21,6 @@ export const AddContentDropdown: React.FC<{
         <Box
             style={{
                 display: 'flex',
-                paddingTop: '8px',
             }}
         >
             <DropdownMenu<HTMLButtonElement>
@@ -63,9 +62,7 @@ export const AddContentDropdown: React.FC<{
                         backgroundColor: 'var(--vscode-settings-textInputBackground)',
                         paddingTop: '4px',
                         paddingBottom: '4px',
-                        border: isOpen
-                            ? '1px solid var(--vscode-list-focusOutline)'
-                            : '1px solid var(--vscode-settings-textInputBorder)',
+                        border: '1px solid var(--vscode-list-focusOutline)',
                     }}
                 >
                     <DropdownItem
