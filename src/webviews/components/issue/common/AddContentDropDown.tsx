@@ -6,13 +6,15 @@ import EditorAttachmentIcon from '@atlaskit/icon/glyph/editor/attachment';
 import ChildIssuesIcon from '@atlaskit/icon/glyph/child-issues';
 import IssuesIcon from '@atlaskit/icon/glyph/issues';
 import AddIcon from '@atlaskit/icon/glyph/add';
+import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
 
 export const AddContentDropdown: React.FC<{
     handleAttachmentClick: () => void;
     handleChildIssueClick: () => void;
     handleLinkedIssueClick: () => void;
+    handleLogWorkClick: () => void;
     loading?: boolean;
-}> = ({ handleAttachmentClick, handleChildIssueClick, handleLinkedIssueClick, loading }) => {
+}> = ({ handleAttachmentClick, handleChildIssueClick, handleLinkedIssueClick, handleLogWorkClick, loading }) => {
     const [isOpen, setIsOpen] = React.useState(false);
     const [isHovered, setIsHovered] = React.useState(false);
     return (
@@ -86,6 +88,13 @@ export const AddContentDropdown: React.FC<{
                         onClick={handleLinkedIssueClick}
                     >
                         Linked issue
+                    </DropdownItem>
+                    <DropdownItem
+                        css={dropdownItemStyles}
+                        elemBefore={<EmojiFrequentIcon label="Log Work" />}
+                        onClick={handleLogWorkClick}
+                    >
+                        Work log
                     </DropdownItem>
                 </Box>
             </DropdownMenu>
