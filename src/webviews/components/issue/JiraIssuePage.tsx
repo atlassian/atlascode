@@ -508,7 +508,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     getMainPanelBodyMarkup(): any {
         return (
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', paddingTop: '4px' }}>
                 <IssueMainPanel
                     fields={this.state.fields}
                     fieldValues={this.state.fieldValues}
@@ -733,22 +733,24 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     <Grid layout="fluid">
                                         <GridColumn>
                                             {this.getMainPanelNavMarkup()}
-                                            <Grid layout="fluid">
-                                                <GridColumn medium={8}>
-                                                    <h1>
-                                                        {this.getInputMarkup(
-                                                            this.state.fields['summary'],
-                                                            true,
-                                                            'summary',
-                                                        )}
-                                                    </h1>
-                                                    {this.getMainPanelBodyMarkup()}
-                                                </GridColumn>
-                                                <GridColumn medium={4}>
-                                                    {this.commonSidebar()}
-                                                    {this.createdUpdatedDates()}
-                                                </GridColumn>
-                                            </Grid>
+                                            <div style={{ paddingTop: '8px' }}>
+                                                <Grid layout="fluid">
+                                                    <GridColumn medium={8}>
+                                                        <h1>
+                                                            {this.getInputMarkup(
+                                                                this.state.fields['summary'],
+                                                                true,
+                                                                'summary',
+                                                            )}
+                                                        </h1>
+                                                        {this.getMainPanelBodyMarkup()}
+                                                    </GridColumn>
+                                                    <GridColumn medium={4}>
+                                                        {this.commonSidebar()}
+                                                        {this.createdUpdatedDates()}
+                                                    </GridColumn>
+                                                </Grid>
+                                            </div>
                                         </GridColumn>
                                     </Grid>
                                 </div>

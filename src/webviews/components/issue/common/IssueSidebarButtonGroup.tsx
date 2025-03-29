@@ -64,7 +64,6 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
             style={{
                 display: 'flex',
                 flexDirection: 'row',
-                paddingTop: '8px',
                 justifyContent: 'space-between',
                 alignItems: 'center',
             }}
