@@ -47,6 +47,15 @@ export const loginToJiraMessageNode = createLabelItem('Please login to Jira', {
     arguments: [ProductJira],
 });
 
+/** Takes only the last group of the UUID if it's a real UUID. Otherwise, it returns the input as is. */
+function anonymizeUUID(uuid: string) {
+    // checks if the string is really a UUID - faster than a regex
+    if (uuid.length === 36 && uuid[8] === '-' && uuid[13] === '-' && uuid[18] === '-' && uuid[23] === '-') {
+        return uuid.substring(24);
+    }
+    return uuid;
+}
+
 export class JiraIssueNode extends TreeItem {
     private children: JiraIssueNode[];
 
@@ -61,7 +70,9 @@ export class JiraIssueNode extends TreeItem {
 
         // this id is constructed to ensure unique values for the same jira issue across multiple jql queries.
         // therefore, multiple jql entries must have a unique id for the same site.
-        this.id = `${issue.key}_${issue.siteDetails.id}_${issue.jqlSource.id}`;
+        //
+        // we anonymize the UUID taking just a segment of it, so it can't be considered PII.
+        this.id = `atlascode_${issue.key}_${anonymizeUUID(issue.siteDetails.id)}_${anonymizeUUID(issue.jqlSource.id)}`;
 
         this.description = isMinimalIssue(issue) && issue.isEpic ? issue.epicName : issue.summary;
         this.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [issue] };
