@@ -77,6 +77,7 @@ export const LinkedIssuesComponent: React.FC<Props> = ({
                 <label className="ac-field-label">{label}</label>
                 <Button
                     appearance="subtle"
+                    className="ac-button-secondary"
                     iconBefore={<AddIcon size="small" label="Add" />}
                     onClick={() => setIsEditing(true)}
                 ></Button>

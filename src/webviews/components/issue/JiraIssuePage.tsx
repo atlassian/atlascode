@@ -1,14 +1,3 @@
-import { ButtonGroup } from '@atlaskit/button';
-import LoadingButton from '@atlaskit/button/loading-button';
-import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
-import EditorAttachmentIcon from '@atlaskit/icon/glyph/editor/attachment';
-import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
-import RefreshIcon from '@atlaskit/icon/glyph/refresh';
-import StarIcon from '@atlaskit/icon/glyph/star';
-import StarFilledIcon from '@atlaskit/icon/glyph/star-filled';
-import WatchIcon from '@atlaskit/icon/glyph/watch';
-import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
-import InlineDialog from '@atlaskit/inline-dialog';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
@@ -18,7 +7,6 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
 // NOTE: for now we have to use react-collapsible and NOT Panel because panel uses display:none
 // which totally screws up react-select when select boxes are in an initially hidden panel.
-import Collapsible from 'react-collapsible';
 import uuid from 'uuid';
 import { EditIssueAction, IssueCommentAction } from '../../../ipc/issueActions';
 import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../ipc/issueMessaging';
@@ -35,13 +23,13 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from './AbstractIssueEditorPage';
-import { AttachmentsModal } from './AttachmentsModal';
+// import { AttachmentsModal } from './AttachmentsModal';
 import NavItem from './NavItem';
 import PullRequests from './PullRequests';
-import { TransitionMenu } from './TransitionMenu';
-import VotesForm from './VotesForm';
-import WatchesForm from './WatchesForm';
-import WorklogForm from './WorklogForm';
+// import { TransitionMenu } from './TransitionMenu';
+// import VotesForm from './VotesForm';
+// import WatchesForm from './WatchesForm';
+// import WorklogForm from './WorklogForm';
 import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
 import { readFilesContentAsync } from '../../../util/files';
@@ -52,7 +40,14 @@ import IssueMainPanel from './IssueMainPanel';
 =======
 import IssueMainPanel from './IssueMainPanel';
 import { IssueCommentComponent } from './common/IssueCommentComponent';
+<<<<<<< HEAD
 >>>>>>> a7604034 (merge)
+=======
+import { IssueSidebarCollapsible, SidebarItem } from './common/IssueSidebarCollapsible';
+import { Box } from '@material-ui/core';
+import { IssueSidebarButtonGroup } from './common/IssueSidebarButtonGroup';
+import { TransitionMenu } from './TransitionMenu';
+>>>>>>> 2b2b3cc4 (AXON-249: add sidebar)
 type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
 
@@ -433,7 +428,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({ action: 'deleteIssuelink', site: this.state.siteDetails, objectWithId: issuelink });
     };
 
-    getMainPanelHeaderMarkup(): any {
+    getMainPanelNavMarkup(): any {
         const epicLinkValue = this.state.fieldValues[this.state.epicFieldInfo.epicLink.id];
         let epicLinkKey: string = '';
 
@@ -503,7 +498,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             />
                         </Tooltip>
                     </div>
-                    <h1>{this.getInputMarkup(this.state.fields['summary'], true, 'summary')}</h1>
                 </div>
                 {this.state.isErrorBannerOpen && (
                     <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
@@ -575,179 +569,82 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     commonSidebar(): any {
-        const originalEstimate: string = this.state.fieldValues['timetracking']
-            ? this.state.fieldValues['timetracking'].originalEstimate
-            : '';
-        const numWatches: string =
-            this.state.fieldValues['watches'] && this.state.fieldValues['watches'].watchCount > 0
-                ? this.state.fieldValues['watches'].watchCount
-                : '';
+        const baseItems: SidebarItem[] = [
+            'assignee',
+            'reporter',
+            'labels',
+            'priority',
+            'components',
+            'fixVersions',
+        ].map((field) => {
+            return {
+                itemLabel: this.state.fields[field].name,
+                itemComponent: this.getInputMarkup(this.state.fields[field], true, field),
+            };
+        });
 
-        const numVotes: string =
-            this.state.fieldValues['votes'] && this.state.fieldValues['votes'].votes > 0
-                ? this.state.fieldValues['votes'].votes
-                : '';
+        const commonItems: SidebarItem[] = this.state.fields['status']
+            ? [
+                  {
+                      itemLabel: 'Status',
+                      itemComponent: (
+                          <TransitionMenu
+                              transitions={this.state.selectFieldOptions['transitions']}
+                              currentStatus={this.state.fieldValues['status']}
+                              isStatusButtonLoading={this.state.loadingField === 'status'}
+                              onStatusChange={this.handleStatusChange}
+                          />
+                      ),
+                  },
+                  ...baseItems,
+              ]
+            : baseItems;
+        const advancedItems: SidebarItem[] = this.advancedSidebarFields
+            .map((field) => {
+                if (field.advanced && field.uiType !== UIType.NonEditable) {
+                    if (field.uiType === UIType.Timetracking) {
+                        field.name = 'Original estimate';
+                    }
+                    return {
+                        itemLabel: field.name,
+                        itemComponent: this.getInputMarkup(field, true, `Advanced sidebar`),
+                    };
+                } else {
+                    return undefined;
+                }
+            })
+            .filter((item) => item !== undefined) as SidebarItem[];
 
-        const allowVoting: boolean =
-            this.state.fieldValues['reporter'] &&
-            this.state.currentUser &&
-            this.state.fieldValues['reporter'].accountId !== this.state.currentUser.accountId;
-
+        if (this.state.recentPullRequests && this.state.recentPullRequests.length > 0) {
+            advancedItems.push({
+                itemLabel: 'Recent pull requests',
+                itemComponent: (
+                    <PullRequests
+                        pullRequests={this.state.recentPullRequests}
+                        onClick={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.url })}
+                    />
+                ),
+            });
+        }
         return (
-            <React.Fragment>
-                <ButtonGroup>
-                    <Tooltip content="Refresh">
-                        <LoadingButton
-                            className="ac-button-secondary"
-                            onClick={this.handleRefresh}
-                            iconBefore={<RefreshIcon label="refresh" />}
-                            isLoading={this.state.loadingField === 'refresh'}
-                        />
-                    </Tooltip>
-                    {this.state.fields['worklog'] && (
-                        <div className="ac-inline-dialog">
-                            <InlineDialog
-                                content={
-                                    <WorklogForm
-                                        onSave={(val: any) =>
-                                            this.handleInlineDialogSave(this.state.fields['worklog'], val)
-                                        }
-                                        onCancel={this.handleInlineDialogClose}
-                                        originalEstimate={originalEstimate}
-                                    />
-                                }
-                                isOpen={this.state.currentInlineDialog === 'worklog'}
-                                onClose={this.handleInlineDialogClose}
-                                placement="left-start"
-                            >
-                                <Tooltip content="Log work">
-                                    <LoadingButton
-                                        className="ac-button-secondary"
-                                        onClick={this.handleOpenWorklogEditor}
-                                        iconBefore={<EmojiFrequentIcon label="Log Work" />}
-                                        isLoading={this.state.loadingField === 'worklog'}
-                                    />
-                                </Tooltip>
-                            </InlineDialog>
-                        </div>
-                    )}
-                    {this.state.fields['attachment'] && (
-                        <div className="ac-inline-dialog">
-                            <Tooltip content="Add Attachment">
-                                <LoadingButton
-                                    className="ac-button-secondary"
-                                    onClick={this.handleOpenAttachmentEditor}
-                                    iconBefore={<EditorAttachmentIcon label="Add Attachment" />}
-                                    isLoading={this.state.loadingField === 'attachment'}
-                                />
-                            </Tooltip>
-
-                            <AttachmentsModal
-                                isOpen={this.state.currentInlineDialog === 'attachment'}
-                                onCancel={this.handleInlineDialogClose}
-                                onSave={this.handleAddAttachments}
-                            />
-                        </div>
-                    )}
-                    {this.state.fields['watches'] && (
-                        <div className="ac-inline-dialog">
-                            <InlineDialog
-                                content={
-                                    <WatchesForm
-                                        onFetchUsers={async (input: string) => await this.fetchUsers(input)}
-                                        onAddWatcher={this.handleAddWatcher}
-                                        onRemoveWatcher={this.handleRemoveWatcher}
-                                        currentUser={this.state.currentUser}
-                                        onClose={this.handleInlineDialogClose}
-                                        watches={this.state.fieldValues['watches']}
-                                    />
-                                }
-                                isOpen={this.state.currentInlineDialog === 'watches'}
-                                onClose={this.handleInlineDialogClose}
-                                placement="left-start"
-                            >
-                                <Tooltip content="Watch options">
-                                    <LoadingButton
-                                        className="ac-button-secondary"
-                                        onClick={this.handleOpenWatchesEditor}
-                                        iconBefore={
-                                            this.state.fieldValues['watches'].isWatching ? (
-                                                <WatchFilledIcon label="Watches" />
-                                            ) : (
-                                                <WatchIcon label="Watches" />
-                                            )
-                                        }
-                                        isLoading={this.state.loadingField === 'watches'}
-                                    >
-                                        {numWatches}
-                                    </LoadingButton>
-                                </Tooltip>
-                            </InlineDialog>
-                        </div>
-                    )}
-                    {this.state.fields['votes'] && (
-                        <div className="ac-inline-dialog">
-                            <InlineDialog
-                                content={
-                                    <VotesForm
-                                        onAddVote={this.handleAddVote}
-                                        onRemoveVote={this.handleRemoveVote}
-                                        currentUser={this.state.currentUser}
-                                        onClose={this.handleInlineDialogClose}
-                                        allowVoting={allowVoting}
-                                        votes={this.state.fieldValues['votes']}
-                                    />
-                                }
-                                isOpen={this.state.currentInlineDialog === 'votes'}
-                                onClose={this.handleInlineDialogClose}
-                                placement="left-start"
-                            >
-                                <Tooltip content="Vote options">
-                                    <LoadingButton
-                                        className="ac-button-secondary"
-                                        onClick={this.handleOpenVotesEditor}
-                                        iconBefore={
-                                            this.state.fieldValues['votes'].hasVoted ? (
-                                                <StarFilledIcon label="Votes" />
-                                            ) : (
-                                                <StarIcon label="Votes" />
-                                            )
-                                        }
-                                        isLoading={this.state.loadingField === 'votes'}
-                                    >
-                                        {numVotes}
-                                    </LoadingButton>
-                                </Tooltip>
-                            </InlineDialog>
-                        </div>
-                    )}
-                    <Tooltip content="Create a branch and transition this issue">
-                        <LoadingButton
-                            className="ac-button"
-                            onClick={this.handleStartWorkOnIssue}
-                            iconBefore={<BitbucketBranchesIcon label="Start work" />}
-                            isLoading={false}
-                        >
-                            Start work
-                        </LoadingButton>
-                    </Tooltip>
-                </ButtonGroup>
-                {this.state.fields['status'] && (
-                    <div className="ac-vpadding">
-                        <label className="ac-field-label">{this.state.fields['status'].name}</label>
-                        <TransitionMenu
-                            transitions={this.state.selectFieldOptions['transitions']}
-                            currentStatus={this.state.fieldValues['status']}
-                            isStatusButtonLoading={this.state.loadingField === 'status'}
-                            onStatusChange={this.handleStatusChange}
-                        />
-                    </div>
-                )}
-
-                {['assignee', 'reporter', 'labels', 'priority', 'components', 'fixVersions'].map((field) =>
-                    this.renderField(field, field === 'components' ? (e: any) => e.stopPropagation() : undefined),
-                )}
-            </React.Fragment>
+            <Box style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '16px' }}>
+                <IssueSidebarButtonGroup
+                    handleAddVote={this.handleAddVote}
+                    handleAddWatcher={this.handleAddWatcher}
+                    handleInlineEdit={this.handleInlineEdit}
+                    handleRefresh={this.handleRefresh}
+                    handleRemoveVote={this.handleRemoveVote}
+                    handleRemoveWatcher={this.handleRemoveWatcher}
+                    currentUser={this.state.currentUser}
+                    fields={this.state.fields}
+                    fieldValues={this.state.fieldValues}
+                    loadingField={this.state.loadingField}
+                    fetchUsers={this.fetchUsers}
+                    handleStartWork={this.handleStartWorkOnIssue}
+                />
+                <IssueSidebarCollapsible label="Details" items={commonItems} defaultOpen />
+                <IssueSidebarCollapsible label="More fields" items={advancedItems} />
+            </Box>
         );
     }
 
@@ -760,51 +657,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     {this.getInputMarkup(field, true, key)}
                 </div>
             )
-        );
-    }
-
-    advancedSidebar(): any {
-        const markups: any[] = [];
-
-        this.advancedSidebarFields.forEach((field) => {
-            if (field.advanced && field.uiType !== UIType.NonEditable) {
-                if (field.uiType === UIType.Timetracking) {
-                    field.name = 'Original estimate';
-                }
-                markups.push(
-                    <div className="ac-vpadding">
-                        <label className="ac-field-label">{field.name}</label>
-                        {this.getInputMarkup(field, true, `Advanced sidebar`)}
-                    </div>,
-                );
-            }
-        });
-
-        if (this.state.recentPullRequests && this.state.recentPullRequests.length > 0) {
-            markups.push(
-                <div className="ac-vpadding">
-                    <label className="ac-field-label">Recent pull requests</label>
-                    <PullRequests
-                        pullRequests={this.state.recentPullRequests}
-                        onClick={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.url })}
-                    />
-                </div>,
-            );
-        }
-
-        return (
-            <Collapsible
-                trigger="show more"
-                triggerWhenOpen="show less"
-                triggerClassName="ac-collapsible-trigger"
-                triggerOpenedClassName="ac-collapsible-trigger"
-                triggerTagName="label"
-                easing="ease-out"
-                transitionTime={150}
-                overflowWhenOpen="visible"
-            >
-                {markups}
-            </Collapsible>
         );
     }
 
@@ -836,8 +688,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         }
         return (
             <div className="ac-issue-created-updated">
-                {created && <div>{created}</div>}
-                {updated && <div>{updated}</div>}
+                {created && <div>{created}</div>}•{updated && <div>{updated}</div>}
             </div>
         );
     }
@@ -869,10 +720,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             if (width && width < 800) {
                                 return (
                                     <div style={{ margin: '20px 16px 0px 16px' }}>
-                                        {this.getMainPanelHeaderMarkup()}
+                                        {this.getMainPanelNavMarkup()}
+                                        <h1>{this.getInputMarkup(this.state.fields['summary'], true, 'summary')}</h1>
                                         {this.commonSidebar()}
                                         {this.getMainPanelBodyMarkup()}
-                                        {this.advancedSidebar()}
                                         {this.createdUpdatedDates()}
                                     </div>
                                 );
@@ -880,14 +731,24 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             return (
                                 <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
                                     <Grid layout="fluid">
-                                        <GridColumn medium={8}>
-                                            {this.getMainPanelHeaderMarkup()}
-                                            {this.getMainPanelBodyMarkup()}
-                                        </GridColumn>
-                                        <GridColumn medium={4}>
-                                            {this.commonSidebar()}
-                                            {this.advancedSidebar()}
-                                            {this.createdUpdatedDates()}
+                                        <GridColumn>
+                                            {this.getMainPanelNavMarkup()}
+                                            <Grid layout="fluid">
+                                                <GridColumn medium={8}>
+                                                    <h1>
+                                                        {this.getInputMarkup(
+                                                            this.state.fields['summary'],
+                                                            true,
+                                                            'summary',
+                                                        )}
+                                                    </h1>
+                                                    {this.getMainPanelBodyMarkup()}
+                                                </GridColumn>
+                                                <GridColumn medium={4}>
+                                                    {this.commonSidebar()}
+                                                    {this.createdUpdatedDates()}
+                                                </GridColumn>
+                                            </Grid>
                                         </GridColumn>
                                     </Grid>
                                 </div>

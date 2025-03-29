@@ -15,6 +15,7 @@ import { RenderedContent } from '../RenderedContent';
 import { Box } from '@material-ui/core';
 import AddIcon from '@atlaskit/icon/glyph/add';
 import Button from '@atlaskit/button';
+import Tooltip from '@atlaskit/tooltip';
 
 type Props = {
     fields: FieldUIs;
@@ -71,36 +72,8 @@ const IssueMainPanel: React.FC<Props> = ({
     const [descriptionText, setDescriptionText] = React.useState(defaultDescription);
     const [isEditingDescription, setIsEditingDescription] = React.useState(false);
 
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '16px' }}>
-            {fields['attachment'] && (
-                <AttachmentsModal
-                    isOpen={isModalOpen}
-                    onSave={(f: File[]) => {
-                        handleAddAttachments(f);
-                        setIsModalOpen(false);
-                    }}
-                    onCancel={() => setIsModalOpen(false)}
-                />
-            )}
-            {fields['worklog'] && (
-                <div className="ac-inline-dialog">
-                    <InlineDialog
-                        content={
-                            <WorklogForm
-                                onSave={(val: any) => handleInlineEdit(fields['worklog'], val)}
-                                onCancel={() => setIsInlineDialogOpen(false)}
-                                originalEstimate={originalEstimate}
-                            />
-                        }
-                        isOpen={isInlineDialogOpen}
-                        onClose={() => setIsInlineDialogOpen(false)}
-                        placement="auto"
-                    >
-                        {true} {/* this needs child component but we do not want to display here*/}
-                    </InlineDialog>
-                </div>
-            )}
+    const addContentDropDown = (
+        <Tooltip content="Add content">
             <AddContentDropdown
                 handleAttachmentClick={() => setIsModalOpen(true)}
                 handleChildIssueClick={() => {
@@ -114,6 +87,52 @@ const IssueMainPanel: React.FC<Props> = ({
                 }}
                 loading={addContentFieldKeys.some((key) => fields[key] && loadingField === key)}
             />
+        </Tooltip>
+    );
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '16px' }}>
+            {fields['attachment'] && (
+                <AttachmentsModal
+                    isOpen={isModalOpen}
+                    onSave={(f: File[]) => {
+                        handleAddAttachments(f);
+                        setIsModalOpen(false);
+                    }}
+                    onCancel={() => setIsModalOpen(false)}
+                />
+            )}
+            {fields['worklog'] ? (
+                <Box
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        gap: '8px',
+                        alignItems: 'center',
+                        paddingTop: '8px',
+                    }}
+                >
+                    <div className="ac-inline-dialog">
+                        <InlineDialog
+                            content={
+                                <WorklogForm
+                                    onSave={(val: any) => handleInlineEdit(fields['worklog'], val)}
+                                    onCancel={() => setIsInlineDialogOpen(false)}
+                                    originalEstimate={originalEstimate}
+                                />
+                            }
+                            isOpen={isInlineDialogOpen}
+                            onClose={() => setIsInlineDialogOpen(false)}
+                            placement="top"
+                        >
+                            {addContentDropDown}
+                        </InlineDialog>
+                    </div>
+                </Box>
+            ) : (
+                { addContentDropDown }
+            )}
+
             {fields['description'] && (
                 <div>
                     <div style={{ display: 'flex', gap: '8px', flexDirection: 'row', alignItems: 'flex-start' }}>
@@ -205,6 +224,7 @@ const IssueMainPanel: React.FC<Props> = ({
                         <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <label className="ac-field-label">Work log</label>
                             <Button
+                                className="ac-button-secondary"
                                 appearance="subtle"
                                 iconBefore={<AddIcon size="small" label="Add" />}
                                 onClick={() => setIsInlineDialogOpen(true)}
