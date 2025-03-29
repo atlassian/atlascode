@@ -2,7 +2,7 @@ import { Box } from '@material-ui/core';
 import TextArea from '@atlaskit/textarea';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
-import PopoutMentionPicker from '../../pullrequest/PopoutMentionPicker';
+import PopoutMentionPicker from '../../../pullrequest/PopoutMentionPicker';
 import { ButtonAppearance } from '@atlaskit/button/dist/types/new-button/variants/types';
 import { Spacing } from '@atlaskit/button';
 

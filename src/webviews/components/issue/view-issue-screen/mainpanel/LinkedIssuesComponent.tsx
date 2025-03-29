@@ -6,10 +6,10 @@ import { Box } from '@material-ui/core';
 import Select from '@atlaskit/select';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import { IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models';
-import * as SelectFieldHelper from '../../selectFieldHelper';
+import * as SelectFieldHelper from '../../../selectFieldHelper';
 import { AsyncSelect } from '@atlaskit/select';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
-import { LinkedIssues } from '../LinkedIssues';
+import { LinkedIssues } from '../../LinkedIssues';
 
 export type LinkTypeAndIssue = {
     issueKey: string;
@@ -77,7 +77,7 @@ export const LinkedIssuesComponent: React.FC<Props> = ({
                 <label className="ac-field-label">{label}</label>
                 <Button
                     appearance="subtle"
-                    className="ac-button-secondary"
+                    className="ac-button-secondary-new"
                     iconBefore={<AddIcon size="small" label="Add" />}
                     onClick={() => setIsEditing(true)}
                 ></Button>
@@ -88,7 +88,7 @@ export const LinkedIssuesComponent: React.FC<Props> = ({
                         <div style={{ width: '30%' }}>
                             <Select
                                 className="ac-select-container"
-                                classNamePrefix="ac-select"
+                                classNamePrefix="ac-select-new"
                                 options={linkTypes}
                                 defaultValue={selectedLinkType}
                                 components={SelectFieldHelper.getComponentsForValueType(ValueType.IssueLinks)}
@@ -103,7 +103,7 @@ export const LinkedIssuesComponent: React.FC<Props> = ({
                         <div style={{ width: '100%' }}>
                             <AsyncSelect
                                 className="ac-select-container"
-                                classNamePrefix="ac-select"
+                                classNamePrefix="ac-select-new"
                                 loadOptions={onFetchIssues}
                                 getOptionLabel={(option: any) => option.key}
                                 getOptionValue={(option: any) => option.key}

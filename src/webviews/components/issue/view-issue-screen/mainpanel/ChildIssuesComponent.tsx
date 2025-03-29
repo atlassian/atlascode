@@ -8,7 +8,7 @@ import { components } from '@atlaskit/select';
 import TextField from '@atlaskit/textfield';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
-import IssueList from '../IssueList';
+import IssueList from '../../IssueList';
 
 export type SummaryAndIssueType = {
     summary: string;
@@ -84,7 +84,7 @@ export const ChildIssuesComponent: React.FC<Props> = ({
             <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label className="ac-field-label">{label}</label>
                 <Button
-                    className="ac-button-secondary"
+                    className="ac-button-secondary-new"
                     appearance="subtle"
                     iconBefore={<AddIcon size="small" label="Add" />}
                     onClick={() => setIsEditing(true)}

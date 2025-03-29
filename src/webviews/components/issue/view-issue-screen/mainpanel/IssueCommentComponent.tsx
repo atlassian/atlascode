@@ -9,7 +9,7 @@ import {
 } from '@atlassianlabs/jira-pi-common-models';
 import { Box } from '@material-ui/core';
 import Avatar from '@atlaskit/avatar';
-import { RenderedContent } from '../../RenderedContent';
+import { RenderedContent } from '../../../RenderedContent';
 import { CommentTime } from '@atlaskit/comment';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';

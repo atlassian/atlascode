@@ -1,17 +1,17 @@
 import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atlassianlabs/jira-pi-meta-models';
 import React from 'react';
-import { AttachmentsModal } from '../AttachmentsModal';
-import { AttachmentList } from '../AttachmentList';
+import { AttachmentsModal } from '../../AttachmentsModal';
+import { AttachmentList } from '../../AttachmentList';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { AddContentDropdown } from './AddContentDropDown';
 import { ChildIssuesComponent } from './ChildIssuesComponent';
 import { IssueType, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { LinkedIssuesComponent } from './LinkedIssuesComponent';
 import InlineDialog from '@atlaskit/inline-dialog';
-import WorklogForm from '../WorklogForm';
-import Worklogs from '../Worklogs';
+import WorklogForm from '../../WorklogForm';
+import Worklogs from '../../Worklogs';
 import JiraIssueTextAreaEditor from '../common/JiraIssueTextArea';
-import { RenderedContent } from '../../RenderedContent';
+import { RenderedContent } from '../../../RenderedContent';
 import { Box } from '@material-ui/core';
 import AddIcon from '@atlaskit/icon/glyph/add';
 import Button from '@atlaskit/button';
@@ -112,7 +112,7 @@ const IssueMainPanel: React.FC<Props> = ({
                         paddingTop: '8px',
                     }}
                 >
-                    <div className="ac-inline-dialog">
+                    <div className="ac-inline-dialog-new">
                         <InlineDialog
                             content={
                                 <WorklogForm
@@ -224,7 +224,7 @@ const IssueMainPanel: React.FC<Props> = ({
                         <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <label className="ac-field-label">Work log</label>
                             <Button
-                                className="ac-button-secondary"
+                                className="ac-button-secondary-new"
                                 appearance="subtle"
                                 iconBefore={<AddIcon size="small" label="Add" />}
                                 onClick={() => setIsInlineDialogOpen(true)}

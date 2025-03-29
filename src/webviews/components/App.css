@@ -513,13 +513,16 @@ pre {
 }
 
 .ac-issue-created-updated {
+    color: var(--vscode-editorCodeLens-foreground);
+}
+.ac-issue-created-updated-new {
     padding-top: 16px;
     display: flex;
     align-items: flex-start;
-    color: var(--vscode-editorCodeLens-foreground);
     flex-direction: row;
     gap: 8px;
     font-size: smaller;
+    color: var(--vscode-editorCodeLens-foreground);
 }
 
 /*-------------------- END - general containers --------------------*/
@@ -811,14 +814,31 @@ section button span {
 
 .ac-inline-dialog > div {
     color: var(--vscode-editor-foreground);
+}
+
+.ac-inline-dialog-new > div {
+    color: var(--vscode-editor-foreground);
     background: var(--vscode-settings-textInputBackground) !important;
     border-radius: 3px;
+}
+
+.ac-inline-dialog > div {
+    background-color: var(--vscode-editor-background--lighten-15);
+}
+
+.vscode-light .ac-inline-dialog > div {
+    background-color: var(--vscode-editor-background--darken-05);
+}
+
+.ac-inline-items-container {
+    width: 100%;
 }
 
 .ac-inline-item {
     display: block;
     padding-top: 10px;
     padding-bottom: 10px;
+    background-color: var(--vscode-editor-background--lighten-05);
 }
 
 .ac-inline-watcher {
@@ -928,17 +948,33 @@ div[role='dialog'],
     color: black !important;
 }
 
-.ac-button-secondary {
+.ac-button-secondary-new {
     background: var(--vscode-editor-background) !important;
     color: var(--vscode-editor-foreground) !important;
 }
-
-.ac-button-secondary:hover {
+.ac-button-secondary-new:hover {
     background: var(--vscode-editor-background--lighten-075) !important;
 }
 
+.ac-button-secondary {
+    background: rgb(240, 240, 240) !important;
+}
+
+.ac-button-secondary:hover {
+    background: rgb(200, 200, 200) !important;
+}
+
 .ac-button-secondary:active {
-    background: var(--vscode-editor-selectionHighlightBackground) !important;
+    background: rgb(179, 212, 255) !important;
+    color: rgb(0, 82, 204) !important;
+}
+
+.ac-button-secondary:disabled {
+    background: rgb(240, 240, 240) !important;
+}
+
+.ac-button-secondary span {
+    color: black !important;
 }
 
 /*-------------------- END - buttons --------------------*/
@@ -1078,9 +1114,19 @@ div[role='dialog'],
 /*-------------------- BEGIN - select boxes --------------------*/
 
 .ac-select__control {
+    background: var(--vscode-dropdown-background) !important;
+    color: var(--vscode-dropdown-foreground) !important;
+    border: 1px solid var(--vscode-settings-textInputBorder) !important;
+}
+.ac-select-new__control {
     background: var(--vscode-editor-background) !important;
     color: var(--vscode-dropdown-foreground) !important;
     border: 1px solid var(--vscode-editor-background) !important;
+}
+.ac-select-new__indicator,
+.ac-select-new__input {
+    background: var(--vscode-editor-background) !important;
+    color: var(--vscode-input-foreground) !important;
 }
 
 .ac-select__control--is-focused,
@@ -1089,10 +1135,7 @@ div[role='dialog'],
 }
 
 .ac-select__indicator,
-.ac-select__input {
-    background: var(--vscode-editor-background) !important;
-    color: var(--vscode-input-foreground) !important;
-}
+.ac-select__input,
 .ac-select__menu,
 .ac-select__menu-list {
     background: var(--vscode-dropdown-background) !important;
