@@ -49,7 +49,7 @@ export const loginToJiraMessageNode = createLabelItem('Please login to Jira', {
 
 /** Takes only the last group of the UUID if it's a real UUID. Otherwise, it returns the input as is. */
 function anonymizeUUID(uuid: string) {
-    // checks if the string is really a UUID - faster than a regex
+    // checks if the string is really a UUID, faster than a regex
     if (uuid.length === 36 && uuid[8] === '-' && uuid[13] === '-' && uuid[18] === '-' && uuid[23] === '-') {
         return uuid.substring(24);
     }
