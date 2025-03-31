@@ -1,4 +1,4 @@
-import { expansionCastTo, forceCastTo } from './miscFunctions';
+import { expansionCastTo, forceCastTo, resolvePromiseSync } from './miscFunctions';
 import { DateTimeMocker } from './DateTimeMocker';
 
-export { expansionCastTo, forceCastTo, DateTimeMocker };
+export { expansionCastTo, forceCastTo, resolvePromiseSync, DateTimeMocker };
