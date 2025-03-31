@@ -37,7 +37,7 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
     private _skipNotificationForNextFetch = false;
 
     constructor() {
-        super(() => this.dispose);
+        super(() => this.dispose());
 
         setCommandContext(CommandContext.JiraExplorer, false);
         setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
@@ -72,21 +72,25 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
         if (configuration.changed(e, 'jira.explorer.enabled')) {
             setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
-            this.refresh();
+            this.refreshWithouNotifications();
         } else if (configuration.changed(e, 'jira.explorer')) {
-            this.refresh();
+            this.refreshWithouNotifications();
         }
     }
 
     private onSitesDidChange(e: SitesAvailableUpdateEvent): void {
         if (e.product.key === ProductJira.key) {
-            this._skipNotificationForNextFetch = true;
-            this.refresh();
+            this.refreshWithouNotifications();
         }
     }
 
     public dispose(): void {
         this._disposable.dispose();
+    }
+
+    private refreshWithouNotifications(): void {
+        this._skipNotificationForNextFetch = true;
+        this.refresh();
     }
 
     private refresh(): void {
