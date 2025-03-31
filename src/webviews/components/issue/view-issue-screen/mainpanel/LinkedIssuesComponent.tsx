@@ -74,7 +74,10 @@ export const LinkedIssuesComponent: React.FC<Props> = ({
     return (
         <Box>
             <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label className="ac-field-label">{label}</label>
+                <div style={{ display: 'flex', gap: '8px', flexDirection: 'row', alignItems: 'flex-start' }}>
+                    <label className="ac-field-label">{label}</label>
+                    {loading ? <p>Saving...</p> : null}
+                </div>
                 <Button
                     appearance="subtle"
                     className="ac-button-secondary-new"
@@ -88,7 +91,7 @@ export const LinkedIssuesComponent: React.FC<Props> = ({
                         <div style={{ width: '30%' }}>
                             <Select
                                 className="ac-select-container"
-                                classNamePrefix="ac-select-new"
+                                classNamePrefix="ac-select"
                                 options={linkTypes}
                                 defaultValue={selectedLinkType}
                                 components={SelectFieldHelper.getComponentsForValueType(ValueType.IssueLinks)}
@@ -103,7 +106,7 @@ export const LinkedIssuesComponent: React.FC<Props> = ({
                         <div style={{ width: '100%' }}>
                             <AsyncSelect
                                 className="ac-select-container"
-                                classNamePrefix="ac-select-new"
+                                classNamePrefix="ac-select"
                                 loadOptions={onFetchIssues}
                                 getOptionLabel={(option: any) => option.key}
                                 getOptionValue={(option: any) => option.key}

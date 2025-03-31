@@ -1118,16 +1118,6 @@ div[role='dialog'],
     color: var(--vscode-dropdown-foreground) !important;
     border: 1px solid var(--vscode-settings-textInputBorder) !important;
 }
-.ac-select-new__control {
-    background: var(--vscode-editor-background) !important;
-    color: var(--vscode-dropdown-foreground) !important;
-    border: 1px solid var(--vscode-editor-background) !important;
-}
-.ac-select-new__indicator,
-.ac-select-new__input {
-    background: var(--vscode-editor-background) !important;
-    color: var(--vscode-input-foreground) !important;
-}
 
 .ac-select__control--is-focused,
 .ac-select__control:hover {

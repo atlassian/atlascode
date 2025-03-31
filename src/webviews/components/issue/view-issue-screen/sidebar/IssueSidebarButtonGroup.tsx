@@ -1,6 +1,6 @@
 import { LoadingButton } from '@atlaskit/button';
 import InlineDialog from '@atlaskit/inline-dialog';
-import { User } from '@atlassianlabs/jira-pi-common-models';
+import { Transition, User } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, FieldUIs, FieldValues } from '@atlassianlabs/jira-pi-meta-models';
 import { Box } from '@material-ui/core';
 import React from 'react';
@@ -14,7 +14,8 @@ import StarIcon from '@atlaskit/icon/glyph/star';
 import StarFilledIcon from '@atlaskit/icon/glyph/star-filled';
 import WatchIcon from '@atlaskit/icon/glyph/watch';
 import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
-import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
+
+import { StatusTransitionMenu } from './StatusTransitionMenu';
 
 type Props = {
     handleRefresh: () => void;
@@ -28,7 +29,8 @@ type Props = {
     fieldValues: FieldValues;
     loadingField: string;
     fetchUsers: (input: string) => Promise<any[]>;
-    handleStartWork: () => void;
+    handleStatusChange: (t: Transition) => void;
+    transitions: Transition[];
 };
 
 export const IssueSidebarButtonGroup: React.FC<Props> = ({
@@ -43,7 +45,8 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
     fieldValues,
     loadingField,
     fetchUsers,
-    handleStartWork,
+    handleStatusChange,
+    transitions,
 }) => {
     const originalEstimate: string = fieldValues['timetracking'] ? fieldValues['timetracking'].originalEstimate : '';
     const numWatches: string =
@@ -57,49 +60,38 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
     const [worklogDialogOpen, setWorklogDialogOpen] = React.useState(false);
     const [votesDialogOpen, setVotesDialogOpen] = React.useState(false);
     const [watchesDialogOpen, setWatchesDialogOpen] = React.useState(false);
-    const [isStartWorkHovered, setIsStartWorkHovered] = React.useState(false);
 
     return (
         <Box
             style={{
                 display: 'flex',
                 flexDirection: 'row',
-                justifyContent: 'space-between',
                 alignItems: 'center',
+                width: '100%',
             }}
         >
-            <Tooltip content="Create a branch and transition this issue">
-                <LoadingButton
-                    style={{
-                        alignContent: 'center',
-                        border: isStartWorkHovered
-                            ? '1px solid var(--vscode-list-focusOutline)'
-                            : '1px solid var(--vscode-editorGroup-border)',
-                        background: 'var(--vscode-editor-background)',
-
-                        color: 'var(--vscode-editor-foreground)',
-                    }}
-                    onClick={handleStartWork}
-                    iconBefore={<BitbucketBranchesIcon label="Start work" />}
-                    isLoading={false}
-                    onMouseOver={() => setIsStartWorkHovered(true)}
-                    onMouseLeave={() => setIsStartWorkHovered(false)}
-                    onFocus={() => setIsStartWorkHovered(true)}
-                    onBlur={() => setIsStartWorkHovered(false)}
-                >
-                    Start work
-                </LoadingButton>
-            </Tooltip>
+            {fields['status'] && (
+                <Box style={{ display: 'inline-flex', alignItems: 'center', flexGrow: 0 }}>
+                    <StatusTransitionMenu
+                        transitions={transitions}
+                        currentStatus={fieldValues['status']}
+                        isStatusButtonLoading={loadingField === 'status'}
+                        onStatusChange={handleStatusChange}
+                    />
+                </Box>
+            )}
             <Box
                 style={{
                     display: 'flex',
                     flexDirection: 'row',
-                    gap: '4px',
+                    justifyContent: 'flex-end',
+                    flexGrow: 1,
                     background: 'var(--vscode-editor-background)',
                 }}
             >
                 <Tooltip content="Refresh">
                     <LoadingButton
+                        spacing="compact"
                         className="ac-button-secondary-new"
                         onClick={handleRefresh}
                         iconBefore={<RefreshIcon label="refresh" />}
@@ -124,6 +116,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                         >
                             <Tooltip content="Log work">
                                 <LoadingButton
+                                    spacing="compact"
                                     className="ac-button-secondary-new"
                                     onClick={() => setWorklogDialogOpen(true)}
                                     iconBefore={<EmojiFrequentIcon label="Log Work" />}
@@ -152,6 +145,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                         >
                             <Tooltip content="Watch options">
                                 <LoadingButton
+                                    spacing="compact"
                                     className="ac-button-secondary-new"
                                     onClick={() => {
                                         setWatchesDialogOpen(true);
@@ -190,6 +184,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                         >
                             <Tooltip content="Vote options">
                                 <LoadingButton
+                                    spacing="compact"
                                     className="ac-button-secondary-new"
                                     onClick={() => setVotesDialogOpen(true)}
                                     iconBefore={

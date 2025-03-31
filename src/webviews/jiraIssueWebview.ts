@@ -21,7 +21,7 @@ import { Commands } from '../commands';
 import { postComment } from '../commands/jira/postComment';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
 import { Container } from '../container';
-import { FeatureFlagClient, Features } from 'src/util/featureFlags';
+import { FeatureFlagClient, Features } from '../util/featureFlags';
 import {
     EditIssueAction,
     isAddAttachmentsAction,

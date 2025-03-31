@@ -23,13 +23,8 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
-// import { AttachmentsModal } from './AttachmentsModal';
 import NavItem from '../NavItem';
 import PullRequests from '../PullRequests';
-// import { TransitionMenu } from './TransitionMenu';
-// import VotesForm from './VotesForm';
-// import WatchesForm from './WatchesForm';
-// import WorklogForm from './WorklogForm';
 import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
 import { readFilesContentAsync } from '../../../../util/files';
@@ -38,7 +33,6 @@ import IssueMainPanel from './mainpanel/IssueMainPanel';
 import { IssueSidebarCollapsible, SidebarItem } from './sidebar/IssueSidebarCollapsible';
 import { Box } from '@material-ui/core';
 import { IssueSidebarButtonGroup } from './sidebar/IssueSidebarButtonGroup';
-import { TransitionMenu } from '../TransitionMenu';
 
 type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -527,6 +521,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         }))
                     }
                     fetchImage={(img) => this.fetchImage(img)}
+                    handleStartWork={this.handleStartWorkOnIssue}
                 />
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (
@@ -560,7 +555,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         );
     }
     commonSidebar(): any {
-        const baseItems: SidebarItem[] = [
+        const commonItems: SidebarItem[] = [
             'assignee',
             'reporter',
             'labels',
@@ -573,24 +568,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 itemComponent: this.getInputMarkup(this.state.fields[field], true, field),
             };
         });
-        const commonItems: SidebarItem[] = this.state.fields['status']
-            ? [
-                  {
-                      itemLabel: 'Status',
-                      itemComponent: (
-                          <div className="ac-select-new">
-                              <TransitionMenu
-                                  transitions={this.state.selectFieldOptions['transitions']}
-                                  currentStatus={this.state.fieldValues['status']}
-                                  isStatusButtonLoading={this.state.loadingField === 'status'}
-                                  onStatusChange={this.handleStatusChange}
-                              />
-                          </div>
-                      ),
-                  },
-                  ...baseItems,
-              ]
-            : baseItems;
+
         const advancedItems: SidebarItem[] = this.advancedSidebarFields
             .map((field) => {
                 if (field.advanced && field.uiType !== UIType.NonEditable) {
@@ -632,23 +610,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     fieldValues={this.state.fieldValues}
                     loadingField={this.state.loadingField}
                     fetchUsers={this.fetchUsers}
-                    handleStartWork={this.handleStartWorkOnIssue}
+                    transitions={this.state.selectFieldOptions['transitions']}
+                    handleStatusChange={this.handleStatusChange}
                 />
                 <IssueSidebarCollapsible label="Details" items={commonItems} defaultOpen />
                 <IssueSidebarCollapsible label="More fields" items={advancedItems} />
             </Box>
-        );
-    }
-
-    renderField(key: string, onClick?: (e: any) => void) {
-        const field = this.state.fields[key];
-        return (
-            field && (
-                <div className="ac-vpadding" onClick={onClick}>
-                    <label className="ac-field-label">{field.name}</label>
-                    {this.getInputMarkup(field, true, key)}
-                </div>
-            )
         );
     }
 
@@ -679,7 +646,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             updated = this.state.fieldValues['updated.rendered'] || this.state.fieldValues['updated'];
         }
         return (
-            <div className="ac-issue-created-updated">
+            <div className="ac-issue-created-updated-new">
                 {created && <div>{created}</div>}•{updated && <div>{updated}</div>}
             </div>
         );

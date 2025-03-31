@@ -82,7 +82,10 @@ export const ChildIssuesComponent: React.FC<Props> = ({
     return (
         <Box>
             <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label className="ac-field-label">{label}</label>
+                <div style={{ display: 'flex', gap: '8px', flexDirection: 'row', alignItems: 'flex-start' }}>
+                    <label className="ac-field-label">{label}</label>
+                    {loading ? <p>Saving...</p> : null}
+                </div>
                 <Button
                     className="ac-button-secondary-new"
                     appearance="subtle"

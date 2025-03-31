@@ -14,9 +14,9 @@ import JiraIssueTextAreaEditor from '../common/JiraIssueTextArea';
 import { RenderedContent } from '../../../RenderedContent';
 import { Box } from '@material-ui/core';
 import AddIcon from '@atlaskit/icon/glyph/add';
-import Button from '@atlaskit/button';
+import Button, { LoadingButton } from '@atlaskit/button';
 import Tooltip from '@atlaskit/tooltip';
-
+import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
 type Props = {
     fields: FieldUIs;
     fieldValues: FieldValues;
@@ -29,13 +29,13 @@ type Props = {
     subtaskTypes: IssueType[];
     linkTypes: IssueLinkTypeSelectOption[];
     handleOpenIssue: (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => void;
+    handleStartWork: () => void;
     onDelete: (issueLink: any) => void;
     onFetchIssues: (input: string) => Promise<any>;
     fetchUsers: (input: string) => Promise<any[]>;
     fetchImage: (url: string) => Promise<string>;
 };
 
-const addContentFieldKeys = ['attachment', 'subtasks', 'issuelinks', 'worklog'];
 const IssueMainPanel: React.FC<Props> = ({
     fields,
     fieldValues,
@@ -48,6 +48,7 @@ const IssueMainPanel: React.FC<Props> = ({
     subtaskTypes,
     linkTypes,
     handleOpenIssue,
+    handleStartWork,
     onDelete,
     onFetchIssues,
     fetchUsers,
@@ -71,7 +72,7 @@ const IssueMainPanel: React.FC<Props> = ({
     const [isInlineDialogOpen, setIsInlineDialogOpen] = React.useState(false);
     const [descriptionText, setDescriptionText] = React.useState(defaultDescription);
     const [isEditingDescription, setIsEditingDescription] = React.useState(false);
-
+    const [isStartWorkHovered, setIsStartWorkHovered] = React.useState(false);
     const addContentDropDown = (
         <Tooltip content="Add content">
             <AddContentDropdown
@@ -85,7 +86,7 @@ const IssueMainPanel: React.FC<Props> = ({
                 handleLogWorkClick={() => {
                     setIsInlineDialogOpen(true);
                 }}
-                loading={addContentFieldKeys.some((key) => fields[key] && loadingField === key)}
+                loading={loadingField === 'attachment'}
             />
         </Tooltip>
     );
@@ -102,37 +103,59 @@ const IssueMainPanel: React.FC<Props> = ({
                     onCancel={() => setIsModalOpen(false)}
                 />
             )}
-            {fields['worklog'] ? (
-                <Box
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        gap: '8px',
-                        alignItems: 'center',
-                        paddingTop: '8px',
-                    }}
-                >
-                    <div className="ac-inline-dialog-new">
-                        <InlineDialog
-                            content={
-                                <WorklogForm
-                                    onSave={(val: any) => handleInlineEdit(fields['worklog'], val)}
-                                    onCancel={() => setIsInlineDialogOpen(false)}
-                                    originalEstimate={originalEstimate}
-                                />
-                            }
-                            isOpen={isInlineDialogOpen}
-                            onClose={() => setIsInlineDialogOpen(false)}
-                            placement="top"
-                        >
-                            {addContentDropDown}
-                        </InlineDialog>
-                    </div>
-                </Box>
-            ) : (
-                { addContentDropDown }
-            )}
+            <Box style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center', paddingTop: '8px' }}>
+                {fields['worklog'] ? (
+                    <Box
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            gap: '8px',
+                            alignItems: 'center',
+                        }}
+                    >
+                        <div className="ac-inline-dialog-new">
+                            <InlineDialog
+                                content={
+                                    <WorklogForm
+                                        onSave={(val: any) => handleInlineEdit(fields['worklog'], val)}
+                                        onCancel={() => setIsInlineDialogOpen(false)}
+                                        originalEstimate={originalEstimate}
+                                    />
+                                }
+                                isOpen={isInlineDialogOpen}
+                                onClose={() => setIsInlineDialogOpen(false)}
+                                placement="top"
+                            >
+                                {addContentDropDown}
+                            </InlineDialog>
+                        </div>
+                    </Box>
+                ) : (
+                    { addContentDropDown }
+                )}
+                <Tooltip content="Create a branch and transition this issue">
+                    <LoadingButton
+                        style={{
+                            alignContent: 'center',
+                            border: isStartWorkHovered
+                                ? '1px solid var(--vscode-list-focusOutline)'
+                                : '1px solid var(--vscode-editorGroup-border)',
+                            background: 'var(--vscode-editor-background)',
 
+                            color: 'var(--vscode-editor-foreground)',
+                        }}
+                        onClick={handleStartWork}
+                        iconBefore={<BitbucketBranchesIcon label="Start work" />}
+                        isLoading={false}
+                        onMouseOver={() => setIsStartWorkHovered(true)}
+                        onMouseLeave={() => setIsStartWorkHovered(false)}
+                        onFocus={() => setIsStartWorkHovered(true)}
+                        onBlur={() => setIsStartWorkHovered(false)}
+                    >
+                        Start work
+                    </LoadingButton>
+                </Tooltip>
+            </Box>
             {fields['description'] && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div style={{ display: 'flex', gap: '8px', flexDirection: 'row', alignItems: 'flex-start' }}>
