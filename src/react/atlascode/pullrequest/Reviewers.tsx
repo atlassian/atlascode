@@ -125,64 +125,52 @@ export const Reviewers: React.FunctionComponent<ReviewersProps> = ({
 
     return (
         <Grid container direction="column" style={{ padding: '0', width: '100%' }}>
-            {activeParticipants.length === 0 ? (
-                <Typography variant="body2">No reviewers!</Typography>
-            ) : (
-                activeParticipants.map((participant) => (
-                    <div key={participant.accountId} className={classes.reviewerContainer}>
-                        <div className={classes.reviewerInfo}>
-                            <Badge
-                                className={classes.avatarBadge}
-                                overlap="circle"
-                                anchorOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'right',
-                                }}
-                                invisible={
-                                    participant.status !== 'APPROVED' && participant.status !== 'CHANGES_REQUESTED'
-                                }
-                                badgeContent={
-                                    participant.status === 'APPROVED' ? (
-                                        <Tooltip title="Approved">
-                                            <Box bgcolor={'white'} borderRadius={'100%'}>
-                                                <CheckCircleIcon
-                                                    className={classes.approvedIcon}
-                                                    htmlColor={'#07b82b'}
-                                                />
-                                            </Box>
-                                        </Tooltip>
-                                    ) : participant.status === 'CHANGES_REQUESTED' ? (
-                                        <Tooltip title="Changes requested">
-                                            <Box bgcolor={'white'} borderRadius={'100%'}>
-                                                <RequestedChangesIcon
-                                                    primaryColor={token('color.icon.warning')}
-                                                    label=""
-                                                />
-                                            </Box>
-                                        </Tooltip>
-                                    ) : null
-                                }
-                            >
-                                <Avatar
-                                    alt={participant.displayName}
-                                    src={participant.avatarUrl}
-                                    className={classes.avatar}
-                                />
-                            </Badge>
-                            <Typography className={classes.name}>{participant.displayName}</Typography>
-                        </div>
-                        <Tooltip title="Remove reviewer">
-                            <IconButton
-                                size="small"
-                                onClick={() => handleRemoveReviewer(participant)}
-                                className={`removeButton ${classes.removeButton}`}
-                            >
-                                <CloseIcon fontSize="small" />
-                            </IconButton>
-                        </Tooltip>
+            {activeParticipants.map((participant) => (
+                <div key={participant.accountId} className={classes.reviewerContainer}>
+                    <div className={classes.reviewerInfo}>
+                        <Badge
+                            className={classes.avatarBadge}
+                            overlap="circle"
+                            anchorOrigin={{
+                                vertical: 'top',
+                                horizontal: 'right',
+                            }}
+                            invisible={participant.status !== 'APPROVED' && participant.status !== 'CHANGES_REQUESTED'}
+                            badgeContent={
+                                participant.status === 'APPROVED' ? (
+                                    <Tooltip title="Approved">
+                                        <Box bgcolor={'white'} borderRadius={'100%'}>
+                                            <CheckCircleIcon className={classes.approvedIcon} htmlColor={'#07b82b'} />
+                                        </Box>
+                                    </Tooltip>
+                                ) : participant.status === 'CHANGES_REQUESTED' ? (
+                                    <Tooltip title="Changes requested">
+                                        <Box bgcolor={'white'} borderRadius={'100%'}>
+                                            <RequestedChangesIcon primaryColor={token('color.icon.warning')} label="" />
+                                        </Box>
+                                    </Tooltip>
+                                ) : null
+                            }
+                        >
+                            <Avatar
+                                alt={participant.displayName}
+                                src={participant.avatarUrl}
+                                className={classes.avatar}
+                            />
+                        </Badge>
+                        <Typography className={classes.name}>{participant.displayName}</Typography>
                     </div>
-                ))
-            )}
+                    <Tooltip title="Remove reviewer">
+                        <IconButton
+                            size="small"
+                            onClick={() => handleRemoveReviewer(participant)}
+                            className={`removeButton ${classes.removeButton}`}
+                        >
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                </div>
+            ))}
             <Box mt={1}>
                 <AddReviewers site={site} reviewers={activeParticipants} updateReviewers={handleUpdateReviewers} />
             </Box>

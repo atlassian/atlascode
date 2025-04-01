@@ -1,15 +1,10 @@
-import {
-    Box,
-    CircularProgress,
-    ExpansionPanel,
-    ExpansionPanelDetails,
-    ExpansionPanelSummary,
-    makeStyles,
-} from '@material-ui/core';
+import { Box, ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary, makeStyles } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import React, { memo, useCallback, useState } from 'react';
 import { PanelTitle } from '../common/PanelTitle';
 import { PanelSubtitle } from './PanelSubtitle';
+import Skeleton from '@atlaskit/skeleton';
+
 interface BasicPanelProps {
     title: string;
     subtitle?: string;
@@ -56,6 +51,7 @@ export const BasicPanel: React.FC<BasicPanelProps> = memo(
         const expansionHandler = useCallback((event: React.ChangeEvent<{}>, expanded: boolean) => {
             setInternalExpanded(expanded);
         }, []);
+
         return (
             <Box hidden={!isLoading && hidden} className={classes.root}>
                 <ExpansionPanel
@@ -68,7 +64,9 @@ export const BasicPanel: React.FC<BasicPanelProps> = memo(
                         <PanelTitle>{title}</PanelTitle>
                         {subtitle && <PanelSubtitle>{subtitle}</PanelSubtitle>}
                     </ExpansionPanelSummary>
-                    <ExpansionPanelDetails>{isLoading ? <CircularProgress /> : children}</ExpansionPanelDetails>
+                    <ExpansionPanelDetails>
+                        {isLoading ? <Skeleton width="100%" height="80px" borderRadius={3} /> : children}
+                    </ExpansionPanelDetails>
                 </ExpansionPanel>
             </Box>
         );

@@ -10,10 +10,14 @@ const useStyles = makeStyles(
                 '.vscode-dark': {
                     '--ds-icon-success': '#2ABB7F',
                     '--ds-icon-warning': '#F5CD47',
+                    '--ds-skeleton': '#CECED912',
+                    '--ds-skeleton-subtle': '#BDBDBD0A',
                 },
                 '.vscode-light': {
                     '--ds-icon-success': '#22A06B',
                     '--ds-icon-warning': '#E56910',
+                    '--ds-skeleton': '#0515240F',
+                    '--ds-skeleton-subtle': '#17171708',
                 },
                 ':root': {
                     /* Spacing tokens: Using Atlassian defaults */

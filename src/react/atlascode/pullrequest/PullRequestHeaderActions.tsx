@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ApproveButton } from './ApproveButton';
 import { ApprovalStatus } from 'src/bitbucket/model';
 import { PullRequestDetailsControllerApi, PullRequestDetailsState } from './pullRequestDetailsController';
@@ -9,7 +9,6 @@ import { RequestChangesButton } from './RequestChangesButton';
 type PullRequestHeaderActionsProps = {
     state: PullRequestDetailsState;
     controller: PullRequestDetailsControllerApi;
-    currentUserApprovalStatus: ApprovalStatus;
     isCurrentUserAuthor: boolean;
     isDraftPr: boolean;
     notMerged: boolean;
@@ -18,7 +17,6 @@ type PullRequestHeaderActionsProps = {
 export function PullRequestHeaderActions({
     controller,
     state,
-    currentUserApprovalStatus,
     isCurrentUserAuthor,
     isDraftPr,
     notMerged,
@@ -26,6 +24,17 @@ export function PullRequestHeaderActions({
     const canShowApprove = !isCurrentUserAuthor || state.pr.site.details.isCloud;
     const canShowRequestChanges = !isCurrentUserAuthor;
     const canShowMerge = !isDraftPr && notMerged;
+
+    const [currentUserApprovalStatus, setCurrentUserApprovalStatus] = useState<ApprovalStatus>('UNAPPROVED');
+
+    useEffect(() => {
+        const foundCurrentUser = state.pr.data.participants.find(
+            (participant) => participant.accountId === state.currentUser.accountId,
+        );
+        if (foundCurrentUser) {
+            setCurrentUserApprovalStatus(foundCurrentUser.status);
+        }
+    }, [state.pr.data.participants, state.currentUser.accountId]);
 
     return (
         <ButtonGroup>

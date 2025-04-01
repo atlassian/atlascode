@@ -1,7 +1,7 @@
 import { Box, Container, Grid, makeStyles, Paper, Theme, Divider, useMediaQuery, useTheme } from '@material-ui/core';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
-import React, { useCallback, useEffect, useState } from 'react';
-import { ApprovalStatus, User } from '../../../bitbucket/model';
+import React, { useMemo } from 'react';
+import { User } from '../../../bitbucket/model';
 import { BasicPanel } from '../common/BasicPanel';
 import CommentForm from '../common/CommentForm';
 import { ErrorDisplay } from '../common/ErrorDisplay';
@@ -23,6 +23,7 @@ import { SummaryPanel } from './SummaryPanel';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
 import { PullRequestHeader } from './PullRequestHeader';
+import EmptyState from '@atlaskit/empty-state';
 
 const useStyles = makeStyles((theme: Theme) => ({
     grow: {
@@ -61,15 +62,9 @@ interface PullRequestMainContentProps {
     state: PullRequestDetailsState;
     controller: PullRequestDetailsControllerApi;
     handleFetchUsers: (input: string, abortSignal?: AbortSignal) => Promise<User[]>;
-    taskTitle: () => string;
 }
 
-const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
-    state,
-    controller,
-    handleFetchUsers,
-    taskTitle,
-}) => {
+const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({ state, controller, handleFetchUsers }) => {
     return (
         <Box margin={2}>
             <Grid container spacing={3} direction="column" justify="center">
@@ -167,10 +162,21 @@ const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
 interface PullRequestSidebarProps {
     state: PullRequestDetailsState;
     controller: PullRequestDetailsControllerApi;
-    taskTitle: () => string;
 }
 
-const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controller, taskTitle }) => {
+const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controller }) => {
+    const taskSubtitle = useMemo(() => {
+        const numTasks = state.tasks.length;
+        const numCompletedTasks = state.tasks.filter((task) => task.isComplete).length;
+        return numTasks === 0 ? '0 tasks' : `${numCompletedTasks} of ${numTasks} complete`;
+    }, [state.tasks]);
+
+    const buildStatusSubtitle = useMemo(() => {
+        const numBuilds = state.buildStatuses.length;
+        const numSuccessfulBuilds = state.buildStatuses.filter((status) => status.state === 'SUCCESSFUL').length;
+        return numBuilds === 0 ? '0 builds' : `${numSuccessfulBuilds} of ${numBuilds} passed`;
+    }, [state.buildStatuses]);
+
     return (
         <Box margin={2}>
             <Grid container spacing={1} direction={'column'}>
@@ -178,7 +184,7 @@ const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controll
                     <BasicPanel
                         isLoading={state.loadState.basicData}
                         isDefaultExpanded
-                        hidden={state.buildStatuses.length === 0}
+                        hidden={false}
                         title={`Reviewers`}
                     >
                         <Reviewers
@@ -194,10 +200,9 @@ const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controll
                     <BasicPanel
                         isLoading={state.loadState.buildStatuses}
                         isDefaultExpanded
-                        hidden={state.buildStatuses.length === 0}
-                        title={`${
-                            state.buildStatuses.filter((status) => status.state === 'SUCCESSFUL').length
-                        } of ${state.buildStatuses.length} build${state.buildStatuses.length > 0 ? 's' : ''} passed`}
+                        hidden={false}
+                        subtitle={buildStatusSubtitle}
+                        title={'Builds'}
                     >
                         <PRBuildStatus
                             buildStatuses={state.buildStatuses}
@@ -209,7 +214,7 @@ const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controll
                 <Grid item>
                     <BasicPanel
                         title={'Tasks'}
-                        subtitle={taskTitle()}
+                        subtitle={taskSubtitle}
                         isDefaultExpanded
                         isLoading={state.loadState.tasks}
                     >
@@ -226,41 +231,7 @@ const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controll
 };
 
 export const PullRequestDetailsPage: React.FunctionComponent = () => {
-    const classes = useStyles();
-    const theme = useTheme();
     const [state, controller] = usePullRequestDetailsController();
-    const [currentUserApprovalStatus, setCurrentUserApprovalStatus] = useState<ApprovalStatus>('UNAPPROVED');
-
-    const handleFetchUsers = AwesomeDebouncePromise(
-        async (input: string, abortSignal?: AbortSignal): Promise<User[]> => {
-            return await controller.fetchUsers(state.pr.site, input, abortSignal);
-        },
-        300,
-        { leading: false },
-    );
-
-    const isSomethingLoading = useCallback(() => {
-        return Object.entries(state.loadState).some(
-            (entry) => entry[1] /* Second index is the value in the key/value pair */,
-        );
-    }, [state.loadState]);
-
-    const taskTitle = useCallback(() => {
-        const numTasks = state.tasks.length;
-        const numCompletedTasks = state.tasks.filter((task) => task.isComplete).length;
-        return numTasks === 0 ? '0 tasks' : `${numCompletedTasks} of ${numTasks} complete`;
-    }, [state.tasks]);
-
-    useEffect(() => {
-        const foundCurrentUser = state.pr.data.participants.find(
-            (participant) => participant.accountId === state.currentUser.accountId,
-        );
-        if (foundCurrentUser) {
-            setCurrentUserApprovalStatus(foundCurrentUser.status);
-        }
-    }, [state.pr.data.participants, state.currentUser.accountId]);
-
-    const isWideScreen = useMediaQuery(theme.breakpoints.up('md'));
 
     return (
         <PullRequestDetailsControllerContext.Provider value={controller}>
@@ -269,42 +240,61 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                 postMessageFunc={controller.postMessage}
             >
                 <Container maxWidth="xl">
-                    <PullRequestHeader
-                        state={state}
-                        controller={controller}
-                        currentUserApprovalStatus={currentUserApprovalStatus}
-                        isSomethingLoading={isSomethingLoading}
-                    />
-                    <Divider />
-                    <Box marginTop={1} />
-                    <Grid container spacing={1} direction="row">
-                        <Grid item xs={12} md={9} lg={9} xl={9}>
-                            <Paper className={classes.paper100}>
-                                <PullRequestMainContent
-                                    state={state}
-                                    controller={controller}
-                                    handleFetchUsers={handleFetchUsers}
-                                    taskTitle={taskTitle}
-                                />
-                            </Paper>
-                        </Grid>
-                        <Grid
-                            item
-                            xs={12}
-                            md={3}
-                            lg={3}
-                            xl={3}
-                            style={{ borderLeft: isWideScreen ? '1px solid var(--vscode-input-border)' : 'none' }}
-                        >
-                            <Paper className={classes.paperOverflow}>
-                                <PullRequestSidebar state={state} controller={controller} taskTitle={taskTitle} />
-                            </Paper>
-                        </Grid>
-                    </Grid>
+                    {state.loadState.basicData ? (
+                        <EmptyState header="Loading..." headingLevel={3} />
+                    ) : (
+                        <PullRequestDetailsPageContent state={state} controller={controller} />
+                    )}
                 </Container>
             </AtlascodeErrorBoundary>
         </PullRequestDetailsControllerContext.Provider>
     );
 };
 
+interface PullRequestDetailsPageContentProps {
+    state: PullRequestDetailsState;
+    controller: PullRequestDetailsControllerApi;
+}
+function PullRequestDetailsPageContent({ state, controller }: PullRequestDetailsPageContentProps) {
+    const classes = useStyles();
+    const theme = useTheme();
+    const isWideScreen = useMediaQuery(theme.breakpoints.up('md'));
+    const handleFetchUsers = AwesomeDebouncePromise(
+        async (input: string, abortSignal?: AbortSignal): Promise<User[]> => {
+            return await controller.fetchUsers(state.pr.site, input, abortSignal);
+        },
+        300,
+        { leading: false },
+    );
+    return (
+        <>
+            <PullRequestHeader state={state} controller={controller} />
+            <Divider />
+            <Box marginTop={1} />
+            <Grid container spacing={1} direction="row">
+                <Grid item xs={12} md={9} lg={9} xl={9}>
+                    <Paper className={classes.paper100}>
+                        <PullRequestMainContent
+                            state={state}
+                            controller={controller}
+                            handleFetchUsers={handleFetchUsers}
+                        />
+                    </Paper>
+                </Grid>
+                <Grid
+                    item
+                    xs={12}
+                    md={3}
+                    lg={3}
+                    xl={3}
+                    style={{ borderLeft: isWideScreen ? '1px solid var(--vscode-input-border)' : 'none' }}
+                >
+                    <Paper className={classes.paperOverflow}>
+                        <PullRequestSidebar state={state} controller={controller} />
+                    </Paper>
+                </Grid>
+            </Grid>
+        </>
+    );
+}
 export default PullRequestDetailsPage;

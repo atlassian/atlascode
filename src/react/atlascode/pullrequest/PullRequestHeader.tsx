@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import PageHeader from '@atlaskit/page-header';
 import Breadcrumbs from '@atlaskit/breadcrumbs';
 import { BreadcrumbsItem } from '@atlaskit/breadcrumbs';
@@ -13,7 +13,6 @@ import { RefreshButton } from './RefreshButton';
 import { Flex } from '@atlaskit/primitives';
 import Heading from '@atlaskit/heading';
 import { PullRequestDetailsControllerApi, PullRequestDetailsState } from './pullRequestDetailsController';
-import { ApprovalStatus } from 'src/bitbucket/model';
 import { token } from '@atlaskit/tokens';
 import { Theme } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core';
@@ -24,8 +23,6 @@ import UserAvatar from './UserAvatar';
 interface PullRequestHeaderProps {
     state: PullRequestDetailsState;
     controller: PullRequestDetailsControllerApi;
-    currentUserApprovalStatus: ApprovalStatus;
-    isSomethingLoading: () => boolean;
 }
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -66,23 +63,24 @@ const useStyles = makeStyles((theme: Theme) => ({
     },
 
     prHeaderTitle: {
-        flex: '1 0 auto',
+        flex: '1 1 auto',
         font: token('font.heading.large'),
     },
 }));
 
-export function PullRequestHeader({
-    state,
-    controller,
-    currentUserApprovalStatus,
-    isSomethingLoading,
-}: PullRequestHeaderProps) {
+export function PullRequestHeader({ state, controller }: PullRequestHeaderProps) {
     const prState = state.pr.data.state;
     const isDraftPr = state.pr.data.draft;
     const notMerged = state.pr.data.state === 'OPEN';
     const isCurrentUserAuthor = state.currentUser.accountId === state.pr.data.author.accountId;
 
     const classes = useStyles();
+
+    const isSomethingLoading = useMemo(() => {
+        return Object.entries(state.loadState).some(
+            (entry) => entry[1] /* Second index is the value in the key/value pair */,
+        );
+    }, [state.loadState]);
 
     return (
         <PageHeader
@@ -120,7 +118,6 @@ export function PullRequestHeader({
                     <PullRequestHeaderActions
                         state={state}
                         controller={controller}
-                        currentUserApprovalStatus={currentUserApprovalStatus}
                         isDraftPr={isDraftPr}
                         isCurrentUserAuthor={isCurrentUserAuthor}
                         notMerged={notMerged}
@@ -150,7 +147,7 @@ export function PullRequestHeader({
                 </div>
                 <ButtonGroup>
                     <SourceCheckoutButton state={state} controller={controller} />
-                    <RefreshButton loading={isSomethingLoading()} onClick={controller.refresh} />
+                    <RefreshButton loading={isSomethingLoading} onClick={controller.refresh} />
                 </ButtonGroup>
             </Flex>
         </PageHeader>
