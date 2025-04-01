@@ -1501,6 +1501,7 @@
         "@atlaskit/feature-gate-js-client": "^4.20.0",
         "@atlaskit/form": "^8.4.4",
         "@atlaskit/icon": "^21.9.3",
+        "@atlaskit/icon-lab": "^2.8.0",
         "@atlaskit/inline-dialog": "^13.1.8",
         "@atlaskit/lozenge": "^11.14.0",
         "@atlaskit/modal-dialog": "^12.1.0",

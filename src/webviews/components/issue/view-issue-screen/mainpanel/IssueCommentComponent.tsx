@@ -10,7 +10,6 @@ import {
 import { Box } from '@material-ui/core';
 import Avatar from '@atlaskit/avatar';
 import { RenderedContent } from '../../../RenderedContent';
-import { CommentTime } from '@atlaskit/comment';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import JiraIssueTextAreaEditor from '../common/JiraIssueTextArea';
@@ -111,7 +110,9 @@ const CommentComponent: React.FC<{
                     )}
                 </>
             }
-            time={<CommentTime>{`${formatDistanceToNow(parseISO(comment.created))} ago`}</CommentTime>}
+            time={
+                <div className="inlinePanelSubheading">{`${formatDistanceToNow(parseISO(comment.created))} ago`}</div>
+            }
             actions={actions}
         />
     );

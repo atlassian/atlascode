@@ -14,7 +14,7 @@ import StarIcon from '@atlaskit/icon/glyph/star';
 import StarFilledIcon from '@atlaskit/icon/glyph/star-filled';
 import WatchIcon from '@atlaskit/icon/glyph/watch';
 import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
-
+import AssetsSchemaIcon from '@atlaskit/icon-lab/core/assets-schema';
 import { StatusTransitionMenu } from './StatusTransitionMenu';
 
 type Props = {
@@ -30,6 +30,7 @@ type Props = {
     loadingField: string;
     fetchUsers: (input: string) => Promise<any[]>;
     handleStatusChange: (t: Transition) => void;
+    handleStartWork: () => void;
     transitions: Transition[];
 };
 
@@ -46,6 +47,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
     loadingField,
     fetchUsers,
     handleStatusChange,
+    handleStartWork,
     transitions,
 }) => {
     const originalEstimate: string = fieldValues['timetracking'] ? fieldValues['timetracking'].originalEstimate : '';
@@ -60,6 +62,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
     const [worklogDialogOpen, setWorklogDialogOpen] = React.useState(false);
     const [votesDialogOpen, setVotesDialogOpen] = React.useState(false);
     const [watchesDialogOpen, setWatchesDialogOpen] = React.useState(false);
+    const [isStartWorkHovered, setIsStartWorkHovered] = React.useState(false);
 
     return (
         <Box
@@ -68,30 +71,53 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                 flexDirection: 'row',
                 alignItems: 'center',
                 width: '100%',
+                justifyContent: 'space-between',
             }}
         >
-            {fields['status'] && (
-                <Box style={{ display: 'inline-flex', alignItems: 'center', flexGrow: 0 }}>
-                    <StatusTransitionMenu
-                        transitions={transitions}
-                        currentStatus={fieldValues['status']}
-                        isStatusButtonLoading={loadingField === 'status'}
-                        onStatusChange={handleStatusChange}
-                    />
-                </Box>
-            )}
+            <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
+                <Tooltip content="Create a branch and transition this issue">
+                    <LoadingButton
+                        style={{
+                            alignContent: 'center',
+                            background: isStartWorkHovered
+                                ? 'var(--vscode-button-hoverBackground)'
+                                : 'var(--vscode-button-background)',
+                        }}
+                        onClick={handleStartWork}
+                        iconBefore={<AssetsSchemaIcon label="Start work" />}
+                        isLoading={false}
+                        onMouseOver={() => setIsStartWorkHovered(true)}
+                        onMouseLeave={() => setIsStartWorkHovered(false)}
+                        onFocus={() => setIsStartWorkHovered(true)}
+                        onBlur={() => setIsStartWorkHovered(false)}
+                    >
+                        Start work
+                    </LoadingButton>
+                </Tooltip>
+                {fields['status'] && (
+                    <Box style={{ display: 'inline-flex', alignItems: 'center', flexGrow: 0 }}>
+                        <StatusTransitionMenu
+                            transitions={transitions}
+                            currentStatus={fieldValues['status']}
+                            isStatusButtonLoading={loadingField === 'status'}
+                            onStatusChange={handleStatusChange}
+                        />
+                    </Box>
+                )}
+            </Box>
             <Box
                 style={{
                     display: 'flex',
                     flexDirection: 'row',
+                    alignContent: 'center',
+                    gap: '4px',
                     justifyContent: 'flex-end',
-                    flexGrow: 1,
                     background: 'var(--vscode-editor-background)',
                 }}
             >
                 <Tooltip content="Refresh">
                     <LoadingButton
-                        spacing="compact"
+                        spacing="none"
                         className="ac-button-secondary-new"
                         onClick={handleRefresh}
                         iconBefore={<RefreshIcon label="refresh" />}
@@ -99,7 +125,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                     />
                 </Tooltip>
                 {fields['worklog'] && (
-                    <div className="ac-inline-dialog-new">
+                    <div className={`ac-inline-dialog-new ${worklogDialogOpen ? 'active' : ''}`}>
                         <InlineDialog
                             content={
                                 <WorklogForm
@@ -116,7 +142,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                         >
                             <Tooltip content="Log work">
                                 <LoadingButton
-                                    spacing="compact"
+                                    spacing="none"
                                     className="ac-button-secondary-new"
                                     onClick={() => setWorklogDialogOpen(true)}
                                     iconBefore={<EmojiFrequentIcon label="Log Work" />}
@@ -127,7 +153,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                     </div>
                 )}
                 {fields['watches'] && (
-                    <div className="ac-inline-dialog-new">
+                    <div className={`ac-inline-dialog-new ${watchesDialogOpen ? 'active' : ''}`}>
                         <InlineDialog
                             content={
                                 <WatchesForm
@@ -145,7 +171,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                         >
                             <Tooltip content="Watch options">
                                 <LoadingButton
-                                    spacing="compact"
+                                    spacing="none"
                                     className="ac-button-secondary-new"
                                     onClick={() => {
                                         setWatchesDialogOpen(true);
@@ -166,7 +192,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                     </div>
                 )}
                 {fields['votes'] && (
-                    <div className="ac-inline-dialog-new">
+                    <div className={`ac-inline-dialog-new ${votesDialogOpen ? 'active' : ''}`}>
                         <InlineDialog
                             content={
                                 <VotesForm
@@ -184,7 +210,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                         >
                             <Tooltip content="Vote options">
                                 <LoadingButton
-                                    spacing="compact"
+                                    spacing="none"
                                     className="ac-button-secondary-new"
                                     onClick={() => setVotesDialogOpen(true)}
                                     iconBefore={

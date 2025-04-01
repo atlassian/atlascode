@@ -521,7 +521,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         }))
                     }
                     fetchImage={(img) => this.fetchImage(img)}
-                    handleStartWork={this.handleStartWorkOnIssue}
                 />
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (
@@ -612,6 +611,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     fetchUsers={this.fetchUsers}
                     transitions={this.state.selectFieldOptions['transitions']}
                     handleStatusChange={this.handleStatusChange}
+                    handleStartWork={this.handleStartWorkOnIssue}
                 />
                 <IssueSidebarCollapsible label="Details" items={commonItems} defaultOpen />
                 <IssueSidebarCollapsible label="More fields" items={advancedItems} />

@@ -14,9 +14,9 @@ import JiraIssueTextAreaEditor from '../common/JiraIssueTextArea';
 import { RenderedContent } from '../../../RenderedContent';
 import { Box } from '@material-ui/core';
 import AddIcon from '@atlaskit/icon/glyph/add';
-import Button, { LoadingButton } from '@atlaskit/button';
+import Button from '@atlaskit/button';
 import Tooltip from '@atlaskit/tooltip';
-import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
+
 type Props = {
     fields: FieldUIs;
     fieldValues: FieldValues;
@@ -29,7 +29,6 @@ type Props = {
     subtaskTypes: IssueType[];
     linkTypes: IssueLinkTypeSelectOption[];
     handleOpenIssue: (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => void;
-    handleStartWork: () => void;
     onDelete: (issueLink: any) => void;
     onFetchIssues: (input: string) => Promise<any>;
     fetchUsers: (input: string) => Promise<any[]>;
@@ -48,7 +47,6 @@ const IssueMainPanel: React.FC<Props> = ({
     subtaskTypes,
     linkTypes,
     handleOpenIssue,
-    handleStartWork,
     onDelete,
     onFetchIssues,
     fetchUsers,
@@ -72,7 +70,7 @@ const IssueMainPanel: React.FC<Props> = ({
     const [isInlineDialogOpen, setIsInlineDialogOpen] = React.useState(false);
     const [descriptionText, setDescriptionText] = React.useState(defaultDescription);
     const [isEditingDescription, setIsEditingDescription] = React.useState(false);
-    const [isStartWorkHovered, setIsStartWorkHovered] = React.useState(false);
+
     const addContentDropDown = (
         <Tooltip content="Add content">
             <AddContentDropdown
@@ -133,28 +131,6 @@ const IssueMainPanel: React.FC<Props> = ({
                 ) : (
                     { addContentDropDown }
                 )}
-                <Tooltip content="Create a branch and transition this issue">
-                    <LoadingButton
-                        style={{
-                            alignContent: 'center',
-                            border: isStartWorkHovered
-                                ? '1px solid var(--vscode-list-focusOutline)'
-                                : '1px solid var(--vscode-editorGroup-border)',
-                            background: 'var(--vscode-editor-background)',
-
-                            color: 'var(--vscode-editor-foreground)',
-                        }}
-                        onClick={handleStartWork}
-                        iconBefore={<BitbucketBranchesIcon label="Start work" />}
-                        isLoading={false}
-                        onMouseOver={() => setIsStartWorkHovered(true)}
-                        onMouseLeave={() => setIsStartWorkHovered(false)}
-                        onFocus={() => setIsStartWorkHovered(true)}
-                        onBlur={() => setIsStartWorkHovered(false)}
-                    >
-                        Start work
-                    </LoadingButton>
-                </Tooltip>
             </Box>
             {fields['description'] && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
