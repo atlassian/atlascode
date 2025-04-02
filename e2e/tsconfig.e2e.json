@@ -4,8 +4,8 @@
         "outDir": "../.generated",
         "module": "CommonJS",
         "target": "es2018",
-        "lib": ["es2018", "dom"],
-        "skipDefaultLibCheck": true,
+        "lib": ["ESNext", "dom"],
+        "alwaysStrict": true,
         "resolveJsonModule": true,
         "skipLibCheck": true,
         "sourceMap": true,
@@ -19,8 +19,9 @@
         "noImplicitThis": true,
         "noImplicitAny": true,
         "strictNullChecks": true,
-        "ignoreDeprecations": "5.0",
         "noUnusedLocals": true,
+        "noFallthroughCasesInSwitch": true,
+        "strictPropertyInitialization": true,
         "typeRoots": ["node_modules/@types", "src/typings/"]
     },
     "include": ["tests/**/*"]
