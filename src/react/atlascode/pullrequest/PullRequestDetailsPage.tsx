@@ -175,32 +175,6 @@ const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controll
         <Box margin={2}>
             <Grid container spacing={1} direction={'column'}>
                 <Grid item>
-                    <Typography variant="h6">
-                        <strong>Author</strong>
-                    </Typography>
-                    <Box hidden={state.loadState.basicData}>
-                        <Grid container spacing={1} direction="row" alignItems="center">
-                            <Grid item>
-                                {' '}
-                                <Tooltip title={state.pr.data.author.displayName}>
-                                    <Avatar
-                                        alt={state.pr.data.author.displayName}
-                                        src={state.pr.data.author.avatarUrl}
-                                    />
-                                </Tooltip>
-                            </Grid>
-
-                            <Grid item>
-                                <Typography>{state.pr.data.author.displayName}</Typography>
-                            </Grid>
-                        </Grid>
-                    </Box>
-                    <Box hidden={!state.loadState.basicData}>
-                        <CircularProgress />
-                    </Box>
-                </Grid>
-
-                <Grid item>
                     <BasicPanel
                         isLoading={state.loadState.basicData}
                         isDefaultExpanded
@@ -214,24 +188,6 @@ const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controll
                             isLoading={state.loadState.basicData}
                         />
                     </BasicPanel>
-                </Grid>
-
-                <Grid item>
-                    <Typography variant="h6">
-                        <strong>Created</strong>
-                    </Typography>
-                    <Tooltip title={state.pr.data.ts || 'unknown'}>
-                        <Typography>{formatDate(state.pr.data.ts)}</Typography>
-                    </Tooltip>
-                </Grid>
-
-                <Grid item>
-                    <Typography variant="h6">
-                        <strong>Updated</strong>
-                    </Typography>
-                    <Tooltip title={state.pr.data.updatedTs || 'unknown'}>
-                        <Typography>{formatDate(state.pr.data.updatedTs)}</Typography>
-                    </Tooltip>
                 </Grid>
 
                 <Grid item>
