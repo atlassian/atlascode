@@ -31,6 +31,8 @@ describe('errorReporting', () => {
             registerErrorReporting();
 
             expect(process.addListener).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
+            expect(process.addListener).toHaveBeenCalledWith('uncaughtExceptionMonitor', expect.any(Function));
+            expect(process.addListener).toHaveBeenCalledWith('unhandledRejection', expect.any(Function));
             expect(Logger.addListener).toHaveBeenCalledWith('error', expect.any(Function));
         });
 
@@ -38,7 +40,7 @@ describe('errorReporting', () => {
             registerErrorReporting();
             registerErrorReporting();
 
-            expect(process.addListener).toHaveBeenCalledTimes(1);
+            expect(process.addListener).toHaveBeenCalledTimes(3);
             expect(Logger.addListener).toHaveBeenCalledTimes(1);
         });
 
@@ -47,6 +49,8 @@ describe('errorReporting', () => {
             unregisterErrorReporting();
 
             expect(process.removeListener).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
+            expect(process.removeListener).toHaveBeenCalledWith('uncaughtExceptionMonitor', expect.any(Function));
+            expect(process.removeListener).toHaveBeenCalledWith('unhandledRejection', expect.any(Function));
             expect(Logger.removeListener).toHaveBeenCalledWith('error', expect.any(Function));
         });
     });

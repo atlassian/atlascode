@@ -34,6 +34,8 @@ export function registerErrorReporting(): void {
 
         try {
             process.addListener('uncaughtException', errorHandler);
+            process.addListener('uncaughtExceptionMonitor', errorHandler);
+            process.addListener('unhandledRejection', errorHandler);
             Logger.addListener('error', errorHandler);
         } catch {}
     }
@@ -42,6 +44,8 @@ export function registerErrorReporting(): void {
 export function unregisterErrorReporting(): void {
     try {
         process.removeListener('uncaughtException', errorHandler);
+        process.removeListener('uncaughtExceptionMonitor', errorHandler);
+        process.removeListener('unhandledRejection', errorHandler);
         Logger.removeListener('error', errorHandler);
         nodeJsErrorReportingRegistered = false;
     } catch {}
