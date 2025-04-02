@@ -62,7 +62,6 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
     const [worklogDialogOpen, setWorklogDialogOpen] = React.useState(false);
     const [votesDialogOpen, setVotesDialogOpen] = React.useState(false);
     const [watchesDialogOpen, setWatchesDialogOpen] = React.useState(false);
-    const [isStartWorkHovered, setIsStartWorkHovered] = React.useState(false);
 
     return (
         <Box
@@ -77,19 +76,10 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
             <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
                 <Tooltip content="Create a branch and transition this issue">
                     <LoadingButton
-                        style={{
-                            alignContent: 'center',
-                            background: isStartWorkHovered
-                                ? 'var(--vscode-button-hoverBackground)'
-                                : 'var(--vscode-button-background)',
-                        }}
+                        className="ac-button"
                         onClick={handleStartWork}
                         iconBefore={<AssetsSchemaIcon label="Start work" />}
                         isLoading={false}
-                        onMouseOver={() => setIsStartWorkHovered(true)}
-                        onMouseLeave={() => setIsStartWorkHovered(false)}
-                        onFocus={() => setIsStartWorkHovered(true)}
-                        onBlur={() => setIsStartWorkHovered(false)}
                     >
                         Start work
                     </LoadingButton>

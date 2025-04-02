@@ -80,6 +80,7 @@ export const StatusTransitionMenu: React.FC<Props> = (props) => {
                 >
                     {props.transitions.map((t) => (
                         <DropdownItem
+                            key={t.id}
                             css={{
                                 ':hover': {
                                     background: 'var(--vscode-editor-selectionHighlightBackground) !important',

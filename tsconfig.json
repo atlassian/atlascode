@@ -23,7 +23,7 @@
         "strictPropertyInitialization": true,
         "ignoreDeprecations": "5.0",
         "noUnusedLocals": true,
-        "typeRoots": ["node_modules/@types", "src/typings/"],
+        "typeRoots": ["node_modules/@types", "src/typings/"]
     },
     "include": ["**/src/**/*", "webpack.*.js", "e2e/**/*"],
     "exclude": [
