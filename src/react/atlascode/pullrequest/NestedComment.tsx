@@ -1,12 +1,51 @@
-import { Avatar, Box, Button, CircularProgress, Grid, Typography } from '@material-ui/core';
+import { Avatar, Box, Button, CircularProgress, Grid, Tooltip, Typography, makeStyles } from '@material-ui/core';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Comment, User } from '../../../bitbucket/model';
 import CommentForm from '../common/CommentForm';
-import { formatDate } from './bitbucketDateFormatter';
+import { formatTime } from '../util/date-fns';
 import { CommentTaskList } from './CommentTaskList';
 import { NestedCommentList } from './NestedCommentList';
 import { PullRequestDetailsControllerContext } from './pullRequestDetailsController';
 import { TaskAdder } from './CommentTaskAdder';
+import { format, parseISO } from 'date-fns';
+
+const useStyles = makeStyles({
+    actionButton: {
+        textTransform: 'none',
+        minWidth: 'auto',
+        padding: '0',
+        '&:hover': {
+            background: 'transparent',
+            textDecoration: 'underline',
+        },
+        fontWeight: 'normal',
+        fontSize: '14px',
+        color: 'inherit',
+    },
+    buttonSeparator: {
+        color: 'inherit',
+        content: '.',
+        display: 'inline-Lock',
+        textAlign: 'left',
+        verticalAlign: 'middle',
+        marginRight: '8px',
+        marginLeft: '8px',
+    },
+    avatar: {
+        width: '24',
+        height: '24',
+    },
+    userName: {
+        fontWeight: 'bold',
+    },
+    timestamp: {
+        marginLeft: '8px',
+        cursor: 'default',
+    },
+    commentTaskList: {
+        marginTop: '8px',
+    },
+});
 
 type NestedCommentProps = {
     comment: Comment;
@@ -14,12 +53,14 @@ type NestedCommentProps = {
     fetchUsers: (input: string) => Promise<User[]>;
     onDelete: (comment: Comment) => Promise<void>;
 };
+
 export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
     comment,
     currentUser,
     fetchUsers,
     onDelete,
 }) => {
+    const classes = useStyles();
     const [isReplying, setIsReplying] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState(false);
@@ -88,18 +129,24 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
             <Box hidden={isEditing}>
                 <Grid container spacing={1} direction="row" alignItems="flex-start">
                     <Grid item>
-                        <Avatar src={comment.user.avatarUrl} alt={comment.user.displayName} />
+                        <Avatar
+                            className={classes.avatar}
+                            src={comment.user.avatarUrl}
+                            alt={comment.user.displayName}
+                        />
                     </Grid>
-                    <Grid item>
-                        <Grid container direction={'column'}>
+                    <Grid item xs>
+                        <Grid container direction="column">
                             <Grid item>
                                 <Typography variant="subtitle2">
-                                    {comment.user.displayName}
-                                    {'  '}
-                                    {formatDate(comment.ts)}
+                                    <span className={classes.userName}>{comment.user.displayName}</span>
+                                    <Tooltip title={format(parseISO(comment.ts), "MMMM d, yyyy 'at' HH:mm:ss a zzz")}>
+                                        <span className={classes.timestamp}>
+                                            {formatTime(comment.ts, { daysPreference: 7 })}
+                                        </span>
+                                    </Tooltip>
                                 </Typography>
                             </Grid>
-
                             <Box hidden={!isLoading}>
                                 <CircularProgress />
                             </Box>
@@ -107,83 +154,81 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
                                 <Typography dangerouslySetInnerHTML={{ __html: comment.htmlContent }} />
                             </Box>
                             <Grid item>
-                                <Grid container direction={'row'}>
-                                    <Grid item>
-                                        <Button color={'primary'} onClick={handleReplyPressed}>
-                                            Reply
+                                <Grid container direction={'row'} alignItems="center">
+                                    <Button className={classes.actionButton} disableRipple onClick={handleReplyPressed}>
+                                        Reply
+                                    </Button>
+                                    <span className={classes.buttonSeparator}>·</span>
+                                    <Box hidden={!comment.editable}>
+                                        <Button
+                                            className={classes.actionButton}
+                                            disableRipple
+                                            onClick={handleEditPressed}
+                                        >
+                                            Edit
                                         </Button>
-                                    </Grid>
-                                    <Grid item>
-                                        <Box hidden={!comment.editable}>
-                                            <Button color={'primary'} onClick={handleEditPressed}>
-                                                Edit
-                                            </Button>
-                                        </Box>
-                                    </Grid>
-                                    <Grid item>
-                                        <Box hidden={comment.deleted || !comment.deletable}>
-                                            <Button color={'primary'} onClick={handleDelete}>
-                                                Delete
-                                            </Button>
-                                        </Box>
-                                    </Grid>
-                                    <Grid item>
-                                        <Box marginLeft={2}>
-                                            <Button color={'primary'} onClick={handleCreateTaskPressed}>
-                                                Create Task
-                                            </Button>
-                                        </Box>
-                                    </Grid>
+                                        <span className={classes.buttonSeparator}>·</span>
+                                    </Box>
+                                    <Box hidden={comment.deleted || !comment.deletable}>
+                                        <Button className={classes.actionButton} disableRipple onClick={handleDelete}>
+                                            Delete
+                                        </Button>
+                                        <span className={classes.buttonSeparator}>·</span>
+                                    </Box>
+                                    <Button
+                                        className={classes.actionButton}
+                                        disableRipple
+                                        onClick={handleCreateTaskPressed}
+                                    >
+                                        Create task
+                                    </Button>
                                 </Grid>
+                            </Grid>
+                            <Grid item className={classes.commentTaskList}>
+                                <CommentTaskList
+                                    tasks={comment.tasks}
+                                    onEdit={controller.editTask}
+                                    onDelete={controller.deleteTask}
+                                />
+                            </Grid>
+                            <Grid item>
+                                <Box hidden={!isCreatingTask}>
+                                    <TaskAdder handleCancel={handleCancelTask} addTask={handleAddTask} />
+                                </Box>
+                            </Grid>
+                            <Grid item>
+                                <Box hidden={!isReplying}>
+                                    <CommentForm
+                                        currentUser={currentUser}
+                                        onSave={handleSave}
+                                        onCancel={handleCancel}
+                                        fetchUsers={fetchUsers}
+                                    />
+                                </Box>
+                            </Grid>
+                            <Grid item>
+                                <Box hidden={comment.children.length === 0}>
+                                    <NestedCommentList
+                                        comments={comment.children}
+                                        currentUser={currentUser}
+                                        onDelete={onDelete}
+                                        fetchUsers={fetchUsers}
+                                    />
+                                </Box>
                             </Grid>
                         </Grid>
                     </Grid>
                 </Grid>
             </Box>
+            {/* Edit form */}
             <Box hidden={!isEditing}>
-                <Grid item>
-                    <CommentForm
-                        initialContent={comment.rawContent}
-                        currentUser={currentUser}
-                        onSave={handleEdit}
-                        onCancel={handleCancelEdit}
-                        fetchUsers={fetchUsers}
-                    />
-                </Grid>
-            </Box>
-            <Box hidden={!isCreatingTask}>
-                <Grid item>
-                    <TaskAdder handleCancel={handleCancelTask} addTask={handleAddTask} />
-                </Grid>
-            </Box>
-
-            <Grid item>
-                <CommentTaskList tasks={comment.tasks} onEdit={controller.editTask} onDelete={controller.deleteTask} />
-            </Grid>
-            <Box hidden={!isReplying}>
-                <Grid item>
-                    <Box marginLeft={5}>
-                        <CommentForm
-                            currentUser={currentUser}
-                            onSave={handleSave}
-                            onCancel={handleCancel}
-                            fetchUsers={fetchUsers}
-                        />
-                    </Box>
-                </Grid>
-            </Box>
-
-            <Box hidden={comment.children.length === 0}>
-                <Grid item>
-                    <Box marginLeft={5}>
-                        <NestedCommentList
-                            comments={comment.children}
-                            currentUser={currentUser}
-                            onDelete={onDelete}
-                            fetchUsers={fetchUsers}
-                        />
-                    </Box>
-                </Grid>
+                <CommentForm
+                    initialContent={comment.rawContent}
+                    currentUser={currentUser}
+                    onSave={handleEdit}
+                    onCancel={handleCancelEdit}
+                    fetchUsers={fetchUsers}
+                />
             </Box>
         </React.Fragment>
     );
