@@ -37,7 +37,6 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
 
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.refresh, this),
-            Container.jqlManager.onDidJQLChange(this.refresh, this),
             commands.registerCommand(Commands.JiraSearchIssues, this.createIssueQuickPick),
         );
 

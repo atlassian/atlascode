@@ -245,12 +245,13 @@ export type PullRequestData = {
     title: string;
     htmlSummary: string;
     rawSummary: string;
-    ts: string;
-    updatedTs: string;
+    ts: string | number;
+    updatedTs: string | number;
     state: 'MERGED' | 'SUPERSEDED' | 'OPEN' | 'DECLINED';
     closeSourceBranch: boolean;
     taskCount: number;
     buildStatuses?: BuildStatus[];
+    draft: boolean;
 };
 
 export interface PullRequest {
@@ -286,6 +287,7 @@ const emptyPullRequestData: PullRequestData = {
     state: 'OPEN',
     closeSourceBranch: false,
     taskCount: 0,
+    draft: false,
 };
 export const emptyPullRequest: PullRequest = {
     site: emptyBitbucketSite,
