@@ -2,12 +2,7 @@ import { InlineTextEditor, ToggleWithLabel } from '@atlassianlabs/guipi-core-com
 import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import {
     Box,
-    Button,
     CircularProgress,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
     Grid,
     makeStyles,
     MenuItem,
@@ -19,12 +14,15 @@ import {
     Theme,
     Typography,
 } from '@material-ui/core';
+import Modal, { ModalBody, ModalFooter, ModalHeader, ModalTitle, ModalTransition } from '@atlaskit/modal-dialog';
 import React, { useCallback, useEffect, useState } from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { BitbucketIssue, Commit, MergeStrategy, PullRequestData } from '../../../bitbucket/model';
 import { BitbucketTransitionMenu } from './BitbucketTransitionMenu';
 import { JiraTransitionMenu } from './JiraTransitionMenu';
 import { MergeChecks } from './MergeChecks';
+import Button from '@atlaskit/button';
+import { ReviewerActionButton } from './ReviewActionButton';
 
 const useStyles = makeStyles((theme: Theme) => ({
     table: {
@@ -247,148 +245,155 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
     }, [mergeStrategies, mergeStrategy]);
 
     return (
-        <Box>
-            <Box hidden={loadState.basicData}>
-                <Button
-                    color={'primary'}
-                    variant={'contained'}
-                    onClick={handleOpen}
-                    disabled={prData.state !== 'OPEN' || isMerging}
-                >
-                    <Typography variant={'button'} noWrap>
-                        {prData.state === 'OPEN' ? 'Merge' : 'Merged'}
-                    </Typography>
-                </Button>
-            </Box>
-            <Box hidden={!loadState.basicData}>
-                <CircularProgress />
-            </Box>
+        <>
+            <ReviewerActionButton
+                onClick={handleOpen}
+                isDisabled={prData.state !== 'OPEN' || isMerging}
+                label={prData.state === 'OPEN' ? 'Merge' : 'Merged'}
+                isError={false}
+                isLoading={false}
+            />
 
-            <Dialog
-                open={dialogOpen}
-                onClose={handleClose}
-                fullWidth
-                maxWidth={'md'}
-                aria-labelledby="merge-dialog-title"
-            >
-                <DialogTitle>
-                    <Typography variant="h4">Merge Pull Request</Typography>
-                </DialogTitle>
-                <DialogContent>
-                    <MergeChecks prData={prData} />
-                    <Box marginTop={5} />
-                    <Grid container spacing={1} direction="column" alignItems="stretch">
-                        <Grid item>
-                            <Box hidden={loadState.mergeStrategies}>
-                                <TextField
-                                    select
-                                    value={mergeStrategy}
-                                    onChange={handleMergeStrategyChange}
-                                    fullWidth
-                                    size="small"
-                                    label="Merge Strategy"
-                                >
-                                    <MenuItem
-                                        key={emptyMergeStrategy.label}
-                                        //@ts-ignore
-                                        value={emptyMergeStrategy}
-                                        disabled
-                                    >
-                                        Select a merge strategy
-                                    </MenuItem>
-                                    {mergeStrategies.map((strategy) => (
-                                        //@ts-ignore
-                                        <MenuItem key={strategy.label} value={strategy}>
-                                            {strategy.label}
-                                        </MenuItem>
-                                    ))}
-                                </TextField>
-                            </Box>
-                            <Box hidden={!loadState.mergeStrategies}>
-                                <CircularProgress />
-                            </Box>
-                        </Grid>
-                        <Grid item>
-                            <Box hidden={!loadState.commits}>
-                                <CircularProgress />
-                            </Box>
-                            <Box hidden={loadState.commits}>
-                                <InlineTextEditor
-                                    fullWidth
-                                    multiline
-                                    rows={5}
-                                    defaultValue={commitMessage}
-                                    onSave={handleCommitMessageChange}
-                                    placeholder={'Enter commit message'}
-                                    saveDisabled={isEmptyCommitMessage}
-                                    label={'Commit Message'}
-                                />
-                            </Box>
-                        </Grid>
-                        <Grid item>
-                            <Box hidden={!loadState.relatedJiraIssues && !loadState.relatedBitbucketIssues}>
-                                <CircularProgress />
-                            </Box>
-                            <Box hidden={loadState.relatedJiraIssues || loadState.relatedBitbucketIssues}>
-                                <Box
-                                    marginTop={3}
-                                    hidden={
-                                        !(transitionedJiraIssues.length > 0 || transitionedBitbucketIssues.length > 0)
-                                    }
-                                >
-                                    <Typography variant="h5">Transition issues</Typography>
-                                </Box>
-                                <TableContainer>
-                                    <Table size="small" aria-label="issues to transition">
-                                        <TableBody className={classes.table}>
-                                            {transitionedJiraIssues.map((issue) => (
-                                                <JiraTransitionMenu
-                                                    issue={issue}
-                                                    handleIssueTransition={handleJiraIssueTransition}
-                                                    onShouldTransitionChange={handleShouldTransitionChangeJira}
-                                                    key={issue.key}
-                                                />
+            <ModalTransition>
+                {dialogOpen && (
+                    <Modal onClose={handleClose}>
+                        <ModalHeader>
+                            <ModalTitle>Merge Pull Request</ModalTitle>
+                        </ModalHeader>
+                        <ModalBody>
+                            <MergeChecks prData={prData} />
+                            <Box marginTop={5} />
+                            <Grid container spacing={1} direction="column" alignItems="stretch">
+                                <Grid item>
+                                    <Box hidden={loadState.mergeStrategies}>
+                                        <TextField
+                                            select
+                                            value={mergeStrategy}
+                                            onChange={handleMergeStrategyChange}
+                                            fullWidth
+                                            size="small"
+                                            label="Merge Strategy"
+                                        >
+                                            <MenuItem
+                                                key={emptyMergeStrategy.label}
+                                                //@ts-ignore
+                                                value={emptyMergeStrategy}
+                                                disabled
+                                            >
+                                                Select a merge strategy
+                                            </MenuItem>
+                                            {mergeStrategies.map((strategy) => (
+                                                //@ts-ignore
+                                                <MenuItem key={strategy.label} value={strategy}>
+                                                    {strategy.label}
+                                                </MenuItem>
                                             ))}
-                                            {transitionedBitbucketIssues.map((issue) => (
-                                                <BitbucketTransitionMenu
-                                                    issue={issue}
-                                                    handleIssueTransition={handleBitbucketIssueTransition}
-                                                    onShouldTransitionChange={handleShouldTransitionChangeBitbucket}
-                                                    key={issue.data.id}
-                                                />
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            </Box>
-                        </Grid>
-                        <Grid item>
-                            <ToggleWithLabel
-                                control={
-                                    <Switch
-                                        size="small"
-                                        color="primary"
-                                        value="Close source branch"
-                                        checked={closeSourceBranch}
-                                        onChange={handleCloseSourceBranchChange}
+                                        </TextField>
+                                    </Box>
+                                    <Box hidden={!loadState.mergeStrategies}>
+                                        <CircularProgress />
+                                    </Box>
+                                </Grid>
+                                <Grid item>
+                                    <Box hidden={!loadState.commits}>
+                                        <CircularProgress />
+                                    </Box>
+                                    <Box hidden={loadState.commits}>
+                                        <InlineTextEditor
+                                            fullWidth
+                                            multiline
+                                            rows={5}
+                                            defaultValue={commitMessage}
+                                            onSave={handleCommitMessageChange}
+                                            placeholder={'Enter commit message'}
+                                            saveDisabled={isEmptyCommitMessage}
+                                            label={'Commit Message'}
+                                        />
+                                    </Box>
+                                </Grid>
+                                <Grid item>
+                                    <Box hidden={!loadState.relatedJiraIssues && !loadState.relatedBitbucketIssues}>
+                                        <CircularProgress />
+                                    </Box>
+                                    <Box hidden={loadState.relatedJiraIssues || loadState.relatedBitbucketIssues}>
+                                        <Box
+                                            marginTop={3}
+                                            hidden={
+                                                !(
+                                                    transitionedJiraIssues.length > 0 ||
+                                                    transitionedBitbucketIssues.length > 0
+                                                )
+                                            }
+                                        >
+                                            <Typography variant="h5">Transition issues</Typography>
+                                        </Box>
+                                        <TableContainer>
+                                            <Table size="small" aria-label="issues to transition">
+                                                <TableBody className={classes.table}>
+                                                    {transitionedJiraIssues.map((issue) => (
+                                                        <JiraTransitionMenu
+                                                            issue={issue}
+                                                            handleIssueTransition={handleJiraIssueTransition}
+                                                            onShouldTransitionChange={handleShouldTransitionChangeJira}
+                                                            key={issue.key}
+                                                        />
+                                                    ))}
+                                                    {transitionedBitbucketIssues.map((issue) => (
+                                                        <BitbucketTransitionMenu
+                                                            issue={issue}
+                                                            handleIssueTransition={handleBitbucketIssueTransition}
+                                                            onShouldTransitionChange={
+                                                                handleShouldTransitionChangeBitbucket
+                                                            }
+                                                            key={issue.data.id}
+                                                        />
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
+                                    </Box>
+                                </Grid>
+                                <Grid item>
+                                    <ToggleWithLabel
+                                        control={
+                                            <Switch
+                                                size="small"
+                                                color="primary"
+                                                value="Close source branch"
+                                                checked={closeSourceBranch}
+                                                onChange={handleCloseSourceBranchChange}
+                                            />
+                                        }
+                                        label={'Close source branch'}
+                                        spacing={1}
+                                        variant="body1"
                                     />
-                                }
-                                label={'Close source branch'}
-                                spacing={1}
-                                variant="body1"
-                            />
-                        </Grid>
-                    </Grid>
-                </DialogContent>
-                <DialogActions>
-                    <Button variant="contained" onClick={handleClose} color="primary">
-                        Cancel
-                    </Button>
-                    <Button variant="contained" onClick={handleMerge} color="primary">
-                        Merge
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
+                                </Grid>
+                            </Grid>
+                        </ModalBody>
+                        <ModalFooter>
+                            <Button
+                                appearance="subtle"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleClose();
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                appearance="danger"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMerge();
+                                }}
+                            >
+                                Merge
+                            </Button>
+                        </ModalFooter>
+                    </Modal>
+                )}
+            </ModalTransition>
+        </>
     );
 };

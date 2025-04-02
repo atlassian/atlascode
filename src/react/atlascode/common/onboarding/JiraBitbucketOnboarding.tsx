@@ -71,7 +71,7 @@ export const JiraBitbucketOnboarding: React.FC<Props> = ({
         <Container style={{ justifyContent: 'center' }} maxWidth="xs">
             <Box style={wrapperStyles} flexDirection="column">
                 {product === 'Jira' ? <JiraOnboardingLogo /> : <BitbucketOnboardingLogo />}
-                <Typography variant="h2">What version of {product} do you use?</Typography>
+                <Typography variant="h2">Sign in to {product}</Typography>
                 <Box flexDirection="column" style={radioGroupStyles}>
                     <OnboardingRadio
                         checked={checked}

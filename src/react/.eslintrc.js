@@ -13,7 +13,6 @@ module.exports = {
                 paths: ['vscode'],
                 patterns: [
                     '@material-ui/core/*',
-                    '@atlaskit/*',
                     '@atlassianlabs/guipi-core-components/*',
                     '@atlassianlabs/guipi-core-controller/*',
                     '@atlassianlabs/guipi-jira-components/*',
