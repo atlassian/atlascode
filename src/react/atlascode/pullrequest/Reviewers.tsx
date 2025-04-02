@@ -147,7 +147,7 @@ export const Reviewers: React.FunctionComponent<ReviewersProps> = ({
                                             <Box bgcolor={'white'} borderRadius={'100%'}>
                                                 <CheckCircleIcon
                                                     className={classes.approvedIcon}
-                                                    htmlColor={'#07b82b'}
+                                                    htmlColor={'var(--ds-icon-success)'}
                                                 />
                                             </Box>
                                         </Tooltip>
