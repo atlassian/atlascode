@@ -1,25 +1,26 @@
-import { ConfigurationChangeEvent, ExtensionContext, OutputChannel, window } from 'vscode';
+import { ConfigurationChangeEvent, Event, ExtensionContext, OutputChannel, window } from 'vscode';
 import { configuration, OutputLevel } from './config/configuration';
 import { extensionOutputChannelName } from './constants';
 import { Container } from './container';
+import { EventEmitter } from 'vscode';
 
 const ConsolePrefix = `[${extensionOutputChannelName}]`;
 
-function safeCall(func: Function, ...args: any[]) {
-    try {
-        func(...args);
-    } catch {}
-}
-
-export type OnErrorEventListener = (error: Error) => void;
+export type ErrorEvent = {
+    error: Error;
+};
 
 export class Logger {
     private static _instance: Logger;
     private level: OutputLevel = OutputLevel.Info;
     private output: OutputChannel | undefined;
 
-    private errorEventListeners: OnErrorEventListener[] = [];
+    private static _onError = new EventEmitter<ErrorEvent>();
+    public static get onError(): Event<ErrorEvent> {
+        return Logger._onError.event;
+    }
 
+    // constructor is private to ensure only a single instance is created
     private constructor() {}
 
     public static get Instance(): Logger {
@@ -48,25 +49,6 @@ export class Logger {
             }
         } else {
             this.output = this.output || window.createOutputChannel(extensionOutputChannelName);
-        }
-    }
-
-    public static addListener(event: 'error', listener: OnErrorEventListener) {
-        this.Instance.addListener(event, listener);
-    }
-
-    public static removeListener(event: 'error', listener: OnErrorEventListener) {
-        this.Instance.removeListener(event, listener);
-    }
-
-    public addListener(event: 'error', listener: OnErrorEventListener) {
-        this.errorEventListeners.push(listener);
-    }
-
-    public removeListener(event: 'error', listener: OnErrorEventListener) {
-        const index = this.errorEventListeners.indexOf(listener);
-        if (index > -1) {
-            this.errorEventListeners.splice(index, 1);
         }
     }
 
@@ -107,7 +89,7 @@ export class Logger {
     }
 
     public error(ex: Error, classOrMethod?: string, ...params: any[]): void {
-        this.errorEventListeners.forEach((listener) => safeCall(listener, ex));
+        Logger._onError.fire({ error: ex });
 
         if (this.level === OutputLevel.Silent) {
             return;

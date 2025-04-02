@@ -3,6 +3,7 @@ import { registerErrorReporting, unregisterErrorReporting, registerAnalyticsClie
 import { Logger } from './logger';
 import { TrackEvent } from './analytics-node-client/src/types';
 import { AnalyticsClient } from './analytics-node-client/src/client.min';
+import { Disposable } from 'vscode';
 import * as analytics from './analytics';
 
 const mockAnalyticsClient = expansionCastTo<AnalyticsClient>({
@@ -15,8 +16,7 @@ jest.mock('./analytics', () => ({
 
 describe('errorReporting', () => {
     beforeEach(() => {
-        jest.spyOn(Logger, 'addListener').mockImplementation(jest.fn());
-        jest.spyOn(Logger, 'removeListener').mockImplementation(jest.fn());
+        jest.spyOn(Logger, 'onError').mockImplementation(jest.fn());
         jest.spyOn(process, 'addListener').mockImplementation(jest.fn());
         jest.spyOn(process, 'removeListener').mockImplementation(jest.fn());
     });
@@ -33,7 +33,7 @@ describe('errorReporting', () => {
             expect(process.addListener).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
             expect(process.addListener).toHaveBeenCalledWith('uncaughtExceptionMonitor', expect.any(Function));
             expect(process.addListener).toHaveBeenCalledWith('unhandledRejection', expect.any(Function));
-            expect(Logger.addListener).toHaveBeenCalledWith('error', expect.any(Function));
+            expect(Logger.onError).toHaveBeenCalled();
         });
 
         it('should not register error handlers more than once', () => {
@@ -41,17 +41,22 @@ describe('errorReporting', () => {
             registerErrorReporting();
 
             expect(process.addListener).toHaveBeenCalledTimes(3);
-            expect(Logger.addListener).toHaveBeenCalledTimes(1);
+            expect(Logger.onError).toHaveBeenCalledTimes(1);
         });
 
         it('should unregister error handlers and restore the Error object', () => {
+            const eventRegistrationObj: Disposable = { dispose: () => {} };
+            (Logger.onError as jest.Mock).mockReturnValue(eventRegistrationObj);
+
+            jest.spyOn(eventRegistrationObj, 'dispose');
+
             registerErrorReporting();
             unregisterErrorReporting();
 
             expect(process.removeListener).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
             expect(process.removeListener).toHaveBeenCalledWith('uncaughtExceptionMonitor', expect.any(Function));
             expect(process.removeListener).toHaveBeenCalledWith('unhandledRejection', expect.any(Function));
-            expect(Logger.removeListener).toHaveBeenCalledWith('error', expect.any(Function));
+            expect(eventRegistrationObj.dispose).toHaveBeenCalled();
         });
     });
 
@@ -64,14 +69,14 @@ describe('errorReporting', () => {
             jest.spyOn(analytics, 'errorEvent').mockResolvedValue(mockEvent);
             jest.spyOn(mockAnalyticsClient, 'sendTrackEvent').mockImplementation(jest.fn());
 
-            (Logger.addListener as jest.Mock).mockImplementation((event, listener) => {
+            (Logger.onError as jest.Mock).mockImplementation((listener) => {
                 errorlistener = listener;
             });
 
             registerErrorReporting();
 
             expect(errorlistener!).toBeDefined();
-            errorlistener!(expansionCastTo<Error>({ message: 'Error1', stack: '@' }));
+            errorlistener!({ error: expansionCastTo<Error>({ message: 'Error1', stack: '@' }) });
 
             expect(analytics.errorEvent).toHaveBeenCalled();
             expect(mockAnalyticsClient.sendTrackEvent).not.toHaveBeenCalled();

@@ -2,9 +2,12 @@ import { TrackEvent } from './analytics-node-client/src/types';
 import { errorEvent } from './analytics';
 import { Logger } from './logger';
 import { AnalyticsClient } from './analytics-node-client/src/client.min';
+import { Disposable } from 'vscode';
 
 let nodeJsErrorReportingRegistered = false;
 let analyticsClientRegistered = false;
+
+let _logger_onError_eventRegistration: Disposable | undefined = undefined;
 
 let analyticsClient: AnalyticsClient | undefined;
 let eventQueue: Promise<TrackEvent>[] | undefined = [];
@@ -36,7 +39,8 @@ export function registerErrorReporting(): void {
             process.addListener('uncaughtException', errorHandler);
             process.addListener('uncaughtExceptionMonitor', errorHandler);
             process.addListener('unhandledRejection', errorHandler);
-            Logger.addListener('error', errorHandler);
+
+            _logger_onError_eventRegistration = Logger.onError((data) => errorHandler(data.error), undefined);
         } catch {}
     }
 }
@@ -46,7 +50,10 @@ export function unregisterErrorReporting(): void {
         process.removeListener('uncaughtException', errorHandler);
         process.removeListener('uncaughtExceptionMonitor', errorHandler);
         process.removeListener('unhandledRejection', errorHandler);
-        Logger.removeListener('error', errorHandler);
+
+        _logger_onError_eventRegistration?.dispose();
+        _logger_onError_eventRegistration = undefined;
+
         nodeJsErrorReportingRegistered = false;
     } catch {}
 }
