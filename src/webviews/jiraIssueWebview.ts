@@ -21,7 +21,7 @@ import { Commands } from '../commands';
 import { postComment } from '../commands/jira/postComment';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
 import { Container } from '../container';
-import { FeatureFlagClient, Features } from '../util/featureFlags';
+
 import {
     EditIssueAction,
     isAddAttachmentsAction,
@@ -68,9 +68,6 @@ export class JiraIssueWebview
         return 'Jira Issue';
     }
     public get id(): string {
-        if (FeatureFlagClient.checkGateValueWithInstrumentation(Features.EnableNewJiraIssueView)) {
-            return 'viewEditIssueScreen';
-        }
         return 'viewIssueScreen';
     }
 

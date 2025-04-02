@@ -513,9 +513,6 @@ pre {
 }
 
 .ac-issue-created-updated {
-    color: var(--vscode-editorCodeLens-foreground);
-}
-.ac-issue-created-updated-new {
     padding-top: 16px;
     display: flex;
     align-items: flex-start;
@@ -811,22 +808,15 @@ section button span {
 /*-------------------- BEGIN - inline dialog --------------------*/
 
 .ac-inline-dialog > div {
-    color: var(--vscode-editor-foreground);
-}
-
-.ac-inline-dialog-new > div {
     align-items: center;
     color: var(--vscode-editor-foreground);
     background: var(--vscode-editor-background) !important;
     border-radius: 3px;
 }
-.ac-inline-dialog-new.active > div {
+.ac-inline-dialog.active > div {
     color: var(--vscode-editor-foreground);
     background: var(--vscode-editor-background--lighten-05) !important;
     border-radius: 3px;
-}
-.ac-inline-dialog > div {
-    background-color: var(--vscode-editor-background--lighten-15);
 }
 
 .vscode-light .ac-inline-dialog > div {
@@ -951,20 +941,12 @@ div[role='dialog'],
     color: black !important;
 }
 
-.ac-button-secondary-new {
+.ac-button-secondary {
     background: var(--vscode-editor-background) !important;
     color: var(--vscode-editor-foreground) !important;
 }
-.ac-button-secondary-new:hover {
-    background: var(--vscode-editor-background--lighten-075) !important;
-}
-
-.ac-button-secondary {
-    background: rgb(240, 240, 240) !important;
-}
-
 .ac-button-secondary:hover {
-    background: rgb(200, 200, 200) !important;
+    background: var(--vscode-editor-background--lighten-075) !important;
 }
 
 .ac-button-secondary:active {

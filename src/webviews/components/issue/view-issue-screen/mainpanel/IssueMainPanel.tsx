@@ -111,7 +111,7 @@ const IssueMainPanel: React.FC<Props> = ({
                             alignItems: 'center',
                         }}
                     >
-                        <div className="ac-inline-dialog-new">
+                        <div className="ac-inline-dialog">
                             <InlineDialog
                                 content={
                                     <WorklogForm
@@ -223,7 +223,7 @@ const IssueMainPanel: React.FC<Props> = ({
                         <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <label className="ac-field-label">Work log</label>
                             <Button
-                                className="ac-button-secondary-new"
+                                className="ac-button-secondary"
                                 appearance="subtle"
                                 iconBefore={<AddIcon size="small" label="Add" />}
                                 onClick={() => setIsInlineDialogOpen(true)}

@@ -108,14 +108,14 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                 <Tooltip content="Refresh">
                     <LoadingButton
                         spacing="none"
-                        className="ac-button-secondary-new"
+                        className="ac-button-secondary"
                         onClick={handleRefresh}
                         iconBefore={<RefreshIcon label="refresh" />}
                         isLoading={loadingField === 'refresh'}
                     />
                 </Tooltip>
                 {fields['worklog'] && (
-                    <div className={`ac-inline-dialog-new ${worklogDialogOpen ? 'active' : ''}`}>
+                    <div className={`ac-inline-dialog ${worklogDialogOpen ? 'active' : ''}`}>
                         <InlineDialog
                             content={
                                 <WorklogForm
@@ -133,7 +133,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                             <Tooltip content="Log work">
                                 <LoadingButton
                                     spacing="none"
-                                    className="ac-button-secondary-new"
+                                    className="ac-button-secondary"
                                     onClick={() => setWorklogDialogOpen(true)}
                                     iconBefore={<EmojiFrequentIcon label="Log Work" />}
                                     isLoading={loadingField === 'worklog'}
@@ -143,7 +143,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                     </div>
                 )}
                 {fields['watches'] && (
-                    <div className={`ac-inline-dialog-new ${watchesDialogOpen ? 'active' : ''}`}>
+                    <div className={`ac-inline-dialog ${watchesDialogOpen ? 'active' : ''}`}>
                         <InlineDialog
                             content={
                                 <WatchesForm
@@ -162,7 +162,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                             <Tooltip content="Watch options">
                                 <LoadingButton
                                     spacing="none"
-                                    className="ac-button-secondary-new"
+                                    className="ac-button-secondary"
                                     onClick={() => {
                                         setWatchesDialogOpen(true);
                                     }}
@@ -182,7 +182,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                     </div>
                 )}
                 {fields['votes'] && (
-                    <div className={`ac-inline-dialog-new ${votesDialogOpen ? 'active' : ''}`}>
+                    <div className={`ac-inline-dialog ${votesDialogOpen ? 'active' : ''}`}>
                         <InlineDialog
                             content={
                                 <VotesForm
@@ -201,7 +201,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                             <Tooltip content="Vote options">
                                 <LoadingButton
                                     spacing="none"
-                                    className="ac-button-secondary-new"
+                                    className="ac-button-secondary"
                                     onClick={() => setVotesDialogOpen(true)}
                                     iconBefore={
                                         fieldValues['votes'].hasVoted ? (

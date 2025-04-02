@@ -2,7 +2,6 @@ export const enum Features {
     EnableNewUriHandler = 'atlascode-enable-new-uri-handler',
     OldSidebarTreeView = 'atlascode-old-sidebar-treeview',
     NoOpFeature = 'atlascode-noop',
-    EnableNewJiraIssueView = 'atlascode-jira-ux-redesign',
 }
 
 export const enum Experiments {

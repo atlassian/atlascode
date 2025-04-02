@@ -87,7 +87,7 @@ export const ChildIssuesComponent: React.FC<Props> = ({
                     {loading ? <p>Saving...</p> : null}
                 </div>
                 <Button
-                    className="ac-button-secondary-new"
+                    className="ac-button-secondary"
                     appearance="subtle"
                     iconBefore={<AddIcon size="small" label="Add" />}
                     onClick={() => setIsEditing(true)}
