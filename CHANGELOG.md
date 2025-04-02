@@ -1,3 +1,8 @@
+## What's new in 3.4.23
+
+### Improvements 
+- Improved the pull request details page with idea to make UI more intuitive and close to Butbucket UI.
+
 ## What's new in 3.4.22
 
 ### Improvements 
