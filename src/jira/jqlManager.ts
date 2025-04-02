@@ -1,6 +1,6 @@
 import PQueue from 'p-queue/dist';
 import { v4 } from 'uuid';
-import { ConfigurationChangeEvent, ConfigurationTarget, Disposable, Event, EventEmitter } from 'vscode';
+import { ConfigurationChangeEvent, ConfigurationTarget, Disposable } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
 import { configuration } from '../config/configuration';
 import { JQLEntry } from '../config/model';
@@ -14,11 +14,6 @@ export type JQLUpdateEvent = {
 export class JQLManager extends Disposable {
     private _disposable: Disposable;
     private _queue = new PQueue({ concurrency: 1 });
-
-    private _onDidJQLChange = new EventEmitter<JQLUpdateEvent>();
-    public get onDidJQLChange(): Event<JQLUpdateEvent> {
-        return this._onDidJQLChange.event;
-    }
 
     // In this PR: https://github.com/atlassian/atlascode/pull/169
     // we have introduced a new field in DetailedSiteInfo that is populated at auth time.
@@ -52,7 +47,6 @@ export class JQLManager extends Disposable {
 
     dispose() {
         this._disposable.dispose();
-        this._onDidJQLChange.dispose();
     }
 
     public async updateFilters() {
