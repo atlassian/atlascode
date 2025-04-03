@@ -56,7 +56,7 @@
         "compile": "npm run clean && npm run compile:react && npm run compile:extension",
         "compile:extension": "NODE_OPTIONS=--openssl-legacy-provider webpack --mode production --config webpack.extension.prod.js",
         "compile:react": "NODE_OPTIONS=--openssl-legacy-provider webpack --mode production --config webpack.react.prod.js",
-        "postinstall": "cp ./scripts/githooks/pre-commit ./.git/hooks && patch-package",
+        "postinstall": "cp ./scripts/githooks/* ./.git/hooks && patch-package",
         "extension:clean": "rm -rf ./atlascode-*.vsix",
         "extension:package:prerelease": "npm run extension:clean && vsce package --pre-release --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",
         "extension:package": "npm run extension:clean && vsce package --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",

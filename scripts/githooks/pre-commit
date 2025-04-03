@@ -1,1 +1,42 @@
-npm run lint
+#!/bin/bash
+
+# Allows us to read user input below, assigns stdin to keyboard
+exec < /dev/tty
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+stagedFiles=($(git diff --name-only --staged))
+
+# nothing staged, nothing to do.
+if (( ${#stagedFiles[@]} == 0 )); then
+    exit 0
+fi
+
+stagedWithUnstaged=($(git status -s | awk '/MM / { print $2 }'))
+
+# warn if there are unstaged files with a corresponding staged file.
+# e.g., 'util.ts' in both staged and unstaged area.
+# usually this means you have run 'lint:fix' and forgot to add the fixed files.
+if (( ${#stagedWithUnstaged[@]} != 0 )); then
+    echo "You have unstaged files, do you want to continue the commit without them?"
+    printf "Files: ${RED}${stagedWithUnstaged[*]}${NC}\n"
+    printf "Type '${GREEN}y${NC}' to commit without them, anything else to abort : "
+    read answer
+
+    if [ "$answer" == "${answer#[Yy]}" ] ;then 
+        echo Aborted.
+        exit 1
+    fi
+fi
+
+# run lint only if the staged area contains a .js, .jsx, .ts, or .tsx file
+for file in "${stagedFiles[@]}"; do
+  case $file in
+    (*.js) npm run lint;;
+    (*.jsx) npm run lint;;
+    (*.ts) npm run lint;;
+    (*.tsx) npm run lint;;
+  esac
+done
