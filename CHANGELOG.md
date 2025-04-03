@@ -1,3 +1,8 @@
+## What's new in 3.4.24
+
+### Improvements 
+- In PR details page, made UI Changes to make the comment section and Add Reviewer option cleaner and user friendly
+
 ## What's new in 3.4.23
 
 ### Improvements 
