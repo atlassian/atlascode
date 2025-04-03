@@ -14,8 +14,6 @@ import CloseIcon from '@material-ui/icons/Close';
 import React, { useCallback, useEffect, useState } from 'react';
 import { BitbucketSite, Reviewer, User } from '../../../bitbucket/model';
 import { AddReviewers } from './AddReviewers';
-import RequestedChangesIcon from './RequestedChangesIcon';
-import { token } from '@atlaskit/tokens';
 
 const useStyles = makeStyles({
     reviewerContainer: {

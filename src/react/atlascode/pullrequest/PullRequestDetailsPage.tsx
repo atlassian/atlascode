@@ -1,12 +1,37 @@
-import { Box, Container, Grid, makeStyles, Paper, Theme, Divider, useMediaQuery, useTheme } from '@material-ui/core';
+import { InlineTextEditor, RefreshButton } from '@atlassianlabs/guipi-core-components';
+import {
+    AppBar,
+    Avatar,
+    Box,
+    Button,
+    CircularProgress,
+    Container,
+    Divider,
+    Grid,
+    Link,
+    makeStyles,
+    Paper,
+    Theme,
+    Toolbar,
+    Tooltip,
+    Typography,
+    useMediaQuery,
+    useTheme,
+} from '@material-ui/core';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ApprovalStatus, User } from '../../../bitbucket/model';
 import { BasicPanel } from '../common/BasicPanel';
 import CommentForm from '../common/CommentForm';
+import { CopyLinkButton } from '../common/CopyLinkButton';
 import { ErrorDisplay } from '../common/ErrorDisplay';
+import { ApproveButton } from './ApproveButton';
+import { formatDate } from './bitbucketDateFormatter';
+import { BranchInfo } from './BranchInfo';
 import { Commits } from './Commits';
 import { DiffList } from './DiffList';
+import { MergeDialog } from './MergeDialog';
+import { RequestChangesButton } from './RequestChangesButton';
 import { NestedCommentList } from './NestedCommentList';
 import { PageTaskList } from './PageTaskList';
 import { PRBuildStatus } from './PRBuildStatus';
@@ -22,7 +47,6 @@ import { Reviewers } from './Reviewers';
 import { SummaryPanel } from './SummaryPanel';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
-import { PullRequestHeader } from './PullRequestHeader';
 
 const useStyles = makeStyles((theme: Theme) => ({
     grow: {
@@ -56,6 +80,127 @@ const useStyles = makeStyles((theme: Theme) => ({
         },
     },
 }));
+
+interface PullRequestHeaderProps {
+    state: PullRequestDetailsState;
+    controller: PullRequestDetailsControllerApi;
+    currentUserApprovalStatus: ApprovalStatus;
+    isSomethingLoading: () => boolean;
+}
+
+const PullRequestHeader: React.FC<PullRequestHeaderProps> = ({
+    state,
+    controller,
+    currentUserApprovalStatus,
+    isSomethingLoading,
+}) => {
+    return (
+        <AppBar position="relative">
+            <Toolbar>
+                <Box flexGrow={1}>
+                    <Typography variant={'h3'}>
+                        <Link color="textPrimary" href={state.pr.data.url}>
+                            {`${state.pr.data.destination!.repo.displayName}: Pull request #${state.pr.data.id}`}
+                        </Link>
+                    </Typography>
+                </Box>
+                <CopyLinkButton
+                    tooltip="Copy link to pull request"
+                    url={state.pr.data.url}
+                    onClick={controller.copyLink}
+                />
+                <Box marginLeft={1} hidden={state.loadState.basicData}>
+                    <RequestChangesButton
+                        hidden={
+                            !state.pr.site.details.isCloud &&
+                            state.currentUser.accountId === state.pr.data.author.accountId
+                        }
+                        status={currentUserApprovalStatus}
+                        onApprove={controller.updateApprovalStatus}
+                    />
+                </Box>
+                <Box marginLeft={1} hidden={state.loadState.basicData}>
+                    <ApproveButton
+                        hidden={
+                            !state.pr.site.details.isCloud &&
+                            state.currentUser.accountId === state.pr.data.author.accountId
+                        }
+                        status={currentUserApprovalStatus}
+                        onApprove={controller.updateApprovalStatus}
+                    />
+                </Box>
+                <Box marginLeft={1} hidden={state.loadState.basicData}>
+                    <MergeDialog
+                        prData={state.pr.data}
+                        commits={state.commits}
+                        relatedJiraIssues={state.relatedJiraIssues}
+                        relatedBitbucketIssues={state.relatedBitbucketIssues}
+                        mergeStrategies={state.mergeStrategies}
+                        loadState={{
+                            basicData: state.loadState.basicData,
+                            commits: state.loadState.commits,
+                            mergeStrategies: state.loadState.mergeStrategies,
+                            relatedJiraIssues: state.loadState.relatedJiraIssues,
+                            relatedBitbucketIssues: state.loadState.relatedBitbucketIssues,
+                        }}
+                        merge={controller.merge}
+                    />
+                </Box>
+                <RefreshButton loading={isSomethingLoading()} onClick={controller.refresh} />
+            </Toolbar>
+        </AppBar>
+    );
+};
+
+interface PullRequestTitleSectionProps {
+    state: PullRequestDetailsState;
+    controller: PullRequestDetailsControllerApi;
+}
+
+const PullRequestTitleSection: React.FC<PullRequestTitleSectionProps> = ({ state, controller }) => {
+    return (
+        <Box margin={2}>
+            <Grid container direction={'column'} spacing={1}>
+                <Grid item>
+                    <InlineTextEditor fullWidth defaultValue={state.pr.data.title} onSave={controller.updateTitle} />
+                </Grid>
+                <Grid item>
+                    <Grid container direction="row" spacing={2} justify={'space-between'}>
+                        <Grid item>
+                            <Box marginLeft={2}>
+                                <BranchInfo
+                                    source={state.pr.data.source}
+                                    destination={state.pr.data.destination}
+                                    author={state.pr.data.author}
+                                    isLoading={state.loadState.basicData}
+                                />
+                            </Box>
+                        </Grid>
+
+                        <Grid item>
+                            <Button
+                                disabled={
+                                    state.pr.data.source.branchName === state.currentBranchName ||
+                                    state.isCheckingOutBranch
+                                }
+                                onClick={controller.checkoutBranch}
+                                color={'primary'}
+                            >
+                                <Typography variant="button" noWrap>
+                                    {state.pr.data.source.branchName === state.currentBranchName
+                                        ? 'Source branch checked out'
+                                        : state.isCheckingOutBranch
+                                          ? 'Checking out...'
+                                          : 'Checkout source branch'}
+                                </Typography>
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Box>
+    );
+};
 
 interface PullRequestMainContentProps {
     state: PullRequestDetailsState;
@@ -175,19 +320,61 @@ const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controll
         <Box margin={2}>
             <Grid container spacing={1} direction={'column'}>
                 <Grid item>
-                    <BasicPanel
-                        isLoading={state.loadState.basicData}
-                        isDefaultExpanded
-                        hidden={state.buildStatuses.length === 0}
-                        title={`Reviewers`}
-                    >
+                    <Typography variant="h6">
+                        <strong>Author</strong>
+                    </Typography>
+                    <Box hidden={state.loadState.basicData}>
+                        <Grid container spacing={1} direction="row" alignItems="center">
+                            <Grid item>
+                                {' '}
+                                <Tooltip title={state.pr.data.author.displayName}>
+                                    <Avatar
+                                        alt={state.pr.data.author.displayName}
+                                        src={state.pr.data.author.avatarUrl}
+                                    />
+                                </Tooltip>
+                            </Grid>
+
+                            <Grid item>
+                                <Typography>{state.pr.data.author.displayName}</Typography>
+                            </Grid>
+                        </Grid>
+                    </Box>
+                    <Box hidden={!state.loadState.basicData}>
+                        <CircularProgress />
+                    </Box>
+                </Grid>
+
+                <Grid item>
+                    <Typography variant="h6">
+                        <strong>Reviewers</strong>
+                    </Typography>
+                    <Box marginLeft={2} marginTop={1}>
                         <Reviewers
                             site={state.pr.site}
                             participants={state.pr.data.participants}
                             onUpdateReviewers={controller.updateReviewers}
                             isLoading={state.loadState.basicData}
                         />
-                    </BasicPanel>
+                    </Box>
+                </Grid>
+
+                <Grid item>
+                    <Typography variant="h6">
+                        <strong>Created</strong>
+                    </Typography>
+                    <Tooltip title={state.pr.data.ts || 'unknown'}>
+                        <Typography>{formatDate(state.pr.data.ts)}</Typography>
+                    </Tooltip>
+                </Grid>
+
+                <Grid item>
+                    <Typography variant="h6">
+                        <strong>Updated</strong>
+                    </Typography>
+                    <Tooltip title={state.pr.data.updatedTs || 'unknown'}>
+                        <Typography>{formatDate(state.pr.data.updatedTs)}</Typography>
+                    </Tooltip>
                 </Grid>
 
                 <Grid item>
@@ -280,6 +467,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                     <Grid container spacing={1} direction="row">
                         <Grid item xs={12} md={9} lg={9} xl={9}>
                             <Paper className={classes.paper100}>
+                                <PullRequestTitleSection state={state} controller={controller} />
                                 <PullRequestMainContent
                                     state={state}
                                     controller={controller}

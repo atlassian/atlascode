@@ -1,35 +1,31 @@
+import { Box, Button, Typography } from '@material-ui/core';
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import React, { useCallback } from 'react';
 import { ApprovalStatus } from '../../../bitbucket/model';
-import CheckCircleIcon from '@atlaskit/icon/glyph/check-circle';
-import { ReviewerActionButton } from './ReviewActionButton';
-import { token } from '@atlaskit/tokens';
 
 type ApproveButtonProps = {
+    hidden?: boolean;
     status: ApprovalStatus;
     onApprove: (status: ApprovalStatus) => void;
-    isDisabled: boolean;
 };
 
-export const ApproveButton: React.FunctionComponent<ApproveButtonProps> = ({ status, onApprove, isDisabled }) => {
+export const ApproveButton: React.FunctionComponent<ApproveButtonProps> = ({ hidden, status, onApprove }) => {
     const handleOnApprove = useCallback(() => {
         onApprove(status === 'APPROVED' ? 'UNAPPROVED' : 'APPROVED');
     }, [onApprove, status]);
 
     return (
-        <ReviewerActionButton
-            mainIcon={
-                <CheckCircleIcon
-                    primaryColor={status === 'APPROVED' ? token('color.icon.success') : 'default'}
-                    label=""
-                    size="small"
-                />
-            }
-            label={status === 'APPROVED' ? 'Approved' : 'Approve'}
-            isSelected={status === 'APPROVED'}
-            onClick={handleOnApprove}
-            isLoading={false}
-            isDisabled={isDisabled}
-            isError={false}
-        />
+        <Box hidden={hidden}>
+            <Button
+                startIcon={<CheckCircleIcon htmlColor={'#07b82b'} />}
+                color={'primary'}
+                variant={'contained'}
+                onClick={handleOnApprove}
+            >
+                <Typography variant={'button'} noWrap>
+                    {status === 'APPROVED' ? 'Unapprove' : 'Approve'}
+                </Typography>
+            </Button>
+        </Box>
     );
 };

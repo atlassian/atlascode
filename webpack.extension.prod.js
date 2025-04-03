@@ -81,6 +81,7 @@ module.exports = [
             splitChunks: {
                 cacheGroups: {
                     styles: {
+                        name: 'main',
                         test: /\.css$/,
                         chunks: 'all',
                         enforce: true,
@@ -103,9 +104,7 @@ module.exports = [
                 'process.env.ATLASCODE_TEST_USER_API_TOKEN': JSON.stringify(process.env.ATLASCODE_TEST_USER_API_TOKEN),
                 'process.env.ATLASCODE_FF_OVERRIDES': JSON.stringify(process.env.ATLASCODE_FF_OVERRIDES),
                 'process.env.ATLASCODE_EXP_OVERRIDES_BOOL': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_BOOL),
-                'process.env.ATLASCODE_EXP_OVERRIDES_STRING': JSON.stringify(
-                    process.env.ATLASCODE_EXP_OVERRIDES_STRING,
-                ),
+                'process.env.ATLASCODE_EXP_OVERRIDES_STRING': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_STRING),
                 'process.env.CI': JSON.stringify(process.env.CI),
             }),
         ],
