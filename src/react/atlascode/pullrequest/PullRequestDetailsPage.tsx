@@ -6,7 +6,6 @@ import {
     Button,
     CircularProgress,
     Container,
-    Divider,
     Grid,
     Link,
     makeStyles,
@@ -15,8 +14,6 @@ import {
     Toolbar,
     Tooltip,
     Typography,
-    useMediaQuery,
-    useTheme,
 } from '@material-ui/core';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useEffect, useState } from 'react';
