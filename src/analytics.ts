@@ -84,9 +84,9 @@ export async function errorEvent(error: Error | string): Promise<TrackEvent> {
     const attributes =
         typeof error === 'string'
             ? { name: 'Error', message: error }
-            : { name: error.name, message: error.message, stack: error.stack! };
+            : { name: error.name || 'Error', message: error.message, stack: error.stack! };
 
-    return trackEvent('initialized', 'featureFlagClient', { attributes });
+    return trackEvent('errorEvent', 'atlascode', { attributes });
 }
 
 // Feature Flag Events
