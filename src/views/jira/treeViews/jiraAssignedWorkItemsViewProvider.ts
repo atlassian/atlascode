@@ -72,15 +72,15 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
         if (configuration.changed(e, 'jira.explorer.enabled')) {
             setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
-            this.refreshWithouNotifications();
+            this.refreshWithoutNotifications();
         } else if (configuration.changed(e, 'jira.explorer')) {
-            this.refreshWithouNotifications();
+            this.refreshWithoutNotifications();
         }
     }
 
     private onSitesDidChange(e: SitesAvailableUpdateEvent): void {
         if (e.product.key === ProductJira.key) {
-            this.refreshWithouNotifications();
+            this.refreshWithoutNotifications();
         }
     }
 
@@ -88,7 +88,7 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
         this._disposable.dispose();
     }
 
-    private refreshWithouNotifications(): void {
+    private refreshWithoutNotifications(): void {
         this._skipNotificationForNextFetch = true;
         this.refresh();
     }
