@@ -167,9 +167,11 @@ export type Commit = {
 
 export type BuildStatus = {
     name: string;
+    key: string;
     state: 'SUCCESSFUL' | 'FAILED' | 'INPROGRESS' | 'STOPPED';
     url: string;
     ts: string;
+    last_updated?: string;
 };
 
 export type MergeStrategy = {

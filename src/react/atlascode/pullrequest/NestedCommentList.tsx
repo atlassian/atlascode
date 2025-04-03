@@ -1,4 +1,4 @@
-import { Grid } from '@material-ui/core';
+import { Grid, makeStyles } from '@material-ui/core';
 import React from 'react';
 import { Comment, User } from '../../../bitbucket/model';
 import { NestedComment } from './NestedComment';
@@ -9,16 +9,24 @@ type NestedCommentListProps = {
     fetchUsers: (input: string) => Promise<User[]>;
     onDelete: (comment: Comment) => Promise<void>;
 };
+
+const useStyles = makeStyles({
+    nestedComment: {
+        marginTop: 16,
+    },
+});
+
 export const NestedCommentList: React.FunctionComponent<NestedCommentListProps> = ({
     comments,
     currentUser,
     fetchUsers,
     onDelete,
 }) => {
+    const classes = useStyles();
     return (
         <Grid container spacing={1} direction="column" justify="center">
             {comments.map((comment) => (
-                <Grid item key={comment.id}>
+                <Grid item key={comment.id} className={classes.nestedComment}>
                     <NestedComment
                         comment={comment}
                         currentUser={currentUser}
