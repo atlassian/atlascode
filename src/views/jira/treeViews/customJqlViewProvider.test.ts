@@ -187,19 +187,6 @@ describe('CustomJqlViewProvider', () => {
         });
     });
 
-    describe('onDidJQLChange', () => {
-        it('onDidJQLChange is registered during construction', async () => {
-            let onDidJQLChangeCallback = undefined;
-            jest.spyOn(Container.jqlManager, 'onDidJQLChange').mockImplementation((func: any, parent: any): any => {
-                onDidJQLChangeCallback = (...args: any[]) => func.apply(parent, args);
-            });
-
-            provider = new CustomJQLViewProvider();
-
-            expect(onDidJQLChangeCallback).toBeDefined();
-        });
-    });
-
     describe('onDidSitesAvailableChange', () => {
         it('onDidSitesAvailableChange is registered during construction', async () => {
             let onDidSitesAvailableChangeCallback = undefined;

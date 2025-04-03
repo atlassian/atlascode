@@ -5,7 +5,9 @@
 # the repo. Unless a later match takes precedence,
 # @global-owner1 and @global-owner2 will be requested for
 # review when someone opens a pull request.
-*       @bwieger-atlassian-com @sdzh-atlassian @cabella-dot @marcomura
+# AXON TEAM: @bwieger-atlassian-com @sdzh-atlassian @cabella-dot @marcomura
+# DEV INNER LOOP: @akalia-atlassian @pastelsky
+*       @bwieger-atlassian-com @sdzh-atlassian @cabella-dot @marcomura @akalia-atlassian @pastelsky
 
 # Order is important; the last matching pattern takes the most
 # precedence. When someone opens a pull request that only
