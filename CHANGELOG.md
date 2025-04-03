@@ -1,15 +1,10 @@
-## What's new in 3.4.24
-
-### Improvements 
-
-- In PR details page, made UI Changes to make the comment section and Add Reviewer option cleaner and user friendly
-- Improved the notification for new Jira issues, which now includes issues created long time ago but just assigned to you.
-
 ## What's new in 3.4.23
 
 ### Improvements 
 
 - Improved the pull request details page with idea to make UI more intuitive and close to Butbucket UI.
+- In PR details page, made UI Changes to make the comment section and Add Reviewer option cleaner and user friendly
+- Improved the notification for new Jira issues, which now includes issues created long time ago but just assigned to you.
 
 ## What's new in 3.4.22
 
