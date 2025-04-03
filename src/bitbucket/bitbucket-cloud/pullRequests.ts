@@ -887,6 +887,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 state: pr.state!,
                 closeSourceBranch: !!pr.close_source_branch,
                 taskCount: pr.task_count || 0,
+                draft: pr.draft!,
             },
         };
     }
