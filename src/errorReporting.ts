@@ -12,14 +12,9 @@ let _logger_onError_eventRegistration: Disposable | undefined = undefined;
 let analyticsClient: AnalyticsClient | undefined;
 let eventQueue: Promise<TrackEvent>[] | undefined = [];
 
-function errorHandler(error: Error): void {
+function errorHandler(error: Error | string): void {
     try {
-        if (error.hasOwnProperty('__atlascode_logged')) {
-            return;
-        }
-        (error as any).__atlascode_logged = true;
-
-        Logger.debug('[ERROR]', error);
+        Logger.debug('[LOGGED ERROR]', error);
 
         const event = errorEvent(error);
 
@@ -53,9 +48,10 @@ export function unregisterErrorReporting(): void {
 
         _logger_onError_eventRegistration?.dispose();
         _logger_onError_eventRegistration = undefined;
-
+    } catch {
+    } finally {
         nodeJsErrorReportingRegistered = false;
-    } catch {}
+    }
 }
 
 export async function registerAnalyticsClient(client: AnalyticsClient): Promise<void> {
@@ -63,14 +59,11 @@ export async function registerAnalyticsClient(client: AnalyticsClient): Promise<
         analyticsClientRegistered = true;
 
         analyticsClient = client;
+        const queue = eventQueue!;
+        eventQueue = undefined;
 
         try {
-            const queue = eventQueue!;
-            eventQueue = undefined;
             await Promise.all(queue.map((event) => event.then((e) => client.sendTrackEvent(e))));
-        } catch {
-        } finally {
-            eventQueue = undefined;
-        }
+        } catch {}
     }
 }
