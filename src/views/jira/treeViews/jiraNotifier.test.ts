@@ -73,10 +73,7 @@ describe('JiraNotifier', () => {
         const jiraNotifier = new JiraNotifier();
         jiraNotifier.notifyForNewAssignedIssues(issues);
 
-        expect(window.showInformationMessage).toHaveBeenCalledWith(
-            '[ISSUE-1] "Issue 1" added to explorer',
-            'Open Issue',
-        );
+        expect(window.showInformationMessage).toHaveBeenCalledWith('[ISSUE-1] "Issue 1" assigned to you', 'Open Issue');
     });
 
     it('should handle multiple new issues correctly', () => {
@@ -90,7 +87,7 @@ describe('JiraNotifier', () => {
         jiraNotifier.notifyForNewAssignedIssues(issues);
 
         expect(window.showInformationMessage).toHaveBeenCalledWith(
-            '[ISSUE-1] "Issue 1", [ISSUE-2] "Issue 2" and [ISSUE-3] "Issue 3" added to explorer',
+            '[ISSUE-1] "Issue 1", [ISSUE-2] "Issue 2" and [ISSUE-3] "Issue 3" assigned to you',
             'View Atlassian Explorer',
         );
     });
@@ -107,7 +104,7 @@ describe('JiraNotifier', () => {
         jiraNotifier.notifyForNewAssignedIssues(issues);
 
         expect(window.showInformationMessage).toHaveBeenCalledWith(
-            '[ISSUE-1] "Issue 1", [ISSUE-2] "Issue 2" and 2 other new issues added to explorer',
+            '[ISSUE-1] "Issue 1", [ISSUE-2] "Issue 2" and 2 other new issues assigned to you',
             'View Atlassian Explorer',
         );
     });
