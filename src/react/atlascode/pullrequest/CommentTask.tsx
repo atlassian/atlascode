@@ -1,124 +1,107 @@
-import { Box, Button, Checkbox, CircularProgress, Grid, TextField, Typography } from '@material-ui/core';
-import React, { useCallback, useEffect, useState } from 'react';
+import { Checkbox, IconButton, makeStyles, Tooltip } from '@material-ui/core';
+import DeleteIcon from '@material-ui/icons/Delete';
+import React, { useCallback, useState } from 'react';
 import { Task } from '../../../bitbucket/model';
+import { EditableTextComponent } from './EditableTextComponent';
 
 type CommentTaskProps = {
     task: Task;
     onEdit: (task: Task) => Promise<void>;
     onDelete: (task: Task) => Promise<void>;
 };
+
+const useStyles = makeStyles({
+    taskContainer: {
+        display: 'flex',
+        alignItems: 'flex-start',
+        '&:hover .deleteButton': {
+            opacity: 1,
+        },
+        width: '100%',
+        minWidth: 0,
+    },
+    checkbox: {
+        padding: 0,
+        marginRight: 8,
+        marginTop: 3,
+    },
+    deleteButton: {
+        padding: 4,
+        marginLeft: 4,
+        marginTop: 3,
+        opacity: 0,
+        transition: 'opacity 0.2s',
+        '&:hover': {
+            color: 'var(--vscode-errorForeground)',
+        },
+    },
+});
+
 export const CommentTask: React.FunctionComponent<CommentTaskProps> = ({ task, onEdit, onDelete }) => {
-    const [isEditing, setIsEditing] = useState(false);
+    const classes = useStyles();
     const [isLoading, setIsLoading] = useState(false);
-    const [taskContent, setTaskContent] = useState(task.content);
+    const [isEditing, setIsEditing] = useState(false);
 
-    const handleEditPressed = useCallback(() => {
-        setIsEditing(!isEditing);
-    }, [isEditing]);
-
-    const handleSave = useCallback(async () => {
+    const handleMarkTaskComplete = useCallback(async () => {
         setIsLoading(true);
-        await onEdit({ ...task, content: taskContent });
-        setIsEditing(false);
-    }, [taskContent, task, onEdit]);
+        await onEdit({ ...task, isComplete: !task.isComplete });
+        setIsLoading(false);
+    }, [task, onEdit]);
 
-    const handleCancel = useCallback(() => {
-        setIsEditing(false);
-    }, []);
+    const handleEditContent = useCallback(
+        async (newContent: string) => {
+            if (newContent.trim() !== task.content) {
+                setIsLoading(true);
+                await onEdit({ ...task, content: newContent });
+                setIsLoading(false);
+            }
+            setIsEditing(false);
+        },
+        [task, onEdit],
+    );
 
     const handleDelete = useCallback(async () => {
         setIsLoading(true);
         await onDelete(task);
     }, [task, onDelete]);
 
-    const handleMarkTaskComplete = useCallback(async () => {
-        setIsLoading(true);
-        await onEdit({ ...task, isComplete: !task.isComplete });
-    }, [task, onEdit]);
+    const handleCancel = useCallback(() => {
+        setIsEditing(false);
+    }, []);
 
-    const handleTaskContentChange = useCallback(
-        (event: React.ChangeEvent<{ value: string }>) => {
-            setTaskContent(event.target.value);
-        },
-        [setTaskContent],
-    );
-
-    useEffect(() => {
-        setTaskContent(task.content);
-        setIsLoading(false);
-    }, [task]);
+    const handleFocus = useCallback(() => {
+        setIsEditing(true);
+    }, []);
 
     return (
-        <React.Fragment>
-            <Box hidden={isEditing}>
-                <Grid container spacing={1} direction="row" alignItems="baseline">
-                    <Grid item>
-                        <Checkbox
-                            color={'primary'}
-                            checked={task.isComplete}
-                            onChange={handleMarkTaskComplete}
-                            disabled={isLoading}
-                        />
-                    </Grid>
-
-                    <Grid item>
-                        <Grid container direction={'column'}>
-                            {isLoading ? <CircularProgress /> : <Typography variant="body1">{task.content}</Typography>}
-                            <Grid item>
-                                <Grid container direction={'row'}>
-                                    <Grid item hidden={!task.editable}>
-                                        <Button color={'primary'} onClick={handleEditPressed} disabled={isLoading}>
-                                            Edit
-                                        </Button>
-                                    </Grid>
-                                    <Grid item hidden={!task.deletable}>
-                                        <Button color={'primary'} onClick={handleDelete} disabled={isLoading}>
-                                            Delete
-                                        </Button>
-                                    </Grid>
-                                </Grid>
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                </Grid>
-            </Box>
-            <Box hidden={!isEditing}>
-                <Grid container spacing={1} direction="row" alignItems="flex-start">
-                    <Checkbox color={'primary'} disabled />
-                    <Grid item xs>
-                        <Grid container direction={'column'}>
-                            {isLoading ? (
-                                <CircularProgress />
-                            ) : (
-                                <TextField
-                                    size="small"
-                                    value={taskContent}
-                                    onChange={handleTaskContentChange}
-                                    name="content"
-                                />
-                            )}
-                            <Grid item>
-                                <Grid container direction={'row'}>
-                                    <Grid item>
-                                        <Button
-                                            color={'primary'}
-                                            onClick={handleSave}
-                                            disabled={taskContent.trim() === '' || isLoading}
-                                        >
-                                            Save
-                                        </Button>
-                                    </Grid>
-                                    <Grid item>
-                                        <Button color={'primary'} onClick={handleCancel} disabled={isLoading}>
-                                            Cancel
-                                        </Button>
-                                    </Grid>
-                                </Grid>
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                </Grid>
-            </Box>
-        </React.Fragment>
+        <div className={classes.taskContainer}>
+            <Checkbox
+                color="primary"
+                checked={task.isComplete}
+                onChange={handleMarkTaskComplete}
+                disabled={isLoading}
+                className={classes.checkbox}
+            />
+            <EditableTextComponent
+                initialContent={task.content}
+                onSave={handleEditContent}
+                onCancel={handleCancel}
+                onFocus={handleFocus}
+                showCancelButton={isEditing}
+                disabled={!task.editable || isLoading}
+            />
+            {!isEditing && task.deletable && (
+                <Tooltip title="Delete task">
+                    <IconButton
+                        size="small"
+                        onClick={handleDelete}
+                        className={`${classes.deleteButton} deleteButton`}
+                        disabled={isLoading}
+                    >
+                        <DeleteIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+            )}
+        </div>
     );
 };

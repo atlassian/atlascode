@@ -1,4 +1,4 @@
-import { Button, Checkbox, CircularProgress, Grid, TextField } from '@material-ui/core';
+import { Button, Checkbox, Grid, TextField } from '@material-ui/core';
 import React, { useCallback, useState } from 'react';
 
 type TaskAdderProps = {
@@ -35,18 +35,14 @@ export const TaskAdder: React.FunctionComponent<TaskAdderProps> = ({ addTask, ha
             <Checkbox color={'primary'} disabled />
             <Grid item xs>
                 <Grid container direction={'column'}>
-                    {isLoading ? (
-                        <CircularProgress />
-                    ) : (
-                        <TextField
-                            size="small"
-                            value={taskContent}
-                            onChange={handleTaskContentChange}
-                            name="content"
-                            autoComplete={'off'}
-                        />
-                    )}
-
+                    <TextField
+                        size="small"
+                        value={taskContent}
+                        onChange={handleTaskContentChange}
+                        name="content"
+                        autoComplete={'off'}
+                        disabled={isLoading}
+                    />
                     <Grid item>
                         <Grid container direction={'row'}>
                             <Grid item>

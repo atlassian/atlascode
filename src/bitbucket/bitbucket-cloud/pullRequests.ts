@@ -558,6 +558,8 @@ export class CloudPullRequestApi implements PullRequestApi {
                 state: status.state!,
                 url: status.url!,
                 ts: status.created_on!,
+                key: status.key!,
+                last_updated: status.updated_on!,
             }));
     }
 
