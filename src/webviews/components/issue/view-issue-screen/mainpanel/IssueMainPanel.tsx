@@ -1,3 +1,4 @@
+import Button from '@atlaskit/button';
 import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atlassianlabs/jira-pi-meta-models';
 import React from 'react';
 import { AttachmentsModal } from '../../AttachmentsModal';
@@ -14,7 +15,6 @@ import JiraIssueTextAreaEditor from '../common/JiraIssueTextArea';
 import { RenderedContent } from '../../../RenderedContent';
 import { Box } from '@material-ui/core';
 import AddIcon from '@atlaskit/icon/glyph/add';
-import Button from '@atlaskit/button';
 import Tooltip from '@atlaskit/tooltip';
 
 type Props = {
@@ -111,7 +111,7 @@ const IssueMainPanel: React.FC<Props> = ({
                             alignItems: 'center',
                         }}
                     >
-                        <div className="ac-inline-dialog">
+                        <div className={`ac-inline-dialog ${isInlineDialogOpen ? 'active' : ''}`}>
                             <InlineDialog
                                 content={
                                     <WorklogForm
