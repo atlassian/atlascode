@@ -1125,12 +1125,13 @@ div[role='dialog'],
 }
 
 .ac-select__multi-value__label {
-    background: var(--vscode-dropdown-foreground) !important;
+    background: var(--vscode-input-background) !important;
+    color: var(--vscode-input-foreground) !important;
     font-size: 100% !important;
 }
 
 .ac-select__multi-value__label span {
-    color: var(--vscode-editor-foreground--darken-10) !important;
+    color: var(--vscode-input-foreground) !important;
 }
 
 .ac-select__option {
