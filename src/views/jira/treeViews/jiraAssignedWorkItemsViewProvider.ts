@@ -39,7 +39,6 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
     constructor() {
         super(() => this.dispose());
 
-        setCommandContext(CommandContext.JiraExplorer, false);
         setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
 
         const treeView = window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });

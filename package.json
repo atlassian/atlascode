@@ -211,15 +211,6 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.jira.refreshExplorer",
-                "title": "Refresh Jira Issues",
-                "icon": {
-                    "dark": "resources/dark/refresh.svg",
-                    "light": "resources/light/refresh.svg"
-                },
-                "category": "Atlassian"
-            },
-            {
                 "command": "atlascode.jira.createNewJql",
                 "title": "Create new JQL filter",
                 "category": "Atlassian"
@@ -484,11 +475,6 @@
         "views": {
             "atlascode-drawer": [
                 {
-                    "id": "atlascode.views.jira.customJql",
-                    "name": "Jira Issues",
-                    "when": "atlascode:jiraExplorerEnabled && config.atlascode.jira.enabled"
-                },
-                {
                     "id": "atlascode.views.jira.assignedWorkItemsTreeView",
                     "name": "Assigned Jira Work Items",
                     "when": "atlascode:assignedIssueExplorerEnabled && config.atlascode.jira.enabled"
@@ -585,18 +571,8 @@
             "view/title": [
                 {
                     "command": "atlascode.jira.createIssue",
-                    "when": "view =~ /(atlascode.views.jira.customJql|atlascode.views.jira.assignedWorkItemsTreeView)/ && atlascode:isJiraAuthenticated",
+                    "when": "view =~ /(atlascode.views.jira.assignedWorkItemsTreeView)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation@1"
-                },
-                {
-                    "command": "atlascode.jira.refreshExplorer",
-                    "when": "view == atlascode.views.jira.customJql && atlascode:isJiraAuthenticated",
-                    "group": "navigation@2"
-                },
-                {
-                    "command": "atlascode.jira.searchIssues",
-                    "when": "view =~ /(atlascode.views.jira.customJqlTreeView|atlascode.views.jira.assignedWorkItemsTreeView)/ && atlascode:isJiraAuthenticated",
-                    "group": "navigation@3"
                 },
                 {
                     "command": "atlascode.jira.refreshAssignedWorkItemsExplorer",
@@ -609,13 +585,13 @@
                     "group": "navigation@2"
                 },
                 {
-                    "command": "atlascode.jira.createNewJql",
-                    "when": "view =~ /(atlascode.views.jira.customJqlTreeView)/ && atlascode:isJiraAuthenticated"
+                    "command": "atlascode.jira.searchIssues",
+                    "when": "view =~ /(atlascode.views.jira.customJqlTreeView|atlascode.views.jira.assignedWorkItemsTreeView)/ && atlascode:isJiraAuthenticated",
+                    "group": "navigation@3"
                 },
                 {
-                    "command": "atlascode.jira.showJiraIssueSettings",
-                    "when": "view == atlascode.views.jira.customJql",
-                    "group": "navigation@4"
+                    "command": "atlascode.jira.createNewJql",
+                    "when": "view =~ /(atlascode.views.jira.customJqlTreeView)/ && atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.addJiraSite",
@@ -809,10 +785,6 @@
                 },
                 {
                     "command": "atlascode.bb.refreshPullRequests",
-                    "when": "false"
-                },
-                {
-                    "command": "atlascode.jira.refreshExplorer",
                     "when": "false"
                 },
                 {

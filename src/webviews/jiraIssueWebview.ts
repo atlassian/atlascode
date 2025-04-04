@@ -321,7 +321,6 @@ export class JiraIssueWebview
                             });
                         });
 
-                        commands.executeCommand(Commands.RefreshJiraExplorer);
                         commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
                         commands.executeCommand(Commands.RefreshCustomJqlExplorer);
                     } catch (e) {
@@ -421,7 +420,9 @@ export class JiraIssueWebview
                             issueCreatedEvent(msg.site, resp.key).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
-                            commands.executeCommand(Commands.RefreshJiraExplorer);
+
+                            commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
+                            commands.executeCommand(Commands.RefreshCustomJqlExplorer);
                         } catch (e) {
                             Logger.error(new Error(`error creating issue: ${e}`));
                             this.postMessage({
@@ -458,7 +459,9 @@ export class JiraIssueWebview
                             ).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
-                            commands.executeCommand(Commands.RefreshJiraExplorer);
+
+                            commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
+                            commands.executeCommand(Commands.RefreshCustomJqlExplorer);
                         } catch (e) {
                             Logger.error(new Error(`error creating issue link: ${e}`));
                             this.postMessage({
@@ -501,7 +504,10 @@ export class JiraIssueWebview
                                     nonce: msg.nonce,
                                 },
                             });
-                            commands.executeCommand(Commands.RefreshJiraExplorer);
+
+                            commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
+                            commands.executeCommand(Commands.RefreshCustomJqlExplorer);
+
                             issueUpdatedEvent(
                                 this._issue.siteDetails,
                                 this._issue.key,
