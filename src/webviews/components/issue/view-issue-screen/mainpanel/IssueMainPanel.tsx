@@ -185,6 +185,7 @@ const IssueMainPanel: React.FC<Props> = ({
                         attachments={attachments}
                         baseLinkUrl={siteDetails.baseLinkUrl}
                         onDelete={onDeleteAttachment}
+                        fetchImage={fetchImage}
                     />
                 </div>
             )}
