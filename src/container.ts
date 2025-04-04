@@ -74,6 +74,7 @@ import { AssignedWorkItemsViewProvider } from './views/jira/treeViews/jiraAssign
 import { Logger } from './logger';
 import { SearchJiraHelper } from './views/jira/searchJiraHelper';
 import { featureFlagClientInitializedEvent } from './analytics';
+import { openPullRequest } from './commands/bitbucket/pullRequest';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -218,6 +219,10 @@ export class Container {
         this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
         this.initializeNewSidebarView(context, config);
     }
+
+    static openPullRequestHandler = (pullRequestUrl: string) => {
+        return openPullRequest(this._bitbucketHelper, pullRequestUrl);
+    };
 
     private static getAnalyticsEnable(): boolean {
         const telemetryConfig = workspace.getConfiguration('telemetry');
