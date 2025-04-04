@@ -11,7 +11,7 @@ import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { IssueNode } from '../nodes/issueNode';
 import { SimpleJiraIssueNode } from '../nodes/simpleJiraIssueNode';
 
-// TODO - remove this file, it shouldn't be used anymore
+// [mmura] TODO remove this file, it shouldn't be used anymore
 
 export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implements AbstractBaseNode {
     public disposables: Disposable[] = [];

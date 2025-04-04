@@ -46,7 +46,7 @@ export class ExplorerFocusManager extends Disposable {
     private onDidSitesChange(updateEvent: SitesAvailableUpdateEvent) {
         if (updateEvent.newSites) {
             if (updateEvent.product.key === ProductJira.key) {
-                // TODO check this!
+                // [mmura] TODO check this!
                 vscode.commands.executeCommand(`${CustomJQLTreeId}.focus`);
             } else if (updateEvent.product.key === ProductBitbucket.key) {
                 vscode.commands.executeCommand(`${PullRequestTreeViewId}.focus`);
