@@ -19,3 +19,15 @@ export const cannotGetClientFor = 'cannot get client for';
 
 export const ATLASCODE_TEST_USER_EMAIL = 'axontest2025@gmail.com';
 export const ATLASCODE_TEST_HOST = 'axontest2025.atlassian.net';
+export enum CommandContext {
+    JiraExplorer = 'atlascode:jiraExplorerEnabled',
+    BitbucketExplorer = 'atlascode:bitbucketExplorerEnabled',
+    PipelineExplorer = 'atlascode:pipelineExplorerEnabled',
+    BitbucketIssuesExplorer = 'atlascode:bitbucketIssuesExplorerEnabled',
+    OpenIssuesTree = 'atlascode:openIssuesTreeEnabled',
+    AssignedIssuesTree = 'atlascode:assignedIssuesTreeEnabled',
+    JiraLoginTree = 'atlascode:jiraLoginTreeEnabled',
+    IsJiraAuthenticated = 'atlascode:isJiraAuthenticated',
+    IsBBAuthenticated = 'atlascode:isBBAuthenticated',
+    IsNormalizerEnabled = 'atlascode:IsNormalizerEnabled',
+}
