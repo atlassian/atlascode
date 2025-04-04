@@ -474,7 +474,8 @@ export class CreateIssueWebview
                                 await client.addAttachments(resp.key, formData);
                             }
                             // TODO: [VSCODE-601] add a new analytic event for issue updates
-                            commands.executeCommand(Commands.RefreshJiraExplorer);
+                            commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
+                            commands.executeCommand(Commands.RefreshCustomJqlExplorer);
 
                             this.postMessage({
                                 type: 'issueCreated',
@@ -482,7 +483,6 @@ export class CreateIssueWebview
                                 nonce: msg.nonce,
                             });
 
-                            commands.executeCommand(Commands.RefreshJiraExplorer);
                             this.fireCallback(resp.key, payload.summary);
                         } catch (e) {
                             Logger.error(new Error(`error creating issue: ${e}`));
