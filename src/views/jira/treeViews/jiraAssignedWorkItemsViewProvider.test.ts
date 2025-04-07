@@ -1,4 +1,4 @@
-import { forceCastTo } from '../../../../testsutil';
+import { expansionCastTo, forceCastTo } from '../../../../testsutil';
 import { AssignedWorkItemsViewProvider } from './jiraAssignedWorkItemsViewProvider';
 import { Container } from '../../../container';
 import { JQLManager } from '../../../jira/jqlManager';
@@ -8,6 +8,9 @@ import { JQLEntry } from '../../../config/model';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import * as vscode from 'vscode';
+import { PromiseRacer } from 'src/util/promises';
+import { JiraNotifier } from './jiraNotifier';
+import { RefreshTimer } from 'src/views/RefreshTimer';
 
 const mockedJqlEntry = forceCastTo<JQLEntry>({
     id: 'jqlId',
@@ -52,6 +55,7 @@ const mockedIssue3 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     children: [],
 });
 
+jest.mock('./jiraNotifier');
 jest.mock('../searchJiraHelper');
 jest.mock('../../../container', () => ({
     Container: {
@@ -78,7 +82,9 @@ jest.mock('../../../container', () => ({
     },
 }));
 
-class PromiseRacerMockClass {
+type ExtractPublic<T> = { [P in keyof T]: T[P] };
+
+class PromiseRacerMockClass implements ExtractPublic<PromiseRacer<any>> {
     public static LastInstance: PromiseRacerMockClass | undefined = undefined;
     private count: number;
     private mockedData: any[] = [];
@@ -108,6 +114,44 @@ jest.mock('../../../util/promises', () => ({
     PromiseRacer: jest.fn().mockImplementation((promises) => new PromiseRacerMockClass(promises)),
 }));
 
+class JiraNotifierMockClass implements ExtractPublic<JiraNotifier> {
+    public static LastInstance: JiraNotifierMockClass | undefined = undefined;
+    constructor() {
+        JiraNotifierMockClass.LastInstance = this;
+    }
+    public ignoreAssignedIssues(issues: MinimalIssue<DetailedSiteInfo>[]): void {}
+    public notifyForNewAssignedIssues(issues: MinimalIssue<DetailedSiteInfo>[]): void {}
+}
+
+jest.mock('./jiraNotifier', () => ({
+    JiraNotifier: jest.fn().mockImplementation(() => new JiraNotifierMockClass()),
+}));
+
+class RefreshTimerMockClass implements ExtractPublic<RefreshTimer> {
+    public static LastInstance: RefreshTimerMockClass | undefined = undefined;
+    constructor(
+        _enabledConfigPath: string | undefined,
+        _intervalConfigPath: string,
+        public refreshFunc: () => void,
+    ) {
+        RefreshTimerMockClass.LastInstance = this;
+    }
+    dispose(): void {}
+    isEnabled(): boolean {
+        return false;
+    }
+    setActive(active: boolean): void {}
+}
+
+jest.mock('../../RefreshTimer', () => ({
+    RefreshTimer: jest
+        .fn()
+        .mockImplementation(
+            (enabledConfigPath, intervalConfigPath, refreshFunc) =>
+                new RefreshTimerMockClass(enabledConfigPath, intervalConfigPath, refreshFunc),
+        ),
+}));
+
 const mockedTreeView = {
     onDidChangeVisibility: () => {},
 };
@@ -118,11 +162,42 @@ describe('AssignedWorkItemsViewProvider', () => {
     beforeEach(() => {
         jest.spyOn(vscode.window, 'createTreeView').mockReturnValue(mockedTreeView as any);
         provider = undefined;
+
+        PromiseRacerMockClass.LastInstance = undefined;
+        JiraNotifierMockClass.LastInstance = undefined;
+        RefreshTimerMockClass.LastInstance = undefined;
     });
 
     afterEach(() => {
         provider?.dispose();
         jest.restoreAllMocks();
+    });
+
+    describe('initialization', () => {
+        it('onDidSitesAvailableChange is registered during construction', async () => {
+            let onDidSitesAvailableChangeCallback = undefined;
+            jest.spyOn(Container.siteManager, 'onDidSitesAvailableChange').mockImplementation(
+                (func: any, parent: any): any => {
+                    onDidSitesAvailableChangeCallback = (...args: any[]) => func.apply(parent, args);
+                },
+            );
+
+            provider = new AssignedWorkItemsViewProvider();
+
+            expect(onDidSitesAvailableChangeCallback).toBeDefined();
+        });
+
+        it('RefreshTimer is registered during construction and triggers refresh', async () => {
+            let dataChanged = false;
+
+            provider = new AssignedWorkItemsViewProvider();
+            provider.onDidChangeTreeData(() => (dataChanged = true), undefined);
+
+            expect(RefreshTimerMockClass.LastInstance).toBeDefined();
+
+            RefreshTimerMockClass.LastInstance?.refreshFunc();
+            expect(dataChanged).toBeTruthy();
+        });
     });
 
     describe('getAllDefaultJQLEntries', () => {
@@ -139,7 +214,7 @@ describe('AssignedWorkItemsViewProvider', () => {
         });
 
         it('should initialize with JQL promises if JQL entries exist, returns empty', async () => {
-            const jqlEntries = [forceCastTo<JQLEntry>({ siteId: 'site1', query: 'query1' })];
+            const jqlEntries = [expansionCastTo<JQLEntry>({ siteId: 'site1', query: 'query1' })];
             jest.spyOn(Container.jqlManager, 'getAllDefaultJQLEntries').mockReturnValue(jqlEntries);
             provider = new AssignedWorkItemsViewProvider();
 
@@ -153,7 +228,7 @@ describe('AssignedWorkItemsViewProvider', () => {
         });
 
         it('should initialize with JQL promises if JQL entries exist, returns issues', async () => {
-            const jqlEntries = [forceCastTo<JQLEntry>({ siteId: 'site1', query: 'query1' })];
+            const jqlEntries = [expansionCastTo<JQLEntry>({ siteId: 'site1', query: 'query1' })];
             jest.spyOn(Container.jqlManager, 'getAllDefaultJQLEntries').mockReturnValue(jqlEntries);
             provider = new AssignedWorkItemsViewProvider();
 
@@ -180,18 +255,43 @@ describe('AssignedWorkItemsViewProvider', () => {
         });
     });
 
-    describe('onDidSitesAvailableChange', () => {
-        it('onDidSitesAvailableChange is registered during construction', async () => {
-            let onDidSitesAvailableChangeCallback = undefined;
-            jest.spyOn(Container.siteManager, 'onDidSitesAvailableChange').mockImplementation(
-                (func: any, parent: any): any => {
-                    onDidSitesAvailableChangeCallback = (...args: any[]) => func.apply(parent, args);
-                },
-            );
+    describe('JiraNotifier', () => {
+        it("doesn't notify when the provider is fetching for the first time", async () => {
+            const jqlEntries = [expansionCastTo<JQLEntry>({ siteId: 'site1', query: 'query1' })];
+
+            jest.spyOn(Container.jqlManager, 'getAllDefaultJQLEntries').mockReturnValue(jqlEntries);
+            jest.spyOn(vscode.window, 'showInformationMessage');
 
             provider = new AssignedWorkItemsViewProvider();
 
-            expect(onDidSitesAvailableChangeCallback).toBeDefined();
+            jest.spyOn(JiraNotifierMockClass.LastInstance!, 'ignoreAssignedIssues');
+            jest.spyOn(JiraNotifierMockClass.LastInstance!, 'notifyForNewAssignedIssues');
+
+            PromiseRacerMockClass.LastInstance?.mockData([mockedIssue1, mockedIssue2, mockedIssue3]);
+            await provider.getChildren();
+
+            expect(JiraNotifierMockClass.LastInstance!.ignoreAssignedIssues).toHaveBeenCalled();
+            expect(JiraNotifierMockClass.LastInstance!.notifyForNewAssignedIssues).not.toHaveBeenCalled();
+        });
+
+        it('it notifies for newly fetched items', async () => {
+            const jqlEntries = [expansionCastTo<JQLEntry>({ siteId: 'site1', query: 'query1' })];
+
+            jest.spyOn(Container.jqlManager, 'getAllDefaultJQLEntries').mockReturnValue(jqlEntries);
+            jest.spyOn(vscode.window, 'showInformationMessage');
+
+            provider = new AssignedWorkItemsViewProvider();
+
+            PromiseRacerMockClass.LastInstance?.mockData([mockedIssue1, mockedIssue2, mockedIssue3]);
+            await provider.getChildren();
+
+            jest.spyOn(JiraNotifierMockClass.LastInstance!, 'ignoreAssignedIssues');
+            jest.spyOn(JiraNotifierMockClass.LastInstance!, 'notifyForNewAssignedIssues');
+
+            await provider.getChildren();
+
+            expect(JiraNotifierMockClass.LastInstance!.ignoreAssignedIssues).not.toHaveBeenCalled();
+            expect(JiraNotifierMockClass.LastInstance!.notifyForNewAssignedIssues).toHaveBeenCalled();
         });
     });
 });

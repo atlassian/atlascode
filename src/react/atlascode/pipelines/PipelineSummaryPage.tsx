@@ -16,7 +16,7 @@ import {
 import AccessTimeIcon from '@material-ui/icons/AccessTime';
 import CalendarTodayIcon from '@material-ui/icons/CalendarToday';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import { format, parseISO } from 'date-fns';
+import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import React, { useCallback, useMemo } from 'react';
 import { emptyPipeline } from '../../../lib/ipc/models/pipelineSummary';
 import {
@@ -39,7 +39,6 @@ import SuccessIcon from '../icons/SuccessIcon';
 import { PipelineSummaryControllerContext, usePipelineSummaryController } from './pipelineSummaryController';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
-import { formatTime } from '../util/date-fns';
 
 const failureRed = 'rgb(255, 86, 48)';
 const successGreen = 'rgb(54, 178, 126)';
@@ -215,6 +214,19 @@ function dateString(completed_on?: string): string {
     }
 
     return format(parseISO(completed_on), 'MMM do yyyy, h:mm:ss aaa');
+}
+
+function formatTime(dateString: string | undefined): string {
+    if (!dateString) {
+        return '';
+    }
+
+    const date = parseISO(dateString);
+
+    if (!date) {
+        return '';
+    }
+    return `${formatDistanceToNow(date)} ago`;
 }
 
 function isPaused(step: PipelineStep) {

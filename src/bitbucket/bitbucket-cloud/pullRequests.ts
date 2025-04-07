@@ -558,6 +558,8 @@ export class CloudPullRequestApi implements PullRequestApi {
                 state: status.state!,
                 url: status.url!,
                 ts: status.created_on!,
+                key: status.key!,
+                last_updated: status.updated_on!,
             }));
     }
 
@@ -887,7 +889,6 @@ export class CloudPullRequestApi implements PullRequestApi {
                 state: pr.state!,
                 closeSourceBranch: !!pr.close_source_branch,
                 taskCount: pr.task_count || 0,
-                draft: pr.draft!,
             },
         };
     }

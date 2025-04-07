@@ -716,6 +716,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             state: val.state,
             url: val.url,
             ts: val.dateAdded,
+            key: val.key,
         }));
     }
 
@@ -1017,7 +1018,6 @@ export class ServerPullRequestApi implements PullRequestApi {
                 closeSourceBranch: false,
                 taskCount: taskCount,
                 buildStatuses: [],
-                draft: data.draft,
             },
         };
     }
