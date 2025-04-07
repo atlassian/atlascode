@@ -10,7 +10,7 @@ import {
 import { CreateIssueData, emptyCreateIssueData, isIssueCreated } from '../../../ipc/issueMessaging';
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import { FieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
-import Form, { Field, FormFooter } from '@atlaskit/form';
+import Form, { Field, FormFooter, FormHeader, RequiredAsterisk } from '@atlaskit/form';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Select, { components } from '@atlaskit/select';
 
@@ -285,6 +285,19 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         return this.advancedFields.map((field) => this.getInputMarkup(field));
     }
 
+    formHeader = () => {
+        return (
+            <div>
+                Create work item
+                {this.state.isSomethingLoading && (
+                    <div className="spinner" style={{ marginLeft: '15px' }}>
+                        <Spinner size="medium" />
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     public render() {
         if (!this.state.fieldValues['issuetype']?.id && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refresh' });
@@ -337,32 +350,28 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                         errorDetails={this.state.errorDetails}
                                     />
                                 )}
-                                <div className="ac-vpadding">
-                                    <div className="ac-flex">
-                                        <h2>Create Issue</h2>
-                                        {this.state.isSomethingLoading && (
-                                            <div className="spinner" style={{ marginLeft: '15px' }}>
-                                                <Spinner size="medium" />
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
                                 <Form name="create-issue" onSubmit={this.handleSubmit}>
                                     {(frmArgs: any) => {
                                         return (
                                             <form {...frmArgs.formProps}>
+                                                <FormHeader title={this.formHeader()}>
+                                                    <p>
+                                                        Required fields are marked with an asterisk <RequiredAsterisk />
+                                                    </p>
+                                                </FormHeader>
                                                 <Field
-                                                    label="Select Site"
+                                                    label="Site"
                                                     id="site"
                                                     name="site"
+                                                    isRequired
                                                     defaultValue={this.state.siteDetails}
                                                 >
                                                     {(fieldArgs: any) => {
                                                         return (
                                                             <Select
                                                                 {...fieldArgs.fieldProps}
-                                                                className="ac-select-container"
-                                                                classNamePrefix="ac-select"
+                                                                className="ac-form-select-container"
+                                                                classNamePrefix="ac-form-select"
                                                                 getOptionLabel={(option: any) => option.name}
                                                                 getOptionValue={(option: any) => option.id}
                                                                 options={this.state.selectFieldOptions['site']}
@@ -373,6 +382,38 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                                 onChange={chain(
                                                                     fieldArgs.fieldProps.onChange,
                                                                     this.handleSiteChange,
+                                                                )}
+                                                            />
+                                                        );
+                                                    }}
+                                                </Field>
+                                                <Field
+                                                    label="Project"
+                                                    id="project"
+                                                    name="project"
+                                                    isRequired
+                                                    defaultValue={this.state.fieldValues['project']}
+                                                >
+                                                    {(fieldArgs: any) => {
+                                                        return (
+                                                            <Select
+                                                                {...fieldArgs.fieldProps}
+                                                                className="ac-form-select-container"
+                                                                classNamePrefix="ac-form-select"
+                                                                getOptionLabel={(option: any) => option.name}
+                                                                getOptionValue={(option: any) => option.id}
+                                                                options={this.state.selectFieldOptions['project']}
+                                                                components={{
+                                                                    Option: IconOption,
+                                                                    SingleValue: IconValue,
+                                                                }}
+                                                                onChange={chain(
+                                                                    fieldArgs.fieldProps.onChange,
+                                                                    this.handleInlineEdit.bind(this, {
+                                                                        key: 'project',
+                                                                        valueType: ValueType.Project,
+                                                                        uiType: UIType.Select,
+                                                                    }),
                                                                 )}
                                                             />
                                                         );

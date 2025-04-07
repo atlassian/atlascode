@@ -1499,7 +1499,7 @@
         "@atlaskit/datetime-picker": "^11.1.1",
         "@atlaskit/dropdown-menu": "^12.26.5",
         "@atlaskit/feature-gate-js-client": "^4.20.0",
-        "@atlaskit/form": "^8.4.4",
+        "@atlaskit/form": "^11.2.0",
         "@atlaskit/heading": "^4.3.1",
         "@atlaskit/icon": "^21.9.3",
         "@atlaskit/icon-lab": "^2.8.0",
