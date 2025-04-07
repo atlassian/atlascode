@@ -98,10 +98,15 @@ export const StatusTransitionMenu: React.FC<Props> = (props) => {
 };
 
 const getDynamicStyles = (colorName: string) => {
-    const { border, bg } = statusCategoryToColorTokenMap[colorName];
+    let fields = { border: '', bg: '' };
+    if (!statusCategoryToColorTokenMap[colorName]) {
+        fields = statusCategoryToColorTokenMap['default'];
+    } else {
+        fields = statusCategoryToColorTokenMap[colorName];
+    }
     return {
-        border: `1px solid ${border}`,
-        background: bg,
+        border: `1px solid ${fields.border}`,
+        background: fields.bg,
     };
 };
 
@@ -109,6 +114,10 @@ const statusCategoryToColorTokenMap: { [key: string]: { border: string; bg: stri
     yellow: { border: '#669DF1', bg: '#669DF133' },
     green: { border: '#94C748', bg: '#94C74833' },
     'blue-gray': {
+        border: '#B0BEC5',
+        bg: '#B0BEC533',
+    },
+    default: {
         border: '#B0BEC5',
         bg: '#B0BEC533',
     },
