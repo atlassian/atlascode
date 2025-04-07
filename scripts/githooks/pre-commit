@@ -32,11 +32,16 @@ if (( ${#stagedWithUnstaged[@]} != 0 )); then
 fi
 
 # run lint only if the staged area contains a .js, .jsx, .ts, or .tsx file
+runlint=0
 for file in "${stagedFiles[@]}"; do
-  case $file in
-    (*.js) npm run lint;;
-    (*.jsx) npm run lint;;
-    (*.ts) npm run lint;;
-    (*.tsx) npm run lint;;
-  esac
+    case $file in
+        (*.js) runlint=1;;
+        (*.jsx) runlint=1;;
+        (*.ts) runlint=1;;
+        (*.tsx) runlint=1;;
+    esac
 done
+
+if (( ${runlint} == 1 )); then
+    npm run lint
+fi
