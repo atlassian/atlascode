@@ -84,6 +84,10 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
         }
     }
 
+    public focus(): void {
+        commands.executeCommand(`${AssignedWorkItemsViewProviderId}.focus`, {});
+    }
+
     public dispose(): void {
         this._disposable.dispose();
     }

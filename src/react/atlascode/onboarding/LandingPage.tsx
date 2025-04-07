@@ -4,7 +4,6 @@ import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import React, { useCallback, useContext, useState } from 'react';
 import { KnownLinkID } from '../../../lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
-import { SiteWithAuthInfo } from '../../../lib/ipc/toUI/config';
 import BitbucketIcon from '../icons/BitbucketIcon';
 import DemoButton from './DemoButton';
 import { DemoDialog } from './DemoDialog';
@@ -34,16 +33,16 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 export type LandingPageProps = {
     bitbucketEnabled: boolean;
-    bitbucketSites: SiteWithAuthInfo[];
+    bitbucketSitesConfigured: boolean;
     jiraEnabled: boolean;
-    jiraSites: SiteWithAuthInfo[];
+    jiraSitesConfigured: boolean;
 };
 
 export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
     bitbucketEnabled,
-    bitbucketSites,
+    bitbucketSitesConfigured,
     jiraEnabled,
-    jiraSites,
+    jiraSitesConfigured,
 }) => {
     const classes = useStyles();
     const controller = useContext(OnboardingControllerContext);
@@ -94,7 +93,7 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                 </Grid>
                 <Grid container xs={12} direction="row" justify="center" spacing={3}>
                     <Grid
-                        hidden={!(jiraEnabled && jiraSites.length > 0)}
+                        hidden={!(jiraEnabled && jiraSitesConfigured)}
                         item
                         lg={3}
                         md={5}
@@ -111,7 +110,7 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                         />
                     </Grid>
                     <Grid
-                        hidden={!(jiraEnabled && jiraSites.length > 0)}
+                        hidden={!(jiraEnabled && jiraSitesConfigured)}
                         item
                         lg={3}
                         md={5}
@@ -128,7 +127,7 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                         />
                     </Grid>
                     <Grid
-                        hidden={!(bitbucketEnabled && bitbucketSites.length > 0)}
+                        hidden={!(bitbucketEnabled && bitbucketSitesConfigured)}
                         item
                         lg={3}
                         md={5}
@@ -147,7 +146,7 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                         />
                     </Grid>
                     <Grid
-                        hidden={!(bitbucketEnabled && bitbucketSites.length > 0)}
+                        hidden={!(bitbucketEnabled && bitbucketSitesConfigured)}
                         item
                         lg={3}
                         md={5}

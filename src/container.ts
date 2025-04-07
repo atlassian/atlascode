@@ -2,8 +2,7 @@ import { LegacyAtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHa
 import { BitbucketIssue, BitbucketSite, PullRequest, WorkspaceRepo } from './bitbucket/model';
 import { ExtensionContext, env, workspace, UIKind, window } from 'vscode';
 import { IConfig, configuration } from './config/configuration';
-import { analyticsClient } from './analytics-node-client/src/client.min.js';
-import { AnalyticsClient } from './analytics-node-client/src/client.min.js';
+import { AnalyticsClient, analyticsClient } from './analytics-node-client/src/client.min.js';
 import { AuthStatusBar } from './views/authStatusBar';
 import { BitbucketContext } from './bitbucket/bbContext';
 import { BitbucketIssueAction } from './lib/ipc/fromUI/bbIssue';
@@ -83,6 +82,7 @@ export class Container {
     private static _cancellationManager: CancellationManager;
     private static _commonMessageHandler: CommonActionMessageHandler;
     private static _bitbucketHelper: CheckoutHelper;
+    private static _assignedWorkItemsView: AssignedWorkItemsViewProvider;
 
     static async initialize(context: ExtensionContext, config: IConfig, version: string) {
         const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
@@ -220,6 +220,10 @@ export class Container {
         this.initializeNewSidebarView(context, config);
     }
 
+    static focus() {
+        this._assignedWorkItemsView.focus();
+    }
+
     static openPullRequestHandler = (pullRequestUrl: string) => {
         return openPullRequest(this._bitbucketHelper, pullRequestUrl);
     };
@@ -248,7 +252,7 @@ export class Container {
         } else {
             SearchJiraHelper.initialize();
             context.subscriptions.push(new CustomJQLViewProvider());
-            context.subscriptions.push(new AssignedWorkItemsViewProvider());
+            context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
         }
     }
 
@@ -340,6 +344,43 @@ export class Container {
         this._context.globalState.update(ConfigTargetKey, target);
     }
 
+    public static async testLogout() {
+        Container.siteManager.getSitesAvailable(ProductJira).forEach(async (site) => {
+            await Container.clientManager.removeClient(site);
+            Container.siteManager.removeSite(site);
+        });
+    }
+
+    public static async testLogin() {
+        if (!process.env.ATLASCODE_TEST_USER_API_TOKEN) {
+            // vscode notify user that this is for testing only
+            window.showInformationMessage(
+                'This is for testing only. Please set the ATLASCODE_TEST_USER_API_TOKEN environment variable to run this test',
+            );
+            return;
+        }
+        const authInfo = {
+            username: ATLASCODE_TEST_USER_EMAIL,
+            password: process.env.ATLASCODE_TEST_USER_API_TOKEN,
+            user: {
+                id: '',
+                displayName: '',
+                email: '',
+                avatarUrl: '',
+            },
+            state: 0,
+        };
+        const site = {
+            host: ATLASCODE_TEST_HOST,
+            protocol: 'https:',
+            product: {
+                name: 'Jira',
+                key: 'jira',
+            },
+        };
+        await Container.loginManager.userInitiatedServerLogin(site, authInfo);
+    }
+
     private static _version: string;
     public static get version() {
         return this._version;
@@ -378,43 +419,6 @@ export class Container {
     private static _onboardingWebviewFactory: SingleWebview<any, OnboardingAction>;
     public static get onboardingWebviewFactory() {
         return this._onboardingWebviewFactory;
-    }
-
-    public static async testLogout() {
-        Container.siteManager.getSitesAvailable(ProductJira).forEach(async (site) => {
-            await Container.clientManager.removeClient(site);
-            Container.siteManager.removeSite(site);
-        });
-    }
-
-    public static async testLogin() {
-        if (!process.env.ATLASCODE_TEST_USER_API_TOKEN) {
-            // vscode notify user that this is for testing only
-            window.showInformationMessage(
-                'This is for testing only. Please set the ATLASCODE_TEST_USER_API_TOKEN environment variable to run this test',
-            );
-            return;
-        }
-        const authInfo = {
-            username: ATLASCODE_TEST_USER_EMAIL,
-            password: process.env.ATLASCODE_TEST_USER_API_TOKEN,
-            user: {
-                id: '',
-                displayName: '',
-                email: '',
-                avatarUrl: '',
-            },
-            state: 0,
-        };
-        const site = {
-            host: ATLASCODE_TEST_HOST,
-            protocol: 'https:',
-            product: {
-                name: 'Jira',
-                key: 'jira',
-            },
-        };
-        await Container.loginManager.userInitiatedServerLogin(site, authInfo);
     }
 
     private static _pullRequestDetailsWebviewFactory: MultiWebview<any, PullRequestDetailsAction>;

@@ -37,6 +37,8 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
         this.initData = factoryData!;
     }
 
+    public onShown(): void {}
+
     public title(): string {
         return 'Create pull request';
     }

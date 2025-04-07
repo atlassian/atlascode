@@ -5,15 +5,10 @@ export const enum Features {
 }
 
 export const enum Experiments {
-    NewAuthUI = 'atlascode_new_auth_ui',
     AtlascodeAA = 'atlascode_aa_experiment',
 }
 
 export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
-    [Experiments.NewAuthUI]: {
-        parameter: 'onboardingFlow',
-        defaultValue: 'control',
-    },
     [Experiments.AtlascodeAA]: {
         parameter: 'isEnabled2',
         defaultValue: 'Default',

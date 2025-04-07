@@ -32,6 +32,8 @@ export class CreateBitbucketIssueWebviewController implements WebviewController<
         private analytics: AnalyticsApi,
     ) {}
 
+    public onShown(): void {}
+
     public title(): string {
         return 'Create Bitbucket Issue';
     }
