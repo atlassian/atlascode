@@ -27,17 +27,18 @@ function errorHandler(error: Error | string): void {
 }
 
 export function registerErrorReporting(): void {
-    if (!nodeJsErrorReportingRegistered) {
-        nodeJsErrorReportingRegistered = true;
-
-        try {
-            process.addListener('uncaughtException', errorHandler);
-            process.addListener('uncaughtExceptionMonitor', errorHandler);
-            process.addListener('unhandledRejection', errorHandler);
-
-            _logger_onError_eventRegistration = Logger.onError((data) => errorHandler(data.error), undefined);
-        } catch {}
+    if (nodeJsErrorReportingRegistered) {
+        return;
     }
+    nodeJsErrorReportingRegistered = true;
+
+    try {
+        process.addListener('uncaughtException', errorHandler);
+        process.addListener('uncaughtExceptionMonitor', errorHandler);
+        process.addListener('unhandledRejection', errorHandler);
+
+        _logger_onError_eventRegistration = Logger.onError((data) => errorHandler(data.error), undefined);
+    } catch {}
 }
 
 export function unregisterErrorReporting(): void {
