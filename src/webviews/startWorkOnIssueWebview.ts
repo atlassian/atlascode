@@ -1,6 +1,7 @@
 import { createEmptyMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import orderBy from 'lodash.orderby';
 import * as vscode from 'vscode';
+
 import { issueUrlCopiedEvent, issueWorkStartedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';

@@ -1,4 +1,5 @@
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+
 import { DetailedSiteInfo, ProductBitbucket } from '../atlclients/authInfo';
 import { bbAPIConnectivityError } from '../constants';
 import { Container } from '../container';

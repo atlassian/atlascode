@@ -4,7 +4,6 @@ jest.mock('../../commands/jira/showIssue', () => ({
     showIssue: jest.fn(),
 }));
 import { showIssue } from '../../commands/jira/showIssue';
-
 import { ShowJiraIssueUriHandlerAction } from './showJiraIssue';
 
 describe('ShowJiraIssueUriHandlerAction', () => {

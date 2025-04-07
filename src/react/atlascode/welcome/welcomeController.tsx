@@ -1,5 +1,6 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
+
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { WelcomeAction, WelcomeActionType } from '../../../lib/ipc/fromUI/welcome';
 import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';

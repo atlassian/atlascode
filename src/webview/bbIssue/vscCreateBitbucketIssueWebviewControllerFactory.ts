@@ -1,4 +1,5 @@
 import { Disposable, Uri } from 'vscode';
+
 import { BitbucketSite } from '../../bitbucket/model';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { UIWSPort } from '../../lib/ipc/models/ports';

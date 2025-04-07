@@ -1,9 +1,10 @@
-import { ButtonAppearance } from '@atlaskit/button/dist/types/new-button/variants/types';
 import { Spacing } from '@atlaskit/button';
-import { Box } from '@material-ui/core';
+import { ButtonAppearance } from '@atlaskit/button/dist/types/new-button/variants/types';
 import TextArea from '@atlaskit/textarea';
+import { Box } from '@material-ui/core';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
+
 import PopoutMentionPicker from '../../../pullrequest/PopoutMentionPicker';
 
 type Props = {

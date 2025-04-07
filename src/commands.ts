@@ -1,5 +1,6 @@
 import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { commands, env, ExtensionContext, Uri } from 'vscode';
+
 import {
     cloneRepositoryButtonEvent,
     openWorkbenchRepositoryButtonEvent,

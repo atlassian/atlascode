@@ -1,5 +1,6 @@
 import { Project } from '@atlassianlabs/jira-pi-common-models';
 import { ViewColumn } from 'vscode';
+
 import { DetailedSiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { Logger } from '../logger';

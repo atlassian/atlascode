@@ -1,13 +1,14 @@
 import FeatureGates, { FeatureGateEnvironment, Identifiers } from '@atlaskit/feature-gate-js-client';
-import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
-import { AnalyticsClientMapper } from './analytics';
-import { ExperimentGates, ExperimentGateValues, Experiments, FeatureGateValues, Features } from './features';
+
 import {
     ClientInitializedErrorType,
     featureGateExposureBoolEvent,
     featureGateExposureStringEvent,
 } from '../../analytics';
+import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
 import { Logger } from '../../logger';
+import { AnalyticsClientMapper } from './analytics';
+import { ExperimentGates, ExperimentGateValues, Experiments, FeatureGateValues, Features } from './features';
 
 export type FeatureFlagClientOptions = {
     analyticsClient: AnalyticsClient;

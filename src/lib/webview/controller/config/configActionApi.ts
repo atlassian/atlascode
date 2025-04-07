@@ -1,13 +1,13 @@
-import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../../atlclients/authInfo';
 import {
     AutocompleteSuggestion,
     FilterSearchResults,
     JQLAutocompleteData,
     JQLErrors,
 } from '@atlassianlabs/jira-pi-common-models';
-import { ConfigTarget, FlattenedConfig } from '../../../ipc/models/config';
 
+import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../../atlclients/authInfo';
 import { FeedbackUser } from '../../../ipc/models/common';
+import { ConfigTarget, FlattenedConfig } from '../../../ipc/models/config';
 import { SiteWithAuthInfo } from '../../../ipc/toUI/config';
 
 export interface ConfigActionApi {

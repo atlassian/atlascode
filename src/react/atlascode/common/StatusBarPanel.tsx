@@ -1,6 +1,7 @@
 import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import React, { memo, useCallback, useEffect, useState } from 'react';
+
 import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
 import { StatusBar } from '../config/StatusBar';
 import { CommonSubpanelProps } from './commonPanelProps';

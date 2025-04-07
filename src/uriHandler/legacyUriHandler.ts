@@ -1,14 +1,14 @@
-import { ConfigSection, ConfigSubSection } from '../lib/ipc/models/config';
-import { Disposable, Uri, UriHandler, env, window } from 'vscode';
+import { Disposable, env, Uri, UriHandler, window } from 'vscode';
 
-import { AnalyticsApi } from '../lib/analyticsApi';
-import { CheckoutHelper } from '../bitbucket/interfaces';
-import { Container } from '../container';
-import { Logger } from '../logger';
 import { ProductJira } from '../atlclients/authInfo';
-import { fetchMinimalIssue } from '../jira/fetchIssue';
+import { CheckoutHelper } from '../bitbucket/interfaces';
 import { showIssue } from '../commands/jira/showIssue';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
+import { Container } from '../container';
+import { fetchMinimalIssue } from '../jira/fetchIssue';
+import { AnalyticsApi } from '../lib/analyticsApi';
+import { ConfigSection, ConfigSubSection } from '../lib/ipc/models/config';
+import { Logger } from '../logger';
 
 const ExtensionId = 'atlassian.atlascode';
 //const pullRequestUrl = `${env.uriScheme}://${ExtensionId}/openPullRequest`;

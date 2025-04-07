@@ -2,6 +2,7 @@ import { JQLErrors } from '@atlassianlabs/jira-pi-common-models';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import { useCallback, useContext, useRef } from 'react';
 import useConstant from 'use-constant';
+
 import { DetailedSiteInfo } from '../../../../../atlclients/authInfo';
 import { ConfigControllerContext } from '../../configController';
 

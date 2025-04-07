@@ -1,5 +1,6 @@
 import { isMinimalIssue, MinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { Command, Disposable, Event, EventEmitter, TreeItem } from 'vscode';
+
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { JQLEntry } from '../../config/model';

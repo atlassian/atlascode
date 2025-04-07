@@ -1,6 +1,7 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import Axios from 'axios';
+
 import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import {
     ApprovalStatus,

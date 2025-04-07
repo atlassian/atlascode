@@ -1,5 +1,6 @@
 import uuid from 'uuid';
 import * as vscode from 'vscode';
+
 import { issueForKey } from '../../jira/issueForKey';
 import { Logger } from '../../logger';
 import { Resources } from '../../resources';

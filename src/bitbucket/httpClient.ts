@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse, CancelToken } from 'axios';
+
 import { AuthInterceptor } from '../atlclients/authInterceptor';
 import { addCurlLogging } from '../atlclients/interceptors';
 import { AxiosUserAgent } from '../constants';

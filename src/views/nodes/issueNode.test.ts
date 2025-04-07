@@ -22,9 +22,10 @@ jest.mock('@atlassianlabs/jira-pi-common-models', () => {
 });
 
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
+import * as vscode from 'vscode';
+
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { IssueNode } from './issueNode';
-import * as vscode from 'vscode';
 
 const mockIssue: MinimalORIssueLink<DetailedSiteInfo> = {
     descriptionHtml: '<p>This is a test issue description</p>',

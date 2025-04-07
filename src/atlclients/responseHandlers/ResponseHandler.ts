@@ -1,5 +1,4 @@
 import { AccessibleResource, UserInfo } from '../authInfo';
-
 import { Tokens } from '../tokens';
 
 export abstract class ResponseHandler {

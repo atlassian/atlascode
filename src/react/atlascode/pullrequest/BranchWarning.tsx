@@ -1,6 +1,7 @@
 import { Box, Card, CardContent, Collapse, Grid, makeStyles, Theme, Typography } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import React, { useEffect, useState } from 'react';
+
 import { Branch } from '../../../typings/git';
 
 const useStyles = makeStyles((theme: Theme) => ({

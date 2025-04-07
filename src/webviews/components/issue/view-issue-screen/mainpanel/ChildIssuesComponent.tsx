@@ -1,13 +1,14 @@
 import Button from '@atlaskit/button';
-import { emptyIssueType, IssueType, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import React from 'react';
 import AddIcon from '@atlaskit/icon/glyph/add';
-import { Box } from '@material-ui/core';
 import Select from '@atlaskit/select';
 import { components } from '@atlaskit/select';
 import TextField from '@atlaskit/textfield';
+import { emptyIssueType, IssueType, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { Box } from '@material-ui/core';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
+import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+
 import IssueList from '../../IssueList';
 
 export type SummaryAndIssueType = {

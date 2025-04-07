@@ -1,6 +1,7 @@
 import { Checkbox, IconButton, makeStyles, Tooltip } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import React, { useCallback, useState } from 'react';
+
 import { Task } from '../../../bitbucket/model';
 import { EditableTextComponent } from './EditableTextComponent';
 

@@ -1,4 +1,5 @@
 import * as path from 'path';
+
 import { BitbucketSite } from '../../bitbucket/model';
 import { BitbucketSiteBase } from './bitbucket-site-base';
 

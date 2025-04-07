@@ -1,11 +1,12 @@
 import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { commands } from 'vscode';
+
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
+import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { IssueNode } from '../../views/nodes/issueNode';
 import { currentUserJira } from './currentUser';
-import { Commands } from '../../commands';
-import { commands } from 'vscode';
 
 export async function assignIssue(param: MinimalIssue<DetailedSiteInfo> | IssueNode, accountId?: string) {
     const issue = isMinimalIssue(param) ? param : param.issue;

@@ -1,5 +1,6 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { createEmptyMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import { BitbucketBranchingModel, WorkspaceRepo } from '../../../bitbucket/model';
 import { Branch } from '../../../typings/git';

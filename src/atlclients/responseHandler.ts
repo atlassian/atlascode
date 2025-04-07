@@ -1,7 +1,8 @@
 import { AxiosInstance } from 'axios';
+
+import { OAuthProvider } from './authInfo';
 import { BitbucketResponseHandler } from './responseHandlers/BitbucketResponseHandler';
 import { JiraPKCEResponseHandler } from './responseHandlers/JiraPKCEResponseHandler';
-import { OAuthProvider } from './authInfo';
 import { ResponseHandler } from './responseHandlers/ResponseHandler';
 import { Strategy } from './strategy';
 

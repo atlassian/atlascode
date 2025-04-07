@@ -1,5 +1,6 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { Transition } from '@atlassianlabs/jira-pi-common-models';
+
 import { WorkspaceRepo } from '../../../bitbucket/model';
 import { Branch } from '../../../typings/git';
 import { ConfigSection, ConfigSubSection } from '../models/config';

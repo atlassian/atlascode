@@ -1,6 +1,7 @@
 import Mustache from 'mustache';
 import { SitesAvailableUpdateEvent } from 'src/siteManager';
 import { ConfigurationChangeEvent, Disposable, StatusBarAlignment, StatusBarItem, window } from 'vscode';
+
 import {
     AuthInfo,
     DetailedSiteInfo,

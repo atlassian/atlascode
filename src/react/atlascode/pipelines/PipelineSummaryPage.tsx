@@ -18,6 +18,8 @@ import CalendarTodayIcon from '@material-ui/icons/CalendarToday';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import React, { useCallback, useMemo } from 'react';
+import { AnalyticsView } from 'src/analyticsTypes';
+
 import { emptyPipeline } from '../../../lib/ipc/models/pipelineSummary';
 import {
     Pipeline,
@@ -30,6 +32,7 @@ import {
     Status,
     statusForState,
 } from '../../../pipelines/model';
+import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import FailedIcon from '../icons/FailedIcon';
 import InProgressIcon from '../icons/InProgressIcon';
 import NotRunIcon from '../icons/NotRunIcon';
@@ -37,8 +40,6 @@ import PausedIcon from '../icons/PausedIcon';
 import StoppedIcon from '../icons/StoppedIcon';
 import SuccessIcon from '../icons/SuccessIcon';
 import { PipelineSummaryControllerContext, usePipelineSummaryController } from './pipelineSummaryController';
-import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
-import { AnalyticsView } from 'src/analyticsTypes';
 
 const failureRed = 'rgb(255, 86, 48)';
 const successGreen = 'rgb(54, 178, 126)';

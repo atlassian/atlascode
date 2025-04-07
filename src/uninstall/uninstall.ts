@@ -1,7 +1,7 @@
-import { TrackEvent } from '../analytics-node-client/src/types';
-import { analyticsClient } from '../analytics-node-client/src/client.min.js';
-
 import { v4 } from 'uuid';
+
+import { analyticsClient } from '../analytics-node-client/src/client.min.js';
+import { TrackEvent } from '../analytics-node-client/src/types';
 
 class AnalyticsPlatform {
     private static nodeJsPlatformMapping: Record<string, string> = {

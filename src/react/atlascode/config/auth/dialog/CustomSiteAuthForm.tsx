@@ -2,10 +2,11 @@ import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { Box, Grid, IconButton, Radio, RadioGroup, Switch, Tab, Tabs, TextField } from '@material-ui/core';
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
-import { SiteWithAuthInfo } from 'src/lib/ipc/toUI/config';
 import React, { useState } from 'react';
-import { TabPanel } from './TabPanel';
 import { BasicAuthInfo } from 'src/atlclients/authInfo';
+import { SiteWithAuthInfo } from 'src/lib/ipc/toUI/config';
+
+import { TabPanel } from './TabPanel';
 
 export type CustomSiteAuthFormProps = {
     defaultSiteWithAuth: SiteWithAuthInfo;

@@ -1,4 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+
 import { emptyFeedbackUser, FeedbackUser } from '../models/common';
 
 export enum WelcomeMessageType {

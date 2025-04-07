@@ -3,6 +3,7 @@ import Lozenge from '@atlaskit/lozenge';
 import { components } from '@atlaskit/select';
 import { SelectFieldUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import * as React from 'react';
+
 import { colorToLozengeAppearanceMap } from './colors';
 
 type OptionFunc = (option: any) => string;

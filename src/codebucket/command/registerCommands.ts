@@ -1,4 +1,5 @@
 import { commands, ExtensionContext } from 'vscode';
+
 import { CopyBitbucketPullRequestCommand } from './command-copy-pullreqest';
 import { OpenInBitbucketCommand } from './command-open';
 import { OpenBitbucketChangesetCommand } from './command-open-changeset';

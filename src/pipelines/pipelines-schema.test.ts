@@ -1,5 +1,6 @@
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
+
 import * as schema from '../../resources/schemas/pipelines-schema.json';
 
 describe('Pipeline schema', () => {

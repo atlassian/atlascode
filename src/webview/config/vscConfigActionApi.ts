@@ -1,35 +1,35 @@
 import {
-    AuthInfo,
-    DetailedSiteInfo,
-    ProductBitbucket,
-    ProductJira,
-    SiteInfo,
-    emptyAuthInfo,
-    emptyBasicAuthInfo,
-} from '../../atlclients/authInfo';
-import {
     AutocompleteSuggestion,
     FilterSearchResults,
     JQLAutocompleteData,
     JQLErrors,
 } from '@atlassianlabs/jira-pi-common-models';
-import { ConfigTarget, FlattenedConfig } from '../../lib/ipc/models/config';
-import { ConfigurationTarget, Uri, WorkspaceEdit, commands, env, window, workspace } from 'vscode';
-import { IConfig, JQLEntry, configuration } from '../../config/configuration';
-import axios, { CancelToken, CancelTokenSource } from 'axios';
-
-import { AnalyticsApi } from '../../lib/analyticsApi';
-import { CancellationManager } from '../../lib/cancellation';
-import { ConfigActionApi } from '../../lib/webview/controller/config/configActionApi';
-import { Container } from '../../container';
-import { FeedbackUser } from '../../lib/ipc/models/common';
-import { FocusEventActions } from '../ExplorerFocusManager';
-import { SiteWithAuthInfo } from '../../lib/ipc/toUI/config';
-import { flatten } from 'flatten-anything';
-import { getFeedbackUser } from '../../feedback/feedbackUser';
 import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
+import axios, { CancelToken, CancelTokenSource } from 'axios';
+import { flatten } from 'flatten-anything';
 import { merge } from 'merge-anything';
 import { join as pathJoin } from 'path';
+import { commands, ConfigurationTarget, env, Uri, window, workspace, WorkspaceEdit } from 'vscode';
+
+import {
+    AuthInfo,
+    DetailedSiteInfo,
+    emptyAuthInfo,
+    emptyBasicAuthInfo,
+    ProductBitbucket,
+    ProductJira,
+    SiteInfo,
+} from '../../atlclients/authInfo';
+import { configuration, IConfig, JQLEntry } from '../../config/configuration';
+import { Container } from '../../container';
+import { getFeedbackUser } from '../../feedback/feedbackUser';
+import { AnalyticsApi } from '../../lib/analyticsApi';
+import { CancellationManager } from '../../lib/cancellation';
+import { FeedbackUser } from '../../lib/ipc/models/common';
+import { ConfigTarget, FlattenedConfig } from '../../lib/ipc/models/config';
+import { SiteWithAuthInfo } from '../../lib/ipc/toUI/config';
+import { ConfigActionApi } from '../../lib/webview/controller/config/configActionApi';
+import { FocusEventActions } from '../ExplorerFocusManager';
 
 export class VSCConfigActionApi implements ConfigActionApi {
     private _analyticsApi: AnalyticsApi;

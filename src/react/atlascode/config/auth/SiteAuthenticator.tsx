@@ -1,12 +1,12 @@
 import { Box, Button, Grid } from '@material-ui/core';
 import React, { memo, useCallback, useContext } from 'react';
 
-import { AuthDialogControllerContext } from './useAuthDialog';
-import { CloudAuthButton } from './CloudAuthButton';
 import { Product } from '../../../../atlclients/authInfo';
-import { SiteList } from './SiteList';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { ConfigControllerContext } from '../configController';
+import { CloudAuthButton } from './CloudAuthButton';
+import { SiteList } from './SiteList';
+import { AuthDialogControllerContext } from './useAuthDialog';
 
 type SiteAuthenticatorProps = {
     product: Product;

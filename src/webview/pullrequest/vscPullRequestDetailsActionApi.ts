@@ -2,6 +2,7 @@ import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-mode
 import axios, { CancelToken, CancelTokenSource } from 'axios';
 import pSettle, { PromiseFulfilledResult } from 'p-settle';
 import * as vscode from 'vscode';
+
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { extractBitbucketIssueKeys, extractIssueKeys } from '../../bitbucket/issueKeysExtractor';

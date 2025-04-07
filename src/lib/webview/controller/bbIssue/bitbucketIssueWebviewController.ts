@@ -1,5 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
+
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketIssue, User } from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';

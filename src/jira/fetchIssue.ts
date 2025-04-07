@@ -1,6 +1,7 @@
-import { createIssueUI, editIssueUI, EditIssueUI } from '@atlassianlabs/jira-metaui-client';
+import { createIssueUI, EditIssueUI, editIssueUI } from '@atlassianlabs/jira-metaui-client';
 import { MinimalIssue, minimalIssueFromJsonObject, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { CreateMetaTransformerResult } from '@atlassianlabs/jira-pi-meta-models';
+
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { SearchJiraHelper } from '../views/jira/searchJiraHelper';

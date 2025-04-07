@@ -7,6 +7,7 @@ import { User, Watches } from '@atlassianlabs/jira-pi-common-models';
 import { ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import debounce from 'lodash.debounce';
 import * as React from 'react';
+
 import * as SelectFieldHelper from '../selectFieldHelper';
 
 type MyState = {

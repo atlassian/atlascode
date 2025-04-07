@@ -2,6 +2,7 @@ import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassian
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { v4 } from 'uuid';
+
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import {
     ApprovalStatus,
@@ -25,6 +26,7 @@ import {
     PullRequestDetailsCheckoutBranchMessage,
     PullRequestDetailsCommentsMessage,
     PullRequestDetailsCommitsMessage,
+    PullRequestDetailsConflictedFilesMessage,
     PullRequestDetailsFileDiffsMessage,
     PullRequestDetailsInitMessage,
     PullRequestDetailsMergeStrategiesMessage,
@@ -37,7 +39,6 @@ import {
     PullRequestDetailsSummaryMessage,
     PullRequestDetailsTasksMessage,
     PullRequestDetailsTitleMessage,
-    PullRequestDetailsConflictedFilesMessage,
 } from '../../../lib/ipc/toUI/pullRequestDetails';
 import { ConnectionTimeout } from '../../../util/time';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';

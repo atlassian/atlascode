@@ -2,6 +2,7 @@ import { fileCheckoutEvent, prCommentEvent, prTaskEvent } from 'src/analytics';
 import TurndownService from 'turndown';
 import { v4 } from 'uuid';
 import vscode, { commands, CommentThread, MarkdownString } from 'vscode';
+
 import { BitbucketMentionsCompletionProvider } from '../../bitbucket/bbMentionsCompletionProvider';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, Comment, emptyTask, Task } from '../../bitbucket/model';

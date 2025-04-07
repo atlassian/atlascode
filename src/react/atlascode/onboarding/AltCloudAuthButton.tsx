@@ -1,6 +1,7 @@
 import { Button, Grid, lighten, makeStyles, Tooltip, Typography } from '@material-ui/core';
 import CloudIcon from '@material-ui/icons/Cloud';
 import React, { useCallback, useContext } from 'react';
+
 import { AuthInfoState, emptyUserInfo, Product, ProductJira } from '../../../atlclients/authInfo';
 import { OnboardingControllerContext } from './onboardingController';
 

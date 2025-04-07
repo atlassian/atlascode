@@ -2,6 +2,7 @@ import { readFileSync } from 'fs';
 import Mustache from 'mustache';
 import { join as pathJoin } from 'path';
 import { Uri } from 'vscode';
+
 import { Resources } from '../../resources';
 
 export function getHtmlForView(extensionPath: string, baseUri: Uri, cspSource: string, viewId: string): string {

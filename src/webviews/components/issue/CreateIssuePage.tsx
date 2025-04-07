@@ -1,5 +1,26 @@
+import Button from '@atlaskit/button';
+import LoadingButton from '@atlaskit/button/loading-button';
+import Form, { Field, FormFooter } from '@atlaskit/form';
+import Page, { Grid, GridColumn } from '@atlaskit/page';
+import Panel from '@atlaskit/panel';
+import SectionMessage from '@atlaskit/section-message';
+import Select, { components } from '@atlaskit/select';
+import Spinner from '@atlaskit/spinner';
+import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { FieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import * as React from 'react';
+import { AnalyticsView } from 'src/analyticsTypes';
+import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
 
+import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
+import { CreateIssueData, emptyCreateIssueData, isIssueCreated } from '../../../ipc/issueMessaging';
+import { LegacyPMFData } from '../../../ipc/messaging';
+import { readFilesContentAsync } from '../../../util/files';
+import { AtlLoader } from '../AtlLoader';
+import ErrorBanner from '../ErrorBanner';
+import { chain } from '../fieldValidators';
+import Offline from '../Offline';
+import PMFBBanner from '../pmfBanner';
 import {
     AbstractIssueEditorPage,
     CommonEditorPageAccept,
@@ -7,28 +28,6 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from './AbstractIssueEditorPage';
-import { CreateIssueData, emptyCreateIssueData, isIssueCreated } from '../../../ipc/issueMessaging';
-import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
-import { FieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
-import Form, { Field, FormFooter } from '@atlaskit/form';
-import Page, { Grid, GridColumn } from '@atlaskit/page';
-import Select, { components } from '@atlaskit/select';
-
-import { AtlLoader } from '../AtlLoader';
-import Button from '@atlaskit/button';
-import ErrorBanner from '../ErrorBanner';
-import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import { LegacyPMFData } from '../../../ipc/messaging';
-import LoadingButton from '@atlaskit/button/loading-button';
-import Offline from '../Offline';
-import PMFBBanner from '../pmfBanner';
-import Panel from '@atlaskit/panel';
-import SectionMessage from '@atlaskit/section-message';
-import Spinner from '@atlaskit/spinner';
-import { chain } from '../fieldValidators';
-import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
-import { AnalyticsView } from 'src/analyticsTypes';
-import { readFilesContentAsync } from '../../../util/files';
 
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;

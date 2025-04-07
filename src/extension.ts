@@ -1,14 +1,18 @@
+import { pid } from 'process';
 import * as semver from 'semver';
 import { commands, env, ExtensionContext, extensions, languages, Memento, window } from 'vscode';
+
 import { installedEvent, launchedEvent, upgradedEvent } from './analytics';
 import { DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
+import { startListening } from './atlclients/negotiate';
 import { BitbucketContext } from './bitbucket/bbContext';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
-import { Commands, registerCommands } from './commands';
-import { configuration, Configuration, IConfig } from './config/configuration';
-import { GlobalStateVersionKey } from './constants';
 import { CommandContext, setCommandContext } from './commandContext';
+import { Commands, registerCommands } from './commands';
+import { Configuration, configuration, IConfig } from './config/configuration';
+import { GlobalStateVersionKey } from './constants';
 import { Container } from './container';
+import { JQLManager } from './jira/jqlManager';
 import { provideCodeLenses } from './jira/todoObserver';
 import { Logger } from './logger';
 import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
@@ -19,8 +23,6 @@ import {
 } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
-import { pid } from 'process';
-import { startListening } from './atlclients/negotiate';
 import { FeatureFlagClient } from './util/featureFlags';
 import { JQLManager } from './jira/jqlManager';
 import { registerErrorReporting, registerAnalyticsClient, unregisterErrorReporting } from './errorReporting';

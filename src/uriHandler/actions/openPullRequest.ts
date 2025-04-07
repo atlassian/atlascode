@@ -1,8 +1,9 @@
 import { Uri, window } from 'vscode';
+
+import { CheckoutHelper } from '../../bitbucket/interfaces';
+import { AnalyticsApi } from '../../lib/analyticsApi';
 import { Logger } from '../../logger';
 import { UriHandlerAction } from '../uriHandlerAction';
-import { AnalyticsApi } from '../../lib/analyticsApi';
-import { CheckoutHelper } from '../../bitbucket/interfaces';
 
 /**
  * Use a deep link to open pull request

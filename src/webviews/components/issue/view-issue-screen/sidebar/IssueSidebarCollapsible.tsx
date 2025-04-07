@@ -1,8 +1,8 @@
 import Button from '@atlaskit/button';
-import React from 'react';
-import ChevronUpIcon from '@atlaskit/icon/glyph/chevron-up';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
+import ChevronUpIcon from '@atlaskit/icon/glyph/chevron-up';
 import { Box } from '@material-ui/core';
+import React from 'react';
 export type SidebarItem = {
     itemLabel?: string;
     itemComponent: React.ReactNode;

@@ -7,11 +7,11 @@ jest.mock('./strategyCrypto', () => {
     };
 });
 
-import { OAuthProvider } from './authInfo';
-import { strategyForProvider } from './strategy';
-
 // it.each is not found without this:
 import { it } from '@jest/globals';
+
+import { OAuthProvider } from './authInfo';
+import { strategyForProvider } from './strategy';
 
 const expectedData: any = {
     bbcloud: {

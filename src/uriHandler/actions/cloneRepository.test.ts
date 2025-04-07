@@ -1,4 +1,5 @@
 import { Uri, window } from 'vscode';
+
 import { CloneRepositoryUriHandlerAction } from './cloneRepository';
 
 describe('CloneRepositoryUriHandlerAction', () => {

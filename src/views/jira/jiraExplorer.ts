@@ -1,5 +1,6 @@
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { commands, Disposable } from 'vscode';
+
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { FocusEvent, FocusEventActions } from '../../webview/ExplorerFocusManager';

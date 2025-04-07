@@ -1,8 +1,7 @@
-import * as vscode from 'vscode';
-
 // keytar depends on a native module shipped in vscode, so this is
 // how we load it
 import * as keytarType from 'keytar';
+import * as vscode from 'vscode';
 
 function getNodeModule<T>(moduleName: string): T | undefined {
     const vscodeRequire = eval('require');

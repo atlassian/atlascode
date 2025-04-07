@@ -1,4 +1,5 @@
 import { commands, window } from 'vscode';
+
 import { parseGitUrl, urlForRemote } from '../../bitbucket/bbUtils';
 import { PullRequest, WorkspaceRepo } from '../../bitbucket/model';
 import { Container } from '../../container';

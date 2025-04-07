@@ -10,6 +10,7 @@ import {
     TreeItemCollapsibleState,
     Uri,
 } from 'vscode';
+
 import { ProductBitbucket } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { WorkspaceRepo } from '../../bitbucket/model';

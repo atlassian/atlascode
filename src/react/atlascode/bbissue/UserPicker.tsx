@@ -4,6 +4,7 @@ import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useContext, useState } from 'react';
 import { useAsyncAbortable } from 'react-async-hook';
 import useConstant from 'use-constant';
+
 import { emptyUser, User } from '../../../bitbucket/model';
 import { BitbucketIssueControllerContext } from './bitbucketIssueController';
 

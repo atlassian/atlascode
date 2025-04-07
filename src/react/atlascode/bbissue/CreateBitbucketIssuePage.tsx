@@ -27,15 +27,16 @@ import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import LaunchIcon from '@material-ui/icons/Launch';
 import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked';
 import React, { useCallback, useState } from 'react';
+import { AnalyticsView } from 'src/analyticsTypes';
+
 import { emptyBitbucketSite } from '../../../bitbucket/model';
+import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import {
     CreateBitbucketIssueControllerContext,
     useCreateBitbucketIssueController,
 } from './createBitbucketIssueController';
-import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
-import { AnalyticsView } from 'src/analyticsTypes';
 
 const priorityIcon: Record<string, JSX.Element> = {
     trivial: <RadioButtonUncheckedIcon />,

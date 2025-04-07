@@ -1,4 +1,5 @@
 import { Uri, window } from 'vscode';
+
 import { CheckoutBranchUriHandlerAction } from './checkoutBranch';
 
 describe('CheckoutBranchUriHandlerAction', () => {

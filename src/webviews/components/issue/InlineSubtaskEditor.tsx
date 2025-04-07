@@ -3,6 +3,7 @@ import Spinner from '@atlaskit/spinner';
 import { emptyIssueType, IssueType } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
 import EdiText from 'react-editext';
+
 import * as FieldValidators from '../fieldValidators';
 
 export type SummaryAndIssueType = {

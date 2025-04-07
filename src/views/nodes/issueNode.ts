@@ -1,5 +1,6 @@
 import { isMinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import * as vscode from 'vscode';
+
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { AbstractBaseNode } from './abstractBaseNode';

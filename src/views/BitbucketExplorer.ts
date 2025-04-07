@@ -1,4 +1,5 @@
 import vscode, { ConfigurationChangeEvent, Disposable } from 'vscode';
+
 import { ProductBitbucket } from '../atlclients/authInfo';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { Commands } from '../commands';
@@ -6,12 +7,12 @@ import { configuration } from '../config/configuration';
 import { BitbucketEnabledKey } from '../constants';
 import { Container } from '../container';
 import { FocusEvent, FocusEventActions } from '../webview/ExplorerFocusManager';
+import { BitbucketActivityMonitor } from './BitbucketActivityMonitor';
 import { BaseTreeDataProvider, Explorer } from './Explorer';
 import { CreatePullRequestNode } from './pullrequest/headerNode';
 import { DescriptionNode, PullRequestTitlesNode } from './pullrequest/pullRequestNode';
 import { PullRequestNodeDataProvider } from './pullRequestNodeDataProvider';
 import { RefreshTimer } from './RefreshTimer';
-import { BitbucketActivityMonitor } from './BitbucketActivityMonitor';
 
 export abstract class BitbucketExplorer extends Explorer implements Disposable {
     private _disposable: Disposable;

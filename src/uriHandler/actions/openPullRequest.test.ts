@@ -1,4 +1,5 @@
 import { Uri, window } from 'vscode';
+
 import { OpenPullRequestUriHandlerAction } from './openPullRequest';
 
 describe('OpenPullRequestUriHandlerAction', () => {

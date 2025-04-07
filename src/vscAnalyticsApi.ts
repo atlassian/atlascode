@@ -49,9 +49,9 @@ import {
     viewScreenEvent,
 } from './analytics';
 import { AnalyticsClient } from './analytics-node-client/src/client.min.js';
+import { UIErrorInfo } from './analyticsTypes';
 import { DetailedSiteInfo, Product, SiteInfo } from './atlclients/authInfo';
 import { AnalyticsApi } from './lib/analyticsApi';
-import { UIErrorInfo } from './analyticsTypes';
 
 export class VSCAnalyticsApi implements AnalyticsApi {
     private _analyticsClient: AnalyticsClient;

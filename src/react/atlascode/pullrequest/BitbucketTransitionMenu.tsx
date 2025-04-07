@@ -1,5 +1,6 @@
 import { Checkbox, makeStyles, TableCell, TableRow, Theme, Typography } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
+
 import { BitbucketIssue } from '../../../bitbucket/model';
 import StatusMenu from '../bbissue/StatusMenu';
 
