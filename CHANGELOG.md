@@ -1,10 +1,8 @@
 ## What's new in 3.4.23
 
-### Improvements 
+### Improvements
 
-- Improved the pull request details page with idea to make UI more intuitive and close to Butbucket UI.
-- In PR details page, made UI Changes to make the comment section and Add Reviewer option cleaner and user friendly
-- Improved the notification for new Jira issues, which now includes issues created long time ago but just assigned to you.
+-   Updated and improved styling in ViewIssueScreen
 
 ## What's new in 3.4.22
 
@@ -12,187 +10,188 @@
 
 - Changed text in the onboarding flow to "Sign in to ____." Used to be "What version of {product} do you use?"
 
+
 ## What's new in 3.4.21
 
 ### Bug Fixes
 
-- Fixed a bug introduced in 3.4.20 causing the same issue being retrieved by different JQL queries in the 'Custom JQL filters panel' fail to render.
+-   Fixed a bug introduced in 3.4.20 causing the same issue being retrieved by different JQL queries in the 'Custom JQL filters panel' fail to render.
 
 ## What's new in 3.4.20
 
 ### Features
 
-- New 'Assigned Jira work items' side panel, showing all and only the Jira issues assigned to the user
-- Note: the above feature is controlled under an experiment flag that could be turned off server side.
+-   New 'Assigned Jira work items' side panel, showing all and only the Jira issues assigned to the user
+-   Note: the above feature is controlled under an experiment flag that could be turned off server side.
 
 ### Improvements
 
-- The existing 'Jira issues' panel is being renamed to 'Custom JQL filters' and now it only shows the customized JQL queries. If there are no customized JQLs, the panel will stay hidden.
-- Note: the above change is controlled under an experiment flag that could be turned off server side.
+-   The existing 'Jira issues' panel is being renamed to 'Custom JQL filters' and now it only shows the customized JQL queries. If there are no customized JQLs, the panel will stay hidden.
+-   Note: the above change is controlled under an experiment flag that could be turned off server side.
 
 ## What's new in 3.4.19
 
-- Internal changes only.
+-   Internal changes only.
 
-## What's new in 3.4.18 
+## What's new in 3.4.18
 
 ### Bug Fixes
 
-- Were you experiencing issues with commands not being found for the Atlassian extension? Please follow steps here after installing this version: 
-    - Delete all auths under Settings > Jira > Authentication section
-    - Re-authenticate. 
-    - If you are still experiencing issues, please comment on https://github.com/atlassian/atlascode/issues/219
+-   Were you experiencing issues with commands not being found for the Atlassian extension? Please follow steps here after installing this version:
+    -   Delete all auths under Settings > Jira > Authentication section
+    -   Re-authenticate.
+    -   If you are still experiencing issues, please comment on https://github.com/atlassian/atlascode/issues/219
 
 ### Improvements
 
-- Improved new Onboarding authentication UI.
+-   Improved new Onboarding authentication UI.
 
 ## What's new in 3.4.17
 
-- Internal changes only.
+-   Internal changes only.
 
 ## What's new in 3.4.16
 
-- Internal changes only.
+-   Internal changes only.
 
 ## What's new in 3.4.15
 
 ### Improvements
 
-- 'Push the new branch to remote' toggle is now a child of the 'Set up git branch' toggle
+-   'Push the new branch to remote' toggle is now a child of the 'Set up git branch' toggle
 
 ### Bug Fixes
 
-- Editing comments in PRs work. 
+-   Editing comments in PRs work.
 
 ## What's new in 3.4.14
 
 ### Improvements
 
-- Improved the performance of BitBucket pull requests for large repositories by dividing APIs into critical and non-critical flows.
+-   Improved the performance of BitBucket pull requests for large repositories by dividing APIs into critical and non-critical flows.
 
 ## What's new in 3.4.13
 
 ### Features
 
-- Added a loading state for the 'Checkout source Branch' button in BitBucket pull requests.
-- Added a loading icon for the BitBucket pull request summary section.
+-   Added a loading state for the 'Checkout source Branch' button in BitBucket pull requests.
+-   Added a loading icon for the BitBucket pull request summary section.
 
 ### Bug Fixes
 
-- Fixed exceptions thrown during a failed stat-sig initialization for experimentations.
-- Fixed the time-out error that prevented the BitBucket pull request to load for large repos.
+-   Fixed exceptions thrown during a failed stat-sig initialization for experimentations.
+-   Fixed the time-out error that prevented the BitBucket pull request to load for large repos.
 
 ## What's new in 3.4.12
 
 ### Rollback Release !!
 
-- Same as 3.4.7
-- Rolled back several releases as we investigate a possible regression in the authentication flow.
+-   Same as 3.4.7
+-   Rolled back several releases as we investigate a possible regression in the authentication flow.
 
 ## What's new in 3.4.11
 
-- Internal changes only.
+-   Internal changes only.
 
 ## What's new in 3.4.10
 
 ### Bug Fixes
 
-- Fixed the bug introduced in 3.4.8 for Server / Data Center users on Authentication.
+-   Fixed the bug introduced in 3.4.8 for Server / Data Center users on Authentication.
 
 ## What's new in 3.4.9
 
 ### Rollback Release !!
 
-- Same as 3.4.7
-- Rolled back 3.4.8 release as it contained a breaking bug for Server / Data Center users on Authentication.
+-   Same as 3.4.7
+-   Rolled back 3.4.8 release as it contained a breaking bug for Server / Data Center users on Authentication.
 
 ## What's new in 3.4.8
 
 ### Features
 
-- Added a new toggle switch in 'Start work' page to choose if the new branch should be automatically pushed to remote.
+-   Added a new toggle switch in 'Start work' page to choose if the new branch should be automatically pushed to remote.
 
 ## What's new in 3.4.7
 
 ### Bug Fixes
 
-- Fixed 'Create Jira issue' page getting stuck on the loader when the first Jira server is unreachable.
-- Fixed 'Start work' not working when another 'Start work' tab is open.
+-   Fixed 'Create Jira issue' page getting stuck on the loader when the first Jira server is unreachable.
+-   Fixed 'Start work' not working when another 'Start work' tab is open.
 
 ## What's new in 3.4.6
 
 ### Features
 
-- Cleaned up feature flag for Jira Cloud authentication from Remote Development Environments
-- Placed code for Auth UI experiment. Still needs additional work before we turn this on.
+-   Cleaned up feature flag for Jira Cloud authentication from Remote Development Environments
+-   Placed code for Auth UI experiment. Still needs additional work before we turn this on.
 
 ## What's new in 3.4.5
 
 ### Bug Fixes
 
-- Fixed bitbucket PR erroring out due to deprecated API being used
+-   Fixed bitbucket PR erroring out due to deprecated API being used
 
 ## What's new in 3.4.4
 
 ### Bug Fixes
 
-- Fixed images not showing up in Jira tickets' description and comments
+-   Fixed images not showing up in Jira tickets' description and comments
 
 ## What's new in 3.4.3
 
 ### Bug Fixes
 
-- Fixed Bitbucket Data Center Auth not working for usernames with special characters. 
+-   Fixed Bitbucket Data Center Auth not working for usernames with special characters.
 
 ## What's new in 3.4.2
 
 ### Bug Fixes
 
-- Fixed file not found error when attaching files to Jira tickets
+-   Fixed file not found error when attaching files to Jira tickets
 
 ## What's new in 3.4.1
 
 ### Improvements
 
-- Lowered VSCode engine compatibility to v1.77.0
+-   Lowered VSCode engine compatibility to v1.77.0
 
 ## What's new in 3.4.0
 
 ### Bug Fixes
 
-- Fixed several API calls broken due to a breaking change introduced since Jira DC 8.4.0, which causes Jira tickets to not be displayed (404 error)
+-   Fixed several API calls broken due to a breaking change introduced since Jira DC 8.4.0, which causes Jira tickets to not be displayed (404 error)
 
 ## What's new in 3.2.3
 
 ### Bug Fixes
 
-- Fix on create Issue for JIRA cloud when there were no attachments. 
+-   Fix on create Issue for JIRA cloud when there were no attachments.
 
 ## What's new in 3.2.2
 
 ### Bug Fixes
 
-- Issues fetched from multiple JIRA sites now display correctly in the tree
-- Error banner no longer causes JIRA issue page to crash
-- Added workaround to fix completion for JIRA Reporter field
-- Fixed link in the Start Work flow for adding JIRAs to commit messages [Issue 70](https://github.com/atlassian/atlascode/issues/70)
+-   Issues fetched from multiple JIRA sites now display correctly in the tree
+-   Error banner no longer causes JIRA issue page to crash
+-   Added workaround to fix completion for JIRA Reporter field
+-   Fixed link in the Start Work flow for adding JIRAs to commit messages [Issue 70](https://github.com/atlassian/atlascode/issues/70)
 
 ## What's New in 3.2.0
 
-### Improvements 
+### Improvements
 
-- PAT authentication is now supported for Bitbucket Data Center / Server. 
+-   PAT authentication is now supported for Bitbucket Data Center / Server.
 
 ### Bug Fixes
 
 ## What's New in 3.0.16
 
-### Improvements 
+### Improvements
 
-- License Change from MIT to Apache to align with Atlassian Open Source Standards
-- Moved source code and release process from Bitbucket to Github for better collaboration with community
-- Usage of pre-releases. We will follow the convention of even numbered minor release being the stable release ex: "xx.2.xx" . Odd numbers will be the pre-releases. 
+-   License Change from MIT to Apache to align with Atlassian Open Source Standards
+-   Moved source code and release process from Bitbucket to Github for better collaboration with community
+-   Usage of pre-releases. We will follow the convention of even numbered minor release being the stable release ex: "xx.2.xx" . Odd numbers will be the pre-releases.
 
 ### Bug Fixes
 

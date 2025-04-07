@@ -1,7 +1,7 @@
 const _baseConfig = (project, testExtension) => ({
     displayName: project,
     roots: ['<rootDir>'],
-    
+
     testMatch: [`**/*.test.${testExtension}`],
     testPathIgnorePatterns: ['/node_modules/', '/e2e/'],
 
@@ -13,8 +13,10 @@ const _baseConfig = (project, testExtension) => ({
                 isolatedModules: project === 'react',
             },
         ],
+        '^.+\\.(css|styl|less|sass|scss)$': 'jest-css-modules-transform',
     },
-    transformIgnorePatterns: ['/node_modules/(?!(@vscode/webview-ui-toolkit/|@microsoft/|exenv-es6/))'],
+
+    transformIgnorePatterns: ['/node_modules/(?!(@vscode/webview-ui-toolkit/|@microsoft/|exenv-es6/|@atlaskit/))'],
 
     collectCoverage: true,
     collectCoverageFrom: [
@@ -26,12 +28,12 @@ const _baseConfig = (project, testExtension) => ({
     coverageReporters: ['json', 'lcov', 'text-summary', 'clover'],
 
     coverageThreshold: {
-        global: testExtension === 'ts' ? {            
+        global: testExtension === 'ts' ? {
             statements: 21,
             branches: 8,
             functions: 8,
             lines: 21,
-        } : /* tsx */{            
+        } : /* tsx */{
             statements: 0,
             branches: 0,
             functions: 0,
@@ -43,7 +45,6 @@ const _baseConfig = (project, testExtension) => ({
 module.exports = {
     projects: ['<rootDir>/jest.*.config.js'],
     verbose: true,
-
     // custom exports for individual projects
     _baseConfig,
 };

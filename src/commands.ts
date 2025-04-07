@@ -30,6 +30,7 @@ export enum Commands {
     BitbucketFetchPullRequests = 'atlascode.bb.fetchPullRequests',
     BitbucketRefreshPullRequests = 'atlascode.bb.refreshPullRequests',
     BitbucketToggleFileNesting = 'atlascode.bb.toggleFileNesting',
+    BitbucketOpenPullRequest = 'atlascode.bb.openPullRequest',
     BitbucketShowOpenPullRequests = 'atlascode.bb.showOpenPullRequests',
     BitbucketShowPullRequestsToReview = 'atlascode.bb.showPullRequestsToReview',
     BitbucketShowPullRequestsCreatedByMe = 'atlascode.bb.showOpenPullRequestsCreatedByMe',
@@ -253,6 +254,9 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         }),
         commands.registerCommand(Commands.DisableHelpExplorer, () => {
             configuration.updateEffective('helpExplorerEnabled', false, null, true);
+        }),
+        commands.registerCommand(Commands.BitbucketOpenPullRequest, (data: { pullRequestUrl: string }) => {
+            Container.openPullRequestHandler(data.pullRequestUrl);
         }),
     );
 }

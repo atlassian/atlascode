@@ -23,14 +23,19 @@ import { pid } from 'process';
 import { startListening } from './atlclients/negotiate';
 import { FeatureFlagClient } from './util/featureFlags';
 import { JQLManager } from './jira/jqlManager';
+import { registerErrorReporting, registerAnalyticsClient, unregisterErrorReporting } from './errorReporting';
 
 const AnalyticDelay = 5000;
 
 export async function activate(context: ExtensionContext) {
     const start = process.hrtime();
+
+    registerErrorReporting();
+
     const atlascode = extensions.getExtension('atlassian.atlascode')!;
     const atlascodeVersion = atlascode.packageJSON.version;
     const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
+
     registerResources(context);
 
     Configuration.configure(context);
@@ -42,6 +47,7 @@ export async function activate(context: ExtensionContext) {
     try {
         await Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
 
+        registerAnalyticsClient(Container.analyticsClient);
         registerCommands(context);
         activateCodebucket(context);
 
@@ -173,5 +179,6 @@ function showOnboardingPage() {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
+    unregisterErrorReporting();
     FeatureFlagClient.dispose();
 }

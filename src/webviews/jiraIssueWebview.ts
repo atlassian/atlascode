@@ -21,6 +21,7 @@ import { Commands } from '../commands';
 import { postComment } from '../commands/jira/postComment';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
 import { Container } from '../container';
+
 import {
     EditIssueAction,
     isAddAttachmentsAction,

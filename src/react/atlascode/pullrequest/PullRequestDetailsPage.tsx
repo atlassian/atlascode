@@ -378,6 +378,24 @@ const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, controll
                 </Grid>
 
                 <Grid item>
+                    <Typography variant="h6">
+                        <strong>Created</strong>
+                    </Typography>
+                    <Tooltip title={state.pr.data.ts || 'unknown'}>
+                        <Typography>{formatDate(state.pr.data.ts)}</Typography>
+                    </Tooltip>
+                </Grid>
+
+                <Grid item>
+                    <Typography variant="h6">
+                        <strong>Updated</strong>
+                    </Typography>
+                    <Tooltip title={state.pr.data.updatedTs || 'unknown'}>
+                        <Typography>{formatDate(state.pr.data.updatedTs)}</Typography>
+                    </Tooltip>
+                </Grid>
+
+                <Grid item>
                     <BasicPanel
                         isLoading={state.loadState.buildStatuses}
                         isDefaultExpanded

@@ -78,6 +78,17 @@ export async function loggedOutEvent(site: DetailedSiteInfo): Promise<TrackEvent
     });
 }
 
+// Error/diagnostics events
+
+export async function errorEvent(error: Error | string): Promise<TrackEvent> {
+    const attributes =
+        typeof error === 'string'
+            ? { name: 'Error', message: error }
+            : { name: error.name || 'Error', message: error.message, stack: error.stack! };
+
+    return trackEvent('errorEvent', 'atlascode', { attributes });
+}
+
 // Feature Flag Events
 
 export const enum ClientInitializedErrorType {
@@ -678,7 +689,7 @@ function event(action: string, actionSubject: string, attributes: any): any {
 
 function anyUserOrAnonymous<T>(e: Object): T {
     let newObj: Object;
-    const aaid = Container.siteManager.getFirstAAID();
+    const aaid = Container.siteManager?.getFirstAAID();
 
     if (aaid) {
         newObj = { ...e, ...{ userId: aaid, userIdType: 'atlassianAccount', anonymousId: Container.machineId } };

@@ -513,6 +513,12 @@ pre {
 }
 
 .ac-issue-created-updated {
+    padding-top: 16px;
+    display: flex;
+    align-items: flex-start;
+    flex-direction: row;
+    gap: 8px;
+    font-size: smaller;
     color: var(--vscode-editorCodeLens-foreground);
 }
 
@@ -701,9 +707,7 @@ pre {
 
 .inlinePanelSubheading {
     display: inline-block;
-    margin-left: 15px;
     color: var(--vscode-input-placeholderForeground) !important;
-    font-style: italic;
 }
 
 /*-------------------- END - panels --------------------*/
@@ -804,11 +808,15 @@ section button span {
 /*-------------------- BEGIN - inline dialog --------------------*/
 
 .ac-inline-dialog > div {
+    align-items: center;
     color: var(--vscode-editor-foreground);
+    background: var(--vscode-editor-background) !important;
+    border-radius: 3px;
 }
-
-.ac-inline-dialog > div {
-    background-color: var(--vscode-editor-background--lighten-15);
+.ac-inline-dialog.active > div {
+    color: var(--vscode-editor-foreground);
+    background: var(--vscode-editor-background--lighten-05) !important;
+    border-radius: 3px;
 }
 
 .vscode-light .ac-inline-dialog > div {
@@ -934,11 +942,11 @@ div[role='dialog'],
 }
 
 .ac-button-secondary {
-    background: rgb(240, 240, 240) !important;
+    background: var(--vscode-editor-background) !important;
+    color: var(--vscode-editor-foreground) !important;
 }
-
 .ac-button-secondary:hover {
-    background: rgb(200, 200, 200) !important;
+    background: var(--vscode-editor-background--lighten-075) !important;
 }
 
 .ac-button-secondary:active {
@@ -951,7 +959,7 @@ div[role='dialog'],
 }
 
 .ac-button-secondary span {
-    color: black !important;
+    color: var(--vscode-editor-foreground) !important;
 }
 
 /*-------------------- END - buttons --------------------*/
@@ -1091,9 +1099,9 @@ div[role='dialog'],
 /*-------------------- BEGIN - select boxes --------------------*/
 
 .ac-select__control {
-    background: var(--vscode-dropdown-background) !important;
+    background: var(--vscode-editor-background) !important;
     color: var(--vscode-dropdown-foreground) !important;
-    border: 1px solid var(--vscode-settings-textInputBorder) !important;
+    border: 1px solid var(--vscode-editor-background) !important;
 }
 
 .ac-select__control--is-focused,
@@ -1102,7 +1110,10 @@ div[role='dialog'],
 }
 
 .ac-select__indicator,
-.ac-select__input,
+.ac-select__input {
+    background: var(--vscode-editor-background) !important;
+    color: var(--vscode-input-foreground) !important;
+}
 .ac-select__menu,
 .ac-select__menu-list {
     background: var(--vscode-dropdown-background) !important;
@@ -1114,12 +1125,13 @@ div[role='dialog'],
 }
 
 .ac-select__multi-value__label {
-    background: var(--vscode-dropdown-foreground) !important;
+    background: var(--vscode-input-background) !important;
+    color: var(--vscode-input-foreground) !important;
     font-size: 100% !important;
 }
 
 .ac-select__multi-value__label span {
-    color: var(--vscode-editor-foreground--darken-10) !important;
+    color: var(--vscode-input-foreground) !important;
 }
 
 .ac-select__option {
