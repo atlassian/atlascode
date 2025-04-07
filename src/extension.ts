@@ -12,6 +12,7 @@ import { Commands, registerCommands } from './commands';
 import { Configuration, configuration, IConfig } from './config/configuration';
 import { GlobalStateVersionKey } from './constants';
 import { Container } from './container';
+import { registerAnalyticsClient, registerErrorReporting, unregisterErrorReporting } from './errorReporting';
 import { JQLManager } from './jira/jqlManager';
 import { provideCodeLenses } from './jira/todoObserver';
 import { Logger } from './logger';
@@ -24,8 +25,6 @@ import {
 import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
 import { FeatureFlagClient } from './util/featureFlags';
-import { JQLManager } from './jira/jqlManager';
-import { registerErrorReporting, registerAnalyticsClient, unregisterErrorReporting } from './errorReporting';
 
 const AnalyticDelay = 5000;
 
