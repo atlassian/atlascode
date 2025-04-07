@@ -56,7 +56,7 @@ export default class PopoutMentionPicker extends React.Component<
                 onClose={this.toggleOpen}
                 target={
                     <Tooltip content={this.props.targetButtonTooltip}>
-                        <Button {...this.props.targetButtonProps} onClick={this.toggleOpen} isSelected={isOpen}>
+                        <Button {...this.props.targetButtonProps} onClick={this.toggleOpen}>
                             {this.props.targetButtonContent}
                         </Button>
                     </Tooltip>

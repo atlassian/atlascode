@@ -167,9 +167,11 @@ export type Commit = {
 
 export type BuildStatus = {
     name: string;
+    key: string;
     state: 'SUCCESSFUL' | 'FAILED' | 'INPROGRESS' | 'STOPPED';
     url: string;
     ts: string;
+    last_updated?: string;
 };
 
 export type MergeStrategy = {
@@ -245,13 +247,12 @@ export type PullRequestData = {
     title: string;
     htmlSummary: string;
     rawSummary: string;
-    ts: string | number;
-    updatedTs: string | number;
+    ts: string;
+    updatedTs: string;
     state: 'MERGED' | 'SUPERSEDED' | 'OPEN' | 'DECLINED';
     closeSourceBranch: boolean;
     taskCount: number;
     buildStatuses?: BuildStatus[];
-    draft: boolean;
 };
 
 export interface PullRequest {
@@ -287,7 +288,6 @@ const emptyPullRequestData: PullRequestData = {
     state: 'OPEN',
     closeSourceBranch: false,
     taskCount: 0,
-    draft: false,
 };
 export const emptyPullRequest: PullRequest = {
     site: emptyBitbucketSite,

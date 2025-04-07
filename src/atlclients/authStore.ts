@@ -75,22 +75,6 @@ export class CredentialManager implements Disposable {
 
         const existingInfo = await this.getAuthInfo(site, false);
 
-        if (isOAuthInfo(existingInfo) && isOAuthInfo(info)) {
-            const effectiveExistingIat = existingInfo.iat ?? 0;
-            const effectiveNewIat = info.iat ?? 0;
-            if (effectiveExistingIat > effectiveNewIat) {
-                Logger.debug(`Not replacing credentials because the existing credentials have a later iat.`);
-                return;
-            }
-
-            if (effectiveExistingIat === effectiveNewIat && existingInfo.recievedAt > info.recievedAt) {
-                Logger.debug(
-                    `Not replacing credentials because the existing credentials have were received at a later time (despite having the same iat).`,
-                );
-                return;
-            }
-        }
-
         this._memStore.set(site.product.key, productAuths.set(site.credentialId, info));
 
         const hasNewInfo =

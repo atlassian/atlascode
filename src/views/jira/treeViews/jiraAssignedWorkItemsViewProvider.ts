@@ -17,9 +17,9 @@ import { JiraIssueNode, TreeViewIssue, executeJqlQuery, loginToJiraMessageNode }
 import { configuration } from '../../../config/configuration';
 import { CommandContext, setCommandContext } from '../../../commandContext';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
-import { NewIssueMonitor } from '../../../jira/newIssueMonitor';
 import { RefreshTimer } from '../../RefreshTimer';
 import { viewScreenEvent } from '../../../analytics';
+import { JiraNotifier } from './jiraNotifier';
 
 const AssignedWorkItemsViewProviderId = 'atlascode.views.jira.assignedWorkItemsTreeView';
 
@@ -29,13 +29,15 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
     private _onDidChangeTreeData = new EventEmitter<TreeItem | undefined | void>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-    private _disposable: Disposable;
-    private _initPromises: PromiseRacer<TreeViewIssue[]> | undefined;
-    private _initChildren: TreeItem[] = [];
-    private _newIssueMonitor: NewIssueMonitor;
+    private readonly _disposable: Disposable;
+    private readonly _initPromises: PromiseRacer<TreeViewIssue[]> | undefined;
+    private readonly _initChildren: TreeItem[] = [];
+    private readonly _jiraNotifier = new JiraNotifier();
+
+    private _skipNotificationForNextFetch = false;
 
     constructor() {
-        super(() => this.dispose);
+        super(() => this.dispose());
 
         setCommandContext(CommandContext.JiraExplorer, false);
         setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
@@ -49,8 +51,6 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
             commands.registerCommand(Commands.RefreshAssignedWorkItemsExplorer, this.refresh, this),
             treeView,
         );
-
-        this._newIssueMonitor = new NewIssueMonitor(() => Container.jqlManager.getAllDefaultJQLEntries());
 
         const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
         if (jqlEntries.length) {
@@ -72,15 +72,15 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
         if (configuration.changed(e, 'jira.explorer.enabled')) {
             setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
-            this.refresh();
+            this.refreshWithoutNotifications();
         } else if (configuration.changed(e, 'jira.explorer')) {
-            this.refresh();
+            this.refreshWithoutNotifications();
         }
     }
 
     private onSitesDidChange(e: SitesAvailableUpdateEvent): void {
         if (e.product.key === ProductJira.key) {
-            this.refresh();
+            this.refreshWithoutNotifications();
         }
     }
 
@@ -88,8 +88,12 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
         this._disposable.dispose();
     }
 
+    private refreshWithoutNotifications(): void {
+        this._skipNotificationForNextFetch = true;
+        this.refresh();
+    }
+
     private refresh(): void {
-        this._newIssueMonitor.checkForNewIssues();
         this._onDidChangeTreeData.fire();
     }
 
@@ -120,6 +124,8 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
                 }
 
                 SearchJiraHelper.appendIssues(issues, AssignedWorkItemsViewProviderId);
+                this._jiraNotifier.ignoreAssignedIssues(issues);
+
                 this._initChildren.push(...this.buildTreeItemsFromIssues(issues));
                 break;
             }
@@ -139,7 +145,16 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
             }
 
             const allIssues = (await Promise.all(jqlEntries.map(executeJqlQuery))).flat();
+
+            if (this._skipNotificationForNextFetch) {
+                this._skipNotificationForNextFetch = false;
+                this._jiraNotifier.ignoreAssignedIssues(allIssues);
+            } else {
+                this._jiraNotifier.notifyForNewAssignedIssues(allIssues);
+            }
+
             SearchJiraHelper.setIssues(allIssues, AssignedWorkItemsViewProviderId);
+
             return this.buildTreeItemsFromIssues(allIssues);
         }
     }

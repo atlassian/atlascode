@@ -14,3 +14,9 @@ export function forceCastTo<T>(obj: any): T {
     return obj as unknown as T;
 }
 
+/** Returns a Promise-like object that resolves synchronously */
+export function resolvePromiseSync<T>(value: T): Thenable<T> {
+    return forceCastTo<Thenable<T>>({
+        then: (onfulfilled: (val: T) => void) => onfulfilled(value),
+    });
+}
