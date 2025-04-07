@@ -1,15 +1,20 @@
+## What's new in 3.4.24
+
+### Improvements
+
+- Focus on the Atlascode UI panels when the Onboarding view triggers
+
 ## What's new in 3.4.23
 
 ### Improvements
 
--   Updated and improved styling in ViewIssueScreen
+- Updated and improved styling in ViewIssueScreen
 
 ## What's new in 3.4.22
 
 ### Improvements
 
 - Changed text in the onboarding flow to "Sign in to ____." Used to be "What version of {product} do you use?"
-
 
 ## What's new in 3.4.21
 
