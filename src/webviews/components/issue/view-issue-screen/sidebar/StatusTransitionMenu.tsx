@@ -31,9 +31,7 @@ export const StatusTransitionMenu: React.FC<Props> = (props) => {
     const [isHovered, setIsHovered] = React.useState(false);
     const [isOpen, setIsOpen] = React.useState(false);
 
-    const { border, background } = getDynamicStyles(props.currentStatus.statusCategory.colorName)
-        ? getDynamicStyles(props.currentStatus.statusCategory.colorName)
-        : getDynamicStyles('default');
+    const { border, background } = getDynamicStyles(props.currentStatus.statusCategory.colorName);
     const shouldShowTransitionName = props.transitions.some((t) => t.name !== t.to.name);
     return (
         <Box
