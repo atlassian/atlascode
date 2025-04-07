@@ -138,7 +138,7 @@ export class JQLManager extends Disposable {
 
     private defaultJQLEntryForJiraExplorer(site: DetailedSiteInfo): JQLEntry {
         return {
-            id: 'default',
+            id: site.id, // in Assigned Jira Work Items we only have 1 query per site, so this id works well
             enabled: true,
             name: 'My issues',
             query: 'assignee = currentUser() AND StatusCategory != Done ORDER BY updated DESC',
