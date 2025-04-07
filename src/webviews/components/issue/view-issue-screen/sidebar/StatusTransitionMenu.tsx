@@ -100,10 +100,15 @@ export const StatusTransitionMenu: React.FC<Props> = (props) => {
 };
 
 const getDynamicStyles = (colorName: string) => {
-    const { border, bg } = statusCategoryToColorTokenMap[colorName];
+    let fields = { border: '', bg: '' };
+    if (!statusCategoryToColorTokenMap[colorName]) {
+        fields = statusCategoryToColorTokenMap['default'];
+    } else {
+        fields = statusCategoryToColorTokenMap[colorName];
+    }
     return {
-        border: `1px solid ${border}`,
-        background: bg,
+        border: `1px solid ${fields.border}`,
+        background: fields.bg,
     };
 };
 
