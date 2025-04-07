@@ -114,4 +114,8 @@ const statusCategoryToColorTokenMap: { [key: string]: { border: string; bg: stri
         border: '#B0BEC5',
         bg: '#B0BEC533',
     },
+    default: {
+        border: '#B0BEC5',
+        bg: '#B0BEC533',
+    },
 };
