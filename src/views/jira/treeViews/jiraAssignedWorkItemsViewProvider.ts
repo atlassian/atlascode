@@ -20,7 +20,7 @@ import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { RefreshTimer } from '../../RefreshTimer';
 import { viewScreenEvent } from '../../../analytics';
 import { JiraNotifier } from './jiraNotifier';
-import { AssignedJiraItemsViewId } from 'src/constants';
+import { AssignedJiraItemsViewId } from '../../../../src/constants';
 
 const AssignedWorkItemsViewProviderId = AssignedJiraItemsViewId;
 
