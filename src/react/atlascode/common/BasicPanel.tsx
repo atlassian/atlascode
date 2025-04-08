@@ -8,6 +8,7 @@ import {
 } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import React, { memo, useCallback, useState } from 'react';
+
 import { PanelTitle } from '../common/PanelTitle';
 import { PanelSubtitle } from './PanelSubtitle';
 interface BasicPanelProps {

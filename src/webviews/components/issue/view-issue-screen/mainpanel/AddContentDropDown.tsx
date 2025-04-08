@@ -1,12 +1,12 @@
 import { LoadingButton } from '@atlaskit/button';
 import DropdownMenu, { DropdownItem } from '@atlaskit/dropdown-menu';
+import AddIcon from '@atlaskit/icon/glyph/add';
+import ChildIssuesIcon from '@atlaskit/icon/glyph/child-issues';
+import EditorAttachmentIcon from '@atlaskit/icon/glyph/editor/attachment';
+import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
+import IssuesIcon from '@atlaskit/icon/glyph/issues';
 import { Box } from '@material-ui/core';
 import React from 'react';
-import EditorAttachmentIcon from '@atlaskit/icon/glyph/editor/attachment';
-import ChildIssuesIcon from '@atlaskit/icon/glyph/child-issues';
-import IssuesIcon from '@atlaskit/icon/glyph/issues';
-import AddIcon from '@atlaskit/icon/glyph/add';
-import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
 
 export const AddContentDropdown: React.FC<{
     handleAttachmentClick: () => void;

@@ -1,17 +1,20 @@
-import {
-    AuthInfo,
-    AuthInfoState,
-    DetailedSiteInfo,
-    ProductJira,
-    isBasicAuthInfo,
-    isOAuthInfo,
-    isPATAuthInfo,
-} from './authInfo';
-import { CacheMap } from '../util/cachemap';
-import { Time } from '../util/time';
-import { ClientError, HTTPClient } from '../bitbucket/httpClient';
-import { ConfigurationChangeEvent, Disposable, ExtensionContext } from 'vscode';
 import { JiraClient, JiraCloudClient, JiraServerClient } from '@atlassianlabs/jira-pi-client';
+import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
+import { AxiosResponse } from 'axios';
+import PQueue from 'p-queue';
+import { ConfigurationChangeEvent, Disposable, ExtensionContext } from 'vscode';
+import { commands, window } from 'vscode';
+
+import { BitbucketIssuesApiImpl } from '../bitbucket/bitbucket-cloud/bbIssues';
+import { CloudPullRequestApi } from '../bitbucket/bitbucket-cloud/pullRequests';
+import { CloudRepositoriesApi } from '../bitbucket/bitbucket-cloud/repositories';
+import { ServerPullRequestApi } from '../bitbucket/bitbucket-server/pullRequests';
+import { ServerRepositoriesApi } from '../bitbucket/bitbucket-server/repositories';
+import { ClientError, HTTPClient } from '../bitbucket/httpClient';
+import { BitbucketApi } from '../bitbucket/model';
+import { configuration } from '../config/configuration';
+import { cannotGetClientFor } from '../constants';
+import { Container } from '../container';
 import {
     basicJiraTransportFactory,
     getAgent,
@@ -19,25 +22,22 @@ import {
     jiraTokenAuthProvider,
     oauthJiraTransportFactory,
 } from '../jira/jira-client/providers';
-import { commands, window } from 'vscode';
-
-import { AxiosResponse } from 'axios';
-import { BasicInterceptor } from './basicInterceptor';
-import { BitbucketApi } from '../bitbucket/model';
-import { BitbucketIssuesApiImpl } from '../bitbucket/bitbucket-cloud/bbIssues';
-import { CloudPullRequestApi } from '../bitbucket/bitbucket-cloud/pullRequests';
-import { CloudRepositoriesApi } from '../bitbucket/bitbucket-cloud/repositories';
-import { Container } from '../container';
 import { Logger } from '../logger';
-import { Negotiator } from './negotiate';
-import PQueue from 'p-queue';
 import { PipelineApiImpl } from '../pipelines/pipelines';
-import { ServerPullRequestApi } from '../bitbucket/bitbucket-server/pullRequests';
-import { ServerRepositoriesApi } from '../bitbucket/bitbucket-server/repositories';
 import { SitesAvailableUpdateEvent } from '../siteManager';
-import { cannotGetClientFor } from '../constants';
-import { configuration } from '../config/configuration';
-import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
+import { CacheMap } from '../util/cachemap';
+import { Time } from '../util/time';
+import {
+    AuthInfo,
+    AuthInfoState,
+    DetailedSiteInfo,
+    isBasicAuthInfo,
+    isOAuthInfo,
+    isPATAuthInfo,
+    ProductJira,
+} from './authInfo';
+import { BasicInterceptor } from './basicInterceptor';
+import { Negotiator } from './negotiate';
 
 const oauthTTL: number = 45 * Time.MINUTES;
 const serverTTL: number = Time.FOREVER;

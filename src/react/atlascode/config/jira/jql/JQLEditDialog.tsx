@@ -16,6 +16,7 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useAsync } from 'react-async-hook';
 import { Controller, useForm } from 'react-hook-form';
 import { v4 } from 'uuid';
+
 import { DetailedSiteInfo, emptySiteInfo } from '../../../../../atlclients/authInfo';
 import { JQLEntry } from '../../../../../config/model';
 import { ConfigControllerContext } from '../../configController';

@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
+
 import { PaginatedPullRequests, PullRequest, WorkspaceRepo } from '../../bitbucket/model';
 import { Container } from '../../container';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';

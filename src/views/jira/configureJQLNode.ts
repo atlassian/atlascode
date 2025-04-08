@@ -1,4 +1,5 @@
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
+
 import { Commands } from '../../commands';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 

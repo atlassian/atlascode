@@ -1,5 +1,6 @@
 import path from 'path';
 import * as vscode from 'vscode';
+
 import { FileStatus } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';

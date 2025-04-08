@@ -1,9 +1,10 @@
 import * as React from 'react';
+import uuid from 'uuid';
+
 import { Action, LegacyPMFData } from '../../ipc/messaging';
 import { OnMessageEventPromise } from '../../util/reactpromise';
 import { ConnectionTimeout } from '../../util/time';
 import { darken, lighten, opacity } from './colors';
-import uuid from 'uuid';
 
 interface VsCodeApi {
     postMessage(msg: {}): void;

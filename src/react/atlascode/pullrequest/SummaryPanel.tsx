@@ -1,4 +1,5 @@
 import React, { memo, useCallback } from 'react';
+
 import { User } from '../../../bitbucket/model';
 import { BasicPanel } from '../common/BasicPanel';
 import InlineRenderedTextEditor from './InlineRenderedTextEditor';

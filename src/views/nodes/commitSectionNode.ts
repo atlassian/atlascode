@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+
 import { Commit, PullRequest } from '../../bitbucket/model';
 import { AbstractBaseNode } from './abstractBaseNode';
 import { CommitNode } from './commitNode';

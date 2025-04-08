@@ -1,6 +1,7 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import axios, { CancelToken, CancelTokenSource } from 'axios';
-import { Uri, commands } from 'vscode';
+import { commands, Uri } from 'vscode';
+
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, Commit, FileDiff, FileStatus, PullRequest, User, WorkspaceRepo } from '../../bitbucket/model';
@@ -11,13 +12,13 @@ import { parseJiraIssueKeys } from '../../jira/issueKeyParser';
 import { transitionIssue } from '../../jira/transitionIssue';
 import { CancellationManager } from '../../lib/cancellation';
 import { SubmitCreateRequestAction } from '../../lib/ipc/fromUI/createPullRequest';
-import { RepoData, emptyRepoData } from '../../lib/ipc/toUI/createPullRequest';
+import { emptyRepoData, RepoData } from '../../lib/ipc/toUI/createPullRequest';
 import { CreatePullRequestActionApi } from '../../lib/webview/controller/pullrequest/createPullRequestActionApi';
 import { Logger } from '../../logger';
 import { Branch, Commit as GitCommit } from '../../typings/git';
 import { Shell } from '../../util/shell';
-import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
 import { FileDiffQueryParams } from '../../views/pullrequest/diffViewHelper';
+import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
 
 export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi {
     constructor(private cancellationManager: CancellationManager) {}

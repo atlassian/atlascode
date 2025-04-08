@@ -1,7 +1,7 @@
-import * as React from 'react';
 import Button from '@atlaskit/button';
-import Tooltip from '@atlaskit/tooltip';
 import CopyIcon from '@atlaskit/icon/glyph/copy';
+import Tooltip from '@atlaskit/tooltip';
+import * as React from 'react';
 
 export default class NavItem extends React.Component<
     {

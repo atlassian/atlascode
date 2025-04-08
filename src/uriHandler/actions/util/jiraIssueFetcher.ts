@@ -1,8 +1,9 @@
+import { window } from 'vscode';
+
 import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
 import { Container } from '../../../container';
 import { fetchMinimalIssue } from '../../../jira/fetchIssue';
 import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
-import { window } from 'vscode';
 
 // Common logic that's shared between multiple actions that deal with Jira issues
 export class JiraIssueFetcher {

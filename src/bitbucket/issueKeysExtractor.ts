@@ -1,7 +1,7 @@
-import { PullRequest, Comment, Commit } from './model';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { Logger } from '../logger';
 import { parseBitbucketIssueKeys } from './bbIssueKeyParser';
+import { Comment, Commit, PullRequest } from './model';
 
 export async function extractIssueKeys(pr: PullRequest, commits: Commit[], allComments: Comment[]): Promise<string[]> {
     const result = new Set<string>();

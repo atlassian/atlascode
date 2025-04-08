@@ -1,4 +1,5 @@
 import { Disposable, ViewColumn } from 'vscode';
+
 import { AnalyticsApi } from '../lib/analyticsApi';
 import { SingleWebview } from './singleViewFactory';
 import { VSCWebviewControllerFactory } from './vscWebviewControllerFactory';

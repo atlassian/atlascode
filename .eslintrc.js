@@ -20,6 +20,7 @@ module.exports = {
         'import',
         'prettier',
         '@stylistic/js',
+	'simple-import-sort',
     ],
     rules: {
         'prettier/prettier': 'error',
@@ -73,6 +74,7 @@ module.exports = {
         eqeqeq: ['error', 'always'],
         semi: 'off',
         '@stylistic/js/semi': ['error', 'always'],
+	'simple-import-sort/imports': 'error',
     },
     settings: {
         react: {

@@ -1,13 +1,4 @@
 import { LoadingButton } from '@atlaskit/button';
-import InlineDialog from '@atlaskit/inline-dialog';
-import { Transition, User } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI, FieldUIs, FieldValues } from '@atlassianlabs/jira-pi-meta-models';
-import { Box } from '@material-ui/core';
-import React from 'react';
-import VotesForm from '../../VotesForm';
-import WatchesForm from '../../WatchesForm';
-import WorklogForm from '../../WorklogForm';
-import Tooltip from '@atlaskit/tooltip';
 import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
 import RefreshIcon from '@atlaskit/icon/glyph/refresh';
 import StarIcon from '@atlaskit/icon/glyph/star';
@@ -15,6 +6,16 @@ import StarFilledIcon from '@atlaskit/icon/glyph/star-filled';
 import WatchIcon from '@atlaskit/icon/glyph/watch';
 import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
 import AssetsSchemaIcon from '@atlaskit/icon-lab/core/assets-schema';
+import InlineDialog from '@atlaskit/inline-dialog';
+import Tooltip from '@atlaskit/tooltip';
+import { Transition, User } from '@atlassianlabs/jira-pi-common-models';
+import { FieldUI, FieldUIs, FieldValues } from '@atlassianlabs/jira-pi-meta-models';
+import { Box } from '@material-ui/core';
+import React from 'react';
+
+import VotesForm from '../../VotesForm';
+import WatchesForm from '../../WatchesForm';
+import WorklogForm from '../../WorklogForm';
 import { StatusTransitionMenu } from './StatusTransitionMenu';
 
 type Props = {

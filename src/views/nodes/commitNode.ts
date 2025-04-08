@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { Commit, PullRequest } from '../../bitbucket/model';
 import { Logger } from '../../logger';

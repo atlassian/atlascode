@@ -1,9 +1,10 @@
-import { expansionCastTo, resolvePromiseSync } from '../../../../testsutil';
-import { JiraNotifier } from './jiraNotifier';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { commands, window } from 'vscode';
+
+import { expansionCastTo, resolvePromiseSync } from '../../../../testsutil';
 import * as showIssueCommand from '../../../commands/jira/showIssue';
-import { window, commands } from 'vscode';
+import { JiraNotifier } from './jiraNotifier';
 
 function createIssue(key: string, summary: string, siteId: string): MinimalIssue<DetailedSiteInfo> {
     return expansionCastTo<MinimalIssue<DetailedSiteInfo>>({

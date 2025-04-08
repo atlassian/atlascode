@@ -1,11 +1,11 @@
-import { AccessibleResource, UserInfo } from '../authInfo';
-
 import { AxiosInstance } from 'axios';
+
 import { Logger } from '../../logger';
+import { AccessibleResource, UserInfo } from '../authInfo';
 import { ProductBitbucket } from '../authInfo';
-import { ResponseHandler } from './ResponseHandler';
 import { Strategy } from '../strategy';
 import { Tokens } from '../tokens';
+import { ResponseHandler } from './ResponseHandler';
 
 export class BitbucketResponseHandler extends ResponseHandler {
     constructor(

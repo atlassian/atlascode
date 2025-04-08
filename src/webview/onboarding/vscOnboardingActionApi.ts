@@ -1,6 +1,7 @@
 import { flatten } from 'flatten-anything';
 import { merge } from 'merge-anything';
 import { ConfigurationTarget, env } from 'vscode';
+
 import {
     AuthInfo,
     DetailedSiteInfo,

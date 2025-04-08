@@ -1,4 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+
 import { Pipeline, PipelineStep } from '../../../pipelines/model';
 
 export enum PipelineSummaryMessageType {

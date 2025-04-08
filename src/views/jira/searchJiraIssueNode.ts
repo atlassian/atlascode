@@ -1,9 +1,10 @@
+import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
+
+import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { Resources } from '../../resources';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
-import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
-import { DetailedSiteInfo } from '../../atlclients/authInfo';
 
 export class SearchJiraIssuesNode extends AbstractBaseNode {
     private _searchableIssueList: MinimalORIssueLink<DetailedSiteInfo>[] | undefined;

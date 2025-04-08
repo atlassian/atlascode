@@ -1,6 +1,7 @@
 import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { Switch } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
+
 import { ConfigControllerContext } from '../configController';
 type IssueHoversProps = {
     enabled: boolean;

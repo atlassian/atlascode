@@ -1,4 +1,5 @@
 import { CancelToken } from 'axios';
+
 import { DetailedSiteInfo, emptySiteInfo } from '../atlclients/authInfo';
 import { PipelineApiImpl } from '../pipelines/pipelines';
 import { Remote, Repository } from '../typings/git';

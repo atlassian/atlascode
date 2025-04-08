@@ -1,19 +1,20 @@
 import path from 'path';
-import { commands, window, ConfigurationChangeEvent, QuickPickItem } from 'vscode';
+import { commands, ConfigurationChangeEvent, QuickPickItem, window } from 'vscode';
+
 import { startIssueCreationEvent } from '../../analytics';
 import { ProductBitbucket } from '../../atlclients/authInfo';
 import { BitbucketContext } from '../../bitbucket/bbContext';
+import { BitbucketSite } from '../../bitbucket/model';
+import { CommandContext, setCommandContext } from '../../commandContext';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { BitbucketIssuesTreeViewId } from '../../constants';
-import { CommandContext, setCommandContext } from '../../commandContext';
 import { Container } from '../../container';
+import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 import { BitbucketExplorer } from '../BitbucketExplorer';
 import { BitbucketIssuesDataProvider } from '../bitbucketIssuesDataProvider';
 import { BaseTreeDataProvider } from '../Explorer';
 import { BitbucketIssuesMonitor } from './bbIssuesMonitor';
-import { BitbucketSite } from '../../bitbucket/model';
-import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 
 export class BitbucketIssuesExplorer extends BitbucketExplorer {
     constructor(ctx: BitbucketContext) {

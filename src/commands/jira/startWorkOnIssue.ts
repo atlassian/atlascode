@@ -1,4 +1,5 @@
 import { isMinimalIssue, IssueLinkIssue, MinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
+
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Container } from '../../container';
 import { fetchMinimalIssue } from '../../jira/fetchIssue';

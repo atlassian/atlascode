@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
+
 import { BitbucketContext } from '../../bitbucket/bbContext';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { Commands } from '../../commands';

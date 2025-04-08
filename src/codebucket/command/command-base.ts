@@ -1,6 +1,7 @@
 import * as path from 'path';
 import slash from 'slash';
 import * as vscode from 'vscode';
+
 import { Shell } from '../../util/shell';
 import { FileDiffQueryParams } from '../../views/pullrequest/diffViewHelper';
 import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';

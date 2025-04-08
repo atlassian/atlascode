@@ -6,6 +6,7 @@ import {
     SnippetString,
     TextDocument,
 } from 'vscode';
+
 import { getAgent, getAxiosInstance } from '../../jira/jira-client/providers';
 import { Logger } from '../../logger';
 

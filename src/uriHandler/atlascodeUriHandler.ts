@@ -1,16 +1,17 @@
+import { Disposable, Uri, UriHandler, window } from 'vscode';
+
+import { CheckoutHelper } from '../bitbucket/interfaces';
+import { Container } from '../container';
+import { AnalyticsApi } from '../lib/analyticsApi';
+import { Logger } from '../logger';
 import { CheckoutBranchUriHandlerAction } from './actions/checkoutBranch';
 import { CloneRepositoryUriHandlerAction } from './actions/cloneRepository';
 import { OpenPullRequestUriHandlerAction } from './actions/openPullRequest';
-import { SimpleCallbackAction } from './actions/simpleCallback';
 import { ShowJiraIssueUriHandlerAction } from './actions/showJiraIssue';
+import { SimpleCallbackAction } from './actions/simpleCallback';
 import { StartWorkUriHandlerAction } from './actions/startWork';
-import { UriHandlerAction } from './uriHandlerAction';
-import { AnalyticsApi } from '../lib/analyticsApi';
-import { CheckoutHelper } from '../bitbucket/interfaces';
-import { Uri, UriHandler, window, Disposable } from 'vscode';
-import { Logger } from '../logger';
 import { JiraIssueFetcher } from './actions/util/jiraIssueFetcher';
-import { Container } from '../container';
+import { UriHandlerAction } from './uriHandlerAction';
 
 export class AtlascodeUriHandler implements Disposable, UriHandler {
     private disposables: Disposable;

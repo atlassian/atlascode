@@ -1,5 +1,6 @@
 import truncate from 'lodash.truncate';
 import { version, window } from 'vscode';
+
 import { ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';

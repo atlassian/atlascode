@@ -1,5 +1,6 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { flatten } from 'flatten-anything';
+
 import { emptyConfig } from '../../../config/model';
 import { ConfigTarget, FlattenedConfig } from '../models/config';
 import { SiteWithAuthInfo } from './config';

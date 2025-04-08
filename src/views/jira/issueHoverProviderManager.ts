@@ -1,10 +1,11 @@
-import { Disposable, ConfigurationChangeEvent, languages } from 'vscode';
-import { Container } from '../../container';
+import { ConfigurationChangeEvent, Disposable, languages } from 'vscode';
+
+import { ProductJira } from '../../atlclients/authInfo';
 import { configuration } from '../../config/configuration';
 import { JiraHoverProviderConfigurationKey } from '../../constants';
-import { ProductJira } from '../../atlclients/authInfo';
-import { IssueHoverProvider } from './issueHoverProvider';
+import { Container } from '../../container';
 import { SitesAvailableUpdateEvent } from '../../siteManager';
+import { IssueHoverProvider } from './issueHoverProvider';
 
 export class IssueHoverProviderManager implements Disposable {
     private _disposable: Disposable;

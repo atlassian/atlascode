@@ -9,6 +9,7 @@ import {
     TextEditor,
     window,
 } from 'vscode';
+
 import { openActiveIssueEvent } from '../../analytics';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { BitbucketContext } from '../../bitbucket/bbContext';

@@ -1,8 +1,9 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+
+import { UIErrorInfo } from '../../../analyticsTypes';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { FeedbackData, PMFData } from '../models/common';
-import { UIErrorInfo } from '../../../analyticsTypes';
 
 export enum CommonActionType {
     SubmitPMF = 'pmfSubmit',

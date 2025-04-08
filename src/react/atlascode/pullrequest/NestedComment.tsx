@@ -1,13 +1,14 @@
-import { Avatar, Box, Button, CircularProgress, Grid, Tooltip, Typography, makeStyles } from '@material-ui/core';
+import { Avatar, Box, Button, CircularProgress, Grid, makeStyles, Tooltip, Typography } from '@material-ui/core';
+import { format, parseISO } from 'date-fns';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
+
 import { Comment, User } from '../../../bitbucket/model';
 import CommentForm from '../common/CommentForm';
 import { formatTime } from '../util/date-fns';
+import { TaskAdder } from './CommentTaskAdder';
 import { CommentTaskList } from './CommentTaskList';
 import { NestedCommentList } from './NestedCommentList';
 import { PullRequestDetailsControllerContext } from './pullRequestDetailsController';
-import { TaskAdder } from './CommentTaskAdder';
-import { format, parseISO } from 'date-fns';
 
 const useStyles = makeStyles({
     actionButton: {

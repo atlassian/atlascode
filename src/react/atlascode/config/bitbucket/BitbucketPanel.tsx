@@ -1,17 +1,17 @@
-import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';
 import { Fade, Grid } from '@material-ui/core';
+import React from 'react';
 
+import { ProductBitbucket } from '../../../../atlclients/authInfo';
+import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';
+import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
+import { CommonPanelProps } from '../../common/commonPanelProps';
+import { StatusBarPanel } from '../../common/StatusBarPanel';
 import { AuthPanel } from '../auth/AuthPanel';
 import { BitbucketIssuesPanel } from './subpanels/BitbucketIssuesPanel';
-import { CommonPanelProps } from '../../common/commonPanelProps';
 import { ContextMenuPanel } from './subpanels/ContextMenuPanel';
-import { PRExplorerPanel } from './subpanels/PRExplorerPanel';
 import { PipelinesPanel } from './subpanels/PipelinesPanel';
 import { PreferredRemotesPanel } from './subpanels/PreferredRemotesPanel';
-import { ProductBitbucket } from '../../../../atlclients/authInfo';
-import React from 'react';
-import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
-import { StatusBarPanel } from '../../common/StatusBarPanel';
+import { PRExplorerPanel } from './subpanels/PRExplorerPanel';
 
 type BitbucketPanelProps = CommonPanelProps & {
     config: { [key: string]: any };

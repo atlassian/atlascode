@@ -1,25 +1,26 @@
-import { ProductJira } from '../../../atlclients/authInfo';
-import { Container } from '../../../container';
-import { Commands } from '../../../commands';
-import { SearchJiraHelper } from '../searchJiraHelper';
-import { PromiseRacer } from '../../../util/promises';
 import {
+    commands,
+    ConfigurationChangeEvent,
     Disposable,
+    EventEmitter,
     TreeDataProvider,
     TreeItem,
-    EventEmitter,
-    ConfigurationChangeEvent,
     TreeViewVisibilityChangeEvent,
-    commands,
     window,
 } from 'vscode';
-import { JiraIssueNode, TreeViewIssue, executeJqlQuery, loginToJiraMessageNode } from './utils';
-import { configuration } from '../../../config/configuration';
-import { CommandContext, setCommandContext } from '../../../commandContext';
-import { SitesAvailableUpdateEvent } from '../../../siteManager';
-import { RefreshTimer } from '../../RefreshTimer';
+
 import { viewScreenEvent } from '../../../analytics';
+import { ProductJira } from '../../../atlclients/authInfo';
+import { CommandContext, setCommandContext } from '../../../commandContext';
+import { Commands } from '../../../commands';
+import { configuration } from '../../../config/configuration';
+import { Container } from '../../../container';
+import { SitesAvailableUpdateEvent } from '../../../siteManager';
+import { PromiseRacer } from '../../../util/promises';
+import { RefreshTimer } from '../../RefreshTimer';
+import { SearchJiraHelper } from '../searchJiraHelper';
 import { JiraNotifier } from './jiraNotifier';
+import { executeJqlQuery, JiraIssueNode, loginToJiraMessageNode, TreeViewIssue } from './utils';
 
 const AssignedWorkItemsViewProviderId = 'atlascode.views.jira.assignedWorkItemsTreeView';
 

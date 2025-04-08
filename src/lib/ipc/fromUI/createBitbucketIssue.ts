@@ -1,6 +1,7 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { CommonAction } from './common';
+
 import { BitbucketSite } from '../../../bitbucket/model';
+import { CommonAction } from './common';
 
 export enum CreateBitbucketIssueActionType {
     SubmitCreateRequest = 'submitCreateRequest',

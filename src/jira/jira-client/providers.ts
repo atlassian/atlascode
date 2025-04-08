@@ -3,14 +3,15 @@ import { AgentProvider, getProxyHostAndPort, shouldTunnelHost } from '@atlassian
 import axios, { AxiosInstance } from 'axios';
 import * as fs from 'fs';
 import * as https from 'https';
-import { Logger } from '../../logger';
 import * as sslRootCas from 'ssl-root-cas';
+
 import { DetailedSiteInfo, SiteInfo } from '../../atlclients/authInfo';
 import { BasicInterceptor } from '../../atlclients/basicInterceptor';
 import { addCurlLogging, rewriteSecureImageRequests } from '../../atlclients/interceptors';
 import { configuration } from '../../config/configuration';
 import { AxiosUserAgent } from '../../constants';
 import { Container } from '../../container';
+import { Logger } from '../../logger';
 import { Resources } from '../../resources';
 import { ConnectionTimeout } from '../../util/time';
 

@@ -1,6 +1,7 @@
 import { Chip, CircularProgress, Grid, Tooltip } from '@material-ui/core';
 import ArrowRightAltIcon from '@material-ui/icons/ArrowRightAlt';
 import * as React from 'react';
+
 import { Repo, User } from '../../../bitbucket/model';
 
 type BranchInfoProps = {

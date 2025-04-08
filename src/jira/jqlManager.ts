@@ -1,6 +1,7 @@
 import PQueue from 'p-queue/dist';
 import { v4 } from 'uuid';
 import { ConfigurationChangeEvent, ConfigurationTarget, Disposable } from 'vscode';
+
 import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
 import { configuration } from '../config/configuration';
 import { JQLEntry } from '../config/model';

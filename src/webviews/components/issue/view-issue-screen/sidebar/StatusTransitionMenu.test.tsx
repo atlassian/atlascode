@@ -1,7 +1,8 @@
+import { Status, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { fireEvent, render } from '@testing-library/react';
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+
 import { StatusTransitionMenu } from './StatusTransitionMenu';
-import { Transition, Status } from '@atlassianlabs/jira-pi-common-models';
 
 describe('StatusTransitionMenu', () => {
     const mockTransitions: Transition[] = [

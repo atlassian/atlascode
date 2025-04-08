@@ -1,5 +1,6 @@
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { commands, ConfigurationChangeEvent, Disposable, Event, EventEmitter, QuickPickItem, window } from 'vscode';
+
 import { searchIssuesEvent } from '../../analytics';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';

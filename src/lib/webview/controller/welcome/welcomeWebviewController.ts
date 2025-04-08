@@ -1,4 +1,5 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { WelcomeAction, WelcomeActionType } from '../../../ipc/fromUI/welcome';
 import { WebViewID } from '../../../ipc/models/common';

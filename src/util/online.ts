@@ -2,6 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import pAny from 'p-any';
 import pRetry from 'p-retry';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter } from 'vscode';
+
 import { addCurlLogging } from '../atlclients/interceptors';
 import { configuration } from '../config/configuration';
 import { AxiosUserAgent } from '../constants';

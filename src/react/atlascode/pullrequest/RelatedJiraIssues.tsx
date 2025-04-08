@@ -13,6 +13,7 @@ import {
     Typography,
 } from '@material-ui/core';
 import React from 'react';
+
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { colorToLozengeAppearanceMap } from '../../vscode/theme/colors';
 import Lozenge from '../common/Lozenge';

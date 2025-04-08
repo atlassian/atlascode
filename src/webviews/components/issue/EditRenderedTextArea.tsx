@@ -2,6 +2,7 @@ import { ButtonGroup } from '@atlaskit/button';
 import Button from '@atlaskit/button';
 import Comment from '@atlaskit/comment';
 import React, { useState } from 'react';
+
 import { RenderedContent } from '../RenderedContent';
 import { TextAreaEditor } from './TextAreaEditor';
 

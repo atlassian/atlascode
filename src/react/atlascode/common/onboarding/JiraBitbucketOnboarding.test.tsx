@@ -1,6 +1,7 @@
-import React from 'react';
-import { JiraBitbucketOnboarding } from './JiraBitbucketOnboarding';
 import { render, screen } from '@testing-library/react';
+import React from 'react';
+
+import { JiraBitbucketOnboarding } from './JiraBitbucketOnboarding';
 
 const MockJiraComponent = ({ callback }: { callback?: () => void }) => {
     const jiraValueSet = {

@@ -1,15 +1,15 @@
-import { OAuthProvider, ProductBitbucket, ProductJira } from './authInfo';
-import { Tokens, tokensFromResponseData } from './tokens';
 import axios, { AxiosInstance } from 'axios';
+import { Disposable } from 'vscode';
 
 import { AxiosUserAgent } from '../constants';
-import { ConnectionTimeout } from '../util/time';
 import { Container } from '../container';
-import { Disposable } from 'vscode';
-import { Logger } from '../logger';
-import { addCurlLogging } from './interceptors';
 import { getAgent } from '../jira/jira-client/providers';
+import { Logger } from '../logger';
+import { ConnectionTimeout } from '../util/time';
+import { OAuthProvider, ProductBitbucket, ProductJira } from './authInfo';
+import { addCurlLogging } from './interceptors';
 import { strategyForProvider } from './strategy';
+import { Tokens, tokensFromResponseData } from './tokens';
 
 export interface TokenResponse {
     tokens?: Tokens;

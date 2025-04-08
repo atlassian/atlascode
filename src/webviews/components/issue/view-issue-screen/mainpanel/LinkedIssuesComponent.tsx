@@ -1,14 +1,15 @@
 import Button from '@atlaskit/button';
-import { IssuePickerIssue, MinimalIssueLink, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import React from 'react';
 import AddIcon from '@atlaskit/icon/glyph/add';
-import { Box } from '@material-ui/core';
 import Select from '@atlaskit/select';
-import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
-import { IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models';
-import * as SelectFieldHelper from '../../../selectFieldHelper';
 import { AsyncSelect } from '@atlaskit/select';
+import { IssuePickerIssue, MinimalIssueLink, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { Box } from '@material-ui/core';
+import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
+import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+
+import * as SelectFieldHelper from '../../../selectFieldHelper';
 import { LinkedIssues } from '../../LinkedIssues';
 
 export type LinkTypeAndIssue = {

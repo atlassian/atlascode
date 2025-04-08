@@ -1,11 +1,12 @@
+import * as vscode from 'vscode';
+
 import { forceCastTo } from '../../../../testsutil';
 import { DetailedSiteInfo, ProductBitbucket, ProductJira } from '../../../atlclients/authInfo';
 import { Container } from '../../../container';
-import { CustomJQLViewProvider } from './customJqlViewProvider';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
+import { CustomJQLViewProvider } from './customJqlViewProvider';
 import { TreeViewIssue } from './utils';
 import * as utils from './utils';
-import * as vscode from 'vscode';
 
 const mockJqlEntries = [
     {

@@ -1,4 +1,5 @@
 import { Disposable, Event, EventEmitter, Memento } from 'vscode';
+
 import {
     AuthInfoEvent,
     DetailedSiteInfo,

@@ -2,6 +2,7 @@ import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@m
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import equal from 'fast-deep-equal/es6';
 import React, { memo, useCallback, useEffect, useState } from 'react';
+
 import { ConfigSection, ConfigSubSection } from '../../../../../lib/ipc/models/config';
 import { CommonSubpanelProps } from '../../../common/commonPanelProps';
 import { PanelSubtitle } from '../../../common/PanelSubtitle';

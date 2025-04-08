@@ -1,4 +1,5 @@
 import { commands, Disposable, Event, EventEmitter, TreeItem } from 'vscode';
+
 import { bbIssuesPaginationEvent } from '../analytics';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { clientForSite } from '../bitbucket/bbUtils';

@@ -1,4 +1,5 @@
 import { version, window } from 'vscode';
+
 import { ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { LegacyPMFData } from '../ipc/messaging';

@@ -1,9 +1,10 @@
-import { expansionCastTo, forceCastTo } from '../../../../testsutil';
-import { DetailedSiteInfo } from 'src/atlclients/authInfo';
-import { JiraIssueNode, TreeViewIssue } from './utils';
-import { Uri } from 'vscode';
-import { JQLEntry } from 'src/config/model';
 import { cloneDeep } from 'lodash';
+import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { JQLEntry } from 'src/config/model';
+import { Uri } from 'vscode';
+
+import { expansionCastTo, forceCastTo } from '../../../../testsutil';
+import { JiraIssueNode, TreeViewIssue } from './utils';
 
 jest.mock('../../../container', () => ({
     Container: {

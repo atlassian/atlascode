@@ -1,5 +1,6 @@
 import { createEmptyMinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { Command, TreeItem, TreeItemCollapsibleState } from 'vscode';
+
 import { emptySiteInfo } from '../../atlclients/authInfo';
 import { AbstractBaseNode } from './abstractBaseNode';
 import { IssueNode } from './issueNode';

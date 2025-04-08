@@ -1,26 +1,27 @@
-import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
-import { JQLEntry } from '../../../config/model';
-import { Container } from '../../../container';
-import { CommandContext, setCommandContext } from '../../../commandContext';
-import { Commands } from '../../../commands';
-import { configuration } from '../../../config/configuration';
-import { fetchMinimalIssue } from '../../../jira/fetchIssue';
 import {
+    commands,
+    ConfigurationChangeEvent,
     Disposable,
+    EventEmitter,
     TreeDataProvider,
     TreeItem,
     TreeItemCollapsibleState,
-    ConfigurationChangeEvent,
     TreeViewVisibilityChangeEvent,
-    EventEmitter,
-    commands,
     window,
 } from 'vscode';
-import { JiraIssueNode, TreeViewIssue, executeJqlQuery, createLabelItem, loginToJiraMessageNode } from './utils';
-import { SearchJiraHelper } from '../searchJiraHelper';
+
+import { viewScreenEvent } from '../../../analytics';
+import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
+import { CommandContext, setCommandContext } from '../../../commandContext';
+import { Commands } from '../../../commands';
+import { configuration } from '../../../config/configuration';
+import { JQLEntry } from '../../../config/model';
+import { Container } from '../../../container';
+import { fetchMinimalIssue } from '../../../jira/fetchIssue';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { RefreshTimer } from '../../RefreshTimer';
-import { viewScreenEvent } from '../../../analytics';
+import { SearchJiraHelper } from '../searchJiraHelper';
+import { createLabelItem, executeJqlQuery, JiraIssueNode, loginToJiraMessageNode, TreeViewIssue } from './utils';
 
 const enum ViewStrings {
     ConfigureJqlMessage = 'Configure JQL entries in settings to view Jira issues',

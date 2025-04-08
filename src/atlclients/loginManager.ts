@@ -1,32 +1,33 @@
 import * as vscode from 'vscode';
+
+import { authenticatedEvent, editedEvent } from '../analytics';
+import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
+import { Container } from '../container';
+import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
+import { Logger } from '../logger';
+import { SiteManager } from '../siteManager';
 import {
     AccessibleResource,
     AuthInfo,
     AuthInfoState,
     BasicAuthInfo,
     DetailedSiteInfo,
+    isBasicAuthInfo,
+    isPATAuthInfo,
     OAuthInfo,
     OAuthProvider,
+    oauthProviderForSite,
     OAuthResponse,
     PATAuthInfo,
     Product,
     ProductBitbucket,
     ProductJira,
     SiteInfo,
-    isBasicAuthInfo,
-    isPATAuthInfo,
-    oauthProviderForSite,
 } from './authInfo';
-import { authenticatedEvent, editedEvent } from '../analytics';
-import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
-import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
-import { BitbucketAuthenticator } from './bitbucketAuthenticator';
 import { CredentialManager } from './authStore';
+import { BitbucketAuthenticator } from './bitbucketAuthenticator';
 import { JiraAuthentictor as JiraAuthenticator } from './jiraAuthenticator';
-import { Logger } from '../logger';
 import { OAuthDancer } from './oauthDancer';
-import { SiteManager } from '../siteManager';
-import { Container } from '../container';
 
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;

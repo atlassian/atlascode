@@ -1,4 +1,6 @@
 import { ConfigurationChangeEvent, Event, ExtensionContext, OutputChannel, window } from 'vscode';
+import { EventEmitter } from 'vscode';
+
 import { configuration, OutputLevel } from './config/configuration';
 import { extensionOutputChannelName } from './constants';
 import { Container } from './container';

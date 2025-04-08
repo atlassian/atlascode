@@ -1,32 +1,32 @@
+import crypto from 'crypto';
+import PQueue from 'p-queue';
+import { Disposable, Event, EventEmitter, version, window } from 'vscode';
+
+import { loggedOutEvent } from '../analytics';
+import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
+import { CommandContext, setCommandContext } from '../commandContext';
+import { Container } from '../container';
+import { Logger } from '../logger';
+import { keychain } from '../util/keychain';
 import {
     AuthChangeType,
     AuthInfo,
     AuthInfoEvent,
     AuthInfoState,
     DetailedSiteInfo,
+    emptyAuthInfo,
+    getSecretForAuthInfo,
+    isOAuthInfo,
     OAuthProvider,
+    oauthProviderForSite,
     Product,
     ProductBitbucket,
     ProductJira,
     RemoveAuthInfoEvent,
     UpdateAuthInfoEvent,
-    emptyAuthInfo,
-    getSecretForAuthInfo,
-    isOAuthInfo,
-    oauthProviderForSite,
 } from './authInfo';
-import { CommandContext, setCommandContext } from '../commandContext';
-import { Disposable, Event, EventEmitter, version, window } from 'vscode';
-
-import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
-import { Logger } from '../logger';
 import { OAuthRefesher } from './oauthRefresher';
-import PQueue from 'p-queue';
 import { Tokens } from './tokens';
-import crypto from 'crypto';
-import { keychain } from '../util/keychain';
-import { loggedOutEvent } from '../analytics';
-import { Container } from '../container';
 const keychainServiceNameV3 = version.endsWith('-insider') ? 'atlascode-insiders-authinfoV3' : 'atlascode-authinfoV3';
 
 enum Priority {

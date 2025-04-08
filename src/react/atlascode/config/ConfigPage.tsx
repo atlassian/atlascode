@@ -1,9 +1,11 @@
+import { RefreshButton } from '@atlassianlabs/guipi-core-components';
 import {
     AppBar,
     Badge,
     Box,
     Container,
     Grid,
+    makeStyles,
     Paper,
     Tab,
     Tabs,
@@ -11,30 +13,28 @@ import {
     Toolbar,
     Tooltip,
     Typography,
-    makeStyles,
 } from '@material-ui/core';
-import { AuthDialogControllerContext, useAuthDialog } from './auth/useAuthDialog';
-import { ConfigControllerContext, useConfigController } from './configController';
-import { ConfigSection, ConfigSubSection, ConfigTarget } from '../../../lib/ipc/models/config';
+import PersonIcon from '@material-ui/icons/Person';
+import WorkIcon from '@material-ui/icons/Work';
+import ToggleButton from '@material-ui/lab/ToggleButton';
+import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
+import equal from 'fast-deep-equal/es6';
 import React, { useCallback, useEffect, useState } from 'react';
+import { AnalyticsView } from 'src/analyticsTypes';
 
-import { AuthDialog } from './auth/dialog/AuthDialog';
-import { BitbucketPanel } from './bitbucket/BitbucketPanel';
+import { ConfigSection, ConfigSubSection, ConfigTarget } from '../../../lib/ipc/models/config';
+import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { ErrorDisplay } from '../common/ErrorDisplay';
+import { PMFDisplay } from '../common/pmf/PMFDisplay';
+import { AuthDialog } from './auth/dialog/AuthDialog';
+import { AuthDialogControllerContext, useAuthDialog } from './auth/useAuthDialog';
+import { BitbucketPanel } from './bitbucket/BitbucketPanel';
+import { ConfigControllerContext, useConfigController } from './configController';
 import { ExplorePanel } from './explore/ExplorePanel';
 import { GeneralPanel } from './general/GeneralPanel';
 import { JiraPanel } from './jira/JiraPanel';
-import { PMFDisplay } from '../common/pmf/PMFDisplay';
-import PersonIcon from '@material-ui/icons/Person';
 import { ProductEnabler } from './ProductEnabler';
-import { RefreshButton } from '@atlassianlabs/guipi-core-components';
 import { SidebarButtons } from './SidebarButtons';
-import ToggleButton from '@material-ui/lab/ToggleButton';
-import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
-import WorkIcon from '@material-ui/icons/Work';
-import equal from 'fast-deep-equal/es6';
-import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
-import { AnalyticsView } from 'src/analyticsTypes';
 
 const useStyles = makeStyles(
     (theme: Theme) =>

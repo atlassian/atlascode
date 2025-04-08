@@ -1,4 +1,5 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+
 import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import { BitbucketSite, Commit, FileDiff, PullRequest, User, WorkspaceRepo } from '../../../../bitbucket/model';
 import { Branch } from '../../../../typings/git';

@@ -1,11 +1,12 @@
 import { commands, window } from 'vscode';
+
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { WorkspaceRepo } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { Pipeline, PipelineTarget } from '../../pipelines/model';
-import { descriptionForState, generatePipelineTitle, shouldDisplay } from './Helpers';
 import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
+import { descriptionForState, generatePipelineTitle, shouldDisplay } from './Helpers';
 
 export class PipelinesMonitor implements BitbucketActivityMonitor {
     private _previousResults: Record<string, Pipeline[]> = {};

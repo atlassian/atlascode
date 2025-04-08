@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+
 import { ProductBitbucket } from '../../atlclients/authInfo';
 import { extractBitbucketIssueKeys } from '../../bitbucket/issueKeysExtractor';
 import { Comment, Commit, PullRequest } from '../../bitbucket/model';

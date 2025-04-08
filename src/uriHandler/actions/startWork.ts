@@ -1,8 +1,9 @@
 import { Uri, window } from 'vscode';
-import { UriHandlerAction } from '../uriHandlerAction';
+
 import { startWorkOnIssue } from '../../commands/jira/startWorkOnIssue';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { Logger } from '../../logger';
+import { UriHandlerAction } from '../uriHandlerAction';
 import { JiraIssueFetcher } from './util/jiraIssueFetcher';
 
 /**

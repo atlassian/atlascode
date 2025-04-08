@@ -13,6 +13,7 @@ import {
 } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import { v4 } from 'uuid';
+
 import { DetailedSiteInfo, emptySiteInfo } from '../../../../../atlclients/authInfo';
 import { JQLEntry } from '../../../../../config/model';
 import { FilterSearchResultsTable } from './FilterSearchResultsTable';

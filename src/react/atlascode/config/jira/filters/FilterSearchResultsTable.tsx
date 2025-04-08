@@ -20,6 +20,7 @@ import StarIcon from '@material-ui/icons/Star';
 import StarBorderIcon from '@material-ui/icons/StarBorder';
 import clsx from 'clsx';
 import React, { useContext, useEffect, useState } from 'react';
+
 import { DetailedSiteInfo } from '../../../../../atlclients/authInfo';
 import { VSCodeStyles, VSCodeStylesContext } from '../../../../vscode/theme/styles';
 import { ConfigControllerContext } from '../../configController';

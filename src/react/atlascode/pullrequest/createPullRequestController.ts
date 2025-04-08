@@ -2,6 +2,7 @@ import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassian
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { v4 } from 'uuid';
+
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { BitbucketSite, Commit, FileDiff, PullRequest, User } from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';

@@ -1,11 +1,12 @@
-import { expansionCastTo } from '../../testsutil';
 import { JiraClient } from '@atlassianlabs/jira-pi-client';
-import { JQLManager } from './jqlManager';
-import { Container } from '../container';
-import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
-import { JQLEntry } from '../config/model';
 import { it } from '@jest/globals';
+
+import { expansionCastTo } from '../../testsutil';
+import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
 import { configuration } from '../config/configuration';
+import { JQLEntry } from '../config/model';
+import { Container } from '../container';
+import { JQLManager } from './jqlManager';
 //import { EventEmitter } from 'vscode';
 
 const mockedSites = [
