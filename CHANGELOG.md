@@ -1,3 +1,9 @@
+## What's new in 3.4.24
+
+### Improvements
+
+-   Updated and improved styling in CreateIssueScreen
+
 ## What's new in 3.4.23
 
 ### Improvements
@@ -8,8 +14,7 @@
 
 ### Improvements
 
-- Changed text in the onboarding flow to "Sign in to ____." Used to be "What version of {product} do you use?"
-
+-   Changed text in the onboarding flow to "Sign in to \_\_\_\_." Used to be "What version of {product} do you use?"
 
 ## What's new in 3.4.21
 
