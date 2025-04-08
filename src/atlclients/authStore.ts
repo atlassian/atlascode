@@ -99,6 +99,18 @@ export class CredentialManager implements Disposable {
         }
     }
 
+    public async refreshOrMarkAsInvalid(site: DetailedSiteInfo) {
+        const refreshed = await this.refreshAccessToken(site);
+        if (!refreshed) {
+            const info = await this.getAuthInfo(site, false);
+            if (info) {
+                info.state = AuthInfoState.Invalid;
+                await this.saveAuthInfo(site, info);
+            }
+        }
+        return refreshed;
+    }
+
     private async getAuthInfoForProductAndCredentialId(
         site: DetailedSiteInfo,
         allowCache: boolean,

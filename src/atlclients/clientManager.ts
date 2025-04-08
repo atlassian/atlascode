@@ -36,6 +36,7 @@ import {
     ProductJira,
 } from './authInfo';
 import { BasicInterceptor } from './basicInterceptor';
+import { HardcodedAuthInterceptor } from './hardcodedAuthInterceptor';
 import { LoginManager } from './loginManager';
 import { Negotiator } from './negotiate';
 
@@ -114,27 +115,38 @@ export class ClientManager implements Disposable {
         }
     }
 
+    private createBitBucketCloudClient(site: DetailedSiteInfo, info: AuthInfo): HTTPClient {
+        if (isOAuthInfo(info)) {
+            return this.createOAuthHTTPClient(site, info);
+        } else if (info.type === 'hardcoded') {
+            // This is a generic problem: we cannot retry a failed 401 request in BitBucket right now.
+            // But instead of deploying this for everyone, we are deploying this only for hardcoded auth right now.
+            // If this proves successful, we can deploy this for OAuth flow as well.
+            return this.createRefreshableHTTPClient(site, info);
+        } else {
+            // This flow is not possible, because we check already within `bbClient`
+            return undefined!;
+        }
+    }
+
     public async bbClient(site: DetailedSiteInfo): Promise<BitbucketApi> {
         return this.getClient<BitbucketApi>(site, (info) => {
+            const isSupportedAuth = isOAuthInfo(info) || info.type === 'hardcoded';
             let result: BitbucketApi;
             if (site.isCloud) {
                 result = {
-                    repositories:
-                        isOAuthInfo(info) || info.type === 'hardcoded'
-                            ? new CloudRepositoriesApi(this.createOAuthHTTPClient(site, info))
-                            : undefined!,
-                    pullrequests:
-                        isOAuthInfo(info) || info.type === 'hardcoded'
-                            ? new CloudPullRequestApi(this.createOAuthHTTPClient(site, info))
-                            : undefined!,
-                    issues:
-                        isOAuthInfo(info) || info.type === 'hardcoded'
-                            ? new BitbucketIssuesApiImpl(this.createOAuthHTTPClient(site, info))
-                            : undefined!,
-                    pipelines:
-                        isOAuthInfo(info) || info.type === 'hardcoded'
-                            ? new PipelineApiImpl(this.createOAuthHTTPClient(site, info))
-                            : undefined!,
+                    repositories: isSupportedAuth
+                        ? new CloudRepositoriesApi(this.createBitBucketCloudClient(site, info))
+                        : undefined!,
+                    pullrequests: isSupportedAuth
+                        ? new CloudPullRequestApi(this.createBitBucketCloudClient(site, info))
+                        : undefined!,
+                    issues: isSupportedAuth
+                        ? new BitbucketIssuesApiImpl(this.createBitBucketCloudClient(site, info))
+                        : undefined!,
+                    pipelines: isSupportedAuth
+                        ? new PipelineApiImpl(this.createBitBucketCloudClient(site, info))
+                        : undefined!,
                 };
             } else {
                 result = {
@@ -221,6 +233,30 @@ export class ClientManager implements Disposable {
 
                 return new ClientError(response.statusText, errString);
             },
+        );
+    }
+
+    private createRefreshableHTTPClient(site: DetailedSiteInfo, info: AuthInfo): HTTPClient {
+        return new HTTPClient(
+            site.baseApiUrl,
+            LoginManager.authHeader(info),
+            getAgent(site),
+            async (response: AxiosResponse): Promise<Error> => {
+                let errString = 'Unknown error';
+                const errJson = response.data;
+
+                if (errJson.errors && Array.isArray(errJson.errors) && errJson.errors.length > 0) {
+                    const e = errJson.errors[0];
+                    errString = e.message || errString;
+                } else if (errJson.error && errJson.error.message) {
+                    errString = errJson.error.message;
+                } else {
+                    errString = errJson;
+                }
+
+                return new ClientError(response.statusText, errString);
+            },
+            new HardcodedAuthInterceptor(site, Container.credentialManager), // Add the refresh interceptor
         );
     }
 
