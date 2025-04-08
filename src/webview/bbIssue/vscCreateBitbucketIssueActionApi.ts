@@ -1,9 +1,10 @@
+import { commands } from 'vscode';
+
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketIssue, BitbucketSite } from '../../bitbucket/model';
-import { CreateBitbucketIssueActionApi } from '../../lib/webview/controller/bbIssue/createbitbucketIssueActionApi';
-import { commands } from 'vscode';
 import { Commands } from '../../commands';
 import { Container } from '../../container';
+import { CreateBitbucketIssueActionApi } from '../../lib/webview/controller/bbIssue/createbitbucketIssueActionApi';
 
 export class VSCCreateBitbucketIssueActionImpl implements CreateBitbucketIssueActionApi {
     async createIssue(

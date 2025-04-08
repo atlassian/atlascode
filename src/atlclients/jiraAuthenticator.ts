@@ -1,6 +1,5 @@
-import { AccessibleResource, DetailedSiteInfo, OAuthProvider, ProductJira } from './authInfo';
-
 import { Authenticator } from './authenticator';
+import { AccessibleResource, DetailedSiteInfo, OAuthProvider, ProductJira } from './authInfo';
 import { CredentialManager } from './authStore';
 
 export class JiraAuthentictor implements Authenticator {

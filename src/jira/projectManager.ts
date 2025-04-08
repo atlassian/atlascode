@@ -1,5 +1,6 @@
 import { emptyProject, Project } from '@atlassianlabs/jira-pi-common-models';
 import { Disposable } from 'vscode';
+
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { Logger } from '../logger';

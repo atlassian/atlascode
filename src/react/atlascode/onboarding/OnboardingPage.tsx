@@ -1,5 +1,7 @@
 import { Box, Container, lighten, makeStyles, Step, StepLabel, Stepper, Theme } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
+
+import { AnalyticsView } from '../../../analyticsTypes';
 import {
     AuthInfo,
     AuthInfoState,
@@ -8,15 +10,14 @@ import {
     ProductJira,
     SiteInfo,
 } from '../../../atlclients/authInfo';
+import { OnboardingActionType } from '../../../lib/ipc/fromUI/onboarding';
+import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { AuthDialog } from '../config/auth/dialog/AuthDialog';
 import { AuthDialogControllerContext, useAuthDialog } from '../config/auth/useAuthDialog';
+import { BitbucketOnboarding } from './BitbucketOnboarding';
+import { JiraOnboarding } from './JiraOnboarding';
 import LandingPage from './LandingPage';
 import { OnboardingControllerContext, useOnboardingController } from './onboardingController';
-import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
-import { AnalyticsView } from '../../../analyticsTypes';
-import { OnboardingActionType } from '../../../lib/ipc/fromUI/onboarding';
-import { JiraOnboarding } from './JiraOnboarding';
-import { BitbucketOnboarding } from './BitbucketOnboarding';
 
 const useStyles = makeStyles((theme: Theme) => ({
     root: {

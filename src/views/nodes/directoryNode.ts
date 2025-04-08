@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+
 import { PRDirectory } from '../pullrequest/diffViewHelper';
 import { AbstractBaseNode } from './abstractBaseNode';
 import { PullRequestFilesNode } from './pullRequestFilesNode';

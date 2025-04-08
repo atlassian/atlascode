@@ -11,6 +11,7 @@ import {
     workspace,
     WorkspaceConfiguration,
 } from 'vscode';
+
 import {
     extensionId,
     JiraCreateSiteAndProjectKey,

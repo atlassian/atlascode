@@ -1,5 +1,5 @@
-import { AccessibleResource, DetailedSiteInfo, OAuthProvider, ProductBitbucket } from './authInfo';
 import { Authenticator } from './authenticator';
+import { AccessibleResource, DetailedSiteInfo, OAuthProvider, ProductBitbucket } from './authInfo';
 import { CredentialManager } from './authStore';
 
 export class BitbucketAuthenticator implements Authenticator {

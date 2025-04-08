@@ -1,13 +1,14 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel } from '../../../../bitbucket/model';
+// eslint-disable-next-line no-restricted-imports
+import { Container } from '../../../../container';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { StartWorkAction, StartWorkActionType } from '../../../ipc/fromUI/startWork';
 import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
-// eslint-disable-next-line no-restricted-imports
-import { Container } from '../../../../container';
 import {
     BranchType,
     emptyStartWorkIssueMessage,

@@ -1,22 +1,23 @@
 import { defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
+
+import { BitbucketIssue } from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
-import { PostMessageFunc, useMessagingApi } from '../messagingApi';
+import {
+    CreateBitbucketIssueAction,
+    CreateBitbucketIssueActionType,
+    SubmitCreateRequestAction,
+} from '../../../lib/ipc/fromUI/createBitbucketIssue';
 import {
     CreateBitbucketIssueInitMessage,
-    emptyCreateBitbucketIssueInitMessage,
     CreateBitbucketIssueMessage,
     CreateBitbucketIssueMessageType,
     CreateBitbucketIssueResponse,
+    emptyCreateBitbucketIssueInitMessage,
     SubmitResponseMessage,
 } from '../../../lib/ipc/toUI/createBitbucketIssue';
-import {
-    CreateBitbucketIssueAction,
-    SubmitCreateRequestAction,
-    CreateBitbucketIssueActionType,
-} from '../../../lib/ipc/fromUI/createBitbucketIssue';
-import { BitbucketIssue } from '../../../bitbucket/model';
 import { ConnectionTimeout } from '../../../util/time';
+import { PostMessageFunc, useMessagingApi } from '../messagingApi';
 
 export interface CreateBitbucketIssueControllerApi {
     postMessage: PostMessageFunc<CreateBitbucketIssueAction>;

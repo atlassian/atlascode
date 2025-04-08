@@ -2,6 +2,7 @@ import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@m
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import equal from 'fast-deep-equal/es6';
 import React, { memo, useCallback, useEffect, useState } from 'react';
+
 import { DetailedSiteInfo } from '../../../../../atlclients/authInfo';
 import { JQLEntry } from '../../../../../config/model';
 import { ConfigSection, ConfigSubSection } from '../../../../../lib/ipc/models/config';

@@ -1,4 +1,5 @@
 import { Uri } from 'vscode';
+
 import { isAcceptedBySuffix } from './uriHandlerAction';
 
 describe('isAcceptedBySuffix', () => {

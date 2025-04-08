@@ -7,6 +7,7 @@ import {
     IssueTypeUI,
     SelectFieldOptions,
 } from '@atlassianlabs/jira-pi-meta-models';
+
 import { DetailedSiteInfo, emptySiteInfo } from '../atlclients/authInfo';
 import { PullRequestData } from '../bitbucket/model';
 import { HostErrorMessage, Message } from './messaging';

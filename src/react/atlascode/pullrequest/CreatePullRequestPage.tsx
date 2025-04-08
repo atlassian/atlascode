@@ -1,3 +1,5 @@
+import { RefreshButton, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
 import {
     AppBar,
     Box,
@@ -19,29 +21,27 @@ import {
     Typography,
     useTheme,
 } from '@material-ui/core';
-import { CreatePullRequestControllerContext, useCreatePullRequestController } from './createPullRequestController';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { RefreshButton, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Transition, emptyTransition } from '@atlassianlabs/jira-pi-common-models';
-import { VSCodeStyles, VSCodeStylesContext } from '../../vscode/theme/styles';
-
 import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
-import { Autocomplete } from '@material-ui/lab';
-import { Branch } from '../../../typings/git';
-import { BranchWarning } from './BranchWarning';
-import { Commits } from './Commits';
-import { DiffList } from './DiffList';
-import { ErrorDisplay } from '../common/ErrorDisplay';
 import LaunchIcon from '@material-ui/icons/Launch';
-import Lozenge from '../common/Lozenge';
-import { PMFDisplay } from '../common/pmf/PMFDisplay';
-import { User } from '../../../bitbucket/model';
-import UserPicker from './UserPicker';
-import { colorToLozengeAppearanceMap } from '../../vscode/theme/colors';
+import { Autocomplete } from '@material-ui/lab';
 import { makeStyles } from '@material-ui/styles';
 import path from 'path';
-import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
+
+import { User } from '../../../bitbucket/model';
+import { Branch } from '../../../typings/git';
+import { colorToLozengeAppearanceMap } from '../../vscode/theme/colors';
+import { VSCodeStyles, VSCodeStylesContext } from '../../vscode/theme/styles';
+import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
+import { ErrorDisplay } from '../common/ErrorDisplay';
+import Lozenge from '../common/Lozenge';
+import { PMFDisplay } from '../common/pmf/PMFDisplay';
+import { BranchWarning } from './BranchWarning';
+import { Commits } from './Commits';
+import { CreatePullRequestControllerContext, useCreatePullRequestController } from './createPullRequestController';
+import { DiffList } from './DiffList';
+import UserPicker from './UserPicker';
 
 const useStyles = makeStyles((theme: Theme) => ({
     title: {

@@ -1,8 +1,8 @@
-import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../atlclients/authInfo';
-
-import { CommonAction } from './common';
-import { ConfigTarget } from '../models/config';
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+
+import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../atlclients/authInfo';
+import { ConfigTarget } from '../models/config';
+import { CommonAction } from './common';
 
 export enum ConfigActionType {
     Login = 'login',

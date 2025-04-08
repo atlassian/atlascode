@@ -1,7 +1,8 @@
 import { ConfigurationChangeEvent, Disposable } from 'vscode';
-import { Time } from '../util/time';
-import { Container } from '../container';
+
 import { configuration } from '../config/configuration';
+import { Container } from '../container';
+import { Time } from '../util/time';
 
 const defaultRefreshInterval = 5 * Time.MINUTES;
 

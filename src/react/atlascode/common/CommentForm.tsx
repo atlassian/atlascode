@@ -1,5 +1,6 @@
 import { Avatar, Grid } from '@material-ui/core';
 import React from 'react';
+
 import { User } from '../../../bitbucket/model';
 import { MarkdownEditor } from './editor/MarkdownEditor';
 

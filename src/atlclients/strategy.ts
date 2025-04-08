@@ -1,6 +1,6 @@
-import { createVerifier, base64URLEncode, sha256, basicAuth } from './strategyCrypto';
 import { OAuthProvider } from './authInfo';
-import { StrategyProps, OAuthStrategyData } from './strategyData';
+import { base64URLEncode, basicAuth, createVerifier, sha256 } from './strategyCrypto';
+import { OAuthStrategyData, StrategyProps } from './strategyData';
 
 export function strategyForProvider(provider: OAuthProvider): Strategy {
     switch (provider) {

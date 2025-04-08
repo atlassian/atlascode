@@ -1,4 +1,5 @@
 import { Uri } from 'vscode';
+
 import { UriHandlerAction } from '../uriHandlerAction';
 
 /**

@@ -1,11 +1,12 @@
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { FocusEvent } from 'src/webview/ExplorerFocusManager';
 import { commands, ConfigurationChangeEvent, Disposable } from 'vscode';
+
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
+import { CommandContext, setCommandContext } from '../../commandContext';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { CustomJQLTreeId } from '../../constants';
-import { CommandContext, setCommandContext } from '../../commandContext';
 import { Container } from '../../container';
 import { NewIssueMonitor } from '../../jira/newIssueMonitor';
 import { SitesAvailableUpdateEvent } from '../../siteManager';

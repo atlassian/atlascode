@@ -1,4 +1,5 @@
-import { workspace, Uri, ConfigurationTarget, window, Extension, extensions, commands } from 'vscode';
+import { commands, ConfigurationTarget, Extension, extensions, Uri, window, workspace } from 'vscode';
+
 import { Resources } from '../../resources';
 
 const VSCODE_YAML_EXTENSION_ID = 'redhat.vscode-yaml';

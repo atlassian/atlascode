@@ -2,6 +2,7 @@ import { CssBaseline, ThemeProvider } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import * as ReactDOM from 'react-dom';
 import useConstant from 'use-constant';
+
 import AtlGlobalStyles from './atlascode/common/AtlGlobalStyles';
 import { AtlLoader } from './atlascode/common/AtlLoader';
 import { ErrorControllerContext, ErrorStateContext, useErrorController } from './atlascode/common/errorController';

@@ -1,5 +1,6 @@
 import { JQLEntry } from 'src/config/model';
 import { Disposable, TreeItem, TreeItemCollapsibleState } from 'vscode';
+
 import { Container } from '../../container';
 import { MAX_RESULTS } from '../../jira/issuesForJql';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';

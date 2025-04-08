@@ -2,6 +2,7 @@ import { InlineTextEditor, InlineTextEditorList } from '@atlassianlabs/guipi-cor
 import { Box, FormHelperText, Grid, Link, Typography } from '@material-ui/core';
 import Mustache from 'mustache';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
+
 import { useBorderBoxStyles } from '../common/useBorderBoxStyles';
 import { ConfigControllerContext } from './configController';
 

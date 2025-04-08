@@ -1,4 +1,5 @@
 import vscode, { TreeItem, TreeItemCollapsibleState } from 'vscode';
+
 import { iconSet, Resources } from '../../resources';
 import { AbstractBaseNode } from './abstractBaseNode';
 

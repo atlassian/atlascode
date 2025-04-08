@@ -1,4 +1,10 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+// eslint-disable-next-line no-restricted-imports
+import { ConfigurationTarget, WebviewPanel } from 'vscode';
+
+import { configuration } from '../../../../../src/config/configuration';
+// eslint-disable-next-line no-restricted-imports
+import { Container } from '../../../../../src/container';
 import { isBasicAuthInfo, ProductBitbucket, ProductJira } from '../../../../atlclients/authInfo';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonAction, CommonActionType } from '../../../ipc/fromUI/common';
@@ -11,11 +17,6 @@ import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
 import { OnboardingActionApi } from './onboardingActionApi';
-import { configuration } from '../../../../../src/config/configuration';
-// eslint-disable-next-line no-restricted-imports
-import { Container } from '../../../../../src/container';
-// eslint-disable-next-line no-restricted-imports
-import { ConfigurationTarget, WebviewPanel } from 'vscode';
 
 export const id: string = 'atlascodeOnboardingV2';
 const title: string = 'Getting Started';

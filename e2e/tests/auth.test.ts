@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-expressions */
-import { before, after, EditorView, Workbench, ActivityBar, SideBarView } from 'vscode-extension-tester';
+import { ActivityBar, after, before, EditorView, SideBarView, Workbench } from 'vscode-extension-tester';
 
 describe('Auth User', async () => {
     let activityBar: ActivityBar;

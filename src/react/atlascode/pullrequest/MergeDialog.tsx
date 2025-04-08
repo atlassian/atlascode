@@ -20,6 +20,7 @@ import {
     Typography,
 } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
+
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { BitbucketIssue, Commit, MergeStrategy, PullRequestData } from '../../../bitbucket/model';
 import { BitbucketTransitionMenu } from './BitbucketTransitionMenu';

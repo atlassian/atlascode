@@ -1,4 +1,4 @@
-import { formatDistanceToNow, parseISO, differenceInDays, format } from 'date-fns';
+import { differenceInDays, format, formatDistanceToNow, parseISO } from 'date-fns';
 
 interface FormatTimeOptions {
     prefix?: string;

@@ -1,5 +1,5 @@
-import * as React from 'react';
 import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
+import * as React from 'react';
 
 export default class Offline extends React.Component<{}, {}> {
     constructor(props: any) {

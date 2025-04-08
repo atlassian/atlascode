@@ -1,8 +1,9 @@
 import { makeStyles } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import React, { useContext } from 'react';
-import { PullRequestDetailsControllerContext } from './pullRequestDetailsController';
+
 import { EditableTextComponent } from './EditableTextComponent';
+import { PullRequestDetailsControllerContext } from './pullRequestDetailsController';
 
 const useStyles = makeStyles({
     container: {

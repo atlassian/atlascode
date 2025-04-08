@@ -1,4 +1,5 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { JiraIssueWebview } from './jiraIssueWebview';
 import { AbstractMultiViewManager } from './multiViewManager';

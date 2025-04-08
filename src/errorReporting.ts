@@ -1,8 +1,9 @@
-import { TrackEvent } from './analytics-node-client/src/types';
-import { errorEvent } from './analytics';
-import { Logger } from './logger';
-import { AnalyticsClient } from './analytics-node-client/src/client.min';
 import { Disposable } from 'vscode';
+
+import { errorEvent } from './analytics';
+import { AnalyticsClient } from './analytics-node-client/src/client.min';
+import { TrackEvent } from './analytics-node-client/src/types';
+import { Logger } from './logger';
 
 let nodeJsErrorReportingRegistered = false;
 let analyticsClientRegistered = false;

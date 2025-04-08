@@ -4,6 +4,7 @@ import SpeedDial from '@material-ui/lab/SpeedDial';
 import SpeedDialAction from '@material-ui/lab/SpeedDialAction';
 import SpeedDialIcon from '@material-ui/lab/SpeedDialIcon';
 import React, { memo, useCallback, useState } from 'react';
+
 import { JQLEntry } from '../../../../../config/model';
 
 type JQLSpeedDialProps = {

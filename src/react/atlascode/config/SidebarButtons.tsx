@@ -1,6 +1,7 @@
 import { IconLink } from '@atlassianlabs/guipi-core-components';
 import { Grid } from '@material-ui/core';
 import React, { memo, useContext } from 'react';
+
 import { FeedbackUser, KnownLinkID } from '../../../lib/ipc/models/common';
 import { FeedbackDialogButton } from '../common/feedback/FeedbackDialogButton';
 import BitbucketIcon from '../icons/BitbucketIcon';

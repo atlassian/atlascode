@@ -4,6 +4,7 @@ import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 import { IssueLinkIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
+
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { colorToLozengeAppearanceMap } from '../colors';
 

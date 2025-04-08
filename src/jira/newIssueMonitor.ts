@@ -1,13 +1,14 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { format } from 'date-fns';
 import pSettle from 'p-settle';
+import { JQLEntry } from 'src/config/model';
 import { commands, window } from 'vscode';
+
 import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
 import { showIssue } from '../commands/jira/showIssue';
 import { Container } from '../container';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { Logger } from '../logger';
-import { JQLEntry } from 'src/config/model';
 
 type JQLSettleResult = { jqlName: string; issues: MinimalIssue<DetailedSiteInfo>[] };
 export class NewIssueMonitor {

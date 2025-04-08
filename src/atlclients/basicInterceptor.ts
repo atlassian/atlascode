@@ -1,5 +1,6 @@
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { commands, window } from 'vscode';
+
 import { Commands } from '../commands';
 import { Logger } from '../logger';
 import { AuthInfoState, DetailedSiteInfo } from './authInfo';

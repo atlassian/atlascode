@@ -1,7 +1,8 @@
 import { CancelToken } from 'axios';
 import PQueue from 'p-queue/dist';
-import { configuration } from '../../config/configuration';
+
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
+import { configuration } from '../../config/configuration';
 import { Logger } from '../../logger';
 import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';

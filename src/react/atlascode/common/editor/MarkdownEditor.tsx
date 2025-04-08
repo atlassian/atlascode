@@ -20,6 +20,7 @@ import { Schema } from 'prosemirror-model';
 import { EditorState, Plugin, PluginKey } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+
 import { User } from '../../../../bitbucket/model';
 
 function markInputRule(regexp: RegExp, markType: any, getAttrs: any) {

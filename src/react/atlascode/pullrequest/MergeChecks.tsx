@@ -1,6 +1,7 @@
 import { Typography } from '@material-ui/core';
 import { Alert } from '@material-ui/lab';
 import * as React from 'react';
+
 import { PullRequestData } from '../../../bitbucket/model';
 
 type MergeChecksProps = {

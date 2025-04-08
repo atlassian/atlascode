@@ -2,9 +2,10 @@ import { Avatar, Badge, Box, CircularProgress, Grid, Tooltip, Typography } from 
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import { AvatarGroup } from '@material-ui/lab';
 import React, { useCallback, useEffect, useState } from 'react';
+
 import { BitbucketSite, Reviewer, User } from '../../../bitbucket/model';
-import { AddReviewers } from './AddReviewers';
 import StoppedIcon from '../icons/StoppedIcon';
+import { AddReviewers } from './AddReviewers';
 type ReviewersProps = {
     site: BitbucketSite;
     onUpdateReviewers: (reviewers: User[]) => Promise<void>;

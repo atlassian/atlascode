@@ -1,8 +1,9 @@
 import { Uri, window } from 'vscode';
-import { isAcceptedBySuffix, UriHandlerAction } from '../uriHandlerAction';
+
 import { CheckoutHelper } from '../../bitbucket/interfaces';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { Logger } from '../../logger';
+import { isAcceptedBySuffix, UriHandlerAction } from '../uriHandlerAction';
 
 /**
  * Use a deep link to checkout a branch

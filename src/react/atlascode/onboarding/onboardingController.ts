@@ -1,5 +1,6 @@
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
+
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../atlclients/authInfo';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { OnboardingAction, OnboardingActionType } from '../../../lib/ipc/fromUI/onboarding';

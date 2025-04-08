@@ -1,6 +1,6 @@
-import { IconButton, Tooltip, makeStyles } from '@material-ui/core';
+import { IconButton, makeStyles, Tooltip } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 const useStyles = makeStyles({
     container: {

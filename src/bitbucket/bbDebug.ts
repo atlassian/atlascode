@@ -1,4 +1,5 @@
 import vscode from 'vscode';
+
 import { ProductBitbucket } from '../atlclients/authInfo';
 import { OutputLevel } from '../config/model';
 import { Container } from '../container';

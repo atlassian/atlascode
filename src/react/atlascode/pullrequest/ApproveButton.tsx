@@ -1,6 +1,7 @@
 import { Box, Button, Typography } from '@material-ui/core';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import React, { useCallback } from 'react';
+
 import { ApprovalStatus } from '../../../bitbucket/model';
 
 type ApproveButtonProps = {

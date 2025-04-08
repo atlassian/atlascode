@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
+
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketIssue, PaginatedBitbucketIssues, WorkspaceRepo } from '../../bitbucket/model';
 import { Commands } from '../../commands';

@@ -1,4 +1,5 @@
 import { Disposable } from 'vscode';
+
 import { emptyProduct, Product } from '../atlclients/authInfo';
 import { HelpTreeViewId } from '../constants';
 import { FocusEvent } from '../webview/ExplorerFocusManager';

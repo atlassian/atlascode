@@ -1,7 +1,8 @@
 import { AxiosInstance } from 'axios';
 import curlirize from 'axios-curlirize';
-import { Logger } from '../logger';
 import { parse } from 'url';
+
+import { Logger } from '../logger';
 
 interface CurlResult {
     command: string;

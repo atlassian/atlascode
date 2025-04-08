@@ -1,12 +1,13 @@
 import { commands, Memento, QuickPickItem, window } from 'vscode';
+
 import { Commands } from '../commands';
 import { Container } from '../container';
 import { ConfigSection, ConfigSubSection } from '../lib/ipc/models/config';
 import { Logger } from '../logger';
 import { checkout } from '../views/pullrequest/gitActions';
 import { bitbucketSiteForRemote, clientForHostname } from './bbUtils';
-import { WorkspaceRepo } from './model';
 import { CheckoutHelper } from './interfaces';
+import { WorkspaceRepo } from './model';
 
 type RefInfo = {
     timestamp: number;

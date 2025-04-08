@@ -1,4 +1,5 @@
 import { CompletionItem, CompletionItemKind, CompletionItemProvider, Position, TextDocument, window } from 'vscode';
+
 import { PRFileDiffQueryParams } from '../views/pullrequest/diffViewHelper';
 import { PullRequestNodeDataProvider } from '../views/pullRequestNodeDataProvider';
 import { clientForSite } from './bbUtils';

@@ -14,6 +14,7 @@ import {
 } from '@material-ui/core';
 import clsx from 'clsx';
 import React from 'react';
+
 import { FileDiff, FileStatus } from '../../../bitbucket/model';
 
 const useStyles = makeStyles((theme: Theme) => ({

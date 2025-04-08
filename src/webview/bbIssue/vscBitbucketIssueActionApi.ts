@@ -1,5 +1,6 @@
 import axios, { CancelToken, CancelTokenSource } from 'axios';
 import { commands } from 'vscode';
+
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketIssue, Comment, User } from '../../bitbucket/model';
 import { Commands } from '../../commands';

@@ -20,10 +20,13 @@ import {
 } from '@material-ui/core';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useEffect, useState } from 'react';
+import { AnalyticsView } from 'src/analyticsTypes';
+
 import { ApprovalStatus, User } from '../../../bitbucket/model';
 import { BasicPanel } from '../common/BasicPanel';
 import CommentForm from '../common/CommentForm';
 import { CopyLinkButton } from '../common/CopyLinkButton';
+import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { ApproveButton } from './ApproveButton';
 import { formatDate } from './bitbucketDateFormatter';
@@ -31,7 +34,6 @@ import { BranchInfo } from './BranchInfo';
 import { Commits } from './Commits';
 import { DiffList } from './DiffList';
 import { MergeDialog } from './MergeDialog';
-import { RequestChangesButton } from './RequestChangesButton';
 import { NestedCommentList } from './NestedCommentList';
 import { PageTaskList } from './PageTaskList';
 import { PRBuildStatus } from './PRBuildStatus';
@@ -43,10 +45,9 @@ import {
 } from './pullRequestDetailsController';
 import { RelatedBitbucketIssues } from './RelatedBitbucketIssues';
 import { RelatedJiraIssues } from './RelatedJiraIssues';
+import { RequestChangesButton } from './RequestChangesButton';
 import { Reviewers } from './Reviewers';
 import { SummaryPanel } from './SummaryPanel';
-import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
-import { AnalyticsView } from 'src/analyticsTypes';
 
 const useStyles = makeStyles((theme: Theme) => ({
     grow: {

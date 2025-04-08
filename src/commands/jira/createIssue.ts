@@ -1,4 +1,5 @@
 import { Position, Range, Uri, ViewColumn, window, workspace, WorkspaceEdit } from 'vscode';
+
 import { startIssueCreationEvent } from '../../analytics';
 import { ProductJira } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';

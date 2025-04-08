@@ -2,6 +2,7 @@ import Avatar from '@atlaskit/avatar';
 import Button from '@atlaskit/button';
 import Lozenge from '@atlaskit/lozenge';
 import React from 'react';
+
 import { PullRequestData } from '../../../bitbucket/model';
 
 export default class PullRequests extends React.Component<

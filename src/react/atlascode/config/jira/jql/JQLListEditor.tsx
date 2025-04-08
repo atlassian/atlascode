@@ -4,6 +4,7 @@ import DragIndicatorIcon from '@material-ui/icons/DragIndicator';
 import equal from 'fast-deep-equal/es6';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { unstable_trace as trace } from 'scheduler/tracing';
+
 import { DetailedSiteInfo } from '../../../../../atlclients/authInfo';
 import { JQLEntry } from '../../../../../config/model';
 import { ConfigControllerContext } from '../../configController';

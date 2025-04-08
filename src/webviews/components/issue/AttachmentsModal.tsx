@@ -2,6 +2,7 @@ import Button, { ButtonGroup } from '@atlaskit/button';
 import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
 import React, { useState } from 'react';
 import { FileWithPath } from 'react-dropzone';
+
 import { AttachmentForm } from './AttachmentForm';
 type AttachmentsModalProps = {
     isOpen: boolean;

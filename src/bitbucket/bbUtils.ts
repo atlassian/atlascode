@@ -1,4 +1,5 @@
 import gitUrlParse from 'git-url-parse';
+
 import { DetailedSiteInfo, ProductBitbucket } from '../atlclients/authInfo';
 import { bbAPIConnectivityError } from '../constants';
 import { Container } from '../container';

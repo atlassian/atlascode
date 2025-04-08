@@ -1,4 +1,5 @@
 import { createMuiTheme } from '@material-ui/core';
+
 import { darken, lighten } from './colors';
 import { VSCodeStyles } from './styles';
 

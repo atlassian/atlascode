@@ -1,28 +1,29 @@
-import { forceCastTo } from '../../testsutil';
-import { LoginManager } from './loginManager';
-import { CredentialManager } from './authStore';
-import { SiteManager } from '../siteManager';
-import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
-import { OAuthDancer } from './oauthDancer';
-import {
-    OAuthProvider,
-    UserInfo,
-    PATAuthInfo,
-    BasicAuthInfo,
-    AuthInfoState,
-    SiteInfo,
-    DetailedSiteInfo,
-    ProductJira,
-    OAuthResponse,
-    ProductBitbucket,
-} from './authInfo';
-import { Memento } from 'vscode';
-import { AxiosInstance } from 'axios';
-import { Container } from '../container';
 import { JiraClient } from '@atlassianlabs/jira-pi-client';
-import * as authInfo from './authInfo';
+import { AxiosInstance } from 'axios';
+import { Memento } from 'vscode';
+
+import { forceCastTo } from '../../testsutil';
 import * as analytics from '../analytics';
+import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
+import { Container } from '../container';
 import * as jira_client_providers from '../jira/jira-client/providers';
+import { SiteManager } from '../siteManager';
+import {
+    AuthInfoState,
+    BasicAuthInfo,
+    DetailedSiteInfo,
+    OAuthProvider,
+    OAuthResponse,
+    PATAuthInfo,
+    ProductBitbucket,
+    ProductJira,
+    SiteInfo,
+    UserInfo,
+} from './authInfo';
+import * as authInfo from './authInfo';
+import { CredentialManager } from './authStore';
+import { LoginManager } from './loginManager';
+import { OAuthDancer } from './oauthDancer';
 
 jest.mock('./authStore');
 jest.mock('../siteManager');

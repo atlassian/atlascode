@@ -1,5 +1,6 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { BitbucketSite, emptyBitbucketSite, BitbucketIssue } from '../../../bitbucket/model';
+
+import { BitbucketIssue, BitbucketSite, emptyBitbucketSite } from '../../../bitbucket/model';
 
 export enum CreateBitbucketIssueMessageType {
     Init = 'init',

@@ -1,10 +1,11 @@
-import { SiteWithAuthInfo } from 'src/lib/ipc/toUI/config';
-import { AuthFormState } from './types';
-import React from 'react';
 import { Box, Grid, IconButton, Link, TextField, Typography } from '@material-ui/core';
-import { BasicAuthInfo } from 'src/atlclients/authInfo';
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
+import React from 'react';
+import { BasicAuthInfo } from 'src/atlclients/authInfo';
+import { SiteWithAuthInfo } from 'src/lib/ipc/toUI/config';
+
+import { AuthFormState } from './types';
 
 type JiraBasicAuthFormProps = {
     defaultSiteWithAuth: SiteWithAuthInfo;

@@ -1,9 +1,10 @@
+import { Box, Card, CardActionArea, CardContent, Container, Typography } from '@material-ui/core';
+import { VSCodeButton, VSCodeRadio } from '@vscode/webview-ui-toolkit/react';
 import React, { useCallback } from 'react';
-import { Container, Typography, Box, Card, CardActionArea, CardContent } from '@material-ui/core';
-import { Product } from '../types';
-import { VSCodeRadio, VSCodeButton } from '@vscode/webview-ui-toolkit/react';
+
 import { BitbucketOnboardingLogo } from '../../icons/BitbucketOnboardingLogo';
 import { JiraOnboardingLogo } from '../../icons/JiraOnboardingLogo';
+import { Product } from '../types';
 
 type Props = {
     product: Product;

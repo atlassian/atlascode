@@ -4,7 +4,8 @@ import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useContext, useState } from 'react';
 import { useAsyncAbortable } from 'react-async-hook';
 import useConstant from 'use-constant';
-import { User, BitbucketSite } from '../../../bitbucket/model';
+
+import { BitbucketSite, User } from '../../../bitbucket/model';
 import { CreatePullRequestControllerContext } from './createPullRequestController';
 
 type UserPickerProps = { site?: BitbucketSite; users: User[]; defaultUsers: User[]; onChange: (users: User[]) => void };

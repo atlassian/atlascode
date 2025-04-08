@@ -1,11 +1,12 @@
 import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { Command, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
+
 import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
+import { Commands } from '../../../commands';
 import { JQLEntry } from '../../../config/model';
 import { Container } from '../../../container';
-import { Commands } from '../../../commands';
-import { Logger } from '../../../logger';
 import { issuesForJQL } from '../../../jira/issuesForJql';
-import { TreeItem, TreeItemCollapsibleState, Command, Uri } from 'vscode';
+import { Logger } from '../../../logger';
 
 export function createLabelItem(label: string, command?: Command): TreeItem {
     const item = new TreeItem(label);
