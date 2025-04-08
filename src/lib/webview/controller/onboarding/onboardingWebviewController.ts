@@ -52,16 +52,9 @@ export class OnboardingWebviewController implements WebviewController<Onboarding
     }
 
     public async onShown(panel: WebviewPanel): Promise<void> {
-        // resets the jira.enabled configuration from every workspace
-        for (const target of [
-            ConfigurationTarget.Global,
-            ConfigurationTarget.Workspace,
-            ConfigurationTarget.WorkspaceFolder,
-        ]) {
-            try {
-                await configuration.update('jira.enabled', undefined, target);
-            } catch {}
-        }
+        try {
+            await configuration.update('jira.enabled', undefined, ConfigurationTarget.Global);
+        } catch {}
 
         // focus the atlassian extension panels when the onboarding view shows...
         Container.focus();
