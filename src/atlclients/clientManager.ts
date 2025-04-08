@@ -119,18 +119,22 @@ export class ClientManager implements Disposable {
             let result: BitbucketApi;
             if (site.isCloud) {
                 result = {
-                    repositories: isOAuthInfo(info)
-                        ? new CloudRepositoriesApi(this.createOAuthHTTPClient(site, info))
-                        : undefined!,
-                    pullrequests: isOAuthInfo(info)
-                        ? new CloudPullRequestApi(this.createOAuthHTTPClient(site, info))
-                        : undefined!,
-                    issues: isOAuthInfo(info)
-                        ? new BitbucketIssuesApiImpl(this.createOAuthHTTPClient(site, info))
-                        : undefined!,
-                    pipelines: isOAuthInfo(info)
-                        ? new PipelineApiImpl(this.createOAuthHTTPClient(site, info))
-                        : undefined!,
+                    repositories:
+                        isOAuthInfo(info) || info.type === 'hardcoded'
+                            ? new CloudRepositoriesApi(this.createOAuthHTTPClient(site, info))
+                            : undefined!,
+                    pullrequests:
+                        isOAuthInfo(info) || info.type === 'hardcoded'
+                            ? new CloudPullRequestApi(this.createOAuthHTTPClient(site, info))
+                            : undefined!,
+                    issues:
+                        isOAuthInfo(info) || info.type === 'hardcoded'
+                            ? new BitbucketIssuesApiImpl(this.createOAuthHTTPClient(site, info))
+                            : undefined!,
+                    pipelines:
+                        isOAuthInfo(info) || info.type === 'hardcoded'
+                            ? new PipelineApiImpl(this.createOAuthHTTPClient(site, info))
+                            : undefined!,
                 };
             } else {
                 result = {

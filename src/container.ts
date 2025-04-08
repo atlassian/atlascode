@@ -12,7 +12,7 @@ import { BitbucketCheckoutHelper } from './bitbucket/checkoutHelper';
 import { CheckoutHelper } from './bitbucket/interfaces';
 import { BitbucketIssue, BitbucketSite, PullRequest, WorkspaceRepo } from './bitbucket/model';
 import { openPullRequest } from './commands/bitbucket/pullRequest';
-import { configuration, IConfig } from './config/configuration';
+import { configuration, IConfig, ValidHardcodedSite } from './config/configuration';
 import { ATLASCODE_TEST_HOST, ATLASCODE_TEST_USER_EMAIL } from './constants';
 import { PmfStats } from './feedback/pmfStats';
 import { JQLManager } from './jira/jqlManager';
@@ -301,6 +301,9 @@ export class Container {
             )),
         );
         this._context.subscriptions.push((this._jiraActiveIssueStatusBar = new JiraActiveIssueStatusBar(bbCtx)));
+
+        Container.authenticateHardcodedSite();
+
         // It seems to take a bit of time for VS Code to initialize git, if we try and find repos before that completes
         // we'll fail. Wait a few seconds before trying to check out a branch.
         setTimeout(() => {
@@ -351,6 +354,58 @@ export class Container {
         return configuration.get<IConfig>();
     }
 
+    public static calculateHardcodedSite(): null | ValidHardcodedSite {
+        // always return the latest
+        const rawHardcodedSite = this.config.bitbucket.hardcodedSite;
+
+        if (!rawHardcodedSite) {
+            return null;
+        }
+
+        const {
+            product,
+            host,
+            credentialsPath,
+            credentialsFormat = 'git-remote',
+            authHeader = 'bearer',
+            isCloud = true,
+            hasResolutionField = true,
+        } = rawHardcodedSite;
+
+        /**
+         * For now, we only support Bitbucket Cloud.
+         *
+         * Most of this code is written to not assume any product but some flows may assume Bitbucket Cloud.
+         * So, it is better to restrict this to what is tested. We can extend this to other sites as neededs.
+         */
+        if (product !== 'bitbucket' || !isCloud) {
+            Logger.warn(`Unsupported configuration for hardcoded site: product=${product}, isCloud=${isCloud}`);
+            return null;
+        }
+
+        if (!host) {
+            Logger.warn(`No host for hardcoded site: ${product}`);
+            return null;
+        }
+
+        if (!credentialsPath) {
+            Logger.warn(`No credentials path for hardcoded site: ${product}`);
+            return null;
+        }
+
+        const hardcodedSite: ValidHardcodedSite = {
+            product,
+            host,
+            credentialsPath,
+            credentialsFormat,
+            authHeader,
+            isCloud,
+            hasResolutionField,
+        };
+
+        return hardcodedSite;
+    }
+
     private static _jqlManager: JQLManager;
     public static get jqlManager() {
         return this._jqlManager;
@@ -386,6 +441,17 @@ export class Container {
             await Container.clientManager.removeClient(site);
             Container.siteManager.removeSite(site);
         });
+    }
+
+    static async authenticateHardcodedSite(): Promise<boolean> {
+        const hardcodedSite = this.calculateHardcodedSite();
+
+        if (!hardcodedSite) {
+            Logger.warn("Hardcoded site either doesn't exist or is invalid");
+            return false;
+        }
+
+        return Container.loginManager.authenticateHardcodedSite(hardcodedSite);
     }
 
     public static async testLogin() {

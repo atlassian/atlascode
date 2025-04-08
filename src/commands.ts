@@ -97,6 +97,7 @@ export enum Commands {
     WorkbenchOpenWorkspace = 'atlascode.workbenchOpenWorkspace',
     CloneRepository = 'atlascode.cloneRepository',
     DisableHelpExplorer = 'atlascode.disableHelpExplorer',
+    AuthenticateWithBitbucketToken = 'atlascode.authenticateWithBitbucketToken',
     CreateNewJql = 'atlascode.jira.createNewJql',
     ToDoIssue = 'atlascode.jira.todoIssue',
     InProgressIssue = 'atlascode.jira.inProgressIssue',
@@ -257,8 +258,8 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(Commands.DisableHelpExplorer, () => {
             configuration.updateEffective('helpExplorerEnabled', false, null, true);
         }),
-        commands.registerCommand(Commands.BitbucketOpenPullRequest, (data: { pullRequestUrl: string }) => {
-            Container.openPullRequestHandler(data.pullRequestUrl);
+        commands.registerCommand(Commands.AuthenticateWithBitbucketToken, () => {
+            Container.authenticateHardcodedSite();
         }),
     );
 }

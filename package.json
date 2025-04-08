@@ -101,6 +101,10 @@
     "contributes": {
         "commands": [
             {
+                "command": "atlascode.authenticateWithBitbucketToken",
+                "title": "Atlasian: Authenticate with Bitbucket Token"
+            },
+            {
                 "command": "atlascode.jira.todoIssue",
                 "title": "TO DO"
             },
@@ -1483,6 +1487,46 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Shows the help explorer treeview",
+                    "scope": "window"
+                },
+                "atlascode.internal.hardcodedSite": {
+                    "type": "object",
+                    "properties": {
+                        "product": {
+                            "enum": [
+                                "bitbucket"
+                            ]
+                        },
+                        "host": {
+                            "type": "string"
+                        },
+                        "credentialsPath": {
+                            "type": "string"
+                        },
+                        "credentialsFormat": {
+                            "enum": [
+                                "git-remote",
+                                "self"
+                            ],
+                            "default": "git-remote"
+                        },
+                        "authHeader": {
+                            "enum": [
+                                "bearer",
+                                "basic"
+                            ],
+                            "default": "bearer"
+                        },
+                        "isCloud": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "hasResolutionField": {
+                            "type": "boolean",
+                            "default": true
+                        }
+                    },
+                    "description": "The hardcoded site to use for Bitbucket authentication",
                     "scope": "window"
                 }
             }

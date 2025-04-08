@@ -1,17 +1,21 @@
+import { readFile } from 'fs/promises';
 import * as vscode from 'vscode';
 
 import { authenticatedEvent, editedEvent } from '../analytics';
 import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
+import { HardcodedSite, ValidHardcodedSite } from '../config/model';
 import { Container } from '../container';
 import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { SiteManager } from '../siteManager';
+import { substitute } from '../util/variable-substitution';
 import {
     AccessibleResource,
     AuthInfo,
     AuthInfoState,
     BasicAuthInfo,
     DetailedSiteInfo,
+    HardCodedAuthInfo,
     isBasicAuthInfo,
     isOAuthInfo,
     isPATAuthInfo,
@@ -27,6 +31,7 @@ import {
 } from './authInfo';
 import { CredentialManager } from './authStore';
 import { BitbucketAuthenticator } from './bitbucketAuthenticator';
+import { getUserForBBToken } from './getUserForBBToken';
 import { JiraAuthentictor as JiraAuthenticator } from './jiraAuthenticator';
 import { OAuthDancer } from './oauthDancer';
 import { basicAuthEncode } from './strategyCrypto';
@@ -113,6 +118,142 @@ export class LoginManager {
         }
     }
 
+    // Look for https://x-token-auth:<token>@bitbucket.org pattern
+    private extractTokenFromGitRemoteRegex(line: string): string | null {
+        const tokenMatch = line.match(/https:\/\/x-token-auth:([^@]+)@bitbucket\.org/);
+        if (tokenMatch && tokenMatch[1]) {
+            Logger.debug('Auth token found in git remote');
+            return tokenMatch[1];
+        }
+        return null;
+    }
+
+    /**
+     * Extracts auth token from git remote URL
+     * @returns The auth token or null if not found
+     */
+    private async getAuthTokenFromCredentialsPath(
+        credentialsPath: string,
+        credentialsFormat: HardcodedSite['credentialsFormat'],
+    ): Promise<string | null> {
+        try {
+            const resolvedPath = substitute(credentialsPath);
+            const credentialsContents = (await readFile(resolvedPath, 'utf-8')).trim();
+
+            let token: string | null = null;
+            switch (credentialsFormat) {
+                case 'git-remote':
+                    token = this.extractTokenFromGitRemoteRegex(credentialsContents);
+                    break;
+                case 'self':
+                    token = credentialsContents;
+                    break;
+            }
+
+            if (token) {
+                Logger.debug(`Auth token for initial site found`);
+            } else {
+                Logger.warn(`No auth token found for initial site`);
+            }
+            return token;
+        } catch (error) {
+            Logger.error(error, `Error extracting auth token for initial site`);
+            return null;
+        }
+    }
+
+    /**
+     * This function is used to authenticate and add a hardcoded site.
+     *
+     * The flow is quite constant: for a given setting, simply read a token the given credentials path
+     * and update the auth info and site based on the VS Code settings.
+     *
+     * The only branching happens if we provide existing auth info too. In that case, the authentication fails
+     * if the existing auth info is the same as the fetched auth info. This flow is used while refreshing to
+     * know if the token got refreshed or not.
+     */
+    public async authenticateHardcodedSite(
+        hardcodedSite: ValidHardcodedSite,
+        existingAuthInfo?: AuthInfo,
+    ): Promise<boolean> {
+        const { product, host, credentialsPath, credentialsFormat, authHeader } = hardcodedSite;
+
+        let siteProduct: Product | null = null;
+        switch (product) {
+            case 'bitbucket':
+                siteProduct = ProductBitbucket;
+                break;
+            default:
+                Logger.warn(`Invalid product for initial site`);
+                return false;
+        }
+
+        const site: SiteInfo = {
+            host,
+            product: siteProduct,
+        };
+
+        try {
+            const token = await this.getAuthTokenFromCredentialsPath(credentialsPath, credentialsFormat);
+
+            if (!token) {
+                Logger.warn('No hardcoded Bitbucket auth token found');
+                vscode.window.showErrorMessage('No hardcoded Bitbucket auth token found');
+                return false;
+            }
+            Logger.debug('Authenticating with Bitbucket using auth token');
+
+            if (existingAuthInfo && existingAuthInfo.type === 'hardcoded' && existingAuthInfo.token === token) {
+                Logger.debug(`Same token found, skipping authentication`);
+                return false;
+            }
+            // The part of the code where the hardcoded site is assumed to be Bitbucket Cloud.
+            // This function can be extended to support other sites as needed.
+            const userData = await getUserForBBToken(LoginManager.authHeaderMaker(hardcodedSite.authHeader, token));
+
+            const hardcodedAuthInfo: HardCodedAuthInfo = {
+                type: 'hardcoded',
+                token,
+                authHeader,
+                user: {
+                    id: userData.id,
+                    displayName: userData.displayName,
+                    email: userData.email,
+                    avatarUrl: userData.avatarUrl,
+                },
+                state: AuthInfoState.Valid,
+            };
+
+            const detailedSiteInfo: DetailedSiteInfo = {
+                ...site,
+                id: site.host,
+                name: site.host,
+                userId: userData.id,
+                credentialId: CredentialManager.generateCredentialId(site.product.key, userData.id),
+                avatarUrl: userData.avatarUrl,
+                baseLinkUrl: site.host,
+                baseApiUrl: site.host,
+                isCloud: hardcodedSite.isCloud ?? true,
+                hasResolutionField: hardcodedSite.hasResolutionField ?? true,
+            };
+
+            await this._credentialManager.saveAuthInfo(detailedSiteInfo, hardcodedAuthInfo);
+
+            this._siteManager.addOrUpdateSite(detailedSiteInfo);
+            // Fire authenticated event
+            authenticatedEvent(detailedSiteInfo, false).then((e) => {
+                this._analyticsClient.sendTrackEvent(e);
+            });
+            Logger.info(`Successfully authenticated with Bitbucket using auth token`);
+
+            return true;
+        } catch (e) {
+            Logger.error(e, 'Error authenticating with Bitbucket token');
+            vscode.window.showErrorMessage(`Error authenticating with Bitbucket token: ${e}`);
+            return false;
+        }
+    }
+
     private async getOAuthSiteDetails(
         product: Product,
         provider: OAuthProvider,
@@ -167,6 +308,8 @@ export class LoginManager {
             return LoginManager.authHeaderMaker('basic', basicAuthEncode(credentials.username, credentials.password));
         } else if (isPATAuthInfo(credentials)) {
             return LoginManager.authHeaderMaker('bearer', credentials.token);
+        } else if (credentials.type === 'hardcoded') {
+            return LoginManager.authHeaderMaker(credentials.authHeader, credentials.token);
         } else {
             return '';
         }

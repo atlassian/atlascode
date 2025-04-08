@@ -119,6 +119,19 @@ export interface JQLEntryV1 {
     query: string;
 }
 
+// Configuration can take any shape in reality: this type is reflecting that
+export type HardcodedSite = {
+    product?: 'bitbucket';
+    host?: string;
+    credentialsPath?: string;
+    credentialsFormat?: 'git-remote' | 'self';
+    authHeader?: 'bearer' | 'basic';
+    isCloud?: boolean;
+    hasResolutionField?: boolean;
+};
+
+export type ValidHardcodedSite = Required<NonNullable<HardcodedSite>>;
+
 export interface BitbucketConfig {
     enabled: boolean;
     explorer: BitbucketExplorer;
@@ -127,6 +140,7 @@ export interface BitbucketConfig {
     pipelines: BitbucketPipelinesConfig;
     issues: BitbucketIssuesConfig;
     preferredRemotes: string[];
+    hardcodedSite?: HardcodedSite;
 }
 
 export interface BitbucketPipelinesConfig {

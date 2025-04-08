@@ -308,6 +308,12 @@ export class CredentialManager implements Disposable {
     public async refreshAccessToken(site: DetailedSiteInfo): Promise<boolean> {
         const credentials = await this.getAuthInfo(site);
         if (!isOAuthInfo(credentials)) {
+            if (credentials?.type === 'hardcoded') {
+                const hardcodedSite = Container.calculateHardcodedSite();
+                if (hardcodedSite && hardcodedSite.host === site.host) {
+                    return await Container.loginManager.authenticateHardcodedSite(hardcodedSite, credentials);
+                }
+            }
             return false;
         }
         Logger.debug(`refreshingAccessToken for ${site.baseApiUrl} credentialID: ${site.credentialId}`);

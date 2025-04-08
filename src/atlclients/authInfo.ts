@@ -98,7 +98,13 @@ export interface BasicAuthInfo extends AuthInfoCommon {
     password: string;
 }
 
-export type AuthInfo = NoAuthInfo | OAuthInfo | BasicAuthInfo | PATAuthInfo;
+export interface HardCodedAuthInfo extends AuthInfoCommon {
+    type: 'hardcoded';
+    token: string;
+    authHeader: 'bearer' | 'basic';
+}
+
+export type AuthInfo = NoAuthInfo | OAuthInfo | BasicAuthInfo | PATAuthInfo | HardCodedAuthInfo;
 
 export interface UserInfo {
     id: string;
@@ -266,20 +272,20 @@ export function isBasicAuthInfo(a: AuthInfo | undefined): a is BasicAuthInfo {
 
 export function isPATAuthInfo(a: AuthInfo | undefined): a is PATAuthInfo {
     // This check should be retired over time when auth info is updated to use the new type
-    const oldCheck = a && (<PATAuthInfo>a).token !== undefined;
+    // Hardcoded check is needed because token exists in hardcoded auth info as well
+    // This is the reason why the introduction of the `type` field is so crucial in the first place!
+    const oldCheck = a && (<PATAuthInfo>a).token !== undefined && a.type !== 'hardcoded';
     return oldCheck || (!!a && a.type === 'pat');
 }
 
 export function getSecretForAuthInfo(info: AuthInfo): string {
     if (isOAuthInfo(info)) {
         return info.access + info.refresh;
-    }
-
-    if (isBasicAuthInfo(info)) {
+    } else if (isBasicAuthInfo(info)) {
         return info.password;
-    }
-
-    if (isPATAuthInfo(info)) {
+    } else if (isPATAuthInfo(info)) {
+        return info.token;
+    } else if (info.type === 'hardcoded') {
         return info.token;
     }
 

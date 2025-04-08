@@ -62,6 +62,9 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             new CloneRepositoryUriHandlerAction(bitbucketHelper, analyticsApi),
             new StartWorkUriHandlerAction(analyticsApi, jiraIssueFetcher),
             new ShowJiraIssueUriHandlerAction(analyticsApi, jiraIssueFetcher),
+            new SimpleCallbackAction('authenticateWithBitbucketToken', async () => {
+                Container.authenticateHardcodedSite();
+            }),
         ]);
     }
 }
