@@ -1,9 +1,10 @@
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
+import { commands, QuickPickItem, window } from 'vscode';
+
 import { searchIssuesEvent } from '../../analytics';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { Container } from '../../container';
-import { commands, QuickPickItem, window } from 'vscode';
 
 interface QuickPickIssue extends QuickPickItem {
     issue: MinimalORIssueLink<DetailedSiteInfo>;

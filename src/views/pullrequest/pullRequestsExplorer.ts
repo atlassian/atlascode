@@ -1,17 +1,18 @@
 import path from 'path';
 import { commands, ConfigurationChangeEvent, QuickPickItem, window } from 'vscode';
+
 import { BitbucketContext } from '../../bitbucket/bbContext';
 import { PullRequest, WorkspaceRepo } from '../../bitbucket/model';
+import { CommandContext, setCommandContext } from '../../commandContext';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { PullRequestTreeViewId } from '../../constants';
-import { CommandContext, setCommandContext } from '../../commandContext';
 import { Container } from '../../container';
+import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 import { BitbucketExplorer } from '../BitbucketExplorer';
 import { BaseTreeDataProvider } from '../Explorer';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { PullRequestCreatedMonitor } from './pullRequestCreatedMonitor';
-import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 
 export class PullRequestsExplorer extends BitbucketExplorer {
     constructor(ctx: BitbucketContext) {

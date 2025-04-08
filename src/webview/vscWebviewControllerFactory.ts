@@ -1,4 +1,5 @@
 import { Disposable, Uri } from 'vscode';
+
 import { WebviewController } from '../lib/webview/controller/webviewController';
 
 export type PostMessageFunc = (m: any) => Thenable<boolean>;

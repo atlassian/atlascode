@@ -1,11 +1,12 @@
 import { LoadingButton } from '@atlaskit/button';
-import React from 'react';
+import DropdownMenu, { DropdownItem } from '@atlaskit/dropdown-menu';
+import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import Lozenge from '@atlaskit/lozenge';
 import { Status, Transition } from '@atlassianlabs/jira-pi-common-models';
-import { colorToLozengeAppearanceMap } from '../../../colors';
-import DropdownMenu, { DropdownItem } from '@atlaskit/dropdown-menu';
 import { Box } from '@material-ui/core';
-import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
+import React from 'react';
+
+import { colorToLozengeAppearanceMap } from '../../../colors';
 
 const StatusOption = (data: Transition) => (
     <Box>

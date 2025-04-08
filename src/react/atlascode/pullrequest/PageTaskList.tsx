@@ -1,5 +1,6 @@
 import { Grid } from '@material-ui/core';
 import React from 'react';
+
 import { Task } from '../../../bitbucket/model';
 import { CommentTask } from './CommentTask';
 import { PageTaskAdder } from './PageTaskAdder';

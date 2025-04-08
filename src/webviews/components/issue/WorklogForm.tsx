@@ -4,6 +4,7 @@ import { DateTimePicker } from '@atlaskit/datetime-picker';
 import Form, { CheckboxField, ErrorMessage, Field, FormFooter, HelperMessage } from '@atlaskit/form';
 import { format } from 'date-fns';
 import * as React from 'react';
+
 import { WorklogData } from '../../../ipc/issueActions';
 import * as FieldValidators from '../fieldValidators';
 

@@ -1,10 +1,11 @@
-import { Avatar, Grid, TextField, Typography, makeStyles } from '@material-ui/core';
-import { Autocomplete } from '@material-ui/lab';
+import { Avatar, Grid, makeStyles, TextField, Typography } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
+import { Autocomplete } from '@material-ui/lab';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useContext, useState } from 'react';
 import { useAsyncAbortable } from 'react-async-hook';
 import useConstant from 'use-constant';
+
 import { BitbucketSite, User } from '../../../bitbucket/model';
 import { PullRequestDetailsControllerContext } from './pullRequestDetailsController';
 

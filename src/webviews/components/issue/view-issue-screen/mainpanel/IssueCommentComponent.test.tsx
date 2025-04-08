@@ -1,8 +1,9 @@
+import { Comment as JiraComment, User } from '@atlassianlabs/jira-pi-common-models';
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { IssueCommentComponent } from './IssueCommentComponent';
-import { User, Comment as JiraComment } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
+
+import { IssueCommentComponent } from './IssueCommentComponent';
 
 const mockSiteDetails: DetailedSiteInfo = {
     userId: 'user-123',

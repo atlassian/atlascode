@@ -1,4 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../atlclients/authInfo';
 import { ConfigSection, ConfigSubSection, ConfigTarget } from '../models/config';
 import { CommonAction } from './common';

@@ -1,5 +1,6 @@
-import { AtlascodeUriHandler } from './atlascodeUriHandler';
 import { Uri, window } from 'vscode';
+
+import { AtlascodeUriHandler } from './atlascodeUriHandler';
 
 describe('AtlascodeUriHandler', () => {
     const mockDispose = jest.fn();

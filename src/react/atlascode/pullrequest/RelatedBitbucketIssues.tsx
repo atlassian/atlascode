@@ -11,6 +11,7 @@ import {
     Typography,
 } from '@material-ui/core';
 import React from 'react';
+
 import { BitbucketIssue } from '../../../bitbucket/model';
 import Lozenge from '../common/Lozenge';
 

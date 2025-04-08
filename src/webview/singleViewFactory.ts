@@ -9,15 +9,16 @@ import {
     WebviewPanelOnDidChangeViewStateEvent,
     window,
 } from 'vscode';
+
 import { Container } from '../container';
 import { AnalyticsApi } from '../lib/analyticsApi';
 import { CommonActionType } from '../lib/ipc/fromUI/common';
 import { CommonMessageType } from '../lib/ipc/toUI/common';
 import { WebviewController } from '../lib/webview/controller/webviewController';
+import { FeatureFlagClient } from '../util/featureFlags';
+import { ExperimentGateValues, Experiments, FeatureGateValues, Features } from '../util/featureFlags/features';
 import { UIWebsocket } from '../ws';
 import { VSCWebviewControllerFactory } from './vscWebviewControllerFactory';
-import { FeatureFlagClient } from '../util/featureFlags';
-import { Experiments, ExperimentGateValues, Features, FeatureGateValues } from '../util/featureFlags/features';
 
 // ReactWebview is the interface for all basic webviews.
 // It takes FD as a generic type parameter that represents the type of "Factory Data" that will be

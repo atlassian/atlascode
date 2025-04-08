@@ -1,5 +1,6 @@
 import path from 'path';
 import { commands, QuickPickItem, window } from 'vscode';
+
 import { pipelineStartEvent } from '../../analytics';
 import { bitbucketSiteForRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
 import { BitbucketApi, BitbucketSite, WorkspaceRepo } from '../../bitbucket/model';

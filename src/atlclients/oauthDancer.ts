@@ -1,26 +1,25 @@
+import axios, { AxiosInstance } from 'axios';
+import EventEmitter from 'eventemitter3';
 import * as express from 'express';
 import * as http from 'http';
+import Mustache from 'mustache';
+import PCancelable from 'p-cancelable';
+import pTimeout from 'p-timeout';
+import { promisify } from 'util';
+import { v4 } from 'uuid';
 import * as vscode from 'vscode';
-
-import { ConnectionTimeout, Time } from '../util/time';
-import { OAuthProvider, OAuthResponse, ProductBitbucket, ProductJira, SiteInfo } from './authInfo';
-import { Strategy, strategyForProvider } from './strategy';
-import axios, { AxiosInstance } from 'axios';
+import { Disposable } from 'vscode';
 
 import { AxiosUserAgent } from '../constants';
 import { Container } from '../container';
-import { Disposable } from 'vscode';
-import EventEmitter from 'eventemitter3';
-import { Logger } from '../logger';
-import Mustache from 'mustache';
-import PCancelable from 'p-cancelable';
-import { Resources } from '../resources';
-import { addCurlLogging } from './interceptors';
 import { getAgent } from '../jira/jira-client/providers';
-import pTimeout from 'p-timeout';
-import { promisify } from 'util';
+import { Logger } from '../logger';
+import { Resources } from '../resources';
+import { ConnectionTimeout, Time } from '../util/time';
+import { OAuthProvider, OAuthResponse, ProductBitbucket, ProductJira, SiteInfo } from './authInfo';
+import { addCurlLogging } from './interceptors';
 import { responseHandlerForStrategy } from './responseHandler';
-import { v4 } from 'uuid';
+import { Strategy, strategyForProvider } from './strategy';
 
 declare interface ResponseEvent {
     provider: OAuthProvider;

@@ -1,4 +1,4 @@
-import { AuthInfoState, DetailedSiteInfo, Product, ProductJira, emptyUserInfo } from '../../../../atlclients/authInfo';
+import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
 import {
     Avatar,
     Box,
@@ -10,24 +10,24 @@ import {
     ListItemIcon,
     ListItemSecondaryAction,
     ListItemText,
+    makeStyles,
     Theme,
     Tooltip,
     Typography,
-    makeStyles,
 } from '@material-ui/core';
-import React, { useContext } from 'react';
-
 import CloudIcon from '@material-ui/icons/Cloud';
-import { ConfigControllerContext } from '../configController';
 import DeleteIcon from '@material-ui/icons/Delete';
 import DomainIcon from '@material-ui/icons/Domain';
 import EditIcon from '@material-ui/icons/Edit';
 import ErrorIcon from '@material-ui/icons/Error';
-import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
-import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import clsx from 'clsx';
+import React, { useContext } from 'react';
 import { uid } from 'react-uid';
+
+import { AuthInfoState, DetailedSiteInfo, emptyUserInfo, Product, ProductJira } from '../../../../atlclients/authInfo';
+import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { useBorderBoxStyles } from '../../common/useBorderBoxStyles';
+import { ConfigControllerContext } from '../configController';
 
 type SiteListProps = {
     product: Product;

@@ -1,12 +1,13 @@
 import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
-import { Logger } from '../../logger';
+
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { Repo, WorkspaceRepo, emptyRepo } from '../../bitbucket/model';
+import { emptyRepo, Repo, WorkspaceRepo } from '../../bitbucket/model';
 import { StartWorkBranchTemplate } from '../../config/model';
 import { Container } from '../../container';
 import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
 import { StartWorkActionApi } from '../../lib/webview/controller/startwork/startWorkActionApi';
+import { Logger } from '../../logger';
 import { Branch, RefType } from '../../typings/git';
 
 export class VSCStartWorkActionApi implements StartWorkActionApi {

@@ -11,8 +11,10 @@ import {
     User,
 } from '@atlassianlabs/jira-pi-common-models';
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
 import { commands, env } from 'vscode';
+
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
@@ -21,7 +23,6 @@ import { Commands } from '../commands';
 import { postComment } from '../commands/jira/postComment';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
 import { Container } from '../container';
-
 import {
     EditIssueAction,
     isAddAttachmentsAction,
@@ -47,7 +48,6 @@ import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
-import { decode } from 'base64-arraybuffer-es6';
 
 export class JiraIssueWebview
     extends AbstractIssueEditorWebview

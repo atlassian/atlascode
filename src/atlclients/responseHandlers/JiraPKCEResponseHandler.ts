@@ -1,10 +1,10 @@
-import { AccessibleResource, UserInfo } from '../authInfo';
-
 import { AxiosInstance } from 'axios';
+
 import { Logger } from '../../logger';
-import { ResponseHandler } from './ResponseHandler';
+import { AccessibleResource, UserInfo } from '../authInfo';
 import { Strategy } from '../strategy';
 import { Tokens } from '../tokens';
+import { ResponseHandler } from './ResponseHandler';
 
 export class JiraPKCEResponseHandler extends ResponseHandler {
     constructor(

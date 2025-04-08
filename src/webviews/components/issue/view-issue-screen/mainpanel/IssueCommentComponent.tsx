@@ -1,17 +1,18 @@
-import React from 'react';
-import Comment, { CommentAction, CommentEdited, CommentAuthor } from '@atlaskit/comment';
+import Avatar from '@atlaskit/avatar';
+import Comment, { CommentAction, CommentAuthor, CommentEdited } from '@atlaskit/comment';
 import TextField from '@atlaskit/textfield';
 import {
-    CommentVisibility,
     Comment as JiraComment,
+    CommentVisibility,
     JsdInternalCommentVisibility,
     User,
 } from '@atlassianlabs/jira-pi-common-models';
 import { Box } from '@material-ui/core';
-import Avatar from '@atlaskit/avatar';
-import { RenderedContent } from '../../../RenderedContent';
 import { formatDistanceToNow, parseISO } from 'date-fns';
+import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+
+import { RenderedContent } from '../../../RenderedContent';
 import JiraIssueTextAreaEditor from '../common/JiraIssueTextArea';
 
 type IssueCommentComponentProps = {

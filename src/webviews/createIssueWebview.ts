@@ -1,4 +1,16 @@
-import { Action, onlineStatus } from '../ipc/messaging';
+import { emptyIssueType, IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
+import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { decode } from 'base64-arraybuffer-es6';
+import { format } from 'date-fns';
+import FormData from 'form-data';
+import { commands, Position, Uri, ViewColumn } from 'vscode';
+
+import { issueCreatedEvent } from '../analytics';
+import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
+import { BitbucketIssue } from '../bitbucket/model';
+import { Commands } from '../commands';
+import { configuration } from '../config/configuration';
+import { Container } from '../container';
 import {
     CreateIssueAction,
     isCreateIssue,
@@ -6,25 +18,13 @@ import {
     isScreensForSite,
     isSetIssueType,
 } from '../ipc/issueActions';
-import { WebViewID } from '../lib/ipc/models/common';
-import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
-import { DetailedSiteInfo, Product, ProductJira, emptySiteInfo } from '../atlclients/authInfo';
-import { IssueType, Project, emptyIssueType } from '@atlassianlabs/jira-pi-common-models';
-import { Position, Uri, ViewColumn, commands } from 'vscode';
-
-import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
-import { BitbucketIssue } from '../bitbucket/model';
-import { Commands } from '../commands';
-import { Container } from '../container';
 import { CreateIssueData } from '../ipc/issueMessaging';
-import FormData from 'form-data';
-import { InitializingWebview } from './abstractWebview';
-import { Logger } from '../logger';
-import { configuration } from '../config/configuration';
+import { Action, onlineStatus } from '../ipc/messaging';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
-import { format } from 'date-fns';
-import { issueCreatedEvent } from '../analytics';
-import { decode } from 'base64-arraybuffer-es6';
+import { WebViewID } from '../lib/ipc/models/common';
+import { Logger } from '../logger';
+import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
+import { InitializingWebview } from './abstractWebview';
 
 export interface PartialIssue {
     uri?: Uri;

@@ -1,7 +1,8 @@
-import { Memento } from 'vscode';
 import { IPC } from 'node-ipc';
-import { Logger } from '../logger';
 import { pid, uptime } from 'process';
+import { Memento } from 'vscode';
+
+import { Logger } from '../logger';
 import { DetailedSiteInfo } from './authInfo';
 
 const RESPONSIBLE_PID_KEY = 'rulingPid';

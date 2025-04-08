@@ -1,6 +1,7 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import pAny from 'p-any';
 import pTimeout from 'p-timeout';
+
 import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { Time } from '../util/time';

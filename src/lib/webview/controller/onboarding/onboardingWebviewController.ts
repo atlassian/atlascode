@@ -1,4 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import { Experiments } from 'src/util/featureFlags';
+
 import { isBasicAuthInfo } from '../../../../atlclients/authInfo';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonAction, CommonActionType } from '../../../ipc/fromUI/common';
@@ -12,7 +14,6 @@ import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
 import { OnboardingActionApi } from './onboardingActionApi';
-import { Experiments } from 'src/util/featureFlags';
 
 export const id: string = 'atlascodeOnboardingV2';
 const title: string = 'Getting Started';

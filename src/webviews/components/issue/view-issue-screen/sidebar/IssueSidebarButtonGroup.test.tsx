@@ -1,8 +1,9 @@
-import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
-import { IssueSidebarButtonGroup } from './IssueSidebarButtonGroup';
 import { Transition, User } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUIs, FieldValues, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { fireEvent, render } from '@testing-library/react';
+import React from 'react';
+
+import { IssueSidebarButtonGroup } from './IssueSidebarButtonGroup';
 
 describe('IssueSidebarButtonGroup', () => {
     const mockHandleRefresh = jest.fn();

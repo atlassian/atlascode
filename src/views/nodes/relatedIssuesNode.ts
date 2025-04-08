@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
-import { AbstractBaseNode } from './abstractBaseNode';
-import { StaticIssuesNode } from '../jira/staticIssuesNode';
-import { IssueNode } from './issueNode';
-import { PullRequest, Comment, Commit } from '../../bitbucket/model';
-import { Container } from '../../container';
-import { extractIssueKeys } from '../../bitbucket/issueKeysExtractor';
+
 import { ProductJira } from '../../atlclients/authInfo';
+import { extractIssueKeys } from '../../bitbucket/issueKeysExtractor';
+import { Comment, Commit, PullRequest } from '../../bitbucket/model';
+import { Container } from '../../container';
+import { StaticIssuesNode } from '../jira/staticIssuesNode';
+import { AbstractBaseNode } from './abstractBaseNode';
+import { IssueNode } from './issueNode';
 
 export class RelatedIssuesNode extends AbstractBaseNode {
     private _delegate: StaticIssuesNode | undefined;

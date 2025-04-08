@@ -4,6 +4,7 @@ import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
 import { RadioGroup } from '@atlaskit/radio';
 import SectionMessage from '@atlaskit/section-message';
 import * as React from 'react';
+
 import { LegacyPMFData } from '../../ipc/messaging';
 import * as FieldValidators from './fieldValidators';
 

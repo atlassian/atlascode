@@ -1,5 +1,6 @@
 import { darken, lighten, makeStyles, Theme } from '@material-ui/core';
 import React, { useContext } from 'react';
+
 import { VSCodeStyles, VSCodeStylesContext } from '../../vscode/theme/styles';
 
 const useStyles = makeStyles(

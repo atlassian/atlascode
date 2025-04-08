@@ -1,21 +1,22 @@
 import Button from '@atlaskit/button';
-import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atlassianlabs/jira-pi-meta-models';
-import React from 'react';
-import { AttachmentsModal } from '../../AttachmentsModal';
-import { AttachmentList } from '../../AttachmentList';
-import { DetailedSiteInfo } from 'src/atlclients/authInfo';
-import { AddContentDropdown } from './AddContentDropDown';
-import { ChildIssuesComponent } from './ChildIssuesComponent';
-import { IssueType, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import { LinkedIssuesComponent } from './LinkedIssuesComponent';
+import AddIcon from '@atlaskit/icon/glyph/add';
 import InlineDialog from '@atlaskit/inline-dialog';
+import Tooltip from '@atlaskit/tooltip';
+import { IssueType, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atlassianlabs/jira-pi-meta-models';
+import { Box } from '@material-ui/core';
+import React from 'react';
+import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+
+import { RenderedContent } from '../../../RenderedContent';
+import { AttachmentList } from '../../AttachmentList';
+import { AttachmentsModal } from '../../AttachmentsModal';
 import WorklogForm from '../../WorklogForm';
 import Worklogs from '../../Worklogs';
 import JiraIssueTextAreaEditor from '../common/JiraIssueTextArea';
-import { RenderedContent } from '../../../RenderedContent';
-import { Box } from '@material-ui/core';
-import AddIcon from '@atlaskit/icon/glyph/add';
-import Tooltip from '@atlaskit/tooltip';
+import { AddContentDropdown } from './AddContentDropDown';
+import { ChildIssuesComponent } from './ChildIssuesComponent';
+import { LinkedIssuesComponent } from './LinkedIssuesComponent';
 
 type Props = {
     fields: FieldUIs;

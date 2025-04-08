@@ -1,7 +1,8 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
-import { showIssue } from '../../../commands/jira/showIssue';
 import { commands, window } from 'vscode';
+
+import { showIssue } from '../../../commands/jira/showIssue';
 
 export class JiraNotifier {
     private readonly _knownIssues = new Set<string>();

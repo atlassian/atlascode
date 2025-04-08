@@ -1,4 +1,5 @@
 import { commands, window } from 'vscode';
+
 import { pipelineRerunEvent } from '../../analytics';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { Commands } from '../../commands';

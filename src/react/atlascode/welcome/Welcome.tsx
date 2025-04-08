@@ -1,3 +1,4 @@
+import { IconLink } from '@atlassianlabs/guipi-core-components';
 import {
     AppBar,
     Box,
@@ -5,22 +6,21 @@ import {
     Container,
     Grid,
     Link,
+    makeStyles,
     Paper,
     Theme,
     Toolbar,
     Typography,
-    makeStyles,
 } from '@material-ui/core';
-import { WelcomeControllerContext, useWelcomeController } from './welcomeController';
-
-import { IconLink } from '@atlassianlabs/guipi-core-components';
 import React from 'react';
+import { AnalyticsView } from 'src/analyticsTypes';
+
 import { KnownLinkID } from '../../../lib/ipc/models/common';
+import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { FeedbackDialogButton } from '../common/feedback/FeedbackDialogButton';
 import BitbucketIcon from '../icons/BitbucketIcon';
-import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
-import { AnalyticsView } from 'src/analyticsTypes';
+import { useWelcomeController, WelcomeControllerContext } from './welcomeController';
 
 const useStyles = makeStyles(
     (theme: Theme) =>

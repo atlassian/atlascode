@@ -1,16 +1,17 @@
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { PromiseRacer } from 'src/util/promises';
+import { RefreshTimer } from 'src/views/RefreshTimer';
+import { Disposable } from 'vscode';
+import * as vscode from 'vscode';
+
 import { expansionCastTo, forceCastTo } from '../../../../testsutil';
-import { AssignedWorkItemsViewProvider } from './jiraAssignedWorkItemsViewProvider';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import { JQLEntry } from '../../../config/model';
 import { Container } from '../../../container';
 import { JQLManager } from '../../../jira/jqlManager';
 import { SiteManager } from '../../../siteManager';
-import { Disposable } from 'vscode';
-import { JQLEntry } from '../../../config/model';
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-import { DetailedSiteInfo } from '../../../atlclients/authInfo';
-import * as vscode from 'vscode';
-import { PromiseRacer } from 'src/util/promises';
+import { AssignedWorkItemsViewProvider } from './jiraAssignedWorkItemsViewProvider';
 import { JiraNotifier } from './jiraNotifier';
-import { RefreshTimer } from 'src/views/RefreshTimer';
 
 const mockedJqlEntry = forceCastTo<JQLEntry>({
     id: 'jqlId',

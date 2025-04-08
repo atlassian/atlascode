@@ -28,6 +28,7 @@ import debounce from 'lodash.debounce';
 import * as React from 'react';
 import EdiText, { EdiTextType } from 'react-editext';
 import uuid from 'uuid';
+
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import {

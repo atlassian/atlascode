@@ -1,5 +1,6 @@
 import { defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
+
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { PipelineSummaryAction, PipelineSummaryActionType } from '../../../lib/ipc/fromUI/pipelineSummary';
 import { emptyPipeline } from '../../../lib/ipc/models/pipelineSummary';

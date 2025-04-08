@@ -1,15 +1,16 @@
-import { ConfigurationChangeEvent, commands } from 'vscode';
-import { Container } from '../../container';
-import { configuration } from '../../config/configuration';
-import { PipelinesTree } from './PipelinesTree';
-import { PipelinesTreeViewId } from '../../constants';
-import { setCommandContext, CommandContext } from '../../commandContext';
+import { commands, ConfigurationChangeEvent } from 'vscode';
+
 import { BitbucketContext } from '../../bitbucket/bbContext';
-import { PipelinesMonitor } from './PipelinesMonitor';
+import { CommandContext, setCommandContext } from '../../commandContext';
 import { Commands } from '../../commands';
+import { configuration } from '../../config/configuration';
+import { PipelinesTreeViewId } from '../../constants';
+import { Container } from '../../container';
+import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 import { BitbucketExplorer } from '../BitbucketExplorer';
 import { BaseTreeDataProvider } from '../Explorer';
-import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
+import { PipelinesMonitor } from './PipelinesMonitor';
+import { PipelinesTree } from './PipelinesTree';
 
 export class PipelinesExplorer extends BitbucketExplorer {
     constructor(ctx: BitbucketContext) {

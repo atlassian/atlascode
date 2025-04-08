@@ -1,7 +1,8 @@
-import { CodeLens, Range, Position, TextDocument, CancellationToken } from 'vscode';
-import { parseJiraIssueKeys } from './issueKeyParser';
-import { Container } from '../container';
+import { CancellationToken, CodeLens, Position, Range, TextDocument } from 'vscode';
+
 import { Commands } from '../commands';
+import { Container } from '../container';
+import { parseJiraIssueKeys } from './issueKeyParser';
 
 interface LensMatch {
     document: TextDocument;

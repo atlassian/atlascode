@@ -1,5 +1,5 @@
-import { ServerPullRequestApi } from './pullRequests';
 import { BitbucketSite } from '../model';
+import { ServerPullRequestApi } from './pullRequests';
 
 const mockGet = jest.fn();
 const mockPost = jest.fn();
@@ -13,8 +13,9 @@ jest.mock('../httpClient', () => ({
         delete: mockDelete,
     })),
 }));
-import { HTTPClient } from '../httpClient';
 import { AxiosResponse } from 'axios';
+
+import { HTTPClient } from '../httpClient';
 
 describe('ServerPullRequestApi', () => {
     let api: ServerPullRequestApi;

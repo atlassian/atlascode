@@ -1,5 +1,6 @@
 import { Box, Fade, Grid, makeStyles, Theme, Typography } from '@material-ui/core';
 import React from 'react';
+
 import { ConfigSubSection } from '../../../../lib/ipc/models/config';
 import { CommonPanelProps } from '../../common/commonPanelProps';
 import { GenConnectPanel } from './subpanels/GenConnectPanel';

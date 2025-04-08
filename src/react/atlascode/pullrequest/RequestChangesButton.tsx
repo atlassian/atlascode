@@ -1,5 +1,6 @@
 import { Box, Button, Typography } from '@material-ui/core';
 import React, { useCallback } from 'react';
+
 import { ApprovalStatus } from '../../../bitbucket/model';
 import StoppedIcon from '../icons/StoppedIcon';
 type RequestChangesButtonProps = {

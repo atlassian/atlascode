@@ -1,5 +1,6 @@
 import orderBy from 'lodash.orderby';
 import * as vscode from 'vscode';
+
 import { bbIssueUrlCopiedEvent, bbIssueWorkStartedEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
@@ -12,7 +13,7 @@ import { isStartWork } from '../ipc/issueActions';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { RepoData } from '../ipc/prMessaging';
 import { Logger } from '../logger';
-import { Resources, iconSet } from '../resources';
+import { iconSet, Resources } from '../resources';
 import { Branch, RefType, Repository } from '../typings/git';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 

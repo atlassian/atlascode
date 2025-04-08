@@ -1,6 +1,7 @@
 import TurnDownService from 'turndown';
 import * as vscode from 'vscode';
 import { HoverProvider } from 'vscode';
+
 import { viewScreenEvent } from '../../analytics';
 import { Commands } from '../../commands';
 import { Container } from '../../container';

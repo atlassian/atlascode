@@ -1,18 +1,19 @@
 import { commands, Disposable, Event, EventEmitter, TreeItem, Uri, window, workspace } from 'vscode';
+
 import { prPaginationEvent, viewScreenEvent } from '../analytics';
 import { ProductBitbucket } from '../atlclients/authInfo';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { clientForSite } from '../bitbucket/bbUtils';
 import { PaginatedPullRequests, WorkspaceRepo } from '../bitbucket/model';
-import { configuration } from '../config/configuration';
 import { Commands } from '../commands';
+import { configuration } from '../config/configuration';
 import { Container } from '../container';
 import { BaseTreeDataProvider } from './Explorer';
 import { GitContentProvider } from './gitContentProvider';
 import { AbstractBaseNode } from './nodes/abstractBaseNode';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
 import { SimpleNode } from './nodes/simpleNode';
-import { CreatePullRequestNode, PullRequestHeaderNode, PullRequestFilters } from './pullrequest/headerNode';
+import { CreatePullRequestNode, PullRequestFilters, PullRequestHeaderNode } from './pullrequest/headerNode';
 import { DescriptionNode, PullRequestTitlesNode } from './pullrequest/pullRequestNode';
 import { RepositoriesNode } from './pullrequest/repositoriesNode';
 

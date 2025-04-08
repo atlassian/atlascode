@@ -1,4 +1,5 @@
 import vscode, { Disposable, Event, EventEmitter } from 'vscode';
+
 import { ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { AssignedJiraItemsViewId, PullRequestTreeViewId } from '../constants';
 import { Container } from '../container';

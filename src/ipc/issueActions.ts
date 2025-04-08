@@ -10,6 +10,7 @@ import {
     User,
 } from '@atlassianlabs/jira-pi-common-models';
 import { FieldValues, IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Branch } from '../typings/git';
 import { Action } from './messaging';

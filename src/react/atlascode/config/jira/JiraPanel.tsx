@@ -1,16 +1,16 @@
-import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';
 import { Fade, Grid } from '@material-ui/core';
 import React, { useMemo } from 'react';
 
-import { AuthPanel } from '../auth/AuthPanel';
+import { ProductJira } from '../../../../atlclients/authInfo';
+import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';
+import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { CommonPanelProps } from '../../common/commonPanelProps';
+import { StartWorkPanel } from '../../common/StartWorkPanel';
+import { StatusBarPanel } from '../../common/StatusBarPanel';
+import { AuthPanel } from '../auth/AuthPanel';
 import { JiraExplorerPanel } from './subpanels/JiraExplorerPanel';
 import { JiraHoversPanel } from './subpanels/JiraHoversPanel';
 import { JiraTriggersPanel } from './subpanels/JiraTriggersPanel';
-import { ProductJira } from '../../../../atlclients/authInfo';
-import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
-import { StartWorkPanel } from '../../common/StartWorkPanel';
-import { StatusBarPanel } from '../../common/StatusBarPanel';
 
 type JiraPanelProps = CommonPanelProps & {
     config: { [key: string]: any };

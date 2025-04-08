@@ -11,6 +11,7 @@ import {
     Typography,
 } from '@material-ui/core';
 import React, { memo, useCallback, useState } from 'react';
+
 import {
     AuthInfo,
     AuthInfoState,
@@ -25,9 +26,9 @@ import {
 import { emptySiteWithAuthInfo, SiteWithAuthInfo } from '../../../../../lib/ipc/toUI/config';
 import { useFormValidation } from '../../../common/form/useFormValidation';
 import { validateRequiredString, validateStartsWithProtocol } from '../../../util/fieldValidators';
-import { emptyAuthFormState, FormFields } from './types';
-import { JiraBasicAuthForm } from './JiraApiTokenAuthForm';
 import { CustomSiteAuthForm } from './CustomSiteAuthForm';
+import { JiraBasicAuthForm } from './JiraApiTokenAuthForm';
+import { emptyAuthFormState, FormFields } from './types';
 
 export type AuthDialogProps = {
     open: boolean;

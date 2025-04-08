@@ -1,10 +1,11 @@
-import { expansionCastTo } from '../testsutil';
-import { registerErrorReporting, unregisterErrorReporting, registerAnalyticsClient } from './errorReporting';
-import { Logger } from './logger';
-import { TrackEvent } from './analytics-node-client/src/types';
-import { AnalyticsClient } from './analytics-node-client/src/client.min';
 import { Disposable } from 'vscode';
+
+import { expansionCastTo } from '../testsutil';
 import * as analytics from './analytics';
+import { AnalyticsClient } from './analytics-node-client/src/client.min';
+import { TrackEvent } from './analytics-node-client/src/types';
+import { registerAnalyticsClient, registerErrorReporting, unregisterErrorReporting } from './errorReporting';
+import { Logger } from './logger';
 
 const mockAnalyticsClient = expansionCastTo<AnalyticsClient>({
     sendTrackEvent: () => Promise.reject(),

@@ -1,7 +1,9 @@
-import { Disposable, Uri, UriHandler, env, window } from 'vscode';
-import { AnalyticsApi } from '../lib/analyticsApi';
-import { CheckoutHelper } from '../bitbucket/interfaces';
+import { env } from 'process';
+import { CheckoutHelper } from 'src/bitbucket/interfaces';
+import { Disposable, Uri, UriHandler, window } from 'vscode';
+
 import { Container } from '../container';
+import { AnalyticsApi } from '../lib/analyticsApi';
 import { Logger } from '../logger';
 
 const ExtensionId = 'atlassian.atlascode';

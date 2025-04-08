@@ -12,6 +12,7 @@ import {
 } from '@material-ui/core';
 import { differenceInWeeks, format, formatDistanceToNow } from 'date-fns';
 import React, { useMemo } from 'react';
+
 import { Commit } from '../../../bitbucket/model';
 
 const useStyles = makeStyles((theme: Theme) => ({

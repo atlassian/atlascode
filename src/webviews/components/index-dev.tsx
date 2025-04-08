@@ -1,8 +1,9 @@
 // prettier-ignore-start
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 // prettier-ignore-end
 import './App.css';
+
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 
 // @ts-ignore
 // __webpack_public_path__ is used to set the public path for the js files - https://webpack.js.org/guides/public-path/

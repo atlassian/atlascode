@@ -6,6 +6,7 @@ import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 import filesize from 'filesize';
 import React, { useState } from 'react';
+
 import { RenderedContent } from '../RenderedContent';
 import { previewableTypes } from './AttachmentForm';
 

@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
+
 import { DetailedSiteInfo } from '../../../../../atlclients/authInfo';
 import { JQLEntry } from '../../../../../config/model';
 import { JQLEditDialog } from './JQLEditDialog';

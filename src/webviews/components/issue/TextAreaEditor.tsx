@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+
 import PopoutMentionPicker from '../pullrequest/PopoutMentionPicker';
 
 type Props = {
