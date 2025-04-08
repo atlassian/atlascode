@@ -1534,7 +1534,6 @@
         "merge-anything": "^3.0.3",
         "mustache": "^4.0.1",
         "node-ipc": "^9.2.1",
-        "p-any": "^2.1.0",
         "p-cancelable": "^2.0.0",
         "p-queue": "^6.3.0",
         "p-retry": "^4.2.0",
