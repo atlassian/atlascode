@@ -13,7 +13,7 @@ import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
 import { RenderedContent } from '../../../RenderedContent';
-import JiraIssueTextAreaEditor from '../common/JiraIssueTextArea';
+import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 
 type IssueCommentComponentProps = {
     siteDetails: DetailedSiteInfo;

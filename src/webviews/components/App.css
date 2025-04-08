@@ -149,6 +149,9 @@ h6 {
     text-transform: uppercase;
 }
 
+input::placeholder {
+    color: var(--vscode-input-placeholderForeground) !important;
+}
 /* Lists */
 
 ul,

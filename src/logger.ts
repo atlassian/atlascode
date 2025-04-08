@@ -4,7 +4,6 @@ import { EventEmitter } from 'vscode';
 import { configuration, OutputLevel } from './config/configuration';
 import { extensionOutputChannelName } from './constants';
 import { Container } from './container';
-import { EventEmitter } from 'vscode';
 
 const ConsolePrefix = `[${extensionOutputChannelName}]`;
 
