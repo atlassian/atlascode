@@ -20,8 +20,9 @@ import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { RefreshTimer } from '../../RefreshTimer';
 import { viewScreenEvent } from '../../../analytics';
 import { JiraNotifier } from './jiraNotifier';
+import { AssignedJiraItemsViewId } from 'src/constants';
 
-const AssignedWorkItemsViewProviderId = 'atlascode.views.jira.assignedWorkItemsTreeView';
+const AssignedWorkItemsViewProviderId = AssignedJiraItemsViewId;
 
 export class AssignedWorkItemsViewProvider extends Disposable implements TreeDataProvider<TreeItem> {
     private static readonly _treeItemConfigureJiraMessage = loginToJiraMessageNode;
