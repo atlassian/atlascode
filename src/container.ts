@@ -1,4 +1,5 @@
 import { env, ExtensionContext, UIKind, window, workspace } from 'vscode';
+import * as vscode from 'vscode';
 
 import { featureFlagClientInitializedEvent } from './analytics';
 import { AnalyticsClient, analyticsClient } from './analytics-node-client/src/client.min.js';
@@ -91,6 +92,8 @@ export class Container {
 
         this._context = context;
         this._version = version;
+
+        new MyFileDecorationProvider();
 
         context.subscriptions.push((this._credentialManager = new CredentialManager(this._analyticsClient)));
         context.subscriptions.push((this._siteManager = new SiteManager(context.globalState)));
@@ -429,5 +432,31 @@ export class Container {
     private static _pmfStats: PmfStats;
     public static get pmfStats() {
         return this._pmfStats;
+    }
+}
+
+class MyFileDecorationProvider implements vscode.FileDecorationProvider {
+    constructor() {
+        vscode.window.registerFileDecorationProvider(this);
+    }
+
+    provideFileDecoration(uri: vscode.Uri, token: vscode.CancellationToken) {
+        if (uri.scheme === 'badge') {
+            const uriQuery = new URLSearchParams(uri.query);
+
+            const value = uriQuery.get('value') ?? 0;
+            if (!value) {
+                return undefined;
+            }
+
+            return {
+                badge: value,
+                tooltip: `${value} notifications`,
+                color: new vscode.ThemeColor('editorForeground'),
+                propagate: false, // don't propagate to children elements
+            };
+        }
+
+        return undefined;
     }
 }
