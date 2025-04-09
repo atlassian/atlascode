@@ -5,14 +5,14 @@ import { Box } from '@material-ui/core';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
 
-import PopoutMentionPicker from '../../../pullrequest/PopoutMentionPicker';
+import PopoutMentionPicker from '../../pullrequest/PopoutMentionPicker';
 
 type Props = {
     value: string;
     onChange: (input: string) => void;
     onEditorFocus?: (e: any) => void;
-    onSave: () => void;
-    onCancel: () => void;
+    onSave?: () => void;
+    onCancel?: () => void;
     fetchUsers?: (input: string) => Promise<{ displayName: string; mention: string; avatarUrl?: string }[]>;
     isServiceDeskProject?: boolean;
     onInternalCommentSave?: () => void;
@@ -91,9 +91,11 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                         gap: '8px',
                     }}
                 >
-                    <VSCodeButton appearance="primary" onClick={onSave} disabled={saving}>
-                        {isServiceDeskProject ? 'Reply' : 'Save'}
-                    </VSCodeButton>
+                    {onSave && (
+                        <VSCodeButton appearance="primary" onClick={onSave} disabled={saving}>
+                            {isServiceDeskProject ? 'Reply' : 'Save'}
+                        </VSCodeButton>
+                    )}
                     {isServiceDeskProject && onInternalCommentSave && (
                         <VSCodeButton appearance="secondary" onClick={onInternalCommentSave} disabled={saving}>
                             Add internal note
@@ -109,9 +111,11 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                         />
                     )}
                 </Box>
-                <VSCodeButton appearance="secondary" onClick={onCancel} disabled={saving}>
-                    Cancel
-                </VSCodeButton>
+                {onCancel && (
+                    <VSCodeButton appearance="secondary" onClick={onCancel} disabled={saving}>
+                        Cancel
+                    </VSCodeButton>
+                )}
             </Box>
         </Box>
     );

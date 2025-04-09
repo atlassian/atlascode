@@ -9,6 +9,7 @@ import {
     window,
 } from 'vscode';
 
+import { AssignedJiraItemsViewId } from '../../../../src/constants';
 import { viewScreenEvent } from '../../../analytics';
 import { ProductJira } from '../../../atlclients/authInfo';
 import { CommandContext, setCommandContext } from '../../../commandContext';
@@ -22,7 +23,7 @@ import { SearchJiraHelper } from '../searchJiraHelper';
 import { JiraNotifier } from './jiraNotifier';
 import { executeJqlQuery, JiraIssueNode, loginToJiraMessageNode, TreeViewIssue } from './utils';
 
-const AssignedWorkItemsViewProviderId = 'atlascode.views.jira.assignedWorkItemsTreeView';
+const AssignedWorkItemsViewProviderId = AssignedJiraItemsViewId;
 
 export class AssignedWorkItemsViewProvider extends Disposable implements TreeDataProvider<TreeItem> {
     private static readonly _treeItemConfigureJiraMessage = loginToJiraMessageNode;
@@ -40,7 +41,6 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
     constructor() {
         super(() => this.dispose());
 
-        setCommandContext(CommandContext.JiraExplorer, false);
         setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
 
         const treeView = window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });

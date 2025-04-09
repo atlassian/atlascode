@@ -27,6 +27,8 @@ export class RelatedIssuesNode extends AbstractBaseNode {
         ) {
             return undefined;
         }
+
+        // [mmura] TODO is this broken now? or at least it should migrate to a simpler logic
         const issueKeys = await extractIssueKeys(pr, commits, allComments);
         if (issueKeys.length > 0) {
             const node = new RelatedIssuesNode();

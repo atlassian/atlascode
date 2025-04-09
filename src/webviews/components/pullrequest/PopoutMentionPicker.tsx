@@ -63,8 +63,8 @@ export default class PopoutMentionPicker extends React.Component<
                 }
             >
                 <AsyncSelect
-                    className="ac-select-container"
-                    classNamePrefix="ac-select"
+                    className="ac-form-select-container"
+                    classNamePrefix="ac-form-select"
                     autoFocus
                     backspaceRemovesValue={false}
                     components={{ Option: UserOption, DropdownIndicator, IndicatorSeparator: null }}

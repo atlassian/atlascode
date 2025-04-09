@@ -12,28 +12,28 @@ import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary
 // which totally screws up react-select when select boxes are in an initially hidden panel.
 import uuid from 'uuid';
 
-import { EditIssueAction, IssueCommentAction } from '../../../ipc/issueActions';
-import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../ipc/issueMessaging';
-import { LegacyPMFData } from '../../../ipc/messaging';
-import { readFilesContentAsync } from '../../../util/files';
-import { ConnectionTimeout } from '../../../util/time';
-import { AtlLoader } from '../AtlLoader';
-import ErrorBanner from '../ErrorBanner';
-import Offline from '../Offline';
-import PMFBBanner from '../pmfBanner';
+import { EditIssueAction, IssueCommentAction } from '../../../../ipc/issueActions';
+import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../../ipc/issueMessaging';
+import { LegacyPMFData } from '../../../../ipc/messaging';
+import { readFilesContentAsync } from '../../../../util/files';
+import { ConnectionTimeout } from '../../../../util/time';
+import { AtlLoader } from '../../AtlLoader';
+import ErrorBanner from '../../ErrorBanner';
+import Offline from '../../Offline';
+import PMFBBanner from '../../pmfBanner';
 import {
     AbstractIssueEditorPage,
     CommonEditorPageAccept,
     CommonEditorPageEmit,
     CommonEditorViewState,
     emptyCommonEditorState,
-} from './AbstractIssueEditorPage';
-import NavItem from './NavItem';
-import PullRequests from './PullRequests';
-import { IssueCommentComponent } from './view-issue-screen/mainpanel/IssueCommentComponent';
-import IssueMainPanel from './view-issue-screen/mainpanel/IssueMainPanel';
-import { IssueSidebarButtonGroup } from './view-issue-screen/sidebar/IssueSidebarButtonGroup';
-import { IssueSidebarCollapsible, SidebarItem } from './view-issue-screen/sidebar/IssueSidebarCollapsible';
+} from '../AbstractIssueEditorPage';
+import NavItem from '../NavItem';
+import PullRequests from '../PullRequests';
+import { IssueCommentComponent } from './mainpanel/IssueCommentComponent';
+import IssueMainPanel from './mainpanel/IssueMainPanel';
+import { IssueSidebarButtonGroup } from './sidebar/IssueSidebarButtonGroup';
+import { IssueSidebarCollapsible, SidebarItem } from './sidebar/IssueSidebarCollapsible';
 
 type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
