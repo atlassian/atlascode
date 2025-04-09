@@ -1,12 +1,3 @@
-jest.mock('./simpleJiraIssueNode', () => {
-    return {
-        SimpleJiraIssueNode: jest.fn().mockImplementation(() => {
-            return {
-                getTreeItem: jest.fn().mockReturnValue({}),
-            };
-        }),
-    };
-});
 jest.mock('../../commands', () => {
     return {
         Commands: {

@@ -61,23 +61,9 @@ export class LegacyAtlascodeUriHandler implements Disposable, UriHandler {
             await this.handlePullRequestUri(uri);
         } else if (uri.path.endsWith('cloneRepository')) {
             await this.handleCloneRepository(uri);
-        } else if (uri.path.endsWith('startWorkOnJiraIssue')) {
-            await this.handleStartWorkOnJiraIssue(uri);
         } else if (uri.path.endsWith('checkoutBranch')) {
             await this.handleCheckoutBranch(uri);
-        } else if (uri.path.endsWith('showJiraIssue')) {
-            await this.handleShowJiraIssue(uri);
         }
-    }
-
-    private async handleStartWorkOnJiraIssue(uri: Uri) {
-        Logger.debug('error opening start work page:');
-        window.showErrorMessage('Error opening start work page (check log for details)');
-    }
-
-    private async handleShowJiraIssue(uri: Uri) {
-        Logger.debug('error opening issue page:');
-        window.showErrorMessage('Error opening issue page (check log for details)');
     }
 
     private async handleCheckoutBranch(uri: Uri) {

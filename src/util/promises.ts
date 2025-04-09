@@ -58,3 +58,24 @@ export class PromiseRacer<T> {
         }
     }
 }
+/** Function similar to Promise.all(), except it never rejects when some promises in the array reject.
+ *
+ * If all promises of the array reject, it simply resolves with an empty array.
+ */
+export async function Promise_allSucceeded<T>(promises: Promise<T>[]): Promise<T[]> {
+    const result: T[] = [];
+
+    if (!promises.length) {
+        return result;
+    }
+
+    const allSettled = await Promise.allSettled(promises);
+
+    for (const settled of allSettled) {
+        if (settled.status === 'fulfilled') {
+            result.push(settled.value);
+        }
+    }
+
+    return result;
+}

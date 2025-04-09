@@ -2,7 +2,9 @@ import { parseISO } from 'date-fns';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import * as vscode from 'vscode';
 
+import { ProductJira } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
+import { extractIssueKeys } from '../../bitbucket/issueKeysExtractor';
 import {
     Commit,
     type FileDiff,
@@ -12,6 +14,7 @@ import {
     Task,
 } from '../../bitbucket/model';
 import { Commands } from '../../commands';
+import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { Resources } from '../../resources';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
@@ -196,12 +199,16 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         commits: Commit[],
         allComments: PaginatedComments,
     ): Promise<AbstractBaseNode[]> {
-        const result: AbstractBaseNode[] = [];
-        const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, commits, allComments.data);
-        if (relatedIssuesNode) {
-            result.push(relatedIssuesNode);
+        // TODO: [VSCODE-503] handle related issues across cloud/server
+        if (
+            !Container.siteManager.productHasAtLeastOneSite(ProductJira) ||
+            !Container.config.bitbucket.explorer.relatedJiraIssues.enabled
+        ) {
+            return [];
         }
-        return result;
+
+        const issueKeys = await extractIssueKeys(this.pr, commits, allComments.data);
+        return issueKeys.length ? [new RelatedIssuesNode(issueKeys, 'Related Jira issues')] : [];
     }
 
     private async createRelatedBitbucketIssueNode(

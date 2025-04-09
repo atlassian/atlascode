@@ -20,18 +20,19 @@ export class RepositoriesNode extends AbstractBaseNode {
     ) {
         super();
         this.treeItem = this.createTreeItem();
-        this.disposables.push({
-            dispose: () => {
-                if (this.children) {
-                    this.children.forEach((child) => {
-                        if (child instanceof PullRequestTitlesNode) {
-                            Container.bitbucketContext.prCommentController.disposePR(child.prHref);
-                        }
-                        child.dispose();
-                    });
+    }
+
+    override dispose(): void {
+        super.dispose();
+
+        if (this.children) {
+            this.children.forEach((child) => {
+                if (child instanceof PullRequestTitlesNode) {
+                    Container.bitbucketContext.prCommentController.disposePR(child.prHref);
                 }
-            },
-        });
+                child.dispose();
+            });
+        }
     }
 
     private createTreeItem(): vscode.TreeItem {

@@ -7,6 +7,7 @@ import { JQLEntry } from '../../../config/model';
 import { Container } from '../../../container';
 import { issuesForJQL } from '../../../jira/issuesForJql';
 import { Logger } from '../../../logger';
+import { AbstractBaseNode } from '../../../views/nodes/abstractBaseNode';
 
 export function createLabelItem(label: string, command?: Command): TreeItem {
     const item = new TreeItem(label);
@@ -48,7 +49,7 @@ export const loginToJiraMessageNode = createLabelItem('Please login to Jira', {
     arguments: [ProductJira],
 });
 
-export class JiraIssueNode extends TreeItem {
+export class JiraIssueNode extends TreeItem implements AbstractBaseNode {
     private children: JiraIssueNode[];
 
     constructor(
@@ -92,20 +93,25 @@ export class JiraIssueNode extends TreeItem {
         }
     }
 
-    async getTreeItem(): Promise<any> {
-        return {
-            resourceUri: this.resourceUri,
-        };
+    getTreeItem(): Promise<TreeItem> | TreeItem {
+        return this;
     }
 
-    getChildren(): Promise<TreeItem[]> {
+    getChildren(): Promise<JiraIssueNode[]> {
         return Promise.resolve(this.children);
     }
+
+    getParent(): AbstractBaseNode | undefined {
+        return undefined;
+    }
+
+    dispose(): void {}
 }
 
 export namespace JiraIssueNode {
     export enum NodeType {
         JiraAssignedIssuesNode = 'assignedJiraIssue',
         CustomJqlQueriesNode = 'jiraIssue',
+        RelatedJiraIssueInBitbucketPR = 'relatedJiraIssueBB',
     }
 }
