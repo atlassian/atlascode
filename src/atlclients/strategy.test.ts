@@ -3,7 +3,7 @@ jest.mock('./strategyCrypto', () => {
         createVerifier: jest.fn(() => 'verifier'),
         base64URLEncode: jest.fn(() => 'base64URLEncode'),
         sha256: jest.fn(() => 'sha256'),
-        basicAuth: jest.fn(() => 'basicAuth'),
+        basicAuthEncode: jest.fn(() => 'basicAuth'),
     };
 });
 
@@ -24,7 +24,7 @@ const expectedData: any = {
         apiUrl: 'https://bitbucket.org',
         refreshHeaders: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: 'basicAuth',
+            Authorization: 'Basic basicAuth',
         },
         tokenRefreshData: 'grant_type=refresh_token&refresh_token=refreshToken',
         profileUrl: 'https://api.bitbucket.org/2.0/user',
@@ -40,7 +40,7 @@ const expectedData: any = {
         apiUrl: 'https://staging.bb-inf.net',
         refreshHeaders: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: 'basicAuth',
+            Authorization: 'Basic basicAuth',
         },
         tokenRefreshData: 'grant_type=refresh_token&refresh_token=refreshToken',
         profileUrl: 'https://api-staging.bb-inf.net/2.0/user',

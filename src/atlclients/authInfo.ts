@@ -69,12 +69,17 @@ export enum AuthInfoState {
     Invalid,
 }
 
-export interface AuthInfo {
+interface AuthInfoCommon {
     user: UserInfo;
     state: AuthInfoState;
 }
 
-export interface OAuthInfo extends AuthInfo {
+export interface NoAuthInfo extends AuthInfoCommon {
+    type: 'none';
+}
+
+export interface OAuthInfo extends AuthInfoCommon {
+    type: 'oauth';
     access: string;
     refresh: string;
     expirationDate?: number;
@@ -82,14 +87,18 @@ export interface OAuthInfo extends AuthInfo {
     recievedAt: number;
 }
 
-export interface PATAuthInfo extends AuthInfo {
+export interface PATAuthInfo extends AuthInfoCommon {
+    type: 'pat';
     token: string;
 }
 
-export interface BasicAuthInfo extends AuthInfo {
+export interface BasicAuthInfo extends AuthInfoCommon {
+    type: 'basic';
     username: string;
     password: string;
 }
+
+export type AuthInfo = NoAuthInfo | OAuthInfo | BasicAuthInfo | PATAuthInfo;
 
 export interface UserInfo {
     id: string;
@@ -189,11 +198,13 @@ export const emptyAccessibleResourceV1: AccessibleResourceV1 = {
 };
 
 export const emptyAuthInfo: AuthInfo = {
+    type: 'none',
     user: emptyUserInfo,
     state: AuthInfoState.Valid,
 };
 
 export const emptyBasicAuthInfo: BasicAuthInfo = {
+    type: 'basic',
     user: emptyUserInfo,
     username: '',
     password: '',
@@ -201,6 +212,7 @@ export const emptyBasicAuthInfo: BasicAuthInfo = {
 };
 
 export const emptyPATAuthInfo: PATAuthInfo = {
+    type: 'pat',
     user: emptyUserInfo,
     token: '',
     state: AuthInfoState.Valid,
@@ -240,19 +252,25 @@ export function isEmptySiteInfo(a: any): boolean {
     );
 }
 
-export function isOAuthInfo(a: any): a is OAuthInfo {
-    return a && (<OAuthInfo>a).access !== undefined && (<OAuthInfo>a).refresh !== undefined;
+export function isOAuthInfo(a: AuthInfo | undefined): a is OAuthInfo {
+    // This check should be retired over time when auth info is updated to use the new type
+    const oldCheck = a && (<OAuthInfo>a).access !== undefined && (<OAuthInfo>a).refresh !== undefined;
+    return oldCheck || (!!a && a.type === 'oauth');
 }
 
-export function isBasicAuthInfo(a: any): a is BasicAuthInfo {
-    return a && (<BasicAuthInfo>a).username !== undefined && (<BasicAuthInfo>a).password !== undefined;
+export function isBasicAuthInfo(a: AuthInfo | undefined): a is BasicAuthInfo {
+    // This check should be retired over time when auth info is updated to use the new type
+    const oldCheck = a && (<BasicAuthInfo>a).username !== undefined && (<BasicAuthInfo>a).password !== undefined;
+    return oldCheck || (!!a && a.type === 'basic');
 }
 
-export function isPATAuthInfo(a: any): a is PATAuthInfo {
-    return a && (<PATAuthInfo>a).token !== undefined;
+export function isPATAuthInfo(a: AuthInfo | undefined): a is PATAuthInfo {
+    // This check should be retired over time when auth info is updated to use the new type
+    const oldCheck = a && (<PATAuthInfo>a).token !== undefined;
+    return oldCheck || (!!a && a.type === 'pat');
 }
 
-export function getSecretForAuthInfo(info: any): string {
+export function getSecretForAuthInfo(info: AuthInfo): string {
     if (isOAuthInfo(info)) {
         return info.access + info.refresh;
     }

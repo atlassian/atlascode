@@ -15,6 +15,6 @@ export function sha256(buffer: any) {
     return crypto.createHash('sha256').update(buffer).digest();
 }
 
-export function basicAuth(username: string, password: string) {
-    return 'Basic ' + Buffer.from(username + ':' + password).toString('base64');
+export function basicAuthEncode(username: string, password: string) {
+    return Buffer.from(username + ':' + password).toString('base64');
 }

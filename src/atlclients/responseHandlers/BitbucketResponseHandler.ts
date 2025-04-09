@@ -34,14 +34,14 @@ export class BitbucketResponseHandler extends ResponseHandler {
         }
     }
 
-    public async user(accessToken: string, resource: AccessibleResource): Promise<UserInfo> {
+    public async user(authHeader: string): Promise<UserInfo> {
         try {
             const userResponse = await this.axios(this.strategy.profileUrl(), {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
-                    Authorization: `Bearer ${accessToken}`,
+                    Authorization: authHeader,
                 },
                 ...this.agent,
             });
@@ -53,7 +53,7 @@ export class BitbucketResponseHandler extends ResponseHandler {
                     headers: {
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
-                        Authorization: `Bearer ${accessToken}`,
+                        Authorization: authHeader,
                     },
                     ...this.agent,
                 });

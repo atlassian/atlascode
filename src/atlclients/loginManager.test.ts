@@ -247,6 +247,7 @@ describe('LoginManager', () => {
             const site: SiteInfo = { host: 'jira.atlassian.com', product: ProductJira };
             const user = forceCastTo<UserInfo>({ id: 'user' });
             const authInfoData: BasicAuthInfo = {
+                type: 'basic',
                 username: 'user',
                 password: 'pass',
                 user,
@@ -285,6 +286,7 @@ describe('LoginManager', () => {
             const site: SiteInfo = { host: 'jira.atlassian.com', product: ProductJira };
             const user = forceCastTo<UserInfo>({ id: 'user' });
             const authInfoData: BasicAuthInfo = {
+                type: 'basic',
                 username: 'user',
                 password: 'pass',
                 user,
@@ -306,6 +308,7 @@ describe('LoginManager', () => {
             const site: SiteInfo = { host: 'jira.atlassian.com', product: ProductJira };
             const user = forceCastTo<UserInfo>({ id: 'user' });
             const authInfoData: BasicAuthInfo = {
+                type: 'basic',
                 username: 'user',
                 password: 'pass',
                 user,
@@ -338,6 +341,7 @@ describe('LoginManager', () => {
             const site: SiteInfo = { host: 'jira.atlassian.com', product: ProductJira };
             const user = forceCastTo<UserInfo>({ id: 'user' });
             const authInfoData: BasicAuthInfo = {
+                type: 'basic',
                 username: 'user',
                 password: 'pass',
                 user,
@@ -370,6 +374,7 @@ describe('LoginManager', () => {
             const site: SiteInfo = { host: 'jira.atlassian.com', product: ProductBitbucket };
             const user = forceCastTo<UserInfo>({ id: 'user' });
             const authInfoData: BasicAuthInfo = {
+                type: 'basic',
                 username: 'user',
                 password: 'pass',
                 user,
@@ -393,6 +398,7 @@ describe('LoginManager', () => {
             const site: SiteInfo = { host: 'jira.atlassian.com', product: ProductJira };
             const user = forceCastTo<UserInfo>({ id: 'user' });
             const authInfoData: BasicAuthInfo = {
+                type: 'basic',
                 username: 'user',
                 password: 'pass',
                 user,
@@ -413,6 +419,7 @@ describe('LoginManager', () => {
             const site: SiteInfo = { host: 'jira.atlassian.com', product: ProductJira };
             const user = forceCastTo<UserInfo>({ id: 'user' });
             const authInfoData: BasicAuthInfo = {
+                type: 'basic',
                 username: 'user',
                 password: 'pass',
                 user,

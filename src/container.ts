@@ -3,7 +3,7 @@ import { env, ExtensionContext, UIKind, window, workspace } from 'vscode';
 import { featureFlagClientInitializedEvent } from './analytics';
 import { analyticsClient } from './analytics-node-client/src/client.min.js';
 import { AnalyticsClient } from './analytics-node-client/src/client.min.js';
-import { ProductJira } from './atlclients/authInfo';
+import { BasicAuthInfo, ProductJira } from './atlclients/authInfo';
 import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
@@ -375,7 +375,8 @@ export class Container {
             );
             return;
         }
-        const authInfo = {
+        const authInfo: BasicAuthInfo = {
+            type: 'basic',
             username: ATLASCODE_TEST_USER_EMAIL,
             password: process.env.ATLASCODE_TEST_USER_API_TOKEN,
             user: {

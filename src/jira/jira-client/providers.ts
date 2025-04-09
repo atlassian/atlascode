@@ -47,16 +47,9 @@ export function basicJiraTransportFactory(site: DetailedSiteInfo): TransportFact
     return () => axios;
 }
 
-export const jiraTokenAuthProvider = (token: string): AuthorizationProvider => {
+export const jiraNoopProvider = (authHeader: string): AuthorizationProvider => {
     return (method: string, url: string) => {
-        return Promise.resolve(`Bearer ${token}`);
-    };
-};
-
-export const jiraBasicAuthProvider = (username: string, password: string): AuthorizationProvider => {
-    const basicAuth = Buffer.from(`${username}:${password}`).toString('base64');
-    return (method: string, url: string) => {
-        return Promise.resolve(`Basic ${basicAuth}`);
+        return Promise.resolve(authHeader);
     };
 };
 

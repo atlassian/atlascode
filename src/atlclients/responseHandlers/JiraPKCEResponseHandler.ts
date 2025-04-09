@@ -2,6 +2,7 @@ import { AxiosInstance } from 'axios';
 
 import { Logger } from '../../logger';
 import { AccessibleResource, UserInfo } from '../authInfo';
+import { LoginManager } from '../loginManager';
 import { Strategy } from '../strategy';
 import { Tokens } from '../tokens';
 import { ResponseHandler } from './ResponseHandler';
@@ -38,7 +39,7 @@ export class JiraPKCEResponseHandler extends ResponseHandler {
         }
     }
 
-    async user(accessToken: string, resource: AccessibleResource): Promise<UserInfo> {
+    async user(authHeader: string, resource: AccessibleResource): Promise<UserInfo> {
         try {
             const apiUri = this.strategy.apiUrl();
             const url = `https://${apiUri}/ex/jira/${resource.id}/rest/api/2/myself`;
@@ -48,7 +49,7 @@ export class JiraPKCEResponseHandler extends ResponseHandler {
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
-                    Authorization: `Bearer ${accessToken}`,
+                    Authorization: authHeader,
                 },
                 ...this.agent,
             });
@@ -77,7 +78,7 @@ export class JiraPKCEResponseHandler extends ResponseHandler {
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
-                    Authorization: `Bearer ${accessToken}`,
+                    Authorization: LoginManager.authHeaderMaker('bearer', accessToken),
                 },
                 ...this.agent,
             });

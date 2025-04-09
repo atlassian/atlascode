@@ -95,6 +95,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                 switch (authFormType) {
                     case AuthFormType.JiraCloud:
                         const authInfo: BasicAuthInfo = {
+                            type: 'basic',
                             username: data.username,
                             password: data.password,
                             user: emptyUserInfo,
@@ -105,6 +106,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                     case AuthFormType.CustomSite:
                         if (data.personalAccessToken) {
                             const authInfo: PATAuthInfo = {
+                                type: 'pat',
                                 token: data.personalAccessToken,
                                 user: emptyUserInfo,
                                 state: AuthInfoState.Valid,
@@ -112,6 +114,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                             save(siteInfo, authInfo);
                         } else {
                             const authInfo: BasicAuthInfo = {
+                                type: 'basic',
                                 username: data.username,
                                 password: data.password,
                                 user: emptyUserInfo,

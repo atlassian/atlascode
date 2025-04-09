@@ -49,7 +49,10 @@ export const AltCloudAuthButton: React.FunctionComponent<AltCloudAuthButtonProps
 
     const handleCloudProd = useCallback(() => {
         const hostname = product.key === ProductJira.key ? 'atlassian.net' : 'bitbucket.org';
-        controller.login({ host: hostname, product: product }, { user: emptyUserInfo, state: AuthInfoState.Valid });
+        controller.login(
+            { host: hostname, product: product },
+            { type: 'none', user: emptyUserInfo, state: AuthInfoState.Valid },
+        );
     }, [controller, product]);
 
     return (

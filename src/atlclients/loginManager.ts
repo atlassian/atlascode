@@ -13,6 +13,7 @@ import {
     BasicAuthInfo,
     DetailedSiteInfo,
     isBasicAuthInfo,
+    isOAuthInfo,
     isPATAuthInfo,
     OAuthInfo,
     OAuthProvider,
@@ -28,6 +29,7 @@ import { CredentialManager } from './authStore';
 import { BitbucketAuthenticator } from './bitbucketAuthenticator';
 import { JiraAuthentictor as JiraAuthenticator } from './jiraAuthenticator';
 import { OAuthDancer } from './oauthDancer';
+import { basicAuthEncode } from './strategyCrypto';
 
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
@@ -74,6 +76,7 @@ export class LoginManager {
     private async saveDetails(provider: OAuthProvider, site: SiteInfo, resp: OAuthResponse, isOnboarding?: boolean) {
         try {
             const oauthInfo: OAuthInfo = {
+                type: 'oauth',
                 access: resp.access,
                 refresh: resp.refresh,
                 iat: resp.iat,
@@ -157,21 +160,34 @@ export class LoginManager {
         }
     }
 
-    private authHeader(credentials: BasicAuthInfo | PATAuthInfo) {
-        if (isBasicAuthInfo(credentials)) {
-            return 'Basic ' + new Buffer(credentials.username + ':' + credentials.password).toString('base64');
+    public static authHeader(credentials: AuthInfo): string {
+        if (isOAuthInfo(credentials)) {
+            return LoginManager.authHeaderMaker('bearer', credentials.access);
+        } else if (isBasicAuthInfo(credentials)) {
+            return LoginManager.authHeaderMaker('basic', basicAuthEncode(credentials.username, credentials.password));
         } else if (isPATAuthInfo(credentials)) {
-            return `Bearer ${credentials.token}`;
+            return LoginManager.authHeaderMaker('bearer', credentials.token);
+        } else {
+            return '';
         }
-        Logger.warn(`Trying to construct auth header for non basic / non PAT auth info`);
-        return '';
+    }
+
+    public static authHeaderMaker(type: 'basic' | 'bearer', token: string): string {
+        switch (type) {
+            case 'basic':
+                return `Basic ${token}`;
+            case 'bearer':
+                return `Bearer ${token}`;
+            default:
+                throw new Error(`Unknown auth header type: ${type}`);
+        }
     }
 
     private async saveDetailsForServerSite(
         site: SiteInfo,
         credentials: BasicAuthInfo | PATAuthInfo,
     ): Promise<DetailedSiteInfo> {
-        const authHeader = this.authHeader(credentials);
+        const authHeader = LoginManager.authHeader(credentials);
         // For cloud instances we can use the user ID as the credential ID (they're globally unique). Server instances
         // will have a much smaller pool of user IDs so we use an arbitrary UUID as the credential ID.
 

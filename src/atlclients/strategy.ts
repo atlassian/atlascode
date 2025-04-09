@@ -1,5 +1,6 @@
 import { OAuthProvider } from './authInfo';
-import { base64URLEncode, basicAuth, createVerifier, sha256 } from './strategyCrypto';
+import { LoginManager } from './loginManager';
+import { base64URLEncode, basicAuthEncode, createVerifier, sha256 } from './strategyCrypto';
 import { OAuthStrategyData, StrategyProps } from './strategyData';
 
 export function strategyForProvider(provider: OAuthProvider): Strategy {
@@ -178,7 +179,10 @@ class BitbucketStrategy extends Strategy {
 
         return {
             'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: basicAuth(this.data.clientID, this.data.clientSecret),
+            Authorization: LoginManager.authHeaderMaker(
+                'basic',
+                basicAuthEncode(this.data.clientID, this.data.clientSecret),
+            ),
         };
     }
 }

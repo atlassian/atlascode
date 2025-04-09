@@ -18,6 +18,7 @@ import { Resources } from '../resources';
 import { ConnectionTimeout, Time } from '../util/time';
 import { OAuthProvider, OAuthResponse, ProductBitbucket, ProductJira, SiteInfo } from './authInfo';
 import { addCurlLogging } from './interceptors';
+import { LoginManager } from './loginManager';
 import { responseHandlerForStrategy } from './responseHandler';
 import { Strategy, strategyForProvider } from './strategy';
 
@@ -114,7 +115,10 @@ export class OAuthDancer implements Disposable {
         if (accessibleResources.length === 0) {
             throw new Error(`No accessible resources found for ${provider}`);
         }
-        const user = await responseHandler.user(tokens.accessToken, accessibleResources[0]);
+        const user = await responseHandler.user(
+            LoginManager.authHeaderMaker('bearer', tokens.accessToken),
+            accessibleResources[0],
+        );
 
         return {
             access: tokens.accessToken,
@@ -179,7 +183,10 @@ export class OAuthDancer implements Disposable {
                         if (accessibleResources.length === 0) {
                             throw new Error(`No accessible resources found for ${provider}`);
                         }
-                        const user = await responseHandler.user(tokens.accessToken, accessibleResources[0]);
+                        const user = await responseHandler.user(
+                            LoginManager.authHeaderMaker('bearer', tokens.accessToken),
+                            accessibleResources[0],
+                        );
 
                         this._authsInFlight.delete(respEvent.provider);
 

@@ -119,7 +119,10 @@ export const SiteList: React.FunctionComponent<SiteListProps> = ({ sites, produc
         if (site.isCloud) {
             controller.logout(site);
             const hostname = product.key === ProductJira.key ? 'atlassian.net' : 'bitbucket.org';
-            controller.login({ host: hostname, product: product }, { user: emptyUserInfo, state: AuthInfoState.Valid });
+            controller.login(
+                { host: hostname, product: product },
+                { type: 'none', user: emptyUserInfo, state: AuthInfoState.Valid },
+            );
         } else {
             editServer(siteWithAuth);
         }

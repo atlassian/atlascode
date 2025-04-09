@@ -18,8 +18,7 @@ import { Container } from '../container';
 import {
     basicJiraTransportFactory,
     getAgent,
-    jiraBasicAuthProvider,
-    jiraTokenAuthProvider,
+    jiraNoopProvider,
     oauthJiraTransportFactory,
 } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
@@ -37,6 +36,7 @@ import {
     ProductJira,
 } from './authInfo';
 import { BasicInterceptor } from './basicInterceptor';
+import { LoginManager } from './loginManager';
 import { Negotiator } from './negotiate';
 
 const oauthTTL: number = 45 * Time.MINUTES;
@@ -120,16 +120,16 @@ export class ClientManager implements Disposable {
             if (site.isCloud) {
                 result = {
                     repositories: isOAuthInfo(info)
-                        ? new CloudRepositoriesApi(this.createOAuthHTTPClient(site, info.access))
+                        ? new CloudRepositoriesApi(this.createOAuthHTTPClient(site, info))
                         : undefined!,
                     pullrequests: isOAuthInfo(info)
-                        ? new CloudPullRequestApi(this.createOAuthHTTPClient(site, info.access))
+                        ? new CloudPullRequestApi(this.createOAuthHTTPClient(site, info))
                         : undefined!,
                     issues: isOAuthInfo(info)
-                        ? new BitbucketIssuesApiImpl(this.createOAuthHTTPClient(site, info.access))
+                        ? new BitbucketIssuesApiImpl(this.createOAuthHTTPClient(site, info))
                         : undefined!,
                     pipelines: isOAuthInfo(info)
-                        ? new PipelineApiImpl(this.createOAuthHTTPClient(site, info.access))
+                        ? new PipelineApiImpl(this.createOAuthHTTPClient(site, info))
                         : undefined!,
                 };
             } else {
@@ -165,28 +165,29 @@ export class ClientManager implements Disposable {
                     Logger.debug(`getClient factory`);
                     let client: any = undefined;
 
-                    if (isOAuthInfo(info)) {
-                        Logger.debug(`${tag}: creating client for ${site.baseApiUrl}`);
-                        client = new JiraCloudClient(
-                            site,
-                            oauthJiraTransportFactory(site),
-                            jiraTokenAuthProvider(info.access),
-                            getAgent,
-                        );
-                    } else if (isBasicAuthInfo(info)) {
-                        client = new JiraServerClient(
-                            site,
-                            basicJiraTransportFactory(site),
-                            jiraBasicAuthProvider(info.username, info.password),
-                            getAgent,
-                        );
-                    } else if (isPATAuthInfo(info)) {
-                        client = new JiraServerClient(
-                            site,
-                            basicJiraTransportFactory(site),
-                            jiraTokenAuthProvider(info.token),
-                            getAgent,
-                        );
+                    switch (info.type) {
+                        case 'oauth':
+                            Logger.debug(`${tag}: creating client for ${site.baseApiUrl}`);
+                            client = new JiraCloudClient(
+                                site,
+                                oauthJiraTransportFactory(site),
+                                jiraNoopProvider(LoginManager.authHeader(info)),
+                                getAgent,
+                            );
+                            break;
+                        case 'basic':
+                        case 'pat':
+                            client = new JiraServerClient(
+                                site,
+                                basicJiraTransportFactory(site),
+                                jiraNoopProvider(LoginManager.authHeader(info)),
+                                getAgent,
+                            );
+                            break;
+                        case 'none':
+                        default:
+                            // Do nothing
+                            break;
                     }
                     Logger.debug(`${tag}: client created`);
                     return client;
@@ -199,10 +200,10 @@ export class ClientManager implements Disposable {
         return newClient!;
     }
 
-    private createOAuthHTTPClient(site: DetailedSiteInfo, token: string): HTTPClient {
+    private createOAuthHTTPClient(site: DetailedSiteInfo, info: AuthInfo): HTTPClient {
         return new HTTPClient(
             site.baseApiUrl,
-            `Bearer ${token}`,
+            LoginManager.authHeader(info),
             getAgent(site),
             async (response: AxiosResponse): Promise<Error> => {
                 let errString = 'Unknown error';
@@ -220,20 +221,9 @@ export class ClientManager implements Disposable {
     }
 
     private createHTTPClient(site: DetailedSiteInfo, info: AuthInfo): HTTPClient {
-        let auth = '';
-        if (isBasicAuthInfo(info)) {
-            Logger.info('Using Username and Password Auth');
-            auth = `Basic ${Buffer.from(info.username + ':' + info.password).toString('base64')}`;
-        } else if (isPATAuthInfo(info)) {
-            Logger.info('Using PAT Auth');
-            auth = `Bearer ${info.token}`;
-        } else {
-            Logger.warn('Auth format not recognized');
-        }
-
         return new HTTPClient(
             site.baseApiUrl,
-            auth,
+            LoginManager.authHeader(info),
             getAgent(site),
             async (response: AxiosResponse): Promise<Error> => {
                 let errString = 'Unknown error';
