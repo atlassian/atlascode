@@ -37,6 +37,10 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
         spacing: 'compact' as Spacing,
         appearance: 'subtle' as ButtonAppearance,
     };
+    const [isPopoutOpen, setIsPopoutOpen] = React.useState(false);
+    const [isInline, setIsInline] = React.useState(false);
+    const [searchInput, setSearchInput] = React.useState('');
+    const [tmpValue, setTmpValue] = React.useState('');
     React.useEffect(() => {
         if (inputTextAreaRef.current && cursorPosition > 0) {
             inputTextAreaRef.current.selectionEnd = cursorPosition;
@@ -45,18 +49,41 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
         }
     }, [inputTextAreaRef, cursorPosition]);
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === '@') {
+            e.preventDefault();
+            setIsPopoutOpen(true);
+            setIsInline(true);
+            setTmpValue(value);
+        }
+    };
+
+    const handleSearchInputChange = (input: string) => {
+        if (!inputTextAreaRef.current) {
+            return;
+        }
+        const { selectionStart, selectionEnd, value } = inputTextAreaRef.current;
+        const val = tmpValue !== '' ? tmpValue : value;
+        const commentInputWithInline = `${val.slice(0, selectionStart)}${input} ${val.slice(selectionEnd)}`;
+        setCursorPosition(selectionStart + input.length);
+        setSearchInput(input);
+        onChange(commentInputWithInline);
+    };
     const handleMention = React.useCallback(
         (user: any) => {
             if (!inputTextAreaRef.current) {
                 return;
             }
+
             const { selectionStart, selectionEnd, value } = inputTextAreaRef.current;
+            const val = tmpValue !== '' ? tmpValue : value;
             const mentionText: string = user.mention;
-            const commentInputWithMention = `${value.slice(0, selectionStart)}${mentionText} ${value.slice(selectionEnd)}`;
+            const commentInputWithMention = `${val.slice(0, selectionStart)}${mentionText} ${val.slice(selectionEnd)}`;
             setCursorPosition(selectionStart + mentionText.length);
             onChange(commentInputWithMention);
+            setIsPopoutOpen(false);
         },
-        [onChange],
+        [onChange, tmpValue, inputTextAreaRef, setCursorPosition],
     );
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
@@ -76,6 +103,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                 onFocus={onEditorFocus ? onEditorFocus : undefined}
                 onChange={(e) => onChange(e.target.value)}
                 isDisabled={saving}
+                onKeyDown={handleKeyDown}
             />
             <Box
                 style={{
@@ -104,8 +132,20 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                     )}
                     {fetchUsers && (
                         <PopoutMentionPicker
+                            isInline={isInline}
+                            parentOnChange={handleSearchInputChange}
                             targetButtonContent="@"
                             targetButtonTooltip="Mention @"
+                            injectToggleOpen={() => {
+                                setIsPopoutOpen((prev) => !prev);
+                                if (isInline) {
+                                    setIsInline(false);
+                                    inputTextAreaRef.current?.focus();
+                                    handleSearchInputChange(searchInput);
+                                    setSearchInput('');
+                                }
+                            }}
+                            injectIsOpen={isPopoutOpen}
                             targetButtonProps={buttonProps}
                             loadUserOptions={fetchUsers}
                             onUserMentioned={handleMention}
