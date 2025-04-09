@@ -1,5 +1,4 @@
 import axios, { AxiosInstance } from 'axios';
-import pAny from 'p-any';
 import pRetry from 'p-retry';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter } from 'vscode';
 
@@ -80,7 +79,7 @@ export class OnlineDetector extends Disposable {
     private async runOnlineChecks(): Promise<boolean> {
         const urlList = Container.config.onlineCheckerUrls.slice();
         const promise = async () =>
-            await pAny(
+            await Promise.any(
                 urlList.map((url) => {
                     return (async () => {
                         Logger.debug(`Online check attempting to connect to ${url}`);

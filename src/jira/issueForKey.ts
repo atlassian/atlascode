@@ -1,5 +1,4 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-import pAny from 'p-any';
 import pTimeout from 'p-timeout';
 
 import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
@@ -17,7 +16,7 @@ export async function issueForKey(issueKey: string): Promise<MinimalIssue<Detail
             })(),
         );
     });
-    const promise = pAny(emptyPromises);
+    const promise = Promise.any(emptyPromises);
 
     const foundSite = await pTimeout(promise, 1 * Time.MINUTES).catch(() => undefined);
     return foundSite ? foundSite : Promise.reject(`no issue found with key ${issueKey}`);
