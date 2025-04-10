@@ -33,7 +33,6 @@ export default class PullRequests extends React.Component<
             return (
                 <Tooltip content={`${pr.author.displayName}: ${title}`}>
                     <div key={pr.url} style={{ display: 'flex', alignItems: 'center' }}>
-                        {/* {this.avatar(pr)} */}
                         <div style={{ maxLines: 1, textOverflow: 'ellipsis', overflow: 'auto' }}>
                             <Button appearance="link" onClick={() => this.props.onClick(pr)}>
                                 {title}
