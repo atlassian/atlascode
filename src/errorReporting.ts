@@ -5,6 +5,8 @@ import { AnalyticsClient } from './analytics-node-client/src/client.min';
 import { TrackEvent } from './analytics-node-client/src/types';
 import { Logger } from './logger';
 
+const AtlascodeStackTraceHint = '/.vscode/extensions/atlassian.atlascode-';
+
 let nodeJsErrorReportingRegistered = false;
 let analyticsClientRegistered = false;
 
@@ -13,9 +15,30 @@ let _logger_onError_eventRegistration: Disposable | undefined = undefined;
 let analyticsClient: AnalyticsClient | undefined;
 let eventQueue: Promise<TrackEvent>[] | undefined = [];
 
-function errorHandler(error: Error | string): void {
+function safeExecute(body: () => void, finallyBody?: () => void): void {
     try {
-        Logger.debug('[LOGGED ERROR]', error);
+        body();
+    } catch {
+    } finally {
+        try {
+            if (finallyBody) {
+                finallyBody();
+            }
+        } catch {}
+    }
+}
+
+function errorHandlerWithFilter(error: Error): void {
+    safeExecute(() => {
+        if (error instanceof Error && error.stack && error.stack.includes(AtlascodeStackTraceHint)) {
+            errorHandler(error);
+        }
+    });
+}
+
+function errorHandler(error: Error | string): void {
+    safeExecute(() => {
+        safeExecute(() => Logger.debug('[LOGGED ERROR]', error));
 
         const event = errorEvent(error);
 
@@ -24,7 +47,7 @@ function errorHandler(error: Error | string): void {
         } else {
             eventQueue!.push(event);
         }
-    } catch {}
+    });
 }
 
 export function registerErrorReporting(): void {
@@ -33,27 +56,29 @@ export function registerErrorReporting(): void {
     }
     nodeJsErrorReportingRegistered = true;
 
-    try {
-        process.addListener('uncaughtException', errorHandler);
-        process.addListener('uncaughtExceptionMonitor', errorHandler);
-        process.addListener('unhandledRejection', errorHandler);
+    safeExecute(() => {
+        process.addListener('uncaughtException', errorHandlerWithFilter);
+        process.addListener('uncaughtExceptionMonitor', errorHandlerWithFilter);
+        process.addListener('unhandledRejection', errorHandlerWithFilter);
 
         _logger_onError_eventRegistration = Logger.onError((data) => errorHandler(data.error), undefined);
-    } catch {}
+    });
 }
 
 export function unregisterErrorReporting(): void {
-    try {
-        process.removeListener('uncaughtException', errorHandler);
-        process.removeListener('uncaughtExceptionMonitor', errorHandler);
-        process.removeListener('unhandledRejection', errorHandler);
+    safeExecute(
+        () => {
+            process.removeListener('uncaughtException', errorHandlerWithFilter);
+            process.removeListener('uncaughtExceptionMonitor', errorHandlerWithFilter);
+            process.removeListener('unhandledRejection', errorHandlerWithFilter);
 
-        _logger_onError_eventRegistration?.dispose();
-        _logger_onError_eventRegistration = undefined;
-    } catch {
-    } finally {
-        nodeJsErrorReportingRegistered = false;
-    }
+            _logger_onError_eventRegistration?.dispose();
+            _logger_onError_eventRegistration = undefined;
+        },
+        /* finally */ () => {
+            nodeJsErrorReportingRegistered = false;
+        },
+    );
 }
 
 export async function registerAnalyticsClient(client: AnalyticsClient): Promise<void> {
