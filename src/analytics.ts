@@ -80,11 +80,15 @@ export async function loggedOutEvent(site: DetailedSiteInfo): Promise<TrackEvent
 
 // Error/diagnostics events
 
+function sanitizeStackTrace(stack?: string): string | undefined {
+    return stack ? stack.replace(/\/Users\/[^/]+\//g, '/Users/<user>/') : stack;
+}
+
 export async function errorEvent(error: Error | string): Promise<TrackEvent> {
-    const attributes =
+    const attributes: { name: string; message: string; stack?: string } =
         typeof error === 'string'
             ? { name: 'Error', message: error }
-            : { name: error.name || 'Error', message: error.message, stack: error.stack! };
+            : { name: error.name || 'Error', message: error.message, stack: sanitizeStackTrace(error.stack) };
 
     return trackEvent('errorEvent', 'atlascode', { attributes });
 }
