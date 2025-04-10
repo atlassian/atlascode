@@ -1,4 +1,3 @@
-// import Avatar from '@atlaskit/avatar';
 import Button from '@atlaskit/button';
 import Lozenge from '@atlaskit/lozenge';
 import Tooltip from '@atlaskit/tooltip';
