@@ -101,10 +101,6 @@ export class JiraIssueNode extends TreeItem implements AbstractBaseNode {
         return Promise.resolve(this.children);
     }
 
-    getParent(): AbstractBaseNode | undefined {
-        return undefined;
-    }
-
     dispose(): void {}
 }
 

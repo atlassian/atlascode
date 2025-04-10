@@ -46,9 +46,5 @@ export class RelatedIssuesNode extends TreeItem implements AbstractBaseNode {
         return children.length ? children : [new SimpleNode('No issues found')];
     }
 
-    getParent(): AbstractBaseNode | undefined {
-        return undefined;
-    }
-
     dispose(): void {}
 }

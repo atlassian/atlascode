@@ -92,14 +92,6 @@ describe('RelatedIssuesNode', () => {
         expect(treeItem.label).toBe('No issues found');
     });
 
-    it('should return undefined for getParent', () => {
-        const jiraKeys = ['JIRA-1'];
-        const label = 'Related Issues';
-        const node = new RelatedIssuesNode(jiraKeys, label);
-
-        expect(node.getParent()).toBeUndefined();
-    });
-
     it('should dispose without errors', () => {
         const jiraKeys = ['JIRA-1'];
         const label = 'Related Issues';

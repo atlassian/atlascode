@@ -128,7 +128,7 @@ export class RepositoriesNode extends AbstractBaseNode {
             if (!pr.site.details.isCloud) {
                 //We can preload server PRs even without caching if there are less than 10 of them. Otherwise, probably not a good idea because of
                 //varying bbserver rate limits
-                return new PullRequestTitlesNode(pr, numPRs <= 10 && this.preloadingEnabled, this);
+                return new PullRequestTitlesNode(pr, numPRs <= 10 && this.preloadingEnabled);
             }
 
             const prAndTreeNode = prMap.get(pr.data.id);
@@ -136,7 +136,7 @@ export class RepositoriesNode extends AbstractBaseNode {
                 return prAndTreeNode.node;
             } else {
                 //If there are more than 25 open pull requests, stop preloading them. We don't want to run into rate limit issues for bbcloud
-                return new PullRequestTitlesNode(pr, numPRs <= 10 && this.preloadingEnabled, this);
+                return new PullRequestTitlesNode(pr, numPRs <= 10 && this.preloadingEnabled);
             }
         });
     }

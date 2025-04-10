@@ -34,9 +34,9 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     constructor(
         private pr: PullRequest,
         shouldPreload: boolean,
-        parent: AbstractBaseNode | undefined,
     ) {
-        super(parent);
+        super();
+
         this.treeItem = this.createTreeItem();
         this.prHref = pr.data!.url;
 
@@ -103,7 +103,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             fileChangedNodes = await createFileChangesNodes(this.pr, comments, files, [], []);
             // update loadedChildren with critical data without commits
             this.loadedChildren = [
-                new DescriptionNode(this.pr, this),
+                new DescriptionNode(this.pr),
                 ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, [], true)] : []),
                 ...fileChangedNodes,
             ];
@@ -132,7 +132,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             ]);
             // update loadedChildren with additional data
             this.loadedChildren = [
-                new DescriptionNode(this.pr, this),
+                new DescriptionNode(this.pr),
                 ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, commits)] : []),
                 ...jiraIssueNodes,
                 ...bbIssueNodes,
@@ -151,7 +151,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         }
 
         this.isLoading = true;
-        this.loadedChildren = [new DescriptionNode(this.pr, this), new SimpleNode('Loading...')];
+        this.loadedChildren = [new DescriptionNode(this.pr), new SimpleNode('Loading...')];
         let fileDiffs: FileDiff[] = [];
         let allComments: PaginatedComments = { data: [] };
         let fileChangedNodes: AbstractBaseNode[] = [];
@@ -171,7 +171,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         const commits = await commitsPromise;
         // update loadedChildren with commits data
         this.loadedChildren = [
-            new DescriptionNode(this.pr, this),
+            new DescriptionNode(this.pr),
             ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, commits)] : []),
             ...fileChangedNodes,
         ];
@@ -225,11 +225,8 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 }
 
 export class DescriptionNode extends AbstractBaseNode {
-    constructor(
-        private pr: PullRequest,
-        parent?: AbstractBaseNode | undefined,
-    ) {
-        super(parent);
+    constructor(private pr: PullRequest) {
+        super();
     }
 
     getTreeItem(): vscode.TreeItem {

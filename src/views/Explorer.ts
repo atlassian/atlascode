@@ -73,7 +73,4 @@ export abstract class BaseTreeDataProvider implements TreeDataProvider<AbstractB
 
     refresh() {}
     dispose() {}
-    getParent(node: AbstractBaseNode): AbstractBaseNode | undefined {
-        return node.getParent();
-    }
 }

@@ -7,10 +7,6 @@ function isDisposable(obj: Object): obj is Disposable {
 // BaseNode is an abstract tree node which all other *nodes* must extend.
 // It also takes care of disposables if they are added to the `disposables` field.
 export abstract class AbstractBaseNode implements Disposable {
-    constructor(private parent?: AbstractBaseNode) {
-        this.parent = parent;
-    }
-
     abstract getTreeItem(): Promise<TreeItem> | TreeItem;
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         return [];
@@ -24,9 +20,5 @@ export abstract class AbstractBaseNode implements Disposable {
                 }
             }
         });
-    }
-
-    getParent(): AbstractBaseNode | undefined {
-        return this.parent;
     }
 }
