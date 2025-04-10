@@ -25,6 +25,8 @@ export class WelcomeWebviewController implements WebviewController<WelcomeInitMe
         private initData?: WelcomeInitMessage,
     ) {}
 
+    public onShown(): void {}
+
     public title(): string {
         return 'Atlassian Welcome';
     }

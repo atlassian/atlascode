@@ -82,6 +82,18 @@ export const OnboardingPage: React.FunctionComponent = () => {
         authDialogController.close();
     }, [authDialogController]);
 
+    const handleJiraChoice = useCallback((enabled: boolean): void => {
+        const changes = Object.create(null);
+        changes['jira.enabled'] = enabled;
+        setChanges(changes);
+    }, []);
+
+    const handleBitbucketChoice = useCallback((enabled: boolean): void => {
+        const changes = Object.create(null);
+        changes['bitbucket.enabled'] = enabled;
+        setChanges(changes);
+    }, []);
+
     useEffect(() => {
         if (Object.keys(changes).length > 0) {
             controller.updateConfig(changes);
@@ -108,12 +120,15 @@ export const OnboardingPage: React.FunctionComponent = () => {
         console.log(bitbucketSignInFlow);
         switch (bitbucketSignInFlow) {
             case bitbucketValueSet.cloud:
+                handleBitbucketChoice(true);
                 handleCloudSignIn(ProductBitbucket);
                 break;
             case bitbucketValueSet.server:
+                handleBitbucketChoice(true);
                 handleServerSignIn(ProductBitbucket);
                 break;
             case bitbucketValueSet.none:
+                handleBitbucketChoice(state.bitbucketSitesConfigured);
                 handleNext();
                 break;
             default:
@@ -123,17 +138,28 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 });
                 break;
         }
-    }, [bitbucketSignInFlow, controller, handleCloudSignIn, handleNext, handleServerSignIn]);
+    }, [
+        bitbucketSignInFlow,
+        controller,
+        state,
+        handleCloudSignIn,
+        handleNext,
+        handleServerSignIn,
+        handleBitbucketChoice,
+    ]);
 
     const executeJiraSignInFlow = useCallback(() => {
         switch (jiraSignInFlow) {
             case jiraValueSet.cloud:
+                handleJiraChoice(true);
                 handleCloudSignIn(ProductJira);
                 break;
             case jiraValueSet.server:
+                handleJiraChoice(true);
                 handleServerSignIn(ProductJira);
                 break;
             case jiraValueSet.none:
+                handleJiraChoice(state.jiraSitesConfigured);
                 handleNext();
                 break;
             default:
@@ -143,7 +169,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 });
                 break;
         }
-    }, [jiraSignInFlow, handleCloudSignIn, handleServerSignIn, handleNext, controller]);
+    }, [jiraSignInFlow, controller, state, handleCloudSignIn, handleServerSignIn, handleNext, handleJiraChoice]);
 
     const handleJiraOptionChange = useCallback((value: string) => {
         setJiraSignInFlow(value);
@@ -208,8 +234,8 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 <LandingPage
                     bitbucketEnabled={state.config['bitbucket.enabled']}
                     jiraEnabled={state.config['jira.enabled']}
-                    bitbucketSites={state.bitbucketSites}
-                    jiraSites={state.jiraSites}
+                    bitbucketSitesConfigured={state.bitbucketSitesConfigured}
+                    jiraSitesConfigured={state.jiraSitesConfigured}
                 />
             )}
         </div>

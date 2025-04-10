@@ -15,7 +15,7 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { BitbucketContext } from '../../bitbucket/bbContext';
 import { showIssue } from '../../commands/jira/showIssue';
 import { configuration } from '../../config/configuration';
-import { JiraEnabledKey } from '../../constants';
+import { AssignedJiraItemsViewId, JiraEnabledKey } from '../../constants';
 import { Container } from '../../container';
 import { getCachedIssue } from '../../jira/fetchIssue';
 import { issueForKey } from '../../jira/issueForKey';
@@ -142,7 +142,7 @@ export class JiraActiveIssueStatusBar implements Disposable {
     private showEmptyStateStatusBarItem() {
         this.statusBarItem!.text = `$(chevron-right) No active issue`;
         this.statusBarItem!.tooltip = 'No active Jira issue - click to view issue explorer';
-        this.statusBarItem!.command = 'atlascode.views.jira.customJql.focus';
+        this.statusBarItem!.command = `${AssignedJiraItemsViewId}.focus`;
         this.statusBarItem!.show();
     }
 

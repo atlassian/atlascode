@@ -1,9 +1,9 @@
+import { OnboardingInitMessage } from 'src/lib/ipc/toUI/onboarding';
 import { Disposable, Uri } from 'vscode';
 
 import { Container } from '../../container';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { UIWSPort } from '../../lib/ipc/models/ports';
-import { SectionChangeMessage } from '../../lib/ipc/toUI/config';
 import { CommonActionMessageHandler } from '../../lib/webview/controller/common/commonActionMessageHandler';
 import { OnboardingActionApi } from '../../lib/webview/controller/onboarding/onboardingActionApi';
 import { id, OnboardingWebviewController } from '../../lib/webview/controller/onboarding/onboardingWebviewController';
@@ -12,7 +12,7 @@ import { iconSet, Resources } from '../../resources';
 import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
 
-export class VSCOnboardingWebviewControllerFactory implements VSCWebviewControllerFactory<SectionChangeMessage> {
+export class VSCOnboardingWebviewControllerFactory implements VSCWebviewControllerFactory<OnboardingInitMessage> {
     private _api: OnboardingActionApi;
     private _commonHandler: CommonActionMessageHandler;
     private _analytics: AnalyticsApi;

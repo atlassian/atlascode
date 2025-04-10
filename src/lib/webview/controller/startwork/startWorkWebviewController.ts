@@ -45,6 +45,8 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
         this.initData = factoryData || emptyStartWorkIssueMessage;
     }
 
+    public onShown(): void {}
+
     public title(): string {
         return `Start work on ${this.initData.issue.key}`;
     }

@@ -7,10 +7,7 @@ import { Logger } from '../logger';
 import { CheckoutBranchUriHandlerAction } from './actions/checkoutBranch';
 import { CloneRepositoryUriHandlerAction } from './actions/cloneRepository';
 import { OpenPullRequestUriHandlerAction } from './actions/openPullRequest';
-import { ShowJiraIssueUriHandlerAction } from './actions/showJiraIssue';
 import { SimpleCallbackAction } from './actions/simpleCallback';
-import { StartWorkUriHandlerAction } from './actions/startWork';
-import { JiraIssueFetcher } from './actions/util/jiraIssueFetcher';
 import { UriHandlerAction } from './uriHandlerAction';
 
 export class AtlascodeUriHandler implements Disposable, UriHandler {
@@ -45,11 +42,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
         this.disposables.dispose();
     }
 
-    static create(
-        analyticsApi: AnalyticsApi,
-        bitbucketHelper: CheckoutHelper,
-        jiraIssueFetcher: JiraIssueFetcher = new JiraIssueFetcher(),
-    ) {
+    static create(analyticsApi: AnalyticsApi, bitbucketHelper: CheckoutHelper) {
         return new AtlascodeUriHandler([
             new SimpleCallbackAction('auth', async (uri) => {
                 const params = new URLSearchParams(uri.query);
@@ -60,8 +53,6 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             new CheckoutBranchUriHandlerAction(bitbucketHelper, analyticsApi),
             new OpenPullRequestUriHandlerAction(analyticsApi, bitbucketHelper),
             new CloneRepositoryUriHandlerAction(bitbucketHelper, analyticsApi),
-            new StartWorkUriHandlerAction(analyticsApi, jiraIssueFetcher),
-            new ShowJiraIssueUriHandlerAction(analyticsApi, jiraIssueFetcher),
         ]);
     }
 }

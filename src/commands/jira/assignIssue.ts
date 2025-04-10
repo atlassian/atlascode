@@ -20,7 +20,6 @@ export async function assignIssue(param: MinimalIssue<DetailedSiteInfo> | IssueN
     const response = await client.assignIssue(issue.id, accountId);
     Logger.info(response);
 
-    commands.executeCommand(Commands.RefreshJiraExplorer);
     commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
     commands.executeCommand(Commands.RefreshCustomJqlExplorer);
 }
@@ -31,7 +30,6 @@ export async function unassignIssue(issue: MinimalIssue<DetailedSiteInfo>) {
     const response = await client.assignIssue(issue.id, undefined);
     Logger.info(response);
 
-    commands.executeCommand(Commands.RefreshJiraExplorer);
     commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
     commands.executeCommand(Commands.RefreshCustomJqlExplorer);
 }

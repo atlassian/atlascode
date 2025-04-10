@@ -42,6 +42,8 @@ export class PipelineSummaryWebviewController implements WebviewController<Pipel
         this.messagePoster(message);
     }
 
+    public onShown(): void {}
+
     public title(): string {
         if (this.pipeline) {
             return `Pipeline ${this.pipeline.build_number}`;

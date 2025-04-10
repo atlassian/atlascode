@@ -6,7 +6,6 @@ import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { OnboardingAction, OnboardingActionType } from '../../../lib/ipc/fromUI/onboarding';
 import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '../../../lib/ipc/models/config';
-import { SiteWithAuthInfo } from '../../../lib/ipc/toUI/config';
 import {
     emptyOnboardingInitMessage,
     OnboardingInitMessage,
@@ -102,7 +101,7 @@ type OnboardingUIAction =
     | ReducerAction<OnboardingUIActionType.Loading>
     | ReducerAction<
           OnboardingUIActionType.SitesUpdate,
-          { jiraSites: SiteWithAuthInfo[]; bitbucketSites: SiteWithAuthInfo[] }
+          { jiraSitesConfigured: boolean; bitbucketSitesConfigured: boolean }
       >;
 
 export type ConfigChanges = { [key: string]: any };
@@ -138,8 +137,8 @@ function onboardingReducer(state: OnboardingState, action: OnboardingUIAction): 
             return {
                 ...state,
                 ...{
-                    jiraSites: action.jiraSites,
-                    bitbucketSites: action.bitbucketSites,
+                    jiraSitesConfigured: action.jiraSitesConfigured,
+                    bitbucketSitesConfigured: action.bitbucketSitesConfigured,
                     isSomethingLoading: false,
                     isErrorBannerOpen: false,
                     errorDetails: undefined,
@@ -173,8 +172,8 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
             case OnboardingMessageType.SitesUpdate: {
                 dispatch({
                     type: OnboardingUIActionType.SitesUpdate,
-                    jiraSites: message.jiraSites,
-                    bitbucketSites: message.bitbucketSites,
+                    jiraSitesConfigured: message.jiraSitesConfigured,
+                    bitbucketSitesConfigured: message.bitbucketSitesConfigured,
                 });
                 break;
             }

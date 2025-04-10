@@ -64,6 +64,8 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
         this.commonHandler = commonHandler;
     }
 
+    public onShown(): void {}
+
     private postMessage(message: PullRequestDetailsMessage | PullRequestDetailsResponse | CommonMessage) {
         this.messagePoster(message);
     }
@@ -220,8 +222,8 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
         }
     }
 
-    public async update() {
-        this.invalidate();
+    public update() {
+        return this.invalidate();
     }
 
     public async onMessageReceived(msg: PullRequestDetailsAction | CommonAction) {

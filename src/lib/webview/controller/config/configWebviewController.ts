@@ -53,6 +53,8 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         this._initialSection = section;
     }
 
+    public onShown(): void {}
+
     public title(): string {
         return 'Atlassian Settings';
     }

@@ -667,7 +667,7 @@ export abstract class AbstractIssueEditorPage<
                     return (
                         <React.Fragment>
                             <Field
-                                label={field.name}
+                                label={<span>{field.name}</span>}
                                 isRequired={field.required}
                                 id={`${field.key}.type`}
                                 name={`${field.key}.type`}
@@ -685,8 +685,8 @@ export abstract class AbstractIssueEditorPage<
                                                 {...fieldArgs.fieldProps}
                                                 isMulti={false}
                                                 isClearable={!field.required}
-                                                className="ac-select-container"
-                                                classNamePrefix="ac-select"
+                                                className="ac-form-select-container"
+                                                classNamePrefix="ac-form-select"
                                                 components={SelectFieldHelper.getComponentsForValueType(
                                                     ValueType.IssueLinks,
                                                 )}
@@ -722,8 +722,8 @@ export abstract class AbstractIssueEditorPage<
                                             {...fieldArgs.fieldProps}
                                             isClearable={true}
                                             isMulti={true}
-                                            className="ac-select-container"
-                                            classNamePrefix="ac-select"
+                                            className="ac-form-select-container"
+                                            classNamePrefix="ac-form-select"
                                             loadOptions={async (input: string) =>
                                                 await this.loadIssueOptions(field as SelectFieldUI, input)
                                             }
@@ -825,8 +825,6 @@ export abstract class AbstractIssueEditorPage<
 
                 const commonProps: any = {
                     isMulti: selectField.isMulti,
-                    className: 'ac-select-container',
-                    classNamePrefix: 'ac-select',
                     getOptionLabel: SelectFieldHelper.labelFuncForValueType(selectField.valueType),
                     getOptionValue: SelectFieldHelper.valueFuncForValueType(selectField.valueType),
                     components: SelectFieldHelper.getComponentsForValueType(selectField.valueType),
@@ -845,6 +843,8 @@ export abstract class AbstractIssueEditorPage<
                             return (
                                 <Select
                                     {...commonProps}
+                                    className="ac-select-container"
+                                    classNamePrefix="ac-select"
                                     isClearable={this.isClearableSelect(selectField)}
                                     options={this.state.selectFieldOptions[field.key]}
                                     isDisabled={this.state.isSomethingLoading}
@@ -858,7 +858,7 @@ export abstract class AbstractIssueEditorPage<
                         // create mode
                         return (
                             <Field
-                                label={field.name}
+                                label={<span>{field.name}</span>}
                                 isRequired={field.required}
                                 id={field.key}
                                 name={field.key}
@@ -875,6 +875,8 @@ export abstract class AbstractIssueEditorPage<
                                             <Select
                                                 {...fieldArgs.fieldProps}
                                                 {...commonProps}
+                                                className="ac-form-select-container"
+                                                classNamePrefix="ac-form-select"
                                                 isClearable={this.isClearableSelect(selectField)}
                                                 options={this.state.selectFieldOptions[field.key]}
                                                 isDisabled={this.state.isSomethingLoading}
@@ -898,6 +900,8 @@ export abstract class AbstractIssueEditorPage<
                             return (
                                 <CreatableSelect
                                     {...commonProps}
+                                    className="ac-select-container"
+                                    classNamePrefix="ac-select"
                                     placeholder="Type to create new option"
                                     createOptionPosition="first"
                                     value={this.state.fieldValues[field.key]}
@@ -920,7 +924,7 @@ export abstract class AbstractIssueEditorPage<
                         //create mode
                         return (
                             <Field
-                                label={field.name}
+                                label={<span>{field.name}</span>}
                                 isRequired={field.required}
                                 id={field.key}
                                 name={field.key}
@@ -937,6 +941,8 @@ export abstract class AbstractIssueEditorPage<
                                             <CreatableSelect
                                                 {...fieldArgs.fieldProps}
                                                 {...commonProps}
+                                                className="ac-form-select-container"
+                                                classNamePrefix="ac-form-select"
                                                 placeholder="Type to create new option"
                                                 createOptionPosition="first"
                                                 noOptionsMessage={(input: any) => 'Type to create new option'}
@@ -969,6 +975,8 @@ export abstract class AbstractIssueEditorPage<
                                 <AsyncSelect
                                     {...commonProps}
                                     placeholder="Type to search"
+                                    className="ac-select-container"
+                                    classNamePrefix="ac-select"
                                     noOptionsMessage={(input: any) => 'Type to search'}
                                     isClearable={this.isClearableSelect(selectField)}
                                     isDisabled={this.state.isSomethingLoading && this.state.loadingField !== field.key}
@@ -987,7 +995,7 @@ export abstract class AbstractIssueEditorPage<
                         //create mode
                         return (
                             <Field
-                                label={field.name}
+                                label={<span>{field.name}</span>}
                                 isRequired={field.required}
                                 id={field.key}
                                 name={field.key}
@@ -1004,6 +1012,8 @@ export abstract class AbstractIssueEditorPage<
                                             <AsyncSelect
                                                 {...fieldArgs.fieldProps}
                                                 {...commonProps}
+                                                className="ac-form-select-container"
+                                                classNamePrefix="ac-form-select"
                                                 placeholder="Type to search"
                                                 noOptionsMessage={(input: any) => 'Type to search'}
                                                 isDisabled={
@@ -1049,6 +1059,8 @@ export abstract class AbstractIssueEditorPage<
                             return (
                                 <AsyncCreatableSelect
                                     {...commonProps}
+                                    className="ac-select-container"
+                                    classNamePrefix="ac-select"
                                     placeholder="Type to search"
                                     createOptionPosition="first"
                                     value={this.state.fieldValues[field.key]}
@@ -1073,7 +1085,7 @@ export abstract class AbstractIssueEditorPage<
                         //create mode
                         return (
                             <Field
-                                label={field.name}
+                                label={<span>{field.name}</span>}
                                 isRequired={field.required}
                                 id={field.key}
                                 name={field.key}
@@ -1090,6 +1102,8 @@ export abstract class AbstractIssueEditorPage<
                                             <AsyncCreatableSelect
                                                 {...fieldArgs.fieldProps}
                                                 {...commonProps}
+                                                className="ac-form-select-container"
+                                                classNamePrefix="ac-form-select"
                                                 placeholder="Type to search"
                                                 createOptionPosition="first"
                                                 noOptionsMessage={(input: any) => 'Type to search'}
@@ -1153,6 +1167,9 @@ export abstract class AbstractIssueEditorPage<
                     );
                 }
 
+                const legend: React.ReactElement = (
+                    <span style={{ color: 'var(--vscode-editor-foreground)!important' }}>{field.name}</span>
+                );
                 const checkboxItems: any[] = [];
                 const checkField = field as OptionableFieldUI;
                 checkField.allowedValues.forEach((value) => {
@@ -1173,7 +1190,7 @@ export abstract class AbstractIssueEditorPage<
                     );
                 });
 
-                return <Fieldset legend={field.name}>{checkboxItems}</Fieldset>;
+                return <Fieldset legend={legend}>{checkboxItems}</Fieldset>;
             }
             case UIType.Radio: {
                 if (editmode) {
@@ -1215,7 +1232,7 @@ export abstract class AbstractIssueEditorPage<
                 const validateFunc = field.required ? FieldValidators.validateMultiSelect : undefined;
                 return (
                     <Field
-                        label={field.name}
+                        label={<span>{field.name}</span>}
                         isRequired={field.required}
                         id={field.key}
                         name={field.key}
@@ -1543,7 +1560,7 @@ export abstract class AbstractIssueEditorPage<
         }
         return (
             <Field
-                label={field.name}
+                label={<span>{field.name}</span>}
                 isRequired={field.required}
                 id={field.key}
                 name={field.key}
@@ -1606,7 +1623,7 @@ export abstract class AbstractIssueEditorPage<
                 return (
                     <div className="ac-vpadding">
                         <div className="ac-flex">
-                            <img src={value.iconUrl} width="24" height="24" />
+                            <img src={value.iconUrl} width="24" height="24" alt={value.name || 'Icon'} />
                             <span style={{ marginLeft: '10px' }}>{value.name}</span>
                         </div>
                     </div>

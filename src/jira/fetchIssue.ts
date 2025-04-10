@@ -29,7 +29,7 @@ export async function getCachedOrFetchMinimalIssue(
 }
 
 export async function getCachedIssue(issueKey: string): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
-    return SearchJiraHelper.findIssue(issueKey) ?? (await Container.jiraExplorer?.findIssue(issueKey));
+    return SearchJiraHelper.findIssue(issueKey);
 }
 
 export async function fetchMinimalIssue(

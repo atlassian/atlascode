@@ -7,7 +7,6 @@ import {
 } from '../../analytics';
 import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
 import { Logger } from '../../logger';
-import { AnalyticsClientMapper } from './analytics';
 import { ExperimentGates, ExperimentGateValues, Experiments, FeatureGateValues, Features } from './features';
 
 export type FeatureFlagClientOptions = {
@@ -52,8 +51,6 @@ export abstract class FeatureFlagClient {
 
         Logger.debug(`FeatureGates: initializing, target: ${targetApp}, environment: ${environment}`);
 
-        const analyticsClientMapper = new AnalyticsClientMapper(options.analyticsClient, options.identifiers);
-
         try {
             await FeatureGates.initialize(
                 {
@@ -61,7 +58,6 @@ export abstract class FeatureFlagClient {
                     environment,
                     targetApp,
                     fetchTimeoutMs: Number.parseInt(timeout),
-                    analyticsWebClient: Promise.resolve(analyticsClientMapper),
                 },
                 options.identifiers,
             );
@@ -136,7 +132,7 @@ export abstract class FeatureFlagClient {
         let gateValue = false;
         if (FeatureGates.initializeCompleted()) {
             // FeatureGates.checkGate returns false if any errors
-            gateValue = FeatureGates.checkGate(gate);
+            gateValue = FeatureGates.checkGate(gate, { fireGateExposure: true });
         }
 
         Logger.debug(`FeatureGates ${gate} -> ${gateValue}`);
@@ -160,6 +156,7 @@ export abstract class FeatureFlagClient {
                 experiment,
                 experimentGate.parameter,
                 experimentGate.defaultValue,
+                { fireExperimentExposure: true },
             );
         }
 
@@ -179,7 +176,7 @@ export abstract class FeatureFlagClient {
         let gateValue = false;
         if (FeatureGates.initializeCompleted()) {
             // FeatureGates.checkGate returns false if any errors
-            gateValue = FeatureGates.checkGate(gate);
+            gateValue = FeatureGates.checkGate(gate, { fireGateExposure: true });
             featureGateExposureBoolEvent(gate, true, gateValue, 0).then((e) => {
                 this.analyticsClient.sendTrackEvent(e);
             });
@@ -217,6 +214,7 @@ export abstract class FeatureFlagClient {
                 experiment,
                 experimentGate.parameter,
                 experimentGate.defaultValue,
+                { fireExperimentExposure: true },
             );
 
             if (gateValue === experimentGate.defaultValue) {

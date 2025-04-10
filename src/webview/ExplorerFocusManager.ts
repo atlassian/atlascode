@@ -1,7 +1,7 @@
 import vscode, { Disposable, Event, EventEmitter } from 'vscode';
 
 import { ProductBitbucket, ProductJira } from '../atlclients/authInfo';
-import { CustomJQLTreeId, PullRequestTreeViewId } from '../constants';
+import { AssignedJiraItemsViewId, PullRequestTreeViewId } from '../constants';
 import { Container } from '../container';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 
@@ -47,7 +47,7 @@ export class ExplorerFocusManager extends Disposable {
     private onDidSitesChange(updateEvent: SitesAvailableUpdateEvent) {
         if (updateEvent.newSites) {
             if (updateEvent.product.key === ProductJira.key) {
-                vscode.commands.executeCommand(`${CustomJQLTreeId}.focus`);
+                vscode.commands.executeCommand(`${AssignedJiraItemsViewId}.focus`);
             } else if (updateEvent.product.key === ProductBitbucket.key) {
                 vscode.commands.executeCommand(`${PullRequestTreeViewId}.focus`);
             }

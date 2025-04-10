@@ -3,7 +3,6 @@ import { flatten } from 'flatten-anything';
 
 import { emptyConfig } from '../../../config/model';
 import { ConfigTarget, FlattenedConfig } from '../models/config';
-import { SiteWithAuthInfo } from './config';
 
 export enum OnboardingMessageType {
     Init = 'init',
@@ -21,22 +20,20 @@ export type OnboardingMessage =
 export type OnboardingResponse = any;
 
 export interface OnboardingInitMessage {
+    jiraSitesConfigured: boolean;
+    bitbucketSitesConfigured: boolean;
     config: FlattenedConfig;
-    jiraSites: SiteWithAuthInfo[];
-    bitbucketSites: SiteWithAuthInfo[];
-    isRemote: boolean;
     target: ConfigTarget;
 }
 
 export const emptyOnboardingInitMessage: OnboardingInitMessage = {
+    jiraSitesConfigured: false,
+    bitbucketSitesConfigured: false,
     config: flatten(emptyConfig),
-    jiraSites: [],
-    bitbucketSites: [],
-    isRemote: false,
     target: ConfigTarget.User,
 };
 
 export interface SitesUpdateMessage {
-    jiraSites: SiteWithAuthInfo[];
-    bitbucketSites: SiteWithAuthInfo[];
+    jiraSitesConfigured: boolean;
+    bitbucketSitesConfigured: boolean;
 }

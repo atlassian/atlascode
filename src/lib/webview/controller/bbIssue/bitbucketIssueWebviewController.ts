@@ -46,6 +46,8 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
         this._commonHandler = commonHandler;
     }
 
+    public onShown(): void {}
+
     public title(): string {
         return `Bitbucket issue #${this._issue.data.id}`;
     }

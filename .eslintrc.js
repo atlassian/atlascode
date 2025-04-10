@@ -26,7 +26,7 @@ module.exports = {
         'prettier/prettier': 'error',
         'react/jsx-filename-extension': [2, { extensions: ['.js', '.jsx', '.ts', '.tsx'] }],
         'react-hooks/rules-of-hooks': 'error',
-        'react-hooks/exhaustive-deps': 'warn',
+        'react-hooks/exhaustive-deps': 'error',
         '@typescript-eslint/await-thenable': 'error',
         '@typescript-eslint/naming-convention': [
             'error',

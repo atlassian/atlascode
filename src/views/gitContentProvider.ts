@@ -1,4 +1,3 @@
-import pAny from 'p-any';
 import pathlib from 'path';
 import vscode from 'vscode';
 
@@ -30,7 +29,7 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
             //Attempt to get the file content locally with a source-control manager and also try to fetch from Bitbucket
             //pAny returns the first successful result, so it will return the local one if you have this commit on your computer,
             //otherwise it will get it from the Bitbucket API (which takes longer)
-            content = await pAny([
+            content = await Promise.any([
                 (async () => {
                     const u: vscode.Uri = vscode.Uri.parse(repoUri);
                     const wsRepo = this.bbContext.getRepository(u);

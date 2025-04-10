@@ -1,8 +1,7 @@
 import { env, ExtensionContext, UIKind, window, workspace } from 'vscode';
 
 import { featureFlagClientInitializedEvent } from './analytics';
-import { analyticsClient } from './analytics-node-client/src/client.min.js';
-import { AnalyticsClient } from './analytics-node-client/src/client.min.js';
+import { AnalyticsClient, analyticsClient } from './analytics-node-client/src/client.min.js';
 import { ProductJira } from './atlclients/authInfo';
 import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
@@ -43,7 +42,6 @@ import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
 import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
-import { JiraContext } from './views/jira/jiraContext';
 import { SearchJiraHelper } from './views/jira/searchJiraHelper';
 import { CustomJQLViewProvider } from './views/jira/treeViews/customJqlViewProvider';
 import { AssignedWorkItemsViewProvider } from './views/jira/treeViews/jiraAssignedWorkItemsViewProvider';
@@ -84,6 +82,7 @@ export class Container {
     private static _cancellationManager: CancellationManager;
     private static _commonMessageHandler: CommonActionMessageHandler;
     private static _bitbucketHelper: CheckoutHelper;
+    private static _assignedWorkItemsView: AssignedWorkItemsViewProvider;
 
     static async initialize(context: ExtensionContext, config: IConfig, version: string) {
         const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
@@ -218,7 +217,14 @@ export class Container {
         FeatureFlagClient.checkGateValueWithInstrumentation(Features.NoOpFeature);
 
         this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
-        this.initializeNewSidebarView(context, config);
+
+        SearchJiraHelper.initialize();
+        context.subscriptions.push(new CustomJQLViewProvider());
+        context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
+    }
+
+    static focus() {
+        this._assignedWorkItemsView.focus();
     }
 
     static openPullRequestHandler = (pullRequestUrl: string) => {
@@ -240,29 +246,6 @@ export class Container {
             context.subscriptions.push(AtlascodeUriHandler.create(analyticsApi, bitbucketHelper));
         } else {
             context.subscriptions.push(new LegacyAtlascodeUriHandler(analyticsApi, bitbucketHelper));
-        }
-    }
-
-    private static initializeNewSidebarView(context: ExtensionContext, config: IConfig) {
-        if (FeatureFlagClient.checkGate(Features.OldSidebarTreeView)) {
-            this.initializeLegacySidebarView(context, config);
-        } else {
-            SearchJiraHelper.initialize();
-            context.subscriptions.push(new CustomJQLViewProvider());
-            context.subscriptions.push(new AssignedWorkItemsViewProvider());
-        }
-    }
-
-    private static initializeLegacySidebarView(context: ExtensionContext, config: IConfig) {
-        if (config.jira.explorer.enabled) {
-            context.subscriptions.push((this._jiraExplorer = new JiraContext()));
-        } else {
-            const disposable = configuration.onDidChange((e) => {
-                if (configuration.changed(e, 'jira.explorer.enabled')) {
-                    disposable.dispose();
-                    context.subscriptions.push((this._jiraExplorer = new JiraContext()));
-                }
-            });
         }
     }
 
@@ -341,6 +324,43 @@ export class Container {
         this._context.globalState.update(ConfigTargetKey, target);
     }
 
+    public static async testLogout() {
+        Container.siteManager.getSitesAvailable(ProductJira).forEach(async (site) => {
+            await Container.clientManager.removeClient(site);
+            Container.siteManager.removeSite(site);
+        });
+    }
+
+    public static async testLogin() {
+        if (!process.env.ATLASCODE_TEST_USER_API_TOKEN) {
+            // vscode notify user that this is for testing only
+            window.showInformationMessage(
+                'This is for testing only. Please set the ATLASCODE_TEST_USER_API_TOKEN environment variable to run this test',
+            );
+            return;
+        }
+        const authInfo = {
+            username: ATLASCODE_TEST_USER_EMAIL,
+            password: process.env.ATLASCODE_TEST_USER_API_TOKEN,
+            user: {
+                id: '',
+                displayName: '',
+                email: '',
+                avatarUrl: '',
+            },
+            state: 0,
+        };
+        const site = {
+            host: ATLASCODE_TEST_HOST,
+            protocol: 'https:',
+            product: {
+                name: 'Jira',
+                key: 'jira',
+            },
+        };
+        await Container.loginManager.userInitiatedServerLogin(site, authInfo);
+    }
+
     private static _version: string;
     public static get version() {
         return this._version;
@@ -379,43 +399,6 @@ export class Container {
     private static _onboardingWebviewFactory: SingleWebview<any, OnboardingAction>;
     public static get onboardingWebviewFactory() {
         return this._onboardingWebviewFactory;
-    }
-
-    public static async testLogout() {
-        Container.siteManager.getSitesAvailable(ProductJira).forEach(async (site) => {
-            await Container.clientManager.removeClient(site);
-            Container.siteManager.removeSite(site);
-        });
-    }
-
-    public static async testLogin() {
-        if (!process.env.ATLASCODE_TEST_USER_API_TOKEN) {
-            // vscode notify user that this is for testing only
-            window.showInformationMessage(
-                'This is for testing only. Please set the ATLASCODE_TEST_USER_API_TOKEN environment variable to run this test',
-            );
-            return;
-        }
-        const authInfo = {
-            username: ATLASCODE_TEST_USER_EMAIL,
-            password: process.env.ATLASCODE_TEST_USER_API_TOKEN,
-            user: {
-                id: '',
-                displayName: '',
-                email: '',
-                avatarUrl: '',
-            },
-            state: 0,
-        };
-        const site = {
-            host: ATLASCODE_TEST_HOST,
-            protocol: 'https:',
-            product: {
-                name: 'Jira',
-                key: 'jira',
-            },
-        };
-        await Container.loginManager.userInitiatedServerLogin(site, authInfo);
     }
 
     private static _pullRequestDetailsWebviewFactory: MultiWebview<any, PullRequestDetailsAction>;
@@ -466,11 +449,6 @@ export class Container {
     private static _startWorkOnBitbucketIssueWebview: StartWorkOnBitbucketIssueWebview;
     public static get startWorkOnBitbucketIssueWebview() {
         return this._startWorkOnBitbucketIssueWebview;
-    }
-
-    private static _jiraExplorer: JiraContext | undefined;
-    public static get jiraExplorer(): JiraContext {
-        return this._jiraExplorer!;
     }
 
     private static _jiraIssueViewManager: JiraIssueViewManager;

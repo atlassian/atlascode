@@ -118,6 +118,8 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
                 this._panel.webview.cspSource,
             );
 
+            this._controller.onShown(this._panel);
+
             const { id, site, product } = this._controller.screenDetails();
             this._analyticsApi.fireViewScreenEvent(id, site, product);
         } else {

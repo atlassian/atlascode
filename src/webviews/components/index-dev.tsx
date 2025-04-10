@@ -13,9 +13,12 @@ declare var __webpack_public_path__: string;
 __webpack_public_path__ = `${document.baseURI!}build/`;
 
 const routes: Record<string, any> = {
-    viewIssueScreen: React.lazy(() => import(/* webpackChunkName: "viewIssueScreen" */ './issue/JiraIssuePage')),
+    viewIssueScreen: React.lazy(
+        () => import(/* webpackChunkName: "viewIssueScreen" */ './issue/view-issue-screen/JiraIssuePage'),
+    ),
     atlascodeCreateIssueScreen: React.lazy(
-        () => import(/* webpackChunkName: "atlascodeCreateIssueScreen" */ './issue/CreateIssuePage'),
+        () =>
+            import(/* webpackChunkName: "atlascodeCreateIssueScreen" */ './issue/create-issue-screen/CreateIssuePage'),
     ),
     startWorkOnIssueScreen: React.lazy(
         () => import(/* webpackChunkName: "startWorkOnIssueScreen" */ './issue/StartWorkPage'),
