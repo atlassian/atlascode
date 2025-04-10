@@ -46,6 +46,7 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
+import { JiraBadgeManager } from '../views/jira/treeViews/jiraBadgeManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
 
@@ -86,6 +87,8 @@ export class JiraIssueWebview
     async initialize(issue: MinimalIssue<DetailedSiteInfo>) {
         this._issue = issue;
         this.invalidate();
+
+        JiraBadgeManager.getInstance().clearBadgeForIssue(issue);
     }
 
     async invalidate() {

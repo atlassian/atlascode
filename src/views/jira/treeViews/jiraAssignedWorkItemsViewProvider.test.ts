@@ -2,6 +2,7 @@ import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { it } from '@jest/globals';
 import { expansionCastTo, forceCastTo } from 'testsutil';
 import * as vscode from 'vscode';
+import { window } from 'vscode';
 
 import { DetailedSiteInfo, ProductBitbucket, ProductJira } from '../../../atlclients/authInfo';
 import * as commandContext from '../../../commandContext';
@@ -10,7 +11,9 @@ import { Container } from '../../../container';
 import { PromiseRacer } from '../../../util/promises';
 import { RefreshTimer } from '../../../views/RefreshTimer';
 import { AssignedWorkItemsViewProvider } from './jiraAssignedWorkItemsViewProvider';
+import { JiraBadgeManager } from './jiraBadgeManager';
 import { JiraNotifier } from './jiraNotifier';
+import { JiraIssueNode } from './utils';
 
 const mockedJqlEntry = forceCastTo<JQLEntry>({
     id: 'jqlId',
@@ -55,6 +58,7 @@ const mockedIssue3 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     children: [],
 });
 
+jest.mock('./jiraBadgeManager');
 jest.mock('./jiraNotifier');
 jest.mock('../searchJiraHelper');
 jest.mock('../../RefreshTimer');
@@ -131,8 +135,8 @@ class JiraNotifierMockClass implements ExtractPublic<JiraNotifier> {
     constructor() {
         JiraNotifierMockClass.LastInstance = this;
     }
-    public ignoreAssignedIssues(issues: MinimalIssue<DetailedSiteInfo>[]): void {}
-    public notifyForNewAssignedIssues(issues: MinimalIssue<DetailedSiteInfo>[]): void {}
+    public ignoreAssignedIssues(issues: JiraIssueNode[]): void {}
+    public notifyForNewAssignedIssues(issues: JiraIssueNode[]): void {}
 }
 
 jest.mock('./jiraNotifier', () => ({
@@ -177,7 +181,9 @@ describe('AssignedWorkItemsViewProvider', () => {
     >;
 
     beforeEach(() => {
-        (Container.context.subscriptions as any) = [];
+        jest.spyOn(window, 'createTreeView').mockReturnValue(mockedTreeView as any);
+        provider = undefined;
+
         PromiseRacerMockClass.LastInstance = undefined;
         JiraNotifierMockClass.LastInstance = undefined;
         RefreshTimerMockClass.LastInstance = undefined;
@@ -221,26 +227,11 @@ describe('AssignedWorkItemsViewProvider', () => {
             RefreshTimerMockClass.LastInstance?.refreshFunc();
             expect(dataChanged).toBeTruthy();
         });
-    });
 
-    it('getTreeItem is an identity function', () => {
-        provider = new AssignedWorkItemsViewProvider();
-
-        expect(provider.getTreeItem('hello' as any)).toEqual('hello');
-        expect(provider.getTreeItem(10 as any)).toEqual(10);
-        expect(provider.getTreeItem({ a: 'a' } as any)).toEqual({ a: 'a' });
-    });
-
-    it('focus executes the vscode id.focus command', () => {
-        provider = new AssignedWorkItemsViewProvider();
-
-        jest.spyOn(vscode.commands, 'executeCommand');
-        provider.focus();
-
-        expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
-            'atlascode.views.jira.assignedWorkItemsTreeView.focus',
-            {},
-        );
+        it('JiraBadgeManager is initialized', () => {
+            provider = new AssignedWorkItemsViewProvider();
+            expect(JiraBadgeManager.initialize).toHaveBeenCalled();
+        });
     });
 
     describe('getAllDefaultJQLEntries', () => {
@@ -303,7 +294,7 @@ describe('AssignedWorkItemsViewProvider', () => {
             const jqlEntries = [expansionCastTo<JQLEntry>({ siteId: 'site1', query: 'query1' })];
 
             jest.spyOn(Container.jqlManager, 'getAllDefaultJQLEntries').mockReturnValue(jqlEntries);
-            jest.spyOn(vscode.window, 'showInformationMessage');
+            jest.spyOn(window, 'showInformationMessage');
 
             provider = new AssignedWorkItemsViewProvider();
 
@@ -321,7 +312,7 @@ describe('AssignedWorkItemsViewProvider', () => {
             const jqlEntries = [expansionCastTo<JQLEntry>({ siteId: 'site1', query: 'query1' })];
 
             jest.spyOn(Container.jqlManager, 'getAllDefaultJQLEntries').mockReturnValue(jqlEntries);
-            jest.spyOn(vscode.window, 'showInformationMessage');
+            jest.spyOn(window, 'showInformationMessage');
 
             provider = new AssignedWorkItemsViewProvider();
 

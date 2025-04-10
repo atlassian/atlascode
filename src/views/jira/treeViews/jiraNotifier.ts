@@ -1,18 +1,18 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { commands, window } from 'vscode';
 
 import { showIssue } from '../../../commands/jira/showIssue';
+import { JiraBadgeManager } from './jiraBadgeManager';
+import { JiraIssueNode } from './utils';
 
 export class JiraNotifier {
     private readonly _knownIssues = new Set<string>();
 
-    public ignoreAssignedIssues(issues: MinimalIssue<DetailedSiteInfo>[]) {
+    public ignoreAssignedIssues(issues: JiraIssueNode[]) {
         issues.forEach((issue) => this._knownIssues.add(this.getIssueId(issue)));
     }
 
-    public notifyForNewAssignedIssues(issues: MinimalIssue<DetailedSiteInfo>[]) {
-        const newIssues: MinimalIssue<DetailedSiteInfo>[] = [];
+    public notifyForNewAssignedIssues(issues: JiraIssueNode[]) {
+        const newIssues: JiraIssueNode[] = [];
 
         for (const issue of issues) {
             const issueId = this.getIssueId(issue);
@@ -25,16 +25,16 @@ export class JiraNotifier {
         this.showNotification(newIssues);
     }
 
-    private getIssueId(issue: MinimalIssue<DetailedSiteInfo>) {
-        return `${issue.key}_${issue.siteDetails.id}`;
+    private getIssueId(issue: JiraIssueNode) {
+        return `${issue.issue.key}_${issue.issue.siteDetails.id}`;
     }
 
-    private showNotification(newIssues: MinimalIssue<DetailedSiteInfo>[]) {
+    private showNotification(newIssues: JiraIssueNode[]) {
         if (!newIssues.length) {
             return;
         }
 
-        const issueNames = newIssues.map((issue) => `[${issue.key}] "${issue.summary}"`);
+        const issueNames = newIssues.map((issue) => `[${issue.issue.key}] "${issue.issue.summary}"`);
         let message = '';
         if (newIssues.length === 1) {
             message = `${issueNames[0]} assigned to you`;
@@ -50,11 +50,16 @@ export class JiraNotifier {
         window.showInformationMessage(message, title).then((selection) => {
             if (selection) {
                 if (newIssues.length === 1) {
-                    showIssue(newIssues[0]);
+                    showIssue(newIssues[0].issue);
                 } else {
                     commands.executeCommand('workbench.view.extension.atlascode-drawer');
                 }
             }
+        });
+
+        const jiraIssueDecorationProvider = JiraBadgeManager.getInstance();
+        newIssues.forEach((issue) => {
+            jiraIssueDecorationProvider.notificationSent(issue.resourceUri!);
         });
     }
 }

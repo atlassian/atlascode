@@ -43,6 +43,10 @@ export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<TreeViewIssue
     return [];
 }
 
+export function getJiraIssueUri(issue: MinimalIssue<DetailedSiteInfo>): Uri {
+    return Uri.parse(`${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`);
+}
+
 export const loginToJiraMessageNode = createLabelItem('Please login to Jira', {
     command: Commands.ShowConfigPage,
     title: 'Login to Jira',
@@ -70,23 +74,7 @@ export class JiraIssueNode extends TreeItem implements AbstractBaseNode {
         this.iconPath = Uri.parse(issue.issuetype.iconUrl);
         this.contextValue = this.getIssueContextValue(nodeType, issue);
         this.tooltip = `${issue.key} - ${issue.summary}\n\n${issue.priority.name}    |    ${issue.status.name}`;
-        //this.resourceUri = Uri.parse(`${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`);
-
-        let guard = Math.random() > 0.5;
-        const f = () => {
-            if (guard) {
-                const value = Math.trunc(Math.random() * 10) || 99;
-                guard = false;
-                this.resourceUri = Uri.parse(`badge:item?value=${value}`, true);
-            } else {
-                guard = true;
-                this.resourceUri = Uri.parse(`${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`);
-            }
-        };
-        f();
-
-        setInterval(() => f(), 5000);
-
+        this.resourceUri = getJiraIssueUri(issue);
         this.children = issue.children.map((x) => new JiraIssueNode(nodeType, x));
     }
 
