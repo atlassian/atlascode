@@ -159,7 +159,7 @@ export const DiffList: React.FunctionComponent<{
                                 {ConflictChip(row, props.conflictedFiles)}
                             </TableCell>
                             <TableCell className={classes.tableCell}>
-                                <Link onClick={() => props.openDiffHandler(row)}>
+                                <Link component="button" onClick={() => props.openDiffHandler(row)}>
                                     <Typography>{row.file}</Typography>
                                 </Link>
                             </TableCell>
