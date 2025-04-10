@@ -555,19 +555,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         );
     }
     commonSidebar(): any {
-        const commonItems: SidebarItem[] = [
-            'assignee',
-            'reporter',
-            'labels',
-            'priority',
-            'components',
-            'fixVersions',
-        ].map((field) => {
-            return {
-                itemLabel: this.state.fields[field].name,
-                itemComponent: this.getInputMarkup(this.state.fields[field], true, field),
-            };
-        });
+        const commonItems: SidebarItem[] = ['assignee', 'reporter', 'labels', 'priority', 'components', 'fixVersions']
+            .filter((field) => this.state.fields[field] !== undefined)
+            .map((field) => {
+                return {
+                    itemLabel: this.state.fields[field].name,
+                    itemComponent: this.getInputMarkup(this.state.fields[field], true, field),
+                };
+            });
 
         const advancedItems: SidebarItem[] = this.advancedSidebarFields
             .map((field) => {
