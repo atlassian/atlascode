@@ -5,6 +5,10 @@
 -   Updated and improved styling in CreateIssueScreen
 -   Focus on the Atlascode UI panels when the Onboarding view triggers
 
+### Bug fixes:
+
+- Fixed bug in Bitbucket DC for PRs with comments where the PR Details would not display. 
+
 ## What's new in 3.4.23
 
 ### Improvements

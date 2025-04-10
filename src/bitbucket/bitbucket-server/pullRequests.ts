@@ -688,8 +688,8 @@ export class ServerPullRequestApi implements PullRequestApi {
             parentId: data.parentId,
             htmlContent: data.html ? data.html : data.text,
             rawContent: data.text,
-            ts: data.createdDate,
-            updatedTs: data.updatedDate,
+            ts: this.dataDateToCommentDate(data.createdDate),
+            updatedTs: this.dataDateToCommentDate(data.updatedDate),
             deleted: !!data.deleted,
             deletable: data.permittedOperations.deletable && commentBelongsToUser && !data.deleted,
             editable: data.permittedOperations.editable && commentBelongsToUser && !data.deleted,
@@ -704,6 +704,17 @@ export class ServerPullRequestApi implements PullRequestApi {
             children: [],
             tasks: [],
         };
+    }
+
+    private dataDateToCommentDate(date: any): string {
+        switch (typeof date) {
+            case 'string':
+                return date;
+            case 'number':
+                return new Date(date).toISOString();
+            default:
+                return '';
+        }
     }
 
     async getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]> {
