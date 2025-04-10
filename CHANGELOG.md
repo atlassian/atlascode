@@ -1,3 +1,8 @@
+## What's new in 3.4.25
+
+### Bug fixes
+- Some Jira issues weren't loading due to poor handling of missing fields. 
+
 ## What's new in 3.4.24
 
 ### Improvements
