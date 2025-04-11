@@ -30,6 +30,7 @@ const AnalyticDelay = 5000;
 
 export async function activate(context: ExtensionContext) {
     const start = process.hrtime();
+    Logger.configure(context);
 
     registerErrorReporting();
 
@@ -40,7 +41,6 @@ export async function activate(context: ExtensionContext) {
     registerResources(context);
 
     Configuration.configure(context);
-    Logger.configure(context);
 
     // Mark ourselves as the PID in charge of refreshing credentials and start listening for pings.
     context.globalState.update('rulingPid', pid);
