@@ -16,6 +16,7 @@ import { registerAnalyticsClient, registerErrorReporting, unregisterErrorReporti
 import { JQLManager } from './jira/jqlManager';
 import { provideCodeLenses } from './jira/todoObserver';
 import { Logger } from './logger';
+import { api } from './normalize';
 import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
 import {
     activateYamlExtension,
@@ -46,7 +47,7 @@ export async function activate(context: ExtensionContext) {
     context.globalState.update('rulingPid', pid);
 
     try {
-        await Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
+        Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
 
         registerAnalyticsClient(Container.analyticsClient);
         registerCommands(context);
@@ -96,6 +97,7 @@ export async function activate(context: ExtensionContext) {
             duration[0] * 1000 + Math.floor(duration[1] / 1000000)
         } ms`,
     );
+    return api;
 }
 
 async function activateBitbucketFeatures() {
