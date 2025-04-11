@@ -41,12 +41,7 @@ export const StatusTransitionMenu: React.FC<Props> = (props) => {
             }}
         >
             <DropdownMenu<HTMLButtonElement>
-                css={{
-                    backgroundColor: 'var(--vscode-settings-textInputBackground)!important',
-                    ':hover': {
-                        backgroundColor: 'var(--vscode-editor-selectionHighlightBackground)!important',
-                    },
-                }}
+                testId="vscode-dropdown"
                 onOpenChange={(open) => setIsOpen(open.isOpen)}
                 isLoading={props.isStatusButtonLoading}
                 trigger={({ triggerRef, ...properties }) => (
@@ -80,15 +75,7 @@ export const StatusTransitionMenu: React.FC<Props> = (props) => {
                     }}
                 >
                     {props.transitions.map((t) => (
-                        <DropdownItem
-                            key={t.id}
-                            css={{
-                                ':hover': {
-                                    background: 'var(--vscode-editor-selectionHighlightBackground) !important',
-                                },
-                            }}
-                            onClick={() => props.onStatusChange(t)}
-                        >
+                        <DropdownItem testId="vscode-dropdown-item" key={t.id} onClick={() => props.onStatusChange(t)}>
                             {shouldShowTransitionName ? StatusOptionWithTransitionName(t) : StatusOption(t)}
                         </DropdownItem>
                     ))}

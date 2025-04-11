@@ -1,24 +1,11 @@
-import { InlineTextEditor } from '@atlassianlabs/guipi-core-components';
-import {
-    Box,
-    Button,
-    Container,
-    Divider,
-    Grid,
-    makeStyles,
-    Paper,
-    Theme,
-    Typography,
-    useMediaQuery,
-    useTheme,
-} from '@material-ui/core';
+import EmptyState from '@atlaskit/empty-state';
+import { Box, Container, Divider, Grid, makeStyles, Paper, Theme, useMediaQuery, useTheme } from '@material-ui/core';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
 
 import { User } from '../../../bitbucket/model';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
-import { BranchInfo } from './BranchInfo';
 import {
     PullRequestDetailsControllerApi,
     PullRequestDetailsControllerContext,
@@ -62,56 +49,6 @@ const useStyles = makeStyles((theme: Theme) => ({
     },
 }));
 
-interface PullRequestTitleSectionProps {
-    state: PullRequestDetailsState;
-    controller: PullRequestDetailsControllerApi;
-}
-
-const PullRequestTitleSection: React.FC<PullRequestTitleSectionProps> = ({ state, controller }) => {
-    return (
-        <Box margin={2}>
-            <Grid container direction={'column'} spacing={1}>
-                <Grid item>
-                    <InlineTextEditor fullWidth defaultValue={state.pr.data.title} onSave={controller.updateTitle} />
-                </Grid>
-                <Grid item>
-                    <Grid container direction="row" spacing={2} justify={'space-between'}>
-                        <Grid item>
-                            <Box marginLeft={2}>
-                                <BranchInfo
-                                    source={state.pr.data.source}
-                                    destination={state.pr.data.destination}
-                                    author={state.pr.data.author}
-                                    isLoading={state.loadState.basicData}
-                                />
-                            </Box>
-                        </Grid>
-
-                        <Grid item>
-                            <Button
-                                disabled={
-                                    state.pr.data.source.branchName === state.currentBranchName ||
-                                    state.isCheckingOutBranch
-                                }
-                                onClick={controller.checkoutBranch}
-                                color={'primary'}
-                            >
-                                <Typography variant="button" noWrap>
-                                    {state.pr.data.source.branchName === state.currentBranchName
-                                        ? 'Source branch checked out'
-                                        : state.isCheckingOutBranch
-                                          ? 'Checking out...'
-                                          : 'Checkout source branch'}
-                                </Typography>
-                            </Button>
-                        </Grid>
-                    </Grid>
-                </Grid>
-            </Grid>
-        </Box>
-    );
-};
-
 export const PullRequestDetailsPage: React.FunctionComponent = () => {
     const [state, controller] = usePullRequestDetailsController();
 
@@ -122,7 +59,11 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                 postMessageFunc={controller.postMessage}
             >
                 <Container maxWidth="xl">
-                    <PullRequestDetailsPageContent state={state} controller={controller} />
+                    {state.loadState.basicData ? (
+                        <EmptyState header="Loading..." headingLevel={3} />
+                    ) : (
+                        <PullRequestDetailsPageContent state={state} controller={controller} />
+                    )}
                 </Container>
             </AtlascodeErrorBoundary>
         </PullRequestDetailsControllerContext.Provider>
@@ -152,7 +93,6 @@ function PullRequestDetailsPageContent({ state, controller }: PullRequestDetails
             <Grid container spacing={1} direction="row">
                 <Grid item xs={12} md={9} lg={9} xl={9}>
                     <Paper className={classes.paper100}>
-                        <PullRequestTitleSection state={state} controller={controller} />
                         <PullRequestMainContent
                             state={state}
                             controller={controller}

@@ -1,21 +1,31 @@
-import { RefreshButton } from '@atlassianlabs/guipi-core-components';
-import { Box } from '@material-ui/core';
-import React, { useEffect, useMemo, useState } from 'react';
+import ButtonGroup from '@atlaskit/button/button-group';
+import React, { useEffect, useState } from 'react';
+import { ApprovalStatus } from 'src/bitbucket/model';
 
-import { ApprovalStatus } from '../../../bitbucket/model';
-import { CopyLinkButton } from '../common/CopyLinkButton';
 import { ApproveButton } from './ApproveButton';
 import { MergeDialog } from './MergeDialog';
-import { PullRequestDetailsControllerApi } from './pullRequestDetailsController';
-import { PullRequestDetailsState } from './pullRequestDetailsController';
+import { PullRequestDetailsControllerApi, PullRequestDetailsState } from './pullRequestDetailsController';
 import { RequestChangesButton } from './RequestChangesButton';
 
-export interface PullRequestHeaderActionsProps {
+type PullRequestHeaderActionsProps = {
     state: PullRequestDetailsState;
     controller: PullRequestDetailsControllerApi;
-}
+    isCurrentUserAuthor: boolean;
+    isDraftPr: boolean;
+    notMerged: boolean;
+};
 
-export const PullRequestHeaderActions: React.FC<PullRequestHeaderActionsProps> = ({ state, controller }) => {
+export function PullRequestHeaderActions({
+    controller,
+    state,
+    isCurrentUserAuthor,
+    isDraftPr,
+    notMerged,
+}: PullRequestHeaderActionsProps) {
+    const canShowApprove = !isCurrentUserAuthor || state.pr.site.details.isCloud;
+    const canShowRequestChanges = !isCurrentUserAuthor;
+    const canShowMerge = !isDraftPr && notMerged;
+
     const [currentUserApprovalStatus, setCurrentUserApprovalStatus] = useState<ApprovalStatus>('UNAPPROVED');
 
     useEffect(() => {
@@ -27,34 +37,23 @@ export const PullRequestHeaderActions: React.FC<PullRequestHeaderActionsProps> =
         }
     }, [state.pr.data.participants, state.currentUser.accountId]);
 
-    const isSomethingLoading = useMemo(() => {
-        return Object.entries(state.loadState).some(
-            (entry) => entry[1] /* Second index is the value in the key/value pair */,
-        );
-    }, [state.loadState]);
-
     return (
-        <>
-            <CopyLinkButton tooltip="Copy link to pull request" url={state.pr.data.url} onClick={controller.copyLink} />
-            <Box marginLeft={1} hidden={state.loadState.basicData}>
+        <ButtonGroup>
+            {canShowRequestChanges && (
                 <RequestChangesButton
-                    hidden={
-                        !state.pr.site.details.isCloud && state.currentUser.accountId === state.pr.data.author.accountId
-                    }
                     status={currentUserApprovalStatus}
                     onApprove={controller.updateApprovalStatus}
+                    isDisabled={!notMerged}
                 />
-            </Box>
-            <Box marginLeft={1} hidden={state.loadState.basicData}>
+            )}
+            {canShowApprove && (
                 <ApproveButton
-                    hidden={
-                        !state.pr.site.details.isCloud && state.currentUser.accountId === state.pr.data.author.accountId
-                    }
                     status={currentUserApprovalStatus}
                     onApprove={controller.updateApprovalStatus}
+                    isDisabled={!notMerged}
                 />
-            </Box>
-            <Box marginLeft={1} hidden={state.loadState.basicData}>
+            )}
+            {canShowMerge && (
                 <MergeDialog
                     prData={state.pr.data}
                     commits={state.commits}
@@ -70,8 +69,7 @@ export const PullRequestHeaderActions: React.FC<PullRequestHeaderActionsProps> =
                     }}
                     merge={controller.merge}
                 />
-            </Box>
-            <RefreshButton loading={isSomethingLoading} onClick={controller.refresh} />
-        </>
+            )}
+        </ButtonGroup>
     );
-};
+}

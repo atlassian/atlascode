@@ -1,11 +1,11 @@
-import { createMuiTheme, Theme } from '@material-ui/core';
+import { createTheme, Theme } from '@material-ui/core';
 
 export const atlascodeTheme = (baseTheme: Theme, usedefault?: boolean): Theme => {
     if (usedefault) {
-        return createMuiTheme();
+        return createTheme();
     }
 
-    return createMuiTheme({
+    return createTheme({
         ...baseTheme,
         spacing: 6,
         typography: {

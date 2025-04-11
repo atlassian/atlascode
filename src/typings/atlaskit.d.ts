@@ -9,7 +9,6 @@ declare module '@atlaskit/breadcrumbs';
 declare module '@atlaskit/lozenge';
 declare module '@atlaskit/tooltip';
 declare module '@atlaskit/theme';
-declare module '@atlaskit/panel';
 
 declare module '@atlaskit/select';
 declare module '@atlaskit/spinner';

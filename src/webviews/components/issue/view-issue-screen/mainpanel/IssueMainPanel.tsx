@@ -157,18 +157,8 @@ const IssueMainPanel: React.FC<Props> = ({
                         />
                     ) : (
                         <Box
-                            css={{
-                                ':hover': {
-                                    backgroundColor: 'var(--vscode-editor-selectionHighlightBackground)!important',
-                                    cursor: 'pointer !important',
-                                },
-                                paddingLeft: 0,
-                                paddingBottom: '4px',
-                                display: 'flex',
-                                alignItems: 'flex-start',
-                            }}
                             onClick={() => setIsEditingDescription(true)}
-                            className="ac-inline-input-view-p"
+                            className="ac-inline-input-view-p rendered-description"
                         >
                             {renderedDescription ? (
                                 <RenderedContent html={renderedDescription} fetchImage={fetchImage} />

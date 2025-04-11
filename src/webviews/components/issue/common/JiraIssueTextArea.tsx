@@ -1,5 +1,3 @@
-import { Spacing } from '@atlaskit/button';
-import { ButtonAppearance } from '@atlaskit/button/dist/types/new-button/variants/types';
 import TextArea from '@atlaskit/textarea';
 import { Box } from '@material-ui/core';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
@@ -33,10 +31,6 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
 }) => {
     const inputTextAreaRef = React.useRef<HTMLTextAreaElement>(null);
     const [cursorPosition, setCursorPosition] = React.useState(value?.length || 0);
-    const buttonProps = {
-        spacing: 'compact' as Spacing,
-        appearance: 'subtle' as ButtonAppearance,
-    };
     React.useEffect(() => {
         if (inputTextAreaRef.current && cursorPosition > 0) {
             inputTextAreaRef.current.selectionEnd = cursorPosition;
@@ -105,7 +99,6 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                         <PopoutMentionPicker
                             targetButtonContent="@"
                             targetButtonTooltip="Mention @"
-                            targetButtonProps={buttonProps}
                             loadUserOptions={fetchUsers}
                             onUserMentioned={handleMention}
                         />

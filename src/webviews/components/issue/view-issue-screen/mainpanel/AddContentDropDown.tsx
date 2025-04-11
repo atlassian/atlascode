@@ -24,12 +24,7 @@ export const AddContentDropdown: React.FC<{
             }}
         >
             <DropdownMenu<HTMLButtonElement>
-                css={{
-                    backgroundColor: 'var(--vscode-settings-textInputBackground)!important',
-                    ':hover': {
-                        backgroundColor: 'var(--vscode-editor-selectionHighlightBackground)!important',
-                    },
-                }}
+                testId="vscode-dropdown"
                 onOpenChange={(open) => setIsOpen(open.isOpen)}
                 isLoading={loading}
                 trigger={({ triggerRef, ...props }) => (
@@ -66,28 +61,28 @@ export const AddContentDropdown: React.FC<{
                     }}
                 >
                     <DropdownItem
-                        css={dropdownItemStyles}
+                        testId="vscode-dropdown-item"
                         elemBefore={<EditorAttachmentIcon label="Add Attachment" />}
                         onClick={handleAttachmentClick}
                     >
                         Attachment
                     </DropdownItem>
                     <DropdownItem
-                        css={dropdownItemStyles}
+                        testId="vscode-dropdown-item"
                         elemBefore={<ChildIssuesIcon label="Add Child Issues" />}
                         onClick={handleChildIssueClick}
                     >
                         Child issue
                     </DropdownItem>
                     <DropdownItem
-                        css={dropdownItemStyles}
+                        testId="vscode-dropdown-item"
                         elemBefore={<IssuesIcon label="Add Linked Issue" />}
                         onClick={handleLinkedIssueClick}
                     >
                         Linked issue
                     </DropdownItem>
                     <DropdownItem
-                        css={dropdownItemStyles}
+                        testId="vscode-dropdown-item"
                         elemBefore={<EmojiFrequentIcon label="Log Work" />}
                         onClick={handleLogWorkClick}
                     >
@@ -97,12 +92,4 @@ export const AddContentDropdown: React.FC<{
             </DropdownMenu>
         </Box>
     );
-};
-
-const dropdownItemStyles = {
-    background: 'var(--vscode-settings-textInputBackground)!important',
-    color: 'var(--vscode-settings-textInputForeground)!important',
-    ':hover': {
-        background: 'var(--vscode-editor-selectionHighlightBackground) !important',
-    },
 };

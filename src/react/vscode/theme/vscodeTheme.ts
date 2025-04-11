@@ -1,4 +1,4 @@
-import { createMuiTheme } from '@material-ui/core';
+import { createTheme } from '@material-ui/core';
 
 import { darken, lighten } from './colors';
 import { VSCodeStyles } from './styles';
@@ -18,7 +18,7 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
     // Icons don't always have a useful color in high-contrast
     const muiSvg = isHighContrast ? { root: { color: '#ffffff' } } : undefined;
 
-    return createMuiTheme({
+    return createTheme({
         palette: {
             type: isDark ? 'dark' : 'light',
             primary: {

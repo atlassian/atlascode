@@ -1112,8 +1112,7 @@ div[role='dialog'],
     border-color: var(--vscode-focusBorder) !important;
 }
 
-.ac-select__indicator,
-.ac-select__input {
+.ac-select__indicator {
     background: var(--vscode-editor-background) !important;
     color: var(--vscode-input-foreground) !important;
 }
@@ -1159,10 +1158,6 @@ div[role='dialog'],
 .ac-select__menu {
     border: 1px solid var(--vscode-focusBorder) !important;
     border-radius: 2px !important;
-}
-
-.ac-select__value-container {
-    padding: 0 !important;
 }
 
 .ac-select-container-control-on-hover .ac-select__control {
@@ -2092,4 +2087,84 @@ pre {
 
 .commit-files-summary .commit-files-summary--filename {
     margin-left: 5px;
+}
+
+:root {
+    --ds-text-inverse: var(--vscode-button-foreground);
+    --ds-text: var(--vscode-foreground);
+    --ds-text-input: var(--vscode-input-foreground);
+    --ds-text-selected: var(--vscode-list-activeSelectionForeground);
+    /* Color Tokens: Borders: Mapping to VSCode Tokens */
+    --ds-border: var(--vscode-input-border);
+    --ds-border-disabled: var(--vscode-radio-inactiveBorder);
+    --ds-border-focused: var(--vscode-inputOption-activeBorder);
+    --ds-border-input: var(--vscode-input-border);
+    --ds-border-inverse: var(--vscode-input-border);
+    --ds-border-selected: var(--vscode-inputOption-activeBorder);
+    --ds-border-danger: var(--vscode-inputValidation-errorBorder);
+    --ds-border-warning: var(--vscode-inputValidation-warningBorder);
+    --ds-border-success: var(--vscode-inputValidation-infoBorder);
+    --ds-border-discovery: var(--vscode-inputValidation-infoBorder);
+    --ds-border-information: var(--vscode-inputValidation-infoBorder);
+    --ds-border-bold: var(--vscode-input-border);
+    /* Color Tokens: Backgrounds: Mapping to VSCode Tokens */
+    --ds-background-brand-bold: var(--vscode-button-background);
+    --ds-background-input: var(--vscode-input-background);
+    --ds-background-input-hovered: var(--vscode-inputOption-hoverBackground);
+    --ds-background-input-pressed: var(--vscode-input-background);
+    --ds-background-selected: var(--vscode-list-activeSelectionBackground);
+    --ds-background-neutral: var(--vscode-input-background);
+    --ds-background-neutral-hovered: var(--vscode-inputOption-hoverBackground);
+    --ds-background-neutral-pressed: var(--vscode-inputOption-activeBackground);
+    --ds-background-neutral-subtle: var(--vscode-input-background);
+    --ds-background-neutral-subtle-hovered: var(--vscode-inputOption-hoverBackground);
+    --ds-background-neutral-subtle-pressed: var(--vscode-inputOption-activeBackground);
+    /* Color Tokens: Overlays: Mapping to VSCode Tokens */
+    --ds-surface-overlay: var(--vscode-menu-background);
+    --ds-surface-overlay-hovered: var(--vscode-menu-selectionBackground);
+}
+
+[data-testid='editable-title-textfield'] {
+    font-size: 24px !important;
+    font-weight: 500 !important;
+    padding: 4px 0px !important;
+    letter-spacing: 0px !important;
+    height: inherit !important;
+}
+
+[data-testid='vscode-dropdown--trigger'] {
+    background-color: var(--vscode-settings-textInputBackground) !important;
+}
+
+[data-testid='vscode-dropdown--trigger']:hover {
+    background-color: var(--vscode-editor-selectionHighlightBackground) !important;
+}
+
+[data-testid='vscode-dropdown-item'] {
+    background: var(--vscode-settings-textInputBackground) !important;
+    color: var(--vscode-settings-textInputForeground) !important;
+}
+
+[data-testid='vscode-dropdown-item']:hover {
+    background: var(--vscode-editor-selectionHighlightBackground) !important;
+}
+
+[data-testid='vscode-breadcrumbs'] * {
+    background-color: transparent !important;
+}
+
+[data-testid='.ac-inputField::placeholder'] {
+    color: var(--vscode-input-placeholderForeground) !important;
+}
+
+.rendered-description {
+    padding-left: 0;
+    padding-bottom: 4px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.rendered-description:hover {
+    background-color: var(--vscode-editor-selectionHighlightBackground) !important;
+    cursor: pointer !important;
 }

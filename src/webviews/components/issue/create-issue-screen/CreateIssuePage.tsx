@@ -2,7 +2,6 @@ import Button from '@atlaskit/button';
 import LoadingButton from '@atlaskit/button/loading-button';
 import Form, { Field, FormFooter, FormHeader, RequiredAsterisk } from '@atlaskit/form';
 import Page from '@atlaskit/page';
-import Panel from '@atlaskit/panel';
 import SectionMessage from '@atlaskit/section-message';
 import Select, { components } from '@atlaskit/select';
 import { AsyncSelect } from '@atlaskit/select';
@@ -22,6 +21,7 @@ import { AtlLoader } from '../../AtlLoader';
 import ErrorBanner from '../../ErrorBanner';
 import { chain } from '../../fieldValidators';
 import Offline from '../../Offline';
+import Panel from '../../panel/Panel';
 import PMFBBanner from '../../pmfBanner';
 import * as SelectFieldHelper from '../../selectFieldHelper';
 import {

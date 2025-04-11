@@ -372,7 +372,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                     <PageHeader
                         actions={undefined}
                         breadcrumbs={
-                            <Breadcrumbs>
+                            <Breadcrumbs testId="vscode-breadcrumbs">
                                 {issue.parentKey && (
                                     <BreadcrumbsItem
                                         component={() => (

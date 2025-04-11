@@ -1,4 +1,4 @@
-import { Avatar, Badge, Box, CircularProgress, Grid, Tooltip, Typography } from '@material-ui/core';
+import { Avatar, Badge, Box, CircularProgress, Grid, Tooltip } from '@material-ui/core';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import { AvatarGroup } from '@material-ui/lab';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -50,9 +50,7 @@ export const Reviewers: React.FunctionComponent<ReviewersProps> = ({
                 </Grid>
             ) : (
                 <Grid item>
-                    {activeParticipants.length === 0 ? (
-                        <Typography variant="body2">No reviewers!</Typography>
-                    ) : (
+                    {
                         <AvatarGroup max={5}>
                             {activeParticipants.map((participant) => (
                                 <Badge
@@ -86,7 +84,7 @@ export const Reviewers: React.FunctionComponent<ReviewersProps> = ({
                                 </Badge>
                             ))}
                         </AvatarGroup>
-                    )}
+                    }
                 </Grid>
             )}
 

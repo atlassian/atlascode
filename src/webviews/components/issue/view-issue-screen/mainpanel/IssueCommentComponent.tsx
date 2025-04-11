@@ -142,11 +142,6 @@ const AddCommentComponent: React.FC<{
                     <TextField
                         readOnly
                         className="ac-inputField"
-                        css={{
-                            ':placeholder': {
-                                color: 'var(--vscode-input-placeholderForeground) !important',
-                            },
-                        }}
                         onClick={() => {
                             setIsEditing(true);
                         }}
