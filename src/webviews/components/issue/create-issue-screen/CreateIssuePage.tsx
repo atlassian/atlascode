@@ -399,68 +399,72 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                         );
                                                     }}
                                                 </Field>
-                                                <Field
-                                                    label={<span>Project</span>}
-                                                    id="project"
-                                                    name="project"
-                                                    isRequired
-                                                    defaultValue={this.state.fieldValues['project']}
-                                                >
-                                                    {(fieldArgs: any) => {
-                                                        const selectField = this.state.fields['project'];
-                                                        return (
-                                                            <Select
-                                                                {...fieldArgs.fieldProps}
-                                                                className="ac-form-select-container"
-                                                                classNamePrefix="ac-form-select"
-                                                                getOptionLabel={(option: any) => option.name}
-                                                                getOptionValue={(option: any) => option.id}
-                                                                options={this.state.selectFieldOptions['project']}
-                                                                components={SelectFieldHelper.getComponentsForValueType(
-                                                                    selectField.valueType,
-                                                                )}
-                                                                onChange={chain(
-                                                                    fieldArgs.fieldProps.onChange,
-                                                                    this.handleInlineEdit.bind(this, {
-                                                                        key: 'project',
-                                                                        valueType: ValueType.Project,
-                                                                        uiType: UIType.Select,
-                                                                    }),
-                                                                )}
-                                                            />
-                                                        );
-                                                    }}
-                                                </Field>
-                                                <Field
-                                                    label={<span>Issue Type</span>}
-                                                    id="issuetype"
-                                                    name="issuetype"
-                                                    isRequired
-                                                    defaultValue={this.state.fieldValues['issuetype']}
-                                                >
-                                                    {(fieldArgs: any) => {
-                                                        const selectField = this.state.fields['issuetype'];
-                                                        return (
-                                                            <Select
-                                                                {...fieldArgs.fieldProps}
-                                                                className="ac-form-select-container"
-                                                                classNamePrefix="ac-form-select"
-                                                                getOptionLabel={(option: any) => option.name}
-                                                                getOptionValue={(option: any) => option.id}
-                                                                options={this.state.selectFieldOptions['issuetype']}
-                                                                components={SelectFieldHelper.getComponentsForValueType(
-                                                                    selectField.valueType,
-                                                                )}
-                                                                onChange={(e: any) =>
-                                                                    chain(
+                                                {this.state.fields['project'] && (
+                                                    <Field
+                                                        label={<span>Project</span>}
+                                                        id="project"
+                                                        name="project"
+                                                        isRequired
+                                                        defaultValue={this.state.fieldValues['project']}
+                                                    >
+                                                        {(fieldArgs: any) => {
+                                                            const selectField = this.state.fields['project'];
+                                                            return (
+                                                                <Select
+                                                                    {...fieldArgs.fieldProps}
+                                                                    className="ac-form-select-container"
+                                                                    classNamePrefix="ac-form-select"
+                                                                    getOptionLabel={(option: any) => option.name}
+                                                                    getOptionValue={(option: any) => option.id}
+                                                                    options={this.state.selectFieldOptions['project']}
+                                                                    components={SelectFieldHelper.getComponentsForValueType(
+                                                                        selectField.valueType,
+                                                                    )}
+                                                                    onChange={chain(
                                                                         fieldArgs.fieldProps.onChange,
-                                                                        this.handleSelectChange(selectField, e),
-                                                                    )
-                                                                }
-                                                            />
-                                                        );
-                                                    }}
-                                                </Field>
+                                                                        this.handleInlineEdit.bind(this, {
+                                                                            key: 'project',
+                                                                            valueType: ValueType.Project,
+                                                                            uiType: UIType.Select,
+                                                                        }),
+                                                                    )}
+                                                                />
+                                                            );
+                                                        }}
+                                                    </Field>
+                                                )}
+                                                {this.state.fields['issuetype'] && (
+                                                    <Field
+                                                        label={<span>Issue Type</span>}
+                                                        id="issuetype"
+                                                        name="issuetype"
+                                                        isRequired
+                                                        defaultValue={this.state.fieldValues['issuetype']}
+                                                    >
+                                                        {(fieldArgs: any) => {
+                                                            const selectField = this.state.fields['issuetype'];
+                                                            return (
+                                                                <Select
+                                                                    {...fieldArgs.fieldProps}
+                                                                    className="ac-form-select-container"
+                                                                    classNamePrefix="ac-form-select"
+                                                                    getOptionLabel={(option: any) => option.name}
+                                                                    getOptionValue={(option: any) => option.id}
+                                                                    options={this.state.selectFieldOptions['issuetype']}
+                                                                    components={SelectFieldHelper.getComponentsForValueType(
+                                                                        selectField.valueType,
+                                                                    )}
+                                                                    onChange={(e: any) =>
+                                                                        chain(
+                                                                            fieldArgs.fieldProps.onChange,
+                                                                            this.handleSelectChange(selectField, e),
+                                                                        )
+                                                                    }
+                                                                />
+                                                            );
+                                                        }}
+                                                    </Field>
+                                                )}
                                                 {this.state.fields['summary'] && (
                                                     <Field
                                                         label={<span>Summary</span>}
