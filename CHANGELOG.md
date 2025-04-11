@@ -1,3 +1,7 @@
+### [Report an Issue](https://github.com/atlassian/atlascode/issues/new/choose)
+
+-----
+
 ## What's new in 3.4.25
 
 ### Improvements
