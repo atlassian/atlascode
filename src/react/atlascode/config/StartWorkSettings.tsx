@@ -17,6 +17,10 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
     const [changes, setChanges] = useState<{ [key: string]: any }>({});
     const [template, setTemplate] = useState<string>(customTemplate);
 
+    useEffect(() => {
+        setTemplate(customTemplate);
+    }, [customTemplate]);
+
     const handlePrefixesChange = useCallback((newOptions: string[]) => {
         const changes = Object.create(null);
         changes['jira.startWorkBranchTemplate.customPrefixes'] = newOptions;
@@ -38,13 +42,24 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
     }, [changes, controller]);
 
     const getTemplatePreview = useCallback(() => {
+        const usernameBase = 'trevinavery';
+        const prefixBase = 'feature/';
+        const issueKeyBase = 'VSCODE-257';
+        const summaryBase = 'allow-users-to-configure-the-way-branch-name-is-co';
         const view = {
-            prefix: 'feature',
-            PREFIX: 'FEATURE',
-            issueKey: 'VSCODE-1005',
-            issuekey: 'vscode-1005',
-            summary: 'allow-users-to-configure-the-way-branch-name-is-co',
-            SUMMARY: 'ALLOW-USERS-TO-CONFIGURE-THE-WAY-BRANCH-NAME-IS-CO',
+            username: usernameBase.toLowerCase(),
+            UserName: usernameBase,
+            USERNAME: usernameBase.toUpperCase(),
+            prefix: prefixBase.toLowerCase(),
+            Prefix: prefixBase,
+            PREFIX: prefixBase.toUpperCase(),
+            issuekey: issueKeyBase.toLowerCase(),
+            IssueKey: issueKeyBase,
+            issueKey: issueKeyBase,
+            ISSUEKEY: issueKeyBase.toUpperCase(),
+            summary: summaryBase.toLowerCase(),
+            Summary: summaryBase,
+            SUMMARY: summaryBase.toUpperCase(),
         };
 
         //Mustache doesn't seem to throw errors in most cases when the template is invalid, it just ignores variables that are entered wrong.
@@ -64,18 +79,25 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
                     <Typography variant="h4">Custom Branch Template</Typography>
 
                     <Typography variant="caption">
-                        Branch names will be generated based on the template. Use the keywords <code>prefix</code>,{' '}
-                        <code>issueKey</code>, and <code>summary</code> surrounded by triple curly brackets to build a
-                        template. Any of the keywords can be excluded if they are not needed, but do not put a
-                        non-keyword in double curly brackets. E.g.{' '}
-                        <code>{'{{{prefix}}}/{{{issueKey}}}-{{{summary}}}'}</code> will generate something of the format{' '}
-                        <code>{'feature/VSCODE-1005-allow-users-to-configure-the-way-branch-name-is-co'}</code>
+                        Branch names will be generated based on the template. Use the keywords <code>username</code>,{' '}
+                        <code>prefix</code>, <code>issuekey</code>, and <code>summary</code> surrounded by triple curly
+                        brackets to build a template. Any of the keywords can be excluded if they are not needed, but do
+                        not put a non-keyword in triple curly brackets.
                         <br />
-                        Upper-case: <code>PREFIX, SUMMARY</code>
+                        E.g. <code>{'{{{username}}}/{{{prefix}}}{{{issueKey}}}-{{{summary}}}'}</code> will generate
+                        something of the format:{' '}
+                        <code>
+                            {'trevinavery/feature/VSCODE-1005-allow-users-to-configure-the-way-branch-name-is-co'}
+                        </code>
                         <br />
-                        Mixed-case: <code>Prefix, Summary, issueKey</code>
+                        Note that <code>prefix</code> automatically appends a <code>/</code> character after it.
                         <br />
-                        Lower-case: <code>prefix, issuekey, summary</code>
+                        <br />
+                        Upper-case: <code>USERNAME, PREFIX, ISSUEKEY, SUMMARY</code>
+                        <br />
+                        Mixed-case: <code>UserName, Prefix, IssueKey, Summary</code>
+                        <br />
+                        Lower-case: <code>username, prefix, issuekey, summary</code>
                     </Typography>
 
                     <Box marginTop={1} paddingBottom={2}>
