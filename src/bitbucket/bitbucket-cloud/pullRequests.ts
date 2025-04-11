@@ -7,6 +7,7 @@ import { Logger } from '../../logger';
 import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';
 import { getFileNameFromPaths } from '../../views/pullrequest/diffViewHelper';
+import { encodePathParts } from '../bbUtils';
 import { HTTPClient } from '../httpClient';
 import {
     ApprovalStatus,
@@ -829,7 +830,8 @@ export class CloudPullRequestApi implements PullRequestApi {
             return cachedValue;
         }
 
-        const { data } = await this.client.getRaw(`/repositories/${ownerSlug}/${repoSlug}/src/${commitHash}/${path}`);
+        const url = `/repositories/${ownerSlug}/${repoSlug}/src/${commitHash}/${encodePathParts(path)}`;
+        const { data } = await this.client.getRaw(url);
 
         this.fileContentCache.setItem(cacheKey, data, 5 * Time.MINUTES);
 

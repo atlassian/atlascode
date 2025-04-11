@@ -150,3 +150,7 @@ export function workspaceRepoFor(repository: Repository): WorkspaceRepo {
         siteRemotes: siteRemotes,
     };
 }
+
+export function encodePathParts(path: string) {
+    return path?.split('/').map(encodeURIComponent).join('/');
+}
