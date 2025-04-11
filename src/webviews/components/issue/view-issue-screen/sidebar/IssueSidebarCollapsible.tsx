@@ -110,7 +110,7 @@ export const IssueSidebarCollapsible: React.FC<Props> = ({ label, items, default
                             >
                                 {item.itemLabel}
                             </div>
-                            <Box style={{ width: '100%', overflow: 'hidden' }}>{item.itemComponent}</Box>
+                            <Box style={{ width: '70%' }}>{item.itemComponent}</Box>
                         </Box>
                     ))}
                 </Box>
