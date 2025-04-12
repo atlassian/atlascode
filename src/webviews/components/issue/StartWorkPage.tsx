@@ -27,7 +27,12 @@ import {
     RefreshIssueAction,
     StartWorkAction,
 } from '../../../ipc/issueActions';
-import { isStartWorkOnIssueResult, StartWorkOnIssueData, StartWorkOnIssueResult } from '../../../ipc/issueMessaging';
+import {
+    isStartWorkOnIssueData,
+    isStartWorkOnIssueResult,
+    StartWorkOnIssueData,
+    StartWorkOnIssueResult,
+} from '../../../ipc/issueMessaging';
 import { HostErrorMessage } from '../../../ipc/messaging';
 import { BranchType, RepoData } from '../../../ipc/prMessaging';
 import { Branch } from '../../../typings/git';
@@ -105,14 +110,12 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                 break;
             }
             case 'update': {
-                if (e.issue.key.length > 0) {
+                if (isStartWorkOnIssueData(e) && e.issue.key.length > 0) {
                     const repo =
                         this.isEmptyRepo(this.state.repo) && e.repoData.length > 0 ? e.repoData[0] : this.state.repo;
                     const transition =
                         this.state.transition === emptyTransition
-                            ? // TODO check why this is an any
-                              e.issue.transitions.find((t: any) => t.to.id === e.issue.status.id) ||
-                              this.state.transition
+                            ? e.issue.transitions.find((t) => t.to.id === e.issue.status.id) || this.state.transition
                             : this.state.transition;
                     const issueType = 'jiraIssue';
                     const issueId = e.issue.key;
