@@ -2,15 +2,23 @@
 
 -----
 
+## What's new in 3.5.0
+
+### Deprecations
+
+-   Following the official deprecation of Bitbucket issues, and their very low usage in our extension, we have removed the Bitbucket issues functionality from Atlascode. 
+
+    Users who still need to use the Bitbucket issues functionality can manually install the latest version supporting it: v3.4.25.
+
 ## What's new in 3.4.25
 
 ### Improvements
 
-- The 'Release notes' button on the update notification now lands on the vscode markeplace page for Atlascode, Changelog tab.
+-   The 'Release notes' button on the update notification now lands on the vscode markeplace page for Atlascode, Changelog tab.
 
 ### Bug fixes
 
-- Some Jira issues weren't loading due to poor handling of missing fields. 
+-   Some Jira issues weren't loading due to poor handling of missing fields. 
 
 ## What's new in 3.4.24
 
