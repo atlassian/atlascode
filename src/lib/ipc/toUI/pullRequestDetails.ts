@@ -4,7 +4,6 @@ import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import {
     ApprovalStatus,
-    BitbucketIssue,
     BuildStatus,
     Comment,
     Commit,
@@ -39,7 +38,6 @@ export enum PullRequestDetailsMessageType {
     UpdateBuildStatuses = 'updateBuildStatuses',
     UpdateMergeStrategies = 'updateMergeStrategies',
     UpdateRelatedJiraIssues = 'updateRelatedJiraIssues',
-    UpdateRelatedBitbucketIssues = 'updateRelatedBitbucketIssues',
     UpdateTasks = 'updateTasks',
     UpdateConflictedFiles = 'updateConflictedFiles',
 }
@@ -58,11 +56,7 @@ export type PullRequestDetailsMessage =
     | ReducerAction<PullRequestDetailsMessageType.UpdateBuildStatuses, PullRequestDetailsBuildStatusesMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateMergeStrategies, PullRequestDetailsMergeStrategiesMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateRelatedJiraIssues, PullRequestDetailsRelatedJiraIssuesMessage>
-    | ReducerAction<PullRequestDetailsMessageType.UpdateTasks, PullRequestDetailsTasksMessage>
-    | ReducerAction<
-          PullRequestDetailsMessageType.UpdateRelatedBitbucketIssues,
-          PullRequestDetailsRelatedBitbucketIssuesMessage
-      >;
+    | ReducerAction<PullRequestDetailsMessageType.UpdateTasks, PullRequestDetailsTasksMessage>;
 export type PullRequestDetailsResponse =
     | ReducerAction<PullRequestDetailsMessageType.FetchUsersResponse, FetchUsersResponseMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateFileDiffs, PullRequestDetailsFileDiffsMessage>
@@ -86,14 +80,12 @@ export interface PullRequestDetailsInitMessage {
     mergeStrategies: MergeStrategy[];
     buildStatuses: BuildStatus[];
     relatedJiraIssues: MinimalIssue<DetailedSiteInfo>[];
-    relatedBitbucketIssues: BitbucketIssue[];
     loadState: {
         basicData: boolean;
         comments: boolean;
         commits: boolean;
         tasks: boolean;
         relatedJiraIssues: boolean;
-        relatedBitbucketIssues: boolean;
         diffs: boolean;
         mergeStrategies: boolean;
         buildStatuses: boolean;
@@ -155,10 +147,6 @@ export interface PullRequestDetailsRelatedJiraIssuesMessage {
     relatedIssues: MinimalIssue<DetailedSiteInfo>[];
 }
 
-export interface PullRequestDetailsRelatedBitbucketIssuesMessage {
-    relatedIssues: BitbucketIssue[];
-}
-
 export interface PullRequestDetailsTasksMessage {
     tasks: Task[];
     comments: Comment[];
@@ -174,16 +162,14 @@ export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage =
     mergeStrategies: [],
     buildStatuses: [],
     relatedJiraIssues: [],
-    relatedBitbucketIssues: [],
     tasks: [],
-    //True indicates this particular component is still loading
     loadState: {
+        // true indicates this particular component is still loading
         basicData: true,
         comments: true,
         commits: true,
         tasks: true,
         relatedJiraIssues: true,
-        relatedBitbucketIssues: true,
         diffs: true,
         mergeStrategies: true,
         buildStatuses: true,

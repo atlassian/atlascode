@@ -189,28 +189,6 @@ export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {
     return trackEvent('searchIssues', 'issue', { attributes: { hostProduct: product.name } });
 }
 
-// Bitbucket issue events
-
-export async function bbIssueCreatedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'created', 'bbIssue');
-}
-
-export async function bbIssueTransitionedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'transitioned', 'bbIssue');
-}
-
-export async function bbIssueUrlCopiedEvent(): Promise<TrackEvent> {
-    return trackEvent('copied', 'bbIssueUrl');
-}
-
-export async function bbIssueCommentEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'created', 'bbIssueComment');
-}
-
-export async function bbIssueWorkStartedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'workStarted', 'bbIssue');
-}
-
 // PR events
 
 export async function prCreatedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {

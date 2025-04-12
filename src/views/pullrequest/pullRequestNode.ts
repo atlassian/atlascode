@@ -19,7 +19,6 @@ import { Logger } from '../../logger';
 import { Resources } from '../../resources';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { CommitSectionNode } from '../nodes/commitSectionNode';
-import { RelatedBitbucketIssuesNode } from '../nodes/relatedBitbucketIssuesNode';
 import { RelatedIssuesNode } from '../nodes/relatedIssuesNode';
 import { SimpleNode } from '../nodes/simpleNode';
 import { createFileChangesNodes } from './diffViewHelper';
@@ -125,9 +124,8 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     ): Promise<void> {
         try {
             const [conflictedFiles, tasks] = await nonCriticalPromise;
-            const [jiraIssueNodes, bbIssueNodes, fileNodes] = await Promise.all([
+            const [jiraIssueNodes, fileNodes] = await Promise.all([
                 this.createRelatedJiraIssueNode(commits, allComments),
-                this.createRelatedBitbucketIssueNode(commits, allComments),
                 createFileChangesNodes(this.pr, allComments, fileDiffs, conflictedFiles, tasks),
             ]);
             // update loadedChildren with additional data
@@ -135,7 +133,6 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
                 new DescriptionNode(this.pr),
                 ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, commits)] : []),
                 ...jiraIssueNodes,
-                ...bbIssueNodes,
                 ...fileNodes,
             ];
         } catch (error) {
@@ -209,18 +206,6 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
         const issueKeys = await extractIssueKeys(this.pr, commits, allComments.data);
         return issueKeys.length ? [new RelatedIssuesNode(issueKeys, 'Related Jira issues')] : [];
-    }
-
-    private async createRelatedBitbucketIssueNode(
-        commits: Commit[],
-        allComments: PaginatedComments,
-    ): Promise<AbstractBaseNode[]> {
-        const result: AbstractBaseNode[] = [];
-        const relatedIssuesNode = await RelatedBitbucketIssuesNode.create(this.pr, commits, allComments.data);
-        if (relatedIssuesNode) {
-            result.push(relatedIssuesNode);
-        }
-        return result;
     }
 }
 

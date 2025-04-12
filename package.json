@@ -401,33 +401,6 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.bb.createIssue",
-                "title": "Create Bitbucket Issue",
-                "icon": {
-                    "dark": "resources/dark/add.svg",
-                    "light": "resources/light/add.svg"
-                },
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.bb.refreshIssues",
-                "title": "Refresh Bitbucket Issues",
-                "icon": {
-                    "dark": "resources/dark/refresh.svg",
-                    "light": "resources/light/refresh.svg"
-                },
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.bb.showBitbucketIssueSettings",
-                "title": "Bitbucket Issue Settings",
-                "icon": {
-                    "dark": "resources/dark/settings.svg",
-                    "light": "resources/light/settings.svg"
-                },
-                "category": "Atlassian"
-            },
-            {
                 "command": "atlascode.bb.addComment",
                 "title": "Add comment",
                 "category": "Atlassian"
@@ -487,11 +460,6 @@
                     "id": "atlascode.views.bb.pipelinesTreeView",
                     "name": "Bitbucket pipelines",
                     "when": "atlascode:pipelineExplorerEnabled && config.atlascode.bitbucket.enabled"
-                },
-                {
-                    "id": "atlascode.views.bb.issuesTreeView",
-                    "name": "Bitbucket issues",
-                    "when": "atlascode:bitbucketIssuesExplorerEnabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "id": "atlascode.views.helpTreeView",
@@ -631,21 +599,6 @@
                     "group": "navigation@3"
                 },
                 {
-                    "command": "atlascode.bb.createIssue",
-                    "when": "atlascode:isBBAuthenticated && view == atlascode.views.bb.issuesTreeView",
-                    "group": "navigation@1"
-                },
-                {
-                    "command": "atlascode.bb.refreshIssues",
-                    "when": "view == atlascode.views.bb.issuesTreeView && atlascode:isBBAuthenticated",
-                    "group": "navigation@2"
-                },
-                {
-                    "command": "atlascode.bb.showBitbucketIssueSettings",
-                    "when": "view == atlascode.views.bb.issuesTreeView",
-                    "group": "navigation@3"
-                },
-                {
                     "command": "atlascode.disableHelpExplorer",
                     "when": "view == atlascode.views.helpTreeView"
                 }
@@ -688,7 +641,7 @@
                 },
                 {
                     "command": "atlascode.viewInWebBrowser",
-                    "when": "viewItem =~ /(pullrequest|pipelineBuild|bitbucketIssue)/"
+                    "when": "viewItem =~ /(pullrequest|pipelineBuild)/"
                 },
                 {
                     "command": "atlascode.bb.rerunPipeline",
@@ -790,10 +743,6 @@
                     "when": "false"
                 },
                 {
-                    "command": "atlascode.bb.showBitbucketIssueSettings",
-                    "when": "false"
-                },
-                {
                     "command": "atlascode.bb.openChangeset",
                     "when": "false"
                 },
@@ -823,10 +772,6 @@
                 },
                 {
                     "command": "atlascode.bb.rerunPipeline",
-                    "when": "false"
-                },
-                {
-                    "command": "atlascode.bb.refreshIssues",
                     "when": "false"
                 },
                 {
@@ -1341,30 +1286,6 @@
                     "description": "Bitbucket Pipeline results for branch names that don't contain one of these strings will be hidden.",
                     "scope": "window"
                 },
-                "atlascode.bitbucket.issues.explorerEnabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enables the Bitbucket Issues Explorer",
-                    "scope": "window"
-                },
-                "atlascode.bitbucket.issues.createJiraEnabled": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Shows a create jira issue button on the Bitbucket issue screen",
-                    "scope": "window"
-                },
-                "atlascode.bitbucket.issues.monitorEnabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Show notifications when new Bitbucket Issues are created",
-                    "scope": "window"
-                },
-                "atlascode.bitbucket.issues.refreshInterval": {
-                    "type": "integer",
-                    "default": 15,
-                    "description": "Time (in minutes) to wait before refreshing the Bitbucket Issues",
-                    "scope": "window"
-                },
                 "atlascode.bitbucket.explorer.refreshInterval": {
                     "type": "integer",
                     "default": 5,
@@ -1375,12 +1296,6 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Show related Jira issues for Bitbucket pull requests",
-                    "scope": "window"
-                },
-                "atlascode.bitbucket.explorer.relatedBitbucketIssues.enabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Show related Bitbucket issues for Bitbucket pull requests",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.explorer.notifications.pullRequestCreated": {

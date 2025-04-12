@@ -1,5 +1,5 @@
 import { createEmptyEditIssueUI, EditIssueUI } from '@atlassianlabs/jira-metaui-client';
-import { emptyUser, isMinimalIssue, MinimalIssue, Project, User } from '@atlassianlabs/jira-pi-common-models';
+import { emptyUser, MinimalIssue, Project, User } from '@atlassianlabs/jira-pi-common-models';
 import {
     createEmptyIssueTypeUI,
     CreateMetaTransformerProblems,
@@ -90,11 +90,7 @@ export interface StartWorkOnIssueResult extends Message {
 }
 
 export function isIssueCreated(m: Message): m is IssueCreated {
-    return (<IssueCreated>m).issueData !== undefined;
-}
-
-export function isStartWorkOnIssueData(m: Message): m is StartWorkOnIssueData {
-    return (<StartWorkOnIssueData>m).issue !== undefined && isMinimalIssue((<StartWorkOnIssueData>m).issue);
+    return !!(<IssueCreated>m).issueData;
 }
 
 export function isStartWorkOnIssueResult(m: Message): m is StartWorkOnIssueResult {

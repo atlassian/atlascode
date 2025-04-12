@@ -6,7 +6,6 @@ import { v4 } from 'uuid';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import {
     ApprovalStatus,
-    BitbucketIssue,
     BitbucketSite,
     BuildStatus,
     Comment,
@@ -32,7 +31,6 @@ import {
     PullRequestDetailsMergeStrategiesMessage,
     PullRequestDetailsMessage,
     PullRequestDetailsMessageType,
-    PullRequestDetailsRelatedBitbucketIssuesMessage,
     PullRequestDetailsRelatedJiraIssuesMessage,
     PullRequestDetailsResponse,
     PullRequestDetailsReviewersMessage,
@@ -65,10 +63,9 @@ export interface PullRequestDetailsControllerApi {
         mergeStrategy: MergeStrategy,
         commitMessage: string,
         closeSourceBranch: boolean,
-        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[],
+        issues: MinimalIssue<DetailedSiteInfo>[],
     ) => void;
     openJiraIssue: (issue: MinimalIssue<DetailedSiteInfo>) => void;
-    openBitbucketIssue: (issue: BitbucketIssue) => void;
     openBuildStatus: (buildStatus: BuildStatus) => void;
 }
 
@@ -99,11 +96,10 @@ const emptyApi: PullRequestDetailsControllerApi = {
         mergeStrategy: MergeStrategy,
         commitMessage: string,
         closeSourceBranch: boolean,
-        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[],
+        issues: MinimalIssue<DetailedSiteInfo>[],
     ) => {},
 
     openJiraIssue: (issue: MinimalIssue<DetailedSiteInfo>) => {},
-    openBitbucketIssue: (issue: BitbucketIssue) => {},
     openBuildStatus: (buildStatus: BuildStatus) => {},
 };
 
@@ -136,7 +132,6 @@ enum PullRequestDetailsUIActionType {
     UpdateBuildStatuses = 'updateBuildStatuses',
     UpdateMergeStrategies = 'updateMergeStrategies',
     UpdateRelatedJiraIssues = 'updateRelatedJiraIssues',
-    UpdateRelatedBitbucketIssues = 'updateRelatedBitbucketIssues',
     SetCheckoutLoading = 'setCheckoutLoading',
 }
 
@@ -166,10 +161,6 @@ type PullRequestDetailsUIAction =
     | ReducerAction<
           PullRequestDetailsUIActionType.UpdateRelatedJiraIssues,
           { data: PullRequestDetailsRelatedJiraIssuesMessage }
-      >
-    | ReducerAction<
-          PullRequestDetailsUIActionType.UpdateRelatedBitbucketIssues,
-          { data: PullRequestDetailsRelatedBitbucketIssuesMessage }
       >
     | ReducerAction<PullRequestDetailsUIActionType.Loading>
     | ReducerAction<PullRequestDetailsUIActionType.SetCheckoutLoading, { data: { isLoading: boolean } }>;
@@ -295,13 +286,6 @@ function pullRequestDetailsReducer(
                 loadState: { ...state.loadState, relatedJiraIssues: false },
             };
         }
-        case PullRequestDetailsUIActionType.UpdateRelatedBitbucketIssues: {
-            return {
-                ...state,
-                relatedBitbucketIssues: action.data.relatedIssues,
-                loadState: { ...state.loadState, relatedBitbucketIssues: false },
-            };
-        }
         case PullRequestDetailsUIActionType.SetCheckoutLoading: {
             return {
                 ...state,
@@ -372,10 +356,6 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             }
             case PullRequestDetailsMessageType.UpdateRelatedJiraIssues: {
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateRelatedJiraIssues, data: message });
-                break;
-            }
-            case PullRequestDetailsMessageType.UpdateRelatedBitbucketIssues: {
-                dispatch({ type: PullRequestDetailsUIActionType.UpdateRelatedBitbucketIssues, data: message });
                 break;
             }
             default: {
@@ -650,7 +630,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             mergeStrategy: MergeStrategy,
             commitMessage: string,
             closeSourceBranch: boolean,
-            issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[],
+            issues: MinimalIssue<DetailedSiteInfo>[],
         ) => {
             dispatch({ type: PullRequestDetailsUIActionType.Loading });
             postMessage({
@@ -668,16 +648,6 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         (issue: MinimalIssue<DetailedSiteInfo>) => {
             postMessage({
                 type: PullRequestDetailsActionType.OpenJiraIssue,
-                issue: issue,
-            });
-        },
-        [postMessage],
-    );
-
-    const openBitbucketIssue = useCallback(
-        (issue: BitbucketIssue) => {
-            postMessage({
-                type: PullRequestDetailsActionType.OpenBitbucketIssue,
                 issue: issue,
             });
         },
@@ -714,7 +684,6 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             openDiff: openDiff,
             merge: merge,
             openJiraIssue: openJiraIssue,
-            openBitbucketIssue: openBitbucketIssue,
             openBuildStatus: openBuildStatus,
         };
     }, [
@@ -736,7 +705,6 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         openDiff,
         merge,
         openJiraIssue,
-        openBitbucketIssue,
         openBuildStatus,
     ]);
 
