@@ -2,7 +2,6 @@ import Button from '@atlaskit/button';
 import LoadingButton from '@atlaskit/button/loading-button';
 import Form, { Field, FormFooter, FormHeader, RequiredAsterisk } from '@atlaskit/form';
 import Page from '@atlaskit/page';
-import Panel from '@atlaskit/panel';
 import SectionMessage from '@atlaskit/section-message';
 import Select, { components } from '@atlaskit/select';
 import { AsyncSelect } from '@atlaskit/select';
@@ -32,6 +31,7 @@ import {
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
 import JiraIssueTextAreaEditor from '../common/JiraIssueTextArea';
+import { Panel } from './Panel';
 
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;
