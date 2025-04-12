@@ -16,9 +16,8 @@ import {
 import * as path from 'path';
 import * as React from 'react';
 import EdiText from 'react-editext';
-import { AnalyticsView } from 'src/analyticsTypes';
-import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
 
+import { AnalyticsView } from '../../../analyticsTypes';
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import { emptyBitbucketSite, SiteRemote } from '../../../bitbucket/model';
 import {
@@ -35,6 +34,7 @@ import {
 } from '../../../ipc/issueMessaging';
 import { HostErrorMessage } from '../../../ipc/messaging';
 import { BranchType, RepoData } from '../../../ipc/prMessaging';
+import { AtlascodeErrorBoundary } from '../../../react/atlascode/common/ErrorBoundary';
 import { Branch } from '../../../typings/git';
 import { AtlLoader } from '../AtlLoader';
 import ErrorBanner from '../ErrorBanner';
