@@ -32,12 +32,6 @@ export class HelpDataProvider extends BaseTreeDataProvider {
                 KnownLinkID.Contribute,
             ),
             new LinkNode('Report an Issue', 'Report and vote on issues', iconSet.ISSUES, KnownLinkID.ReportAnIssue),
-            new LinkNode(
-                'Tweet about us',
-                'Share your love for this extension',
-                iconSet.TWITTERLOGOBLUE,
-                KnownLinkID.TweetAboutUs,
-            ),
             new InternalLinkNode(
                 'Explore Features',
                 'Overwhelmed? Check out some of the most common features, all in one place',
