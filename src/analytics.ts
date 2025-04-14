@@ -90,7 +90,7 @@ export async function errorEvent(error: Error | string): Promise<TrackEvent> {
             ? { name: 'Error', message: error }
             : { name: error.name || 'Error', message: error.message, stack: sanitizeStackTrace(error.stack) };
 
-    return trackEvent('errorEvent', 'atlascode', { attributes });
+    return trackEvent('errorEvent_v2', 'atlascode', { attributes });
 }
 
 // Feature Flag Events
