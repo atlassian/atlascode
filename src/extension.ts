@@ -27,10 +27,12 @@ import { GitExtension } from './typings/git';
 import { FeatureFlagClient } from './util/featureFlags';
 
 const AnalyticDelay = 5000;
+
 export async function activate(context: ExtensionContext) {
     const start = process.hrtime();
 
     registerErrorReporting();
+
     const atlascode = extensions.getExtension('atlassian.atlascode')!;
     const atlascodeVersion = atlascode.packageJSON.version;
     const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
@@ -93,12 +95,14 @@ export async function activate(context: ExtensionContext) {
     // icon to appear in the activity bar
     activateBitbucketFeatures();
     activateYamlFeatures(context);
+
     Logger.info(
         `Atlassian for VS Code (v${atlascodeVersion}) activated in ${
             duration[0] * 1000 + Math.floor(duration[1] / 1000000)
         } ms`,
     );
 }
+
 async function activateBitbucketFeatures() {
     let gitExt: GitExtension;
     try {
@@ -114,6 +118,7 @@ async function activateBitbucketFeatures() {
         );
         return;
     }
+
     try {
         const gitApi = gitExt.getAPI(1);
         const bbContext = new BitbucketContext(gitApi);
@@ -134,6 +139,7 @@ async function activateYamlFeatures(context: ExtensionContext) {
     await addPipelinesSchemaToYamlConfig();
     await activateYamlExtension();
 }
+
 async function showWelcomePage(version: string, previousVersion: string | undefined) {
     if (
         (previousVersion === undefined || semver.gt(version, previousVersion)) &&
@@ -160,6 +166,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
         });
         return;
     }
+
     if (semver.gt(version, previousVersion)) {
         Logger.info(`Atlassian for VS Code upgraded from v${previousVersion} to v${version}`);
         upgradedEvent(version, previousVersion).then((e) => {
