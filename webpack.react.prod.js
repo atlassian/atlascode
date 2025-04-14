@@ -101,10 +101,8 @@ module.exports = {
         }),
     ],
     performance: {
-        // About twice the default value of 244 Kib, to remove the warning
-        // Shouldn't be a problem since this is an extension
-        maxEntrypointSize: 512000,
-        maxAssetSize: 512000,
+        maxEntrypointSize: 262144,  // overridden to 256KiB, reccomended is 244KiB
+        maxAssetSize: 524288,       // overridden to 512KiB, reccomended is 244KiB
     },
     watchOptions: {
         ignored: /node_modules/,
