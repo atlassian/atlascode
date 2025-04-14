@@ -1,6 +1,6 @@
 import { pid } from 'process';
 import * as semver from 'semver';
-import * as vscode from 'vscode';
+import { commands, env, ExtensionContext, extensions, languages, Memento, window } from 'vscode';
 
 import { installedEvent, launchedEvent, upgradedEvent } from './analytics';
 import { DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
@@ -27,11 +27,11 @@ import { GitExtension } from './typings/git';
 import { FeatureFlagClient } from './util/featureFlags';
 
 const AnalyticDelay = 5000;
-export async function activate(context: vscode.ExtensionContext) {
+export async function activate(context: ExtensionContext) {
     const start = process.hrtime();
 
     registerErrorReporting();
-    const atlascode = vscode.extensions.getExtension('atlassian.atlascode')!;
+    const atlascode = extensions.getExtension('atlassian.atlascode')!;
     const atlascodeVersion = atlascode.packageJSON.version;
     const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
 
@@ -86,50 +86,47 @@ export async function activate(context: vscode.ExtensionContext) {
     }, delay);
 
     const duration = process.hrtime(start);
-    context.subscriptions.push(vscode.languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
+    context.subscriptions.push(languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
 
     // Following are async functions called without await so that they are run
     // in the background and do not slow down the time taken for the extension
     // icon to appear in the activity bar
     activateBitbucketFeatures();
     activateYamlFeatures(context);
-
     Logger.info(
         `Atlassian for VS Code (v${atlascodeVersion}) activated in ${
             duration[0] * 1000 + Math.floor(duration[1] / 1000000)
         } ms`,
     );
 }
-
 async function activateBitbucketFeatures() {
     let gitExt: GitExtension;
     try {
-        const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git');
+        const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
         if (!gitExtension) {
             throw new Error('vscode.git extension not found');
         }
         gitExt = await gitExtension.activate();
     } catch (e) {
         Logger.error(e, 'Error activating vscode.git extension');
-        vscode.window.showWarningMessage(
+        window.showWarningMessage(
             'Activating Bitbucket features failed. There was an issue activating vscode.git extension.',
         );
         return;
     }
-
     try {
         const gitApi = gitExt.getAPI(1);
         const bbContext = new BitbucketContext(gitApi);
         Container.initializeBitbucket(bbContext);
     } catch (e) {
         Logger.error(e, 'Activating Bitbucket features failed');
-        vscode.window.showWarningMessage('Activating Bitbucket features failed');
+        window.showWarningMessage('Activating Bitbucket features failed');
     }
 }
 
-async function activateYamlFeatures(context: vscode.ExtensionContext) {
+async function activateYamlFeatures(context: ExtensionContext) {
     context.subscriptions.push(
-        vscode.languages.registerCompletionItemProvider(
+        languages.registerCompletionItemProvider(
             { scheme: 'file', language: 'yaml', pattern: `**/*${BB_PIPELINES_FILENAME}` },
             new PipelinesYamlCompletionProvider(),
         ),
@@ -137,24 +134,23 @@ async function activateYamlFeatures(context: vscode.ExtensionContext) {
     await addPipelinesSchemaToYamlConfig();
     await activateYamlExtension();
 }
-
 async function showWelcomePage(version: string, previousVersion: string | undefined) {
     if (
         (previousVersion === undefined || semver.gt(version, previousVersion)) &&
         Container.config.showWelcomeOnInstall &&
-        vscode.window.state.focused
+        window.state.focused
     ) {
-        vscode.window
+        window
             .showInformationMessage(`Jira and Bitbucket (Official) has been updated to v${version}`, 'Release notes')
             .then((userChoice) => {
                 if (userChoice === 'Release notes') {
-                    vscode.commands.executeCommand('extension.open', 'atlassian.atlascode', 'changelog');
+                    commands.executeCommand('extension.open', 'atlassian.atlascode', 'changelog');
                 }
             });
     }
 }
 
-async function sendAnalytics(version: string, globalState: vscode.Memento) {
+async function sendAnalytics(version: string, globalState: Memento) {
     const previousVersion = globalState.get<string>(GlobalStateVersionKey);
     globalState.update(GlobalStateVersionKey, version);
 
@@ -164,7 +160,6 @@ async function sendAnalytics(version: string, globalState: vscode.Memento) {
         });
         return;
     }
-
     if (semver.gt(version, previousVersion)) {
         Logger.info(`Atlassian for VS Code upgraded from v${previousVersion} to v${version}`);
         upgradedEvent(version, previousVersion).then((e) => {
@@ -172,13 +167,13 @@ async function sendAnalytics(version: string, globalState: vscode.Memento) {
         });
     }
 
-    launchedEvent(vscode.env.remoteName ? vscode.env.remoteName : 'local').then((e) => {
+    launchedEvent(env.remoteName ? env.remoteName : 'local').then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
 }
 
 function showOnboardingPage() {
-    vscode.commands.executeCommand(Commands.ShowOnboardingPage);
+    commands.executeCommand(Commands.ShowOnboardingPage);
 }
 
 // this method is called when your extension is deactivated
