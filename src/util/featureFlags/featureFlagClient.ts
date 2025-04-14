@@ -124,13 +124,17 @@ export abstract class FeatureFlagClient {
         }
     }
 
-    static checkGate(gate: Features): boolean {
+    public static isInitialized(): boolean {
+        return FeatureGates.initializeCompleted();
+    }
+
+    public static checkGate(gate: Features): boolean {
         if (this.featureGateOverrides.hasOwnProperty(gate)) {
             return this.featureGateOverrides[gate];
         }
 
         let gateValue = false;
-        if (FeatureGates.initializeCompleted()) {
+        if (this.isInitialized()) {
             // FeatureGates.checkGate returns false if any errors
             gateValue = FeatureGates.checkGate(gate, { fireGateExposure: true });
         }
@@ -139,7 +143,7 @@ export abstract class FeatureFlagClient {
         return gateValue;
     }
 
-    static checkExperimentValue(experiment: Experiments): any {
+    public static checkExperimentValue(experiment: Experiments): any {
         // unknown experiment name
         if (!ExperimentGates.hasOwnProperty(experiment)) {
             return undefined;
@@ -151,7 +155,7 @@ export abstract class FeatureFlagClient {
 
         const experimentGate = ExperimentGates[experiment];
         let gateValue = experimentGate.defaultValue;
-        if (FeatureGates.initializeCompleted()) {
+        if (this.isInitialized()) {
             gateValue = FeatureGates.getExperimentValue(
                 experiment,
                 experimentGate.parameter,
@@ -164,7 +168,7 @@ export abstract class FeatureFlagClient {
         return gateValue;
     }
 
-    static checkGateValueWithInstrumentation(gate: Features): boolean {
+    public static checkGateValueWithInstrumentation(gate: Features): boolean {
         if (this.featureGateOverrides.hasOwnProperty(gate)) {
             const value = this.featureGateOverrides[gate];
             featureGateExposureBoolEvent(gate, false, value, 3).then((e) => {
@@ -190,7 +194,7 @@ export abstract class FeatureFlagClient {
         return gateValue;
     }
 
-    static checkExperimentStringValueWithInstrumentation(experiment: Experiments): string | undefined {
+    public static checkExperimentStringValueWithInstrumentation(experiment: Experiments): string | undefined {
         // unknown experiment name
         if (!ExperimentGates.hasOwnProperty(experiment)) {
             featureGateExposureStringEvent(experiment, false, '', 2).then((e) => {
@@ -236,7 +240,7 @@ export abstract class FeatureFlagClient {
         return gateValue;
     }
 
-    static dispose() {
+    public static dispose() {
         FeatureGates.shutdownStatsig();
     }
 }
