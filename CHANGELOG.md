@@ -2,7 +2,7 @@
 
 -----
 
-## What's new in 3.5.0
+## What's new in 3.6.0
 
 ### Deprecations
 
