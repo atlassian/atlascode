@@ -1,14 +1,18 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues/new/choose)
 
------
+---
 
 ## What's new in 3.5.0
 
 ### Deprecations
 
--   Following the official deprecation of Bitbucket issues, and their very low usage in our extension, we have removed the Bitbucket issues functionality from Atlascode. 
+-   Following the official deprecation of Bitbucket issues, and their very low usage in our extension, we have removed the Bitbucket issues functionality from Atlascode.
 
     Users who still need to use the Bitbucket issues functionality can manually install the latest version supporting it: v3.4.25.
+
+### Bug fixes
+
+-   Fixed bug where Epic/Parent links on Jira Issue Screen Navigation are not clickable
 
 ## What's new in 3.4.25
 
@@ -18,7 +22,7 @@
 
 ### Bug fixes
 
--   Some Jira issues weren't loading due to poor handling of missing fields. 
+-   Some Jira issues weren't loading due to poor handling of missing fields.
 
 ## What's new in 3.4.24
 
@@ -29,7 +33,7 @@
 
 ### Bug fixes:
 
-- Fixed bug in Bitbucket DC for PRs with comments where the PR Details would not display. 
+-   Fixed bug in Bitbucket DC for PRs with comments where the PR Details would not display.
 
 ## What's new in 3.4.23
 
