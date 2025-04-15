@@ -320,7 +320,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                         style={{
                             display: 'flex',
                             maxWidth: '1200px',
-                            margin: '20px auto 0 auto',
+                            margin: '20px auto 36px auto',
                             justifyContent: 'center',
                         }}
                     >
