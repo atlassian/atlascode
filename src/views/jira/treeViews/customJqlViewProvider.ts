@@ -56,7 +56,7 @@ export class CustomJQLViewProvider extends Disposable implements TreeDataProvide
             treeView,
         );
 
-        const jqlEntries = Container.jqlManager.getCustomJQLEntries();
+        const jqlEntries = Container.jqlManager.enabledJQLEntries();
         if (jqlEntries.length) {
             setCommandContext(CommandContext.CustomJQLExplorer, Container.config.jira.explorer.enabled);
         }
@@ -79,8 +79,8 @@ export class CustomJQLViewProvider extends Disposable implements TreeDataProvide
             configuration.changed(e, 'jira.explorer') ||
             configuration.changed(e, 'jira.explorer.enabled')
         ) {
-            const jqlEntries = Container.jqlManager.getCustomJQLEntries();
-            if (jqlEntries.length > 0) {
+            const jqlEntries = Container.jqlManager.enabledJQLEntries();
+            if (jqlEntries.length) {
                 setCommandContext(CommandContext.CustomJQLExplorer, Container.config.jira.explorer.enabled);
             } else {
                 setCommandContext(CommandContext.CustomJQLExplorer, false);
@@ -91,9 +91,6 @@ export class CustomJQLViewProvider extends Disposable implements TreeDataProvide
 
     private async onSitesDidChange(e: SitesAvailableUpdateEvent) {
         if (e.product.key === ProductJira.key) {
-            if (e.newSites) {
-                Container.jqlManager.initializeJQL(e.newSites);
-            }
             this.refresh();
         }
     }
@@ -119,7 +116,7 @@ export class CustomJQLViewProvider extends Disposable implements TreeDataProvide
         } else {
             SearchJiraHelper.clearIssues(CustomJQLViewProviderId);
 
-            const jqlEntries = Container.jqlManager.getCustomJQLEntries();
+            const jqlEntries = Container.jqlManager.enabledJQLEntries();
             return jqlEntries.length
                 ? jqlEntries.map((jqlEntry) => new JiraIssueQueryNode(jqlEntry))
                 : [CustomJQLViewProvider._treeItemConfigureJqlMessage];

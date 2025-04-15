@@ -1,9 +1,7 @@
 import * as vscode from 'vscode';
 
 import { forceCastTo } from '../../../../testsutil';
-import { DetailedSiteInfo, ProductBitbucket, ProductJira } from '../../../atlclients/authInfo';
 import { Container } from '../../../container';
-import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { CustomJQLViewProvider } from './customJqlViewProvider';
 import { TreeViewIssue } from './utils';
 import * as utils from './utils';
@@ -69,7 +67,7 @@ const mockedIssue3 = forceCastTo<TreeViewIssue>({
 jest.mock('../../../container', () => ({
     Container: {
         jqlManager: {
-            getCustomJQLEntries: jest.fn(() => mockJqlEntries),
+            enabledJQLEntries: jest.fn(() => mockJqlEntries),
             onDidJQLChange: () => {},
             updateFilters: jest.fn(),
             initializeJQL: () => {},
@@ -117,7 +115,7 @@ describe('CustomJqlViewProvider', () => {
             provider = new CustomJQLViewProvider();
             const children = await provider.getChildren();
 
-            expect(Container.jqlManager.getCustomJQLEntries).toHaveBeenCalled();
+            expect(Container.jqlManager.enabledJQLEntries).toHaveBeenCalled();
             expect(children).toHaveLength(2);
 
             expect(children[0].label).toBe('Test JQL Entry');
@@ -164,11 +162,11 @@ describe('CustomJqlViewProvider', () => {
         });
 
         it("should return a 'Configure JQL entries' node if no jql entries are enabled", async () => {
-            (Container.jqlManager.getCustomJQLEntries as jest.Mock).mockReturnValue([]);
+            (Container.jqlManager.enabledJQLEntries as jest.Mock).mockReturnValue([]);
             provider = new CustomJQLViewProvider();
             const children = await provider.getChildren();
 
-            expect(Container.jqlManager.getCustomJQLEntries).toHaveBeenCalled();
+            expect(Container.jqlManager.enabledJQLEntries).toHaveBeenCalled();
             expect(children).toHaveLength(1);
 
             expect(children[0].label).toEqual('Configure JQL entries in settings to view Jira issues');
@@ -180,7 +178,7 @@ describe('CustomJqlViewProvider', () => {
             provider = new CustomJQLViewProvider();
             const children = await provider.getChildren();
 
-            expect(Container.jqlManager.getCustomJQLEntries).toHaveBeenCalled();
+            expect(Container.jqlManager.enabledJQLEntries).toHaveBeenCalled();
             expect(children).toHaveLength(1);
 
             expect(children[0].label).toEqual('Please login to Jira');
@@ -200,50 +198,6 @@ describe('CustomJqlViewProvider', () => {
             provider = new CustomJQLViewProvider();
 
             expect(onDidSitesAvailableChangeCallback).toBeDefined();
-        });
-
-        it('onDidSitesAvailableChange initializes the JQL query for the new Jira site', async () => {
-            let onDidSitesAvailableChangeCallback = (...args: any[]) => {};
-            jest.spyOn(Container.siteManager, 'onDidSitesAvailableChange').mockImplementation(
-                (func: any, parent: any): any => {
-                    onDidSitesAvailableChangeCallback = (...args: any[]) => func.apply(parent, args);
-                },
-            );
-
-            provider = new CustomJQLViewProvider();
-
-            const newSite = forceCastTo<DetailedSiteInfo>({ host: 'jira.atlassian.com', product: ProductJira });
-            const evt: SitesAvailableUpdateEvent = forceCastTo<SitesAvailableUpdateEvent>({
-                product: ProductJira,
-                newSites: [newSite],
-            });
-
-            jest.spyOn(Container.jqlManager, 'initializeJQL');
-            onDidSitesAvailableChangeCallback(evt);
-
-            expect(Container.jqlManager.initializeJQL).toHaveBeenCalled();
-        });
-
-        it("onDidSitesAvailableChange doesn't do anything for a non-Jira site", async () => {
-            let onDidSitesAvailableChangeCallback = (...args: any[]) => {};
-            jest.spyOn(Container.siteManager, 'onDidSitesAvailableChange').mockImplementation(
-                (func: any, parent: any): any => {
-                    onDidSitesAvailableChangeCallback = (...args: any[]) => func.apply(parent, args);
-                },
-            );
-
-            provider = new CustomJQLViewProvider();
-
-            const newSite = forceCastTo<DetailedSiteInfo>({ host: 'bb.atlassian.com', product: ProductBitbucket });
-            const evt: SitesAvailableUpdateEvent = forceCastTo<SitesAvailableUpdateEvent>({
-                product: ProductBitbucket,
-                newSites: [newSite],
-            });
-
-            jest.spyOn(Container.jqlManager, 'initializeJQL');
-            onDidSitesAvailableChangeCallback(evt);
-
-            expect(Container.jqlManager.initializeJQL).not.toHaveBeenCalled();
         });
     });
 });

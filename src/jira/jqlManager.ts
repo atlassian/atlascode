@@ -1,6 +1,5 @@
 import PQueue from 'p-queue/dist';
-import { v4 } from 'uuid';
-import { ConfigurationChangeEvent, ConfigurationTarget, Disposable } from 'vscode';
+import { ConfigurationChangeEvent, Disposable } from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
 import { configuration } from '../config/configuration';
@@ -95,46 +94,6 @@ export class JQLManager extends Disposable {
     public getAllDefaultJQLEntries(): JQLEntry[] {
         const sites = Container.siteManager.getSitesAvailable(ProductJira);
         return sites.map((site) => this.defaultJQLEntryForJiraExplorer(site));
-    }
-
-    public getCustomJQLEntries(): JQLEntry[] {
-        const enabledEntries = this.enabledJQLEntries();
-        return enabledEntries.filter((entry) => {
-            const site = Container.siteManager.getSiteForId(ProductJira, entry.siteId);
-            return site && entry.query !== this.defaultJQLQueryForSite(site);
-        });
-    }
-
-    public async initializeJQL(sites: DetailedSiteInfo[]) {
-        this._queue.add(async () => {
-            const allList = Container.config.jira.jqlList;
-
-            for (const site of sites) {
-                if (!allList.some((j) => j.siteId === site.id)) {
-                    // only initialize if there are no jql entries for this site
-                    allList.push(this.defaultJQLEntryForSiteStorage(site));
-                }
-            }
-
-            await configuration.update('jira.jqlList', allList, ConfigurationTarget.Global);
-        });
-    }
-
-    private defaultJQLQueryForSite(site: DetailedSiteInfo): string {
-        return site.hasResolutionField
-            ? 'assignee = currentUser() AND resolution = Unresolved ORDER BY lastViewed DESC'
-            : 'assignee = currentUser() ORDER BY lastViewed DESC';
-    }
-
-    private defaultJQLEntryForSiteStorage(site: DetailedSiteInfo): JQLEntry {
-        return {
-            id: v4(), // In Custom JQL filters we can have multiple queries per site, so we need something unique
-            enabled: true,
-            name: `My ${site.name} Issues`,
-            query: this.defaultJQLQueryForSite(site),
-            siteId: site.id,
-            monitor: true,
-        };
     }
 
     private defaultJQLEntryForJiraExplorer(site: DetailedSiteInfo): JQLEntry {
