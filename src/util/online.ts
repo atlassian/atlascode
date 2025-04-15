@@ -97,7 +97,7 @@ export class OnlineDetector extends Disposable {
                     `Online check attempt ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`,
                 );
             },
-        } as pRetry.Options).catch(() => false);
+        }).catch(() => false);
     }
 
     private async checkOnlineStatus() {
