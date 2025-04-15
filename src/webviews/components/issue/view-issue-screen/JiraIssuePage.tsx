@@ -462,7 +462,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     onItemClick={() =>
                                         this.handleOpenIssue({
                                             siteDetails: this.state.siteDetails,
-                                            key: this.state.fieldValues['parent'],
+                                            key: this.state.fieldValues['parent'].key,
                                         })
                                     }
                                 />
