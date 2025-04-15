@@ -22,8 +22,7 @@ import {
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
-import { BitbucketIssue, Commit, MergeStrategy, PullRequestData } from '../../../bitbucket/model';
-import { BitbucketTransitionMenu } from './BitbucketTransitionMenu';
+import { Commit, MergeStrategy, PullRequestData } from '../../../bitbucket/model';
 import { JiraTransitionMenu } from './JiraTransitionMenu';
 import { MergeChecks } from './MergeChecks';
 
@@ -43,20 +42,18 @@ type MergeDialogProps = {
     prData: PullRequestData;
     commits: Commit[];
     relatedJiraIssues: MinimalIssue<DetailedSiteInfo>[];
-    relatedBitbucketIssues: BitbucketIssue[];
     mergeStrategies: MergeStrategy[];
     loadState: {
         basicData: boolean;
         commits: boolean;
         mergeStrategies: boolean;
         relatedJiraIssues: boolean;
-        relatedBitbucketIssues: boolean;
     };
     merge: (
         mergeStrategy: MergeStrategy,
         commitMessage: string,
         closeSourceBranch: boolean,
-        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[],
+        issues: MinimalIssue<DetailedSiteInfo>[],
     ) => void;
 };
 
@@ -64,7 +61,6 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
     prData,
     commits,
     relatedJiraIssues,
-    relatedBitbucketIssues,
     mergeStrategies,
     loadState,
     merge,
@@ -76,19 +72,13 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
     const [isMerging, setIsMerging] = useState<boolean>(false);
     const [transitionedJiraIssues, setTransitionedJiraIssues] =
         useState<MinimalIssue<DetailedSiteInfo>[]>(relatedJiraIssues);
-    const [transitionedBitbucketIssues, setTransitionedBitbucketIssues] =
-        useState<BitbucketIssue[]>(relatedBitbucketIssues);
     const [jiraIssuesToTransition] = useState<Map<string, boolean>>(new Map<string, boolean>());
-    const [bitbucketIssuesToTransition] = useState<Map<string, boolean>>(new Map<string, boolean>());
     const [closeSourceBranch, setCloseSourceBranch] = useState<boolean>(true);
 
     const handleMerge = useCallback(() => {
         const jiraIssues = transitionedJiraIssues.filter((issue) => jiraIssuesToTransition.get(issue.id));
-        const bitbucketIssues = transitionedBitbucketIssues.filter((issue) =>
-            bitbucketIssuesToTransition.get(issue.data.id),
-        );
         setIsMerging(true);
-        merge(mergeStrategy, commitMessage, closeSourceBranch, [...jiraIssues, ...bitbucketIssues]);
+        merge(mergeStrategy, commitMessage, closeSourceBranch, jiraIssues);
         setDialogOpen(false);
     }, [
         merge,
@@ -97,9 +87,7 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
         commitMessage,
         closeSourceBranch,
         transitionedJiraIssues,
-        transitionedBitbucketIssues,
         jiraIssuesToTransition,
-        bitbucketIssuesToTransition,
     ]);
 
     const handleClose = useCallback(() => {
@@ -183,34 +171,11 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
         [transitionedJiraIssues],
     );
 
-    const handleBitbucketIssueTransition = useCallback(
-        (issueToTransition: BitbucketIssue, transition: string) => {
-            const newTransitionedIssues = transitionedBitbucketIssues.map((issue) => {
-                return issue.data.id === issueToTransition.data.id
-                    ? {
-                          ...issue,
-                          data: { ...issue.data, state: transition },
-                      }
-                    : issue;
-            });
-
-            setTransitionedBitbucketIssues(newTransitionedIssues);
-        },
-        [transitionedBitbucketIssues],
-    );
-
     const handleShouldTransitionChangeJira = useCallback(
         (issueId: string, shouldTransition: boolean) => {
             jiraIssuesToTransition.set(issueId, shouldTransition);
         },
         [jiraIssuesToTransition],
-    );
-
-    const handleShouldTransitionChangeBitbucket = useCallback(
-        (issueId: string, shouldTransition: boolean) => {
-            bitbucketIssuesToTransition.set(issueId, shouldTransition);
-        },
-        [bitbucketIssuesToTransition],
     );
 
     const handleCloseSourceBranchChange = useCallback(
@@ -222,11 +187,6 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
         relatedJiraIssues.forEach((issue) => jiraIssuesToTransition.set(issue.id, true));
         setTransitionedJiraIssues(relatedJiraIssues);
     }, [relatedJiraIssues, jiraIssuesToTransition]);
-
-    useEffect(() => {
-        relatedBitbucketIssues.forEach((issue) => bitbucketIssuesToTransition.set(issue.data.id, true));
-        setTransitionedBitbucketIssues(relatedBitbucketIssues);
-    }, [relatedBitbucketIssues, bitbucketIssuesToTransition]);
 
     useEffect(() => {
         setCommitMessage(getDefaultCommitMessage(mergeStrategy));
@@ -327,16 +287,11 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
                             </Box>
                         </Grid>
                         <Grid item>
-                            <Box hidden={!loadState.relatedJiraIssues && !loadState.relatedBitbucketIssues}>
+                            <Box hidden={!loadState.relatedJiraIssues}>
                                 <CircularProgress />
                             </Box>
-                            <Box hidden={loadState.relatedJiraIssues || loadState.relatedBitbucketIssues}>
-                                <Box
-                                    marginTop={3}
-                                    hidden={
-                                        !(transitionedJiraIssues.length > 0 || transitionedBitbucketIssues.length > 0)
-                                    }
-                                >
+                            <Box hidden={loadState.relatedJiraIssues}>
+                                <Box marginTop={3} hidden={transitionedJiraIssues.length === 0}>
                                     <Typography variant="h5">Transition issues</Typography>
                                 </Box>
                                 <TableContainer>
@@ -348,14 +303,6 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
                                                     handleIssueTransition={handleJiraIssueTransition}
                                                     onShouldTransitionChange={handleShouldTransitionChangeJira}
                                                     key={issue.key}
-                                                />
-                                            ))}
-                                            {transitionedBitbucketIssues.map((issue) => (
-                                                <BitbucketTransitionMenu
-                                                    issue={issue}
-                                                    handleIssueTransition={handleBitbucketIssueTransition}
-                                                    onShouldTransitionChange={handleShouldTransitionChangeBitbucket}
-                                                    key={issue.data.id}
                                                 />
                                             ))}
                                         </TableBody>

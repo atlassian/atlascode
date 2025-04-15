@@ -33,10 +33,11 @@ jest.mock('@atlaskit/feature-gate-js-client', () => {
 });
 
 import FeatureGates from '@atlaskit/feature-gate-js-client';
+import { it } from '@jest/globals';
 
 import { forceCastTo } from '../../../testsutil';
 import { ClientInitializedErrorType } from '../../analytics';
-import { FeatureFlagClient, FeatureFlagClientInitError, FeatureFlagClientOptions } from './client';
+import { FeatureFlagClient, FeatureFlagClientInitError, FeatureFlagClientOptions } from './featureFlagClient';
 import { Experiments, Features } from './features';
 
 describe('FeatureFlagClient', () => {
@@ -129,6 +130,17 @@ describe('FeatureFlagClient', () => {
             expect(error).toBeDefined();
             expect(error.errorType).toBe(ClientInitializedErrorType.IdMissing);
         });
+
+        it.each([true, false])(
+            'isInitialized returns whatever FeatureGates.initializeCompleted says',
+            async (initializeCompleted) => {
+                await FeatureFlagClient.initialize(options);
+
+                jest.spyOn(FeatureGates, 'initializeCompleted').mockReturnValue(initializeCompleted);
+
+                expect(FeatureFlagClient.isInitialized()).toEqual(initializeCompleted);
+            },
+        );
 
         it('checkGate returns what FeatureGates returns', async () => {
             await FeatureFlagClient.initialize(options);

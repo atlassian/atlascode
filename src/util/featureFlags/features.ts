@@ -1,6 +1,7 @@
 export const enum Features {
     EnableNewUriHandler = 'atlascode-enable-new-uri-handler',
     NoOpFeature = 'atlascode-noop',
+    EnableErrorTelemetry = 'atlascode-send-error-telemetry',
 }
 
 export const enum Experiments {

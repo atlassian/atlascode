@@ -4,7 +4,6 @@ import { DetailedSiteInfo, emptySiteInfo } from '../atlclients/authInfo';
 import { PipelineApiImpl } from '../pipelines/pipelines';
 import { Remote, Repository } from '../typings/git';
 import { FileDiffQueryParams } from '../views/pullrequest/diffViewHelper';
-import { BitbucketIssuesApiImpl } from './bitbucket-cloud/bbIssues';
 
 export type BitbucketSite = {
     details: DetailedSiteInfo;
@@ -309,26 +308,6 @@ export interface PaginatedComments {
     next?: string;
 }
 
-export interface PaginatedBitbucketIssues {
-    workspaceRepo: WorkspaceRepo;
-    site: BitbucketSite;
-    data: BitbucketIssue[];
-    next?: string;
-}
-
-export type BitbucketIssue = {
-    site: BitbucketSite;
-    data: BitbucketIssueData;
-};
-
-export function isBitbucketIssue(a: any): a is BitbucketIssue {
-    return a && (<BitbucketIssue>a).site !== undefined && (<BitbucketIssue>a).data !== undefined;
-}
-
-export type BitbucketIssueData = {
-    state: string;
-    [k: string]: any;
-};
 export type BitbucketBranchingModel = any;
 
 export interface PullRequestApi {
@@ -404,7 +383,6 @@ export interface RepositoriesApi {
 export interface BitbucketApi {
     repositories: RepositoriesApi;
     pullrequests: PullRequestApi;
-    issues?: BitbucketIssuesApiImpl;
     pipelines?: PipelineApiImpl;
 }
 

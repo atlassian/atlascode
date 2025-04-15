@@ -88,10 +88,6 @@ export class VSCCommonMessageHandler implements CommonActionMessageHandler {
                         this._analytics.firePrUrlCopiedEvent();
                         break;
                     }
-                    case 'bbIssue': {
-                        this._analytics.fireBBIssueUrlCopiedEvent();
-                        break;
-                    }
                 }
                 break;
             }

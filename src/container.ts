@@ -9,7 +9,7 @@ import { LoginManager } from './atlclients/loginManager';
 import { BitbucketContext } from './bitbucket/bbContext';
 import { BitbucketCheckoutHelper } from './bitbucket/checkoutHelper';
 import { CheckoutHelper } from './bitbucket/interfaces';
-import { BitbucketIssue, BitbucketSite, PullRequest, WorkspaceRepo } from './bitbucket/model';
+import { PullRequest, WorkspaceRepo } from './bitbucket/model';
 import { openPullRequest } from './commands/bitbucket/pullRequest';
 import { configuration, IConfig } from './config/configuration';
 import { ATLASCODE_TEST_HOST, ATLASCODE_TEST_USER_EMAIL } from './constants';
@@ -18,9 +18,7 @@ import { JQLManager } from './jira/jqlManager';
 import { JiraProjectManager } from './jira/projectManager';
 import { JiraSettingsManager } from './jira/settingsManager';
 import { CancellationManager } from './lib/cancellation';
-import { BitbucketIssueAction } from './lib/ipc/fromUI/bbIssue';
 import { ConfigAction } from './lib/ipc/fromUI/config';
-import { CreateBitbucketIssueAction } from './lib/ipc/fromUI/createBitbucketIssue';
 import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
 import { PipelineSummaryAction } from './lib/ipc/fromUI/pipelineSummary';
 import { PullRequestDetailsAction } from './lib/ipc/fromUI/pullRequestDetails';
@@ -45,10 +43,6 @@ import { CustomJQLViewProvider } from './views/jira/treeViews/customJqlViewProvi
 import { AssignedWorkItemsViewProvider } from './views/jira/treeViews/jiraAssignedWorkItemsViewProvider';
 import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
 import { VSCAnalyticsApi } from './vscAnalyticsApi';
-import { VSCBitbucketIssueActionApi } from './webview/bbIssue/vscBitbucketIssueActionApi';
-import { VSCBitbucketIssueWebviewControllerFactory } from './webview/bbIssue/vscBitbucketIssueWebviewControllerFactory';
-import { VSCCreateBitbucketIssueActionImpl } from './webview/bbIssue/vscCreateBitbucketIssueActionApi';
-import { VSCCreateBitbucketIssueWebviewControllerFactory } from './webview/bbIssue/vscCreateBitbucketIssueWebviewControllerFactory';
 import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
 import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
@@ -68,7 +62,6 @@ import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscSta
 import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
-import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucketIssueWebview';
 import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
@@ -112,9 +105,6 @@ export class Container {
         );
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
         context.subscriptions.push(new StartWorkOnIssueWebview(context.extensionPath));
-        context.subscriptions.push(
-            (this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath)),
-        );
         context.subscriptions.push(new IssueHoverProviderManager());
         context.subscriptions.push(new AuthStatusBar());
         context.subscriptions.push((this._jqlManager = new JQLManager()));
@@ -242,26 +232,6 @@ export class Container {
         this._bitbucketContext = bbCtx;
         new PipelinesExplorer(bbCtx);
         this._context.subscriptions.push(
-            (this._bitbucketIssueWebviewFactory = new MultiWebview<BitbucketIssue, BitbucketIssueAction>(
-                this._context.extensionPath,
-                new VSCBitbucketIssueWebviewControllerFactory(
-                    new VSCBitbucketIssueActionApi(this._cancellationManager),
-                    this._commonMessageHandler,
-                    this._analyticsApi,
-                ),
-                this._analyticsApi,
-            )),
-            (this._createBitbucketIssueWebviewFactory = new SingleWebview<BitbucketSite, CreateBitbucketIssueAction>(
-                this._context.extensionPath,
-                new VSCCreateBitbucketIssueWebviewControllerFactory(
-                    new VSCCreateBitbucketIssueActionImpl(),
-                    this._commonMessageHandler,
-                    this._analyticsApi,
-                ),
-                this._analyticsApi,
-            )),
-        );
-        this._context.subscriptions.push(
             (this._pullRequestDetailsWebviewFactory = new MultiWebview<PullRequest, PullRequestDetailsAction>(
                 this._context.extensionPath,
                 new VSCPullRequestDetailsWebviewControllerFactory(
@@ -273,6 +243,7 @@ export class Container {
             )),
         );
         this._context.subscriptions.push((this._jiraActiveIssueStatusBar = new JiraActiveIssueStatusBar(bbCtx)));
+
         // It seems to take a bit of time for VS Code to initialize git, if we try and find repos before that completes
         // we'll fail. Wait a few seconds before trying to check out a branch.
         setTimeout(() => {
@@ -410,16 +381,6 @@ export class Container {
         return this._createPullRequestWebviewFactory;
     }
 
-    private static _bitbucketIssueWebviewFactory: MultiWebview<BitbucketIssue, BitbucketIssueAction>;
-    public static get bitbucketIssueWebviewFactory() {
-        return this._bitbucketIssueWebviewFactory;
-    }
-
-    private static _createBitbucketIssueWebviewFactory: SingleWebview<BitbucketSite, CreateBitbucketIssueAction>;
-    public static get createBitbucketIssueWebviewFactory() {
-        return this._createBitbucketIssueWebviewFactory;
-    }
-
     private static _createIssueWebview: CreateIssueWebview;
     public static get createIssueWebview() {
         return this._createIssueWebview;
@@ -428,11 +389,6 @@ export class Container {
     private static _createIssueProblemsWebview: CreateIssueProblemsWebview;
     public static get createIssueProblemsWebview() {
         return this._createIssueProblemsWebview;
-    }
-
-    private static _startWorkOnBitbucketIssueWebview: StartWorkOnBitbucketIssueWebview;
-    public static get startWorkOnBitbucketIssueWebview() {
-        return this._startWorkOnBitbucketIssueWebview;
     }
 
     private static _jiraIssueViewManager: JiraIssueViewManager;

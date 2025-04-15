@@ -24,7 +24,7 @@ import {
 } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
-import { FeatureFlagClient } from './util/featureFlags';
+import { FeatureFlagClient, Features } from './util/featureFlags';
 
 const AnalyticDelay = 5000;
 
@@ -37,6 +37,11 @@ export async function activate(context: ExtensionContext) {
     const atlascodeVersion = atlascode.packageJSON.version;
     const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
 
+    /***
+     * This is a workaround for the fact that the window object is not available but the Statsig client is reliant on a window object being defined
+     */
+    global.window = { document: {} } as any;
+
     registerResources(context);
 
     Configuration.configure(context);
@@ -48,7 +53,7 @@ export async function activate(context: ExtensionContext) {
     try {
         await Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
 
-        registerAnalyticsClient(Container.analyticsClient);
+        activateErrorReporting();
         registerCommands(context);
         activateCodebucket(context);
 
@@ -96,6 +101,14 @@ export async function activate(context: ExtensionContext) {
             duration[0] * 1000 + Math.floor(duration[1] / 1000000)
         } ms`,
     );
+}
+
+function activateErrorReporting(): void {
+    if (FeatureFlagClient.checkGate(Features.EnableErrorTelemetry)) {
+        registerAnalyticsClient(Container.analyticsClient);
+    } else {
+        unregisterErrorReporting();
+    }
 }
 
 async function activateBitbucketFeatures() {

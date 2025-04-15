@@ -2,10 +2,9 @@ import { Position, Range, Uri, ViewColumn, window, workspace, WorkspaceEdit } fr
 
 import { startIssueCreationEvent } from '../../analytics';
 import { ProductJira } from '../../atlclients/authInfo';
-import { clientForSite } from '../../bitbucket/bbUtils';
-import { BitbucketIssue, WorkspaceRepo } from '../../bitbucket/model';
+import { WorkspaceRepo } from '../../bitbucket/model';
 import { Container } from '../../container';
-import { BBData, CommentData } from '../../webviews/createIssueWebview';
+import { CommentData } from '../../webviews/createIssueWebview';
 
 export interface TodoIssueData {
     summary: string;
@@ -13,7 +12,7 @@ export interface TodoIssueData {
     insertionPoint: Position;
 }
 
-export function createIssue(data: Uri | TodoIssueData | BitbucketIssue | undefined, source?: string) {
+export function createIssue(data: Uri | TodoIssueData | undefined, source?: string) {
     if (isTodoIssueData(data)) {
         const partialIssue = {
             summary: data.summary,
@@ -33,18 +32,6 @@ export function createIssue(data: Uri | TodoIssueData | BitbucketIssue | undefin
             Container.analyticsClient.sendTrackEvent(e);
         });
         return;
-    } else if (isBBIssueData(data)) {
-        const partialIssue = {
-            summary: `BB #${data.data.id} - ${data.data.title}`,
-            description: `created from Bitbucket issue: ${data.data.links!.html!.href!}`,
-            bbIssue: data,
-            onCreated: updateBBIssue,
-        };
-        Container.createIssueWebview.createOrShow(ViewColumn.Beside, partialIssue);
-        startIssueCreationEvent('todoComment', ProductJira).then((e) => {
-            Container.analyticsClient.sendTrackEvent(e);
-        });
-        return;
     }
 
     Container.createIssueWebview.createOrShow();
@@ -57,10 +44,6 @@ function isTodoIssueData(a: any): a is TodoIssueData {
     return a && (<TodoIssueData>a).insertionPoint !== undefined;
 }
 
-function isBBIssueData(a: any): a is BitbucketIssue {
-    return a && (<BitbucketIssue>a).data !== undefined && (<BitbucketIssue>a).data.title !== undefined;
-}
-
 function isUri(a: any): a is Uri {
     return a && (<Uri>a).fsPath !== undefined;
 }
@@ -71,12 +54,6 @@ function annotateComment(data: CommentData) {
     const summary = data.summary && data.summary.length > 0 ? ` ${data.summary}` : '';
     we.insert(data.uri, data.position, ` [${data.issueKey}]${summary}`);
     workspace.applyEdit(we);
-}
-
-async function updateBBIssue(data: BBData) {
-    const bbApi = await clientForSite(data.bbIssue.site);
-    await bbApi.issues!.postComment(data.bbIssue, `Linked to ${data.issueKey}`);
-    await bbApi.issues!.postChange(data.bbIssue, 'open');
 }
 
 function descriptionForUri(uri: Uri) {

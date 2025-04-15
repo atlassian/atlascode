@@ -7,7 +7,6 @@ import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { CommonPanelProps } from '../../common/commonPanelProps';
 import { StatusBarPanel } from '../../common/StatusBarPanel';
 import { AuthPanel } from '../auth/AuthPanel';
-import { BitbucketIssuesPanel } from './subpanels/BitbucketIssuesPanel';
 import { ContextMenuPanel } from './subpanels/ContextMenuPanel';
 import { PipelinesPanel } from './subpanels/PipelinesPanel';
 import { PreferredRemotesPanel } from './subpanels/PreferredRemotesPanel';
@@ -78,17 +77,6 @@ export const BitbucketPanel: React.FunctionComponent<BitbucketPanelProps> = ({
                                 monitorEnabled={config[`${ConfigSection.Bitbucket}.pipelines.monitorEnabled`]}
                                 filters={config[`${ConfigSection.Bitbucket}.pipelines.branchFilters`]}
                                 refreshInterval={config[`${ConfigSection.Bitbucket}.pipelines.refreshInterval`]}
-                            />
-                        </Grid>
-                        <Grid item>
-                            <BitbucketIssuesPanel
-                                visible={visible}
-                                expanded={selectedSubSections.includes(ConfigSubSection.Issues)}
-                                onSubsectionChange={onSubsectionChange}
-                                enabled={config[`${ConfigSection.Bitbucket}.issues.explorerEnabled`]}
-                                notifications={config[`${ConfigSection.Bitbucket}.issues.monitorEnabled`]}
-                                jiraButton={config[`${ConfigSection.Bitbucket}.issues.createJiraEnabled`]}
-                                refreshInterval={config[`${ConfigSection.Bitbucket}.issues.refreshInterval`]}
                             />
                         </Grid>
                         <Grid item>

@@ -5,7 +5,6 @@ import PQueue from 'p-queue';
 import { ConfigurationChangeEvent, Disposable, ExtensionContext } from 'vscode';
 import { commands, window } from 'vscode';
 
-import { BitbucketIssuesApiImpl } from '../bitbucket/bitbucket-cloud/bbIssues';
 import { CloudPullRequestApi } from '../bitbucket/bitbucket-cloud/pullRequests';
 import { CloudRepositoriesApi } from '../bitbucket/bitbucket-cloud/repositories';
 import { ServerPullRequestApi } from '../bitbucket/bitbucket-server/pullRequests';
@@ -125,9 +124,6 @@ export class ClientManager implements Disposable {
                     pullrequests: isOAuthInfo(info)
                         ? new CloudPullRequestApi(this.createOAuthHTTPClient(site, info.access))
                         : undefined!,
-                    issues: isOAuthInfo(info)
-                        ? new BitbucketIssuesApiImpl(this.createOAuthHTTPClient(site, info.access))
-                        : undefined!,
                     pipelines: isOAuthInfo(info)
                         ? new PipelineApiImpl(this.createOAuthHTTPClient(site, info.access))
                         : undefined!,
@@ -142,7 +138,6 @@ export class ClientManager implements Disposable {
                         isBasicAuthInfo(info) || isPATAuthInfo(info)
                             ? new ServerPullRequestApi(this.createHTTPClient(site, info))
                             : undefined!,
-                    issues: undefined,
                     pipelines: undefined,
                 };
             }

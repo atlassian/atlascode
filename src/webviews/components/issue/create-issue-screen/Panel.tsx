@@ -44,6 +44,7 @@ export const Panel: React.FC<PanelProps> = ({ isDefaultExpanded, header, childre
                     alignItems: 'center',
                     padding: '2px 0 2px 24px',
                     width: '100%',
+                    cursor: 'pointer',
                 }}
             >
                 <span style={{ position: 'absolute', top: 0, left: 0 }}>

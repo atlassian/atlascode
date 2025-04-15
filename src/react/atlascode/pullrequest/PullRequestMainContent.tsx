@@ -9,7 +9,6 @@ import { Commits } from './Commits';
 import { DiffList } from './DiffList';
 import { NestedCommentList } from './NestedCommentList';
 import { PullRequestDetailsControllerApi, PullRequestDetailsState } from './pullRequestDetailsController';
-import { RelatedBitbucketIssues } from './RelatedBitbucketIssues';
 import { RelatedJiraIssues } from './RelatedJiraIssues';
 import { SummaryPanel } from './SummaryPanel';
 
@@ -49,21 +48,6 @@ export const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
                             <RelatedJiraIssues
                                 relatedIssues={state.relatedJiraIssues}
                                 openJiraIssue={controller.openJiraIssue}
-                            />
-                        </BasicPanel>
-                    </Grid>
-                )}
-                {state.relatedBitbucketIssues.length > 0 && (
-                    <Grid item>
-                        <BasicPanel
-                            title={'Related Bitbucket Issues'}
-                            subtitle={`${state.relatedBitbucketIssues.length} issues`}
-                            isLoading={state.loadState.relatedBitbucketIssues}
-                            hidden={state.relatedBitbucketIssues.length === 0}
-                        >
-                            <RelatedBitbucketIssues
-                                relatedIssues={state.relatedBitbucketIssues}
-                                openBitbucketIssue={controller.openBitbucketIssue}
                             />
                         </BasicPanel>
                     </Grid>

@@ -7,7 +7,6 @@ import { commands, Position, Uri, ViewColumn } from 'vscode';
 
 import { issueCreatedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
-import { BitbucketIssue } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
@@ -32,7 +31,6 @@ export interface PartialIssue {
     onCreated?: (data: CommentData | BBData) => void;
     summary?: string;
     description?: string;
-    bbIssue?: BitbucketIssue;
 }
 
 export interface CommentData {
@@ -43,7 +41,6 @@ export interface CommentData {
 }
 
 export interface BBData {
-    bbIssue: BitbucketIssue;
     issueKey: string;
 }
 
@@ -62,7 +59,6 @@ export class CreateIssueWebview
     private _currentProject: Project | undefined;
     private _screenData: CreateMetaTransformerResult<DetailedSiteInfo>;
     private _selectedIssueTypeId: string | undefined;
-    private _relatedBBIssue: BitbucketIssue | undefined;
     private _siteDetails: DetailedSiteInfo;
 
     constructor(extensionPath: string) {
@@ -114,9 +110,6 @@ export class CreateIssueWebview
 
         if (data) {
             this._screenData = emptyCreateMetaResult;
-            if (data.bbIssue) {
-                this._relatedBBIssue = data.bbIssue;
-            }
         } else {
             this._partialIssue = {};
         }
@@ -339,9 +332,6 @@ export class CreateIssueWebview
                 issueKey: issueKey,
                 summary: createdSummary,
             });
-            this.hide();
-        } else if (this._relatedBBIssue && this._partialIssue && this._partialIssue.onCreated) {
-            this._partialIssue.onCreated({ bbIssue: this._relatedBBIssue, issueKey: issueKey });
             this.hide();
         }
     }

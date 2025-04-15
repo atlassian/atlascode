@@ -90,7 +90,7 @@ export interface StartWorkOnIssueResult extends Message {
 }
 
 export function isIssueCreated(m: Message): m is IssueCreated {
-    return (<IssueCreated>m).issueData !== undefined;
+    return !!(<IssueCreated>m).issueData;
 }
 
 export function isStartWorkOnIssueData(m: Message): m is StartWorkOnIssueData {
