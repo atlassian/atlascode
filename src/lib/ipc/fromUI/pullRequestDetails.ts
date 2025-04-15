@@ -4,7 +4,6 @@ import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import {
     ApprovalStatus,
-    BitbucketIssue,
     BitbucketSite,
     BuildStatus,
     Comment,
@@ -31,7 +30,6 @@ export enum PullRequestDetailsActionType {
     OpenDiffRequest = 'openDiffRequest',
     Merge = 'merge',
     OpenJiraIssue = 'openJiraIssue',
-    OpenBitbucketIssue = 'openBitbucketIssue',
     OpenBuildStatus = 'openBuildStatus',
 }
 
@@ -51,7 +49,6 @@ export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.OpenDiffRequest, OpenDiffAction>
     | ReducerAction<PullRequestDetailsActionType.Merge, MergeAction>
     | ReducerAction<PullRequestDetailsActionType.OpenJiraIssue, OpenJiraIssueAction>
-    | ReducerAction<PullRequestDetailsActionType.OpenBitbucketIssue, OpenBitbucketIssueAction>
     | ReducerAction<PullRequestDetailsActionType.OpenBuildStatus, OpenBuildStatusAction>
     | CommonAction;
 
@@ -112,15 +109,11 @@ export interface MergeAction {
     mergeStrategy: MergeStrategy;
     commitMessage: string;
     closeSourceBranch: boolean;
-    issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[];
+    issues: MinimalIssue<DetailedSiteInfo>[];
 }
 
 export interface OpenJiraIssueAction {
     issue: MinimalIssue<DetailedSiteInfo>;
-}
-
-export interface OpenBitbucketIssueAction {
-    issue: BitbucketIssue;
 }
 
 export interface OpenBuildStatusAction {

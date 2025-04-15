@@ -5,7 +5,6 @@ import Axios from 'axios';
 import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import {
     ApprovalStatus,
-    BitbucketIssue,
     BuildStatus,
     Comment,
     Commit,
@@ -191,24 +190,9 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     return relatedJiraIssues;
                 });
 
-            const relatedBitbucketIssuesPromise = this.api
-                .fetchRelatedBitbucketIssues(this.pr, this.commits, this.pageComments)
-                .then((relatedBitbucketIssues: BitbucketIssue[]) => {
-                    this.postMessage({
-                        type: PullRequestDetailsMessageType.UpdateRelatedBitbucketIssues,
-                        relatedIssues: relatedBitbucketIssues,
-                    });
-                    return relatedBitbucketIssues;
-                });
-
             //Now we wait for all remaining promises in 2 batches. The reason for this is that some of
             //these promises are older than others, meaning they're more likely to have finished.
-            await Promise.all([
-                buildStatusPromise,
-                mergeStrategiesPromise,
-                relatedJiraIssuesPromise,
-                relatedBitbucketIssuesPromise,
-            ]);
+            await Promise.all([buildStatusPromise, mergeStrategiesPromise, relatedJiraIssuesPromise]);
             const tasksAndComments = await tasksPromise;
             this.pageComments = tasksAndComments.pageComments;
             this.inlineComments = tasksAndComments.inlineComments;
@@ -546,17 +530,6 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             case PullRequestDetailsActionType.OpenJiraIssue:
                 try {
                     await this.api.openJiraIssue(msg.issue);
-                } catch (e) {
-                    this.logger.error(new Error(`error opening jira issue: ${e}`));
-                    this.postMessage({
-                        type: CommonMessageType.Error,
-                        reason: formatError(e, 'Error opening jira issue'),
-                    });
-                }
-                break;
-            case PullRequestDetailsActionType.OpenBitbucketIssue:
-                try {
-                    await this.api.openBitbucketIssue(msg.issue);
                 } catch (e) {
                     this.logger.error(new Error(`error opening jira issue: ${e}`));
                     this.postMessage({

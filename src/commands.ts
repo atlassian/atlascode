@@ -10,7 +10,6 @@ import {
 } from './analytics';
 import { DetailedSiteInfo, ProductBitbucket } from './atlclients/authInfo';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
-import { BitbucketIssue } from './bitbucket/model';
 import { rerunPipeline } from './commands/bitbucket/rerunPipeline';
 import { runPipeline } from './commands/bitbucket/runPipeline';
 import { assignIssue } from './commands/jira/assignIssue';
@@ -61,7 +60,6 @@ export enum Commands {
     ShowJiraIssueSettings = 'atlascode.jira.showJiraIssueSettings',
     ShowPullRequestSettings = 'atlascode.bb.showPullRequestSettings',
     ShowPipelineSettings = 'atlascode.bb.showPipelineSettings',
-    ShowBitbucketIssueSettings = 'atlascode.bb.showBitbucketIssueSettings',
     ShowExploreSettings = 'atlascode.showExploreSettings',
     ShowIssue = 'atlascode.jira.showIssue',
     ShowIssueForKey = 'atlascode.jira.showIssueForKey',
@@ -83,10 +81,6 @@ export enum Commands {
     ShowPipeline = 'atlascode.bb.showPipeline',
     PipelinesNextPage = 'atlascode.bb.pipelinesNextPage',
     BitbucketIssuesNextPage = 'atlascode.bb.issuesNextPage',
-    BitbucketIssuesRefresh = 'atlascode.bb.refreshIssues',
-    CreateBitbucketIssue = 'atlascode.bb.createIssue',
-    ShowBitbucketIssue = 'atlascode.bb.showIssue',
-    StartWorkOnBitbucketIssue = 'atlascode.bb.startWorkOnIssue',
     BBPRCancelAction = 'atlascode.bb.cancelCommentAction',
     BBPRSaveAction = 'atlascode.bb.saveCommentAction',
     ViewDiff = 'atlascode.viewDiff',
@@ -158,12 +152,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 subSection: ConfigSubSection.Pipelines,
             }),
         ),
-        commands.registerCommand(Commands.ShowBitbucketIssueSettings, () =>
-            Container.settingsWebviewFactory.createOrShow({
-                section: ConfigSection.Bitbucket,
-                subSection: ConfigSubSection.Issues,
-            }),
-        ),
         commands.registerCommand(Commands.ShowExploreSettings, () => {
             Container.analyticsApi.fireExploreFeaturesButtonEvent(HelpTreeViewId);
             Container.settingsWebviewFactory.createOrShow({
@@ -216,9 +204,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                     isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue,
                 ),
         ),
-        commands.registerCommand(Commands.StartWorkOnBitbucketIssue, (issue: BitbucketIssue) =>
-            Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue),
-        ),
         commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, Uri, Uri, string]) => {
             viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then((e) => {
                 Container.analyticsClient.sendScreenEvent(e);
@@ -235,9 +220,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(Commands.ShowPipeline, (pipelineInfo: any) => {
             Container.pipelinesSummaryWebview.createOrShow(pipelineInfo.uuid, pipelineInfo);
         }),
-        commands.registerCommand(Commands.ShowBitbucketIssue, (issue: BitbucketIssue) =>
-            Container.bitbucketIssueWebviewFactory.createOrShow(issue.data.links?.self?.href, issue),
-        ),
         commands.registerCommand(Commands.DebugBitbucketSites, showBitbucketDebugInfo),
         commands.registerCommand(Commands.WorkbenchOpenRepository, (source: string) => {
             openWorkbenchRepositoryButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));

@@ -59,14 +59,12 @@ export const PullRequestHeaderActions: React.FC<PullRequestHeaderActionsProps> =
                     prData={state.pr.data}
                     commits={state.commits}
                     relatedJiraIssues={state.relatedJiraIssues}
-                    relatedBitbucketIssues={state.relatedBitbucketIssues}
                     mergeStrategies={state.mergeStrategies}
                     loadState={{
                         basicData: state.loadState.basicData,
                         commits: state.loadState.commits,
                         mergeStrategies: state.loadState.mergeStrategies,
                         relatedJiraIssues: state.loadState.relatedJiraIssues,
-                        relatedBitbucketIssues: state.loadState.relatedBitbucketIssues,
                     }}
                     merge={controller.merge}
                 />

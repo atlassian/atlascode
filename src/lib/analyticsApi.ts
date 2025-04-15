@@ -15,11 +15,6 @@ export interface AnalyticsApi {
     fireIssueWorkStartedEvent(site: DetailedSiteInfo, pushBranchToRemoteChecked: boolean): Promise<void>;
     fireIssueUpdatedEvent(site: DetailedSiteInfo, issueKey: string, fieldName: string, fieldKey: string): Promise<void>;
     fireStartIssueCreationEvent(source: string, product: Product): Promise<void>;
-    fireBBIssueCreatedEvent(site: DetailedSiteInfo): Promise<void>;
-    fireBBIssueTransitionedEvent(site: DetailedSiteInfo): Promise<void>;
-    fireBBIssueUrlCopiedEvent(): Promise<void>;
-    fireBBIssueCommentEvent(site: DetailedSiteInfo): Promise<void>;
-    fireBBIssueWorkStartedEvent(site: DetailedSiteInfo): Promise<void>;
     firePrCreatedEvent(site: DetailedSiteInfo): Promise<void>;
     firePrCommentEvent(site: DetailedSiteInfo): Promise<void>;
     firePrTaskEvent(site: DetailedSiteInfo, commentId?: string): Promise<void>;
