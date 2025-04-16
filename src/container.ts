@@ -1,4 +1,4 @@
-import { ConfigurationChangeEvent, env, ExtensionContext, UIKind, window, workspace } from 'vscode';
+import { env, ExtensionContext, UIKind, window, workspace } from 'vscode';
 
 import { featureFlagClientInitializedEvent } from './analytics';
 import { AnalyticsClient, analyticsClient } from './analytics-node-client/src/client.min.js';
@@ -243,16 +243,7 @@ export class Container {
                 this._analyticsApi,
             )),
         );
-        if (this.config.bitbucket.showTerminalLinkPanel) {
-            this._context.subscriptions.push(new BitbucketPullRequestLinkProvider());
-        } else {
-            configuration.onDidChange(
-                (e: ConfigurationChangeEvent) =>
-                    configuration.changed(e, 'bitbucket.showTerminalLinkPanel') &&
-                    this._context.subscriptions.push(new BitbucketPullRequestLinkProvider()),
-                this,
-            );
-        }
+        this._context.subscriptions.push(new BitbucketPullRequestLinkProvider());
         // It seems to take a bit of time for VS Code to initialize git, if we try and find repos before that completes
         // we'll fail. Wait a few seconds before trying to check out a branch.
         setTimeout(() => {
