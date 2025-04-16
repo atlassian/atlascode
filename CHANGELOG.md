@@ -10,6 +10,10 @@
 
     Users who still need to use the Bitbucket issues functionality can manually install the latest version supporting it: v3.4.25.
 
+### Features
+
+-   Added informational panel when user clicks on create PR link in terminal which asks whether to create PR in extension or continue to browser
+
 ### Bug fixes
 
 -   Fixed bug where Epic/Parent links on Jira Issue Screen Navigation are not clickable
