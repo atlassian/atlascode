@@ -118,6 +118,7 @@ export interface BitbucketConfig {
     pipelines: BitbucketPipelinesConfig;
     issues: BitbucketIssuesConfig;
     preferredRemotes: string[];
+    showTerminalLinkPanel: boolean;
 }
 
 export interface BitbucketPipelinesConfig {
@@ -286,6 +287,7 @@ const emptyBitbucketConfig: BitbucketConfig = {
     pipelines: emptyPipelinesConfig,
     issues: emptyIssuesConfig,
     preferredRemotes: ['upstream', 'origin'],
+    showTerminalLinkPanel: true,
 };
 
 export const emptyConfig: IConfig = {

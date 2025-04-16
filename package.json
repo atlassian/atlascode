@@ -1360,6 +1360,12 @@
                     "description": "Shows a login button in the status bar",
                     "scope": "window"
                 },
+                "atlascode.bitbucket.showTerminalLinkPanel": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shows the terminal link panel when create PR link is clicked in terminal",
+                    "scope": "window"
+                },
                 "atlascode.helpExplorerEnabled": {
                     "type": "boolean",
                     "default": true,
