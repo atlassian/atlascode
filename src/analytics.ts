@@ -191,9 +191,9 @@ export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {
 
 // PR events
 
-export async function createPrTerminalLinkDetectedEvent(isEnabled: boolean): Promise<TrackEvent> {
+export async function createPrTerminalLinkDetectedEvent(isNotifEnabled: boolean): Promise<TrackEvent> {
     return trackEvent('createPrTerminalLink', 'detected', {
-        attributes: { isEnabled: isEnabled },
+        attributes: { isNotificationEnabled: isNotifEnabled },
     });
 }
 
@@ -624,7 +624,7 @@ export async function openActiveIssueEvent(): Promise<UIEvent> {
     return anyUserOrAnonymous<UIEvent>(e);
 }
 
-export async function createPrTerminalLinkPanelButtonCLickedEvent(
+export async function createPrTerminalLinkPanelButtonClickedEvent(
     source: string,
     type: CreatePrTerminalSelection,
 ): Promise<UIEvent> {

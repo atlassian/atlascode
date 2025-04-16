@@ -12,7 +12,7 @@ import {
     window,
 } from 'vscode';
 
-import { createPrTerminalLinkDetectedEvent, createPrTerminalLinkPanelButtonCLickedEvent } from '../../analytics';
+import { createPrTerminalLinkDetectedEvent, createPrTerminalLinkPanelButtonClickedEvent } from '../../analytics';
 import { AnalyticsClient } from '../../analytics-node-client/src/client.min.js';
 import { CreatePrTerminalSelection } from '../../analyticsTypes';
 import { Commands } from '../../commands';
@@ -25,13 +25,16 @@ interface BitbucketTerminalLink extends TerminalLink {
 const PanelId = 'atlascode.bitbucket.createPullRequestTerminalLinkPanel';
 
 const BBCloudPullRequestLinkRegex = new RegExp(/https:\/\/bitbucket\.org\/(.*)\/(.*)\/pull-requests\/new\?source=(.*)/);
+
 export class BitbucketCloudPullRequestLinkProvider extends Disposable implements TerminalLinkProvider {
     private _analyticsClient: AnalyticsClient;
+
     constructor() {
         super(() => this.dispose());
         this._analyticsClient = Container.analyticsClient;
         window.registerTerminalLinkProvider(this);
     }
+
     provideTerminalLinks(
         context: TerminalLinkContext,
         token: CancellationToken,
@@ -98,7 +101,7 @@ export class BitbucketCloudPullRequestLinkProvider extends Disposable implements
                         break;
                 }
 
-                createPrTerminalLinkPanelButtonCLickedEvent(PanelId, type).then((event) => {
+                createPrTerminalLinkPanelButtonClickedEvent(PanelId, type).then((event) => {
                     this._analyticsClient.sendUIEvent(event);
                 });
             });
