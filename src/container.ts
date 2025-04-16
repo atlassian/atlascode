@@ -242,6 +242,8 @@ export class Container {
                 this._analyticsApi,
             )),
         );
+        this._context.subscriptions.push((this._jiraActiveIssueStatusBar = new JiraActiveIssueStatusBar(bbCtx)));
+
         this._context.subscriptions.push(new BitbucketCloudPullRequestLinkProvider());
         // It seems to take a bit of time for VS Code to initialize git, if we try and find repos before that completes
         // we'll fail. Wait a few seconds before trying to check out a branch.
