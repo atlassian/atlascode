@@ -10,7 +10,7 @@ import { BitbucketContext } from './bitbucket/bbContext';
 import { BitbucketCheckoutHelper } from './bitbucket/checkoutHelper';
 import { CheckoutHelper } from './bitbucket/interfaces';
 import { PullRequest, WorkspaceRepo } from './bitbucket/model';
-import { BitbucketPullRequestLinkProvider } from './bitbucket/terminal-link/createPrLinkProvider';
+import { BitbucketCloudPullRequestLinkProvider } from './bitbucket/terminal-link/createPrLinkProvider';
 import { openPullRequest } from './commands/bitbucket/pullRequest';
 import { configuration, IConfig } from './config/configuration';
 import { ATLASCODE_TEST_HOST, ATLASCODE_TEST_USER_EMAIL } from './constants';
@@ -242,7 +242,7 @@ export class Container {
                 this._analyticsApi,
             )),
         );
-        this._context.subscriptions.push(new BitbucketPullRequestLinkProvider());
+        this._context.subscriptions.push(new BitbucketCloudPullRequestLinkProvider());
         // It seems to take a bit of time for VS Code to initialize git, if we try and find repos before that completes
         // we'll fail. Wait a few seconds before trying to check out a branch.
         setTimeout(() => {

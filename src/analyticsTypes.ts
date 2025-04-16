@@ -55,3 +55,9 @@ export type UIErrorInfo = UIAnalyticsContext & {
     errorMessage: string;
     errorCause: string;
 };
+
+export enum CreatePrTerminalSelection {
+    Yes = 'yes',
+    Ignore = 'ignore',
+    Disable = 'disable',
+}

@@ -12,6 +12,9 @@ import {
     window,
 } from 'vscode';
 
+import { createPrTerminalLinkDetectedEvent, createPrTerminalLinkPanelButtonCLickedEvent } from '../../analytics';
+import { AnalyticsClient } from '../../analytics-node-client/src/client.min.js';
+import { CreatePrTerminalSelection } from '../../analyticsTypes';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
@@ -19,14 +22,14 @@ import { Container } from '../../container';
 interface BitbucketTerminalLink extends TerminalLink {
     url: string;
 }
+const PanelId = 'atlascode.bitbucket.createPullRequestTerminalLinkPanel';
 
-export class BitbucketPullRequestLinkProvider extends Disposable implements TerminalLinkProvider {
-    private readonly bbPullRequestLinkRegex = new RegExp(
-        /https:\/\/bitbucket\.org\/(.*)\/(.*)\/pull-requests\/new\?source=(.*)&?.*/,
-    );
+const BBCloudPullRequestLinkRegex = new RegExp(/https:\/\/bitbucket\.org\/(.*)\/(.*)\/pull-requests\/new\?source=(.*)/);
+export class BitbucketCloudPullRequestLinkProvider extends Disposable implements TerminalLinkProvider {
+    private _analyticsClient: AnalyticsClient;
     constructor() {
         super(() => this.dispose());
-
+        this._analyticsClient = Container.analyticsClient;
         window.registerTerminalLinkProvider(this);
     }
     provideTerminalLinks(
@@ -40,11 +43,11 @@ export class BitbucketPullRequestLinkProvider extends Disposable implements Term
 
         const url = context.line.substring(startIndex);
 
-        const result = url.match(this.bbPullRequestLinkRegex);
+        const result = url.match(BBCloudPullRequestLinkRegex);
 
         // check if url is proper create pull request url
         // https://bitbucket.org/<workspace>/<repo>/pull-requests/new?source=<branch>
-        if (result && result.length === 4) {
+        if (result) {
             const link: BitbucketTerminalLink = {
                 startIndex,
                 length: context.line.length - startIndex,
@@ -59,6 +62,10 @@ export class BitbucketPullRequestLinkProvider extends Disposable implements Term
 
     handleTerminalLink(link: BitbucketTerminalLink): ProviderResult<void> {
         const enabled = Container.config.bitbucket.showTerminalLinkPanel;
+
+        createPrTerminalLinkDetectedEvent(enabled).then((event) => {
+            this._analyticsClient.sendTrackEvent(event);
+        });
 
         if (!enabled) {
             this.openUrl(link.url);
@@ -75,11 +82,14 @@ export class BitbucketPullRequestLinkProvider extends Disposable implements Term
                 neverShow,
             )
             .then((selection) => {
+                let type = CreatePrTerminalSelection.Ignore;
                 switch (selection) {
                     case yes:
+                        type = CreatePrTerminalSelection.Yes;
                         commands.executeCommand(Commands.CreatePullRequest);
                         break;
                     case neverShow:
+                        type = CreatePrTerminalSelection.Disable;
                         this.disable();
                         this.openUrl(link.url);
                         break;
@@ -87,6 +97,10 @@ export class BitbucketPullRequestLinkProvider extends Disposable implements Term
                         this.openUrl(link.url);
                         break;
                 }
+
+                createPrTerminalLinkPanelButtonCLickedEvent(PanelId, type).then((event) => {
+                    this._analyticsClient.sendUIEvent(event);
+                });
             });
     }
 
@@ -94,5 +108,6 @@ export class BitbucketPullRequestLinkProvider extends Disposable implements Term
         return env.openExternal(Uri.parse(url));
     }
 
-    private disable = () => configuration.update('bitbucket.showTerminalLinkPanel', false, ConfigurationTarget.Global);
+    private disable = () =>
+        configuration.update('bitbucket.showTerminalLinkPanel', false, ConfigurationTarget.Workspace);
 }
