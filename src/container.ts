@@ -170,7 +170,6 @@ export class Container {
 
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
         this._bitbucketHelper = new BitbucketCheckoutHelper(context.globalState);
-        context.subscriptions.push(new BitbucketPullRequestLinkProvider());
         context.subscriptions.push(new HelpExplorer());
 
         try {
