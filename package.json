@@ -1363,7 +1363,7 @@
                 "atlascode.bitbucket.showTerminalLinkPanel": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Shows the terminal link panel when create PR link is clicked in terminal",
+                    "description": "Asks whether to create pull request in bitbucket or browser",
                     "scope": "window"
                 },
                 "atlascode.helpExplorerEnabled": {
