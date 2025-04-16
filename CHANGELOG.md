@@ -2,6 +2,12 @@
 
 ---
 
+## What's new in 3.6.1
+
+### Features
+
+-   Added informational panel when user clicks on create PR link in terminal which asks whether to create PR in extension or continue to browser
+
 ## What's new in 3.6.0
 
 ### Deprecations
@@ -9,10 +15,6 @@
 -   Following the official deprecation of Bitbucket issues, and their very low usage in our extension, we have removed the Bitbucket issues functionality from Atlascode.
 
     Users who still need to use the Bitbucket issues functionality can manually install the latest version supporting it: v3.4.25.
-
-### Features
-
--   Added informational panel when user clicks on create PR link in terminal which asks whether to create PR in extension or continue to browser
 
 ### Bug fixes
 
