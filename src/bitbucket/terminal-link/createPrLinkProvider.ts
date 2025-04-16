@@ -1,6 +1,3 @@
-import { Commands } from 'src/commands';
-import { configuration } from 'src/config/configuration';
-import { Container } from 'src/container';
 import {
     CancellationToken,
     commands,
@@ -14,6 +11,10 @@ import {
     Uri,
     window,
 } from 'vscode';
+
+import { Commands } from '../../commands';
+import { configuration } from '../../config/configuration';
+import { Container } from '../../container';
 
 interface BitbucketTerminalLink extends TerminalLink {
     url: string;
