@@ -1363,7 +1363,7 @@
                 "atlascode.bitbucket.showTerminalLinkPanel": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Asks whether to create pull request in bitbucket or browser",
+                    "description": "Asks whether to create pull request in extension or browser",
                     "scope": "window"
                 },
                 "atlascode.helpExplorerEnabled": {
