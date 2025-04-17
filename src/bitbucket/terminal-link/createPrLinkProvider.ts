@@ -52,6 +52,7 @@ export class BitbucketCloudPullRequestLinkProvider extends Disposable implements
                 Container.config.bitbucket.showTerminalLinkPanel && Container.config.bitbucket.enabled;
         }
     }
+
     provideTerminalLinks(
         context: TerminalLinkContext,
         token: CancellationToken,
@@ -137,6 +138,7 @@ export class BitbucketCloudPullRequestLinkProvider extends Disposable implements
             commands.executeCommand(Commands.CreatePullRequest);
         }
     }
+
     private openUrl(url: string) {
         return env.openExternal(Uri.parse(url));
     }
