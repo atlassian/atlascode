@@ -962,22 +962,10 @@
                     "description": "Enables the Open Issues in the Jira Issue Explorer",
                     "scope": "window"
                 },
-                "atlascode.jira.explorer.openIssueJql": {
-                    "type": "string",
-                    "default": "assignee in (EMPTY) and project=currentProject() and resolution = Unresolved and statusCategory != Done order by lastViewed DESC",
-                    "description": "JQL to retrieve open issues",
-                    "scope": "window"
-                },
                 "atlascode.jira.explorer.showAssignedIssues": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enables the Assigned Issues in the Jira Issue Explorer",
-                    "scope": "window"
-                },
-                "atlascode.jira.explorer.assignedIssueJql": {
-                    "type": "string",
-                    "default": "assignee=currentUser() and project=currentProject() and resolution = Unresolved and statusCategory != Done",
-                    "description": "JQL to retrieve issues assigned to you",
                     "scope": "window"
                 },
                 "atlascode.jira.explorer.monitorEnabled": {

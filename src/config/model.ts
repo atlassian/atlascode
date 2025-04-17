@@ -66,9 +66,7 @@ export interface JiraExplorer {
     enabled: boolean;
     monitorEnabled: boolean;
     showOpenIssues: boolean;
-    openIssueJql: string;
     showAssignedIssues: boolean;
-    assignedIssueJql: string;
     refreshInterval: number;
     nestSubtasks: boolean;
     fetchAllQueryResults: boolean;
@@ -179,9 +177,7 @@ const emptyJiraExplorer: JiraExplorer = {
     enabled: true,
     monitorEnabled: true,
     showOpenIssues: true,
-    openIssueJql: '',
     showAssignedIssues: true,
-    assignedIssueJql: '',
     refreshInterval: 5,
     nestSubtasks: true,
     fetchAllQueryResults: false,
