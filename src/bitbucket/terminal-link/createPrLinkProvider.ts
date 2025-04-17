@@ -68,28 +68,30 @@ export class BitbucketCloudPullRequestLinkProvider extends Disposable implements
 
         // check if url is proper create pull request url
         // https://bitbucket.org/<workspace>/<repo>/pull-requests/new?source=<branch>
-        if (result) {
-            let response: BitbucketTerminalLink[] = [];
+        if (!result) {
+            return [];
+        }
 
-            if (this._isNotificationEnabled) {
-                const link: BitbucketTerminalLink = {
-                    startIndex,
-                    length: context.line.length - startIndex,
-                    tooltip: `Create pull request`,
-                    url,
-                };
+        if (this._isNotificationEnabled) {
+            const link: BitbucketTerminalLink = {
+                startIndex,
+                length: context.line.length - startIndex,
+                tooltip: `Create pull request`,
+                url,
+            };
 
-                response = [link];
-            }
-
-            // send event for link detected
-            createPrTerminalLinkDetectedEvent(this._isNotificationEnabled).then((event) => {
+            createPrTerminalLinkDetectedEvent(true).then((event) => {
                 this._analyticsClient.sendTrackEvent(event);
             });
 
-            return response;
+            return [link];
+        } else {
+            createPrTerminalLinkDetectedEvent(false).then((event) => {
+                this._analyticsClient.sendTrackEvent(event);
+            });
+
+            return [];
         }
-        return [];
     }
 
     handleTerminalLink(link: BitbucketTerminalLink): ProviderResult<void> {
