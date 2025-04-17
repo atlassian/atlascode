@@ -8,6 +8,7 @@ const mockLink = {
 jest.mock('../../commands', () => ({
     Commands: {
         CreatePullRequest: 'bitbucket.createPullRequest',
+        ShowBitbucketAuth: 'atlascode.showBitbucketAuth',
     },
 }));
 
@@ -16,15 +17,26 @@ jest.mock('../../container', () => ({
         config: {
             bitbucket: {
                 showTerminalLinkPanel: true,
+                enabled: true,
             },
         },
         analyticsClient: {
             sendTrackEvent: jest.fn(),
             sendUIEvent: jest.fn(),
         },
+        context: {
+            subscriptions: [],
+        },
+        siteManager: {
+            productHasAtLeastOneSite: jest.fn().mockReturnValue(true),
+        },
     },
 }));
 
+jest.mock('../../analytics', () => ({
+    createPrTerminalLinkDetectedEvent: jest.fn().mockResolvedValue({}),
+    createPrTerminalLinkPanelButtonClickedEvent: jest.fn().mockResolvedValue({}),
+}));
 import { commands, env, TerminalLinkContext, Uri, window } from 'vscode';
 
 import { configuration } from '../../config/configuration';
@@ -33,6 +45,8 @@ import { BitbucketCloudPullRequestLinkProvider } from './createPrLinkProvider';
 
 beforeEach(() => {
     env.openExternal = jest.fn().mockResolvedValue(true);
+    Container.config.bitbucket.enabled = true;
+    Container.config.bitbucket.showTerminalLinkPanel = true;
 });
 
 afterEach(() => {
@@ -87,9 +101,21 @@ describe('BitbucketPullRequestLinkProvider', () => {
             expect(window.showInformationMessage).not.toHaveBeenCalled();
         });
 
-        it('should display a message if enabled in config', async () => {
+        it('should not display a message if Bitbucket is disabled', async () => {
+            Container.config.bitbucket.enabled = false;
             Container.config.bitbucket.showTerminalLinkPanel = true;
             jest.spyOn(window, 'showInformationMessage');
+
+            const provider = new BitbucketCloudPullRequestLinkProvider();
+
+            await provider.handleTerminalLink(mockLink);
+
+            expect(window.showInformationMessage).not.toHaveBeenCalled();
+        });
+
+        it('should display a message if enabled in config', async () => {
+            jest.spyOn(window, 'showInformationMessage');
+
             const provider = new BitbucketCloudPullRequestLinkProvider();
 
             await provider.handleTerminalLink(mockLink);
@@ -103,15 +129,30 @@ describe('BitbucketPullRequestLinkProvider', () => {
         });
 
         it('should open create pull request view if user selects "Yes"', async () => {
-            Container.config.bitbucket.showTerminalLinkPanel = true;
-            const provider = new BitbucketCloudPullRequestLinkProvider();
             jest.spyOn(window, 'showInformationMessage');
             const executeCommandSpy = jest.spyOn(commands, 'executeCommand');
 
             (window.showInformationMessage as jest.Mock).mockResolvedValue('Yes');
 
+            const provider = new BitbucketCloudPullRequestLinkProvider();
+
             await provider.handleTerminalLink(mockLink);
+
             expect(executeCommandSpy).toHaveBeenCalledWith('bitbucket.createPullRequest');
+        });
+
+        it('should open bitbucket authentication if user selects "Yes" and no site is available', async () => {
+            jest.spyOn(window, 'showInformationMessage');
+            jest.spyOn(Container.siteManager, 'productHasAtLeastOneSite').mockReturnValue(false);
+            const executeCommandSpy = jest.spyOn(commands, 'executeCommand');
+
+            (window.showInformationMessage as jest.Mock).mockResolvedValue('Yes');
+
+            const provider = new BitbucketCloudPullRequestLinkProvider();
+
+            await provider.handleTerminalLink(mockLink);
+
+            expect(executeCommandSpy).toHaveBeenCalledWith('atlascode.showBitbucketAuth');
         });
 
         it('should open the URL if user selects "No, continue to Bitbucket"', async () => {
@@ -123,6 +164,7 @@ describe('BitbucketPullRequestLinkProvider', () => {
             (window.showInformationMessage as jest.Mock).mockResolvedValue('No, continue to Bitbucket');
 
             await provider.handleTerminalLink(mockLink);
+
             expect(executeCommandSpy).not.toHaveBeenCalledWith('bitbucket.createPullRequest');
             expect(env.openExternal).toHaveBeenCalledWith(mockUri);
         });
@@ -137,6 +179,7 @@ describe('BitbucketPullRequestLinkProvider', () => {
             (window.showInformationMessage as jest.Mock).mockResolvedValue("Don't show again");
 
             await provider.handleTerminalLink(mockLink);
+
             expect(executeCommandSpy).not.toHaveBeenCalledWith('bitbucket.createPullRequest');
             expect(env.openExternal).toHaveBeenCalledWith(mockUri);
             expect(configSpy).toHaveBeenCalledWith('bitbucket.showTerminalLinkPanel', false, 2);

@@ -1,6 +1,7 @@
 import {
     CancellationToken,
     commands,
+    ConfigurationChangeEvent,
     ConfigurationTarget,
     Disposable,
     env,
@@ -15,6 +16,7 @@ import {
 import { createPrTerminalLinkDetectedEvent, createPrTerminalLinkPanelButtonClickedEvent } from '../../analytics';
 import { AnalyticsClient } from '../../analytics-node-client/src/client.min.js';
 import { CreatePrTerminalSelection } from '../../analyticsTypes';
+import { ProductBitbucket } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
@@ -29,12 +31,27 @@ const BBCloudPullRequestLinkRegex = new RegExp(/https:\/\/bitbucket\.org\/(.*)\/
 export class BitbucketCloudPullRequestLinkProvider extends Disposable implements TerminalLinkProvider {
     private _analyticsClient: AnalyticsClient;
 
+    private _isNotificationEnabled: boolean;
+
     constructor() {
         super(() => this.dispose());
         this._analyticsClient = Container.analyticsClient;
+        this._isNotificationEnabled =
+            Container.config.bitbucket.showTerminalLinkPanel && Container.config.bitbucket.enabled;
+
+        Container.context.subscriptions.push(configuration.onDidChange(this.onDidChangeConfiguration, this));
         window.registerTerminalLinkProvider(this);
     }
 
+    onDidChangeConfiguration(e: ConfigurationChangeEvent) {
+        if (
+            configuration.changed(e, 'bitbucket.showTerminalLinkPanel') ||
+            configuration.changed(e, 'bitbucket.enabled')
+        ) {
+            this._isNotificationEnabled =
+                Container.config.bitbucket.showTerminalLinkPanel && Container.config.bitbucket.enabled;
+        }
+    }
     provideTerminalLinks(
         context: TerminalLinkContext,
         token: CancellationToken,
@@ -51,26 +68,31 @@ export class BitbucketCloudPullRequestLinkProvider extends Disposable implements
         // check if url is proper create pull request url
         // https://bitbucket.org/<workspace>/<repo>/pull-requests/new?source=<branch>
         if (result) {
-            const link: BitbucketTerminalLink = {
-                startIndex,
-                length: context.line.length - startIndex,
-                tooltip: `Create pull request`,
-                url,
-            };
+            let response: BitbucketTerminalLink[] = [];
 
-            return [link];
+            if (this._isNotificationEnabled) {
+                const link: BitbucketTerminalLink = {
+                    startIndex,
+                    length: context.line.length - startIndex,
+                    tooltip: `Create pull request`,
+                    url,
+                };
+
+                response = [link];
+            }
+
+            // send event for link detected
+            createPrTerminalLinkDetectedEvent(this._isNotificationEnabled).then((event) => {
+                this._analyticsClient.sendTrackEvent(event);
+            });
+
+            return response;
         }
         return [];
     }
 
     handleTerminalLink(link: BitbucketTerminalLink): ProviderResult<void> {
-        const enabled = Container.config.bitbucket.showTerminalLinkPanel;
-
-        createPrTerminalLinkDetectedEvent(enabled).then((event) => {
-            this._analyticsClient.sendTrackEvent(event);
-        });
-
-        if (!enabled) {
+        if (!this._isNotificationEnabled) {
             this.openUrl(link.url);
             return;
         }
@@ -89,7 +111,7 @@ export class BitbucketCloudPullRequestLinkProvider extends Disposable implements
                 switch (selection) {
                     case yes:
                         type = CreatePrTerminalSelection.Yes;
-                        commands.executeCommand(Commands.CreatePullRequest);
+                        this.openCreatePr();
                         break;
                     case neverShow:
                         type = CreatePrTerminalSelection.Disable;
@@ -101,12 +123,20 @@ export class BitbucketCloudPullRequestLinkProvider extends Disposable implements
                         break;
                 }
 
+                // send event for button clicked
                 createPrTerminalLinkPanelButtonClickedEvent(PanelId, type).then((event) => {
                     this._analyticsClient.sendUIEvent(event);
                 });
             });
     }
 
+    private openCreatePr() {
+        if (!Container.siteManager.productHasAtLeastOneSite(ProductBitbucket)) {
+            commands.executeCommand(Commands.ShowBitbucketAuth);
+        } else {
+            commands.executeCommand(Commands.CreatePullRequest);
+        }
+    }
     private openUrl(url: string) {
         return env.openExternal(Uri.parse(url));
     }
