@@ -115,7 +115,6 @@ export class OnboardingWebviewController implements WebviewController<Onboarding
                 this._analytics.fireAuthenticateButtonEvent(id, msg.siteInfo, isCloud);
                 try {
                     if (isCloud) {
-                        // TODO: ask Stan about this url
                         await this._api.authenticateCloud(msg.siteInfo, this._onboardingUrl);
                     } else {
                         await this._api.authenticateServer(msg.siteInfo, msg.authInfo);

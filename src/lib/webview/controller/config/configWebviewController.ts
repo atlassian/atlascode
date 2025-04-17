@@ -144,7 +144,6 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                         });
                     }
                 } else {
-                    // TODO: ask Stan about this URL
                     this._api.authenticateCloud(msg.siteInfo, this._settingsUrl);
                 }
                 this._analytics.fireAuthenticateButtonEvent(id, msg.siteInfo, isCloud);
