@@ -15,34 +15,10 @@ export class JQLManager extends Disposable {
     private _disposable: Disposable;
     private _queue = new PQueue({ concurrency: 1 });
 
-    // In this PR: https://github.com/atlassian/atlascode/pull/169
-    // we have introduced a new field in DetailedSiteInfo that is populated at auth time.
-    // For those who already have this data saved before the introduction of the new logic,
-    // we need to backfill this field to avoid constructing a wrong default JQL query.
-    public static async backFillOldDetailedSiteInfos(): Promise<void> {
-        for (const site of Container.siteManager.getSitesAvailable(ProductJira)) {
-            try {
-                await JQLManager.backFillOldDetailedSiteInfo(site);
-            } catch (error) {
-                Logger.error(error, `Error backfilling site ${site.id}`);
-            }
-        }
-    }
-
     constructor() {
         super(() => this.dispose());
 
         this._disposable = Disposable.from(configuration.onDidChange(this.onConfigurationChanged, this));
-    }
-
-    private static async backFillOldDetailedSiteInfo(site: DetailedSiteInfo) {
-        if (site.hasResolutionField === undefined) {
-            const client = await Container.clientManager.jiraClient(site);
-            const fields = await client.getFields();
-            site.hasResolutionField = fields.some((f) => f.id === 'resolution');
-
-            Container.siteManager.addOrUpdateSite(site);
-        }
     }
 
     dispose() {

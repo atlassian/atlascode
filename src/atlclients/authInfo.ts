@@ -117,8 +117,6 @@ export interface DetailedSiteInfo extends SiteInfo {
     isCloud: boolean;
     userId: string;
     credentialId: string;
-    /** Jira only -- Indicates if the site's schema contains a field named 'resolution' */
-    hasResolutionField: boolean;
 }
 
 // You MUST send source
@@ -169,7 +167,6 @@ export const emptySiteInfo: DetailedSiteInfo = {
     isCloud: true,
     userId: '',
     credentialId: '',
-    hasResolutionField: false,
 };
 
 export const emptyAccessibleResource: AccessibleResource = {
