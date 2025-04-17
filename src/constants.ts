@@ -1,4 +1,5 @@
-export const extensionId = 'atlascode';
+export const ExtensionId = 'atlassian.atlascode';
+export const ConfigNamespace = 'atlascode';
 export const extensionOutputChannelName = 'Atlassian';
 export const JiraLegacyWorkingSiteConfigurationKey = 'jira.workingSite';
 export const JiraCreateSiteAndProjectKey = 'jira.lastCreateSiteAndProject';
