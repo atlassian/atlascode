@@ -20,6 +20,7 @@ import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { PromiseRacer } from '../../../util/promises';
 import { RefreshTimer } from '../../RefreshTimer';
 import { SearchJiraHelper } from '../searchJiraHelper';
+import { JiraBadgeManager } from './jiraBadgeManager';
 import { JiraNotifier } from './jiraNotifier';
 import { executeJqlQuery, JiraIssueNode, loginToJiraMessageNode, TreeViewIssue } from './utils';
 
@@ -45,6 +46,8 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
 
         const treeView = window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
         treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e));
+
+        JiraBadgeManager.initialize(treeView);
 
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
@@ -129,9 +132,10 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
                 }
 
                 SearchJiraHelper.appendIssues(issues, AssignedWorkItemsViewProviderId);
-                this._jiraNotifier.ignoreAssignedIssues(issues);
 
-                this._initChildren.push(...this.buildTreeItemsFromIssues(issues));
+                const treeItems = this.buildTreeItemsFromIssues(issues);
+                this._jiraNotifier.ignoreAssignedIssues(treeItems);
+                this._initChildren.push(...treeItems);
                 break;
             }
 
@@ -150,21 +154,22 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
             }
 
             const allIssues = (await Promise.all(jqlEntries.map(executeJqlQuery))).flat();
+            SearchJiraHelper.setIssues(allIssues, AssignedWorkItemsViewProviderId);
+
+            const treeItems = this.buildTreeItemsFromIssues(allIssues);
 
             if (this._skipNotificationForNextFetch) {
                 this._skipNotificationForNextFetch = false;
-                this._jiraNotifier.ignoreAssignedIssues(allIssues);
+                this._jiraNotifier.ignoreAssignedIssues(treeItems);
             } else {
-                this._jiraNotifier.notifyForNewAssignedIssues(allIssues);
+                this._jiraNotifier.notifyForNewAssignedIssues(treeItems);
             }
 
-            SearchJiraHelper.setIssues(allIssues, AssignedWorkItemsViewProviderId);
-
-            return this.buildTreeItemsFromIssues(allIssues);
+            return treeItems;
         }
     }
 
-    private buildTreeItemsFromIssues(issues?: TreeViewIssue[]): TreeItem[] {
+    private buildTreeItemsFromIssues(issues?: TreeViewIssue[]): JiraIssueNode[] {
         return issues
             ? issues.map((issue) => new JiraIssueNode(JiraIssueNode.NodeType.JiraAssignedIssuesNode, issue))
             : [];

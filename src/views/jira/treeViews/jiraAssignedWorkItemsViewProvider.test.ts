@@ -1,8 +1,5 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-import { PromiseRacer } from 'src/util/promises';
-import { RefreshTimer } from 'src/views/RefreshTimer';
-import { Disposable } from 'vscode';
-import * as vscode from 'vscode';
+import { Disposable, window } from 'vscode';
 
 import { expansionCastTo, forceCastTo } from '../../../../testsutil';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
@@ -10,8 +7,12 @@ import { JQLEntry } from '../../../config/model';
 import { Container } from '../../../container';
 import { JQLManager } from '../../../jira/jqlManager';
 import { SiteManager } from '../../../siteManager';
+import { PromiseRacer } from '../../../util/promises';
+import { RefreshTimer } from '../../../views/RefreshTimer';
 import { AssignedWorkItemsViewProvider } from './jiraAssignedWorkItemsViewProvider';
+import { JiraBadgeManager } from './jiraBadgeManager';
 import { JiraNotifier } from './jiraNotifier';
+import { JiraIssueNode } from './utils';
 
 const mockedJqlEntry = forceCastTo<JQLEntry>({
     id: 'jqlId',
@@ -56,6 +57,7 @@ const mockedIssue3 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     children: [],
 });
 
+jest.mock('./jiraBadgeManager');
 jest.mock('./jiraNotifier');
 jest.mock('../searchJiraHelper');
 jest.mock('../../../container', () => ({
@@ -120,8 +122,8 @@ class JiraNotifierMockClass implements ExtractPublic<JiraNotifier> {
     constructor() {
         JiraNotifierMockClass.LastInstance = this;
     }
-    public ignoreAssignedIssues(issues: MinimalIssue<DetailedSiteInfo>[]): void {}
-    public notifyForNewAssignedIssues(issues: MinimalIssue<DetailedSiteInfo>[]): void {}
+    public ignoreAssignedIssues(issues: JiraIssueNode[]): void {}
+    public notifyForNewAssignedIssues(issues: JiraIssueNode[]): void {}
 }
 
 jest.mock('./jiraNotifier', () => ({
@@ -161,7 +163,7 @@ describe('AssignedWorkItemsViewProvider', () => {
     let provider: AssignedWorkItemsViewProvider | undefined;
 
     beforeEach(() => {
-        jest.spyOn(vscode.window, 'createTreeView').mockReturnValue(mockedTreeView as any);
+        jest.spyOn(window, 'createTreeView').mockReturnValue(mockedTreeView as any);
         provider = undefined;
 
         PromiseRacerMockClass.LastInstance = undefined;
@@ -198,6 +200,11 @@ describe('AssignedWorkItemsViewProvider', () => {
 
             RefreshTimerMockClass.LastInstance?.refreshFunc();
             expect(dataChanged).toBeTruthy();
+        });
+
+        it('JiraBadgeManager is initialized', () => {
+            provider = new AssignedWorkItemsViewProvider();
+            expect(JiraBadgeManager.initialize).toHaveBeenCalled();
         });
     });
 
@@ -261,7 +268,7 @@ describe('AssignedWorkItemsViewProvider', () => {
             const jqlEntries = [expansionCastTo<JQLEntry>({ siteId: 'site1', query: 'query1' })];
 
             jest.spyOn(Container.jqlManager, 'getAllDefaultJQLEntries').mockReturnValue(jqlEntries);
-            jest.spyOn(vscode.window, 'showInformationMessage');
+            jest.spyOn(window, 'showInformationMessage');
 
             provider = new AssignedWorkItemsViewProvider();
 
@@ -279,7 +286,7 @@ describe('AssignedWorkItemsViewProvider', () => {
             const jqlEntries = [expansionCastTo<JQLEntry>({ siteId: 'site1', query: 'query1' })];
 
             jest.spyOn(Container.jqlManager, 'getAllDefaultJQLEntries').mockReturnValue(jqlEntries);
-            jest.spyOn(vscode.window, 'showInformationMessage');
+            jest.spyOn(window, 'showInformationMessage');
 
             provider = new AssignedWorkItemsViewProvider();
 
