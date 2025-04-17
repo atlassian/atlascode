@@ -251,8 +251,14 @@ export async function pmfClosed(): Promise<TrackEvent> {
     return trackEvent('closed', 'atlascodePmf');
 }
 
-export async function deepLinkEvent(source: string, target: string): Promise<TrackEvent> {
-    return trackEvent('opened', 'deepLink', { attributes: { source: source, target: target } });
+export type DeepLinkEventErrorType = 'Success' | 'NotFound' | 'Exception';
+
+export async function deepLinkEvent(
+    source: string,
+    target: string,
+    errorType: DeepLinkEventErrorType,
+): Promise<TrackEvent> {
+    return trackEvent('opened', 'deepLink', { attributes: { source, target, errorType } });
 }
 
 export async function externalLinkEvent(source: string, linkId: string): Promise<TrackEvent> {

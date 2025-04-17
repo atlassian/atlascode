@@ -1,19 +1,18 @@
 import { Uri, window } from 'vscode';
 
-import { CloneRepositoryUriHandlerAction } from './cloneRepository';
+import { expansionCastTo } from '../../../testsutil';
+import { CheckoutHelper } from '../../bitbucket/interfaces';
+import { CloneRepositoryUriHandler } from './cloneRepository';
 
 describe('CloneRepositoryUriHandlerAction', () => {
-    const mockAnalyticsApi = {
-        fireDeepLinkEvent: jest.fn(),
-    };
     const mockCheckoutHelper = {
         cloneRepository: jest.fn(),
     };
-    let action: CloneRepositoryUriHandlerAction;
+    let action: CloneRepositoryUriHandler;
 
     beforeEach(() => {
         jest.clearAllMocks();
-        action = new CloneRepositoryUriHandlerAction(mockCheckoutHelper as any, mockAnalyticsApi as any);
+        action = new CloneRepositoryUriHandler(expansionCastTo<CheckoutHelper>(mockCheckoutHelper));
     });
 
     describe('isAccepted', () => {
@@ -33,12 +32,11 @@ describe('CloneRepositoryUriHandlerAction', () => {
             await action.handle(Uri.parse('https://some-uri/cloneRepository?q=one'));
 
             expect(mockCheckoutHelper.cloneRepository).toHaveBeenCalledWith('one');
-            expect(mockAnalyticsApi.fireDeepLinkEvent).toHaveBeenCalled();
         });
 
         it('shows an error message on failure', async () => {
             mockCheckoutHelper.cloneRepository.mockRejectedValue(new Error('oh no'));
-            await action.handle(Uri.parse('https://some-uri/cloneRepository?q=one'));
+            await expect(action.handle(Uri.parse('https://some-uri/cloneRepository?q=one'))).rejects.toThrow();
 
             expect(window.showErrorMessage).toHaveBeenCalled();
         });

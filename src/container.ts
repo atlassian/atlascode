@@ -30,8 +30,7 @@ import { CommonActionMessageHandler } from './lib/webview/controller/common/comm
 import { Logger } from './logger';
 import { Pipeline } from './pipelines/model';
 import { SiteManager } from './siteManager';
-import { AtlascodeUriHandler } from './uriHandler';
-import { LegacyAtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler/legacyUriHandler';
+import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
 import { Experiments, FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
 import { OnlineDetector } from './util/online';
 import { AuthStatusBar } from './views/authStatusBar';
@@ -195,7 +194,7 @@ export class Container {
         FeatureFlagClient.checkExperimentStringValueWithInstrumentation(Experiments.AtlascodeAA);
         FeatureFlagClient.checkGateValueWithInstrumentation(Features.NoOpFeature);
 
-        this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
+        context.subscriptions.push(AtlascodeUriHandler.create(this._analyticsApi, this._bitbucketHelper));
 
         SearchJiraHelper.initialize();
         context.subscriptions.push(new CustomJQLViewProvider());
@@ -213,19 +212,6 @@ export class Container {
     private static getAnalyticsEnable(): boolean {
         const telemetryConfig = workspace.getConfiguration('telemetry');
         return telemetryConfig.get<boolean>('enableTelemetry', true);
-    }
-
-    private static initializeUriHandler(
-        context: ExtensionContext,
-        analyticsApi: VSCAnalyticsApi,
-        bitbucketHelper: CheckoutHelper,
-    ) {
-        if (FeatureFlagClient.checkGate(Features.EnableNewUriHandler)) {
-            Logger.debug('Using new URI handler');
-            context.subscriptions.push(AtlascodeUriHandler.create(analyticsApi, bitbucketHelper));
-        } else {
-            context.subscriptions.push(new LegacyAtlascodeUriHandler(analyticsApi, bitbucketHelper));
-        }
     }
 
     static initializeBitbucket(bbCtx: BitbucketContext) {

@@ -10,7 +10,7 @@ import { activate as activateCodebucket } from './codebucket/command/registerCom
 import { CommandContext, setCommandContext } from './commandContext';
 import { Commands, registerCommands } from './commands';
 import { Configuration, configuration, IConfig } from './config/configuration';
-import { GlobalStateVersionKey } from './constants';
+import { ExtensionId, GlobalStateVersionKey } from './constants';
 import { Container } from './container';
 import { registerAnalyticsClient, registerErrorReporting, unregisterErrorReporting } from './errorReporting';
 import { JQLManager } from './jira/jqlManager';
@@ -33,7 +33,7 @@ export async function activate(context: ExtensionContext) {
 
     registerErrorReporting();
 
-    const atlascode = extensions.getExtension('atlassian.atlascode')!;
+    const atlascode = extensions.getExtension(ExtensionId)!;
     const atlascodeVersion = atlascode.packageJSON.version;
     const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
 
@@ -158,7 +158,7 @@ async function showWelcomePage(version: string, previousVersion: string | undefi
             .showInformationMessage(`Jira and Bitbucket (Official) has been updated to v${version}`, 'Release notes')
             .then((userChoice) => {
                 if (userChoice === 'Release notes') {
-                    commands.executeCommand('extension.open', 'atlassian.atlascode', 'changelog');
+                    commands.executeCommand('extension.open', ExtensionId, 'changelog');
                 }
             });
     }
