@@ -22,7 +22,10 @@
         "noUnusedLocals": true,
         "noFallthroughCasesInSwitch": true,
         "strictPropertyInitialization": true,
-        "typeRoots": ["node_modules/@types", "src/typings/"]
+        "typeRoots": ["node_modules/@types", "src/typings/"],
+        "paths": {
+            "testsutil/*": ["testsutil/*"],
+        }
     },
     "include": ["**/src/**/*", "webpack.*.js", "e2e/**/*"],
     "exclude": [

@@ -1,5 +1,6 @@
 import { fireEvent, render } from '@testing-library/react';
 import React from 'react';
+import { disableConsole } from 'testsutil';
 
 import JiraIssueTextAreaEditor from './JiraIssueTextArea';
 
@@ -20,6 +21,10 @@ describe('JiraIssueTextAreaEditor', () => {
         fetchUsers: mockFetchUsers,
         saving: false,
     };
+
+    beforeAll(() => {
+        disableConsole('warn');
+    });
 
     afterEach(() => {
         jest.clearAllMocks();

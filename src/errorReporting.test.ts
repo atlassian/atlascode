@@ -1,6 +1,6 @@
+import { expansionCastTo } from 'testsutil';
 import { Disposable } from 'vscode';
 
-import { expansionCastTo } from '../testsutil';
 import * as analytics from './analytics';
 import { AnalyticsClient } from './analytics-node-client/src/client.min';
 import { TrackEvent } from './analytics-node-client/src/types';

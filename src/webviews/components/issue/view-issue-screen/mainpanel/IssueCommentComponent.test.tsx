@@ -2,6 +2,7 @@ import { Comment as JiraComment, User } from '@atlassianlabs/jira-pi-common-mode
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
+import { disableConsole } from 'testsutil';
 
 import { IssueCommentComponent } from './IssueCommentComponent';
 
@@ -98,6 +99,10 @@ const mockFetchImage = jest.fn();
 const mockOnDelete = jest.fn();
 
 describe('IssueCommentComponent', () => {
+    beforeAll(() => {
+        disableConsole('warn', 'error');
+    });
+
     it('renders the AddCommentComponent', () => {
         render(
             <IssueCommentComponent

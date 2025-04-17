@@ -1,8 +1,8 @@
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { forceCastTo } from 'testsutil';
 import * as vscode from 'vscode';
 
-import { forceCastTo } from '../../../testsutil';
 import { SearchJiraHelper } from './searchJiraHelper';
 
 jest.mock('@atlassianlabs/jira-pi-common-models');
@@ -10,7 +10,6 @@ jest.mock('../../analytics');
 jest.mock('../../commands');
 jest.mock('../../container');
 jest.mock('../../atlclients/authInfo');
-jest.mock('vscode');
 
 const issue1 = forceCastTo<MinimalORIssueLink<DetailedSiteInfo>>({ key: 'ISSUE-1', summary: 'Test Issue' });
 const issue2 = forceCastTo<MinimalORIssueLink<DetailedSiteInfo>>({ key: 'ISSUE-2', summary: 'Another Issue' });

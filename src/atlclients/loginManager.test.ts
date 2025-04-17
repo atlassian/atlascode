@@ -1,8 +1,8 @@
 import { JiraClient } from '@atlassianlabs/jira-pi-client';
 import { AxiosInstance } from 'axios';
+import { forceCastTo } from 'testsutil';
 import { Memento } from 'vscode';
 
-import { forceCastTo } from '../../testsutil';
 import * as analytics from '../analytics';
 import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
 import { Container } from '../container';

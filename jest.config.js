@@ -2,6 +2,10 @@ const _baseConfig = (project, testExtension) => ({
     displayName: project,
     roots: ['<rootDir>'],
 
+    moduleNameMapper: {
+        "^testsutil(/.+)?": "<rootDir>/testsutil$1"
+    },    
+
     testMatch: [`**/*.test.${testExtension}`],
     testPathIgnorePatterns: ['/node_modules/', '/e2e/'],
 
@@ -29,15 +33,15 @@ const _baseConfig = (project, testExtension) => ({
 
     coverageThreshold: {
         global: testExtension === 'ts' ? {
-            statements: 21,
+            statements: 22,
             branches: 8,
-            functions: 8,
-            lines: 21,
+            functions: 9,
+            lines: 22,
         } : /* tsx */{
-            statements: 0,
-            branches: 0,
-            functions: 0,
-            lines: 0,
+            statements: 5,
+            branches: 4,
+            functions: 4,
+            lines: 5,
         },
     },
 });

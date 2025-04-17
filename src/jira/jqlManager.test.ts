@@ -1,7 +1,7 @@
 import { JiraClient } from '@atlassianlabs/jira-pi-client';
 import { it } from '@jest/globals';
+import { expansionCastTo } from 'testsutil';
 
-import { expansionCastTo } from '../../testsutil';
 import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
 import { JQLEntry } from '../config/model';
 import { Container } from '../container';
