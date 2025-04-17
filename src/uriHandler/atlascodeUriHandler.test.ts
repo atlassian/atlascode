@@ -1,62 +1,123 @@
+class BasicUriHandlerMock {
+    constructor(protected readonly suffix: string) {}
+
+    public isAccepted(uri: Uri): boolean {
+        return uri.path.endsWith(this.suffix);
+    }
+
+    public handle(uri: Uri): Promise<void> {
+        return Promise.resolve();
+    }
+
+    public getSource(uri: Uri): string {
+        return 'source';
+    }
+
+    public getTarget(uri: Uri): string {
+        return 'target';
+    }
+}
+
+class CloneRepositoryUriHandlerActionMock extends BasicUriHandlerMock {
+    public static overrideHandler: ((uri: Uri) => Promise<void>) | undefined;
+
+    constructor() {
+        super('clone');
+    }
+
+    override handle(uri: Uri): Promise<void> {
+        return CloneRepositoryUriHandlerActionMock.overrideHandler
+            ? CloneRepositoryUriHandlerActionMock.overrideHandler(uri)
+            : super.handle(uri);
+    }
+}
+
+class OpenPullRequestUriHandlerActionMock extends BasicUriHandlerMock {
+    public static overrideHandler: ((uri: Uri) => Promise<void>) | undefined;
+
+    constructor() {
+        super('openPr');
+    }
+
+    override handle(uri: Uri): Promise<void> {
+        return CloneRepositoryUriHandlerActionMock.overrideHandler
+            ? CloneRepositoryUriHandlerActionMock.overrideHandler(uri)
+            : super.handle(uri);
+    }
+}
+
+jest.mock('./actions/basicUriHandler', () => ({
+    BasicUriHandler: BasicUriHandlerMock,
+}));
+jest.mock('./actions/cloneRepository', () => ({
+    CloneRepositoryUriHandler: CloneRepositoryUriHandlerActionMock,
+}));
+jest.mock('./actions/openPullRequest', () => ({
+    OpenPullRequestUriHandler: OpenPullRequestUriHandlerActionMock,
+}));
+
 import { Uri, window } from 'vscode';
 
+import { expansionCastTo } from '../../testsutil';
+import { CheckoutHelper } from '../bitbucket/interfaces';
+import { AnalyticsApi } from '../lib/analyticsApi';
 import { AtlascodeUriHandler } from './atlascodeUriHandler';
 
 describe('AtlascodeUriHandler', () => {
-    const mockDispose = jest.fn();
-    const mockShowErrorMessage = jest.fn();
-    const mockRegisterUriHandler = jest.fn().mockImplementation(() => ({ dispose: mockDispose }));
+    const analyticsApi = { fireDeepLinkEvent: () => Promise.resolve() };
 
-    const uri = Uri.parse('https://some-uri');
+    const singleton = AtlascodeUriHandler.create(
+        expansionCastTo<AnalyticsApi>(analyticsApi),
+        expansionCastTo<CheckoutHelper>({}),
+    );
 
-    beforeEach(() => {
+    afterEach(() => {
+        CloneRepositoryUriHandlerActionMock.overrideHandler = undefined;
+        OpenPullRequestUriHandlerActionMock.overrideHandler = undefined;
+
         jest.clearAllMocks();
-        window.showErrorMessage = mockShowErrorMessage;
-        window.registerUriHandler = mockRegisterUriHandler;
-    });
-
-    describe('create', () => {
-        it('should create a new instance', () => {
-            const uriHandler = AtlascodeUriHandler.create({} as any, {} as any);
-            expect(uriHandler).not.toBeNull();
-            expect(uriHandler).toBeInstanceOf(AtlascodeUriHandler);
-        });
     });
 
     describe('handleUri', () => {
         it('shows error if the right action is not found', async () => {
-            const uriHandler = new AtlascodeUriHandler([]);
-            await uriHandler.handleUri(uri);
-            expect(mockShowErrorMessage).toHaveBeenCalled();
+            jest.spyOn(window, 'showErrorMessage');
+            jest.spyOn(analyticsApi, 'fireDeepLinkEvent');
+
+            await singleton.handleUri(Uri.parse('vscode:some-uri'));
+            expect(window.showErrorMessage).toHaveBeenCalled();
+            expect(analyticsApi.fireDeepLinkEvent).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.any(String),
+                'NotFound',
+            );
         });
 
         it('shows error if action is found, but throws', async () => {
-            const action = {
-                isAccepted: jest.fn().mockReturnValue(true),
-                handle: jest.fn().mockRejectedValue(new Error('oh no')),
-            };
-            const uriHandler = new AtlascodeUriHandler([action]);
-            await uriHandler.handleUri(uri);
-            expect(action.handle).toHaveBeenCalled();
-            expect(mockShowErrorMessage).toHaveBeenCalled();
+            CloneRepositoryUriHandlerActionMock.overrideHandler = () => Promise.reject('error');
+
+            jest.spyOn(window, 'showErrorMessage');
+            jest.spyOn(analyticsApi, 'fireDeepLinkEvent');
+
+            await singleton.handleUri(Uri.parse('vscode:clone'));
+            expect(window.showErrorMessage).toHaveBeenCalled();
+            expect(analyticsApi.fireDeepLinkEvent).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.any(String),
+                'Exception',
+            );
         });
 
         it('executes the action if found', async () => {
-            const action = {
-                isAccepted: jest.fn().mockReturnValue(true),
-                handle: jest.fn().mockResolvedValue(undefined),
-            };
-            const uriHandler = new AtlascodeUriHandler([action]);
-            await uriHandler.handleUri(uri);
-            expect(action.handle).toHaveBeenCalled();
-        });
-    });
+            jest.spyOn(window, 'showErrorMessage');
+            jest.spyOn(analyticsApi, 'fireDeepLinkEvent');
 
-    describe('dispose', () => {
-        it('should dispose the uri handler', () => {
-            const uriHandler = new AtlascodeUriHandler([]);
-            uriHandler.dispose();
-            expect(mockDispose).toHaveBeenCalled();
+            await singleton.handleUri(Uri.parse('vscode:clone'));
+            expect(window.showErrorMessage).not.toHaveBeenCalled();
+            expect(analyticsApi.fireDeepLinkEvent).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.any(String),
+                'Success',
+            );
         });
     });
 });

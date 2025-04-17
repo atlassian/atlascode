@@ -4,6 +4,7 @@ import {
     bbIssuesPaginationEvent,
     customJQLCreatedEvent,
     deepLinkEvent,
+    DeepLinkEventErrorType,
     doneButtonEvent,
     exploreFeaturesButtonEvent,
     externalLinkEvent,
@@ -214,8 +215,8 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
-    public async fireDeepLinkEvent(source: string, target: string): Promise<void> {
-        return deepLinkEvent(source, target).then((e) => {
+    public async fireDeepLinkEvent(source: string, target: string, errorType: DeepLinkEventErrorType): Promise<void> {
+        return deepLinkEvent(source, target, errorType).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

@@ -1,3 +1,4 @@
+import { DeepLinkEventErrorType } from '../analytics';
 import { UIErrorInfo } from '../analyticsTypes';
 import { DetailedSiteInfo, Product, SiteInfo } from '../atlclients/authInfo';
 
@@ -40,7 +41,7 @@ export interface AnalyticsApi {
     fireLogoutButtonEvent(source: string): Promise<void>;
     fireSaveManualCodeEvent(source: string): Promise<void>;
     fireExternalLinkEvent(source: string, linkId: string): Promise<void>;
-    fireDeepLinkEvent(source: string, target: string): Promise<void>;
+    fireDeepLinkEvent(source: string, target: string, success: DeepLinkEventErrorType): Promise<void>;
     fireOpenSettingsButtonEvent(source: string): Promise<void>;
     fireExploreFeaturesButtonEvent(source: string): Promise<void>;
     firePipelineRerunEvent(site: DetailedSiteInfo, source: string): Promise<void>;

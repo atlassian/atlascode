@@ -13,7 +13,7 @@ import {
 } from 'vscode';
 
 import {
-    extensionId,
+    ConfigNamespace,
     JiraCreateSiteAndProjectKey,
     JiraLegacyWorkingSiteConfigurationKey,
     JiraV1WorkingProjectConfigurationKey,
@@ -47,7 +47,7 @@ export class Configuration extends Disposable {
 
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
         // only fire if it's a config for our extension
-        if (!e.affectsConfiguration(extensionId, null!)) {
+        if (!e.affectsConfiguration(ConfigNamespace, null!)) {
             return;
         }
 
@@ -64,16 +64,16 @@ export class Configuration extends Disposable {
     get<T>(section?: string, resource?: Uri | null, defaultValue?: T): T {
         return defaultValue === undefined
             ? workspace
-                  .getConfiguration(section === undefined ? undefined : extensionId, resource!)
-                  .get<T>(section === undefined ? extensionId : section)!
+                  .getConfiguration(section === undefined ? undefined : ConfigNamespace, resource!)
+                  .get<T>(section === undefined ? ConfigNamespace : section)!
             : workspace
-                  .getConfiguration(section === undefined ? undefined : extensionId, resource!)
-                  .get<T>(section === undefined ? extensionId : section, defaultValue)!;
+                  .getConfiguration(section === undefined ? undefined : ConfigNamespace, resource!)
+                  .get<T>(section === undefined ? ConfigNamespace : section, defaultValue)!;
     }
 
-    // changed can be called to see if the passed in section (minus the extensionId) was affect by the change
+    // changed can be called to see if the passed in section (minus the ConfigNamespace) was affect by the change
     changed(e: ConfigurationChangeEvent, section: string, resource?: Uri | null): boolean {
-        return e.affectsConfiguration(`${extensionId}.${section}`, resource!);
+        return e.affectsConfiguration(`${ConfigNamespace}.${section}`, resource!);
     }
 
     // initializing takes an event and returns if it is an initalizing event or not
@@ -87,8 +87,8 @@ export class Configuration extends Disposable {
         resource?: Uri | null,
     ): { key: string; defaultValue?: T; globalValue?: T; workspaceValue?: T; workspaceFolderValue?: T } {
         const inspect = workspace
-            .getConfiguration(section === undefined ? undefined : extensionId, resource!)
-            .inspect<T>(section === undefined ? extensionId : section);
+            .getConfiguration(section === undefined ? undefined : ConfigNamespace, resource!)
+            .inspect<T>(section === undefined ? ConfigNamespace : section);
 
         return inspect ? inspect : { key: '' };
     }
@@ -110,7 +110,7 @@ export class Configuration extends Disposable {
         }
 
         return await workspace
-            .getConfiguration(extensionId, target === ConfigurationTarget.Global ? undefined : resource!)
+            .getConfiguration(ConfigNamespace, target === ConfigurationTarget.Global ? undefined : resource!)
             .update(section, value, target);
     }
 
@@ -150,7 +150,7 @@ export class Configuration extends Disposable {
     private configForOpenWorkspace(): WorkspaceConfiguration | undefined {
         const f = workspace.workspaceFolders;
         if (f && f.length > 0) {
-            return workspace.getConfiguration(extensionId, f[0].uri);
+            return workspace.getConfiguration(ConfigNamespace, f[0].uri);
         }
         return undefined;
     }
