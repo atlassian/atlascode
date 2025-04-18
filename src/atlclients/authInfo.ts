@@ -41,11 +41,11 @@ export enum OAuthProvider {
     JiraCloudStaging = 'jiracloudstaging',
     JiraCloudRemote = 'jiracloudremote',
 }
+
 export interface AuthInfoV1 {
     access: string;
     refresh: string;
     user: UserInfoV1;
-    accessibleResources?: Array<AccessibleResourceV1>;
 }
 
 export interface UserInfoV1 {
@@ -130,14 +130,6 @@ export interface IntegrationsLinkParams {
     s: string; // source
 }
 
-export interface AccessibleResourceV1 {
-    id: string;
-    name: string;
-    scopes: Array<string>;
-    avatarUrl: string;
-    baseUrlSuffix: string;
-}
-
 export interface AccessibleResource {
     id: string;
     name: string;
@@ -178,14 +170,6 @@ export const emptyAccessibleResource: AccessibleResource = {
     avatarUrl: '',
     scopes: [],
     url: '',
-};
-
-export const emptyAccessibleResourceV1: AccessibleResourceV1 = {
-    id: '',
-    name: '',
-    avatarUrl: '',
-    scopes: [],
-    baseUrlSuffix: 'atlassian.net',
 };
 
 export const emptyAuthInfo: AuthInfo = {
