@@ -96,6 +96,8 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                             branchTypes: branchTypes,
                             developmentBranch: developmentBranch,
                             isCloud: isCloud,
+                            userName: repoScmState.userName,
+                            userEmail: repoScmState.userEmail,
                             localBranches: repoScmState.localBranches,
                             remoteBranches: repoScmState.remoteBranches,
                             hasSubmodules: repoScmState.hasSubmodules,
@@ -109,7 +111,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
             this.postMessage({
                 type: StartWorkMessageType.Init,
                 ...this.initData!,
-                repoData: repoData,
+                repoData,
                 ...this.api.getStartWorkConfig(),
             });
         } catch (e) {
