@@ -54,10 +54,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             .map((approver) => `Approved-by: ${approver.displayName}`)
             .join('\n');
 
-        const item = new vscode.TreeItem(
-            `#${this.pr.data.id!} ${this.pr.data.title!}`,
-            vscode.TreeItemCollapsibleState.Collapsed,
-        );
+        const item = new vscode.TreeItem(`${this.pr.data.title!}`, vscode.TreeItemCollapsibleState.Collapsed);
         item.tooltip = `#${this.pr.data.id!} ${this.pr.data.title!}${
             approvalText.length > 0 ? `\n\n${approvalText}` : ''
         }`;
