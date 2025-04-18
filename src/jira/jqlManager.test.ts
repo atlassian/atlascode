@@ -126,7 +126,6 @@ describe('JQLManager', () => {
     });
 
     afterEach(() => {
-        jqlManager.dispose();
         jest.restoreAllMocks();
     });
 
@@ -154,6 +153,7 @@ describe('JQLManager', () => {
         expect(entries).toHaveLength(2);
 
         entries.forEach((entry) => {
+            expect(entry.name).toEqual(expect.any(String));
             expect(entry.query).toEqual('assignee = currentUser() AND StatusCategory != Done ORDER BY updated DESC');
             expect(entry.enabled).toBeTruthy();
             expect(entry.monitor).toBeTruthy();

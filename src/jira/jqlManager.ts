@@ -1,62 +1,16 @@
-import PQueue from 'p-queue/dist';
-import { ConfigurationChangeEvent, Disposable } from 'vscode';
+import { Disposable } from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
-import { configuration } from '../config/configuration';
 import { JQLEntry } from '../config/model';
 import { Container } from '../container';
-import { Logger } from '../logger';
 
 export type JQLUpdateEvent = {
     jqlEntries: JQLEntry[];
 };
 
 export class JQLManager extends Disposable {
-    private _disposable: Disposable;
-    private _queue = new PQueue({ concurrency: 1 });
-
     constructor() {
-        super(() => this.dispose());
-
-        this._disposable = Disposable.from(configuration.onDidChange(this.onConfigurationChanged, this));
-    }
-
-    dispose() {
-        this._disposable.dispose();
-    }
-
-    public async updateFilters() {
-        this._queue.add(async () => {
-            const allList = Container.config.jira.jqlList;
-            if (!allList) {
-                return;
-            }
-
-            const filterList = allList.filter((item) => item.filterId);
-
-            await Promise.all(
-                filterList.map(async (f) => {
-                    const site = Container.siteManager.getSiteForId(ProductJira, f.siteId);
-                    if (site) {
-                        try {
-                            const client = await Container.clientManager.jiraClient(site);
-                            const updatedFilter = await client.getFilter(f.filterId!);
-                            if (updatedFilter) {
-                                const originalFilter = allList.find((of) => of.id === f.id);
-                                if (originalFilter) {
-                                    originalFilter.name = updatedFilter.name;
-                                    originalFilter.query = updatedFilter.jql;
-                                }
-                            }
-                        } catch (e) {
-                            Logger.error(e, `Error fetching filter "${f.name}"`);
-                        }
-                    }
-                }),
-            );
-
-            configuration.updateEffective('jira.jqlList', allList);
-        });
+        super(() => {});
     }
 
     public notifiableJQLEntries(): JQLEntry[] {
@@ -81,21 +35,5 @@ export class JQLManager extends Disposable {
             siteId: site.id,
             monitor: true,
         };
-    }
-
-    public async removeJQLForSiteWithId(siteId: string) {
-        this._queue.add(async () => {
-            let allList = Container.config.jira.jqlList;
-
-            allList = allList.filter((j) => j.siteId !== siteId);
-
-            await configuration.updateEffective('jira.jqlList', allList);
-        });
-    }
-
-    private onConfigurationChanged(e: ConfigurationChangeEvent) {
-        if (configuration.changed(e, 'jira.filterList')) {
-            this.updateFilters();
-        }
     }
 }
