@@ -7,6 +7,7 @@ import Lozenge from '@atlaskit/lozenge';
 import { RadioGroup } from '@atlaskit/radio';
 import Select, { AsyncCreatableSelect, AsyncSelect, CreatableSelect } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
+import Textfield from '@atlaskit/textfield';
 import {
     CommentVisibility,
     IssuePickerIssue,
@@ -43,9 +44,11 @@ import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
 import { ConnectionTimeout } from '../../../util/time';
 import { colorToLozengeAppearanceMap } from '../colors';
 import * as FieldValidators from '../fieldValidators';
+import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
+import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
@@ -446,7 +449,7 @@ export abstract class AbstractIssueEditorPage<
                 return (
                     <Field
                         defaultValue={defaultVal}
-                        label={field.name}
+                        label={<span>{field.name}</span>}
                         isRequired={field.required}
                         id={field.key}
                         name={field.key}
@@ -459,21 +462,29 @@ export abstract class AbstractIssueEditorPage<
                             }
 
                             let markup = (
-                                <input
+                                <Textfield
                                     {...fieldArgs.fieldProps}
-                                    style={{ width: '100%', display: 'block' }}
                                     className="ac-inputField"
-                                    disabled={this.state.isSomethingLoading}
-                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
-                                        this.handleInlineInputEdit(field, val);
-                                    })}
+                                    isDisabled={this.state.isSomethingLoading}
+                                    isRequired
+                                    onChange={(e: any) =>
+                                        chain(
+                                            fieldArgs.fieldProps.onChange,
+                                            this.handleInlineEdit(field, e.currentTarget.value),
+                                        )
+                                    }
+                                    placeholder={field.key === 'summary' && 'What needs to be done?'}
                                 />
                             );
                             if ((field as InputFieldUI).isMultiline) {
                                 markup = (
-                                    <TextAreaEditor
+                                    <JiraIssueTextAreaEditor
                                         {...fieldArgs.fieldProps}
-                                        rows={5}
+                                        value={this.state.fieldValues[field.key]}
+                                        isDisabled={this.state.isSomethingLoading}
+                                        onChange={(e: any) =>
+                                            chain(fieldArgs.fieldProps.onChange, this.handleInlineEdit(field, e))
+                                        }
                                         fetchUsers={async (input: string) =>
                                             (await this.fetchUsers(input)).map((user) => ({
                                                 displayName: user.displayName,
@@ -483,10 +494,6 @@ export abstract class AbstractIssueEditorPage<
                                                     : `[~${user.name}]`,
                                             }))
                                         }
-                                        disabled={this.state.isSomethingLoading}
-                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
-                                            this.handleInlineEdit(field, val);
-                                        })}
                                     />
                                 );
                             }
@@ -527,7 +534,7 @@ export abstract class AbstractIssueEditorPage<
 
                 return (
                     <Field
-                        label={field.name}
+                        label={<span>{field.name}</span>}
                         isRequired={field.required}
                         id={field.key}
                         name={field.key}
@@ -592,7 +599,7 @@ export abstract class AbstractIssueEditorPage<
 
                 return (
                     <Field
-                        label={field.name}
+                        label={<span>{field.name}</span>}
                         isRequired={field.required}
                         id={field.key}
                         name={field.key}

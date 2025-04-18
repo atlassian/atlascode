@@ -4,11 +4,9 @@ import Form, { Field, FormFooter, FormHeader, RequiredAsterisk } from '@atlaskit
 import Page from '@atlaskit/page';
 import SectionMessage from '@atlaskit/section-message';
 import Select, { components } from '@atlaskit/select';
-import { AsyncSelect } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
-import Textfield from '@atlaskit/textfield';
 import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI, SelectFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { FieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import * as React from 'react';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
@@ -22,7 +20,6 @@ import ErrorBanner from '../../ErrorBanner';
 import { chain } from '../../fieldValidators';
 import Offline from '../../Offline';
 import PMFBBanner from '../../pmfBanner';
-import * as SelectFieldHelper from '../../selectFieldHelper';
 import {
     AbstractIssueEditorPage,
     CommonEditorPageAccept,
@@ -30,7 +27,6 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
-import JiraIssueTextAreaEditor from '../common/JiraIssueTextArea';
 import { Panel } from './Panel';
 
 type Emit = CommonEditorPageEmit;
@@ -129,7 +125,8 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         this.commonFields = [];
 
         orderedValues.forEach((field) => {
-            if (field.advanced) {
+            //we want assignee field in common
+            if (field.advanced && field.key !== 'assignee') {
                 this.advancedFields.push(field);
             } else {
                 this.commonFields.push(field);
@@ -286,7 +283,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
     getAdvancedFieldMarkup(): any {
         return this.advancedFields
-            .filter((field) => field.key !== 'assignee' && field.key !== 'parent') //added assignee to common fields but is set by API + TODO: add parent functionality
+            .filter((field) => field.key !== 'parent') //TODO: add parent functionality
             .map((field) => this.getInputMarkup(field));
     }
 
@@ -399,180 +396,8 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                         );
                                                     }}
                                                 </Field>
-                                                {this.state.fields['project'] && (
-                                                    <Field
-                                                        label={<span>Project</span>}
-                                                        id="project"
-                                                        name="project"
-                                                        isRequired
-                                                        defaultValue={this.state.fieldValues['project']}
-                                                    >
-                                                        {(fieldArgs: any) => {
-                                                            const selectField = this.state.fields['project'];
-                                                            return (
-                                                                <Select
-                                                                    {...fieldArgs.fieldProps}
-                                                                    className="ac-form-select-container"
-                                                                    classNamePrefix="ac-form-select"
-                                                                    getOptionLabel={(option: any) => option.name}
-                                                                    getOptionValue={(option: any) => option.id}
-                                                                    options={this.state.selectFieldOptions['project']}
-                                                                    components={SelectFieldHelper.getComponentsForValueType(
-                                                                        selectField.valueType,
-                                                                    )}
-                                                                    onChange={chain(
-                                                                        fieldArgs.fieldProps.onChange,
-                                                                        this.handleInlineEdit.bind(this, {
-                                                                            key: 'project',
-                                                                            valueType: ValueType.Project,
-                                                                            uiType: UIType.Select,
-                                                                        }),
-                                                                    )}
-                                                                />
-                                                            );
-                                                        }}
-                                                    </Field>
-                                                )}
-                                                {this.state.fields['issuetype'] && (
-                                                    <Field
-                                                        label={<span>Issue Type</span>}
-                                                        id="issuetype"
-                                                        name="issuetype"
-                                                        isRequired
-                                                        defaultValue={this.state.fieldValues['issuetype']}
-                                                    >
-                                                        {(fieldArgs: any) => {
-                                                            const selectField = this.state.fields['issuetype'];
-                                                            return (
-                                                                <Select
-                                                                    {...fieldArgs.fieldProps}
-                                                                    className="ac-form-select-container"
-                                                                    classNamePrefix="ac-form-select"
-                                                                    getOptionLabel={(option: any) => option.name}
-                                                                    getOptionValue={(option: any) => option.id}
-                                                                    options={this.state.selectFieldOptions['issuetype']}
-                                                                    components={SelectFieldHelper.getComponentsForValueType(
-                                                                        selectField.valueType,
-                                                                    )}
-                                                                    onChange={(e: any) =>
-                                                                        chain(
-                                                                            fieldArgs.fieldProps.onChange,
-                                                                            this.handleSelectChange(selectField, e),
-                                                                        )
-                                                                    }
-                                                                />
-                                                            );
-                                                        }}
-                                                    </Field>
-                                                )}
-                                                {this.state.fields['summary'] && (
-                                                    <Field
-                                                        label={<span>Summary</span>}
-                                                        id="summary"
-                                                        name="summary"
-                                                        isRequired
-                                                    >
-                                                        {(fieldArgs: any) => {
-                                                            const selectField = this.state.fields['summary'];
-                                                            return (
-                                                                <Textfield
-                                                                    {...fieldArgs.fieldProps}
-                                                                    className="ac-inputField"
-                                                                    isDisabled={this.state.isSomethingLoading}
-                                                                    isRequired
-                                                                    onChange={(e: any) =>
-                                                                        chain(
-                                                                            fieldArgs.fieldProps.onChange,
-                                                                            this.handleInlineEdit(
-                                                                                selectField,
-                                                                                e.currentTarget.value,
-                                                                            ),
-                                                                        )
-                                                                    }
-                                                                    placeholder="What needs to be done?"
-                                                                />
-                                                            );
-                                                        }}
-                                                    </Field>
-                                                )}
-                                                {this.state.fields['description'] && (
-                                                    <Field
-                                                        label={<span>Description</span>}
-                                                        id="description"
-                                                        name="description"
-                                                    >
-                                                        {(fieldArgs: any) => {
-                                                            const selectField = this.state.fields['description'];
-                                                            return (
-                                                                <JiraIssueTextAreaEditor
-                                                                    {...fieldArgs.fieldProps}
-                                                                    value={this.state.fieldValues['description']}
-                                                                    isDisabled={this.state.isSomethingLoading}
-                                                                    onChange={(e: any) =>
-                                                                        chain(
-                                                                            fieldArgs.fieldProps.onChange,
-                                                                            this.handleInlineEdit(selectField, e),
-                                                                        )
-                                                                    }
-                                                                    fetchUsers={async (input: string) =>
-                                                                        (await this.fetchUsers(input)).map((user) => ({
-                                                                            displayName: user.displayName,
-                                                                            avatarUrl: user.avatarUrls?.['48x48'],
-                                                                            mention: this.state.siteDetails.isCloud
-                                                                                ? `[~accountid:${user.accountId}]`
-                                                                                : `[~${user.name}]`,
-                                                                        }))
-                                                                    }
-                                                                />
-                                                            );
-                                                        }}
-                                                    </Field>
-                                                )}
-                                                {this.state.fields['assignee'] && (
-                                                    <Field label={<span>Assignee</span>} id="assignee" name="assignee">
-                                                        {(fieldArgs: any) => {
-                                                            const selectField = this.state.fields['assignee'];
-                                                            return (
-                                                                <AsyncSelect
-                                                                    {...fieldArgs.fieldProps}
-                                                                    getOptionLabel={SelectFieldHelper.labelFuncForValueType(
-                                                                        selectField.valueType,
-                                                                    )}
-                                                                    getOptionValue={SelectFieldHelper.valueFuncForValueType(
-                                                                        selectField.valueType,
-                                                                    )}
-                                                                    components={SelectFieldHelper.getComponentsForValueType(
-                                                                        selectField.valueType,
-                                                                    )}
-                                                                    className="ac-form-select-container"
-                                                                    classNamePrefix="ac-form-select"
-                                                                    defaultOptions={
-                                                                        this.state.selectFieldOptions['assignee']
-                                                                    }
-                                                                    loadOptions={(e: any) =>
-                                                                        this.loadSelectOptionsForField(
-                                                                            selectField as SelectFieldUI,
-                                                                            e,
-                                                                        )
-                                                                    }
-                                                                    onChange={(selected: any) => {
-                                                                        this.handleSelectChange(selectField, selected);
-                                                                    }}
-                                                                />
-                                                            );
-                                                        }}
-                                                    </Field>
-                                                )}
-                                                {this.state.fields['fixVersions'] &&
-                                                    this.getInputMarkup(this.state.fields['fixVersions'])}
-                                                {this.state.fields['labels'] &&
-                                                    this.getInputMarkup(this.state.fields['labels'])}
-                                                {this.commonFields && this.commonFields.length === 1 && (
-                                                    <div className="ac-vpadding">
-                                                        <h3>
-                                                            No fields found for selected project. Please choose another.
-                                                        </h3>
-                                                    </div>
+                                                {this.commonFields && this.commonFields.length > 0 && (
+                                                    <div>{this.getCommonFieldMarkup()}</div>
                                                 )}
                                                 {this.advancedFields && this.advancedFields.length > 0 && (
                                                     <Panel isDefaultExpanded={false} header={<h4>Advanced Options</h4>}>
