@@ -17,7 +17,6 @@ jest.mock('../../container', () => ({
         config: {
             bitbucket: {
                 showTerminalLinkPanel: true,
-                enabled: true,
             },
         },
         analyticsClient: {
@@ -45,7 +44,6 @@ import { BitbucketCloudPullRequestLinkProvider } from './createPrLinkProvider';
 
 beforeEach(() => {
     env.openExternal = jest.fn().mockResolvedValue(true);
-    Container.config.bitbucket.enabled = true;
     Container.config.bitbucket.showTerminalLinkPanel = true;
 });
 
@@ -94,18 +92,6 @@ describe('BitbucketPullRequestLinkProvider', () => {
         it('should not display a message if disabled in config', async () => {
             Container.config.bitbucket.showTerminalLinkPanel = false;
             jest.spyOn(window, 'showInformationMessage');
-            const provider = new BitbucketCloudPullRequestLinkProvider();
-
-            await provider.handleTerminalLink(mockLink);
-
-            expect(window.showInformationMessage).not.toHaveBeenCalled();
-        });
-
-        it('should not display a message if Bitbucket is disabled', async () => {
-            Container.config.bitbucket.enabled = false;
-            Container.config.bitbucket.showTerminalLinkPanel = true;
-            jest.spyOn(window, 'showInformationMessage');
-
             const provider = new BitbucketCloudPullRequestLinkProvider();
 
             await provider.handleTerminalLink(mockLink);

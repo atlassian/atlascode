@@ -36,20 +36,15 @@ export class BitbucketCloudPullRequestLinkProvider extends Disposable implements
     constructor() {
         super(() => this.dispose());
         this._analyticsClient = Container.analyticsClient;
-        this._isNotificationEnabled =
-            Container.config.bitbucket.showTerminalLinkPanel && Container.config.bitbucket.enabled;
+        this._isNotificationEnabled = Container.config.bitbucket.showTerminalLinkPanel;
 
         Container.context.subscriptions.push(configuration.onDidChange(this.onDidChangeConfiguration, this));
         window.registerTerminalLinkProvider(this);
     }
 
     onDidChangeConfiguration(e: ConfigurationChangeEvent) {
-        if (
-            configuration.changed(e, 'bitbucket.showTerminalLinkPanel') ||
-            configuration.changed(e, 'bitbucket.enabled')
-        ) {
-            this._isNotificationEnabled =
-                Container.config.bitbucket.showTerminalLinkPanel && Container.config.bitbucket.enabled;
+        if (configuration.changed(e, 'bitbucket.showTerminalLinkPanel')) {
+            this._isNotificationEnabled = Container.config.bitbucket.showTerminalLinkPanel;
         }
     }
 
