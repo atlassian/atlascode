@@ -7,6 +7,7 @@ import { DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/au
 import { startListening } from './atlclients/negotiate';
 import { BitbucketContext } from './bitbucket/bbContext';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
+import { activate as activateDecorators } from './codebucket/command/registerDecorators';
 import { CommandContext, setCommandContext } from './commandContext';
 import { Commands, registerCommands } from './commands';
 import { Configuration, configuration, IConfig } from './config/configuration';
@@ -56,7 +57,7 @@ export async function activate(context: ExtensionContext) {
         activateErrorReporting();
         registerCommands(context);
         activateCodebucket(context);
-
+        activateDecorators(context);
         setCommandContext(
             CommandContext.IsJiraAuthenticated,
             Container.siteManager.productHasAtLeastOneSite(ProductJira),
