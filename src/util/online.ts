@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import pRetry from 'p-retry';
+import retry from 'retry';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter } from 'vscode';
 
 import { addCurlLogging } from '../atlclients/interceptors';
@@ -78,26 +78,42 @@ export class OnlineDetector extends Disposable {
 
     private async runOnlineChecks(): Promise<boolean> {
         const urlList = Container.config.onlineCheckerUrls.slice();
-        const promise = async () =>
-            await Promise.any(
-                urlList.map((url) => {
-                    return (async () => {
-                        Logger.debug(`Online check attempting to connect to ${url}`);
-                        await this._transport(url, { method: 'HEAD', ...getAgent() });
-                        Logger.debug(`Online check connected to ${url}`);
-                        return true;
-                    })();
-                }),
-            );
 
-        return await pRetry<boolean>(promise, {
-            retries: 4,
-            onFailedAttempt: (error) => {
-                Logger.debug(
-                    `Online check attempt ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`,
-                );
-            },
-        } as pRetry.Options).catch(() => false);
+        return new Promise<boolean>((resolve) => {
+            const operation = retry.operation({
+                retries: 4,
+                factor: 2,
+                minTimeout: 1000,
+                maxTimeout: 5000,
+            });
+
+            operation.attempt(async (currentAttempt) => {
+                try {
+                    const result = await Promise.any(
+                        urlList.map((url) => {
+                            return (async () => {
+                                Logger.debug(`Online check attempting to connect to ${url}`);
+                                await this._transport(url, { method: 'HEAD', ...getAgent() });
+                                Logger.debug(`Online check connected to ${url}`);
+                                return true;
+                            })();
+                        }),
+                    );
+                    resolve(result);
+                } catch (error) {
+                    Logger.debug(
+                        `Online check attempt ${currentAttempt} failed. There are ${operation.attempts()} retries left.`,
+                    );
+
+                    // operation.retry() will return false when no more retries should be made
+                    // and true when a retry will be performed
+                    if (!operation.retry(error)) {
+                        // No more retries left
+                        resolve(false);
+                    }
+                }
+            });
+        });
     }
 
     private async checkOnlineStatus() {
