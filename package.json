@@ -950,36 +950,6 @@
                     "description": "Enables the Jira Issue Explorer",
                     "scope": "window"
                 },
-                "atlascode.jira.explorer.showCustomJql": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enables Custom Jql Explorer",
-                    "scope": "window"
-                },
-                "atlascode.jira.explorer.showOpenIssues": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enables the Open Issues in the Jira Issue Explorer",
-                    "scope": "window"
-                },
-                "atlascode.jira.explorer.openIssueJql": {
-                    "type": "string",
-                    "default": "assignee in (EMPTY) and project=currentProject() and resolution = Unresolved and statusCategory != Done order by lastViewed DESC",
-                    "description": "JQL to retrieve open issues",
-                    "scope": "window"
-                },
-                "atlascode.jira.explorer.showAssignedIssues": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enables the Assigned Issues in the Jira Issue Explorer",
-                    "scope": "window"
-                },
-                "atlascode.jira.explorer.assignedIssueJql": {
-                    "type": "string",
-                    "default": "assignee=currentUser() and project=currentProject() and resolution = Unresolved and statusCategory != Done",
-                    "description": "JQL to retrieve issues assigned to you",
-                    "scope": "window"
-                },
                 "atlascode.jira.explorer.monitorEnabled": {
                     "type": "boolean",
                     "default": true,
@@ -1034,55 +1004,6 @@
                     "description": "Shows active Jira issue key in the status bar",
                     "scope": "window"
                 },
-                "atlascode.jira.workingProject": {
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                            "default": ""
-                        },
-                        "id": {
-                            "type": "string",
-                            "default": ""
-                        },
-                        "key": {
-                            "type": "string",
-                            "default": ""
-                        }
-                    },
-                    "description": "Jira project for workspace",
-                    "scope": "resource"
-                },
-                "atlascode.jira.workingSite": {
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                            "default": ""
-                        },
-                        "id": {
-                            "type": "string",
-                            "default": ""
-                        },
-                        "scopes": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            },
-                            "uniqueItems": true
-                        },
-                        "avatarUrl": {
-                            "type": "string",
-                            "default": ""
-                        },
-                        "baseUrlSuffix": {
-                            "type": "string",
-                            "default": "atlassian.net"
-                        }
-                    },
-                    "description": "Jira site for workspace",
-                    "scope": "resource"
-                },
                 "atlascode.jira.lastCreateSiteAndProject": {
                     "type": "object",
                     "description": "the last used site id and project key for create issue",
@@ -1095,42 +1016,6 @@
                         "projectKey": {
                             "type": "string",
                             "default": ""
-                        }
-                    }
-                },
-                "atlascode.jira.customJql": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "siteId": {
-                                "type": "string",
-                                "default": ""
-                            },
-                            "jql": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "id": {
-                                            "type": "string",
-                                            "default": ""
-                                        },
-                                        "enabled": {
-                                            "type": "boolean",
-                                            "default": true
-                                        },
-                                        "name": {
-                                            "type": "string",
-                                            "default": ""
-                                        },
-                                        "query": {
-                                            "type": "string",
-                                            "default": ""
-                                        }
-                                    }
-                                }
-                            }
                         }
                     }
                 },

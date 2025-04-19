@@ -24,12 +24,12 @@ export interface Product {
     key: string;
 }
 
-export const ProductJira = {
+export const ProductJira: Product = {
     name: 'Jira',
     key: 'jira',
 };
 
-export const ProductBitbucket = {
+export const ProductBitbucket: Product = {
     name: 'Bitbucket',
     key: 'bitbucket',
 };
@@ -40,18 +40,6 @@ export enum OAuthProvider {
     JiraCloud = 'jiracloud',
     JiraCloudStaging = 'jiracloudstaging',
     JiraCloudRemote = 'jiracloudremote',
-}
-export interface AuthInfoV1 {
-    access: string;
-    refresh: string;
-    user: UserInfoV1;
-    accessibleResources?: Array<AccessibleResourceV1>;
-}
-
-export interface UserInfoV1 {
-    id: string;
-    displayName: string;
-    provider: OAuthProvider;
 }
 
 export interface OAuthResponse {
@@ -130,14 +118,6 @@ export interface IntegrationsLinkParams {
     s: string; // source
 }
 
-export interface AccessibleResourceV1 {
-    id: string;
-    name: string;
-    scopes: Array<string>;
-    avatarUrl: string;
-    baseUrlSuffix: string;
-}
-
 export interface AccessibleResource {
     id: string;
     name: string;
@@ -172,22 +152,6 @@ export const emptySiteInfo: DetailedSiteInfo = {
     hasResolutionField: false,
 };
 
-export const emptyAccessibleResource: AccessibleResource = {
-    id: '',
-    name: '',
-    avatarUrl: '',
-    scopes: [],
-    url: '',
-};
-
-export const emptyAccessibleResourceV1: AccessibleResourceV1 = {
-    id: '',
-    name: '',
-    avatarUrl: '',
-    scopes: [],
-    baseUrlSuffix: 'atlassian.net',
-};
-
 export const emptyAuthInfo: AuthInfo = {
     user: emptyUserInfo,
     state: AuthInfoState.Valid,
@@ -197,12 +161,6 @@ export const emptyBasicAuthInfo: BasicAuthInfo = {
     user: emptyUserInfo,
     username: '',
     password: '',
-    state: AuthInfoState.Valid,
-};
-
-export const emptyPATAuthInfo: PATAuthInfo = {
-    user: emptyUserInfo,
-    token: '',
     state: AuthInfoState.Valid,
 };
 
@@ -218,7 +176,7 @@ export function isRemoveAuthEvent(a: AuthInfoEvent): a is RemoveAuthInfoEvent {
     return a && (<RemoveAuthInfoEvent>a).type === AuthChangeType.Remove;
 }
 
-export function isDetailedSiteInfo(a: any): a is DetailedSiteInfo {
+function isDetailedSiteInfo(a: any): a is DetailedSiteInfo {
     return (
         a &&
         (<DetailedSiteInfo>a).id !== undefined &&

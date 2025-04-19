@@ -1,9 +1,7 @@
 export const ExtensionId = 'atlassian.atlascode';
 export const ConfigNamespace = 'atlascode';
 export const extensionOutputChannelName = 'Atlassian';
-export const JiraLegacyWorkingSiteConfigurationKey = 'jira.workingSite';
 export const JiraCreateSiteAndProjectKey = 'jira.lastCreateSiteAndProject';
-export const JiraV1WorkingProjectConfigurationKey = 'jira.workingProject';
 export const JiraEnabledKey = 'jira.enabled';
 export const BitbucketEnabledKey = 'bitbucket.enabled';
 export const JiraHoverProviderConfigurationKey = 'jira.hover.enabled';
