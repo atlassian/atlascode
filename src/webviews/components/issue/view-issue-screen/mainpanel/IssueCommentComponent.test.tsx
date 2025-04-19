@@ -15,7 +15,6 @@ const mockSiteDetails: DetailedSiteInfo = {
     baseApiUrl: '',
     isCloud: false,
     credentialId: '',
-    hasResolutionField: false,
     host: '',
     product: {
         name: 'JIRA',
