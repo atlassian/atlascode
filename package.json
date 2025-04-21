@@ -893,12 +893,6 @@
                     "description": "Enables UI websocket for debugging webviews",
                     "scope": "window"
                 },
-                "atlascode.offlineMode": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enables offline mode",
-                    "scope": "window"
-                },
                 "atlascode.showWelcomeOnInstall": {
                     "type": "boolean",
                     "default": true,
@@ -1331,7 +1325,6 @@
         "node-ipc": "^9.2.1",
         "p-cancelable": "^2.0.0",
         "p-queue": "^6.3.0",
-        "p-retry": "^4.2.0",
         "p-settle": "^3.1.0",
         "p-timeout": "^3.2.0",
         "path-browserify": "^1.0.1",

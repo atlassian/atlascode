@@ -18,7 +18,7 @@ import {
     isSetIssueType,
 } from '../ipc/issueActions';
 import { CreateIssueData } from '../ipc/issueMessaging';
-import { Action, onlineStatus } from '../ipc/messaging';
+import { Action } from '../ipc/messaging';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { WebViewID } from '../lib/ipc/models/common';
 import { Logger } from '../logger';
@@ -103,11 +103,6 @@ export class CreateIssueWebview
 
         await this.updateSiteAndProject();
 
-        if (!Container.onlineDetector.isOnline()) {
-            this.postMessage(onlineStatus(false));
-            return;
-        }
-
         if (data) {
             this._screenData = emptyCreateMetaResult;
         } else {
@@ -157,12 +152,7 @@ export class CreateIssueWebview
     }
 
     public async invalidate() {
-        if (Container.onlineDetector.isOnline()) {
-            await this.updateFields();
-        } else {
-            this.postMessage(onlineStatus(false));
-        }
-
+        await this.updateFields();
         Container.pmfStats.touchActivity();
     }
 

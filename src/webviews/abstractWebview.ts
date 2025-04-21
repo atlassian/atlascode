@@ -19,7 +19,6 @@ import { submitLegacyJSDPMF } from '../feedback/pmfJSDSubmitter';
 import { isAction, isAlertable, isPMFSubmitAction } from '../ipc/messaging';
 import { CommonActionType } from '../lib/ipc/fromUI/common';
 import { iconSet, Resources } from '../resources';
-import { OnlineInfoEvent } from '../util/online';
 import { UIWebsocket } from '../ws';
 
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
@@ -60,14 +59,8 @@ export abstract class AbstractReactWebview implements ReactWebview {
     constructor(extensionPath: string) {
         this._extensionPath = extensionPath;
 
-        Container.context.subscriptions.push(Container.onlineDetector.onDidOnlineChange(this.onDidOnlineChange, this));
-
         // Note: this is supe rlightweight and does nothing until you call start()
         this.ws = new UIWebsocket(13988);
-    }
-
-    private onDidOnlineChange(e: OnlineInfoEvent) {
-        this.postMessage({ type: 'onlineStatus', isOnline: e.isOnline });
     }
 
     onDidPanelDispose(): Event<void> {
@@ -145,8 +138,6 @@ export abstract class AbstractReactWebview implements ReactWebview {
     private onViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
         // HACK: Because messages aren't sent to the webview when hidden, we need make sure it is up-to-date
         if (e.webviewPanel.visible) {
-            this.postMessage({ type: 'onlineStatus', isOnline: Container.onlineDetector.isOnline() });
-
             const shouldShowSurvey: boolean = Container.pmfStats.shouldShowSurvey();
             this.postMessage({ type: 'pmfStatus', showPMF: shouldShowSurvey });
 

@@ -39,7 +39,7 @@ import {
     isUpdateWatcherAction,
 } from '../ipc/issueActions';
 import { EditIssueData, emptyEditIssueData } from '../ipc/issueMessaging';
-import { Action, onlineStatus } from '../ipc/messaging';
+import { Action } from '../ipc/messaging';
 import { isOpenPullRequest } from '../ipc/prActions';
 import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
@@ -85,21 +85,11 @@ export class JiraIssueWebview
 
     async initialize(issue: MinimalIssue<DetailedSiteInfo>) {
         this._issue = issue;
-
-        if (!Container.onlineDetector.isOnline()) {
-            this.postMessage(onlineStatus(false));
-            return;
-        }
         this.invalidate();
     }
 
     async invalidate() {
-        if (Container.onlineDetector.isOnline()) {
-            await this.forceUpdateIssue();
-        } else {
-            this.postMessage(onlineStatus(false));
-        }
-
+        await this.forceUpdateIssue();
         Container.jiraActiveIssueStatusBar.handleActiveIssueChange(this._issue.key);
         Container.pmfStats.touchActivity();
     }

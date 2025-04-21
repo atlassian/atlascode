@@ -11,7 +11,7 @@ import { showIssue } from '../commands/jira/showIssue';
 import { Container } from '../container';
 import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
 import { StartWorkOnIssueData } from '../ipc/issueMessaging';
-import { Action, onlineStatus } from '../ipc/messaging';
+import { Action } from '../ipc/messaging';
 import { BranchType, RepoData } from '../ipc/prMessaging';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { transitionIssue } from '../jira/transitionIssue';
@@ -57,11 +57,6 @@ export class StartWorkOnIssueWebview
     }
 
     async initialize(data: MinimalIssue<DetailedSiteInfo>) {
-        if (!Container.onlineDetector.isOnline()) {
-            this.postMessage(onlineStatus(false));
-            return;
-        }
-
         if (this._state.key !== data.key) {
             this.postMessage({
                 type: 'update',

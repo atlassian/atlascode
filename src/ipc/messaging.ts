@@ -10,11 +10,6 @@ export interface HostErrorMessage extends Message {
     reason: string;
 }
 
-export interface OnlineStatusMessage extends Message {
-    type: 'onlineStatus';
-    isOnline: boolean;
-}
-
 // Action is the base interface for sending messages from react => vscode
 // Action must have an action so receivers can switch on it.
 // Sub-interfaces should be used to carry action specific data and extend this interface.
@@ -36,10 +31,6 @@ export function isAlertable(a: Action): a is Alert {
 
 export function isAction(a: any): a is Action {
     return a && (<Action>a).action !== undefined;
-}
-
-export function onlineStatus(status: boolean): OnlineStatusMessage {
-    return { type: 'onlineStatus', isOnline: status };
 }
 
 export function isPMFSubmitAction(a: Action): a is PMFSubmitAction {
