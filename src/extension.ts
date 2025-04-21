@@ -182,7 +182,11 @@ async function sendAnalytics(version: string, globalState: Memento) {
         });
     }
 
-    launchedEvent(env.remoteName ? env.remoteName : 'local').then((e) => {
+    launchedEvent(
+        env.remoteName ? env.remoteName : 'local',
+        Container.siteManager.productHasAtLeastOneSite(ProductJira),
+        Container.siteManager.productHasAtLeastOneSite(ProductBitbucket),
+    ).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
 }
