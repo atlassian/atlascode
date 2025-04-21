@@ -17,7 +17,7 @@ export function validateString(value: string, state?: any): string | undefined {
     if (!value || value.trim().length < 1) {
         return 'EMPTY';
     }
-    return;
+    return undefined;
 }
 
 export function isValidString(value: string): boolean {
