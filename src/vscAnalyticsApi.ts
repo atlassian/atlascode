@@ -72,8 +72,12 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
-    public async fireLaunchedEvent(location: string): Promise<void> {
-        return launchedEvent(location).then((e) => {
+    public async fireLaunchedEvent(
+        location: string,
+        isJiraAuthenticated: boolean,
+        isBitbucketAuthenticated: boolean,
+    ): Promise<void> {
+        return launchedEvent(location, isJiraAuthenticated, isBitbucketAuthenticated).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }
