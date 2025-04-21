@@ -1,16 +1,8 @@
-import { AccessibleResourceV1, emptyAccessibleResourceV1 } from '../atlclients/authInfo';
-
 export enum OutputLevel {
     Silent = 'silent',
     Errors = 'errors',
     Info = 'info',
     Debug = 'debug',
-}
-
-export interface WorkingProjectV1 {
-    name: string;
-    id: string;
-    key: string;
 }
 
 export interface IConfig {
@@ -31,14 +23,11 @@ export interface IConfig {
 
 export interface JiraConfig {
     enabled: boolean;
-    workingProject: WorkingProjectV1;
-    workingSite: AccessibleResourceV1;
     lastCreateSiteAndProject: SiteIdAndProjectKey;
     explorer: JiraExplorer;
     issueMonitor: JiraIssueMonitor;
     statusbar: JiraStatusBar;
     hover: JiraHover;
-    customJql: SiteJQLV1[];
     jqlList: JQLEntry[];
     todoIssues: TodoIssues;
     startWorkBranchTemplate: StartWorkBranchTemplate;
@@ -65,8 +54,6 @@ export interface JiraIssueMonitor {
 export interface JiraExplorer {
     enabled: boolean;
     monitorEnabled: boolean;
-    showOpenIssues: boolean;
-    showAssignedIssues: boolean;
     refreshInterval: number;
     nestSubtasks: boolean;
     fetchAllQueryResults: boolean;
@@ -79,11 +66,6 @@ export interface StartWorkBranchTemplate {
 
 export interface JiraHover {
     enabled: boolean;
-}
-
-export interface SiteJQLV1 {
-    siteId: string;
-    jql: JQLEntryV1[];
 }
 
 export interface TodoIssues {
@@ -101,13 +83,6 @@ export interface JQLEntry {
     filterId?: string;
 }
 
-export interface JQLEntryV1 {
-    id: string;
-    enabled: boolean;
-    name: string;
-    query: string;
-}
-
 export interface BitbucketConfig {
     enabled: boolean;
     explorer: BitbucketExplorer;
@@ -116,6 +91,7 @@ export interface BitbucketConfig {
     pipelines: BitbucketPipelinesConfig;
     issues: BitbucketIssuesConfig;
     preferredRemotes: string[];
+    showTerminalLinkPanel: boolean;
 }
 
 export interface BitbucketPipelinesConfig {
@@ -167,17 +143,9 @@ export interface BitbucketContextMenus {
     enabled: boolean;
 }
 
-const emptyWorkingProjectV1: WorkingProjectV1 = {
-    name: '',
-    id: '',
-    key: '',
-};
-
 const emptyJiraExplorer: JiraExplorer = {
     enabled: true,
     monitorEnabled: true,
-    showOpenIssues: true,
-    showAssignedIssues: true,
     refreshInterval: 5,
     nestSubtasks: true,
     fetchAllQueryResults: false,
@@ -211,14 +179,11 @@ const emptyStartWorkBranchTemplate: StartWorkBranchTemplate = {
 
 const emptyJiraConfig: JiraConfig = {
     enabled: true,
-    workingProject: emptyWorkingProjectV1,
-    workingSite: emptyAccessibleResourceV1,
     lastCreateSiteAndProject: { siteId: '', projectKey: '' },
     explorer: emptyJiraExplorer,
     issueMonitor: emtpyIssueMonitor,
     statusbar: emptyJiraStatusBar,
     hover: emptyJiraHover,
-    customJql: [],
     jqlList: [],
     todoIssues: emptyTodoIssues,
     startWorkBranchTemplate: emptyStartWorkBranchTemplate,
@@ -282,6 +247,7 @@ const emptyBitbucketConfig: BitbucketConfig = {
     pipelines: emptyPipelinesConfig,
     issues: emptyIssuesConfig,
     preferredRemotes: ['upstream', 'origin'],
+    showTerminalLinkPanel: true,
 };
 
 export const emptyConfig: IConfig = {

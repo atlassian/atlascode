@@ -1,8 +1,8 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { expansionCastTo, resolvePromiseSync } from 'testsutil';
 import { commands, window } from 'vscode';
 
-import { expansionCastTo, resolvePromiseSync } from '../../../../testsutil';
 import * as showIssueCommand from '../../../commands/jira/showIssue';
 import { JiraNotifier } from './jiraNotifier';
 

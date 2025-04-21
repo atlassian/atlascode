@@ -1,10 +1,10 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { PromiseRacer } from 'src/util/promises';
 import { RefreshTimer } from 'src/views/RefreshTimer';
+import { expansionCastTo, forceCastTo } from 'testsutil';
 import { Disposable } from 'vscode';
 import * as vscode from 'vscode';
 
-import { expansionCastTo, forceCastTo } from '../../../../testsutil';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { JQLEntry } from '../../../config/model';
 import { Container } from '../../../container';

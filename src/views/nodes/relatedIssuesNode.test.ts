@@ -14,9 +14,9 @@ jest.mock('../../resources', () => ({
 
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { expansionCastTo } from 'testsutil';
 import { TreeItemCollapsibleState } from 'vscode';
 
-import { expansionCastTo } from '../../../testsutil';
 import * as issueForKey from '../../jira/issueForKey';
 import { JiraIssueNode } from '../jira/treeViews/utils';
 import { RelatedIssuesNode } from './relatedIssuesNode';

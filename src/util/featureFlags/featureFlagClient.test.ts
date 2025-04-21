@@ -34,8 +34,8 @@ jest.mock('@atlaskit/feature-gate-js-client', () => {
 
 import FeatureGates from '@atlaskit/feature-gate-js-client';
 import { it } from '@jest/globals';
+import { forceCastTo } from 'testsutil';
 
-import { forceCastTo } from '../../../testsutil';
 import { ClientInitializedErrorType } from '../../analytics';
 import { FeatureFlagClient, FeatureFlagClientInitError, FeatureFlagClientOptions } from './featureFlagClient';
 import { Experiments, Features } from './features';

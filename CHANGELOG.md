@@ -2,6 +2,12 @@
 
 ---
 
+## What's new in 3.6.1
+
+### Features
+
+-   Added informational panel when user clicks on create PR link in terminal which asks whether to create PR in extension or continue to browser
+
 ## What's new in 3.6.0
 
 ### Deprecations

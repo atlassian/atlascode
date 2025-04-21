@@ -1,9 +1,9 @@
 import { cloneDeep } from 'lodash';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { JQLEntry } from 'src/config/model';
+import { expansionCastTo, forceCastTo } from 'testsutil';
 import { Uri } from 'vscode';
 
-import { expansionCastTo, forceCastTo } from '../../../../testsutil';
 import { JiraIssueNode, TreeViewIssue } from './utils';
 
 jest.mock('../../../container', () => ({

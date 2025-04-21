@@ -1,6 +1,6 @@
+import { forceCastTo } from 'testsutil';
 import * as vscode from 'vscode';
 
-import { forceCastTo } from '../../../../testsutil';
 import { Container } from '../../../container';
 import { CustomJQLViewProvider } from './customJqlViewProvider';
 import { TreeViewIssue } from './utils';

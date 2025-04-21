@@ -9,15 +9,9 @@ import {
     ExtensionContext,
     Uri,
     workspace,
-    WorkspaceConfiguration,
 } from 'vscode';
 
-import {
-    ConfigNamespace,
-    JiraCreateSiteAndProjectKey,
-    JiraLegacyWorkingSiteConfigurationKey,
-    JiraV1WorkingProjectConfigurationKey,
-} from '../constants';
+import { ConfigNamespace, JiraCreateSiteAndProjectKey } from '../constants';
 import { SiteIdAndProjectKey } from './model';
 
 /*
@@ -114,58 +108,8 @@ export class Configuration extends Disposable {
             .update(section, value, target);
     }
 
-    // Moving from V1 to V2 working site became default site.
-    async clearVersion1WorkingSite() {
-        await this.updateForWorkspace(JiraLegacyWorkingSiteConfigurationKey, undefined);
-    }
-
-    // Migrates the workspace level site settings. This needs to be done for every workspace /directory
-    // the first time it's opened unlike global migrations that can happen on first run of the extension only.
-    async migrateLocalVersion1WorkingSite(deletePrevious: boolean) {
-        let inspect = configuration.inspect(JiraLegacyWorkingSiteConfigurationKey);
-        if (inspect.workspaceValue) {
-            const config = this.configForOpenWorkspace();
-            if (config && deletePrevious) {
-                await config.update(JiraLegacyWorkingSiteConfigurationKey, undefined);
-            }
-        }
-        inspect = configuration.inspect(JiraV1WorkingProjectConfigurationKey);
-        if (inspect.workspaceValue) {
-            const config = this.configForOpenWorkspace();
-            if (config && deletePrevious) {
-                await config.update(JiraV1WorkingProjectConfigurationKey, undefined);
-            }
-        }
-    }
-
     async setLastCreateSiteAndProject(siteAndProject?: SiteIdAndProjectKey) {
         await this.updateEffective(JiraCreateSiteAndProjectKey, siteAndProject, null, true);
-    }
-
-    async clearVersion1WorkingProject() {
-        // for now, we keep the global v1 project so we can use it to migrate jql later
-        await this.update(JiraV1WorkingProjectConfigurationKey, undefined, ConfigurationTarget.Workspace);
-    }
-
-    private configForOpenWorkspace(): WorkspaceConfiguration | undefined {
-        const f = workspace.workspaceFolders;
-        if (f && f.length > 0) {
-            return workspace.getConfiguration(ConfigNamespace, f[0].uri);
-        }
-        return undefined;
-    }
-
-    // Will attempt to update the value for both the Workspace and Global. If that fails (no folder is open) it will only set the value globaly.
-    private async updateForWorkspace(section: string, value: any) {
-        const config = this.configForOpenWorkspace();
-        if (config) {
-            await Promise.all([
-                config.update(section, value, ConfigurationTarget.Workspace),
-                config.update(section, value, ConfigurationTarget.Global),
-            ]);
-        } else {
-            await this.updateEffective(section, value);
-        }
     }
 
     // this tries to figure out where the current value is set and update it there

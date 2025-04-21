@@ -1,5 +1,5 @@
 import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/types';
-import { UIErrorInfo } from './analyticsTypes';
+import { CreatePrTerminalSelection, UIErrorInfo } from './analyticsTypes';
 import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira, SiteInfo } from './atlclients/authInfo';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
@@ -190,6 +190,12 @@ export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {
 }
 
 // PR events
+
+export async function createPrTerminalLinkDetectedEvent(isNotifEnabled: boolean): Promise<TrackEvent> {
+    return trackEvent('createPrTerminalLink', 'detected', {
+        attributes: { isNotificationEnabled: isNotifEnabled },
+    });
+}
 
 export async function prCreatedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'created', 'pullRequest');
@@ -624,6 +630,27 @@ export async function openActiveIssueEvent(): Promise<UIEvent> {
     return anyUserOrAnonymous<UIEvent>(e);
 }
 
+export async function createPrTerminalLinkPanelButtonClickedEvent(
+    source: string,
+    type: CreatePrTerminalSelection,
+): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'createPrTerminalLinkPanel',
+            source: source,
+            attributes: {
+                buttonType: type,
+            },
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
 // Helper methods
 
 async function instanceTrackEvent(

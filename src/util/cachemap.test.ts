@@ -1,4 +1,5 @@
-import { DateTimeMocker } from '../../testsutil';
+import { DateTimeMocker } from 'testsutil';
+
 import { CacheMap } from './cachemap';
 
 describe('CacheMap', () => {

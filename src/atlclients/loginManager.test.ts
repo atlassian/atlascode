@@ -1,8 +1,8 @@
 import { it } from '@jest/globals';
 import { AxiosInstance } from 'axios';
+import { forceCastTo } from 'testsutil';
 import { Memento } from 'vscode';
 
-import { forceCastTo } from '../../testsutil';
 import * as analytics from '../analytics';
 import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
 import * as jira_client_providers from '../jira/jira-client/providers';
