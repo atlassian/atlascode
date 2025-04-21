@@ -466,7 +466,6 @@ export abstract class AbstractIssueEditorPage<
                                     {...fieldArgs.fieldProps}
                                     className="ac-inputField"
                                     isDisabled={this.state.isSomethingLoading}
-                                    isRequired
                                     onChange={(e: any) =>
                                         chain(
                                             fieldArgs.fieldProps.onChange,
@@ -482,7 +481,7 @@ export abstract class AbstractIssueEditorPage<
                                         {...fieldArgs.fieldProps}
                                         value={this.state.fieldValues[field.key]}
                                         isDisabled={this.state.isSomethingLoading}
-                                        onChange={(e: any) =>
+                                        onChange={(e: string) =>
                                             chain(fieldArgs.fieldProps.onChange, this.handleInlineEdit(field, e))
                                         }
                                         fetchUsers={async (input: string) =>

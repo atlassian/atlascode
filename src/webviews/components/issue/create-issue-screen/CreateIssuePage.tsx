@@ -229,6 +229,10 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
         if (field.valueType === ValueType.Number && typeof newValue !== 'number') {
             typedVal = parseFloat(newValue);
+            if (isNaN(typedVal)) {
+                this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [fieldkey]: undefined } } });
+                return;
+            }
         }
 
         if (field.key.indexOf('.') > -1) {

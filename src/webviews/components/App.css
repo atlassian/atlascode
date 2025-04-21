@@ -1052,6 +1052,7 @@ div[role='dialog'],
     padding-left: 6px;
     box-sizing: border-box;
     border: 1px solid var(--vscode-settings-textInputBorder) !important;
+    border-radius: 2px !important;
     outline: 0 !important;
 }
 

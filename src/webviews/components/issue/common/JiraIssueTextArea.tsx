@@ -67,6 +67,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                     border: '1px solid var(--vscode-input-border)',
                     caretColor: 'var(--vscode-editorCursor-background)',
                     minHeight: isDescription ? '175px' : '100px',
+                    borderRadius: '2px',
                     overflow: 'auto',
                 }}
                 value={value}
