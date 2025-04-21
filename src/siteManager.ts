@@ -193,7 +193,11 @@ export class SiteManager extends Disposable {
         return undefined;
     }
 
-    public productHasAtLeastOneSite(product: Product): boolean {
+    public productHasAtLeastOneSite(product: Product, isCloud: boolean | undefined = undefined): boolean {
+        if (isCloud !== undefined) {
+            return this.getSitesAvailable(product).some((site) => site.isCloud === isCloud);
+        }
+
         return this.getSitesAvailable(product).length > 0;
     }
 

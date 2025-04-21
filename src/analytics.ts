@@ -51,15 +51,19 @@ export async function upgradedEvent(version: string, previousVersion: string): P
 
 export async function launchedEvent(
     location: string,
-    isJiraAuthenticated: boolean,
-    isBitbucketAuthenticated: boolean,
+    isJiraCloudAuthenticated: boolean,
+    isJiraServerAuthenticated: boolean,
+    isBitbucketCloudAuthenticated: boolean,
+    isBitbucketServerAuthenticated: boolean,
 ): Promise<TrackEvent> {
     return trackEvent('launched', 'atlascode', {
         attributes: {
             machineId: Container.machineId,
             extensionLocation: location,
-            jiraAuthenticated: isJiraAuthenticated,
-            bitbucketAuthenticated: isBitbucketAuthenticated,
+            jiraCloudAuthenticated: isJiraCloudAuthenticated,
+            jiraServerAuthenticated: isJiraServerAuthenticated,
+            bitbucketCloudAuthenticated: isBitbucketCloudAuthenticated,
+            bitbucketServerAuthenticated: isBitbucketServerAuthenticated,
         },
     });
 }
