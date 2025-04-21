@@ -13,7 +13,6 @@ import { Configuration, configuration, IConfig } from './config/configuration';
 import { ExtensionId, GlobalStateVersionKey } from './constants';
 import { Container } from './container';
 import { registerAnalyticsClient, registerErrorReporting, unregisterErrorReporting } from './errorReporting';
-import { JQLManager } from './jira/jqlManager';
 import { provideCodeLenses } from './jira/todoObserver';
 import { Logger } from './logger';
 import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
@@ -65,8 +64,6 @@ export async function activate(context: ExtensionContext) {
             CommandContext.IsBBAuthenticated,
             Container.siteManager.productHasAtLeastOneSite(ProductBitbucket),
         );
-
-        await JQLManager.backFillOldDetailedSiteInfos();
     } catch (e) {
         Logger.error(e, 'Error initializing atlascode!');
     }
