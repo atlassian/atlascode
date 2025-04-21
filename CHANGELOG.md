@@ -8,6 +8,10 @@
 
 -   Added informational panel when user clicks on create PR link in terminal which asks whether to create PR in extension or continue to browser
 
+### Bug fixes
+
+-   Fixed bug where field validators in Create Issue Page crash page when there is a custom required number field
+
 ## What's new in 3.6.0
 
 ### Deprecations
