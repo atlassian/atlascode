@@ -7,7 +7,6 @@ docker run \
     -p 9988:9988 \
     --platform linux/amd64 \
     -v $(pwd):/atlascode \
-    --user atlascode \
     -e ATLASCODE_TEST_USER_API_TOKEN=$ATLASCODE_TEST_USER_API_TOKEN \
     -e CI=$CI \
     $([ -z "$CI" ] && echo "-it" || echo "") \

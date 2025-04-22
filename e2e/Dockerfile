@@ -8,10 +8,8 @@ RUN apt-get install -y xvfb
 RUN apt-get install -y xauth 
 RUN apt-get install -y curl
 
-
-# Running vscode as root is not recommended, so let's create a user.
-# We need that user's $HOME to exist for the test process to work properly.
-RUN useradd -m -s /bin/bash atlascode
+RUN npm install --global playwright
+RUN npx playwright install --with-deps chromium
 
 # Set the working directory
 # We will mount the whole project directory to WORKDIR
@@ -34,13 +32,12 @@ RUN curl -fsSL https://code-server.dev/install.sh -o install-code-server.sh && \
 # We'll do this in-place to not have any build context for this Dockerfile:
 RUN cat <<EOF > /usr/bin/entrypoint.sh && chmod +x /usr/bin/entrypoint.sh
 #!/usr/bin/env bash
-echo "setting up playwright"
-sudo npx playwright install --with-deps chromium
-echo "starting code-server"
+echo "installing atlascode"
 code-server --install-extension atlascode-0.0.0.vsix --force
-code-server --auth none --bind-addr 0.0.0.0:9988 
-echo "Invoking xvfb-run with the following arguments: \$@"
-xvfb-run \$@
+echo "starting code-server"
+code-server --auth none --bind-addr 0.0.0.0:9988 &
+echo "Running playwright tests"
+npx playwright test ./e2e/tests/playwright.spec.ts
 EOF
 
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]

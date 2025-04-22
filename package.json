@@ -1368,6 +1368,7 @@
     "devDependencies": {
         "@babel/core": "^7.26.9",
         "@jest/globals": "^29.7.0",
+        "@playwright/test": "^1.52.0",
         "@stylistic/eslint-plugin-js": "^2.8.0",
         "@types/chai": "^4",
         "@types/filesize": "^4.1.0",
