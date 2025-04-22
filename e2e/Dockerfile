@@ -19,6 +19,7 @@ RUN useradd -m -s /bin/bash atlascode
 # otherwise tsc might generate wrong paths for e2e tests
 WORKDIR /atlascode
 
+
 # Where our vscode, chromedriver, images etc. will go
 ENV TEST_RESOURCES=/atlascode/e2e/.resources
 
@@ -33,6 +34,8 @@ RUN curl -fsSL https://code-server.dev/install.sh -o install-code-server.sh && \
 # We'll do this in-place to not have any build context for this Dockerfile:
 RUN cat <<EOF > /usr/bin/entrypoint.sh && chmod +x /usr/bin/entrypoint.sh
 #!/usr/bin/env bash
+echo "setting up playwright"
+sudo npx playwright install --with-deps chromium
 echo "starting code-server"
 code-server --install-extension atlascode-0.0.0.vsix --force
 code-server --auth none --bind-addr 0.0.0.0:9988 

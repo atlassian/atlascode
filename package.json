@@ -1420,6 +1420,7 @@
         "nyc": "^17.1.0",
         "ovsx": "^0.10.1",
         "patch-package": "^8.0.0",
+        "playwright": "^1.52.0",
         "postcss-flexbugs-fixes": "^5.0.2",
         "postcss-loader": "^8.1.1",
         "postcss-preset-env": "^10.0.5",
