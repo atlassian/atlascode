@@ -4,6 +4,7 @@
 # e2e/scripts/in-docker some-fancy-command --with-args
 
 docker run \
+    -p 9988:9988 \
     --platform linux/amd64 \
     -v $(pwd):/atlascode \
     --user atlascode \
