@@ -193,12 +193,12 @@ export class SiteManager extends Disposable {
         return undefined;
     }
 
-    public productHasAtLeastOneSite(product: Product, isCloud: boolean | undefined = undefined): boolean {
-        if (isCloud !== undefined) {
-            return this.getSitesAvailable(product).some((site) => site.isCloud === isCloud);
-        }
-
+    public productHasAtLeastOneSite(product: Product): boolean {
         return this.getSitesAvailable(product).length > 0;
+    }
+
+    public numberOfSites(product: Product, isCloud: boolean): number {
+        return this.getSitesAvailable(product).filter((site) => site.isCloud === isCloud).length;
     }
 
     public getSiteForHostname(product: Product, hostname: string): DetailedSiteInfo | undefined {

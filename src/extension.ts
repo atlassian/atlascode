@@ -184,10 +184,10 @@ async function sendAnalytics(version: string, globalState: Memento) {
 
     launchedEvent(
         env.remoteName ? env.remoteName : 'local',
-        Container.siteManager.productHasAtLeastOneSite(ProductJira, true),
-        Container.siteManager.productHasAtLeastOneSite(ProductJira, false),
-        Container.siteManager.productHasAtLeastOneSite(ProductBitbucket, true),
-        Container.siteManager.productHasAtLeastOneSite(ProductBitbucket, false),
+        Container.siteManager.numberOfSites(ProductJira, true),
+        Container.siteManager.numberOfSites(ProductJira, false),
+        Container.siteManager.numberOfSites(ProductBitbucket, true),
+        Container.siteManager.numberOfSites(ProductBitbucket, false),
     ).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
