@@ -78,11 +78,13 @@ jobs:
             --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/ \
             --packagePath atlascode-${PACKAGE_VERSION}.vsix
 
-      - name: Publish to OpenVSX
-        run: |
-          npx ovsx publish \
-             -p ${{ secrets.OPENVSX_KEY }} \
-            "atlascode-${PACKAGE_VERSION}.vsix"
+      # Commenting out OpenVSX for now due to it being down
+
+      # - name: Publish to OpenVSX
+      #   run: |
+      #     npx ovsx publish \
+      #        -p ${{ secrets.OPENVSX_KEY }} \
+      #       "atlascode-${PACKAGE_VERSION}.vsix"
 
       - name: Create Release
         id: create_release
