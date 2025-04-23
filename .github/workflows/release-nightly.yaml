@@ -73,12 +73,14 @@ jobs:
             -p ${{ secrets.VSCE_MARKETPLACE_TOKEN }} \
             --packagePath atlascode-${PACKAGE_VERSION}.vsix
 
-      - name: Publish the pre-release to OpenVSX
-        run: |
-          npx ovsx publish \
-            --pre-release \
-            -p ${{ secrets.OPENVSX_KEY }} \
-            "atlascode-${PACKAGE_VERSION}.vsix"
+      # Commenting out OpenVSX for now due to it being down
+      
+      # - name: Publish the pre-release to OpenVSX
+      #   run: |
+      #     npx ovsx publish \
+      #       --pre-release \
+      #       -p ${{ secrets.OPENVSX_KEY }} \
+      #       "atlascode-${PACKAGE_VERSION}.vsix"
 
       - name: Create Tag
         run: |
