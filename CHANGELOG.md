@@ -1,21 +1,16 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues/new/choose)
 
 ---
+
 ## What's new in 3.6.3
 
-- Internal changes only 
+-   Internal changes only
 
 ## What's new in 3.6.2
 
 ### Bug fixes
 
-- Fixed global window bug which affected polyglot/juptyer notebook users
-
-## What's new in 3.6.2
-
-### Bug fixes
-
-- Fixed global window bug which affected polyglot/juptyer notebook users
+-   Fixed global window bug which affected polyglot/juptyer notebook users
 
 ## What's new in 3.6.1
 
