@@ -3,10 +3,13 @@ module.exports = {
         'no-var': 'error',
         'prefer-const': 'error',
         'no-multi-assign': 'error',
-        'no-unused-expressions': ['error', {
-            "allowShortCircuit": true,
-            "allowTernary": true,
-        }],
+        'no-unused-expressions': [
+            'error',
+            {
+                allowShortCircuit: true,
+                allowTernary: true,
+            },
+        ],
         'no-restricted-imports': [
             'error',
             {

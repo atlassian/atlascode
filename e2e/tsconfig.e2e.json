@@ -24,7 +24,7 @@
         "strictPropertyInitialization": true,
         "typeRoots": ["node_modules/@types", "src/typings/"],
         "paths": {
-            "testsutil/*": ["testsutil/*"],
+            "testsutil/*": ["testsutil/*"]
         }
     },
     "include": ["tests/**/*"]
