@@ -8,7 +8,8 @@ RUN apt-get update \
 
     # install code-server 
 RUN curl -fsSL https://code-server.dev/install.sh -o install-code-server.sh && \
-	sh install-code-server.sh 
+	sh install-code-server.sh && \
+    curl -L https://github.com/redhat-developer/vscode-yaml/releases/download/1.17.0/vscode-yaml-1.17.0-3.vsix -o vscode-yaml-1.17.0-3.vsix
 
 # Set the working directory
 # We will mount the whole project directory to WORKDIR
@@ -22,8 +23,12 @@ ENV TEST_RESOURCES=/atlascode/e2e/.resources
 RUN cat <<EOF > /usr/bin/entrypoint.sh && chmod +x /usr/bin/entrypoint.sh
 #!/usr/bin/env bash
 set -ex
+echo "installing dependencies for atlascode extension"
+ls ..
+code-server --install-extension ../vscode-yaml-1.17.0-3.vsix --force
 echo "installing atlascode"
 code-server --install-extension atlascode-0.0.0.vsix --force
+
 echo "starting code-server"
 code-server --auth none --bind-addr 0.0.0.0:9988 &
 echo "Running tests"
