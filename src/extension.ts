@@ -1,6 +1,6 @@
 import { pid } from 'process';
 import * as semver from 'semver';
-import { commands, env, ExtensionContext, extensions, languages, Memento, window as Window } from 'vscode';
+import { commands, env, ExtensionContext, extensions, languages, Memento, window } from 'vscode';
 
 import { installedEvent, launchedEvent, upgradedEvent } from './analytics';
 import { DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
@@ -113,7 +113,7 @@ async function activateBitbucketFeatures() {
         gitExt = await gitExtension.activate();
     } catch (e) {
         Logger.error(e, 'Error activating vscode.git extension');
-        Window.showWarningMessage(
+        window.showWarningMessage(
             'Activating Bitbucket features failed. There was an issue activating vscode.git extension.',
         );
         return;
@@ -125,7 +125,7 @@ async function activateBitbucketFeatures() {
         Container.initializeBitbucket(bbContext);
     } catch (e) {
         Logger.error(e, 'Activating Bitbucket features failed');
-        Window.showWarningMessage('Activating Bitbucket features failed');
+        window.showWarningMessage('Activating Bitbucket features failed');
     }
 }
 
@@ -144,16 +144,15 @@ async function showWelcomePage(version: string, previousVersion: string | undefi
     if (
         (previousVersion === undefined || semver.gt(version, previousVersion)) &&
         Container.config.showWelcomeOnInstall &&
-        Window.state.focused
+        window.state.focused
     ) {
-        Window.showInformationMessage(
-            `Jira and Bitbucket (Official) has been updated to v${version}`,
-            'Release notes',
-        ).then((userChoice) => {
-            if (userChoice === 'Release notes') {
-                commands.executeCommand('extension.open', ExtensionId, 'changelog');
-            }
-        });
+        window
+            .showInformationMessage(`Jira and Bitbucket (Official) has been updated to v${version}`, 'Release notes')
+            .then((userChoice) => {
+                if (userChoice === 'Release notes') {
+                    commands.executeCommand('extension.open', ExtensionId, 'changelog');
+                }
+            });
     }
 }
 
