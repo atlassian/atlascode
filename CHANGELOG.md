@@ -1,6 +1,9 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues/new/choose)
 
 ---
+## What's new in 3.6.3
+
+- Internal changes only 
 
 ## What's new in 3.6.2
 
