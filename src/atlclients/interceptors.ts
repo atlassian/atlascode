@@ -44,9 +44,13 @@ export function dumpEverythingIntoFile(transport: AxiosInstance): void {
 
                 const requestUrl = config.request.path
                     .split('?')[0]
-                    .replace(/[0-9a-fA-F-]{36}\//g, '--BRUH--/')
-                    .replace(/[0-9a-fA-F-]{36}-/g, '--BRUH--');
-                const filename = requestUrl.replace(/\//g, '_').replace(/:/g, '_');
+                    .replace(/[0-9a-fA-F-]{36}\//g, '--UUID--/')
+                    .replace(/[0-9a-fA-F-]{36}-/g, '--UUID---');
+                const filename = requestUrl
+                    .replace(/\//g, '_')
+                    .replace(/:/g, '_')
+                    .slice(1)
+                    .replace(/--UUID--/g, 'UUID');
 
                 const callMapFile = path.join(hostFolder, filename + '.json');
 
@@ -75,18 +79,22 @@ export function dumpEverythingIntoFile(transport: AxiosInstance): void {
                 traverseAndReplace(data);
 
                 const jsonContent = {
-                    request: {
-                        method,
-                        urlPathPattern: requestUrl.replace(/--BRUH--/g, '[^/]+'),
-                    },
-                    response: {
-                        transformers: ['response-template'],
-                        status: config.status,
-                        body: JSON.stringify(data),
-                        headers: {
-                            'content-type': headers['content-type'],
+                    mappings: [
+                        {
+                            request: {
+                                method,
+                                urlPathPattern: requestUrl.replace(/--UUID--/g, '[^/]+'),
+                            },
+                            response: {
+                                transformers: ['response-template'],
+                                status: config.status,
+                                body: JSON.stringify(data),
+                                headers: {
+                                    'content-type': headers['content-type'],
+                                },
+                            },
                         },
-                    },
+                    ],
                 };
 
                 fs.writeFileSync(callMapFile, JSON.stringify(jsonContent, null, 2));
