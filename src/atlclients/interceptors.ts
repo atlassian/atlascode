@@ -31,30 +31,62 @@ export function dumpEverythingIntoFile(transport: AxiosInstance): void {
         Logger.warn('No workspace root found. Cannot create call map file.');
         return;
     }
-    const callMapFile = path.join(workspaceRoot, 'atlascodeCalls.json');
+    const callMapPath = path.join(workspaceRoot, 'atlascodeCalls');
 
     transport.interceptors.response.use(
         (config) => {
-            if (!fs.existsSync(callMapFile)) {
-                fs.writeFileSync(callMapFile, JSON.stringify({}));
-            }
-
             try {
-                const fileContent = fs.readFileSync(callMapFile, 'utf8');
-                const jsonContent = JSON.parse(fileContent);
+                // let's make a folder under callMapPath with the name of the host
+                const hostFolder = path.join(callMapPath, `${config.request.host}`);
+                if (!fs.existsSync(hostFolder)) {
+                    fs.mkdirSync(hostFolder, { recursive: true });
+                }
 
-                const url = config.request.path
+                const requestUrl = config.request.path
                     .split('?')[0]
-                    .replace(/[0-9a-fA-F-]{36}\//g, 'dummy-uuid/')
-                    .replace(/[0-9a-fA-F-]{36}-/g, 'dummy-uuid-');
+                    .replace(/[0-9a-fA-F-]{36}\//g, '--BRUH--/')
+                    .replace(/[0-9a-fA-F-]{36}-/g, '--BRUH--');
+                const filename = requestUrl.replace(/\//g, '_').replace(/:/g, '_');
+
+                const callMapFile = path.join(hostFolder, filename + '.json');
+
                 const method = config.request.method;
                 const headers = config.headers;
                 const data = config.data;
 
-                jsonContent[url] = {
-                    method,
-                    headers,
-                    data,
+                // Recursively traverse the response body and replace anything token-related
+                const traverseAndReplace = (obj: any) => {
+                    if (Array.isArray(obj) && obj.length > 0) {
+                        obj.length = 1;
+                        traverseAndReplace(obj[0]);
+                    } else if (typeof obj === 'object' && obj !== null) {
+                        for (const key in obj) {
+                            if (obj.hasOwnProperty(key)) {
+                                if (key.includes('token')) {
+                                    obj[key] = 'REDACTED';
+                                } else {
+                                    traverseAndReplace(obj[key]);
+                                }
+                            }
+                        }
+                    }
+                };
+
+                traverseAndReplace(data);
+
+                const jsonContent = {
+                    request: {
+                        method,
+                        urlPathPattern: requestUrl.replace(/--BRUH--/g, '[^/]+'),
+                    },
+                    response: {
+                        transformers: ['response-template'],
+                        status: config.status,
+                        body: JSON.stringify(data),
+                        headers: {
+                            'content-type': headers['content-type'],
+                        },
+                    },
                 };
 
                 fs.writeFileSync(callMapFile, JSON.stringify(jsonContent, null, 2));
