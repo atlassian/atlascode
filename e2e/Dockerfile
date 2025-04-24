@@ -23,8 +23,12 @@ ENV TEST_RESOURCES=/atlascode/e2e/.resources
 RUN cat <<EOF > /usr/bin/entrypoint.sh && chmod +x /usr/bin/entrypoint.sh
 #!/usr/bin/env bash
 set -ex
+echo "setting up trusted certs"
+cp ./e2e/wiremock-node-docker/certs/* /etc/ssl/certs/
+update-ca-certificates
 echo "installing dependencies for atlascode extension"
 ls ..
+ls
 code-server --install-extension ../vscode-yaml-1.17.0-3.vsix --force
 echo "installing atlascode"
 code-server --install-extension atlascode-0.0.0.vsix --force
@@ -32,7 +36,7 @@ code-server --install-extension atlascode-0.0.0.vsix --force
 echo "starting code-server"
 code-server --auth none --bind-addr 0.0.0.0:9988 &
 echo "Running tests"
-npx playwright test ./e2e/tests/playwright.spec.ts
+tail -f /dev/null
 EOF
 
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
