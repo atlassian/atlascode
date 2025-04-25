@@ -2,7 +2,7 @@ FROM node:23-slim
 
 # Install dependencies and xvfb
 RUN apt-get update \
-    && apt-get install -y wget gpg xauth curl \ 
+    && apt-get install -y wget gpg xauth curl git \ 
     && npm install --global playwright \
     && npx playwright install --with-deps chromium
 
