@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('Onboarding flow', async ({ page }) => {
-    await page.goto('http://0.0.0.0:9988/');
+    await page.goto('http://[::1]:9988/');
 
     await page.getByRole('tab', { name: 'Atlassian' }).click();
 
@@ -66,7 +66,7 @@ test('Onboarding flow', async ({ page }) => {
 });
 
 test('everything else', async ({ page }) => {
-    await page.goto('http://0.0.0.0:9988/');
+    await page.goto('http://[::1]:9988/');
 
     await page.getByRole('tab', { name: 'Atlassian' }).click();
 
@@ -88,7 +88,7 @@ test('everything else', async ({ page }) => {
 
     await expect(settingsFrame.getByRole('button', { name: 'Authentication authenticate' })).toBeVisible();
 
-    await expect(page).toHaveScreenshot();
+    await expect(page).toHaveScreenshot({ fullPage: true });
 
     await expect(settingsFrame.getByRole('button', { name: 'Login to Jira' })).toBeVisible();
 

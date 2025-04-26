@@ -34,9 +34,9 @@ echo "installing atlascode"
 code-server --install-extension atlascode-0.0.0.vsix --force
 
 echo "starting code-server"
-code-server --auth none --bind-addr 0.0.0.0:9988 &
+code-server --auth none --bind-addr localhost:9988 &
 echo "Running tests"
-tail -f /dev/null
+npx playwright test ./e2e/tests/playwright.spec.ts
 EOF
 
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
