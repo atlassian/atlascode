@@ -1,15 +1,16 @@
 networks:
   e2e:
 
-services:
+services: 
   wiremock-a:
     image: wiremock/wiremock
     command: >
       --https-port 443
       --verbose
+      --https-keystore /home/wiremock_ssl_certs/rootCA.p12
     volumes:
       - ./wiremock-endpoint/mappings:/home/wiremock/mappings
-      - ./certs:/etc/ssl/certs
+      - ./certs:/home/wiremock_ssl_certs
     networks:
       e2e:
         aliases:
@@ -31,4 +32,3 @@ services:
       - e2e
     ports:
       - "9988:9988"
-  

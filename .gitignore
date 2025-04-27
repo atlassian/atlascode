@@ -4,7 +4,6 @@ node_modules
 .vscode-test/
 .vscode/*
 launch.json
-!.vscode/launch.json.example
 *.vsix
 .yo-*
 yarn-error.log
@@ -21,3 +20,6 @@ e2e/.resources/
 e2e/.test-extensions/
 *.orig
 test-results/*
+
+!e2e/**/*.pem
+!.vscode/launch.json.example

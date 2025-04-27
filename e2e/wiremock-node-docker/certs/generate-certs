@@ -1,0 +1,16 @@
+# Generates a 4096-bit RSA private key for the Root CA:
+
+openssl genrsa -out rootCA.key 4096
+
+# Creates a self-signed Root CA certificate valid for 10 years
+
+openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.pem -subj "/C=US/ST=Washington/L=Bellevue/O=Atlascode/CN=service-a.com"
+
+# Creates a PKCS#12 Keystore from the Root CA with password = "password"
+# Note: wiremock uses the password "password" by default without specifying one
+
+openssl pkcs12 -export -out rootCA.p12 -inkey rootCA.key -in rootCA.pem -name "Root CA" -passout pass:password
+
+# Deletes the private key because we don't need it
+
+rm rootCA.key
