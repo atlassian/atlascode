@@ -8,7 +8,7 @@ RUN apt-get update \
 
 # install code-server 
 RUN curl -fsSL https://code-server.dev/install.sh -o install-code-server.sh \
-	&& sh install-code-server.sh \
+    && sh install-code-server.sh \
     && curl -L https://github.com/redhat-developer/vscode-yaml/releases/download/1.17.0/vscode-yaml-1.17.0-3.vsix -o vscode-yaml-1.17.0-3.vsix
 
 # Set the working directory

@@ -17,7 +17,6 @@ services:
           - service-a.com
           - service-b.com
           - service-c.com
-          - service-d.com # the cert doesn't have this
     expose:
       - 443
 
