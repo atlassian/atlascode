@@ -34,7 +34,7 @@ const mockedIssue1 = forceCastTo<TreeViewIssue>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockJqlEntries[0],
+    source: mockJqlEntries[0],
     children: [],
 });
 
@@ -47,7 +47,7 @@ const mockedIssue2 = forceCastTo<TreeViewIssue>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockJqlEntries[0],
+    source: mockJqlEntries[0],
     children: [],
 });
 
@@ -60,7 +60,7 @@ const mockedIssue3 = forceCastTo<TreeViewIssue>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockJqlEntries[0],
+    source: mockJqlEntries[0],
     children: [],
 });
 

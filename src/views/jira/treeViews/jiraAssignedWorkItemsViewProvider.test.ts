@@ -26,7 +26,7 @@ const mockedIssue1 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockedJqlEntry,
+    source: mockedJqlEntry,
     children: [],
 });
 
@@ -39,7 +39,7 @@ const mockedIssue2 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockedJqlEntry,
+    source: mockedJqlEntry,
     children: [],
 });
 
@@ -52,7 +52,7 @@ const mockedIssue3 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockedJqlEntry,
+    source: mockedJqlEntry,
     children: [],
 });
 

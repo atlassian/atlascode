@@ -41,7 +41,7 @@ const mockedIssue1 = forceCastTo<TreeViewIssue>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockedJqlEntry,
+    source: mockedJqlEntry,
     children: [],
 });
 
@@ -54,7 +54,7 @@ const mockedIssue2 = forceCastTo<TreeViewIssue>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockedJqlEntry,
+    source: mockedJqlEntry,
     children: [mockedIssue1],
 });
 
@@ -67,7 +67,7 @@ const mockedIssue3 = forceCastTo<TreeViewIssue>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockedJqlEntry,
+    source: mockedJqlEntry,
     children: [],
 });
 
@@ -105,16 +105,14 @@ describe('utils', () => {
 
         it('JiraIssueNode id is unique for the same Jira issue across different JQL entries', () => {
             const _mockedIssue1 = cloneDeep(mockedIssue1);
-            _mockedIssue1.jqlSource = expansionCastTo<JQLEntry>({
+            _mockedIssue1.source = {
                 id: 'jqlId1',
-                siteId: 'siteDetailsId',
-            });
+            };
 
             const _mockedIssue2 = cloneDeep(mockedIssue1);
-            _mockedIssue2.jqlSource = expansionCastTo<JQLEntry>({
+            _mockedIssue2.source = {
                 id: 'jqlId2',
-                siteId: 'siteDetailsId',
-            });
+            };
 
             const jiraIssueNode1 = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, _mockedIssue1);
             const jiraIssueNode2 = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, _mockedIssue2);

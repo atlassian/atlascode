@@ -16,7 +16,7 @@ export function createLabelItem(label: string, command?: Command): TreeItem {
 }
 
 export interface TreeViewIssue extends MinimalIssue<DetailedSiteInfo> {
-    jqlSource: JQLEntry;
+    source: { id: string };
     children: TreeViewIssue[];
 }
 
@@ -29,7 +29,7 @@ export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<TreeViewIssue
                 const issues = (await issuesForJQL(jqlEntry.query, jqlSite)) as TreeViewIssue[];
 
                 issues.forEach((i) => {
-                    i.jqlSource = jqlEntry;
+                    i.source = jqlEntry;
                     i.children = [];
                 });
 
@@ -63,7 +63,7 @@ export class JiraIssueNode extends TreeItem implements AbstractBaseNode {
 
         // this id is constructed to ensure unique values for the same jira issue across multiple jql queries.
         // therefore, multiple jql entries must have a unique id for the same site.
-        this.id = `${issue.key}_${issue.siteDetails.id}_${issue.jqlSource.id}`;
+        this.id = `${issue.key}_${issue.siteDetails.id}_${issue.source.id}`;
 
         this.description = isMinimalIssue(issue) && issue.isEpic ? issue.epicName : issue.summary;
         this.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [issue] };

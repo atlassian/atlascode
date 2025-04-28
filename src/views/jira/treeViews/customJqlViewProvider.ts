@@ -205,7 +205,7 @@ class JiraIssueQueryNode extends TreeItem {
         return await Promise.all(
             keys.map(async (issueKey) => {
                 const parent = (await fetchMinimalIssue(issueKey, site)) as TreeViewIssue;
-                parent.jqlSource = this.jqlEntry;
+                parent.source = this.jqlEntry;
                 parent.children = [];
                 return parent;
             }),

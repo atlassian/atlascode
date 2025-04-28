@@ -15,7 +15,7 @@ jest.mock('../../resources', () => ({
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { expansionCastTo } from 'testsutil';
-import { TreeItemCollapsibleState } from 'vscode';
+import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 
 import * as issueForKey from '../../jira/issueForKey';
 import { JiraIssueNode } from '../jira/treeViews/utils';
@@ -25,7 +25,13 @@ import { SimpleNode } from './simpleNode';
 class MockedJiraIssueNode {
     static NodeType = { RelatedJiraIssueInBitbucketPR: 'RelatedJiraIssueInBitbucketPR' };
 
-    constructor(nodeType: any, issue: any) {}
+    public readonly label: string;
+    public readonly id: string;
+
+    constructor(nodeType: any, issue: any) {
+        this.label = issue.key;
+        this.id = issue.source.id;
+    }
 }
 
 describe('RelatedIssuesNode', () => {
@@ -48,7 +54,7 @@ describe('RelatedIssuesNode', () => {
     it('should initialize with correct properties when jiraKeys are provided', () => {
         const jiraKeys = ['JIRA-1', 'JIRA-2'];
         const label = 'Related Issues';
-        const node = new RelatedIssuesNode(jiraKeys, label);
+        const node = new RelatedIssuesNode('prId1', jiraKeys, label);
 
         expect(node.label).toBe(label);
         expect(node.collapsibleState).toBe(TreeItemCollapsibleState.Expanded);
@@ -58,7 +64,7 @@ describe('RelatedIssuesNode', () => {
     it('should initialize with correct properties when no jiraKeys are provided', () => {
         const jiraKeys: string[] = [];
         const label = 'Related Issues';
-        const node = new RelatedIssuesNode(jiraKeys, label);
+        const node = new RelatedIssuesNode('prId1', jiraKeys, label);
 
         expect(node.label).toBe(label);
         expect(node.collapsibleState).toBe(TreeItemCollapsibleState.None);
@@ -69,7 +75,7 @@ describe('RelatedIssuesNode', () => {
         const jiraKeys = ['JIRA-1', 'JIRA-2'];
         const label = 'Related Issues';
 
-        const node = new RelatedIssuesNode(jiraKeys, label);
+        const node = new RelatedIssuesNode('prId1', jiraKeys, label);
         const children = await node.getChildren();
 
         expect(children).toHaveLength(2);
@@ -83,7 +89,7 @@ describe('RelatedIssuesNode', () => {
 
         mockIssueForKey.mockImplementation(() => Promise.reject(new Error('Issue not found')));
 
-        const node = new RelatedIssuesNode(jiraKeys, label);
+        const node = new RelatedIssuesNode('prId1', jiraKeys, label);
         const children = await node.getChildren();
 
         expect(children).toHaveLength(1);
@@ -95,8 +101,24 @@ describe('RelatedIssuesNode', () => {
     it('should dispose without errors', () => {
         const jiraKeys = ['JIRA-1'];
         const label = 'Related Issues';
-        const node = new RelatedIssuesNode(jiraKeys, label);
+        const node = new RelatedIssuesNode('prId1', jiraKeys, label);
 
         expect(() => node.dispose()).not.toThrow();
+    });
+
+    it('returned children nodes have unique ids for different PRs', async () => {
+        const jiraKeys = ['JIRA-1'];
+        const label = 'Related Issues';
+
+        const node1 = new RelatedIssuesNode('prId1', jiraKeys, label);
+        const node2 = new RelatedIssuesNode('prId2', jiraKeys, label);
+
+        const children1 = (await node1.getChildren()) as TreeItem[];
+        const children2 = (await node2.getChildren()) as TreeItem[];
+
+        expect(children1[0].label).toEqual(jiraKeys[0]);
+        expect(children2[0].label).toEqual(jiraKeys[0]);
+
+        expect(children1[0].id).not.toEqual(children2[0].id);
     });
 });
