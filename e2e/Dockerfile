@@ -24,8 +24,8 @@ RUN cat <<EOF > /usr/bin/entrypoint.sh && chmod +x /usr/bin/entrypoint.sh
 #!/usr/bin/env bash
 set -ex
 
-echo "setting up trusted certs"
-cp ./e2e/wiremock-node-docker/certs/rootCA.pem /usr/local/share/ca-certificates/wiremock_e2e_Root_CA.crt
+echo "setting up trusted certificate authorities"
+cp ./e2e/wiremock-node-docker/certs/wiremock-a.crt /usr/local/share/ca-certificates
 update-ca-certificates
 
 echo "installing dependencies for atlascode extension"

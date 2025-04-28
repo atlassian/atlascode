@@ -1,18 +1,54 @@
-# Generates a 4096-bit RSA private key for the Root CA:
+# Function to generate certificates for a service
+generate_service_cert() {
+    local service_name=$1
+    local domain_name=$2
+    # Shift away the first two parameters so that "$@" contains only extra domains
+    shift 2
+    local extra_domains=("$@")
+    local has_extra_domains=$((${#extra_domains[@]} > 0))
 
-openssl genrsa -out rootCA.key 4096
+    echo "Generating certificates for ${service_name} with domains ${domain_name} ${extra_domains[@]}..."
+    
+    # Creates a CRS for the certificate
+    # Build the subjectAltName extension dynamically
+    local san="DNS:${domain_name}"
+    if [ $has_extra_domains -eq 1 ]; then
+        for extra_domain in "${extra_domains[@]}"; do
+            san="${san},DNS:${extra_domain}"
+        done
+    fi
+
+    # Generates a 4096-bit RSA private key for this certificate
+    openssl genrsa -out ${service_name}.key 4096
+
+    # Generate a sign requests for this certificate    
+    #openssl req -new -nodes -key ${service_name}.key -out ${service_name}.csr \
+    #    -subj "/C=US/ST=Washington/L=Bellevue/O=Atlascode/CN=${domain_name}" \
+    #    -addext "subjectAltName=${san}"
+
+    # Signs this certificate with the RCA we have created
+    #openssl x509 -req -in ${service_name}.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out ${service_name}.crt -days 3650
+   
+    # the certificate signed with the RootCA doesn't work with the alternates DNS, and I don't know why.
+    # falling back into individual certs solution for now.
+    openssl req -x509 -new -nodes -key ${service_name}.key -sha256 -days 3650 -out ${service_name}.crt \
+        -subj "/C=US/ST=Washington/L=Bellevue/O=Atlascode/CN=${domain_name}" \
+        -addext "subjectAltName=${san}"
+
+    # Creates a PKCS#12 Keystore with password = "password"
+    # Note: wiremock uses the password "password" by default without specifying one    
+    openssl pkcs12 -export -out ${service_name}.p12 -inkey ${service_name}.key -in ${service_name}.crt -name "${service_name} cert" -passout pass:password
+
+    rm ${service_name}.key
+
+    echo "Certificates for ${service_name} generated successfully."
+}
+
+# Generates a 4096-bit RSA private key for the Root CA
+#openssl genrsa -out rootCA.key 4096
 
 # Creates a self-signed Root CA certificate valid for 10 years
+#openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.crt -subj "/C=US/ST=Washington/L=Bellevue/O=Atlascode/CN=Root CA"
 
-openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.pem \
-    -subj "/C=US/ST=Washington/L=Bellevue/O=Atlascode/CN=service-a.com" \
-    -addext "subjectAltName=DNS:service-a.com,DNS:service-b.com,DNS:service-c.com"
-
-# Creates a PKCS#12 Keystore from the Root CA with password = "password"
-# Note: wiremock uses the password "password" by default without specifying one
-
-openssl pkcs12 -export -out rootCA.p12 -inkey rootCA.key -in rootCA.pem -name "Root CA" -passout pass:password
-
-# Deletes the private key because we don't need it
-
-rm rootCA.key
+# Generates a certificate for wiremock-a
+generate_service_cert "wiremock-a" "service-a.com" "service-b.com" "service-c.com" 

@@ -7,7 +7,7 @@ services:
     command: >
       --https-port 443
       --verbose
-      --https-keystore /home/wiremock_ssl_certs/rootCA.p12
+      --https-keystore /home/wiremock_ssl_certs/wiremock-a.p12
     volumes:
       - ./wiremock-endpoint/mappings:/home/wiremock/mappings
       - ./certs:/home/wiremock_ssl_certs
@@ -17,6 +17,7 @@ services:
           - service-a.com
           - service-b.com
           - service-c.com
+          - service-d.com # the cert doesn't have this
     expose:
       - 443
 
