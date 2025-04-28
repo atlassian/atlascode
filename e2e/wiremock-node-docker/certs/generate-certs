@@ -4,7 +4,9 @@ openssl genrsa -out rootCA.key 4096
 
 # Creates a self-signed Root CA certificate valid for 10 years
 
-openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.pem -subj "/C=US/ST=Washington/L=Bellevue/O=Atlascode/CN=service-a.com"
+openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.pem \
+    -subj "/C=US/ST=Washington/L=Bellevue/O=Atlascode/CN=service-a.com" \
+    -addext "subjectAltName=DNS:service-a.com,DNS:service-b.com,DNS:service-c.com"
 
 # Creates a PKCS#12 Keystore from the Root CA with password = "password"
 # Note: wiremock uses the password "password" by default without specifying one
