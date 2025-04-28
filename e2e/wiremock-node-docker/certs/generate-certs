@@ -8,13 +8,42 @@ generate_service_cert() {
     local has_extra_domains=$((${#extra_domains[@]} > 0))
 
     echo "Generating certificates for ${service_name} with domains ${domain_name} ${extra_domains[@]}..."
+
+    # writes the openssl conf file for both cert sign request and actual signing
+    echo "[ req ]" >${service_name}.conf
+    echo "default_bits = 4096" >>${service_name}.conf
+    echo "prompt = no" >>${service_name}.conf
+    echo "default_md = sha256" >>${service_name}.conf
+    echo "req_extensions = req_ext" >>${service_name}.conf
+    echo "distinguished_name = dn" >>${service_name}.conf
+    echo "" >>${service_name}.conf
+    echo "[ dn ]" >>${service_name}.conf
+    echo "C = US" >>${service_name}.conf
+    echo "ST = Washington" >>${service_name}.conf
+    echo "L = Bellevue" >>${service_name}.conf
+    echo "O = Atlascode" >>${service_name}.conf
+    echo "CN = ${domain_name}" >>${service_name}.conf
+    echo "" >>${service_name}.conf
+    echo "[ req_ext ]" >>${service_name}.conf
+    echo "subjectAltName = @alt_names" >>${service_name}.conf
+    echo "" >>${service_name}.conf
+    echo "[ v3_ext ]" >>${service_name}.conf
+    echo "authorityKeyIdentifier=keyid,issuer:always" >>${service_name}.conf
+    echo "basicConstraints=CA:FALSE" >>${service_name}.conf
+    echo "keyUsage=keyEncipherment,dataEncipherment" >>${service_name}.conf
+    echo "extendedKeyUsage=serverAuth,clientAuth" >>${service_name}.conf
+    echo "subjectAltName=@alt_names" >>${service_name}.conf
+    echo "" >>${service_name}.conf
+
+    # alt_names contains all the domain certified by this certificate, including the main domain
+    echo "[ alt_names ]" >>${service_name}.conf
+    echo "DNS.1 = ${domain_name}" >>${service_name}.conf
     
-    # Creates a CRS for the certificate
-    # Build the subjectAltName extension dynamically
-    local san="DNS:${domain_name}"
     if [ $has_extra_domains -eq 1 ]; then
+        local dns_index=2
         for extra_domain in "${extra_domains[@]}"; do
-            san="${san},DNS:${extra_domain}"
+            echo "DNS.$dns_index = ${extra_domain}" >>${service_name}.conf
+            dns_index=$((dns_index+1))
         done
     fi
 
@@ -22,33 +51,34 @@ generate_service_cert() {
     openssl genrsa -out ${service_name}.key 4096
 
     # Generate a sign requests for this certificate    
-    #openssl req -new -nodes -key ${service_name}.key -out ${service_name}.csr \
-    #    -subj "/C=US/ST=Washington/L=Bellevue/O=Atlascode/CN=${domain_name}" \
-    #    -addext "subjectAltName=${san}"
+    openssl req -new -nodes -key ${service_name}.key -out ${service_name}.csr \
+        -config ${service_name}.conf
 
-    # Signs this certificate with the RCA we have created
-    #openssl x509 -req -in ${service_name}.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out ${service_name}.crt -days 3650
-   
-    # the certificate signed with the RootCA doesn't work with the alternates DNS, and I don't know why.
-    # falling back into individual certs solution for now.
-    openssl req -x509 -new -nodes -key ${service_name}.key -sha256 -days 3650 -out ${service_name}.crt \
-        -subj "/C=US/ST=Washington/L=Bellevue/O=Atlascode/CN=${domain_name}" \
-        -addext "subjectAltName=${san}"
+    # Signs this certificate with the CA we have created
+    openssl x509 -req -in ${service_name}.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out ${service_name}.crt -days 3650 \
+        -extensions v3_ext \
+        -extfile ${service_name}.conf
 
     # Creates a PKCS#12 Keystore with password = "password"
     # Note: wiremock uses the password "password" by default without specifying one    
     openssl pkcs12 -export -out ${service_name}.p12 -inkey ${service_name}.key -in ${service_name}.crt -name "${service_name} cert" -passout pass:password
 
     rm ${service_name}.key
+    rm ${service_name}.csr
+    rm ${service_name}.crt
+    rm ${service_name}.conf
 
     echo "Certificates for ${service_name} generated successfully."
 }
 
-# Generates a 4096-bit RSA private key for the Root CA
-#openssl genrsa -out rootCA.key 4096
+# Generates a 4096-bit RSA private key for the CA
+openssl genrsa -out rootCA.key 4096
 
-# Creates a self-signed Root CA certificate valid for 10 years
-#openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.crt -subj "/C=US/ST=Washington/L=Bellevue/O=Atlascode/CN=Root CA"
+# Creates a self-signed CA certificate valid for 10 years
+openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.crt -subj "/C=US/ST=Washington/L=Bellevue/O=Atlascode/CN=Atlascode CA"
 
 # Generates a certificate for wiremock-a
 generate_service_cert "wiremock-a" "service-a.com" "service-b.com" "service-c.com" 
+
+rm rootCA.key
+rm rootCA.srl
