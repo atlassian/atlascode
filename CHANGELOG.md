@@ -1,6 +1,12 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues/new/choose)
-
 ---
+
+## What's new in 3.6.4
+
+### Bug fixes
+
+- Fixed "already registered id" error when rendering PR related issues in the Bitbucket Pull Requests side panel.
+
 ## What's new in 3.6.3
 
 - Internal changes only 
