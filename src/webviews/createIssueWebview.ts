@@ -259,8 +259,7 @@ export class CreateIssueWebview
                 : {};
             this.postMessage(createData);
         } catch (e) {
-            const err = new Error(`error updating issue fields: ${e}`);
-            Logger.error(err);
+            Logger.error(e, 'error updating issue fields');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
@@ -465,7 +464,7 @@ export class CreateIssueWebview
 
                             this.fireCallback(resp.key, payload.summary);
                         } catch (e) {
-                            Logger.error(new Error(`error creating issue: ${e}`));
+                            Logger.error(e, 'Error creating issue');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error creating issue'),

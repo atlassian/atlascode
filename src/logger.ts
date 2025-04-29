@@ -8,6 +8,7 @@ import { Container } from './container';
 const ConsolePrefix = `[${extensionOutputChannelName}]`;
 
 export type ErrorEvent = {
+    description?: string;
     error: Error;
 };
 
@@ -85,23 +86,23 @@ export class Logger {
         }
     }
 
-    public static error(ex: Error, classOrMethod?: string, ...params: any[]): void {
-        this.Instance.error(ex, classOrMethod, params);
+    public static error(ex: Error, classOrMethod?: string): void {
+        this.Instance.error(ex, classOrMethod);
     }
 
-    public error(ex: Error, classOrMethod?: string, ...params: any[]): void {
-        Logger._onError.fire({ error: ex });
+    public error(ex: Error, classOrMethod?: string): void {
+        Logger._onError.fire({ error: ex, description: classOrMethod });
 
         if (this.level === OutputLevel.Silent) {
             return;
         }
 
         if (Container.isDebugging) {
-            console.error(this.timestamp, ConsolePrefix, classOrMethod, ...params, ex);
+            console.error(this.timestamp, ConsolePrefix, classOrMethod, ex);
         }
 
         if (this.output !== undefined) {
-            this.output.appendLine([this.timestamp, classOrMethod, ...params, ex].join(' '));
+            this.output.appendLine([this.timestamp, classOrMethod, ex].join(' '));
         }
     }
 

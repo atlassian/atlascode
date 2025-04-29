@@ -90,7 +90,7 @@ export class NewIssueMonitor {
 
             this.showNotification(notifyIssues);
         } catch (e) {
-            Logger.error(new Error(`Error checking for new issues ${e}`));
+            Logger.error(e, 'Error checking for new issues');
         }
     }
 

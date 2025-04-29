@@ -94,7 +94,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                     nonce: msg.nonce,
                                 });
                             } catch (e) {
-                                Logger.error(new Error(`error posting comment: ${e}`));
+                                Logger.error(e, 'Error fetching issues');
                                 this.postMessage({
                                     type: 'error',
                                     reason: this.formatErrorReason(e, 'Error fetching issues'),
@@ -119,7 +119,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
 
                                 this.postMessage({ type: 'selectOptionsList', options: suggestions, nonce: msg.nonce });
                             } catch (e) {
-                                Logger.error(new Error(`error posting comment: ${e}`));
+                                Logger.error(e, 'Error fetching options');
                                 this.postMessage({
                                     type: 'error',
                                     reason: this.formatErrorReason(e, 'Error fetching options'),
@@ -144,7 +144,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 const result = await client.postCreateUrl(msg.createUrl, msg.createData);
                                 await this.handleSelectOptionCreated(msg.fieldKey, result, msg.nonce);
                             } catch (e) {
-                                Logger.error(new Error(`error creating select option: ${e}`));
+                                Logger.error(e, 'Error creating select option');
                                 this.postMessage({
                                     type: 'error',
                                     reason: this.formatErrorReason(e, 'Error creating select option'),

@@ -37,7 +37,7 @@ export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<TreeViewIssue
             }
         }
     } catch (e) {
-        Logger.error(new Error(`Failed to execute default JQL query for site "${jqlEntry.siteId}": ${e}`));
+        Logger.error(e, `Failed to execute default JQL query for site "${jqlEntry.siteId}"`);
     }
 
     return [];

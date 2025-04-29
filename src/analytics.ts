@@ -109,13 +109,14 @@ function sanitizeStackTrace(stack?: string): string | undefined {
     return stack || undefined;
 }
 
-export async function errorEvent(error: Error | string): Promise<TrackEvent> {
-    const attributes: { name: string; message?: string; stack?: string } =
+export async function errorEvent(error: Error | string, description?: string): Promise<TrackEvent> {
+    const attributes: { name: string; message?: string; description?: string; stack?: string } =
         typeof error === 'string'
-            ? { name: 'Error', message: sanitazeErrorMessage(error) }
+            ? { name: 'Error', message: sanitazeErrorMessage(error), description }
             : {
                   name: error.name || 'Error',
                   message: sanitazeErrorMessage(error.message),
+                  description,
                   stack: sanitizeStackTrace(error.stack),
               };
 

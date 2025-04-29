@@ -63,7 +63,7 @@ async function showBranchPicker(remote: Remote) {
                 try {
                     await bbApi.pipelines!.triggerPipeline(bbSite!, target);
                 } catch (e) {
-                    Logger.error(e);
+                    Logger.error(e, 'Error building branch');
                     window.showErrorMessage(`Error building branch`);
                 }
                 // Seems like there's a bit of lag between a build starting and it showing up in the list API.

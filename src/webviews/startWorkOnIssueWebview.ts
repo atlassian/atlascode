@@ -262,8 +262,7 @@ export class StartWorkOnIssueWebview
             };
             this.postMessage(msg);
         } catch (e) {
-            const err = new Error(`error updating issue: ${e}`);
-            Logger.error(err);
+            Logger.error(e, 'StartWorkOnIssueWebview.updateIssue');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
@@ -277,7 +276,7 @@ export class StartWorkOnIssueWebview
                 const issue = await fetchMinimalIssue(key, this._state.siteDetails);
                 this.updateIssue(issue);
             } catch (e) {
-                Logger.error(e);
+                Logger.error(e, 'StartWorkOnIssueWebview.forceUpdateIssue');
                 this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
             }
         }

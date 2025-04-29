@@ -150,8 +150,7 @@ export class JiraIssueWebview
             this.updateVoters();
             this.updateRelatedPullRequests();
         } catch (e) {
-            const err = new Error(`error updating issue: ${e}`);
-            Logger.error(err);
+            Logger.error(e, 'error updating issue');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
@@ -315,7 +314,7 @@ export class JiraIssueWebview
                         commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
                         commands.executeCommand(Commands.RefreshCustomJqlExplorer);
                     } catch (e) {
-                        Logger.error(new Error(`error updating issue: ${e}`));
+                        Logger.error(e, 'Error updating issue');
                         this.postMessage({
                             type: 'error',
                             reason: this.formatErrorReason(e, 'Error updating issue'),
@@ -352,7 +351,7 @@ export class JiraIssueWebview
                                 fieldValues: { comment: this._editUIData.fieldValues['comment'], nonce: msg.nonce },
                             });
                         } catch (e) {
-                            Logger.error(new Error(`error posting comment: ${e}`));
+                            Logger.error(e, 'Error posting comment');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error posting comment'),
@@ -379,7 +378,7 @@ export class JiraIssueWebview
                                 fieldValues: { comment: this._editUIData.fieldValues['comment'], nonce: msg.nonce },
                             });
                         } catch (e) {
-                            Logger.error(new Error(`error deleting comment: ${e}`));
+                            Logger.error(e, 'Error deleting comment');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error deleting comment'),
@@ -415,7 +414,7 @@ export class JiraIssueWebview
                             commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
                             commands.executeCommand(Commands.RefreshCustomJqlExplorer);
                         } catch (e) {
-                            Logger.error(new Error(`error creating issue: ${e}`));
+                            Logger.error(e, 'Error creating issue');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error creating issue'),
@@ -454,7 +453,7 @@ export class JiraIssueWebview
                             commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
                             commands.executeCommand(Commands.RefreshCustomJqlExplorer);
                         } catch (e) {
-                            Logger.error(new Error(`error creating issue link: ${e}`));
+                            Logger.error(e, 'Error creating issue issue link');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error creating issue issue link'),
@@ -508,7 +507,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(new Error(`error deleting issuelink: ${e}`));
+                            Logger.error(e, 'Error deleting issuelink');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error deleting issuelink'),
@@ -550,7 +549,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(new Error(`error creating worklog: ${e}`));
+                            Logger.error(e, 'Error creating worklog');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error creating worklog'),
@@ -595,7 +594,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(new Error(`error adding watcher: ${e}`));
+                            Logger.error(e, 'Error adding watcher');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error adding watcher'),
@@ -645,7 +644,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(new Error(`error removing watcher: ${e}`));
+                            Logger.error(e, 'Error removing watcher');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error removing watcher'),
@@ -688,7 +687,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(new Error(`error adding vote: ${e}`));
+                            Logger.error(e, 'Error adding vote');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error adding vote'),
@@ -735,7 +734,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(new Error(`error removing vote: ${e}`));
+                            Logger.error(e, 'Error removing vote');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error removing vote'),
@@ -790,7 +789,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(new Error(`error adding attachments: ${e}`));
+                            Logger.error(e, 'Error adding attachments');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error adding attachments'),
@@ -834,7 +833,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(new Error(`error deleting attachments: ${e}`));
+                            Logger.error(e, 'Error deleting attachments');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error deleting attachments'),
@@ -855,7 +854,7 @@ export class JiraIssueWebview
                             // we need to force an update in case any new tranisitions are available
                             await this.forceUpdateIssue(true);
                         } catch (e) {
-                            Logger.error(new Error(`error transitioning issue: ${e}`));
+                            Logger.error(e, 'Error transitioning issue');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error transitioning issue'),
@@ -870,7 +869,7 @@ export class JiraIssueWebview
                     try {
                         await this.forceUpdateIssue(true);
                     } catch (e) {
-                        Logger.error(new Error(`error refreshing issue: ${e}`));
+                        Logger.error(e, 'Error refeshing issue');
                         this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error refeshing issue') });
                     }
                     break;

@@ -36,11 +36,11 @@ function errorHandlerWithFilter(error: Error): void {
     });
 }
 
-function errorHandler(error: Error | string): void {
+function errorHandler(error: Error | string, description?: string): void {
     safeExecute(() => {
-        safeExecute(() => Logger.debug('[LOGGED ERROR]', error));
+        safeExecute(() => Logger.debug('[LOGGED ERROR]', error, description));
 
-        const event = errorEvent(error);
+        const event = errorEvent(error, description);
 
         if (analyticsClient) {
             event.then((e) => analyticsClient!.sendTrackEvent(e));
@@ -61,7 +61,10 @@ export function registerErrorReporting(): void {
         process.addListener('uncaughtExceptionMonitor', errorHandlerWithFilter);
         process.addListener('unhandledRejection', errorHandlerWithFilter);
 
-        _logger_onError_eventRegistration = Logger.onError((data) => errorHandler(data.error), undefined);
+        _logger_onError_eventRegistration = Logger.onError(
+            (data) => errorHandler(data.error, data.description),
+            undefined,
+        );
     });
 }
 
