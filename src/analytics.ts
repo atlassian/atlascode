@@ -93,15 +93,31 @@ export async function loggedOutEvent(site: DetailedSiteInfo): Promise<TrackEvent
 
 // Error/diagnostics events
 
+function sanitazeErrorMessage(message?: string): string | undefined {
+    if (message) {
+        message = message.replace(/^(Failed to execute default JQL query for site ")([^"]+)(": .*)/, '$1<site>$3');
+        message = message.replace(/^(connect \w+ )(\d+\.\d+\.\d+\.\d+)(.*)/, '$1<ip>$3');
+        message = message.replace(/^(getaddrinfo \w+ )(.*)/, '$1<domain>');
+    }
+    return message || undefined;
+}
+
 function sanitizeStackTrace(stack?: string): string | undefined {
-    return stack ? stack.replace(/\/Users\/[^/]+\//g, '/Users/<user>/') : stack;
+    if (stack) {
+        stack = stack.replace(/\/Users\/[^/]+\//g, '/Users/<user>/');
+    }
+    return stack || undefined;
 }
 
 export async function errorEvent(error: Error | string): Promise<TrackEvent> {
-    const attributes: { name: string; message: string; stack?: string } =
+    const attributes: { name: string; message?: string; stack?: string } =
         typeof error === 'string'
-            ? { name: 'Error', message: error }
-            : { name: error.name || 'Error', message: error.message, stack: sanitizeStackTrace(error.stack) };
+            ? { name: 'Error', message: sanitazeErrorMessage(error) }
+            : {
+                  name: error.name || 'Error',
+                  message: sanitazeErrorMessage(error.message),
+                  stack: sanitizeStackTrace(error.stack),
+              };
 
     return trackEvent('errorEvent_v2', 'atlascode', { attributes });
 }
