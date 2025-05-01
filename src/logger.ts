@@ -9,7 +9,30 @@ const ConsolePrefix = `[${extensionOutputChannelName}]`;
 
 export type ErrorEvent = {
     error: Error;
+    capturedBy?: string;
 };
+
+/** This function must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
+ * If not, the function will return the name of a method inside Logger.
+ */
+function retrieveCallerName(): string | undefined {
+    try {
+        const stack = new Error().stack;
+        if (!stack) {
+            return undefined;
+        }
+
+        // first line is the error message
+        // second line is the latest function in the stack, which is this one
+        // third line is the second-last function in the stack, which is the Logger.error entrypoint
+        // fourth line is the called we are looking for
+        const line = stack.split('\n')[3];
+
+        return line.trim().split(' ')[1];
+    } catch {
+        return undefined;
+    }
+}
 
 export class Logger {
     private static _instance: Logger;
@@ -86,11 +109,17 @@ export class Logger {
     }
 
     public static error(ex: Error, classOrMethod?: string, ...params: any[]): void {
-        this.Instance.error(ex, classOrMethod, params);
+        const callerName = retrieveCallerName();
+        this.Instance.errorInternal(ex, callerName, classOrMethod, params);
     }
 
     public error(ex: Error, classOrMethod?: string, ...params: any[]): void {
-        Logger._onError.fire({ error: ex });
+        const callerName = retrieveCallerName();
+        this.errorInternal(ex, callerName, classOrMethod, params);
+    }
+
+    private errorInternal(ex: Error, capturedBy?: string, classOrMethod?: string, ...params: any[]): void {
+        Logger._onError.fire({ error: ex, capturedBy });
 
         if (this.level === OutputLevel.Silent) {
             return;

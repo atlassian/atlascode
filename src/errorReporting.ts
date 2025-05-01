@@ -36,7 +36,7 @@ function errorHandlerWithFilter(error: Error): void {
     });
 }
 
-function errorHandler(error: Error | string): void {
+function errorHandler(error: Error | string, capturedBy?: string): void {
     safeExecute(() => {
         safeExecute(() => Logger.debug('[LOGGED ERROR]', error));
 
@@ -61,7 +61,10 @@ export function registerErrorReporting(): void {
         process.addListener('uncaughtExceptionMonitor', errorHandlerWithFilter);
         process.addListener('unhandledRejection', errorHandlerWithFilter);
 
-        _logger_onError_eventRegistration = Logger.onError((data) => errorHandler(data.error), undefined);
+        _logger_onError_eventRegistration = Logger.onError(
+            (data) => errorHandler(data.error, data.capturedBy),
+            undefined,
+        );
     });
 }
 
