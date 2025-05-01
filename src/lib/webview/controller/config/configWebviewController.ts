@@ -103,8 +103,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 this._initialSection = undefined;
             }
         } catch (e) {
-            const err = new Error(`error updating configuration: ${e}`);
-            this._logger.error(err);
+            this._logger.error(e, 'Error updating configuration');
             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
         } finally {
             this._isRefreshing = false;
@@ -121,7 +120,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 try {
                     await this.invalidate();
                 } catch (e) {
-                    this._logger.error(new Error(`error refreshing config: ${e}`));
+                    this._logger.error(e, 'Error refeshing config');
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error refeshing config'),
@@ -136,8 +135,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                     try {
                         await this._api.authenticateServer(msg.siteInfo, msg.authInfo);
                     } catch (e) {
-                        const err = new Error(`Authentication error: ${e}`);
-                        this._logger.error(err);
+                        this._logger.error(e, 'Authentication error');
                         this.postMessage({
                             type: CommonMessageType.Error,
                             reason: formatError(e, 'Authentication error'),
@@ -193,8 +191,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                         if (Axios.isCancel(e)) {
                             this._logger.warn(formatError(e));
                         } else {
-                            const err = new Error(`JQL fetch error: ${e}`);
-                            this._logger.error(err);
+                            this._logger.error(e, 'JQL fetch error');
                             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                         }
                     }
@@ -210,8 +207,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                             data: data,
                         });
                     } catch (e) {
-                        const err = new Error(`JQL fetch error: ${e}`);
-                        this._logger.error(err);
+                        this._logger.error(e, 'JQL fetch error');
                         this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                     }
                 }
@@ -235,8 +231,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                         if (Axios.isCancel(e)) {
                             this._logger.warn(formatError(e));
                         } else {
-                            const err = new Error(`Filter fetch error: ${e}`);
-                            this._logger.error(err);
+                            this._logger.error(e, 'Filter fetch error');
                             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                         }
                     }
@@ -255,8 +250,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                         if (Axios.isCancel(e)) {
                             this._logger.warn(formatError(e));
                         } else {
-                            const err = new Error(`JQL Validate network error: ${e}`);
-                            this._logger.error(err);
+                            this._logger.error(e, 'JQL Validate network error');
                             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                         }
                     }
@@ -267,8 +261,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 try {
                     this._api.updateSettings(msg.target, msg.changes, msg.removes);
                 } catch (e) {
-                    const err = new Error(`error updating configuration: ${e}`);
-                    this._logger.error(err);
+                    this._logger.error(e, 'Error updating configuration');
                     this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                 }
                 break;
