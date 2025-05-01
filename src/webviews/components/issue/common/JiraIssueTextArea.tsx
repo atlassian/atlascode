@@ -7,7 +7,7 @@ import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
 
 import PopoutMentionPicker from '../../pullrequest/PopoutMentionPicker';
-import { useEditor } from './Editor';
+import { useEditor } from './editor/Editor';
 
 type Props = {
     value: string;
@@ -81,7 +81,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
     );
     return (
         <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-            <div hidden={!rteEnabled} ref={viewHost} />
+            <div role="textbox" hidden={!rteEnabled} ref={viewHost} aria-label="Jira rich text editor" />
             <div hidden={rteEnabled}>
                 <TextArea
                     style={{
@@ -148,7 +148,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                     )}
                 </div>
                 <Tooltip content="Toggle rich text editor" position="top">
-                    <Toggle defaultChecked onChange={(e) => setRteEnabled(e.target.checked)} />
+                    <Toggle label="rte toggle" defaultChecked onChange={(e) => setRteEnabled(e.target.checked)} />
                 </Tooltip>
             </div>
         </div>

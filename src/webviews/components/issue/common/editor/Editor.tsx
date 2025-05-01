@@ -88,7 +88,7 @@ const schema = new Schema({
  * @param str The string to search
  */
 function findAllMentions(str: string) {
-    const regex = /\[~[a-zA-Z0-9:-]+\]/;
+    const regex = /\[~[a-zA-Z0-9:-]+\]/g;
     const matches = str.match(regex);
     return matches;
 }
@@ -101,15 +101,18 @@ const mdSerializer = new MarkdownSerializer(
             state.write(node.attrs.id);
         },
         text: (state: any, node: any) => {
+            // Remove escape characters for jira mentions
             const matches = findAllMentions(node.text);
             let text: string = node.text;
             if (matches && matches.length > 0) {
                 for (const match of matches) {
-                    const tmp = text.split(match);
+                    const index = text.indexOf(match);
+                    const start = text.slice(0, index);
+                    const end = text.slice(index + match.length);
 
-                    state.text(tmp[0], !state.isAutolink);
+                    state.text(start, !state.isAutolink);
                     state.write(match);
-                    text = tmp[1];
+                    text = end;
                 }
             }
 
@@ -216,7 +219,7 @@ export function useEditor<T extends UserType>(props: {
                 getMentionsPlugin({
                     getSuggestions: async (type: any, text: string, done: any) => {
                         if (type === 'mention') {
-                            const users = await props.fetchUsers!(text);
+                            const users = (await props.fetchUsers!(text)).slice(0, 10); // Limit to 10 users
                             done(
                                 users.map((u) => ({
                                     name: u.displayName,
@@ -234,7 +237,6 @@ export function useEditor<T extends UserType>(props: {
                             return <></>;
                         }
                     },
-                    maxNoOfSuggestions: 5,
                 }),
             );
         }
