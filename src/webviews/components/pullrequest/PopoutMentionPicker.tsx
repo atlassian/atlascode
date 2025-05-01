@@ -26,10 +26,6 @@ type State = { isOpen: boolean; value: any };
 // PopoutMentionPicker is a modified version of `Popout` example from https://react-select.com/advanced#experimental
 export default class PopoutMentionPicker extends React.Component<
     {
-        isInline?: boolean;
-        parentOnChange?: (input: string) => void;
-        injectToggleOpen?: () => void;
-        injectIsOpen?: boolean;
         targetButtonProps?: Partial<ButtonProps>;
         targetButtonContent: string;
         targetButtonTooltip: string;
@@ -42,16 +38,10 @@ export default class PopoutMentionPicker extends React.Component<
         super(props);
         this.state = { isOpen: false, value: undefined };
     }
-    handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Escape') {
-            this.toggleOpen();
-        }
+
+    toggleOpen = () => {
+        this.setState((state) => ({ isOpen: !state.isOpen }));
     };
-    toggleOpen = this.props.injectToggleOpen
-        ? this.props.injectToggleOpen
-        : () => {
-              this.setState((state) => ({ isOpen: !state.isOpen }));
-          };
 
     onSelectChange = (value: any) => {
         this.setState({ value, isOpen: false });
@@ -62,7 +52,7 @@ export default class PopoutMentionPicker extends React.Component<
         const { isOpen } = this.state;
         return (
             <Dropdown
-                isOpen={this.props.injectIsOpen ? this.props.injectIsOpen : isOpen}
+                isOpen={isOpen}
                 onClose={this.toggleOpen}
                 target={
                     <Tooltip content={this.props.targetButtonTooltip}>
@@ -84,12 +74,6 @@ export default class PopoutMentionPicker extends React.Component<
                     placeholder="Search..."
                     tabSelectsValue={false}
                     controlShouldRenderValue={false}
-                    onInputChange={(input: string) => {
-                        if (this.props.isInline && this.props.parentOnChange) {
-                            this.props.parentOnChange(input);
-                        }
-                    }}
-                    onKeyDown={this.handleKeyDown}
                 />
             </Dropdown>
         );
