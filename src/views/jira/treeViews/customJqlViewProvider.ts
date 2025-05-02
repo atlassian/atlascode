@@ -47,12 +47,12 @@ export class CustomJQLViewProvider extends Disposable implements TreeDataProvide
         super(() => this.dispose());
 
         const treeView = window.createTreeView(CustomJQLViewProviderId, { treeDataProvider: this });
-        treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e));
 
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () => this.refresh()),
             commands.registerCommand(Commands.RefreshCustomJqlExplorer, this.refresh, this),
+            treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e)),
             treeView,
         );
 

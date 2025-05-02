@@ -1,15 +1,14 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-import { PromiseRacer } from 'src/util/promises';
-import { RefreshTimer } from 'src/views/RefreshTimer';
+import { it } from '@jest/globals';
 import { expansionCastTo, forceCastTo } from 'testsutil';
-import { Disposable } from 'vscode';
 import * as vscode from 'vscode';
 
-import { DetailedSiteInfo } from '../../../atlclients/authInfo';
-import { JQLEntry } from '../../../config/model';
+import { DetailedSiteInfo, ProductBitbucket, ProductJira } from '../../../atlclients/authInfo';
+import * as commandContext from '../../../commandContext';
+import { configuration, JQLEntry } from '../../../config/configuration';
 import { Container } from '../../../container';
-import { JQLManager } from '../../../jira/jqlManager';
-import { SiteManager } from '../../../siteManager';
+import { PromiseRacer } from '../../../util/promises';
+import { RefreshTimer } from '../../../views/RefreshTimer';
 import { AssignedWorkItemsViewProvider } from './jiraAssignedWorkItemsViewProvider';
 import { JiraNotifier } from './jiraNotifier';
 
@@ -58,20 +57,29 @@ const mockedIssue3 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
 
 jest.mock('./jiraNotifier');
 jest.mock('../searchJiraHelper');
+jest.mock('../../RefreshTimer');
+jest.mock('../../../logger');
+jest.mock('../../../analytics', () => ({
+    viewScreenEvent: () => Promise.resolve({ eventName: 'viewScreenEvent' }),
+}));
+jest.mock('../../../config/configuration', () => ({
+    configuration: {
+        onDidChange: (func: any, thisArg: any) => ({ func, thisArg }),
+        changed: () => false,
+    },
+}));
 jest.mock('../../../container', () => ({
     Container: {
         jqlManager: {
             getAllDefaultJQLEntries: () => [],
-            onDidJQLChange: () => new Disposable(() => {}),
-        } as Partial<JQLManager>,
-
+            onDidJQLChange: () => new vscode.Disposable(() => {}),
+        },
         siteManager: {
-            onDidSitesAvailableChange: () => new Disposable(() => {}),
-        } as Partial<SiteManager>,
+            onDidSitesAvailableChange: () => new vscode.Disposable(() => {}),
+            productHasAtLeastOneSite: () => true,
+        },
         context: {
-            subscriptions: {
-                push: jest.fn(),
-            },
+            subscriptions: [],
         },
         config: {
             jira: {
@@ -79,6 +87,9 @@ jest.mock('../../../container', () => ({
                     enabled: true,
                 },
             },
+        },
+        analyticsClient: {
+            sendScreenEvent: () => {},
         },
     },
 }));
@@ -153,20 +164,27 @@ jest.mock('../../RefreshTimer', () => ({
         ),
 }));
 
-const mockedTreeView = {
-    onDidChangeVisibility: () => {},
-};
+const mockedTreeView = expansionCastTo<vscode.TreeView<vscode.TreeItem>>({
+    onDidChangeVisibility: () => new vscode.Disposable(() => {}),
+});
 
 describe('AssignedWorkItemsViewProvider', () => {
     let provider: AssignedWorkItemsViewProvider | undefined;
+    let createTreeViewMock: jest.SpyInstance<
+        vscode.TreeView<unknown>,
+        [viewId: string, options: vscode.TreeViewOptions<unknown>],
+        any
+    >;
 
     beforeEach(() => {
-        jest.spyOn(vscode.window, 'createTreeView').mockReturnValue(mockedTreeView as any);
-        provider = undefined;
-
+        (Container.context.subscriptions as any) = [];
         PromiseRacerMockClass.LastInstance = undefined;
         JiraNotifierMockClass.LastInstance = undefined;
         RefreshTimerMockClass.LastInstance = undefined;
+        provider = undefined;
+
+        jest.spyOn(vscode.window, 'createTreeView').mockReturnValue(mockedTreeView as any);
+        createTreeViewMock = jest.spyOn(vscode.window, 'createTreeView').mockReturnValue(mockedTreeView);
     });
 
     afterEach(() => {
@@ -175,17 +193,21 @@ describe('AssignedWorkItemsViewProvider', () => {
     });
 
     describe('initialization', () => {
-        it('onDidSitesAvailableChange is registered during construction', async () => {
-            let onDidSitesAvailableChangeCallback = undefined;
-            jest.spyOn(Container.siteManager, 'onDidSitesAvailableChange').mockImplementation(
-                (func: any, parent: any): any => {
-                    onDidSitesAvailableChangeCallback = (...args: any[]) => func.apply(parent, args);
-                },
-            );
+        it('constructor triggers the onDidChangeTreeData event', () => {
+            let registeredProviderObj = undefined;
+            let onDidChangeTreeDataFired = false;
+
+            createTreeViewMock.mockImplementation((viewId, providerObj) => {
+                expect(viewId).toEqual('atlascode.views.jira.assignedWorkItemsTreeView');
+                registeredProviderObj = providerObj.treeDataProvider;
+                registeredProviderObj.onDidChangeTreeData!(() => (onDidChangeTreeDataFired = true));
+                return mockedTreeView;
+            });
 
             provider = new AssignedWorkItemsViewProvider();
 
-            expect(onDidSitesAvailableChangeCallback).toBeDefined();
+            expect(registeredProviderObj).toBe(provider);
+            expect(onDidChangeTreeDataFired).toBeTruthy();
         });
 
         it('RefreshTimer is registered during construction and triggers refresh', async () => {
@@ -199,6 +221,26 @@ describe('AssignedWorkItemsViewProvider', () => {
             RefreshTimerMockClass.LastInstance?.refreshFunc();
             expect(dataChanged).toBeTruthy();
         });
+    });
+
+    it('getTreeItem is an identity function', () => {
+        provider = new AssignedWorkItemsViewProvider();
+
+        expect(provider.getTreeItem('hello' as any)).toEqual('hello');
+        expect(provider.getTreeItem(10 as any)).toEqual(10);
+        expect(provider.getTreeItem({ a: 'a' } as any)).toEqual({ a: 'a' });
+    });
+
+    it('focus executes the vscode id.focus command', () => {
+        provider = new AssignedWorkItemsViewProvider();
+
+        jest.spyOn(vscode.commands, 'executeCommand');
+        provider.focus();
+
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+            'atlascode.views.jira.assignedWorkItemsTreeView.focus',
+            {},
+        );
     });
 
     describe('getAllDefaultJQLEntries', () => {
@@ -293,6 +335,173 @@ describe('AssignedWorkItemsViewProvider', () => {
 
             expect(JiraNotifierMockClass.LastInstance!.ignoreAssignedIssues).not.toHaveBeenCalled();
             expect(JiraNotifierMockClass.LastInstance!.notifyForNewAssignedIssues).toHaveBeenCalled();
+        });
+    });
+
+    describe('onDidSitesAvailableChange', () => {
+        it('onDidSitesAvailableChange is registered during construction', async () => {
+            let onDidSitesAvailableChangeCallback = undefined;
+            jest.spyOn(Container.siteManager, 'onDidSitesAvailableChange').mockImplementation(
+                (func: any, parent: any): any => {
+                    onDidSitesAvailableChangeCallback = (...args: any[]) => func.apply(parent, args);
+                },
+            );
+
+            provider = new AssignedWorkItemsViewProvider();
+
+            expect(onDidSitesAvailableChangeCallback).toBeDefined();
+        });
+
+        it.each([ProductJira, ProductBitbucket])(
+            'onDidSitesAvailableChange callback refreshes only for Jira sites changes (%p)',
+            (product) => {
+                let onDidSitesAvailableChangeCallback = undefined;
+                jest.spyOn(Container.siteManager, 'onDidSitesAvailableChange').mockImplementation(
+                    (func: any, parent: any): any => {
+                        onDidSitesAvailableChangeCallback = (...args: any[]) => func.apply(parent, args);
+                    },
+                );
+
+                provider = new AssignedWorkItemsViewProvider();
+
+                const refreshCallback = jest.fn();
+                provider.onDidChangeTreeData(refreshCallback);
+
+                onDidSitesAvailableChangeCallback!({ product });
+
+                if (product.key === ProductJira.key) {
+                    expect(refreshCallback).toHaveBeenCalledTimes(1);
+                } else {
+                    expect(refreshCallback).not.toHaveBeenCalled();
+                }
+            },
+        );
+    });
+
+    describe('onDidChangeVisibility', () => {
+        it('onDidChangeVisibility is registered during construction', async () => {
+            jest.spyOn(mockedTreeView, 'onDidChangeVisibility');
+
+            provider = new AssignedWorkItemsViewProvider();
+
+            expect(mockedTreeView.onDidChangeVisibility).toHaveBeenCalled();
+        });
+
+        it('the onDidChangeVisibility callback sends telemetry if the panel is visible and there are Jira sites configured', async () => {
+            let onDidChangeVisibilityCallback = undefined;
+            jest.spyOn(mockedTreeView, 'onDidChangeVisibility').mockImplementation((func: any, parent: any): any => {
+                onDidChangeVisibilityCallback = (...args: any[]) => func.apply(parent, args);
+            });
+
+            provider = new AssignedWorkItemsViewProvider();
+
+            expect(onDidChangeVisibilityCallback).toBeDefined();
+
+            jest.spyOn(Container.analyticsClient, 'sendScreenEvent');
+            jest.spyOn(Container.siteManager, 'productHasAtLeastOneSite').mockReturnValue(true);
+
+            const event = expansionCastTo<vscode.TreeViewVisibilityChangeEvent>({
+                visible: true,
+            });
+            await onDidChangeVisibilityCallback!(event);
+
+            expect(Container.analyticsClient.sendScreenEvent).toHaveBeenCalledWith({ eventName: 'viewScreenEvent' });
+        });
+
+        it("the onDidChangeVisibility doesn't send telemetry if the panel is not visible", async () => {
+            let onDidChangeVisibilityCallback = undefined;
+            jest.spyOn(mockedTreeView, 'onDidChangeVisibility').mockImplementation((func: any, parent: any): any => {
+                onDidChangeVisibilityCallback = (...args: any[]) => func.apply(parent, args);
+            });
+
+            provider = new AssignedWorkItemsViewProvider();
+
+            expect(onDidChangeVisibilityCallback).toBeDefined();
+
+            jest.spyOn(Container.analyticsClient, 'sendScreenEvent');
+            jest.spyOn(Container.siteManager, 'productHasAtLeastOneSite').mockReturnValue(true);
+
+            const event = expansionCastTo<vscode.TreeViewVisibilityChangeEvent>({
+                visible: false,
+            });
+            await onDidChangeVisibilityCallback!(event);
+
+            expect(Container.analyticsClient.sendScreenEvent).not.toHaveBeenCalled();
+        });
+
+        it("the onDidChangeVisibility doesn't send telemetry if there aren't Jira sites configured", async () => {
+            let onDidChangeVisibilityCallback = undefined;
+            jest.spyOn(mockedTreeView, 'onDidChangeVisibility').mockImplementation((func: any, parent: any): any => {
+                onDidChangeVisibilityCallback = (...args: any[]) => func.apply(parent, args);
+            });
+
+            provider = new AssignedWorkItemsViewProvider();
+
+            expect(onDidChangeVisibilityCallback).toBeDefined();
+
+            jest.spyOn(Container.analyticsClient, 'sendScreenEvent');
+            jest.spyOn(Container.siteManager, 'productHasAtLeastOneSite').mockReturnValue(false);
+
+            const event = expansionCastTo<vscode.TreeViewVisibilityChangeEvent>({
+                visible: true,
+            });
+            await onDidChangeVisibilityCallback!(event);
+
+            expect(Container.analyticsClient.sendScreenEvent).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('onConfigurationChanged', () => {
+        it('onConfigurationChanged is registered during construction', async () => {
+            jest.spyOn(mockedTreeView, 'onDidChangeVisibility');
+
+            provider = new AssignedWorkItemsViewProvider();
+
+            expect(Container.context.subscriptions).toHaveLength(1);
+        });
+
+        it.each([[true], [false]])(
+            'onConfigurationChanged enabled or disables the panel depending on jira.explorer.enabled setting (%p)',
+            (explorerEnabled) => {
+                jest.spyOn(configuration, 'changed').mockImplementation((e, name) => name === 'jira.explorer.enabled');
+                Container.config.jira.explorer.enabled = explorerEnabled;
+
+                provider = new AssignedWorkItemsViewProvider();
+
+                jest.spyOn(commandContext, 'setCommandContext');
+
+                const callbackObj = Container.context.subscriptions[0] as any;
+                callbackObj.func.call(callbackObj.thisArg);
+
+                expect(commandContext.setCommandContext).toHaveBeenCalledWith(
+                    commandContext.CommandContext.AssignedIssueExplorer,
+                    explorerEnabled,
+                );
+            },
+        );
+
+        it.each([
+            ['jira', false],
+            ['jira.jqlList', false],
+            ['jira.explorer', true],
+            ['jira.explorer.enabled', true],
+            ['jira.explorer.collapsed', false],
+        ])('onConfigurationChanged refreshes if one relevant config is changed (%p)', (configName, expectedRefresh) => {
+            jest.spyOn(configuration, 'changed').mockImplementation((e, name) => name === configName);
+
+            provider = new AssignedWorkItemsViewProvider();
+
+            const refreshCallback = jest.fn();
+            provider.onDidChangeTreeData(refreshCallback);
+
+            const callbackObj = Container.context.subscriptions[0] as any;
+            callbackObj.func.call(callbackObj.thisArg);
+
+            if (expectedRefresh) {
+                expect(refreshCallback).toHaveBeenCalledTimes(1);
+            } else {
+                expect(refreshCallback).not.toHaveBeenCalled();
+            }
         });
     });
 });

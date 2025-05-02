@@ -44,12 +44,12 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
         setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
 
         const treeView = window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
-        treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e));
 
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () => this.refresh()),
             commands.registerCommand(Commands.RefreshAssignedWorkItemsExplorer, this.refresh, this),
+            treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e)),
             treeView,
         );
 
