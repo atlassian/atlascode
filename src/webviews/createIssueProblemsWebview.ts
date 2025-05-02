@@ -44,7 +44,10 @@ export class CreateIssueProblemsWebview extends AbstractReactWebview {
 
         try {
             if (!this._site || !this._project) {
-                Logger.error(new Error(`site or project is missing: site: ${this._site}, project: ${this._project}`));
+                Logger.error(
+                    new Error(`site or project is missing: site: ${this._site}, project: ${this._project}`),
+                    'Site or project is missing',
+                );
                 this.postMessage({
                     type: 'error',
                     reason: `site or project is missing: site: ${this._site}, project: ${this._project}`,

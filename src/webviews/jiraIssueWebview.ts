@@ -150,7 +150,7 @@ export class JiraIssueWebview
             this.updateVoters();
             this.updateRelatedPullRequests();
         } catch (e) {
-            Logger.error(e, 'error updating issue');
+            Logger.error(e, 'Error updating issue');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
@@ -895,7 +895,10 @@ export class JiraIssueWebview
                                 await bbApi.pullrequests.get(pr.site, pr.data.id, pr.workspaceRepo),
                             );
                         } else {
-                            Logger.error(new Error(`error opening pullrequest: ${msg.prHref}`));
+                            Logger.error(
+                                new Error(`error opening pullrequest: ${msg.prHref}`),
+                                'Error opening pullrequest',
+                            );
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(`Error opening pullrequest: ${msg.prHref}`),

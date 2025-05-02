@@ -28,6 +28,21 @@ function safeExecute(body: () => void, finallyBody?: () => void): void {
     }
 }
 
+// we need a dedicated listener to be able to remove it during the unregister
+function uncaughtExceptionHandler(error: Error | string): void {
+    errorHandlerWithFilter(error, 'NodeJS.uncaughtException');
+}
+
+// we need a dedicated listener to be able to remove it during the unregister
+function uncaughtExceptionMonitorHandler(error: Error | string): void {
+    errorHandlerWithFilter(error, 'NodeJS.uncaughtExceptionMonitor');
+}
+
+// we need a dedicated listener to be able to remove it during the unregister
+function unhandledRejectionHandler(error: Error | string): void {
+    errorHandlerWithFilter(error, 'NodeJS.unhandledRejection');
+}
+
 function errorHandlerWithFilter(error: Error | string, capturedBy: string): void {
     safeExecute(() => {
         if (error instanceof Error && error.stack && error.stack.includes(AtlascodeStackTraceHint)) {
@@ -64,11 +79,9 @@ export function registerErrorReporting(): void {
     nodeJsErrorReportingRegistered = true;
 
     safeExecute(() => {
-        process.addListener('uncaughtException', (e) => errorHandlerWithFilter(e, 'NodeJS.uncaughtException'));
-        process.addListener('uncaughtExceptionMonitor', (e) =>
-            errorHandlerWithFilter(e, 'NodeJS.uncaughtExceptionMonitor'),
-        );
-        process.addListener('unhandledRejection', (e) => errorHandlerWithFilter(e as any, 'NodeJS.unhandledRejection'));
+        process.addListener('uncaughtException', uncaughtExceptionHandler);
+        process.addListener('uncaughtExceptionMonitor', uncaughtExceptionMonitorHandler);
+        process.addListener('unhandledRejection', unhandledRejectionHandler);
 
         _logger_onError_eventRegistration = Logger.onError(
             (data) => errorHandler(data.error, data.errorMessage, data.capturedBy),
@@ -80,10 +93,9 @@ export function registerErrorReporting(): void {
 export function unregisterErrorReporting(): void {
     safeExecute(
         () => {
-            // TODO - FIX THIS
-            process.removeListener('uncaughtException', errorHandlerWithFilter);
-            process.removeListener('uncaughtExceptionMonitor', errorHandlerWithFilter);
-            process.removeListener('unhandledRejection', errorHandlerWithFilter);
+            process.removeListener('uncaughtException', uncaughtExceptionHandler);
+            process.removeListener('uncaughtExceptionMonitor', uncaughtExceptionMonitorHandler);
+            process.removeListener('unhandledRejection', unhandledRejectionHandler);
 
             _logger_onError_eventRegistration?.dispose();
             _logger_onError_eventRegistration = undefined;
