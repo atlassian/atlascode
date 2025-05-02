@@ -139,10 +139,12 @@ export class CredentialManager implements Disposable {
                             await this.removeSiteInformationFromKeychain(site.product.key, site.credentialId);
                         } else if (Container.siteManager.getSiteForId(site.product, site.id)) {
                             // if keychain does not have any auth info for the current site but the site has been saved, we need to remove it
-                            Logger.debug(
-                                `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`,
+                            Logger.error(
+                                new Error(
+                                    `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`,
+                                ),
+                                `Removing dead site for product ${site.product.key}: auth info not found in keychain`,
                             );
-
                             await Container.clientManager.removeClient(site);
                             Container.siteManager.removeSite(site);
                         }
@@ -150,7 +152,10 @@ export class CredentialManager implements Disposable {
                         // else if keychain does not exist, we check if the current site has been saved, if yes then we should remove it
                         if (Container.siteManager.getSiteForId(site.product, site.id)) {
                             Logger.debug(
-                                `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`,
+                                new Error(
+                                    `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`,
+                                ),
+                                `Removing dead site for product ${site.product.key}: keychain not found`,
                             );
                             await Container.clientManager.removeClient(site);
                             Container.siteManager.removeSite(site);
