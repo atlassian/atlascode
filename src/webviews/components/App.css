@@ -2170,6 +2170,11 @@ li.ProseMirror-selectednode:after {
     display: inline-block;
 }
 
+.ProseMirror-menu-active {
+    background: var(--vscode-list-focusBackground);
+    color: var(--vscode-list-focusForeground);
+}
+
 .ProseMirror-menuseparator {
     border-right: 1px solid #ddd;
     margin-right: 3px;

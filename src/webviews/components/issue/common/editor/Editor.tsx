@@ -83,10 +83,8 @@ const schema = new Schema({
     marks: markdownSchema.spec.marks,
 });
 
-/**
- * This is to find all mentions in the text node of the editor to be able to remove escape characters
- * @param str The string to search
- */
+// This is to find all mentions in the text node of the editor to be able to remove escape characters
+
 function findAllMentions(str: string) {
     const regex = /\[~[a-zA-Z0-9:-]+\]/g;
     const matches = str.match(regex);
@@ -161,6 +159,7 @@ export function useEditor<T extends UserType>(props: {
     value: string;
     enabled: boolean;
     onSave?: (input: string) => void;
+    onChange: (input: string) => void;
     fetchUsers?: (input: string) => Promise<T[]>;
 }) {
     const viewHost = useRef<HTMLDivElement>(null);
@@ -249,6 +248,16 @@ export function useEditor<T extends UserType>(props: {
         console.log(content);
         const currView = new EditorView(viewHost.current!, {
             state,
+            dispatchTransaction(tr) {
+                const state = currView.state.apply(tr);
+                currView.updateState(state);
+
+                if (tr.docChanged) {
+                    const mdContent: string = props.enabled ? mdSerializer.serialize(state.doc) : content;
+                    setContent(mdContent);
+                    props.onChange(mdContent);
+                }
+            },
         });
         view.current = currView;
         return () => currView.destroy();

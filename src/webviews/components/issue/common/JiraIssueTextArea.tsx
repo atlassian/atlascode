@@ -54,6 +54,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
             onChange(i);
             onSave?.(i);
         },
+        onChange,
         enabled: rteEnabled,
         fetchUsers,
     });
