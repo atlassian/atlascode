@@ -8,9 +8,32 @@ import { Container } from './container';
 const ConsolePrefix = `[${extensionOutputChannelName}]`;
 
 export type ErrorEvent = {
-    description?: string;
     error: Error;
+    errorMessage?: string;
+    capturedBy?: string;
 };
+
+/** This function must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
+ * If not, the function will return the name of a method inside Logger.
+ */
+function retrieveCallerName(): string | undefined {
+    try {
+        const stack = new Error().stack;
+        if (!stack) {
+            return undefined;
+        }
+
+        // first line is the error message
+        // second line is the latest function in the stack, which is this one
+        // third line is the second-last function in the stack, which is the Logger.error entrypoint
+        // fourth line is the called we are looking for
+        const line = stack.split('\n')[3];
+
+        return line.trim().split(' ')[1];
+    } catch {
+        return undefined;
+    }
+}
 
 export class Logger {
     private static _instance: Logger;
@@ -86,23 +109,29 @@ export class Logger {
         }
     }
 
-    public static error(ex: Error, classOrMethod?: string): void {
-        this.Instance.error(ex, classOrMethod);
+    public static error(ex: Error, errorMessage?: string): void {
+        const callerName = retrieveCallerName();
+        this.Instance.errorInternal(ex, callerName, errorMessage);
     }
 
-    public error(ex: Error, classOrMethod?: string): void {
-        Logger._onError.fire({ error: ex, description: classOrMethod });
+    public error(ex: Error, errorMessage?: string): void {
+        const callerName = retrieveCallerName();
+        this.errorInternal(ex, callerName, errorMessage);
+    }
+
+    private errorInternal(ex: Error, capturedBy?: string, errorMessage?: string): void {
+        Logger._onError.fire({ error: ex, errorMessage, capturedBy });
 
         if (this.level === OutputLevel.Silent) {
             return;
         }
 
         if (Container.isDebugging) {
-            console.error(this.timestamp, ConsolePrefix, classOrMethod, ex);
+            console.error(this.timestamp, ConsolePrefix, errorMessage, ex);
         }
 
         if (this.output !== undefined) {
-            this.output.appendLine([this.timestamp, classOrMethod, ex].join(' '));
+            this.output.appendLine([this.timestamp, errorMessage, ex].join(' '));
         }
     }
 

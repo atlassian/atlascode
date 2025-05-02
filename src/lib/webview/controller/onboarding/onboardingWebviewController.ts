@@ -102,7 +102,7 @@ export class OnboardingWebviewController implements WebviewController<Onboarding
                 try {
                     await this.invalidate();
                 } catch (e) {
-                    this._logger.error(new Error(`error refreshing config: ${e}`));
+                    this._logger.error(e, 'Error refeshing config');
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error refeshing config'),
@@ -122,7 +122,7 @@ export class OnboardingWebviewController implements WebviewController<Onboarding
                     this.postMessage({ type: OnboardingMessageType.LoginResponse });
                 } catch (e) {
                     const env = isCloud ? 'cloud' : 'server';
-                    this._logger.error(new Error(`${env} onboarding authentication error: ${e}`));
+                    this._logger.error(e, `${env} onboarding authentication error`);
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, `${env} onboarding authentication error`),
@@ -134,8 +134,7 @@ export class OnboardingWebviewController implements WebviewController<Onboarding
                 try {
                     this._api.updateSettings(msg.target, msg.changes, msg.removes);
                 } catch (e) {
-                    const err = new Error(`error updating configuration: ${e}`);
-                    this._logger.error(err);
+                    this._logger.error(e, 'Error updating configuration');
                     this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                 }
                 break;

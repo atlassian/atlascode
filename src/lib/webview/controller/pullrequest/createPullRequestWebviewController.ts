@@ -68,8 +68,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                 repoData: repoData,
             });
         } catch (e) {
-            const err = new Error(`error updating start work page: ${e}`);
-            this.logger.error(err);
+            this.logger.error(e, 'Error updating start work page');
             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
         } finally {
             this.isRefreshing = false;
@@ -87,7 +86,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                 try {
                     await this.invalidate();
                 } catch (e) {
-                    this.logger.error(new Error(`error refreshing start work page: ${e}`));
+                    this.logger.error(e, 'Error refeshing start work page');
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error refeshing start work page'),
@@ -105,7 +104,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                         });
                     }
                 } catch (e) {
-                    this.logger.error(new Error(`error fetching issue for branch name: ${e}`));
+                    this.logger.error(e, 'Error fetching issue for branch name');
                     // ignore posting error to UI
                 }
                 break;
@@ -122,7 +121,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                         fileDiffs,
                     });
                 } catch (e) {
-                    this.logger.error(new Error(`error fetching commits: ${e}`));
+                    this.logger.error(e, 'Error fetching commits');
                     // ignore posting error to UI
                 }
                 break;
@@ -135,7 +134,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                         ProductBitbucket,
                     );
                 } catch (e) {
-                    this.logger.error(new Error(`error opening diff: ${e}`));
+                    this.logger.error(e, 'Error opening diff');
                     // ignore posting error to UI
                 }
                 break;
@@ -150,7 +149,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                     if (Axios.isCancel(e)) {
                         this.logger.warn(formatError(e));
                     } else {
-                        this.logger.error(new Error(`error fetching users: ${e}`));
+                        this.logger.error(e, 'Error fetching users');
                         this.postMessage({
                             type: CommonMessageType.Error,
                             reason: formatError(e, 'Error fetching users'),
@@ -167,7 +166,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                     });
                     this.analytics.firePrCreatedEvent(msg.sourceSiteRemote.site!.details);
                 } catch (e) {
-                    this.logger.error(new Error(`error creating pull request: ${e}`));
+                    this.logger.error(e, 'Error creating pull request');
                     this.postMessage({
                         type: CreatePullRequestMessageType.SubmitResponse,
                         pr: undefined!,
