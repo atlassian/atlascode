@@ -1,4 +1,5 @@
-import { baseKeymap } from 'prosemirror-commands';
+// import { baseKeymap } from 'prosemirror-commands';
+import { debounce } from 'lodash';
 import { dropCursor } from 'prosemirror-dropcursor';
 import { buildKeymap, buildMenuItems } from 'prosemirror-example-setup';
 import { gapCursor } from 'prosemirror-gapcursor';
@@ -13,7 +14,7 @@ import {
     schema as markdownSchema,
 } from 'prosemirror-markdown';
 import { addMentionNodes, getMentionsPlugin } from 'prosemirror-mentions';
-import { menuBar } from 'prosemirror-menu';
+import { liftItem, menuBar } from 'prosemirror-menu';
 import { Schema } from 'prosemirror-model';
 import { EditorState, Plugin, PluginKey } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
@@ -84,11 +85,8 @@ const schema = new Schema({
 });
 
 // This is to find all mentions in the text node of the editor to be able to remove escape characters
-
 function findAllMentions(str: string) {
-    const regex = /\[~[a-zA-Z0-9:-]+\]/g;
-    const matches = str.match(regex);
-    return matches;
+    return str.match(/\[~[a-zA-Z0-9:-]+\]/g);
 }
 
 // https://github.com/ProseMirror/prosemirror-markdown/blob/master/src/to_markdown.js
@@ -105,12 +103,12 @@ const mdSerializer = new MarkdownSerializer(
             if (matches && matches.length > 0) {
                 for (const match of matches) {
                     const index = text.indexOf(match);
-                    const start = text.slice(0, index);
-                    const end = text.slice(index + match.length);
+                    const before = text.slice(0, index);
+                    const after = text.slice(index + match.length);
 
-                    state.text(start, !state.isAutolink);
+                    state.text(before, !state.isAutolink);
                     state.write(match);
-                    text = end;
+                    text = after;
                 }
             }
 
@@ -166,9 +164,11 @@ export function useEditor<T extends UserType>(props: {
     const view = useRef<EditorView | null>(null);
     const [content, setContent] = useState(props.value || '');
 
+    const debouncedFetch = props.fetchUsers && debounce(props.fetchUsers, 1500);
+
     const handleSave = useCallback(() => {
         const mdContent: string = props.enabled ? mdSerializer.serialize(view.current!.state.doc) : content;
-        console.log(mdContent);
+
         if (mdContent.trim().length > 0) {
             try {
                 props.onSave?.(mdContent);
@@ -198,35 +198,36 @@ export function useEditor<T extends UserType>(props: {
         const plugins = [
             reactProps(props),
             keymap(buildKeymap(schema)),
-            keymap(baseKeymap),
+            // keymap(baseKeymap),
             dropCursor(),
             gapCursor(),
             menuBar({
                 floating: false,
                 content: [
                     [menuItems.toggleStrong, menuItems.toggleEm, menuItems.toggleCode],
-                    [menuItems.wrapBulletList, menuItems.wrapOrderedList, menuItems.wrapBlockQuote],
+                    [menuItems.wrapBulletList, menuItems.wrapOrderedList, menuItems.wrapBlockQuote, liftItem],
                 ],
             }),
             history(),
             inputRules({ rules: buildInputRules(schema) }),
         ];
 
-        if (props.fetchUsers) {
+        if (debouncedFetch) {
             plugins.unshift(
                 // https://github.com/joelewis/prosemirror-mentions
                 getMentionsPlugin({
                     getSuggestions: async (type: any, text: string, done: any) => {
                         if (type === 'mention') {
-                            const users = (await props.fetchUsers!(text)).slice(0, 10); // Limit to 10 users
-                            done(
-                                users.map((u) => ({
-                                    name: u.displayName,
-                                    id: u.mention,
-                                    avatarUrl: u.avatarUrl || '',
-                                    email: u.emailAddress || '',
-                                })),
-                            );
+                            const users = await debouncedFetch(text)!;
+
+                            const formattedUsers = users.map((u) => ({
+                                name: u.displayName,
+                                id: u.mention,
+                                avatarUrl: u.avatarUrl || '',
+                                email: u.emailAddress || '',
+                            }));
+
+                            done(formattedUsers);
                         }
                     },
                     getSuggestionsHTML: (items: T[], type: any) => {
@@ -245,7 +246,7 @@ export function useEditor<T extends UserType>(props: {
             doc: mdParser.parse(content),
             plugins: plugins,
         });
-        console.log(content);
+
         const currView = new EditorView(viewHost.current!, {
             state,
             dispatchTransaction(tr) {
@@ -259,7 +260,9 @@ export function useEditor<T extends UserType>(props: {
                 }
             },
         });
+
         view.current = currView;
+
         return () => currView.destroy();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
