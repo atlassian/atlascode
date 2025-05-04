@@ -1,4 +1,4 @@
-import * as child from 'child_process';
+import { spawn } from 'child_process';
 
 export interface Result {
     code: number | null;
@@ -11,7 +11,7 @@ export class Shell {
 
     public async exec(command: string, ...args: string[]): Promise<Result> {
         return new Promise<Result>((resolve, reject) => {
-            const proc = child.spawn(command, args, {
+            const proc = spawn(command, args, {
                 cwd: this.workingDirectory,
                 shell: true,
             });
