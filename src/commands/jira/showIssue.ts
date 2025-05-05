@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 
 import { DetailedSiteInfo, emptySiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { Container } from '../../container';
-import { fetchMinimalIssue, getCachedIssue } from '../../jira/fetchIssue';
+import { getCachedOrFetchMinimalIssue } from '../../jira/fetchIssue';
 import { issueForKey } from '../../jira/issueForKey';
 
 export async function showIssue(issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) {
@@ -72,17 +72,4 @@ export async function showIssueForKey(issueKey?: string) {
     }
 
     Container.jiraIssueViewManager.createOrShow(issue);
-}
-
-async function getCachedOrFetchMinimalIssue(
-    issueKey: string,
-    siteDetails: DetailedSiteInfo,
-): Promise<MinimalIssue<DetailedSiteInfo>> {
-    const foundIssue = await getCachedIssue(issueKey);
-
-    if (foundIssue && isMinimalIssue(foundIssue)) {
-        return foundIssue;
-    }
-
-    return await fetchMinimalIssue(issueKey, siteDetails);
 }

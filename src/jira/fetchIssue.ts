@@ -1,5 +1,10 @@
 import { createIssueUI, EditIssueUI, editIssueUI } from '@atlassianlabs/jira-metaui-client';
-import { MinimalIssue, minimalIssueFromJsonObject, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
+import {
+    isMinimalIssue,
+    MinimalIssue,
+    minimalIssueFromJsonObject,
+    MinimalORIssueLink,
+} from '@atlassianlabs/jira-pi-common-models';
 import { CreateMetaTransformerResult } from '@atlassianlabs/jira-pi-meta-models';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
@@ -13,6 +18,19 @@ export async function fetchCreateIssueUI(
     const client = await Container.clientManager.jiraClient(siteDetails);
 
     return await createIssueUI(projectKey, client);
+}
+
+export async function getCachedOrFetchMinimalIssue(
+    issueKey: string,
+    siteDetails: DetailedSiteInfo,
+): Promise<MinimalIssue<DetailedSiteInfo>> {
+    const foundIssue = await getCachedIssue(issueKey);
+
+    if (foundIssue && isMinimalIssue(foundIssue)) {
+        return foundIssue;
+    }
+
+    return await fetchMinimalIssue(issueKey, siteDetails);
 }
 
 export async function getCachedIssue(issueKey: string): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
