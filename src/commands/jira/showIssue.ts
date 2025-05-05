@@ -14,13 +14,13 @@ import { getCachedOrFetchMinimalIssue } from '../../jira/fetchIssue';
 import { issueForKey } from '../../jira/issueForKey';
 
 export async function showIssue(issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) {
-    let site: DetailedSiteInfo = emptySiteInfo;
-    let issue: MinimalIssue<DetailedSiteInfo> = createIssueNotFoundIssue(createEmptyMinimalIssue(site));
+    let issue: MinimalIssue<DetailedSiteInfo>;
 
     if (isMinimalIssue(issueOrKeyAndSite)) {
         issue = issueOrKeyAndSite;
     } else {
         let issueKey: string = '';
+        let site: DetailedSiteInfo = emptySiteInfo;
 
         if (isIssueKeyAndSite(issueOrKeyAndSite)) {
             issueKey = issueOrKeyAndSite.key;

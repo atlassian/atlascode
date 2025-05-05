@@ -7,7 +7,7 @@ import { AnalyticsApi } from '../lib/analyticsApi';
 import { Logger } from '../logger';
 import { BasicUriHandler } from './actions/basicUriHandler';
 import { CloneRepositoryUriHandler } from './actions/cloneRepository';
-import { OpenJiraIssueUriHandler } from './actions/openJiraIssue';
+import { OpenOrWorkOnJiraIssueUriHandler } from './actions/openOrWorkOnJiraIssue';
 import { OpenPullRequestUriHandler } from './actions/openPullRequest';
 import { UriHandlerNotFoundHandler } from './actions/uriHandlerNotFoundHandler';
 
@@ -24,7 +24,8 @@ export class AtlascodeUriHandler extends Disposable implements UriHandler {
                 new BasicUriHandler('openOnboarding', () => Container.onboardingWebviewFactory.createOrShow()),
                 new OpenPullRequestUriHandler(bitbucketHelper),
                 new CloneRepositoryUriHandler(bitbucketHelper),
-                new OpenJiraIssueUriHandler(),
+                new OpenOrWorkOnJiraIssueUriHandler('openJiraIssue'),
+                new OpenOrWorkOnJiraIssueUriHandler('startWorkOnJira'),
                 new UriHandlerNotFoundHandler(), // this one must be the last one, because it always matches
             ]);
         }

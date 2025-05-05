@@ -1,27 +1,35 @@
-import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { IssueKeyAndSite, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { Uri, window } from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { showIssue } from '../../commands/jira/showIssue';
+import { startWorkOnIssue } from '../../commands/jira/startWorkOnIssue';
 import { Container } from '../../container';
 import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
 import { Logger } from '../../logger';
 import { BasicUriHandler } from './basicUriHandler';
 
 /**
- * Use a deep link to open pull request
+ * Use a deep link to open, or start working on Jira Issues.
  *
- * Expected link:
- * `vscode://atlassian.atlascode/openJiraIssue?key=...&site=...&[&source=...]`
+ * Expected links:
+ * - for 'openJiraIssue' suffix:
+ *      `vscode://atlassian.atlascode/openJiraIssue?key=...&site=...&[&source=...]`
+ * - for 'startWorkOnJira' suffix:
+ *      `vscode://atlassian.atlascode/startWorkOnJira?key=...&site=...&[&source=...]`
  *
  * Query params:
  * - `key`: the Jira issue's key, like `PROJ-123`
  * - `site`: the site's host name where the Jira issue is hosted, like `site.atlassian.net`
  * - `source`: (optional) the source of the deep link
  */
-export class OpenJiraIssueUriHandler extends BasicUriHandler {
-    constructor() {
-        super('openJiraIssue', (uri) => this.customHandle(uri));
+export class OpenOrWorkOnJiraIssueUriHandler extends BasicUriHandler {
+    private readonly jiraHandler: (issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => Promise<void>;
+
+    constructor(suffix: 'openJiraIssue' | 'startWorkOnJira') {
+        super(suffix, (uri) => this.customHandle(uri));
+
+        this.jiraHandler = suffix === 'openJiraIssue' ? showIssue : startWorkOnIssue;
     }
 
     private async customHandle(uri: Uri): Promise<void> {
@@ -41,7 +49,7 @@ export class OpenJiraIssueUriHandler extends BasicUriHandler {
 
         try {
             const keyAndSite: IssueKeyAndSite<DetailedSiteInfo> = { key: issueKey, siteDetails };
-            await showIssue(keyAndSite);
+            await this.jiraHandler(keyAndSite);
         } catch (e) {
             Logger.debug(`Error opening jira issue ${issueKey}:`, e);
             window.showErrorMessage(`Error opening jira issue ${issueKey} (check log for details)`);
