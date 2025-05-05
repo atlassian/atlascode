@@ -5,7 +5,7 @@
 
 ### Improvements
 
-- Added support for opening a Jira Issue via URI in the form of `vscode://atlassian.atlascode/openJiraIssue?key=<issueKey>&site=<siteHost>&source=<URI_source>`
+- Added support for opening a Jira Issue via URI in the form `vscode://atlassian.atlascode/openJiraIssue?key=<issueKey>&site=<siteHost>&source=<URI_source>`
 
 ## What's new in 3.6.4
 
