@@ -3,12 +3,19 @@ import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from
 import { decode } from 'base64-arraybuffer-es6';
 import { format } from 'date-fns';
 import FormData from 'form-data';
-import { commands, Position, Uri, ViewColumn } from 'vscode';
+import { IssueSuggestionManager } from 'src/commands/jira/issueSuggestionManager';
+import { FeatureFlagClient, Features } from 'src/util/featureFlags';
+import { commands, ConfigurationTarget, Position, Uri, ViewColumn } from 'vscode';
 
 import { issueCreatedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { Commands } from '../commands';
-import { configuration } from '../config/configuration';
+import {
+    configuration,
+    IssueSuggestionContextLevel,
+    IssueSuggestionSettings,
+    SimplifiedTodoIssueData,
+} from '../config/configuration';
 import { Container } from '../container';
 import {
     CreateIssueAction,
@@ -61,6 +68,9 @@ export class CreateIssueWebview
     private _selectedIssueTypeId: string | undefined;
     private _siteDetails: DetailedSiteInfo;
 
+    private _issueSuggestionSettings: IssueSuggestionSettings | undefined;
+    private _todoData: SimplifiedTodoIssueData | undefined;
+
     constructor(extensionPath: string) {
         super(extensionPath);
         this._screenData = emptyCreateMetaResult;
@@ -92,10 +102,30 @@ export class CreateIssueWebview
         this._siteDetails = emptySiteInfo;
     }
 
-    async createOrShow(column?: ViewColumn, data?: PartialIssue): Promise<void> {
+    async createOrShow(
+        column?: ViewColumn,
+        data?: PartialIssue,
+        issueSuggestionSettings?: IssueSuggestionSettings,
+        todoData?: SimplifiedTodoIssueData,
+    ): Promise<void> {
+        this._issueSuggestionSettings = issueSuggestionSettings;
+        this._todoData = todoData;
         await super.createOrShow(column);
+        await this.initialize(data);
+    }
 
-        this.initialize(data);
+    async updateSuggestionData(data: { suggestions: IssueSuggestionSettings; todoData: SimplifiedTodoIssueData }) {
+        const suggestionSettings = data?.suggestions || {
+            isAvailable: false,
+            isEnabled: false,
+            level: IssueSuggestionContextLevel.CodeContext,
+        };
+
+        await this.postMessage({
+            type: 'updateAiSettings',
+            newState: suggestionSettings,
+            todoData: data?.todoData,
+        });
     }
 
     async initialize(data?: PartialIssue) {
@@ -109,7 +139,14 @@ export class CreateIssueWebview
             this._partialIssue = {};
         }
 
-        this.invalidate();
+        await this.invalidate();
+
+        if (this._issueSuggestionSettings && this._todoData) {
+            await this.updateSuggestionData({
+                suggestions: this._issueSuggestionSettings,
+                todoData: this._todoData,
+            });
+        }
     }
 
     private async updateSiteAndProject(inputSite?: DetailedSiteInfo, inputProject?: Project) {
@@ -153,7 +190,7 @@ export class CreateIssueWebview
 
     public async invalidate() {
         await this.updateFields();
-        Container.pmfStats.touchActivity();
+        await Container.pmfStats.touchActivity();
     }
 
     async handleSelectOptionCreated(fieldKey: string, newValue: any, nonce?: string): Promise<void> {
@@ -195,7 +232,7 @@ export class CreateIssueWebview
         // only update if we don't have data.
         // e.g. the user may have started editing.
         if (Object.keys(this._screenData.issueTypeUIs).length < 1) {
-            this.forceUpdateFields();
+            await this.forceUpdateFields();
         }
     }
 
@@ -483,6 +520,62 @@ export class CreateIssueWebview
                     );
                     break;
                 }
+                // AI-assisted issue creation
+                case 'updateAiSettings': {
+                    console.log('updateAiSettings', msg);
+                    handled = true;
+                    const newState = (msg as any).newState as any;
+                    // update vscode settings accordingly
+                    await configuration.update(
+                        'issueSuggestion.enabled',
+                        newState.isEnabled,
+                        ConfigurationTarget.Global,
+                    );
+                    await configuration.update(
+                        'issueSuggestion.contextLevel',
+                        newState.level,
+                        ConfigurationTarget.Global,
+                    );
+                    break;
+                }
+
+                case 'generateIssueSuggestions': {
+                    handled = true;
+                    const { todoData, suggestionSettings } = msg as any;
+                    const suggestionManager = new IssueSuggestionManager(suggestionSettings);
+                    suggestionManager.generate(todoData).then(async (suggestion) => {
+                        await this.forceUpdateFields({
+                            summary: suggestion.summary,
+                            description: suggestion.description,
+                        });
+                    });
+                    break;
+                }
+
+                case 'webviewReady': {
+                    handled = true;
+                    this.postMessage({
+                        type: 'updateFeatureFlag',
+                        value: FeatureFlagClient.checkGate(Features.EnableAiSuggestions),
+                    });
+                    if (this._issueSuggestionSettings && this._todoData) {
+                        await this.updateSuggestionData({
+                            suggestions: this._issueSuggestionSettings,
+                            todoData: this._todoData,
+                        });
+                    }
+                    break;
+                }
+
+                case 'aiSuggestionFeedback': {
+                    handled = true;
+                    const { isPositive, todoData } = msg as any;
+
+                    const suggestionManager = new IssueSuggestionManager(this._issueSuggestionSettings!);
+                    suggestionManager.sendFeedback(isPositive, todoData);
+                    break;
+                }
+
                 default: {
                     break;
                 }

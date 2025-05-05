@@ -174,7 +174,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 }
             },
         ),
-        commands.registerCommand(Commands.CreateIssue, (data: any, source?: string) => createIssue(data, source)),
+        commands.registerCommand(Commands.CreateIssue, async (data: any, source?: string) => createIssue(data, source)),
         commands.registerCommand(
             Commands.ShowIssue,
             async (issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => await showIssue(issueOrKeyAndSite),

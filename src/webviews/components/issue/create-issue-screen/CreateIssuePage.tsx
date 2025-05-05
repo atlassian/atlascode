@@ -8,6 +8,7 @@ import Spinner from '@atlaskit/spinner';
 import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import * as React from 'react';
+import AISuggestionHeader from 'src/webviews/components/aiCreateIssue/AISuggestionHeader';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
 import { DetailedSiteInfo, emptySiteInfo } from '../../../../atlclients/authInfo';
@@ -372,6 +373,9 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                         Required fields are marked with an asterisk <RequiredAsterisk />
                                                     </p>
                                                 </FormHeader>
+
+                                                <AISuggestionHeader vscodeApi={this._api} />
+
                                                 <Field
                                                     label={<span>Site</span>}
                                                     id="site"

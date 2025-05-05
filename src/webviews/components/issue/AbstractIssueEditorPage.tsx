@@ -42,6 +42,7 @@ import {
 } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
 import { ConnectionTimeout } from '../../../util/time';
+import AISuggestionFooter from '../aiCreateIssue/AISuggestionFooter';
 import { colorToLozengeAppearanceMap } from '../colors';
 import * as FieldValidators from '../fieldValidators';
 import { chain } from '../fieldValidators';
@@ -447,63 +448,66 @@ export abstract class AbstractIssueEditorPage<
                 }
 
                 return (
-                    <Field
-                        defaultValue={defaultVal}
-                        label={<span>{field.name}</span>}
-                        isRequired={field.required}
-                        id={field.key}
-                        name={field.key}
-                        validate={validateFunc}
-                    >
-                        {(fieldArgs: any) => {
-                            let errDiv = <span />;
-                            if (fieldArgs.error && fieldArgs.error !== '') {
-                                errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
-                            }
+                    <div>
+                        <Field
+                            defaultValue={defaultVal}
+                            label={<span>{field.name}</span>}
+                            isRequired={field.required}
+                            id={field.key}
+                            name={field.key}
+                            validate={validateFunc}
+                        >
+                            {(fieldArgs: any) => {
+                                let errDiv = <span />;
+                                if (fieldArgs.error && fieldArgs.error !== '') {
+                                    errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
+                                }
 
-                            let markup = (
-                                <Textfield
-                                    {...fieldArgs.fieldProps}
-                                    className="ac-inputField"
-                                    isDisabled={this.state.isSomethingLoading}
-                                    onChange={(e: any) =>
-                                        chain(
-                                            fieldArgs.fieldProps.onChange,
-                                            this.handleInlineEdit(field, e.currentTarget.value),
-                                        )
-                                    }
-                                    placeholder={field.key === 'summary' && 'What needs to be done?'}
-                                />
-                            );
-                            if ((field as InputFieldUI).isMultiline) {
-                                markup = (
-                                    <JiraIssueTextAreaEditor
+                                let markup = (
+                                    <Textfield
                                         {...fieldArgs.fieldProps}
-                                        value={this.state.fieldValues[field.key]}
+                                        className="ac-inputField"
                                         isDisabled={this.state.isSomethingLoading}
-                                        onChange={(e: string) =>
-                                            chain(fieldArgs.fieldProps.onChange, this.handleInlineEdit(field, e))
+                                        onChange={(e: any) =>
+                                            chain(
+                                                fieldArgs.fieldProps.onChange,
+                                                this.handleInlineEdit(field, e.currentTarget.value),
+                                            )
                                         }
-                                        fetchUsers={async (input: string) =>
-                                            (await this.fetchUsers(input)).map((user) => ({
-                                                displayName: user.displayName,
-                                                avatarUrl: user.avatarUrls?.['48x48'],
-                                                mention: this.state.siteDetails.isCloud
-                                                    ? `[~accountid:${user.accountId}]`
-                                                    : `[~${user.name}]`,
-                                            }))
-                                        }
+                                        placeholder={field.key === 'summary' && 'What needs to be done?'}
                                     />
                                 );
-                            }
-                            return (
-                                <div>
-                                    {markup}
-                                    {errDiv}
-                                </div>
-                            );
-                        }}
-                    </Field>
+                                if ((field as InputFieldUI).isMultiline) {
+                                    markup = (
+                                        <JiraIssueTextAreaEditor
+                                            {...fieldArgs.fieldProps}
+                                            value={this.state.fieldValues[field.key]}
+                                            isDisabled={this.state.isSomethingLoading}
+                                            onChange={(e: string) =>
+                                                chain(fieldArgs.fieldProps.onChange, this.handleInlineEdit(field, e))
+                                            }
+                                            fetchUsers={async (input: string) =>
+                                                (await this.fetchUsers(input)).map((user) => ({
+                                                    displayName: user.displayName,
+                                                    avatarUrl: user.avatarUrls?.['48x48'],
+                                                    mention: this.state.siteDetails.isCloud
+                                                        ? `[~accountid:${user.accountId}]`
+                                                        : `[~${user.name}]`,
+                                                }))
+                                            }
+                                        />
+                                    );
+                                }
+                                return (
+                                    <div>
+                                        {markup}
+                                        {errDiv}
+                                    </div>
+                                );
+                            }}
+                        </Field>
+                        {field.key === 'description' && <AISuggestionFooter vscodeApi={this._api} />}
+                    </div>
                 );
             }
             case UIType.Date: {
