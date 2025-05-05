@@ -15,19 +15,6 @@ export async function fetchCreateIssueUI(
     return await createIssueUI(projectKey, client);
 }
 
-export async function getCachedOrFetchMinimalIssue(
-    issueKey: string,
-    siteDetails: DetailedSiteInfo,
-): Promise<MinimalORIssueLink<DetailedSiteInfo>> {
-    let foundIssue = await getCachedIssue(issueKey);
-
-    if (!foundIssue) {
-        foundIssue = await fetchMinimalIssue(issueKey, siteDetails);
-    }
-
-    return foundIssue;
-}
-
 export async function getCachedIssue(issueKey: string): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
     return SearchJiraHelper.findIssue(issueKey);
 }
