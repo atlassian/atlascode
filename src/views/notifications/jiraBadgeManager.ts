@@ -2,7 +2,7 @@ import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { CancellationToken, EventEmitter, FileDecorationProvider, ThemeColor, TreeView, Uri, window } from 'vscode';
 
-import { getJiraIssueUri } from './utils';
+import { getJiraIssueUri } from '../jira/treeViews/utils';
 
 export class JiraBadgeManager implements FileDecorationProvider {
     private static jiraIssueDecorationProviderSingleton: JiraBadgeManager | undefined = undefined;
@@ -48,12 +48,13 @@ export class JiraBadgeManager implements FileDecorationProvider {
         this.notificationSent(getJiraIssueUri(issue));
     }
 
-    public notificationSent(uri: Uri): void {
-        this.increaseBadgeCount(uri);
+    public notificationSent(uri: Uri, increment?: number, toolTip?: string): void {
+        this.increaseBadgeCount(uri, increment, toolTip);
         this._onDidChangeFileDecorations.fire(uri);
     }
 
-    private increaseBadgeCount(uri: Uri, increment?: number): void {
+    private increaseBadgeCount(uri: Uri, increment?: number, toolTip?: string): void {
+        toolTip = toolTip || '';
         increment = increment || 1;
 
         const stringUri = this.getUriString(uri);
@@ -65,7 +66,7 @@ export class JiraBadgeManager implements FileDecorationProvider {
         this.overallCount += increment;
         this.treeViewParent.badge = {
             value: this.overallCount,
-            tooltip: 'xxx',
+            tooltip: toolTip,
         };
     }
 
@@ -98,30 +99,8 @@ export class JiraBadgeManager implements FileDecorationProvider {
 
     private getBadgeValue(value: number): string {
         switch (value) {
-            case 1:
-                return '1️⃣';
-            case 2:
-                return '2️⃣';
-            case 3:
-                return '3️⃣';
-            case 4:
-                return '4️⃣';
-            case 5:
-                return '5️⃣';
-            case 6:
-                return '6️⃣';
-            case 7:
-                return '7️⃣';
-            case 8:
-                return '8️⃣';
-            case 9:
-                return '9️⃣';
-            case 10:
-                return '🔟';
-            case 100:
-                return '💯';
             default:
-                return '🔟+';
+                return '🔔';
         }
     }
 }

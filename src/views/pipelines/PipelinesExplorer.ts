@@ -9,7 +9,7 @@ import { Container } from '../../container';
 import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 import { BitbucketExplorer } from '../BitbucketExplorer';
 import { BaseTreeDataProvider } from '../Explorer';
-import { PipelinesMonitor } from './PipelinesMonitor';
+import { PipelinesMonitor } from '../notifications/PipelinesMonitor';
 import { PipelinesTree } from './PipelinesTree';
 
 export class PipelinesExplorer extends BitbucketExplorer {

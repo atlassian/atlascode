@@ -1,8 +1,8 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { TreeView, Uri } from 'vscode';
 
-import { expansionCastTo } from '../../../../testsutil';
-import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import { expansionCastTo } from '../../../testsutil';
+import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { JiraBadgeManager } from './jiraBadgeManager';
 
 jest.mock('./utils', () => ({

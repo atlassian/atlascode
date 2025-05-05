@@ -1,3 +1,4 @@
+import { JiraNotifier } from 'src/views/notifications/jiraNotifier';
 import {
     commands,
     ConfigurationChangeEvent,
@@ -18,10 +19,10 @@ import { configuration } from '../../../config/configuration';
 import { Container } from '../../../container';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { PromiseRacer } from '../../../util/promises';
+import { JiraBadgeManager } from '../../notifications/jiraBadgeManager';
+import { NotificationManagerImpl } from '../../notifications/notificationManager';
 import { RefreshTimer } from '../../RefreshTimer';
 import { SearchJiraHelper } from '../searchJiraHelper';
-import { JiraBadgeManager } from './jiraBadgeManager';
-import { JiraNotifier } from './jiraNotifier';
 import { executeJqlQuery, JiraIssueNode, loginToJiraMessageNode, TreeViewIssue } from './utils';
 
 const AssignedWorkItemsViewProviderId = AssignedJiraItemsViewId;
@@ -150,6 +151,10 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
         else {
             const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
             if (!jqlEntries.length) {
+                NotificationManagerImpl.getSingleton().addNotification('Please login to Jira', {
+                    id: 'jira.login',
+                    message: 'Please login to Jira',
+                });
                 return [AssignedWorkItemsViewProvider._treeItemConfigureJiraMessage];
             }
 

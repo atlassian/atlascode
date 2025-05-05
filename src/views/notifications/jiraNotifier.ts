@@ -1,8 +1,8 @@
 import { commands, window } from 'vscode';
 
-import { showIssue } from '../../../commands/jira/showIssue';
+import { showIssue } from '../../commands/jira/showIssue';
+import { JiraIssueNode } from '../jira/treeViews/utils';
 import { JiraBadgeManager } from './jiraBadgeManager';
-import { JiraIssueNode } from './utils';
 
 export class JiraNotifier {
     private readonly _knownIssues = new Set<string>();

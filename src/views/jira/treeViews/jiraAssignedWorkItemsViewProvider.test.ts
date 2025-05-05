@@ -10,9 +10,9 @@ import { configuration, JQLEntry } from '../../../config/configuration';
 import { Container } from '../../../container';
 import { PromiseRacer } from '../../../util/promises';
 import { RefreshTimer } from '../../../views/RefreshTimer';
+import { JiraBadgeManager } from '../../notifications/jiraBadgeManager';
+import { JiraNotifier } from '../../notifications/jiraNotifier';
 import { AssignedWorkItemsViewProvider } from './jiraAssignedWorkItemsViewProvider';
-import { JiraBadgeManager } from './jiraBadgeManager';
-import { JiraNotifier } from './jiraNotifier';
 import { JiraIssueNode } from './utils';
 
 const mockedJqlEntry = forceCastTo<JQLEntry>({

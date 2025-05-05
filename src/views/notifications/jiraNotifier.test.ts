@@ -1,10 +1,10 @@
 import { commands, window } from 'vscode';
 
-import { expansionCastTo, resolvePromiseSync } from '../../../../testsutil';
-import { DetailedSiteInfo } from '../../../atlclients/authInfo';
-import * as showIssueCommand from '../../../commands/jira/showIssue';
+import { expansionCastTo, resolvePromiseSync } from '../../../testsutil';
+import { DetailedSiteInfo } from '../../atlclients/authInfo';
+import * as showIssueCommand from '../../commands/jira/showIssue';
+import { JiraIssueNode, TreeViewIssue } from '../jira/treeViews/utils';
 import { JiraNotifier } from './jiraNotifier';
-import { JiraIssueNode, TreeViewIssue } from './utils';
 
 function createIssue(key: string, summary: string, siteId: string): JiraIssueNode {
     return expansionCastTo<JiraIssueNode>({

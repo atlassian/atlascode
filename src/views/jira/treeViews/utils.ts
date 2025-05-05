@@ -11,6 +11,7 @@ import { AbstractBaseNode } from '../../../views/nodes/abstractBaseNode';
 
 export function createLabelItem(label: string, command?: Command): TreeItem {
     const item = new TreeItem(label);
+    item.resourceUri = Uri.parse(label);
     item.command = command;
     return item;
 }

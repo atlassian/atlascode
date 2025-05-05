@@ -46,7 +46,7 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
-import { JiraBadgeManager } from '../views/jira/treeViews/jiraBadgeManager';
+import { JiraBadgeManager } from '../views/notifications/jiraBadgeManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
 

@@ -227,7 +227,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                 Container.analyticsClient.sendScreenEvent(event),
             );
             return [
-                new SimpleNode('Authenticate with Bitbucket to view pull requests', {
+                new SimpleNode('Connect Bitbucket to view pull requests', {
                     command: Commands.ShowBitbucketAuth,
                     title: 'Open Bitbucket Settings',
                 }),
