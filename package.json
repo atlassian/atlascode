@@ -1024,6 +1024,21 @@
                     "description": "Enable Rovo Dev debug panel",
                     "scope": "window"
                 },
+                "atlascode.issueSuggestion.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables AI-assisted issue suggestion for TODO comments",
+                    "scope": "window"
+                },
+                "atlascode.issueSuggestion.contextLevel": {
+                    "type": "string",
+                    "description": "What context to use for issue suggestions - only the TODO text, surrouding code, or the entire file",
+                    "default": "codeContext",
+                    "enum": [
+                        "todoOnly",
+                        "codeContext"
+                    ]
+                },
                 "atlascode.outputLevel": {
                     "type": "string",
                     "default": "silent",

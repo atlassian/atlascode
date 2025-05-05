@@ -1051,7 +1051,14 @@ div[role='dialog'],
     display: inline-block;
 }
 
+.ac-form-separator {
+    border: none;
+    border-top: 1px solid var(--vscode-settings-textInputBorder);
+    margin: 1rem 0;
+}
+
 .ac-inputField,
+.ac-inputField:disabled,
 .ac-inputField-inline,
 .ac-textarea {
     background: var(--vscode-input-background) !important;

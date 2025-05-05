@@ -20,6 +20,7 @@ type Props = {
     isDescription?: boolean;
     saving?: boolean;
     featureGateEnabled?: boolean;
+    isDisabled?: boolean;
 };
 
 interface User {
@@ -40,6 +41,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
     isDescription,
     saving,
     featureGateEnabled = false,
+    isDisabled = false,
 }) => {
     const inputTextAreaRef = React.useRef<HTMLTextAreaElement>(null);
     const [cursorPosition, setCursorPosition] = React.useState(value?.length || 0);
@@ -101,7 +103,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                     autoFocus
                     onFocus={onEditorFocus ? onEditorFocus : undefined}
                     onChange={(e) => onChange(e.target.value)}
-                    isDisabled={saving}
+                    isDisabled={saving || isDisabled}
                 />
             </div>
             <div

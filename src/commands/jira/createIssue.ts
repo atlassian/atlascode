@@ -3,30 +3,70 @@ import { Position, Range, Uri, ViewColumn, window, workspace, WorkspaceEdit } fr
 import { startIssueCreationEvent } from '../../analytics';
 import { ProductJira } from '../../atlclients/authInfo';
 import { WorkspaceRepo } from '../../bitbucket/model';
+import { SimplifiedTodoIssueData } from '../../config/model';
 import { Container } from '../../container';
+import { Logger } from '../../logger';
 import { CommentData } from '../../webviews/createIssueWebview';
+import { IssueSuggestionManager } from './issueSuggestionManager';
 
 export interface TodoIssueData {
     summary: string;
     uri: Uri;
     insertionPoint: Position;
+    context: string;
 }
 
-export function createIssue(data: Uri | TodoIssueData | undefined, source?: string) {
+const simplify = (data: TodoIssueData): SimplifiedTodoIssueData => {
+    return {
+        summary: data.summary,
+        context: data.context,
+        position: {
+            line: data.insertionPoint.line,
+            character: data.insertionPoint.character,
+        },
+        uri: data.uri.toString(),
+    };
+};
+
+export async function createIssue(data: Uri | TodoIssueData | undefined, source?: string) {
     if (isTodoIssueData(data)) {
-        const partialIssue = {
-            summary: data.summary,
-            description: descriptionForUri(data.uri),
-            uri: data.uri,
-            position: data.insertionPoint,
-            onCreated: annotateComment,
-        };
-        Container.createIssueWebview.createOrShow(ViewColumn.Beside, partialIssue);
+        const settings = await IssueSuggestionManager.buildSettings();
+        const todoData = simplify(data);
+
+        await Container.createIssueWebview.createOrShow(
+            ViewColumn.Beside,
+            {
+                description: descriptionForUri(data.uri),
+                uri: data.uri,
+                position: data.insertionPoint,
+                onCreated: annotateComment,
+            },
+            settings,
+            todoData,
+        );
+
+        try {
+            const suggestionManager = new IssueSuggestionManager(settings);
+
+            await suggestionManager.generate(todoData).then(async (suggestion) => {
+                await Container.createIssueWebview.fastUpdateFields({
+                    summary: suggestion.summary,
+                    description: suggestion.description,
+                });
+            });
+        } catch (error) {
+            // The view is already created with legacy logic, do nothing
+            Logger.error(error, 'Error generating issue suggestion settings');
+        }
+
         startIssueCreationEvent('todoComment', ProductJira).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
+
         return;
-    } else if (isUri(data) && data.scheme === 'file') {
+    }
+
+    if (isUri(data) && data.scheme === 'file') {
         Container.createIssueWebview.createOrShow(ViewColumn.Active, { description: descriptionForUri(data) });
         startIssueCreationEvent('contextMenu', ProductJira).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);

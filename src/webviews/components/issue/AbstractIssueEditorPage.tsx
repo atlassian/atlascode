@@ -45,6 +45,8 @@ import {
 } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
 import { ConnectionTimeout } from '../../../util/time';
+import AISuggestionFooter from '../aiCreateIssue/AISuggestionFooter';
+import AISuggestionHeader from '../aiCreateIssue/AISuggestionHeader';
 import { colorToLozengeAppearanceMap } from '../colors';
 import * as FieldValidators from '../fieldValidators';
 import { chain } from '../fieldValidators';
@@ -78,6 +80,7 @@ export interface CommonEditorViewState extends Message {
     commentInputValue: string;
     isRteEnabled: boolean;
     isRovoDevEnabled: boolean;
+    isGeneratingSuggestions?: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -509,19 +512,21 @@ export abstract class AbstractIssueEditorPage<
                 }
 
                 return (
-                    <Field
-                        defaultValue={defaultVal}
-                        label={<span>{field.name}</span>}
-                        isRequired={field.required}
-                        id={field.key}
-                        name={field.key}
-                        validate={validateFunc}
-                    >
-                        {(fieldArgs: any) => {
-                            let errDiv = <span />;
-                            if (fieldArgs.error && fieldArgs.error !== '') {
-                                errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
-                            }
+                    <>
+                        {field.key === 'summary' && <AISuggestionHeader vscodeApi={this._api} />}
+                        <Field
+                            defaultValue={defaultVal}
+                            label={<span>{field.name}</span>}
+                            isRequired={field.required}
+                            id={field.key}
+                            name={field.key}
+                            validate={validateFunc}
+                        >
+                            {(fieldArgs: any) => {
+                                let errDiv = <span />;
+                                if (fieldArgs.error && fieldArgs.error !== '') {
+                                    errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
+                                }
 
                             let markup = (
                                 <Textfield

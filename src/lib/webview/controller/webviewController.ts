@@ -1,7 +1,7 @@
-import { Experiments, Features } from 'src/util/featureFlags';
 import { WebviewPanel } from 'vscode';
 
 import { DetailedSiteInfo, Product } from '../../../atlclients/authInfo';
+import { Experiments, Features } from '../../../util/featureFlags';
 
 export type MessagePoster = (m: any) => Thenable<boolean>;
 
