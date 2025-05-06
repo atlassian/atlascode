@@ -2,7 +2,7 @@ import { commands, window } from 'vscode';
 
 import { showIssue } from '../../commands/jira/showIssue';
 import { JiraIssueNode } from '../jira/treeViews/utils';
-import { NotificationManagerImpl } from './notificationManager';
+import { NotificationManagerImpl, NotificationType } from './notificationManager';
 
 export class JiraNotifier {
     private readonly _knownIssues = new Set<string>();
@@ -62,6 +62,7 @@ export class JiraNotifier {
             notificationManager.addNotification(issue.resourceUri!, {
                 id: this.getIssueId(issue),
                 message: `New issue assigned to you: ${issue.issue.key}`,
+                notificationType: NotificationType.AssignedToYou,
             });
         });
     }
