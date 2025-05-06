@@ -17,10 +17,10 @@ function createIssue(key: string, summary: string, siteId: string): JiraIssueNod
 }
 
 jest.mock('../../../commands/jira/showIssue');
-jest.mock('./jiraBadgeManager', () => ({
-    JiraBadgeManager: {
-        getInstance: () => ({
-            notificationSent: () => {},
+jest.mock('./notificationManager', () => ({
+    NotificationManagerImpl: {
+        getSingleton: () => ({
+            addNotification: () => {},
         }),
     },
 }));

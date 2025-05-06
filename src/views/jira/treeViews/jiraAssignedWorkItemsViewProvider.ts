@@ -1,4 +1,3 @@
-import { JiraNotifier } from 'src/views/notifications/jiraNotifier';
 import {
     commands,
     ConfigurationChangeEvent,
@@ -7,6 +6,7 @@ import {
     TreeDataProvider,
     TreeItem,
     TreeViewVisibilityChangeEvent,
+    Uri,
     window,
 } from 'vscode';
 
@@ -19,7 +19,8 @@ import { configuration } from '../../../config/configuration';
 import { Container } from '../../../container';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { PromiseRacer } from '../../../util/promises';
-import { JiraBadgeManager } from '../../notifications/jiraBadgeManager';
+import { BadgeDelegate } from '../../notifications/badgeDelegate';
+import { JiraNotifier } from '../../notifications/jiraNotifier';
 import { NotificationManagerImpl } from '../../notifications/notificationManager';
 import { RefreshTimer } from '../../RefreshTimer';
 import { SearchJiraHelper } from '../searchJiraHelper';
@@ -47,7 +48,7 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
 
         const treeView = window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
 
-        JiraBadgeManager.initialize(treeView);
+        BadgeDelegate.initialize(treeView);
 
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
@@ -151,7 +152,7 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
         else {
             const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
             if (!jqlEntries.length) {
-                NotificationManagerImpl.getSingleton().addNotification('Please login to Jira', {
+                NotificationManagerImpl.getSingleton().addNotification(Uri.parse('Please login to Jira'), {
                     id: 'jira.login',
                     message: 'Please login to Jira',
                 });

@@ -13,6 +13,8 @@ import {
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
+import { getJiraIssueUri } from 'src/views/jira/treeViews/utils';
+import { NotificationManagerImpl } from 'src/views/notifications/notificationManager';
 import { commands, env } from 'vscode';
 
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
@@ -46,7 +48,6 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
-import { JiraBadgeManager } from '../views/notifications/jiraBadgeManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
 
@@ -88,7 +89,7 @@ export class JiraIssueWebview
         this._issue = issue;
         this.invalidate();
 
-        JiraBadgeManager.getInstance().clearBadgeForIssue(issue);
+        NotificationManagerImpl.getSingleton().clearNotifications(getJiraIssueUri(issue));
     }
 
     async invalidate() {

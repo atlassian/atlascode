@@ -2,7 +2,7 @@ import { commands, window } from 'vscode';
 
 import { showIssue } from '../../commands/jira/showIssue';
 import { JiraIssueNode } from '../jira/treeViews/utils';
-import { JiraBadgeManager } from './jiraBadgeManager';
+import { NotificationManagerImpl } from './notificationManager';
 
 export class JiraNotifier {
     private readonly _knownIssues = new Set<string>();
@@ -57,9 +57,12 @@ export class JiraNotifier {
             }
         });
 
-        const jiraIssueDecorationProvider = JiraBadgeManager.getInstance();
+        const notificationManager = NotificationManagerImpl.getSingleton();
         newIssues.forEach((issue) => {
-            jiraIssueDecorationProvider.notificationSent(issue.resourceUri!);
+            notificationManager.addNotification(issue.resourceUri!, {
+                id: this.getIssueId(issue),
+                message: `New issue assigned to you: ${issue.issue.key}`,
+            });
         });
     }
 }

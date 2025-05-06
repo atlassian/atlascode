@@ -1,5 +1,6 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { it } from '@jest/globals';
+import { BadgeDelegate } from 'src/views/notifications/badgeDelegate';
 import { expansionCastTo, forceCastTo } from 'testsutil';
 import * as vscode from 'vscode';
 import { window } from 'vscode';
@@ -10,7 +11,6 @@ import { configuration, JQLEntry } from '../../../config/configuration';
 import { Container } from '../../../container';
 import { PromiseRacer } from '../../../util/promises';
 import { RefreshTimer } from '../../../views/RefreshTimer';
-import { JiraBadgeManager } from '../../notifications/jiraBadgeManager';
 import { JiraNotifier } from '../../notifications/jiraNotifier';
 import { AssignedWorkItemsViewProvider } from './jiraAssignedWorkItemsViewProvider';
 import { JiraIssueNode } from './utils';
@@ -58,8 +58,8 @@ const mockedIssue3 = forceCastTo<MinimalIssue<DetailedSiteInfo>>({
     children: [],
 });
 
-jest.mock('./jiraBadgeManager');
-jest.mock('./jiraNotifier');
+jest.mock('../../notifications/badgeDelegate');
+jest.mock('../../notifications/jiraNotifier');
 jest.mock('../searchJiraHelper');
 jest.mock('../../RefreshTimer');
 jest.mock('../../../logger');
@@ -230,7 +230,7 @@ describe('AssignedWorkItemsViewProvider', () => {
 
         it('JiraBadgeManager is initialized', () => {
             provider = new AssignedWorkItemsViewProvider();
-            expect(JiraBadgeManager.initialize).toHaveBeenCalled();
+            expect(BadgeDelegate.initialize).toHaveBeenCalled();
         });
     });
 
