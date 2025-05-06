@@ -27,6 +27,7 @@ interface User {
     mention: string;
     avatarUrl?: string;
 }
+
 const JiraIssueTextAreaEditor: React.FC<Props> = ({
     value,
     onChange,

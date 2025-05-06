@@ -1,5 +1,5 @@
-// import { baseKeymap } from 'prosemirror-commands';
 import { debounce } from 'lodash';
+import { baseKeymap } from 'prosemirror-commands';
 import { dropCursor } from 'prosemirror-dropcursor';
 import { buildKeymap, buildMenuItems } from 'prosemirror-example-setup';
 import { gapCursor } from 'prosemirror-gapcursor';
@@ -49,12 +49,13 @@ const buildInputRules = (schema: any) => {
     const rules = [];
 
     if (schema.marks.strong) {
-        rules.push(markInputRule(/(?:\*\*)([^\*_]+)(?:\*\*|__)$/, schema.marks.strong, undefined));
-        rules.push(markInputRule(/(?:__)([^_]+)(?:__)$/, schema.marks.strong, undefined));
+        rules.push(markInputRule(/(?:\*)([^\*_]+)(?:\*)$/, schema.marks.strong, undefined));
     }
     if (schema.marks.em) {
-        rules.push(markInputRule(/(^|[^\*])(?:\*)([^\*]+)(?:\*)$/, schema.marks.em, undefined));
         rules.push(markInputRule(/(^|[^_])(?:_)([^_]+)(?:_)$/, schema.marks.em, undefined));
+    }
+    if (schema.marks.code) {
+        rules.push(markInputRule(/(^|[^`])(?:`)([^`]+)(?:`)$/, schema.marks.code, undefined));
     }
     if (schema.marks.link) {
         rules.push(
@@ -99,7 +100,7 @@ const mdSerializer = new MarkdownSerializer(
         text: (state: any, node: any) => {
             // Remove escape characters for jira mentions
             const matches = findAllMentions(node.text);
-            let text: string = node.text;
+            let text: string = node.text!;
             if (matches && matches.length > 0) {
                 for (const match of matches) {
                     const index = text.indexOf(match);
@@ -115,7 +116,12 @@ const mdSerializer = new MarkdownSerializer(
             state.text(text, !state.isAutolink);
         },
     },
-    defaultMarkdownSerializer.marks,
+
+    {
+        ...defaultMarkdownSerializer.marks,
+        em: { open: '_', close: '_', mixable: true, expelEnclosingWhitespace: true },
+        strong: { open: '*', close: '*', mixable: true, expelEnclosingWhitespace: true },
+    },
 );
 
 const mdParser = new MarkdownParser(schema, defaultMarkdownParser.tokenizer, {
@@ -164,7 +170,8 @@ export function useEditor<T extends UserType>(props: {
     const view = useRef<EditorView | null>(null);
     const [content, setContent] = useState(props.value || '');
 
-    const debouncedFetch = props.fetchUsers && debounce(props.fetchUsers, 1500);
+    // Prevents unnecessary calls to fetchUsers
+    const debouncedFetch = props.fetchUsers && debounce(props.fetchUsers, 3000, { leading: true, maxWait: 1 });
 
     const handleSave = useCallback(() => {
         const mdContent: string = props.enabled ? mdSerializer.serialize(view.current!.state.doc) : content;
@@ -178,6 +185,7 @@ export function useEditor<T extends UserType>(props: {
         }
     }, [props, content]);
 
+    // Update content when the editor is toggled
     useEffect(() => {
         if (!view.current) {
             return;
@@ -192,13 +200,13 @@ export function useEditor<T extends UserType>(props: {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.enabled]);
 
+    // Initialize editor
     useEffect(() => {
-        // initial render
         const menuItems = buildMenuItems(schema);
         const plugins = [
             reactProps(props),
             keymap(buildKeymap(schema)),
-            // keymap(baseKeymap),
+            keymap(baseKeymap),
             dropCursor(),
             gapCursor(),
             menuBar({
@@ -218,14 +226,16 @@ export function useEditor<T extends UserType>(props: {
                 getMentionsPlugin({
                     getSuggestions: async (type: any, text: string, done: any) => {
                         if (type === 'mention') {
-                            const users = await debouncedFetch(text)!;
+                            const users = await debouncedFetch(text);
 
-                            const formattedUsers = users.map((u) => ({
-                                name: u.displayName,
-                                id: u.mention,
-                                avatarUrl: u.avatarUrl || '',
-                                email: u.emailAddress || '',
-                            }));
+                            const formattedUsers = users
+                                ? users.map((u) => ({
+                                      name: u.displayName,
+                                      id: u.mention,
+                                      avatarUrl: u.avatarUrl || '',
+                                      email: u.emailAddress || '',
+                                  }))
+                                : [];
 
                             done(formattedUsers);
                         }
