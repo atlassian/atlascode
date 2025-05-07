@@ -67,9 +67,12 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
     }
 
     private constructItemBadge(newBadgeValue: number) {
+        if (newBadgeValue === 0) {
+            return undefined;
+        }
         return {
             badge: this.getBadgeSymbol(newBadgeValue),
-            tooltip: `${newBadgeValue} notifications`,
+            tooltip: newBadgeValue === 1 ? '1 notification' : `${newBadgeValue} notifications`,
             color: new ThemeColor('editorForeground'),
             propagate: false,
         };
@@ -91,15 +94,35 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
     }
 
     private overallToolTip(): string {
-        return `${this.overallCount} notifications`;
+        return this.overallCount === 1 ? '1 notification' : `${this.overallCount} notifications`;
     }
 
     private getBadgeSymbol(value: number): string {
         switch (value) {
             case 0:
                 return '';
+            case 1:
+                return '1️⃣';
+            case 2:
+                return '2️⃣';
+            case 3:
+                return '3️⃣';
+            case 4:
+                return '4️⃣';
+            case 5:
+                return '5️⃣';
+            case 6:
+                return '6️⃣';
+            case 7:
+                return '7️⃣';
+            case 8:
+                return '8️⃣';
+            case 9:
+                return '9️⃣';
+            case 10:
+                return '🔟';
             default:
-                return '🔔';
+                return '🔟+';
         }
     }
 }
