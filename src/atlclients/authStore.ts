@@ -1,7 +1,5 @@
 import crypto from 'crypto';
 import PQueue from 'p-queue';
-import { loginToJiraMessageNode } from 'src/views/jira/treeViews/utils';
-import { NotificationManagerImpl } from 'src/views/notifications/notificationManager';
 import { Disposable, Event, EventEmitter, version, window } from 'vscode';
 
 import { loggedOutEvent } from '../analytics';
@@ -91,8 +89,6 @@ export class CredentialManager implements Disposable {
             if (cmdctx !== undefined) {
                 setCommandContext(cmdctx, info !== emptyAuthInfo ? true : false);
             }
-
-            NotificationManagerImpl.getSingleton().clearNotifications(loginToJiraMessageNode.resourceUri!);
 
             try {
                 this.addSiteInformationToSecretStorage(site.product.key, site.credentialId, info);
