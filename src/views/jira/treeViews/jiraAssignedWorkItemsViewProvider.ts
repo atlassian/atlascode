@@ -20,7 +20,6 @@ import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { PromiseRacer } from '../../../util/promises';
 import { BadgeDelegate } from '../../notifications/badgeDelegate';
 import { JiraNotifier } from '../../notifications/jiraNotifier';
-import { NotificationManagerImpl, NotificationType } from '../../notifications/notificationManager';
 import { RefreshTimer } from '../../RefreshTimer';
 import { SearchJiraHelper } from '../searchJiraHelper';
 import { executeJqlQuery, JiraIssueNode, loginToJiraMessageNode, TreeViewIssue } from './utils';
@@ -151,11 +150,6 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
         else {
             const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
             if (!jqlEntries.length) {
-                NotificationManagerImpl.getSingleton().addNotification(loginToJiraMessageNode.resourceUri!, {
-                    id: 'jira.login',
-                    message: 'Connect Jira to manage work & get updates on work items',
-                    notificationType: NotificationType.LoginNeeded,
-                });
                 return [AssignedWorkItemsViewProvider._treeItemConfigureJiraMessage];
             }
 

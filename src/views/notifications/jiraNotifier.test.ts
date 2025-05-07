@@ -17,13 +17,6 @@ function createIssue(key: string, summary: string, siteId: string): JiraIssueNod
 }
 
 jest.mock('../../../commands/jira/showIssue');
-jest.mock('./notificationManager', () => ({
-    NotificationManagerImpl: {
-        getSingleton: () => ({
-            addNotification: () => {},
-        }),
-    },
-}));
 
 describe('JiraNotifier', () => {
     let showInformationMessageMock: jest.SpyInstance<Thenable<any>, any, any>;
