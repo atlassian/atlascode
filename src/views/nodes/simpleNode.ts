@@ -1,4 +1,4 @@
-import { Command, TreeItem, TreeItemCollapsibleState } from 'vscode';
+import { Command, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 
 import { AbstractBaseNode } from './abstractBaseNode';
 
@@ -15,6 +15,7 @@ export class SimpleNode extends AbstractBaseNode {
         const treeItem = new TreeItem(text, TreeItemCollapsibleState.None);
         treeItem.tooltip = text;
         treeItem.command = this._command;
+        treeItem.resourceUri = Uri.parse(text);
         return treeItem;
     }
 }

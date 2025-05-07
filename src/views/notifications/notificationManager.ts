@@ -1,6 +1,8 @@
 import { Logger } from 'src/logger';
 import { Uri } from 'vscode';
 
+import { AuthNotifier } from './authNotifier';
+
 export interface AtlasCodeNotification {
     id: string;
     message: string;
@@ -8,6 +10,10 @@ export interface AtlasCodeNotification {
 }
 export interface NotificationDelegate {
     onNotificationChange(uri: Uri): void;
+}
+
+export interface NotificationNotifier {
+    fetchNotifications(): void;
 }
 
 export enum NotificationType {
@@ -50,28 +56,50 @@ const ENABLE_BANNER_FOR = [
 export class NotificationManagerImpl {
     private notifications: Map<string, Map<string, AtlasCodeNotification>> = new Map();
     private static instance: NotificationManagerImpl;
-    private delegates: NotificationDelegate[] = [];
+    private delegates: Set<NotificationDelegate> = new Set();
+    private notifiers: Set<NotificationNotifier> = new Set();
+    private listenerId: NodeJS.Timeout | undefined;
 
     private constructor() {}
 
     public static getSingleton(): NotificationManagerImpl {
         if (!NotificationManagerImpl.instance) {
             NotificationManagerImpl.instance = new NotificationManagerImpl();
+            NotificationManagerImpl.instance.notifiers.add(AuthNotifier.getSingleton());
         }
         return NotificationManagerImpl.instance;
     }
 
+    public listen(): void {
+        if (this.listenerId) {
+            Logger.debug('Notification manager is already listening');
+            return;
+        }
+        // Run immediately
+        this.runNotifiers();
+
+        // Then every minute
+        this.listenerId = setInterval(() => {
+            this.runNotifiers();
+        }, 60 * 1000);
+    }
+
+    public stopListening(): void {
+        Logger.debug('Stopping notification manager');
+        if (this.listenerId) {
+            clearInterval(this.listenerId);
+            this.listenerId = undefined;
+        }
+    }
+
     public registerDelegate(delegate: NotificationDelegate): void {
         Logger.debug(`Registering delegate ${delegate}`);
-        this.delegates.push(delegate);
+        this.delegates.add(delegate);
     }
 
     public unregisterDelegate(delegate: NotificationDelegate): void {
         Logger.debug(`Unregistering delegate ${delegate}`);
-        const index = this.delegates.indexOf(delegate);
-        if (index > -1) {
-            this.delegates.splice(index, 1);
-        }
+        this.delegates.delete(delegate);
     }
 
     public getNotificationsByUri(
@@ -163,5 +191,11 @@ export class NotificationManagerImpl {
             }
         });
         return filteredNotifications;
+    }
+
+    private runNotifiers() {
+        this.notifiers.forEach((notifier) => {
+            notifier.fetchNotifications();
+        });
     }
 }

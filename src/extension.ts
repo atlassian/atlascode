@@ -24,6 +24,7 @@ import {
 import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
 import { FeatureFlagClient, Features } from './util/featureFlags';
+import { NotificationManagerImpl } from './views/notifications/notificationManager';
 
 const AnalyticDelay = 5000;
 
@@ -87,6 +88,7 @@ export async function activate(context: ExtensionContext) {
     // icon to appear in the activity bar
     activateBitbucketFeatures();
     activateYamlFeatures(context);
+    NotificationManagerImpl.getSingleton().listen();
 
     Logger.info(
         `Atlassian for VS Code (v${atlascodeVersion}) activated in ${
@@ -176,10 +178,10 @@ async function sendAnalytics(version: string, globalState: Memento) {
 
     launchedEvent(
         env.remoteName ? env.remoteName : 'local',
-        Container.siteManager.numberOfSites(ProductJira, true),
-        Container.siteManager.numberOfSites(ProductJira, false),
-        Container.siteManager.numberOfSites(ProductBitbucket, true),
-        Container.siteManager.numberOfSites(ProductBitbucket, false),
+        Container.siteManager.numberOfAuthedSites(ProductJira, true),
+        Container.siteManager.numberOfAuthedSites(ProductJira, false),
+        Container.siteManager.numberOfAuthedSites(ProductBitbucket, true),
+        Container.siteManager.numberOfAuthedSites(ProductBitbucket, false),
     ).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
@@ -193,4 +195,5 @@ function showOnboardingPage() {
 export function deactivate() {
     unregisterErrorReporting();
     FeatureFlagClient.dispose();
+    NotificationManagerImpl.getSingleton().stopListening();
 }
