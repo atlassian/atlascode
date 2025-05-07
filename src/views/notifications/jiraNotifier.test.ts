@@ -1,18 +1,16 @@
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { commands, window } from 'vscode';
 
 import { expansionCastTo, resolvePromiseSync } from '../../../testsutil';
-import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import * as showIssueCommand from '../../commands/jira/showIssue';
-import { JiraIssueNode, TreeViewIssue } from '../jira/treeViews/utils';
 import { JiraNotifier } from './jiraNotifier';
 
-function createIssue(key: string, summary: string, siteId: string): JiraIssueNode {
-    return expansionCastTo<JiraIssueNode>({
-        issue: expansionCastTo<TreeViewIssue>({
-            key,
-            summary,
-            siteDetails: expansionCastTo<DetailedSiteInfo>({ id: siteId }),
-        }),
+function createIssue(key: string, summary: string, siteId: string): MinimalIssue<DetailedSiteInfo> {
+    return expansionCastTo<MinimalIssue<DetailedSiteInfo>>({
+        key,
+        summary,
+        siteDetails: expansionCastTo<DetailedSiteInfo>({ id: siteId }),
     });
 }
 
@@ -120,7 +118,7 @@ describe('JiraNotifier', () => {
         const jiraNotifier = new JiraNotifier();
         jiraNotifier.notifyForNewAssignedIssues(issues);
 
-        expect(showIssueCommand.showIssue).toHaveBeenCalledWith(issues[0].issue);
+        expect(showIssueCommand.showIssue).toHaveBeenCalledWith(issues[0]);
         expect(commands.executeCommand).not.toHaveBeenCalled();
     });
 

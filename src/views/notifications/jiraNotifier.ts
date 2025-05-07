@@ -1,17 +1,18 @@
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { commands, window } from 'vscode';
 
 import { showIssue } from '../../commands/jira/showIssue';
-import { JiraIssueNode } from '../jira/treeViews/utils';
 
 export class JiraNotifier {
     private readonly _knownIssues = new Set<string>();
 
-    public ignoreAssignedIssues(issues: JiraIssueNode[]) {
+    public ignoreAssignedIssues(issues: MinimalIssue<DetailedSiteInfo>[]) {
         issues.forEach((issue) => this._knownIssues.add(this.getIssueId(issue)));
     }
 
-    public notifyForNewAssignedIssues(issues: JiraIssueNode[]) {
-        const newIssues: JiraIssueNode[] = [];
+    public notifyForNewAssignedIssues(issues: MinimalIssue<DetailedSiteInfo>[]) {
+        const newIssues: MinimalIssue<DetailedSiteInfo>[] = [];
 
         for (const issue of issues) {
             const issueId = this.getIssueId(issue);
@@ -24,16 +25,16 @@ export class JiraNotifier {
         this.showNotification(newIssues);
     }
 
-    private getIssueId(issue: JiraIssueNode) {
-        return `${issue.issue.key}_${issue.issue.siteDetails.id}`;
+    private getIssueId(issue: MinimalIssue<DetailedSiteInfo>) {
+        return `${issue.key}_${issue.siteDetails.id}`;
     }
 
-    private showNotification(newIssues: JiraIssueNode[]) {
+    private showNotification(newIssues: MinimalIssue<DetailedSiteInfo>[]) {
         if (!newIssues.length) {
             return;
         }
 
-        const issueNames = newIssues.map((issue) => `[${issue.issue.key}] "${issue.issue.summary}"`);
+        const issueNames = newIssues.map((issue) => `[${issue.key}] "${issue.summary}"`);
         let message = '';
         if (newIssues.length === 1) {
             message = `${issueNames[0]} assigned to you`;
@@ -49,7 +50,7 @@ export class JiraNotifier {
         window.showInformationMessage(message, title).then((selection) => {
             if (selection) {
                 if (newIssues.length === 1) {
-                    showIssue(newIssues[0].issue);
+                    showIssue(newIssues[0]);
                 } else {
                     commands.executeCommand('workbench.view.extension.atlascode-drawer');
                 }
