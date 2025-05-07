@@ -15,12 +15,12 @@ import {
 } from 'prosemirror-markdown';
 import { addMentionNodes, getMentionsPlugin } from 'prosemirror-mentions';
 import { liftItem, menuBar } from 'prosemirror-menu';
-import { Schema } from 'prosemirror-model';
+import { MarkType, Schema } from 'prosemirror-model';
 import { EditorState, Plugin, PluginKey } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-function markInputRule(regexp: RegExp, markType: any, getAttrs: any) {
+function markInputRule(regexp: RegExp, markType: MarkType, getAttrs: any): typeof InputRule {
     return new InputRule(regexp, (state: EditorState, match: string[], start: number, end: number) => {
         const attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
         const tr = state.tr;
@@ -45,8 +45,8 @@ function markInputRule(regexp: RegExp, markType: any, getAttrs: any) {
     });
 }
 
-const buildInputRules = (schema: any) => {
-    const rules = [];
+const buildInputRules = (schema: Schema) => {
+    const rules: (typeof InputRule)[] = [];
 
     if (schema.marks.strong) {
         rules.push(markInputRule(/(?:\*)([^\*_]+)(?:\*)$/, schema.marks.strong, undefined));
@@ -171,19 +171,19 @@ export function useEditor<T extends UserType>(props: {
     const [content, setContent] = useState(props.value || '');
 
     // Prevents unnecessary calls to fetchUsers
-    const debouncedFetch = props.fetchUsers && debounce(props.fetchUsers, 3000, { leading: true, maxWait: 1 });
+    const debouncedFetch = props.fetchUsers && debounce(props.fetchUsers, 1500, { leading: true, maxWait: 1 });
 
     const handleSave = useCallback(() => {
-        const mdContent: string = props.enabled ? mdSerializer.serialize(view.current!.state.doc) : content;
+        if (!props.onSave || !view.current) {
+            return;
+        }
+
+        const mdContent: string = props.enabled ? mdSerializer.serialize(view.current.state.doc) : content;
 
         if (mdContent.trim().length > 0) {
-            try {
-                props.onSave?.(mdContent);
-            } catch {
-                return;
-            }
+            props.onSave(mdContent);
         }
-    }, [props, content]);
+    }, [props, content, view]);
 
     // Update content when the editor is toggled
     useEffect(() => {
@@ -240,7 +240,7 @@ export function useEditor<T extends UserType>(props: {
                             done(formattedUsers);
                         }
                     },
-                    getSuggestionsHTML: (items: T[], type: any) => {
+                    getSuggestionsHTML: (items: any[], type: any) => {
                         if (type === 'mention') {
                             return getMentionSuggestionsHTML(items);
                         } else {
