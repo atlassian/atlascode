@@ -40,7 +40,9 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
         this.setExtensionBadge();
         this._onDidChangeFileDecorations.fire(uri);
     }
+
     private _onDidChangeFileDecorations = new EventEmitter<undefined | Uri | Uri[]>();
+
     public readonly onDidChangeFileDecorations = this._onDidChangeFileDecorations.event;
 
     public provideFileDecoration(uri: Uri, token: CancellationToken) {

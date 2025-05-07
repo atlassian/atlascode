@@ -37,14 +37,14 @@ export class AuthNotifier implements NotificationNotifier, Disposable {
     }
 
     private checkJiraAuth(): void {
-        this.checkAuth(ProductJira, 'jira.login', 'Please login to Jira', loginToJiraMessageNode);
+        this.checkAuth(ProductJira, 'jira.login', 'Connect Jira to view & manage work items', loginToJiraMessageNode);
     }
 
     private checkBitbucketAuth(): void {
         this.checkAuth(
             ProductBitbucket,
             'bitbucket.login',
-            'Please login to Bitbucket',
+            'Connect Bitbucket to view & manage pull requests',
             loginToBitbucketMessageNode.getTreeItem(),
         );
     }
