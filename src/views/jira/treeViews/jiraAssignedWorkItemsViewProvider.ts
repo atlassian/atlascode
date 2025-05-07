@@ -1,3 +1,4 @@
+import { BadgeDelegate } from 'src/views/notifications/badgeDelegate';
 import {
     commands,
     ConfigurationChangeEvent,
@@ -18,7 +19,6 @@ import { configuration } from '../../../config/configuration';
 import { Container } from '../../../container';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { PromiseRacer } from '../../../util/promises';
-import { BadgeDelegate } from '../../notifications/badgeDelegate';
 import { JiraNotifier } from '../../notifications/jiraNotifier';
 import { RefreshTimer } from '../../RefreshTimer';
 import { SearchJiraHelper } from '../searchJiraHelper';
@@ -132,10 +132,9 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
                 }
 
                 SearchJiraHelper.appendIssues(issues, AssignedWorkItemsViewProviderId);
+                this._jiraNotifier.ignoreAssignedIssues(issues);
 
-                const treeItems = this.buildTreeItemsFromIssues(issues);
-                this._jiraNotifier.ignoreAssignedIssues(treeItems);
-                this._initChildren.push(...treeItems);
+                this._initChildren.push(...this.buildTreeItemsFromIssues(issues));
                 break;
             }
 
@@ -154,22 +153,21 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
             }
 
             const allIssues = (await Promise.all(jqlEntries.map(executeJqlQuery))).flat();
-            SearchJiraHelper.setIssues(allIssues, AssignedWorkItemsViewProviderId);
-
-            const treeItems = this.buildTreeItemsFromIssues(allIssues);
 
             if (this._skipNotificationForNextFetch) {
                 this._skipNotificationForNextFetch = false;
-                this._jiraNotifier.ignoreAssignedIssues(treeItems);
+                this._jiraNotifier.ignoreAssignedIssues(allIssues);
             } else {
-                this._jiraNotifier.notifyForNewAssignedIssues(treeItems);
+                this._jiraNotifier.notifyForNewAssignedIssues(allIssues);
             }
 
-            return treeItems;
+            SearchJiraHelper.setIssues(allIssues, AssignedWorkItemsViewProviderId);
+
+            return this.buildTreeItemsFromIssues(allIssues);
         }
     }
 
-    private buildTreeItemsFromIssues(issues?: TreeViewIssue[]): JiraIssueNode[] {
+    private buildTreeItemsFromIssues(issues?: TreeViewIssue[]): TreeItem[] {
         return issues
             ? issues.map((issue) => new JiraIssueNode(JiraIssueNode.NodeType.JiraAssignedIssuesNode, issue))
             : [];
