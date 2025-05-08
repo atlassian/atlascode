@@ -7,7 +7,7 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
     private overallCount = 0;
     private badgesRegistration: Record<string, number> = {};
 
-    public static initialize<T>(treeViewParent: TreeView<T>): BadgeDelegate {
+    public static initialize(treeViewParent: TreeView<any>): BadgeDelegate {
         if (this.badgeDelegateSingleton) {
             return this.badgeDelegateSingleton;
         }
