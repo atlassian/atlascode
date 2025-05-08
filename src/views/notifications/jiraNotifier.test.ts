@@ -14,7 +14,7 @@ function createIssue(key: string, summary: string, siteId: string): MinimalIssue
     });
 }
 
-jest.mock('../../../commands/jira/showIssue');
+jest.mock('../../commands/jira/showIssue');
 
 describe('JiraNotifier', () => {
     let showInformationMessageMock: jest.SpyInstance<Thenable<any>, any, any>;

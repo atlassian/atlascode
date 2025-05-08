@@ -1,6 +1,5 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { it } from '@jest/globals';
-import { BadgeDelegate } from 'src/views/notifications/badgeDelegate';
 import { expansionCastTo, forceCastTo } from 'testsutil';
 import * as vscode from 'vscode';
 import { window } from 'vscode';
@@ -11,6 +10,7 @@ import { configuration, JQLEntry } from '../../../config/configuration';
 import { Container } from '../../../container';
 import { PromiseRacer } from '../../../util/promises';
 import { RefreshTimer } from '../../../views/RefreshTimer';
+import { BadgeDelegate } from '../../notifications/badgeDelegate';
 import { JiraNotifier } from '../../notifications/jiraNotifier';
 import { AssignedWorkItemsViewProvider } from './jiraAssignedWorkItemsViewProvider';
 
@@ -138,7 +138,7 @@ class JiraNotifierMockClass implements ExtractPublic<JiraNotifier> {
     public notifyForNewAssignedIssues(issues: MinimalIssue<DetailedSiteInfo>[]): void {}
 }
 
-jest.mock('./jiraNotifier', () => ({
+jest.mock('../../notifications/jiraNotifier', () => ({
     JiraNotifier: jest.fn().mockImplementation(() => new JiraNotifierMockClass()),
 }));
 
@@ -444,10 +444,11 @@ describe('AssignedWorkItemsViewProvider', () => {
     describe('onConfigurationChanged', () => {
         it('onConfigurationChanged is registered during construction', async () => {
             jest.spyOn(mockedTreeView, 'onDidChangeVisibility');
+            const currentSubscriptionCount = Container.context.subscriptions.length;
 
             provider = new AssignedWorkItemsViewProvider();
 
-            expect(Container.context.subscriptions).toHaveLength(1);
+            expect(Container.context.subscriptions).toHaveLength(currentSubscriptionCount + 1);
         });
 
         it.each([[true], [false]])(
@@ -484,7 +485,7 @@ describe('AssignedWorkItemsViewProvider', () => {
             const refreshCallback = jest.fn();
             provider.onDidChangeTreeData(refreshCallback);
 
-            const callbackObj = Container.context.subscriptions[0] as any;
+            const callbackObj = Container.context.subscriptions[Container.context.subscriptions.length - 1] as any;
             callbackObj.func.call(callbackObj.thisArg);
 
             if (expectedRefresh) {

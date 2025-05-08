@@ -1,6 +1,6 @@
-import { Logger } from 'src/logger';
 import { Uri } from 'vscode';
 
+import { Logger } from '../../logger';
 import { AuthNotifier } from './authNotifier';
 
 export interface AtlasCodeNotification {

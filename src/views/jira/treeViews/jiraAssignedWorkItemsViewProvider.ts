@@ -1,4 +1,3 @@
-import { BadgeDelegate } from 'src/views/notifications/badgeDelegate';
 import {
     commands,
     ConfigurationChangeEvent,
@@ -19,6 +18,7 @@ import { configuration } from '../../../config/configuration';
 import { Container } from '../../../container';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { PromiseRacer } from '../../../util/promises';
+import { BadgeDelegate } from '../../notifications/badgeDelegate';
 import { JiraNotifier } from '../../notifications/jiraNotifier';
 import { RefreshTimer } from '../../RefreshTimer';
 import { SearchJiraHelper } from '../searchJiraHelper';

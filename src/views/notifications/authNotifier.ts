@@ -1,9 +1,9 @@
-import { Product, ProductBitbucket, ProductJira } from 'src/atlclients/authInfo';
-import { configuration } from 'src/config/configuration';
-import { Container } from 'src/container';
-import { Logger } from 'src/logger';
 import { ConfigurationChangeEvent, Disposable, TreeItem } from 'vscode';
 
+import { Product, ProductBitbucket, ProductJira } from '../../atlclients/authInfo';
+import { configuration } from '../../config/configuration';
+import { Container } from '../../container';
+import { Logger } from '../../logger';
 import { loginToJiraMessageNode } from '../jira/treeViews/utils';
 import { loginToBitbucketMessageNode } from '../nodes/definedNodes';
 import { NotificationManagerImpl, NotificationNotifier, NotificationType } from './notificationManager';
