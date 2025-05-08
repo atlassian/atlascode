@@ -219,7 +219,7 @@ export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {
 // PR events
 
 export async function createPrTerminalLinkDetectedEvent(isNotifEnabled: boolean): Promise<TrackEvent> {
-    return trackEvent('createPrTerminalLink', 'detected', {
+    return trackEvent('detected', 'createPrTerminalLink', {
         attributes: { isNotificationEnabled: isNotifEnabled },
     });
 }
