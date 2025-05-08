@@ -88,7 +88,7 @@ export async function activate(context: ExtensionContext) {
     // icon to appear in the activity bar
     activateBitbucketFeatures();
     activateYamlFeatures(context);
-    NotificationManagerImpl.getSingleton().listen();
+    NotificationManagerImpl.getInstance().listen();
 
     Logger.info(
         `Atlassian for VS Code (v${atlascodeVersion}) activated in ${
@@ -195,5 +195,5 @@ function showOnboardingPage() {
 export function deactivate() {
     unregisterErrorReporting();
     FeatureFlagClient.dispose();
-    NotificationManagerImpl.getSingleton().stopListening();
+    NotificationManagerImpl.getInstance().stopListening();
 }

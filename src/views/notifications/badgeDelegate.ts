@@ -13,7 +13,7 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
         }
         this.badgeDelegateSingleton = new BadgeDelegate(treeViewParent);
 
-        NotificationManagerImpl.getSingleton().registerDelegate(this.badgeDelegateSingleton);
+        NotificationManagerImpl.getInstance().registerDelegate(this.badgeDelegateSingleton);
         return this.badgeDelegateSingleton;
     }
 
@@ -30,7 +30,7 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
     }
 
     onNotificationChange(uri: Uri): void {
-        const newBadgeValue = NotificationManagerImpl.getSingleton().getNotificationsByUri(
+        const newBadgeValue = NotificationManagerImpl.getInstance().getNotificationsByUri(
             uri,
             NotificationSurface.Badge,
         ).size;
@@ -46,7 +46,7 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
     public readonly onDidChangeFileDecorations = this._onDidChangeFileDecorations.event;
 
     public provideFileDecoration(uri: Uri, token: CancellationToken) {
-        const newBadgeValue = NotificationManagerImpl.getSingleton().getNotificationsByUri(
+        const newBadgeValue = NotificationManagerImpl.getInstance().getNotificationsByUri(
             uri,
             NotificationSurface.Badge,
         ).size;

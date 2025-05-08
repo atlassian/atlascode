@@ -89,7 +89,7 @@ export class JiraIssueWebview
         this._issue = issue;
         this.invalidate();
 
-        NotificationManagerImpl.getSingleton().clearNotifications(getJiraIssueUri(issue));
+        NotificationManagerImpl.getInstance().clearNotifications(getJiraIssueUri(issue));
     }
 
     async invalidate() {

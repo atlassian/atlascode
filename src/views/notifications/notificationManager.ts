@@ -62,10 +62,10 @@ export class NotificationManagerImpl {
 
     private constructor() {}
 
-    public static getSingleton(): NotificationManagerImpl {
+    public static getInstance(): NotificationManagerImpl {
         if (!NotificationManagerImpl.instance) {
             NotificationManagerImpl.instance = new NotificationManagerImpl();
-            NotificationManagerImpl.instance.notifiers.add(AuthNotifier.getSingleton());
+            NotificationManagerImpl.instance.notifiers.add(AuthNotifier.getInstance());
         }
         return NotificationManagerImpl.instance;
     }
