@@ -13,7 +13,6 @@ import { PromiseRacer } from '../../../util/promises';
 import { RefreshTimer } from '../../../views/RefreshTimer';
 import { JiraNotifier } from '../../notifications/jiraNotifier';
 import { AssignedWorkItemsViewProvider } from './jiraAssignedWorkItemsViewProvider';
-import { JiraIssueNode } from './utils';
 
 const mockedJqlEntry = forceCastTo<JQLEntry>({
     id: 'jqlId',
@@ -135,8 +134,8 @@ class JiraNotifierMockClass implements ExtractPublic<JiraNotifier> {
     constructor() {
         JiraNotifierMockClass.LastInstance = this;
     }
-    public ignoreAssignedIssues(issues: JiraIssueNode[]): void {}
-    public notifyForNewAssignedIssues(issues: JiraIssueNode[]): void {}
+    public ignoreAssignedIssues(issues: MinimalIssue<DetailedSiteInfo>[]): void {}
+    public notifyForNewAssignedIssues(issues: MinimalIssue<DetailedSiteInfo>[]): void {}
 }
 
 jest.mock('./jiraNotifier', () => ({
