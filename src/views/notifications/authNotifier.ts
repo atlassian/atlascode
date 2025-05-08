@@ -1,6 +1,8 @@
 import { Product, ProductBitbucket, ProductJira } from 'src/atlclients/authInfo';
+import { configuration } from 'src/config/configuration';
 import { Container } from 'src/container';
-import { Disposable, TreeItem } from 'vscode';
+import { Logger } from 'src/logger';
+import { ConfigurationChangeEvent, Disposable, TreeItem } from 'vscode';
 
 import { loginToJiraMessageNode } from '../jira/treeViews/utils';
 import { loginToBitbucketMessageNode } from '../nodes/definedNodes';
@@ -8,7 +10,9 @@ import { NotificationManagerImpl, NotificationNotifier, NotificationType } from 
 
 export class AuthNotifier implements NotificationNotifier, Disposable {
     private static instance: AuthNotifier;
-    private _disposable: Disposable;
+    private _disposable: Disposable[] = [];
+    private _jiraEnabled: boolean;
+    private _bitbucketEnabled: boolean;
 
     public static getSingleton(): AuthNotifier {
         if (!AuthNotifier.instance) {
@@ -18,16 +22,27 @@ export class AuthNotifier implements NotificationNotifier, Disposable {
     }
 
     private constructor() {
-        this._disposable = Disposable.from(
-            Container.credentialManager.onDidAuthChange(this.fetchNotificationsProxy, this),
+        this._disposable.push(
+            Disposable.from(Container.credentialManager.onDidAuthChange(this.fetchNotifications, this)),
         );
+        this._disposable.push(Disposable.from(configuration.onDidChange(this.onDidChangeConfiguration, this)));
+        this._jiraEnabled = Container.config.jira.enabled;
+        this._bitbucketEnabled = Container.config.bitbucket.enabled;
     }
 
     public dispose() {
-        this._disposable.dispose();
+        this._disposable.forEach((d) => d.dispose());
     }
 
-    public fetchNotificationsProxy(): void {
+    public onDidChangeConfiguration(e: ConfigurationChangeEvent): void {
+        if (configuration.changed(e, 'jira.enabled')) {
+            Logger.debug('Jira enabled changed');
+            this._jiraEnabled = Container.config.jira.enabled;
+        }
+        if (configuration.changed(e, 'bitbucket.enabled')) {
+            Logger.debug('Bitbucket enabled changed');
+            this._bitbucketEnabled = Container.config.bitbucket.enabled;
+        }
         this.fetchNotifications();
     }
 
@@ -50,6 +65,10 @@ export class AuthNotifier implements NotificationNotifier, Disposable {
     }
 
     private checkAuth(product: Product, notificationId: string, message: string, treeItem: TreeItem): void {
+        if (!this.isEnabled(product)) {
+            NotificationManagerImpl.getSingleton().clearNotifications(treeItem.resourceUri!);
+            return;
+        }
         const numberOfAuth =
             Container.siteManager.numberOfAuthedSites(product, false) +
             Container.siteManager.numberOfAuthedSites(product, true);
@@ -62,5 +81,16 @@ export class AuthNotifier implements NotificationNotifier, Disposable {
             return;
         }
         NotificationManagerImpl.getSingleton().clearNotifications(treeItem.resourceUri!);
+    }
+
+    private isEnabled(product: Product): boolean {
+        switch (product) {
+            case ProductJira:
+                return this._jiraEnabled;
+            case ProductBitbucket:
+                return this._bitbucketEnabled;
+            default:
+                return false;
+        }
     }
 }
