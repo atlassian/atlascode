@@ -1,17 +1,19 @@
 import { Spacing } from '@atlaskit/button';
 import { ButtonAppearance } from '@atlaskit/button/dist/types/new-button/variants/types';
 import TextArea from '@atlaskit/textarea';
-import { Box } from '@material-ui/core';
+import Toggle from '@atlaskit/toggle';
+import Tooltip from '@atlaskit/tooltip';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
 
 import PopoutMentionPicker from '../../pullrequest/PopoutMentionPicker';
+import { useEditor } from './editor/Editor';
 
 type Props = {
     value: string;
     onChange: (input: string) => void;
     onEditorFocus?: (e: any) => void;
-    onSave?: () => void;
+    onSave?: (i: string) => void;
     onCancel?: () => void;
     fetchUsers?: (input: string) => Promise<{ displayName: string; mention: string; avatarUrl?: string }[]>;
     isServiceDeskProject?: boolean;
@@ -19,6 +21,13 @@ type Props = {
     isDescription?: boolean;
     saving?: boolean;
 };
+
+interface User {
+    displayName: string;
+    mention: string;
+    avatarUrl?: string;
+}
+
 const JiraIssueTextAreaEditor: React.FC<Props> = ({
     value,
     onChange,
@@ -37,6 +46,20 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
         spacing: 'compact' as Spacing,
         appearance: 'subtle' as ButtonAppearance,
     };
+
+    const [rteEnabled, setRteEnabled] = React.useState(true);
+
+    const { viewHost, handleSave } = useEditor<User>({
+        value,
+        onSave: (i: string) => {
+            onChange(i);
+            onSave?.(i);
+        },
+        onChange,
+        enabled: rteEnabled,
+        fetchUsers,
+    });
+
     React.useEffect(() => {
         if (inputTextAreaRef.current && cursorPosition > 0) {
             inputTextAreaRef.current.selectionEnd = cursorPosition;
@@ -59,32 +82,35 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
         [onChange],
     );
     return (
-        <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-            <TextArea
-                style={{
-                    background: 'var(--vscode-input-background)',
-                    color: 'var(--vscode-input-foreground)',
-                    border: '1px solid var(--vscode-input-border)',
-                    caretColor: 'var(--vscode-editorCursor-background)',
-                    minHeight: isDescription ? '175px' : '100px',
-                    borderRadius: '2px',
-                    overflow: 'auto',
-                }}
-                value={value}
-                ref={inputTextAreaRef}
-                autoFocus
-                onFocus={onEditorFocus ? onEditorFocus : undefined}
-                onChange={(e) => onChange(e.target.value)}
-                isDisabled={saving}
-            />
-            <Box
+        <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+            <div role="textbox" hidden={!rteEnabled} ref={viewHost} aria-label="Jira rich text editor" />
+            <div hidden={rteEnabled}>
+                <TextArea
+                    style={{
+                        background: 'var(--vscode-input-background)',
+                        color: 'var(--vscode-input-foreground)',
+                        border: '1px solid var(--vscode-input-border)',
+                        caretColor: 'var(--vscode-editorCursor-background)',
+                        minHeight: isDescription ? '175px' : '100px',
+                        borderRadius: '2px',
+                        overflow: 'auto',
+                    }}
+                    value={value}
+                    ref={inputTextAreaRef}
+                    autoFocus
+                    onFocus={onEditorFocus ? onEditorFocus : undefined}
+                    onChange={(e) => onChange(e.target.value)}
+                    isDisabled={saving}
+                />
+            </div>
+            <div
                 style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     paddingTop: '8px',
                 }}
             >
-                <Box
+                <div
                     style={{
                         display: 'flex',
                         flexDirection: 'row',
@@ -93,7 +119,13 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                     }}
                 >
                     {onSave && (
-                        <VSCodeButton appearance="primary" onClick={onSave} disabled={saving}>
+                        <VSCodeButton
+                            appearance="primary"
+                            onClick={() => {
+                                rteEnabled ? handleSave() : onSave(value);
+                            }}
+                            disabled={saving}
+                        >
                             {isServiceDeskProject ? 'Reply' : 'Save'}
                         </VSCodeButton>
                     )}
@@ -102,7 +134,12 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                             Add internal note
                         </VSCodeButton>
                     )}
-                    {fetchUsers && (
+                    {onCancel && (
+                        <VSCodeButton appearance="secondary" onClick={onCancel} disabled={saving}>
+                            Cancel
+                        </VSCodeButton>
+                    )}
+                    {fetchUsers && !rteEnabled && (
                         <PopoutMentionPicker
                             targetButtonContent="@"
                             targetButtonTooltip="Mention @"
@@ -111,14 +148,12 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                             onUserMentioned={handleMention}
                         />
                     )}
-                </Box>
-                {onCancel && (
-                    <VSCodeButton appearance="secondary" onClick={onCancel} disabled={saving}>
-                        Cancel
-                    </VSCodeButton>
-                )}
-            </Box>
-        </Box>
+                </div>
+                <Tooltip content="Toggle rich text editor" position="top">
+                    <Toggle label="rte toggle" defaultChecked onChange={(e) => setRteEnabled(e.target.checked)} />
+                </Tooltip>
+            </div>
+        </div>
     );
 };
 

@@ -156,9 +156,9 @@ const AddCommentComponent: React.FC<{
                     <JiraIssueTextAreaEditor
                         value={commentText}
                         onChange={(e: string) => setCommentText(e)}
-                        onSave={() => {
-                            if (commentText !== '') {
-                                onCreate(commentText, undefined);
+                        onSave={(i: string) => {
+                            if (i !== '') {
+                                onCreate(i, undefined);
                                 setCommentText('');
                                 setIsEditing(false);
                             }
