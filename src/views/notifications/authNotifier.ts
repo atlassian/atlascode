@@ -3,7 +3,6 @@ import { ConfigurationChangeEvent, Disposable, TreeItem } from 'vscode';
 import { Product, ProductJira } from '../../atlclients/authInfo';
 import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
-import { Logger } from '../../logger';
 import { loginToJiraMessageNode } from '../jira/treeViews/utils';
 import { NotificationManagerImpl, NotificationNotifier, NotificationType } from './notificationManager';
 
@@ -33,7 +32,6 @@ export class AuthNotifier implements NotificationNotifier, Disposable {
 
     public onDidChangeConfiguration(e: ConfigurationChangeEvent): void {
         if (configuration.changed(e, 'jira.enabled')) {
-            Logger.debug('Jira enabled changed');
             this._jiraEnabled = Container.config.jira.enabled;
         }
         this.fetchNotifications();
@@ -45,7 +43,12 @@ export class AuthNotifier implements NotificationNotifier, Disposable {
     }
 
     private checkJiraAuth(): void {
-        this.checkAuth(ProductJira, 'jira.login', 'Connect Jira to view & manage work items', loginToJiraMessageNode);
+        this.checkAuth(
+            ProductJira,
+            'jira.login',
+            'Connect to Jira to view & manage work items',
+            loginToJiraMessageNode,
+        );
     }
 
     private checkAuth(product: Product, notificationId: string, message: string, treeItem: TreeItem): void {
