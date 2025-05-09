@@ -42,12 +42,20 @@ describe('NotificationManagerImpl', () => {
         // confirm that notifiers are run immediately
         expect(authNotifierFetchNotifications).toHaveBeenCalledTimes(1);
 
+        // confirm that double listen does not create multiple intervals or multiple runNotifiers
+        notificationManager.listen();
+        expect(setIntervalMock).toHaveBeenCalledTimes(1);
+        expect(authNotifierFetchNotifications).toHaveBeenCalledTimes(1);
+
         // confirm that notifiers are run every minute
         jest.advanceTimersByTime(60 * 1000);
         expect(authNotifierFetchNotifications).toHaveBeenCalledTimes(2);
 
+        // confirm that stopListening clears the interval and stops the notifiers
         notificationManager.stopListening();
         expect(clearIntervalMock).toHaveBeenCalledTimes(1);
+        jest.advanceTimersByTime(60 * 1000);
+        expect(authNotifierFetchNotifications).toHaveBeenCalledTimes(2); // should not be called again
 
         setIntervalMock.mockRestore();
         clearIntervalMock.mockRestore();
@@ -116,6 +124,14 @@ describe('NotificationManagerImpl', () => {
         notificationManager.removeNotification(uri, notification);
         const notifications = notificationManager.getNotificationsByUri(uri, NotificationSurface.All);
         expect(notifications.size).toBe(0);
+
+        // Confirm remove notification is idempotent
+        notificationManager.removeNotification(uri, notification);
+        const notificationsAfterIdempotentRemove = notificationManager.getNotificationsByUri(
+            uri,
+            NotificationSurface.All,
+        );
+        expect(notificationsAfterIdempotentRemove.size).toBe(0);
     });
 
     it('should clear all notifications for a URI', () => {
