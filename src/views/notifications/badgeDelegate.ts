@@ -7,29 +7,26 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
     private overallCount = 0;
     private badgesRegistration: Record<string, number> = {};
 
-    public static initialize(treeViewParent: TreeView<any>): BadgeDelegate {
+    public static initialize(treeViewParent: TreeView<any>): void {
         if (this.badgeDelegateSingleton) {
-            return this.badgeDelegateSingleton;
+            throw new Error('BadgeDelegate already initialized.');
         }
         this.badgeDelegateSingleton = new BadgeDelegate(treeViewParent);
-
         NotificationManagerImpl.getInstance().registerDelegate(this.badgeDelegateSingleton);
-        return this.badgeDelegateSingleton;
     }
 
     public static getInstance(): BadgeDelegate {
+        if (!this.badgeDelegateSingleton) {
+            throw new Error('BadgeDelegate has not been initialized. Call initialize() first.');
+        }
         return this.badgeDelegateSingleton!;
     }
 
     private constructor(private treeViewParent: TreeView<any>) {
-        if (BadgeDelegate.badgeDelegateSingleton) {
-            throw new Error('An instance of BadgeDelegate already exists.');
-        }
-
         window.registerFileDecorationProvider(this);
     }
 
-    onNotificationChange(uri: Uri): void {
+    public onNotificationChange(uri: Uri): void {
         const newBadgeValue = NotificationManagerImpl.getInstance().getNotificationsByUri(
             uri,
             NotificationSurface.Badge,
