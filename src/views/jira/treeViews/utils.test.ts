@@ -91,7 +91,7 @@ describe('utils', () => {
         });
 
         it('returns an empty collection of issues for no corresponding site', async () => {
-            const jqlEntry = expansionCastTo<JQLEntry>({ id: 'id1', query: 'query1' });
+            const jqlEntry = expansionCastTo<JQLEntry>({ id: 'id1', query: 'query1', siteId: 'site-id-guid' });
             jest.spyOn(Container.siteManager, 'getSiteForId').mockReturnValue(undefined);
 
             const issues = await executeJqlQuery(jqlEntry);
@@ -100,7 +100,7 @@ describe('utils', () => {
         });
 
         it('initializes the `source` and the `children` fields', async () => {
-            const jqlEntry = expansionCastTo<JQLEntry>({ id: 'id1', query: 'query1' });
+            const jqlEntry = expansionCastTo<JQLEntry>({ id: 'id1', query: 'query1', siteId: 'site-id-guid' });
             const mockedMinimalIssues = [
                 expansionCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'AXON-1' }),
                 expansionCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'AXON-2' }),
@@ -122,12 +122,16 @@ describe('utils', () => {
 
         it('logs an error in case of failure, and returns an empty collection of issues', async () => {
             const error = new Error('this is a failure');
-            const jqlEntry = expansionCastTo<JQLEntry>({ id: 'id1', query: 'query1' });
+            const jqlEntry = expansionCastTo<JQLEntry>({ id: 'id1', query: 'query1', siteId: 'site-id-guid' });
             jest.spyOn(issuesForJQL, 'issuesForJQL').mockRejectedValue(error);
 
             const issues = await executeJqlQuery(jqlEntry);
             expect(issues).toHaveLength(0);
-            expect(Logger.error).toHaveBeenCalledWith(error, expect.any(String));
+            expect(Logger.error).toHaveBeenCalledWith(
+                error,
+                'Failed to execute default JQL query for site',
+                'site-id-guid',
+            );
         });
     });
 

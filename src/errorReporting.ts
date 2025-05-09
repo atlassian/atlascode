@@ -46,22 +46,25 @@ function unhandledRejectionHandler(error: Error | string): void {
 function errorHandlerWithFilter(error: Error | string, capturedBy: string): void {
     safeExecute(() => {
         if (error instanceof Error && error.stack && error.stack.includes(AtlascodeStackTraceHint)) {
-            errorHandler(error, undefined, capturedBy);
+            errorHandler(error, undefined, undefined, capturedBy);
         }
     });
 }
 
-function errorHandler(error: Error | string, errorMessage?: string, capturedBy?: string): void {
+function errorHandler(error: Error | string, errorMessage?: string, params?: string[], capturedBy?: string): void {
     safeExecute(() => {
-        safeExecute(() => Logger.debug('[LOGGED ERROR]', errorMessage, error, capturedBy));
+        const formattedParams =
+            !params || params.length === 0 ? undefined : params.length === 1 ? params[0] : JSON.stringify(params);
+
+        safeExecute(() => Logger.debug('[LOGGED ERROR]', capturedBy, errorMessage, formattedParams, error));
 
         let event: Promise<TrackEvent>;
         if (typeof error === 'string') {
             errorMessage = errorMessage ? `${errorMessage}: ${error}` : error;
-            event = errorEvent(errorMessage);
+            event = errorEvent(errorMessage, undefined, capturedBy, formattedParams);
         } else {
             errorMessage = errorMessage || error.message;
-            event = errorEvent(errorMessage, error, capturedBy);
+            event = errorEvent(errorMessage, error, capturedBy, formattedParams);
         }
 
         if (analyticsClient) {
@@ -84,7 +87,7 @@ export function registerErrorReporting(): void {
         process.addListener('unhandledRejection', unhandledRejectionHandler);
 
         _logger_onError_eventRegistration = Logger.onError(
-            (data) => errorHandler(data.error, data.errorMessage, data.capturedBy),
+            (data) => errorHandler(data.error, data.errorMessage, data.params, data.capturedBy),
             undefined,
         );
     });

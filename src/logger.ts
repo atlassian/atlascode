@@ -11,6 +11,7 @@ export type ErrorEvent = {
     error: Error;
     errorMessage?: string;
     capturedBy?: string;
+    params?: string[];
 };
 
 /** This function must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
@@ -109,29 +110,29 @@ export class Logger {
         }
     }
 
-    public static error(ex: Error, errorMessage?: string): void {
+    public static error(ex: Error, errorMessage?: string, ...params: string[]): void {
         const callerName = retrieveCallerName();
-        this.Instance.errorInternal(ex, callerName, errorMessage);
+        this.Instance.errorInternal(ex, callerName, errorMessage, ...params);
     }
 
-    public error(ex: Error, errorMessage?: string): void {
+    public error(ex: Error, errorMessage?: string, ...params: string[]): void {
         const callerName = retrieveCallerName();
-        this.errorInternal(ex, callerName, errorMessage);
+        this.errorInternal(ex, callerName, errorMessage, ...params);
     }
 
-    private errorInternal(ex: Error, capturedBy?: string, errorMessage?: string): void {
-        Logger._onError.fire({ error: ex, errorMessage, capturedBy });
+    private errorInternal(ex: Error, capturedBy?: string, errorMessage?: string, ...params: string[]): void {
+        Logger._onError.fire({ error: ex, errorMessage, capturedBy, params });
 
         if (this.level === OutputLevel.Silent) {
             return;
         }
 
         if (Container.isDebugging) {
-            console.error(this.timestamp, ConsolePrefix, errorMessage, ex);
+            console.error(this.timestamp, ConsolePrefix, errorMessage, ...params, ex);
         }
 
         if (this.output !== undefined) {
-            this.output.appendLine([this.timestamp, errorMessage, ex].join(' '));
+            this.output.appendLine([this.timestamp, errorMessage, ex, ...params].join(' '));
         }
     }
 
