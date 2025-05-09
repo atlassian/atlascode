@@ -9,7 +9,7 @@ RUN apt-get update \
 # install code-server 
 RUN curl -fsSL https://code-server.dev/install.sh -o install-code-server.sh \
     && sh install-code-server.sh \
-    && curl -L https://github.com/redhat-developer/vscode-yaml/releases/download/1.17.0/vscode-yaml-1.17.0-3.vsix -o vscode-yaml-1.17.0-3.vsix
+    && curl -fL https://open-vsx.org/api/redhat/vscode-yaml/1.18.0/file/redhat.vscode-yaml-1.18.0.vsix -o vscode-yaml-1.17.0-3.vsix
 
 # Set the working directory
 # We will mount the whole project directory to WORKDIR
