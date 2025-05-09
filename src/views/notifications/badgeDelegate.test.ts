@@ -57,13 +57,38 @@ describe('BadgeDelegate', () => {
         expect(() => BadgeDelegate.initialize(treeViewMock)).toThrow('BadgeDelegate already initialized.');
     });
 
-    it('should update badge values', () => {
+    it('should update badge values for different notification counts', () => {
         const uri = Uri.parse('file://test');
-        const mockNotifications = new Set(['notification1', 'notification2']);
-        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(mockNotifications);
 
+        // Case 1: 0 notifications
+        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(new Set());
         badgeDelegate.onNotificationChange(uri);
+        expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
+            uri,
+            NotificationSurface.Badge,
+        );
+        expect(treeViewMock.badge).toEqual({
+            value: 0,
+            tooltip: '0 notifications',
+        });
 
+        // Case 2: 1 notification
+        const oneNotification = new Set(['notification1']);
+        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(oneNotification);
+        badgeDelegate.onNotificationChange(uri);
+        expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
+            uri,
+            NotificationSurface.Badge,
+        );
+        expect(treeViewMock.badge).toEqual({
+            value: 1,
+            tooltip: '1 notification',
+        });
+
+        // Case 3: 2 notifications
+        const twoNotifications = new Set(['notification1', 'notification2']);
+        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(twoNotifications);
+        badgeDelegate.onNotificationChange(uri);
         expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
             uri,
             NotificationSurface.Badge,
@@ -72,20 +97,67 @@ describe('BadgeDelegate', () => {
             value: 2,
             tooltip: '2 notifications',
         });
-    });
 
-    it('should provide file decoration for a URI', () => {
-        const uri = Uri.parse('file://test');
-        const mockNotifications = new Set(['notification1']);
-        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(mockNotifications);
-
-        const decoration = badgeDelegate.provideFileDecoration(uri, {} as any);
-
+        // Case 4: Back to 1 notification
+        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(oneNotification);
+        badgeDelegate.onNotificationChange(uri);
         expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
             uri,
             NotificationSurface.Badge,
         );
-        expect(decoration).toEqual({
+        expect(treeViewMock.badge).toEqual({
+            value: 1,
+            tooltip: '1 notification',
+        });
+
+        // Case 5: Back to 0 notifications
+        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(new Set());
+        badgeDelegate.onNotificationChange(uri);
+        expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
+            uri,
+            NotificationSurface.Badge,
+        );
+        expect(treeViewMock.badge).toEqual({
+            value: 0,
+            tooltip: '0 notifications',
+        });
+    });
+
+    it('should provide file decoration for multiple URIs', () => {
+        const uri1 = Uri.parse('file://test1');
+        const uri2 = Uri.parse('file://test2');
+
+        const mockNotificationsUri1 = new Set(['notification1', 'notification2']);
+        const mockNotificationsUri2 = new Set(['notification1']);
+
+        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockImplementation((uri) => {
+            if (uri.toString() === uri1.toString()) {
+                return mockNotificationsUri1;
+            } else if (uri.toString() === uri2.toString()) {
+                return mockNotificationsUri2;
+            }
+            return new Set();
+        });
+
+        const decorationUri1 = badgeDelegate.provideFileDecoration(uri1, {} as any);
+        const decorationUri2 = badgeDelegate.provideFileDecoration(uri2, {} as any);
+
+        expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
+            uri1,
+            NotificationSurface.Badge,
+        );
+        expect(decorationUri1).toEqual({
+            badge: '2️⃣',
+            tooltip: '2 notifications',
+            color: new ThemeColor('editorForeground'),
+            propagate: false,
+        });
+
+        expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
+            uri2,
+            NotificationSurface.Badge,
+        );
+        expect(decorationUri2).toEqual({
             badge: '1️⃣',
             tooltip: '1 notification',
             color: new ThemeColor('editorForeground'),
