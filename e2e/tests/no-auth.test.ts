@@ -57,7 +57,7 @@ describe('Atlassian Extension SideBar', async () => {
         expect(atlasDrawer).to.not.be.undefined;
 
         // find element by aria-label: "Please login to Jira"
-        const loginButton = atlasDrawer.findElement(By.css('[aria-label="/Please login to Jira • 1 notification"]'));
+        const loginButton = atlasDrawer.findElement(By.css('[aria-label="Please login to Jira"]'));
         expect(loginButton).to.not.be.undefined;
         expect(await loginButton.getText()).to.equal('Please login to Jira');
     });

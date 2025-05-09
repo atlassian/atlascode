@@ -60,6 +60,10 @@ export async function activate(context: ExtensionContext) {
             CommandContext.IsBBAuthenticated,
             Container.siteManager.productHasAtLeastOneSite(ProductBitbucket),
         );
+
+        if (FeatureFlagClient.checkGate(Features.AuthBadgeNotification)) {
+            NotificationManagerImpl.getInstance().listen();
+        }
     } catch (e) {
         Logger.error(e, 'Error initializing atlascode!');
     }
@@ -88,9 +92,6 @@ export async function activate(context: ExtensionContext) {
     // icon to appear in the activity bar
     activateBitbucketFeatures();
     activateYamlFeatures(context);
-    if (FeatureFlagClient.checkGate(Features.AuthBadgeNotification)) {
-        NotificationManagerImpl.getInstance().listen();
-    }
 
     Logger.info(
         `Atlassian for VS Code (v${atlascodeVersion}) activated in ${
