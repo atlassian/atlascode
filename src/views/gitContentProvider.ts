@@ -1,4 +1,5 @@
 import pathlib from 'path';
+import { normalize } from 'src/normalize';
 import vscode from 'vscode';
 
 import { BitbucketContext } from '../bitbucket/bbContext';
@@ -58,6 +59,6 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
             );
         }
 
-        return content || '';
+        return normalize(content || '', uri);
     }
 }
