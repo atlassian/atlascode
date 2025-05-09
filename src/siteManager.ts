@@ -2,6 +2,7 @@ import { Disposable, Event, EventEmitter, Memento } from 'vscode';
 
 import {
     AuthInfoEvent,
+    AuthInfoState,
     DetailedSiteInfo,
     emptySiteInfo,
     isRemoveAuthEvent,
@@ -197,8 +198,14 @@ export class SiteManager extends Disposable {
         return this.getSitesAvailable(product).length > 0;
     }
 
-    public numberOfSites(product: Product, isCloud: boolean): number {
-        return this.getSitesAvailable(product).filter((site) => site.isCloud === isCloud).length;
+    public numberOfAuthedSites(product: Product, isCloud: boolean): number {
+        return this.getSitesAvailable(product)
+            .filter((site) => site.isCloud === isCloud)
+            .filter((site) =>
+                Container.credentialManager
+                    .getAuthInfo(site)
+                    .then((authInfo) => authInfo === undefined || authInfo.state === AuthInfoState.Valid),
+            ).length;
     }
 
     public getSiteForHostname(product: Product, hostname: string): DetailedSiteInfo | undefined {

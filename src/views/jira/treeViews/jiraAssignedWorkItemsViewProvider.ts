@@ -17,10 +17,12 @@ import { Commands } from '../../../commands';
 import { configuration } from '../../../config/configuration';
 import { Container } from '../../../container';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
+import { FeatureFlagClient, Features } from '../../../util/featureFlags';
 import { PromiseRacer } from '../../../util/promises';
+import { BadgeDelegate } from '../../notifications/badgeDelegate';
+import { JiraNotifier } from '../../notifications/jiraNotifier';
 import { RefreshTimer } from '../../RefreshTimer';
 import { SearchJiraHelper } from '../searchJiraHelper';
-import { JiraNotifier } from './jiraNotifier';
 import { executeJqlQuery, JiraIssueNode, loginToJiraMessageNode, TreeViewIssue } from './utils';
 
 const AssignedWorkItemsViewProviderId = AssignedJiraItemsViewId;
@@ -44,6 +46,10 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
         setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
 
         const treeView = window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
+
+        if (FeatureFlagClient.checkGate(Features.AuthBadgeNotification)) {
+            BadgeDelegate.initialize(treeView);
+        }
 
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),

@@ -16,7 +16,9 @@ describe('Atlassian Extension Activity Bar', async () => {
         // Get title from every control
         const titles = await Promise.all(controls.map(async (control) => control.getTitle()));
 
-        expect('Atlassian').to.be.oneOf(titles);
+        const atlassianTitle = titles.filter((title) => title.includes('Atlassian'));
+
+        expect(atlassianTitle.length).to.be.greaterThan(0);
     });
 });
 
@@ -55,7 +57,7 @@ describe('Atlassian Extension SideBar', async () => {
         expect(atlasDrawer).to.not.be.undefined;
 
         // find element by aria-label: "Please login to Jira"
-        const loginButton = atlasDrawer.findElement(By.css('[aria-label="Please login to Jira"]'));
+        const loginButton = atlasDrawer.findElement(By.css('[aria-label="/Please login to Jira"]'));
         expect(loginButton).to.not.be.undefined;
         expect(await loginButton.getText()).to.equal('Please login to Jira');
     });

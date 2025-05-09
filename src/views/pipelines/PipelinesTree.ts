@@ -21,7 +21,7 @@ import { Pipeline } from '../../pipelines/model';
 import { Resources } from '../../resources';
 import { BaseTreeDataProvider } from '../Explorer';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
-import { emptyBitbucketNodes } from '../nodes/bitbucketEmptyNodeList';
+import { emptyBitbucketNodes } from '../nodes/definedNodes';
 import { SimpleNode } from '../nodes/simpleNode';
 import { descriptionForState, filtersActive, iconUriForPipeline, shouldDisplay } from './Helpers';
 

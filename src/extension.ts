@@ -24,6 +24,7 @@ import {
 import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
 import { FeatureFlagClient, Features } from './util/featureFlags';
+import { NotificationManagerImpl } from './views/notifications/notificationManager';
 
 const AnalyticDelay = 5000;
 
@@ -59,6 +60,10 @@ export async function activate(context: ExtensionContext) {
             CommandContext.IsBBAuthenticated,
             Container.siteManager.productHasAtLeastOneSite(ProductBitbucket),
         );
+
+        if (FeatureFlagClient.checkGate(Features.AuthBadgeNotification)) {
+            NotificationManagerImpl.getInstance().listen();
+        }
     } catch (e) {
         Logger.error(e, 'Error initializing atlascode!');
     }
@@ -176,10 +181,10 @@ async function sendAnalytics(version: string, globalState: Memento) {
 
     launchedEvent(
         env.remoteName ? env.remoteName : 'local',
-        Container.siteManager.numberOfSites(ProductJira, true),
-        Container.siteManager.numberOfSites(ProductJira, false),
-        Container.siteManager.numberOfSites(ProductBitbucket, true),
-        Container.siteManager.numberOfSites(ProductBitbucket, false),
+        Container.siteManager.numberOfAuthedSites(ProductJira, true),
+        Container.siteManager.numberOfAuthedSites(ProductJira, false),
+        Container.siteManager.numberOfAuthedSites(ProductBitbucket, true),
+        Container.siteManager.numberOfAuthedSites(ProductBitbucket, false),
     ).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
@@ -193,4 +198,5 @@ function showOnboardingPage() {
 export function deactivate() {
     unregisterErrorReporting();
     FeatureFlagClient.dispose();
+    NotificationManagerImpl.getInstance().stopListening();
 }

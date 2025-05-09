@@ -3,7 +3,7 @@ import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { expansionCastTo, resolvePromiseSync } from 'testsutil';
 import { commands, window } from 'vscode';
 
-import * as showIssueCommand from '../../../commands/jira/showIssue';
+import * as showIssueCommand from '../../commands/jira/showIssue';
 import { JiraNotifier } from './jiraNotifier';
 
 function createIssue(key: string, summary: string, siteId: string): MinimalIssue<DetailedSiteInfo> {
@@ -14,7 +14,7 @@ function createIssue(key: string, summary: string, siteId: string): MinimalIssue
     });
 }
 
-jest.mock('../../../commands/jira/showIssue');
+jest.mock('../../commands/jira/showIssue');
 
 describe('JiraNotifier', () => {
     let showInformationMessageMock: jest.SpyInstance<Thenable<any>, any, any>;

@@ -19,3 +19,8 @@ export const emptyBitbucketNodes: SimpleNode[] = [
         arguments: ['pullRequestsTreeView'],
     }),
 ];
+
+export const loginToBitbucketMessageNode = new SimpleNode('Connect Bitbucket to view pull requests', {
+    command: Commands.ShowBitbucketAuth,
+    title: 'Open Bitbucket Settings',
+});
