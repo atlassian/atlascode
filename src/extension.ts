@@ -88,7 +88,9 @@ export async function activate(context: ExtensionContext) {
     // icon to appear in the activity bar
     activateBitbucketFeatures();
     activateYamlFeatures(context);
-    NotificationManagerImpl.getInstance().listen();
+    if (FeatureFlagClient.checkGate(Features.AuthBadgeNotification)) {
+        NotificationManagerImpl.getInstance().listen();
+    }
 
     Logger.info(
         `Atlassian for VS Code (v${atlascodeVersion}) activated in ${

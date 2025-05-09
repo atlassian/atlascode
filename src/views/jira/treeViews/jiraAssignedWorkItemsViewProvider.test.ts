@@ -96,6 +96,14 @@ jest.mock('../../../container', () => ({
         },
     },
 }));
+jest.mock('../../../util/featureFlags', () => ({
+    FeatureFlagClient: {
+        checkGate: jest.fn().mockResolvedValue(true),
+    },
+    Features: {
+        AuthBadgeNotification: 'AuthBadgeNotification',
+    },
+}));
 
 type ExtractPublic<T> = { [P in keyof T]: T[P] };
 
