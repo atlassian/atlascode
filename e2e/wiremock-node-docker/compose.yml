@@ -14,7 +14,7 @@ services:
     networks:
       e2e:
         aliases:
-          - service-a.com
+          - mockedteams.atlassian.net
           - service-b.com
           - service-c.com
     expose:

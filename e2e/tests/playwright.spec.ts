@@ -1,71 +1,73 @@
 import { expect, test } from '@playwright/test';
 
-// test('Onboarding flow', async ({ page }) => {
-//     await page.goto('http://[::1]:9988/');
+test('Onboarding flow', async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 800 });
+    await page.goto('http://[::1]:9988/');
 
-//     await page.getByRole('tab', { name: 'Atlassian' }).click();
+    await page.getByRole('tab', { name: 'Atlassian' }).click();
 
-//     /*
-//      * Onboarding view tests
-//      **/
+    /*
+     * Onboarding view tests
+     **/
 
-//     await expect(page.getByRole('tab', { name: 'Getting Started' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Getting Started' })).toBeVisible();
 
-//     await page.getByRole('tab', { name: 'Getting Started' }).click();
+    await page.getByRole('tab', { name: 'Getting Started' }).click();
 
-//     const getStartedFrame = page.frameLocator('iframe.webview').frameLocator('iframe[title="Getting Started"]');
+    const getStartedFrame = page.frameLocator('iframe.webview').frameLocator('iframe[title="Getting Started"]');
 
-//     // Jira page
+    // Jira page
 
-//     await page.waitForTimeout(3000);
+    await page.waitForTimeout(3000);
 
-//     await expect(page).toHaveScreenshot();
+    //await expect(page).toHaveScreenshot();
 
-//     await expect(getStartedFrame.getByRole('heading', { name: 'Sign in to Jira' })).toBeVisible();
+    await expect(getStartedFrame.getByRole('heading', { name: 'Sign in to Jira' })).toBeVisible();
 
-//     await expect(getStartedFrame.getByRole('button', { name: 'Sign in to Jira Cloud' })).toBeEnabled();
-//     await expect(getStartedFrame.getByRole('button', { name: 'Back' })).toBeDisabled();
+    await expect(getStartedFrame.getByRole('button', { name: 'Sign in to Jira Cloud' })).toBeEnabled();
+    await expect(getStartedFrame.getByRole('button', { name: 'Back' })).toBeDisabled();
 
-//     await getStartedFrame.getByRole('button', { name: /radio server/i }).click();
+    await getStartedFrame.getByRole('button', { name: /radio server/i }).click();
 
-//     await expect(getStartedFrame.getByRole('button', { name: 'Sign in to Jira Server' })).toBeEnabled();
+    await expect(getStartedFrame.getByRole('button', { name: 'Sign in to Jira Server' })).toBeEnabled();
 
-//     await getStartedFrame.getByRole('button', { name: /radio i don\'t/i }).click();
+    await getStartedFrame.getByRole('button', { name: /radio i don\'t/i }).click();
 
-//     await expect(getStartedFrame.getByRole('button', { name: 'Next' })).toBeEnabled();
+    await expect(getStartedFrame.getByRole('button', { name: 'Next' })).toBeEnabled();
 
-//     await getStartedFrame.getByRole('button', { name: 'Next' }).click();
+    await getStartedFrame.getByRole('button', { name: 'Next' }).click();
 
-//     // Bitbucket page
+    // Bitbucket page
 
-//     await page.waitForTimeout(3000);
+    await page.waitForTimeout(3000);
 
-//     await expect(page).toHaveScreenshot();
+    //await expect(page).toHaveScreenshot();
 
-//     await expect(getStartedFrame.getByRole('heading', { name: 'Sign in to Bitbucket' })).toBeVisible();
+    await expect(getStartedFrame.getByRole('heading', { name: 'Sign in to Bitbucket' })).toBeVisible();
 
-//     await expect(getStartedFrame.getByRole('button', { name: 'Sign in to Bitbucket Cloud' })).toBeEnabled();
-//     await expect(getStartedFrame.getByRole('button', { name: 'Back' })).toBeEnabled();
+    await expect(getStartedFrame.getByRole('button', { name: 'Sign in to Bitbucket Cloud' })).toBeEnabled();
+    await expect(getStartedFrame.getByRole('button', { name: 'Back' })).toBeEnabled();
 
-//     await getStartedFrame.getByRole('button', { name: /radio server/i }).click();
+    await getStartedFrame.getByRole('button', { name: /radio server/i }).click();
 
-//     await expect(getStartedFrame.getByRole('button', { name: 'Sign in to Bitbucket Server' })).toBeEnabled();
+    await expect(getStartedFrame.getByRole('button', { name: 'Sign in to Bitbucket Server' })).toBeEnabled();
 
-//     await getStartedFrame.getByRole('button', { name: /radio i don\'t/i }).click();
+    await getStartedFrame.getByRole('button', { name: /radio i don\'t/i }).click();
 
-//     await expect(getStartedFrame.getByRole('button', { name: 'Next' })).toBeEnabled();
+    await expect(getStartedFrame.getByRole('button', { name: 'Next' })).toBeEnabled();
 
-//     await getStartedFrame.getByRole('button', { name: 'Next' }).click();
+    await getStartedFrame.getByRole('button', { name: 'Next' }).click();
 
-//     // Landing page
+    // Landing page
 
-//     await page.waitForTimeout(3000);
-//     //await expect(page).toHaveScreenshot();
+    await page.waitForTimeout(3000);
+    //await expect(page).toHaveScreenshot();
 
-//     await expect(getStartedFrame.getByRole('heading', { name: "You're ready to get started!" })).toBeVisible();
-// });
+    await expect(getStartedFrame.getByRole('heading', { name: "You're ready to get started!" })).toBeVisible();
+});
 
 test('everything else', async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 800 });
     await page.goto('http://[::1]:9988/');
 
     await page.getByRole('tab', { name: 'Atlassian' }).click();
@@ -98,13 +100,13 @@ test('everything else', async ({ page }) => {
     await settingsFrame.getByRole('textbox', { name: 'Base URL' }).click();
     await page.waitForTimeout(500);
 
-    await settingsFrame.getByRole('textbox', { name: 'Base URL' }).fill('https://softwareteams.atlassian.net');
+    await settingsFrame.getByRole('textbox', { name: 'Base URL' }).fill('https://mockedteams.atlassian.net');
     await page.waitForTimeout(500);
 
     await settingsFrame.getByRole('textbox', { name: 'Username' }).click();
     await page.waitForTimeout(500);
 
-    await settingsFrame.getByRole('textbox', { name: 'Username' }).fill('test@atlassian.qqq');
+    await settingsFrame.getByRole('textbox', { name: 'Username' }).fill('mock@atlassian.code');
     await page.waitForTimeout(500);
 
     await settingsFrame.getByRole('textbox', { name: 'Password (API token)' }).click();
@@ -121,5 +123,5 @@ test('everything else', async ({ page }) => {
 
     // await expect(settingsFrame.getByRole('button', { name: 'Login to Bitbucket' })).toBeVisible();
 
-    //await expect(page).toHaveScreenshot();
+    // await expect(page).toHaveScreenshot();
 });

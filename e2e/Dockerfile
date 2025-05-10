@@ -29,8 +29,6 @@ cp ./e2e/wiremock-node-docker/certs/rootCA.crt /usr/local/share/ca-certificates/
 update-ca-certificates
 
 echo "installing dependencies for atlascode extension"
-ls ..
-ls
 code-server --install-extension ../vscode-yaml-1.17.0-3.vsix --force
 echo "installing atlascode"
 code-server --install-extension atlascode-0.0.0.vsix --force

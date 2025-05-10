@@ -77,8 +77,8 @@ openssl genrsa -out rootCA.key 4096
 # Creates a self-signed CA certificate valid for 10 years
 openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.crt -subj "/C=US/ST=Washington/L=Bellevue/O=Atlascode/CN=Atlascode CA"
 
-# Generates a certificate for wiremock-a
-generate_service_cert "wiremock-a" "service-a.com" "service-b.com" "service-c.com" 
+# Generates a certificate for mockedteams.atlassian.net
+generate_service_cert "wiremock-a" "mockedteams.atlassian.net" "service-b.com" "service-c.com" 
 
 rm rootCA.key
 rm rootCA.srl
