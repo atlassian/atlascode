@@ -68,6 +68,7 @@ module.exports = [
                 new TerserPlugin({
                     extractComments: false,
                     terserOptions: {
+                        keep_fnames: true,
                         compress: {
                             comparisons: false,
                         },

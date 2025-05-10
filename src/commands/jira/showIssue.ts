@@ -10,17 +10,18 @@ import * as vscode from 'vscode';
 
 import { DetailedSiteInfo, emptySiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { Container } from '../../container';
-import { fetchMinimalIssue, getCachedOrFetchMinimalIssue } from '../../jira/fetchIssue';
+import { getCachedOrFetchMinimalIssue } from '../../jira/fetchIssue';
 import { issueForKey } from '../../jira/issueForKey';
 
 export async function showIssue(issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) {
-    let issueKey: string = '';
-    let site: DetailedSiteInfo = emptySiteInfo;
-    let issue: MinimalIssue<DetailedSiteInfo> = createIssueNotFoundIssue(createEmptyMinimalIssue(site));
+    let issue: MinimalIssue<DetailedSiteInfo>;
 
     if (isMinimalIssue(issueOrKeyAndSite)) {
         issue = issueOrKeyAndSite;
     } else {
+        let issueKey: string = '';
+        let site: DetailedSiteInfo = emptySiteInfo;
+
         if (isIssueKeyAndSite(issueOrKeyAndSite)) {
             issueKey = issueOrKeyAndSite.key;
             site = issueOrKeyAndSite.siteDetails;
@@ -30,28 +31,22 @@ export async function showIssue(issueOrKeyAndSite: MinimalIssueOrKeyAndSite<Deta
         }
 
         // Note: we try to get the cached issue first because it will contain epic child info we need
-        const cachedOrFetched = await getCachedOrFetchMinimalIssue(issueKey, site);
-        if (cachedOrFetched && isMinimalIssue(cachedOrFetched)) {
-            issue = cachedOrFetched;
-        } else {
-            issue = await fetchMinimalIssue(issueKey, site);
+        issue = await getCachedOrFetchMinimalIssue(issueKey, site);
+
+        if (!issue) {
+            throw new Error(`Jira issue ${issueKey} not found in site ${site.host}`);
         }
     }
 
     Container.jiraIssueViewManager.createOrShow(issue);
 }
+
 export async function showIssueForSiteIdAndKey(siteId: string, issueKey: string) {
     const site: DetailedSiteInfo | undefined = Container.siteManager.getSiteForId(ProductJira, siteId);
-    let issue: MinimalIssue<DetailedSiteInfo> = createIssueNotFoundIssue(createEmptyMinimalIssue(emptySiteInfo));
 
-    if (site) {
-        const cachedOrFetched = await getCachedOrFetchMinimalIssue(issueKey, site);
-        if (cachedOrFetched && isMinimalIssue(cachedOrFetched)) {
-            issue = cachedOrFetched;
-        } else {
-            issue = await fetchMinimalIssue(issueKey, site);
-        }
-    }
+    const issue = site
+        ? await getCachedOrFetchMinimalIssue(issueKey, site)
+        : createIssueNotFoundIssue(createEmptyMinimalIssue(emptySiteInfo));
 
     Container.jiraIssueViewManager.createOrShow(issue);
 }

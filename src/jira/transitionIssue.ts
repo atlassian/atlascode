@@ -30,7 +30,7 @@ export async function transitionIssue(issueOrKey: MinimalIssueOrKeyAndSite<Detai
         await performTransition(issueKey, transition, site);
         return;
     } catch (e) {
-        Logger.error(e);
+        Logger.error(e, 'Error executing transitionIssue');
         throw e;
     }
 }
@@ -47,7 +47,7 @@ async function performTransition(issueKey: string, transition: Transition, site:
             Container.analyticsClient.sendTrackEvent(e);
         });
     } catch (err) {
-        Logger.error(err);
+        Logger.error(err, 'Error executing performTransition');
         throw err;
     }
 }

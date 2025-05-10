@@ -68,7 +68,7 @@ export class HTTPClient {
             });
             return { data: res.data, headers: res.headers };
         } catch (e) {
-            Logger.error(e, `Error getting URL: ${url}`);
+            Logger.error(e, 'Error getting URL', url);
             if (e.response) {
                 return Promise.reject(await this.errorHandler(e.response));
             } else {

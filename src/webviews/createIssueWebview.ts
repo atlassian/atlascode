@@ -18,7 +18,7 @@ import {
     isSetIssueType,
 } from '../ipc/issueActions';
 import { CreateIssueData } from '../ipc/issueMessaging';
-import { Action, onlineStatus } from '../ipc/messaging';
+import { Action } from '../ipc/messaging';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { WebViewID } from '../lib/ipc/models/common';
 import { Logger } from '../logger';
@@ -103,11 +103,6 @@ export class CreateIssueWebview
 
         await this.updateSiteAndProject();
 
-        if (!Container.onlineDetector.isOnline()) {
-            this.postMessage(onlineStatus(false));
-            return;
-        }
-
         if (data) {
             this._screenData = emptyCreateMetaResult;
         } else {
@@ -157,12 +152,7 @@ export class CreateIssueWebview
     }
 
     public async invalidate() {
-        if (Container.onlineDetector.isOnline()) {
-            await this.updateFields();
-        } else {
-            this.postMessage(onlineStatus(false));
-        }
-
+        await this.updateFields();
         Container.pmfStats.touchActivity();
     }
 
@@ -269,8 +259,7 @@ export class CreateIssueWebview
                 : {};
             this.postMessage(createData);
         } catch (e) {
-            const err = new Error(`error updating issue fields: ${e}`);
-            Logger.error(err);
+            Logger.error(e, 'error updating issue fields');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
@@ -475,7 +464,7 @@ export class CreateIssueWebview
 
                             this.fireCallback(resp.key, payload.summary);
                         } catch (e) {
-                            Logger.error(new Error(`error creating issue: ${e}`));
+                            Logger.error(e, 'Error creating issue');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error creating issue'),

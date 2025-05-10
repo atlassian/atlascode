@@ -10,7 +10,7 @@ import { SimpleNode } from './simpleNode';
 export class RelatedIssuesNode extends TreeItem implements AbstractBaseNode {
     private readonly childrenPromises: Promise<JiraIssueNode[]>;
 
-    constructor(jiraKeys: string[], label: string) {
+    constructor(prId: string, jiraKeys: string[], label: string) {
         const collapsibleState = jiraKeys.length ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None;
         super(label, collapsibleState);
 
@@ -20,14 +20,7 @@ export class RelatedIssuesNode extends TreeItem implements AbstractBaseNode {
             jiraKeys.map((key) =>
                 issueForKey(key).then((issue) => {
                     (issue as TreeViewIssue).children = [];
-                    (issue as TreeViewIssue).jqlSource = {
-                        id: 'relatedJiras',
-                        name: '',
-                        query: '',
-                        siteId: '',
-                        enabled: false,
-                        monitor: false,
-                    };
+                    (issue as TreeViewIssue).source = { id: prId };
                     return new JiraIssueNode(
                         JiraIssueNode.NodeType.RelatedJiraIssueInBitbucketPR,
                         issue as TreeViewIssue,

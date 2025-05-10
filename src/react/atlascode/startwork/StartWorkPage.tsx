@@ -325,7 +325,7 @@ const StartWorkPage: React.FunctionComponent = () => {
         send: StartWorkAction,
         waitForEvent: string,
         timeout: number,
-        nonce?: string,
+        nonce: string,
     ): Promise<any> => {
         controller.postMessage(send);
         return OnMessageEventPromise(waitForEvent, timeout, nonce);

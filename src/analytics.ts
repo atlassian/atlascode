@@ -93,15 +93,40 @@ export async function loggedOutEvent(site: DetailedSiteInfo): Promise<TrackEvent
 
 // Error/diagnostics events
 
-function sanitizeStackTrace(stack?: string): string | undefined {
-    return stack ? stack.replace(/\/Users\/[^/]+\//g, '/Users/<user>/') : stack;
+function sanitazeErrorMessage(message?: string): string | undefined {
+    if (message) {
+        message = message.replace(/^(connect \w+ )(\d+\.\d+\.\d+\.\d+)(.*)/, '$1<ip>$3');
+        message = message.replace(/^(getaddrinfo \w+ )(.*)/, '$1<domain>');
+    }
+    return message || undefined;
 }
 
-export async function errorEvent(error: Error | string): Promise<TrackEvent> {
-    const attributes: { name: string; message: string; stack?: string } =
-        typeof error === 'string'
-            ? { name: 'Error', message: error }
-            : { name: error.name || 'Error', message: error.message, stack: sanitizeStackTrace(error.stack) };
+function sanitizeStackTrace(stack?: string): string | undefined {
+    if (stack) {
+        stack = stack.replace(/\/Users\/[^/]+\//g, '/Users/<user>/');
+    }
+    return stack || undefined;
+}
+
+export async function errorEvent(
+    errorMessage: string,
+    error?: Error,
+    capturedBy?: string,
+    additionalParams?: string,
+): Promise<TrackEvent> {
+    const attributes: {
+        name: string;
+        message?: string;
+        capturedBy?: string;
+        stack?: string;
+        additionalParams?: string;
+    } = {
+        message: sanitazeErrorMessage(errorMessage),
+        name: error?.name || 'Error',
+        capturedBy,
+        stack: error?.stack ? sanitizeStackTrace(error.stack) : undefined,
+        additionalParams,
+    };
 
     return trackEvent('errorEvent_v2', 'atlascode', { attributes });
 }
@@ -205,7 +230,7 @@ export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {
 // PR events
 
 export async function createPrTerminalLinkDetectedEvent(isNotifEnabled: boolean): Promise<TrackEvent> {
-    return trackEvent('createPrTerminalLink', 'detected', {
+    return trackEvent('detected', 'createPrTerminalLink', {
         attributes: { isNotificationEnabled: isNotifEnabled },
     });
 }

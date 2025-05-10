@@ -51,7 +51,6 @@ const ports: Record<string, number> = {
     atlascodeSettingsV2: UIWSPort.Settings,
     atlascodeOnboardingV2: UIWSPort.Onboarding,
     bitbucketIssuePageV2: UIWSPort.BitbucketIssuePage,
-    createBitbucketIssuePageV2: UIWSPort.CreateBitbucketIssuePage,
     startWorkPageV2: UIWSPort.StartWork,
     pipelineSummaryV2: UIWSPort.PipelineSummary,
     pullRequestDetailsPageV2: UIWSPort.PullRequestDetailsPage,

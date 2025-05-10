@@ -99,7 +99,7 @@ export class LoginManager {
                 }),
             );
         } catch (e) {
-            Logger.error(e, 'Error authenticating');
+            Logger.error(e, `Error authenticating with provider '${provider}'`);
             vscode.window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
         }
     }
@@ -129,9 +129,8 @@ export class LoginManager {
                     this._analyticsClient.sendTrackEvent(e);
                 });
             } catch (err) {
-                const errorString = `Error authenticating with ${site.product.name}: ${err}`;
-                Logger.error(new Error(errorString));
-                return Promise.reject(errorString);
+                Logger.error(err, `Error authenticating with ${site.product.name}`);
+                return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
             }
         }
     }
@@ -144,9 +143,8 @@ export class LoginManager {
                     this._analyticsClient.sendTrackEvent(e);
                 });
             } catch (err) {
-                const errorString = `Error authenticating with ${site.product.name}: ${err}`;
-                Logger.error(new Error(errorString));
-                return Promise.reject(errorString);
+                Logger.error(err, `Error authenticating with ${site.product.name}`);
+                return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
             }
         }
     }

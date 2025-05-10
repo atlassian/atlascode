@@ -3,6 +3,7 @@ build
 node_modules
 .vscode-test/
 .vscode/*
+!.vscode/settings.json
 launch.json
 *.vsix
 .yo-*

@@ -20,7 +20,7 @@ export async function rerunPipeline(pipeline: Pipeline) {
             commands.executeCommand(Commands.RefreshPipelines);
         }, 500);
     } catch (e) {
-        Logger.error(e);
+        Logger.error(e, 'Error rerunning build');
         window.showErrorMessage(`Error rerunning build`);
     }
 }

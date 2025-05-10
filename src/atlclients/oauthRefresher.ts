@@ -66,9 +66,10 @@ export class OAuthRefesher implements Disposable {
                 }
             }
         } catch (err) {
-            Logger.error(err, 'Error while refreshing tokens');
+            const responseStatusDescription = err.response?.status ? ` ${err.response.status}` : '';
+            Logger.error(err, 'Error while refreshing tokens' + responseStatusDescription);
             if (err.response?.status === 401 || err.response?.status === 403) {
-                Logger.debug(`Invalidationg credentials due to ${err.response.status} while refreshing tokens`);
+                Logger.debug(`Invalidating credentials due to ${err.response.status} while refreshing tokens`);
                 response.shouldInvalidate = true;
             }
         }

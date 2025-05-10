@@ -60,7 +60,7 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
     }
 
     async refresh() {
-        if (!Container.onlineDetector.isOnline() || !Container.siteManager.productHasAtLeastOneSite(ProductBitbucket)) {
+        if (!Container.siteManager.productHasAtLeastOneSite(ProductBitbucket)) {
             return;
         }
 

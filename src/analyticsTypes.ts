@@ -31,7 +31,6 @@ export enum AnalyticsView {
     SettingsPage = 'page:v2:settings',
 
     BitbucketIssuePage = 'page:v2:bitbucket:issue',
-    CreateBitbucketIssuePage = 'page:v2:bitbucket:createIssue',
 
     PullRequestPage = 'page:v2:bitbucket:pullRequest',
     CreatePullRequestPage = 'page:v2:bitbucket:createPullRequest',

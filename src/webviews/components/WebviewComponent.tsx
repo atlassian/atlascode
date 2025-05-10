@@ -110,7 +110,7 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
         send: any,
         waitForEvent: string,
         timeout: number,
-        nonce?: string,
+        nonce: string,
     ): Promise<any> {
         this._api.postMessage(send);
         return OnMessageEventPromise(waitForEvent, timeout, nonce);

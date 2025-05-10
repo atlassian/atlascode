@@ -33,7 +33,6 @@ import { Pipeline } from './pipelines/model';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
 import { Experiments, FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
-import { OnlineDetector } from './util/online';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -96,7 +95,6 @@ export class Container {
         context.subscriptions.push((this._credentialManager = new CredentialManager(this._analyticsClient)));
         context.subscriptions.push((this._siteManager = new SiteManager(context.globalState)));
         context.subscriptions.push((this._clientManager = new ClientManager(context)));
-        context.subscriptions.push((this._onlineDetector = new OnlineDetector()));
         context.subscriptions.push((this._jiraProjectManager = new JiraProjectManager()));
         context.subscriptions.push((this._jiraSettingsManager = new JiraSettingsManager()));
         context.subscriptions.push((this._createIssueWebview = new CreateIssueWebview(context.extensionPath)));
@@ -396,11 +394,6 @@ export class Container {
     private static _credentialManager: CredentialManager;
     public static get credentialManager() {
         return this._credentialManager;
-    }
-
-    private static _onlineDetector: OnlineDetector;
-    public static get onlineDetector() {
-        return this._onlineDetector;
     }
 
     private static _jiraActiveIssueStatusBar: JiraActiveIssueStatusBar;

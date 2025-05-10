@@ -202,7 +202,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         }
 
         const issueKeys = await extractIssueKeys(this.pr, commits, allComments.data);
-        return issueKeys.length ? [new RelatedIssuesNode(issueKeys, 'Related Jira issues')] : [];
+        return issueKeys.length ? [new RelatedIssuesNode(this.pr.data.id, issueKeys, 'Related Jira issues')] : [];
     }
 }
 

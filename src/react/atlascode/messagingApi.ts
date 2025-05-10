@@ -83,9 +83,6 @@ export function useMessagingApi<A, M extends ReducerAction<any, any>, R extends 
                         errorController.showError(message.reason);
                         break;
                     }
-                    case CommonMessageType.OnlineStatus: {
-                        break;
-                    }
                     case CommonMessageType.PMFStatus: {
                         if (message.showPMF) {
                             pmfController.showPMFBanner();

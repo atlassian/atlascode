@@ -35,6 +35,7 @@ module.exports = {
             new TerserPlugin({
                 extractComments: false,
                 terserOptions: {
+                    keep_fnames: true,
                     compress: {
                         comparisons: false,
                     },
@@ -101,8 +102,8 @@ module.exports = {
         }),
     ],
     performance: {
-        maxEntrypointSize: 262144,  // overridden to 256KiB, reccomended is 244KiB
-        maxAssetSize: 524288,       // overridden to 512KiB, reccomended is 244KiB
+        maxEntrypointSize: 307200,  // overridden to 300KiB, reccomended is 244KiB
+        maxAssetSize: 614400,       // overridden to 600KiB, reccomended is 244KiB
     },
     watchOptions: {
         ignored: /node_modules/,

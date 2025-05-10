@@ -11,6 +11,7 @@ import { issuesForJQL } from '../jira/issuesForJql';
 import { Logger } from '../logger';
 
 type JQLSettleResult = { jqlName: string; issues: MinimalIssue<DetailedSiteInfo>[] };
+
 export class NewIssueMonitor {
     private readonly _jqlFetcher: () => JQLEntry[];
     private _timestamp = new Date();
@@ -36,7 +37,6 @@ export class NewIssueMonitor {
 
     async checkForNewIssues() {
         if (
-            !Container.onlineDetector.isOnline() ||
             !Container.config.jira.explorer.monitorEnabled ||
             !Container.siteManager.productHasAtLeastOneSite(ProductJira)
         ) {
@@ -90,7 +90,7 @@ export class NewIssueMonitor {
 
             this.showNotification(notifyIssues);
         } catch (e) {
-            Logger.error(new Error(`Error checking for new issues ${e}`));
+            Logger.error(e, 'Error checking for new issues');
         }
     }
 
