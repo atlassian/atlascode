@@ -78,7 +78,7 @@ openssl genrsa -out rootCA.key 4096
 openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.crt -subj "/C=US/ST=Washington/L=Bellevue/O=Atlascode/CN=Atlascode CA"
 
 # Generates a certificate for mockedteams.atlassian.net
-generate_service_cert "wiremock-a" "mockedteams.atlassian.net" "service-b.com" "service-c.com" 
+generate_service_cert "wiremock-mockedteams" "mockedteams.atlassian.net"
 
 rm rootCA.key
 rm rootCA.srl

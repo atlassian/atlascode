@@ -2,12 +2,12 @@ networks:
   e2e:
 
 services: 
-  wiremock-a:
+  wiremock-mockedteams:
     image: wiremock/wiremock
     command: >
       --https-port 443
       --verbose
-      --https-keystore /home/wiremock_ssl_certs/wiremock-a.p12
+      --https-keystore /home/wiremock_ssl_certs/wiremock-mockedteams.p12
     volumes:
       - ./wiremock-endpoint/mappings:/home/wiremock/mappings
       - ./certs:/home/wiremock_ssl_certs
@@ -15,8 +15,6 @@ services:
       e2e:
         aliases:
           - mockedteams.atlassian.net
-          - service-b.com
-          - service-c.com
     expose:
       - 443
 
@@ -29,7 +27,7 @@ services:
       # - ATLASCODE_TEST_USER_API_TOKEN=${ATLASCODE_TEST_USER_API_TOKEN}
       - NODE_TLS_REJECT_UNAUTHORIZED=0
     depends_on:
-      - wiremock-a
+      - wiremock-mockedteams
     networks:
       - e2e
     ports:
