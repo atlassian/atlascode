@@ -1,0 +1,36 @@
+networks:
+  e2e:
+
+services: 
+  wiremock-a:
+    image: wiremock/wiremock
+    command: >
+      --https-port 443
+      --verbose
+      --https-keystore /home/wiremock_ssl_certs/wiremock-a.p12
+    volumes:
+      - ./wiremock-endpoint/mappings:/home/wiremock/mappings
+      - ./certs:/home/wiremock_ssl_certs
+    networks:
+      e2e:
+        aliases:
+          - mockedteams.atlassian.net
+          - service-b.com
+          - service-c.com
+    expose:
+      - 443
+
+  atlascode-e2e:
+    image: atlascode-e2e
+    platform: linux/amd64
+    volumes:
+      - ${PWD}/../..:/atlascode
+    environment:
+      # - ATLASCODE_TEST_USER_API_TOKEN=${ATLASCODE_TEST_USER_API_TOKEN}
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+    depends_on:
+      - wiremock-a
+    networks:
+      - e2e
+    ports:
+      - "9988:9988"
