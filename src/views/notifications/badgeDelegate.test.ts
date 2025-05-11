@@ -16,6 +16,16 @@ jest.mock('vscode', () => ({
         registerFileDecorationProvider: jest.fn(),
     },
 }));
+jest.mock('../../analytics', () => ({
+    notificationChangeEvent: jest.fn().mockResolvedValue({}),
+}));
+jest.mock('../../container', () => ({
+    Container: {
+        analyticsClient: {
+            sendTrackEvent: jest.fn(),
+        },
+    },
+}));
 
 jest.mock('./notificationManager', () => ({
     NotificationManagerImpl: {

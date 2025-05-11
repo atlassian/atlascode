@@ -1,11 +1,15 @@
 import { CancellationToken, EventEmitter, FileDecorationProvider, ThemeColor, TreeView, Uri, window } from 'vscode';
 
+import { notificationChangeEvent } from '../../analytics';
+import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
+import { Container } from '../../container';
 import { NotificationDelegate, NotificationManagerImpl, NotificationSurface } from './notificationManager';
 
 export class BadgeDelegate implements FileDecorationProvider, NotificationDelegate {
     private static badgeDelegateSingleton: BadgeDelegate | undefined = undefined;
     private overallCount = 0;
     private badgesRegistration: Record<string, number> = {};
+    private _analyticsClient: AnalyticsClient;
 
     public static initialize(treeViewParent: TreeView<any>): void {
         if (this.badgeDelegateSingleton) {
@@ -24,6 +28,7 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
 
     private constructor(private treeViewParent: TreeView<any>) {
         window.registerFileDecorationProvider(this);
+        this._analyticsClient = Container.analyticsClient;
     }
 
     public onNotificationChange(uri: Uri): void {
@@ -33,7 +38,8 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
         ).size;
         const oldBadgeValue = this.badgesRegistration[uri.toString()];
         this.registerBadgeValueByUri(newBadgeValue, uri);
-        this.updateOverallCount(newBadgeValue, oldBadgeValue);
+        const badgeCountDelta = this.updateOverallCount(newBadgeValue, oldBadgeValue);
+        this.analytics(uri, badgeCountDelta);
         this.setExtensionBadge();
         this._onDidChangeFileDecorations.fire(uri);
     }
@@ -77,7 +83,7 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
         };
     }
 
-    private updateOverallCount(newBadgeValue: number | undefined, oldBadgeValue: number | undefined): void {
+    private updateOverallCount(newBadgeValue: number | undefined, oldBadgeValue: number | undefined): number {
         if (newBadgeValue === undefined) {
             newBadgeValue = 0;
         }
@@ -85,11 +91,14 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
             oldBadgeValue = 0;
         }
 
-        this.overallCount += newBadgeValue - oldBadgeValue;
+        const delta = newBadgeValue - oldBadgeValue;
+        this.overallCount += delta;
 
         if (this.overallCount < 0) {
             this.overallCount = 0;
         }
+
+        return delta;
     }
 
     private overallToolTip(): string {
@@ -123,5 +132,14 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
             default:
                 return '🔟+';
         }
+    }
+
+    private analytics(uri: Uri, badgeCountDelta: number): void {
+        if (badgeCountDelta === 0) {
+            return;
+        }
+        notificationChangeEvent(uri, NotificationSurface.Badge, badgeCountDelta).then((e) => {
+            this._analyticsClient.sendTrackEvent(e);
+        });
     }
 }

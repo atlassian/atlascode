@@ -1,8 +1,11 @@
+import { Uri } from 'vscode';
+
 import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/types';
 import { CreatePrTerminalSelection, UIErrorInfo } from './analyticsTypes';
 import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira, SiteInfo } from './atlclients/authInfo';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
+import { NotificationSurface } from './views/notifications/notificationManager';
 
 // IMPORTANT
 // Make sure there is a corresponding event with the correct attributes in the Data Portal for any event created here.
@@ -225,6 +228,20 @@ export async function startIssueCreationEvent(source: string, product: Product):
 
 export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {
     return trackEvent('searchIssues', 'issue', { attributes: { hostProduct: product.name } });
+}
+
+export async function notificationChangeEvent(
+    uri: Uri,
+    notificationSurface: NotificationSurface,
+    delta: number,
+): Promise<TrackEvent> {
+    return trackEvent('changed', 'notification', {
+        attributes: {
+            uri: uri.toString(),
+            notificationSurface: notificationSurface,
+            delta: delta,
+        },
+    });
 }
 
 // PR events
