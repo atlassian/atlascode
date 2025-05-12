@@ -4,7 +4,7 @@
 ## What's new in 3.7.0
 
 ### Improvements
-- Badge notifications maybe be displayed if user is in an unauthenticated state. 
+- Badge notifications may be be displayed if user is in an unauthenticated state. 
 
 ## What's new in 3.6.6
 
