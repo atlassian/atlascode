@@ -9,7 +9,7 @@ services:
       --verbose
       --https-keystore /home/wiremock_ssl_certs/wiremock-mockedteams.p12
     volumes:
-      - ./wiremock-node-docker/mappings/mockedteams:/home/wiremock/mappings
+      - ./wiremock-mappings/mockedteams:/home/wiremock/mappings
       - ./sslcerts:/home/wiremock_ssl_certs
     networks:
       e2e:
