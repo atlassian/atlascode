@@ -3,7 +3,12 @@ import { CancellationToken, EventEmitter, FileDecorationProvider, ThemeColor, Tr
 import { notificationChangeEvent } from '../../analytics';
 import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
 import { Container } from '../../container';
-import { NotificationDelegate, NotificationManagerImpl, NotificationSurface } from './notificationManager';
+import {
+    NotificationChangeEvent,
+    NotificationDelegate,
+    NotificationManagerImpl,
+    NotificationSurface,
+} from './notificationManager';
 
 export class BadgeDelegate implements FileDecorationProvider, NotificationDelegate {
     private static badgeDelegateSingleton: BadgeDelegate | undefined = undefined;
@@ -31,7 +36,14 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
         this._analyticsClient = Container.analyticsClient;
     }
 
-    public onNotificationChange(uri: Uri): void {
+    public getSurface(): NotificationSurface {
+        return NotificationSurface.Badge;
+    }
+
+    public onNotificationChange(event: NotificationChangeEvent): void {
+        // Todo: bwieger, clean up the logic in here
+
+        const { uri } = event;
         const newBadgeValue = NotificationManagerImpl.getInstance().getNotificationsByUri(
             uri,
             NotificationSurface.Badge,
@@ -64,6 +76,7 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
         }
     }
 
+    // Todo: Show contextual information in the tooltip
     private setExtensionBadge() {
         this.treeViewParent.badge = {
             value: this.overallCount,

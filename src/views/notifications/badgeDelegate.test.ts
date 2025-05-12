@@ -1,7 +1,7 @@
 import { ThemeColor, TreeView, Uri, window } from 'vscode';
 
 import { BadgeDelegate } from './badgeDelegate';
-import { NotificationManagerImpl, NotificationSurface } from './notificationManager';
+import { NotificationAction, NotificationManagerImpl, NotificationSurface } from './notificationManager';
 
 jest.mock('vscode', () => ({
     EventEmitter: jest.fn().mockImplementation(() => ({
@@ -36,6 +36,10 @@ jest.mock('./notificationManager', () => ({
     },
     NotificationSurface: {
         Badge: 'Badge',
+    },
+    NotificationAction: {
+        Added: 'Added',
+        Removed: 'Removed',
     },
 }));
 
@@ -72,7 +76,7 @@ describe('BadgeDelegate', () => {
 
         // Case 1: 0 notifications
         (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(new Set());
-        badgeDelegate.onNotificationChange(uri);
+        badgeDelegate.onNotificationChange({ action: NotificationAction.Added, uri: uri, notifications: new Map() });
         expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
             uri,
             NotificationSurface.Badge,
@@ -85,7 +89,7 @@ describe('BadgeDelegate', () => {
         // Case 2: 1 notification
         const oneNotification = new Set(['notification1']);
         (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(oneNotification);
-        badgeDelegate.onNotificationChange(uri);
+        badgeDelegate.onNotificationChange({ action: NotificationAction.Added, uri: uri, notifications: new Map() });
         expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
             uri,
             NotificationSurface.Badge,
@@ -98,7 +102,7 @@ describe('BadgeDelegate', () => {
         // Case 3: 2 notifications
         const twoNotifications = new Set(['notification1', 'notification2']);
         (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(twoNotifications);
-        badgeDelegate.onNotificationChange(uri);
+        badgeDelegate.onNotificationChange({ action: NotificationAction.Added, uri: uri, notifications: new Map() });
         expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
             uri,
             NotificationSurface.Badge,
@@ -110,7 +114,7 @@ describe('BadgeDelegate', () => {
 
         // Case 4: Back to 1 notification
         (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(oneNotification);
-        badgeDelegate.onNotificationChange(uri);
+        badgeDelegate.onNotificationChange({ action: NotificationAction.Removed, uri: uri, notifications: new Map() });
         expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
             uri,
             NotificationSurface.Badge,
@@ -122,7 +126,7 @@ describe('BadgeDelegate', () => {
 
         // Case 5: Back to 0 notifications
         (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(new Set());
-        badgeDelegate.onNotificationChange(uri);
+        badgeDelegate.onNotificationChange({ action: NotificationAction.Removed, uri: uri, notifications: new Map() });
         expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
             uri,
             NotificationSurface.Badge,

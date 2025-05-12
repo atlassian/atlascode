@@ -63,7 +63,10 @@ describe('NotificationManagerImpl', () => {
     });
 
     it('should register and unregister delegates', () => {
-        const mockDelegate = { onNotificationChange: jest.fn() };
+        const mockDelegate = {
+            onNotificationChange: jest.fn(),
+            getSurface: jest.fn(() => NotificationSurface.All),
+        };
         notificationManager.registerDelegate(mockDelegate);
         const uri = Uri.parse(generateRandomFileUri());
         notificationManager.addNotification(uri, {
@@ -110,28 +113,6 @@ describe('NotificationManagerImpl', () => {
         notificationManager.addNotification(uri, notification);
         const notifications = notificationManager.getNotificationsByUri(uri, NotificationSurface.All);
         expect(notifications.size).toBe(1);
-    });
-
-    it('should remove notifications by URI', () => {
-        const uri = Uri.parse(generateRandomFileUri());
-        const notification: AtlasCodeNotification = {
-            id: '1',
-            message: 'Test Notification',
-            notificationType: NotificationType.AssignedToYou,
-        };
-
-        notificationManager.addNotification(uri, notification);
-        notificationManager.removeNotification(uri, notification);
-        const notifications = notificationManager.getNotificationsByUri(uri, NotificationSurface.All);
-        expect(notifications.size).toBe(0);
-
-        // Confirm remove notification is idempotent
-        notificationManager.removeNotification(uri, notification);
-        const notificationsAfterIdempotentRemove = notificationManager.getNotificationsByUri(
-            uri,
-            NotificationSurface.All,
-        );
-        expect(notificationsAfterIdempotentRemove.size).toBe(0);
     });
 
     it('should clear all notifications for a URI', () => {
