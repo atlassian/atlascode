@@ -9,8 +9,8 @@ services:
       --verbose
       --https-keystore /home/wiremock_ssl_certs/wiremock-mockedteams.p12
     volumes:
-      - ./wiremock-endpoint/mappings:/home/wiremock/mappings
-      - ./certs:/home/wiremock_ssl_certs
+      - ./wiremock-node-docker/mappings/mockedteams:/home/wiremock/mappings
+      - ./sslcerts:/home/wiremock_ssl_certs
     networks:
       e2e:
         aliases:
@@ -22,9 +22,8 @@ services:
     image: atlascode-e2e
     platform: linux/amd64
     volumes:
-      - ${PWD}/../..:/atlascode
+      - ${PWD}/..:/atlascode
     environment:
-      # - ATLASCODE_TEST_USER_API_TOKEN=${ATLASCODE_TEST_USER_API_TOKEN}
       - NODE_TLS_REJECT_UNAUTHORIZED=0
     depends_on:
       - wiremock-mockedteams

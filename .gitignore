@@ -8,8 +8,9 @@ launch.json
 *.vsix
 .yo-*
 yarn-error.log
-charles-ssl-proxying-certificate.pem
 *.pem
+*.crt
+*.p12
 TEMP-*
 .DS_Store
 .yalc
@@ -22,5 +23,4 @@ e2e/.test-extensions/
 *.orig
 test-results/*
 
-!e2e/**/*.pem
 !.vscode/launch.json.example
