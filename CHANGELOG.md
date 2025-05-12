@@ -2,11 +2,17 @@
 
 ---
 
-## What's new in 3.6.7
+
+## What's new in 3.8.1
 
 ### Features
 
 -   Added rich text editing capabilities for Jira Issue editing and creation
+
+## What's new in 3.8.0
+
+### Improvements
+- Badge notifications may be displayed if user is in an unauthenticated state. 
 
 ## What's new in 3.6.6
 

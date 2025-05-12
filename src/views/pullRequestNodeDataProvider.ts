@@ -11,7 +11,7 @@ import { Container } from '../container';
 import { BaseTreeDataProvider } from './Explorer';
 import { GitContentProvider } from './gitContentProvider';
 import { AbstractBaseNode } from './nodes/abstractBaseNode';
-import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
+import { emptyBitbucketNodes, loginToBitbucketMessageNode } from './nodes/definedNodes';
 import { SimpleNode } from './nodes/simpleNode';
 import { CreatePullRequestNode, PullRequestFilters, PullRequestHeaderNode } from './pullrequest/headerNode';
 import { DescriptionNode, PullRequestTitlesNode } from './pullrequest/pullRequestNode';
@@ -226,12 +226,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
             viewScreenEvent('pullRequestsTreeViewUnauthenticatedMessage', undefined, ProductBitbucket).then((event) =>
                 Container.analyticsClient.sendScreenEvent(event),
             );
-            return [
-                new SimpleNode('Authenticate with Bitbucket to view pull requests', {
-                    command: Commands.ShowBitbucketAuth,
-                    title: 'Open Bitbucket Settings',
-                }),
-            ];
+            return [loginToBitbucketMessageNode];
         }
 
         const repos = this.ctx.getBitbucketRepositories();
