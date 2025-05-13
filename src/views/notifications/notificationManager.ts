@@ -2,6 +2,7 @@ import { Uri } from 'vscode';
 
 import { Logger } from '../../logger';
 import { AuthNotifier } from './authNotifier';
+import { BannerDelegate } from './bannerDelegate';
 
 export interface AtlasCodeNotification {
     id: string;
@@ -77,7 +78,11 @@ export class NotificationManagerImpl {
     public static getInstance(): NotificationManagerImpl {
         if (!NotificationManagerImpl.instance) {
             NotificationManagerImpl.instance = new NotificationManagerImpl();
+
             NotificationManagerImpl.instance.notifiers.add(AuthNotifier.getInstance());
+
+            // Note: the badge delegate is not registered here as it needs the context of the tree view
+            NotificationManagerImpl.instance.registerDelegate(BannerDelegate.getInstance());
         }
         return NotificationManagerImpl.instance;
     }

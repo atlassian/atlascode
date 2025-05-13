@@ -1,8 +1,5 @@
-import { notificationChangeEvent } from 'src/analytics';
-import { Uri } from 'vscode';
+import { window } from 'vscode';
 
-import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
-import { Container } from '../../container';
 import {
     NotificationAction,
     NotificationChangeEvent,
@@ -13,7 +10,9 @@ import {
 
 export class BannerDelegate implements NotificationDelegate {
     private static bannerDelegateSingleton: BannerDelegate | undefined = undefined;
-    private _analyticsClient: AnalyticsClient;
+    // private _analyticsClient: AnalyticsClient;
+    private pile: Set<NotificationChangeEvent> = new Set();
+    private timer: NodeJS.Timeout | undefined;
 
     public static getInstance(): BannerDelegate {
         if (!this.bannerDelegateSingleton) {
@@ -24,7 +23,7 @@ export class BannerDelegate implements NotificationDelegate {
     }
 
     private constructor() {
-        this._analyticsClient = Container.analyticsClient;
+        // this._analyticsClient = Container.analyticsClient;
     }
 
     public getSurface(): NotificationSurface {
@@ -32,21 +31,76 @@ export class BannerDelegate implements NotificationDelegate {
     }
 
     public onNotificationChange(event: NotificationChangeEvent): void {
-        const { action, uri, notifications } = event;
-        if (action === NotificationAction.Removed) {
+        if (event.action === NotificationAction.Removed) {
             return;
         }
 
-        const newBannerValue = notifications.size;
-        this.analytics(uri, newBannerValue);
+        // Adds to the "pile of notifications" for the given URI.
+        this.pile.add(event);
+
+        this.updateTimer();
     }
 
-    private analytics(uri: Uri, count: number) {
-        if (count === 0) {
-            return;
+    private updateTimer() {
+        // Updates the timer: after an event is added, the timer waits for a short time for any additional events.
+        // If any new events are added, the timer is reset.
+        // if no new events are added within a short time, the timer will trigger the display of the notification.
+
+        // If the timer is already running, clear it.
+        if (this.timer) {
+            clearTimeout(this.timer);
         }
-        notificationChangeEvent(uri, NotificationSurface.Banner, count).then((e) => {
-            this._analyticsClient.sendTrackEvent(e);
+
+        // Set a new timer to trigger after a short time.
+        this.timer = setTimeout(() => {
+            this.aggregateAndShowNotifications();
+            this.pile.clear();
+            this.timer = undefined;
+        }, 500);
+    }
+
+    private aggregateAndShowNotifications() {
+        this.showNotification(
+            'hi!',
+            'Yes',
+            () => {},
+            'Dismiss',
+            () => {},
+        );
+    }
+
+    private showNotification(
+        message: string,
+        yesText: string,
+        yesAction: () => void,
+        dismissText: string,
+        dismissAction: () => void,
+    ) {
+        const manageNotifications = 'Manage Notifications';
+        const manageNotificationsAction = () => {};
+        window.showInformationMessage(message, yesText, dismissText, manageNotifications).then((selection) => {
+            switch (selection) {
+                case yesText:
+                    yesAction();
+                    break;
+                case dismissText:
+                    dismissAction();
+                    break;
+                case manageNotifications:
+                    manageNotificationsAction();
+                    break;
+                default:
+                    break;
+            }
         });
     }
+
+    // private analytics(uri: Uri, count: number) {
+    //     if (count === 0) {
+    //         return;
+    //     }
+    //     notificationChangeEvent(uri, NotificationSurface.Banner, count).then((e) => {
+    //         this._analyticsClient.sendTrackEvent(e);
+    //     });
+    // }
 }
