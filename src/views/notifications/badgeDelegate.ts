@@ -41,8 +41,6 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
     }
 
     public onNotificationChange(event: NotificationChangeEvent): void {
-        // Todo: bwieger, clean up the logic in here
-
         const { uri } = event;
         const newBadgeValue = NotificationManagerImpl.getInstance().getNotificationsByUri(
             uri,
@@ -76,7 +74,6 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
         }
     }
 
-    // Todo: Show contextual information in the tooltip
     private setExtensionBadge() {
         this.treeViewParent.badge = {
             value: this.overallCount,

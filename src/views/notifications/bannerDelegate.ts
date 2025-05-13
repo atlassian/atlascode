@@ -44,25 +44,26 @@ export class BannerDelegate implements NotificationDelegate {
         // Adds to the "pile of notifications" for the given URI.
         this.pile.add(event);
 
-        this.updateTimer();
+        this.scheduleNotificationDisplay();
     }
 
-    private updateTimer() {
-        // Updates the timer: after an event is added, the timer waits for a short time for any additional events.
-        // If any new events are added, the timer is reset.
-        // if no new events are added within a short time, the timer will trigger the display of the notification.
+    private scheduleNotificationDisplay() {
+        this.clearExistingSchedule();
+        this.createNewSchedule();
+    }
 
-        // If the timer is already running, clear it.
-        if (this.timer) {
-            clearTimeout(this.timer);
-        }
-
-        // Set a new timer to trigger after a short time.
+    private createNewSchedule() {
         this.timer = setTimeout(() => {
             this.aggregateAndShowNotifications();
             this.pile.clear();
             this.timer = undefined;
         }, 500);
+    }
+
+    private clearExistingSchedule() {
+        if (this.timer) {
+            clearTimeout(this.timer);
+        }
     }
 
     private aggregateAndShowNotifications() {

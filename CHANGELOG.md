@@ -7,6 +7,7 @@
 
 ### Features
 
+- Banner notifications may be displayed if user is in an unauthenticated state. 
 -   Added rich text editing capabilities for Jira Issue editing and creation
 
 ## What's new in 3.8.0
