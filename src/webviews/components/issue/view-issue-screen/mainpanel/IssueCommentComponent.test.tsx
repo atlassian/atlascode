@@ -155,7 +155,8 @@ describe('IssueCommentComponent', () => {
         );
 
         fireEvent.click(screen.getAllByText('Edit')[0]);
-        const textArea = screen.getByText('Another test comment');
+        fireEvent.click(screen.getByLabelText('rte toggle'));
+        const textArea = screen.getAllByRole('textbox')[1];
         fireEvent.change(textArea, { target: { value: 'Updated comment' } });
         fireEvent.click(screen.getByText('Save'));
 
@@ -198,8 +199,9 @@ describe('IssueCommentComponent', () => {
         );
 
         fireEvent.click(screen.getByPlaceholderText('Add a comment...'));
-        const textArea = screen.getByRole('textbox');
-        fireEvent.change(textArea, { target: { value: 'New comment' } });
+        fireEvent.click(screen.getByLabelText('rte toggle'));
+        fireEvent.focus(screen.getByRole('textbox'));
+        fireEvent.input(screen.getByRole('textbox'), { target: { value: 'New comment' } });
         fireEvent.click(screen.getByText('Save'));
 
         expect(mockOnCreate).toHaveBeenCalledWith('New comment', undefined);

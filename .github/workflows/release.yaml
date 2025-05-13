@@ -51,11 +51,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Build and package the extension
+        run: npm run extension:package
+
       - name: Run linter
         run: npm run lint
 
       - name: Run unit tests
         run: npm run test
+
+      - name: Generate SSL certs for E2E test
+        run: npm run test:e2e:sslcerts
 
       - name: Fetch E2E image
         run: |
@@ -63,13 +69,7 @@ jobs:
           docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e
 
       - name: Run E2E tests
-        env:
-            ATLASCODE_TEST_USER_API_TOKEN: ${{ secrets.ATLASCODE_TEST_USER_API_TOKEN }}
         run: npm run test:e2e:docker
-
-      # TODO: might want to run this first, and reuse the .vsix in E2E tests instead
-      - name: Build the extension
-        run: npm run extension:package
 
       - name: Publish the extension
         run: |
@@ -78,13 +78,13 @@ jobs:
             --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/ \
             --packagePath atlascode-${PACKAGE_VERSION}.vsix
 
-      # Commenting out OpenVSX for now due to it being down
-
-      # - name: Publish to OpenVSX
-      #   run: |
-      #     npx ovsx publish \
-      #        -p ${{ secrets.OPENVSX_KEY }} \
-      #       "atlascode-${PACKAGE_VERSION}.vsix"
+      # This step is optional, so setting 'continue-on-error' to true
+      - name: Publish to OpenVSX
+        continue-on-error: true
+        run: |
+          npx ovsx publish \
+             -p ${{ secrets.OPENVSX_KEY }} \
+            "atlascode-${PACKAGE_VERSION}.vsix"
 
       - name: Create Release
         id: create_release

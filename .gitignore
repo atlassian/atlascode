@@ -5,12 +5,12 @@ node_modules
 .vscode/*
 !.vscode/settings.json
 launch.json
-!.vscode/launch.json.example
 *.vsix
 .yo-*
 yarn-error.log
-charles-ssl-proxying-certificate.pem
 *.pem
+*.crt
+*.p12
 TEMP-*
 .DS_Store
 .yalc
@@ -21,3 +21,6 @@ coverage
 e2e/.resources/
 e2e/.test-extensions/
 *.orig
+test-results/*
+
+!.vscode/launch.json.example

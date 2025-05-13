@@ -32,11 +32,17 @@ jobs:
           npm install --no-audit
           npm audit
 
+      - name: Build and package the extension
+        run: npm run extension:package
+
       - name: Run linter
         run: npm run lint
 
       - name: Run unit tests
         run: npm run test
+
+      - name: Generate SSL certs for E2E test
+        run: npm run test:e2e:sslcerts
 
       - name: Fetch E2E image
         run: |
@@ -44,6 +50,4 @@ jobs:
           docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e
 
       - name: Run E2E tests
-        env:
-            ATLASCODE_TEST_USER_API_TOKEN: ${{ secrets.ATLASCODE_TEST_USER_API_TOKEN }}
         run: npm run test:e2e:docker

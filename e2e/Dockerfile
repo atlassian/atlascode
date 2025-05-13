@@ -1,23 +1,15 @@
-FROM node:20.18.1-bookworm-slim
+FROM node:23-slim
 
 # Install dependencies and xvfb
-RUN apt-get update && apt-get install -y wget gpg xvfb xauth --no-install-recommends
+RUN apt-get update \
+    && apt-get install -y wget gpg xauth curl git \ 
+    && npm install --global playwright \
+    && npx playwright install --with-deps chromium
 
-# Download vscode .deb package and install it (from https://go.microsoft.com/fwlink/?LinkID=760868)
-# Otherwise vscode fails to run, probably due to missing dependencies
-RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg \
-    && install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg \
-    && echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | tee /etc/apt/sources.list.d/vscode.list > /dev/null \
-    && rm -f packages.microsoft.gpg \
-    && apt install -y apt-transport-https \
-    && apt update \
-    && apt install -y code \
-    && rm -rf /var/lib/apt/lists/* \
-    && npm install -g npm@latest
-
-# Running vscode as root is not recommended, so let's create a user.
-# We need that user's $HOME to exist for the test process to work properly.
-RUN useradd -m -s /bin/bash atlascode
+# install code-server 
+RUN curl -fsSL https://code-server.dev/install.sh -o install-code-server.sh \
+    && sh install-code-server.sh \
+    && curl -fL https://open-vsx.org/api/redhat/vscode-yaml/1.18.0/file/redhat.vscode-yaml-1.18.0.vsix -o redhat.vscode-yaml-1.18.0.vsix
 
 # Set the working directory
 # We will mount the whole project directory to WORKDIR
@@ -28,14 +20,24 @@ WORKDIR /atlascode
 # Where our vscode, chromedriver, images etc. will go
 ENV TEST_RESOURCES=/atlascode/e2e/.resources
 
-# We want to run `xvfb-run` with the parameters passed to `docker run`
-# However, using `xvfb-run` as an entrypoint directly causes docker to hang (?!)
-# So, let's create an entrypoint to pass parameters to xvfb-run.
-# We'll do this in-place to not have any build context for this Dockerfile:
 RUN cat <<EOF > /usr/bin/entrypoint.sh && chmod +x /usr/bin/entrypoint.sh
 #!/usr/bin/env bash
-echo "Invoking xvfb-run with the following arguments: \$@"
-xvfb-run \$@
+set -ex
+
+echo "setting up trusted certificate authorities"
+cp ./e2e/sslcerts/rootCA.crt /usr/local/share/ca-certificates/atlascode_e2e_Root_CA.crt
+update-ca-certificates
+
+echo "installing dependencies for atlascode extension"
+code-server --install-extension ../redhat.vscode-yaml-1.18.0.vsix --force
+echo "installing atlascode"
+code-server --install-extension atlascode-0.0.0.vsix --force
+
+echo "starting code-server"
+code-server --auth none --bind-addr localhost:9988 &
+echo "Running tests"
+npx playwright test ./e2e/tests/playwright.spec.ts
+
 EOF
 
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]

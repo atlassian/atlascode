@@ -1,5 +1,13 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
+
 ---
+
+
+## What's new in 3.8.1
+
+### Features
+
+-   Added rich text editing capabilities for Jira Issue editing and creation
 
 ## What's new in 3.8.0
 
@@ -8,30 +16,30 @@
 
 ## What's new in 3.6.6
 
-- Internal changes only 
+-   Internal changes only
 
 ## What's new in 3.6.5
 
 ### Improvements
 
-- Added support for opening a Jira Issue via URI in the form `vscode://atlassian.atlascode/openJiraIssue?key=<issueKey>&site=<siteHost>&source=<URI_source>`
-- Added support for start working on a Jira Issue via URI in the form `vscode://atlassian.atlascode/startWorkOnJira?key=<issueKey>&site=<siteHost>&source=<URI_source>`
+-   Added support for opening a Jira Issue via URI in the form `vscode://atlassian.atlascode/openJiraIssue?key=<issueKey>&site=<siteHost>&source=<URI_source>`
+-   Added support for start working on a Jira Issue via URI in the form `vscode://atlassian.atlascode/startWorkOnJira?key=<issueKey>&site=<siteHost>&source=<URI_source>`
 
 ## What's new in 3.6.4
 
 ### Bug fixes
 
-- Fixed "already registered id" error when rendering PR related issues in the Bitbucket Pull Requests side panel.
+-   Fixed "already registered id" error when rendering PR related issues in the Bitbucket Pull Requests side panel.
 
 ## What's new in 3.6.3
 
-- Internal changes only 
+-   Internal changes only
 
 ## What's new in 3.6.2
 
 ### Bug fixes
 
-- Fixed global window bug which affected polyglot/juptyer notebook users
+-   Fixed global window bug which affected polyglot/juptyer notebook users
 
 ## What's new in 3.6.1
 
