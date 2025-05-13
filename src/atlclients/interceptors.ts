@@ -1,124 +1,23 @@
 import { AxiosInstance } from 'axios';
-import fs from 'fs';
-import path from 'path';
-// import curlirize from 'axios-curlirize';
+import curlirize from 'axios-curlirize';
 import { parse } from 'url';
-import * as vscode from 'vscode';
 
 import { Logger } from '../logger';
 
-// interface CurlResult {
-//     command: string;
-//     object: any;
-// }
-export function addCurlLogging(transport: AxiosInstance): void {
-    dumpEverythingIntoFile(transport);
-    // curlirize(transport, (result: CurlResult, err: any) => {
-    //     let { command } = result;
-    //     command = command.replace('-H "Accept-Encoding:gzip, deflate" ', '');
-    //     if (!err) {
-    //         Logger.debug('-'.repeat(70));
-    //         Logger.debug(command);
-    //         Logger.debug('-'.repeat(70));
-    //     }
-    // });
+interface CurlResult {
+    command: string;
+    object: any;
 }
-
-export function dumpEverythingIntoFile(transport: AxiosInstance): void {
-    // get vscode workspace folder
-    const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
-    if (!workspaceRoot) {
-        Logger.warn('No workspace root found. Cannot create call map file.');
-        return;
-    }
-    const callMapPath = path.join(workspaceRoot, 'atlascodeCalls');
-
-    transport.interceptors.response.use(
-        (config) => {
-            try {
-                // let's make a folder under callMapPath with the name of the host
-                const hostFolder = path.join(callMapPath, `${config.request.host}`);
-                if (!fs.existsSync(hostFolder)) {
-                    fs.mkdirSync(hostFolder, { recursive: true });
-                }
-
-                const requestUrl = config.request.path
-                    .split('?')[0]
-                    .replace(/[0-9a-fA-F-]{36}\//g, '--UUID--/')
-                    .replace(/[0-9a-fA-F-]{36}-/g, '--UUID---');
-                const filename = requestUrl
-                    .replace(/\//g, '_')
-                    .replace(/:/g, '_')
-                    .slice(1)
-                    .replace(/--UUID--/g, 'UUID');
-
-                const callMapFile = path.join(hostFolder, filename + '.json');
-
-                const method = config.request.method;
-                const headers = config.headers;
-                const data = config.data;
-
-                // Recursively traverse the response body and replace anything token-related
-                const traverseAndReplace = (obj: any) => {
-                    if (Array.isArray(obj) && obj.length > 0) {
-                        obj.length = 1;
-                        traverseAndReplace(obj[0]);
-                    } else if (typeof obj === 'object' && obj !== null) {
-                        for (const key in obj) {
-                            if (obj.hasOwnProperty(key)) {
-                                if (key.includes('token')) {
-                                    obj[key] = 'REDACTED';
-                                } else {
-                                    traverseAndReplace(obj[key]);
-                                }
-                            }
-                        }
-                    }
-                };
-
-                traverseAndReplace(data);
-
-                const jsonContent = {
-                    mappings: [
-                        {
-                            request: {
-                                method,
-                                urlPathPattern: requestUrl.replace(/--UUID--/g, '[^/]+'),
-                            },
-                            response: {
-                                transformers: ['response-template'],
-                                status: config.status,
-                                body: JSON.stringify(data),
-                                headers: {
-                                    'content-type': headers['content-type'],
-                                },
-                            },
-                        },
-                    ],
-                };
-
-                fs.writeFileSync(callMapFile, JSON.stringify(jsonContent, null, 2));
-            } catch (error) {
-                console.error('Error reading or writing file:', error);
-            }
-
-            return config;
-        },
-        (error) => {
-            // Do something with request error
-            return Promise.reject(error);
-        },
-    );
-    transport.interceptors.response.use(
-        function (response) {
-            Logger.debug('Response:', response);
-            return response;
-        },
-        function (error) {
-            // Do something with response error
-            return Promise.reject(error);
-        },
-    );
+export function addCurlLogging(transport: AxiosInstance): void {
+    curlirize(transport, (result: CurlResult, err: any) => {
+        let { command } = result;
+        command = command.replace('-H "Accept-Encoding:gzip, deflate" ', '');
+        if (!err) {
+            Logger.debug('-'.repeat(70));
+            Logger.debug(command);
+            Logger.debug('-'.repeat(70));
+        }
+    });
 }
 
 /*
