@@ -6,8 +6,8 @@ import Tooltip from '@atlaskit/tooltip';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
 
+import { useEditor } from '../../editor/Editor';
 import PopoutMentionPicker from '../../pullrequest/PopoutMentionPicker';
-import { useEditor } from './editor/Editor';
 
 type Props = {
     value: string;
