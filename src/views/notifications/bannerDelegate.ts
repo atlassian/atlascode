@@ -1,6 +1,9 @@
-import { Commands } from 'src/commands';
-import { commands, window } from 'vscode';
+import { commands, Uri, window } from 'vscode';
 
+import { notificationChangeEvent } from '../../analytics';
+import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
+import { Commands } from '../../commands';
+import { Container } from '../../container';
 import {
     AtlasCodeNotification,
     NotificationAction,
@@ -13,7 +16,7 @@ import {
 
 export class BannerDelegate implements NotificationDelegate {
     private static bannerDelegateSingleton: BannerDelegate | undefined = undefined;
-    // private _analyticsClient: AnalyticsClient;
+    private _analyticsClient: AnalyticsClient;
     private pile: Set<NotificationChangeEvent> = new Set();
     private timer: NodeJS.Timeout | undefined;
 
@@ -26,7 +29,7 @@ export class BannerDelegate implements NotificationDelegate {
     }
 
     private constructor() {
-        // this._analyticsClient = Container.analyticsClient;
+        this._analyticsClient = Container.analyticsClient;
     }
 
     public getSurface(): NotificationSurface {
@@ -63,44 +66,30 @@ export class BannerDelegate implements NotificationDelegate {
     }
 
     private aggregateAndShowNotifications() {
-        // get each notification in the pile
-        // and show the notification
+        // for now, this simply shows all notifications in the pile with no aggregation. In the future, this should group notifications by notification type.
         this.pile.forEach((event) => {
+            let count = 0;
             if (event.action === NotificationAction.Added) {
                 event.notifications.forEach((notification) => {
                     this.showNotification(
-                        notification.message,
+                        notification,
                         this.makeActionText(notification),
                         this.makeActionFunction(notification),
-                        this.makeDismissText(notification),
-                        this.makeDismissFunction(notification),
                     );
+                    count++;
                 });
             }
+            this.analyticsBannerShown(event.uri, count);
         });
     }
 
-    private showNotification(
-        message: string,
-        yesText: string,
-        yesAction: () => void,
-        dismissText?: string,
-        dismissAction?: () => void,
-    ) {
-        let displayedNotification;
-        if (dismissText) {
-            displayedNotification = window.showInformationMessage(message, yesText, dismissText);
-        } else {
-            displayedNotification = window.showInformationMessage(message, yesText);
-        }
+    private showNotification(notification: AtlasCodeNotification, yesText: string, yesAction: () => void) {
+        const displayedNotification = window.showInformationMessage(notification.message, yesText);
 
         displayedNotification.then((selection) => {
             switch (selection) {
                 case yesText:
                     yesAction();
-                    break;
-                case dismissText:
-                    dismissAction?.();
                     break;
                 default:
                     break;
@@ -117,15 +106,6 @@ export class BannerDelegate implements NotificationDelegate {
         }
     }
 
-    private makeDismissText(notification: AtlasCodeNotification): string | undefined {
-        switch (notification.notificationType) {
-            case NotificationType.LoginNeeded:
-                return 'Manage Notifications';
-            default:
-                return undefined;
-        }
-    }
-
     private makeActionFunction(notification: AtlasCodeNotification): () => void {
         switch (notification.notificationType) {
             case NotificationType.LoginNeeded:
@@ -137,21 +117,9 @@ export class BannerDelegate implements NotificationDelegate {
         }
     }
 
-    private makeDismissFunction(notification: AtlasCodeNotification): undefined | (() => void) {
-        switch (notification.notificationType) {
-            case NotificationType.LoginNeeded:
-                return () => {};
-            default:
-                return undefined;
-        }
+    private analyticsBannerShown(uri: Uri, count: number) {
+        notificationChangeEvent(uri, NotificationSurface.Banner, count).then((e) => {
+            this._analyticsClient.sendTrackEvent(e);
+        });
     }
-
-    // private analytics(uri: Uri, count: number) {
-    //     if (count === 0) {
-    //         return;
-    //     }
-    //     notificationChangeEvent(uri, NotificationSurface.Banner, count).then((e) => {
-    //         this._analyticsClient.sendTrackEvent(e);
-    //     });
-    // }
 }
