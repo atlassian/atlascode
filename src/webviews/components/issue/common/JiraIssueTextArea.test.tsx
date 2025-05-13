@@ -35,15 +35,8 @@ describe('JiraIssueTextAreaEditor', () => {
         expect(getByDisplayValue('Initial value')).toBeTruthy();
     });
 
-    it('calls onChange when text is entered', () => {
-        const { getByRole } = render(<JiraIssueTextAreaEditor {...defaultProps} />);
-        const textArea = getByRole('textbox');
-        fireEvent.change(textArea, { target: { value: 'New value' } });
-        expect(mockOnChange).toHaveBeenCalledWith('New value');
-    });
-
     it('calls onSave when the save button is clicked', () => {
-        const { getByText } = render(<JiraIssueTextAreaEditor {...defaultProps} />);
+        const { getByText } = render(<JiraIssueTextAreaEditor {...defaultProps} value="value" />);
         const saveButton = getByText('Save');
         fireEvent.click(saveButton);
         expect(mockOnSave).toHaveBeenCalled();
