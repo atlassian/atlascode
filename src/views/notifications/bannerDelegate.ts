@@ -99,6 +99,10 @@ export class BannerDelegate implements NotificationDelegate {
 
     private makeActionText(notification: AtlasCodeNotification): string {
         switch (notification.notificationType) {
+            case NotificationType.NewCommentOnJira:
+                return 'Reply';
+            case NotificationType.AssignedToYou:
+                return 'View Assigned Work Item';
             case NotificationType.LoginNeeded:
                 return 'Log in to Jira';
             default:
@@ -108,6 +112,10 @@ export class BannerDelegate implements NotificationDelegate {
 
     private makeActionFunction(notification: AtlasCodeNotification): () => void {
         switch (notification.notificationType) {
+            case NotificationType.NewCommentOnJira:
+                return () => {};
+            case NotificationType.AssignedToYou:
+                return () => {};
             case NotificationType.LoginNeeded:
                 return () => {
                     commands.executeCommand(Commands.ShowJiraAuth);

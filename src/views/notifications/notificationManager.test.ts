@@ -12,6 +12,13 @@ jest.mock('./authNotifier', () => ({
         })),
     },
 }));
+jest.mock('../../container', () => ({
+    Container: {
+        analyticsClient: {
+            sendTrackEvent: jest.fn(),
+        },
+    },
+}));
 
 describe('NotificationManagerImpl', () => {
     let notificationManager: NotificationManagerImpl;
