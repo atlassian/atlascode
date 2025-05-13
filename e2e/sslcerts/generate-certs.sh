@@ -1,3 +1,5 @@
+#!/bin/bash 
+
 # Function to generate certificates for a service
 generate_service_cert() {
     local service_name=$1
