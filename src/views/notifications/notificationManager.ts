@@ -17,7 +17,7 @@ export interface NotificationDelegate {
 export interface NotificationChangeEvent {
     action: NotificationAction;
     uri: Uri;
-    notifications: Map<String, AtlasCodeNotification>;
+    notifications: Map<string, AtlasCodeNotification>;
 }
 
 export interface NotificationNotifier {
@@ -122,7 +122,7 @@ export class NotificationManagerImpl {
     public getNotificationsByUri(
         uri: Uri,
         notificationSurface: NotificationSurface,
-    ): Map<String, AtlasCodeNotification> {
+    ): Map<string, AtlasCodeNotification> {
         Logger.debug(`Getting notifications for uri ${uri} with surface ${notificationSurface}`);
         const notificationsForUri = this.notifications.get(uri.toString()) ?? new Map();
         return this.filterNotificationsBySurface(notificationsForUri, notificationSurface);
@@ -155,7 +155,7 @@ export class NotificationManagerImpl {
     private onNotificationChange(
         action: NotificationAction,
         uri: Uri,
-        notifications: Map<String, AtlasCodeNotification> | undefined,
+        notifications: Map<string, AtlasCodeNotification> | undefined,
     ): void {
         notifications = notifications || new Map();
         Logger.debug(`Sending notification change for ${uri}`);
@@ -176,19 +176,19 @@ export class NotificationManagerImpl {
     }
 
     private getBadgeNotifications(
-        notifications: Map<String, AtlasCodeNotification>,
+        notifications: Map<string, AtlasCodeNotification>,
     ): Map<string, AtlasCodeNotification> {
         return this.getFilteredNotifications(notifications, ENABLE_BADGE_FOR);
     }
 
     private getBannerNotifications(
-        notifications: Map<String, AtlasCodeNotification>,
+        notifications: Map<string, AtlasCodeNotification>,
     ): Map<string, AtlasCodeNotification> {
         return this.getFilteredNotifications(notifications, ENABLE_BANNER_FOR);
     }
 
     private getFilteredNotifications(
-        notifications: Map<String, AtlasCodeNotification>,
+        notifications: Map<string, AtlasCodeNotification>,
         enabledTypes: NotificationType[],
     ): Map<string, AtlasCodeNotification> {
         const filteredNotifications = new Map<string, AtlasCodeNotification>();
@@ -207,9 +207,9 @@ export class NotificationManagerImpl {
     }
 
     private filterNotificationsBySurface(
-        notificationsForUri: Map<String, AtlasCodeNotification>,
+        notificationsForUri: Map<string, AtlasCodeNotification>,
         notificationSurface: NotificationSurface,
-    ): Map<String, AtlasCodeNotification> {
+    ): Map<string, AtlasCodeNotification> {
         switch (notificationSurface) {
             case NotificationSurface.Banner:
                 return this.getBannerNotifications(notificationsForUri);
