@@ -218,9 +218,8 @@ export class NotificationManagerImpl {
             case NotificationSurface.All:
                 return notificationsForUri;
             default:
-                const error = new Error(`Unknown notification surface: ${notificationSurface}`);
-                Logger.error(error);
-                throw error;
+                Logger.debug(`Unknown notification surface: ${notificationSurface}`);
+                return new Map();
         }
     }
 }

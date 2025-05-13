@@ -55,8 +55,6 @@ export class BannerDelegate implements NotificationDelegate {
     private createNewSchedule() {
         this.timer = setTimeout(() => {
             this.aggregateAndShowNotifications();
-            this.pile.clear();
-            this.timer = undefined;
         }, 500);
     }
 
@@ -82,6 +80,8 @@ export class BannerDelegate implements NotificationDelegate {
             }
             this.analyticsBannerShown(event.uri, count);
         });
+        this.pile.clear();
+        this.timer = undefined;
     }
 
     private showNotification(notification: AtlasCodeNotification, yesText: string, yesAction: () => void) {
