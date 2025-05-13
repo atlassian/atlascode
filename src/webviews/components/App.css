@@ -2270,7 +2270,6 @@ li.ProseMirror-selectednode:after {
     right: 0;
     border-bottom: 1px solid var(--vscode-input-foreground);
     background: var(--vscode-input-background);
-    /* z-index: 10; */
     -moz-box-sizing: border-box;
     box-sizing: border-box;
     overflow: visible;
