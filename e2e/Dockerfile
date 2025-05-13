@@ -9,7 +9,7 @@ RUN apt-get update \
 # install code-server 
 RUN curl -fsSL https://code-server.dev/install.sh -o install-code-server.sh \
     && sh install-code-server.sh \
-    && curl -fL https://open-vsx.org/api/redhat/vscode-yaml/1.18.0/file/redhat.vscode-yaml-1.18.0.vsix -o vscode-yaml-1.17.0-3.vsix
+    && curl -fL https://open-vsx.org/api/redhat/vscode-yaml/1.18.0/file/redhat.vscode-yaml-1.18.0.vsix -o redhat.vscode-yaml-1.18.0.vsix
 
 # Set the working directory
 # We will mount the whole project directory to WORKDIR
@@ -29,7 +29,7 @@ cp ./e2e/sslcerts/rootCA.crt /usr/local/share/ca-certificates/atlascode_e2e_Root
 update-ca-certificates
 
 echo "installing dependencies for atlascode extension"
-code-server --install-extension ../vscode-yaml-1.17.0-3.vsix --force
+code-server --install-extension ../redhat.vscode-yaml-1.18.0.vsix --force
 echo "installing atlascode"
 code-server --install-extension atlascode-0.0.0.vsix --force
 
