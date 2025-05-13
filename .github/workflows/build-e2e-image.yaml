@@ -16,7 +16,6 @@ jobs:
       - name: Build the Docker image
         run: | 
           docker build \
-            --platform linux/amd64 \
             --tag ghcr.io/atlassian/atlascode-e2e:$GITHUB_SHA \
             --tag ghcr.io/atlassian/atlascode-e2e:latest \
             - <e2e/Dockerfile

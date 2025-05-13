@@ -20,7 +20,6 @@ services:
 
   atlascode-e2e:
     image: atlascode-e2e
-    platform: linux/amd64
     volumes:
       - ${PWD}/..:/atlascode
     environment:

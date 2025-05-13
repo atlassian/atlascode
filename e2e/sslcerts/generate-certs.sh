@@ -11,35 +11,35 @@ generate_service_cert() {
 
     echo "Generating certificates for ${service_name} with domains ${domain_name} ${extra_domains[@]}..."
 
-    # writes the openssl conf file for both cert sign request and actual signing
-    echo "[ req ]" >${service_name}.conf
-    echo "default_bits = 4096" >>${service_name}.conf
-    echo "prompt = no" >>${service_name}.conf
-    echo "default_md = sha256" >>${service_name}.conf
-    echo "req_extensions = req_ext" >>${service_name}.conf
-    echo "distinguished_name = dn" >>${service_name}.conf
-    echo "" >>${service_name}.conf
-    echo "[ dn ]" >>${service_name}.conf
-    echo "C = US" >>${service_name}.conf
-    echo "ST = Washington" >>${service_name}.conf
-    echo "L = Bellevue" >>${service_name}.conf
-    echo "O = Atlascode" >>${service_name}.conf
-    echo "CN = ${domain_name}" >>${service_name}.conf
-    echo "" >>${service_name}.conf
-    echo "[ req_ext ]" >>${service_name}.conf
-    echo "subjectAltName = @alt_names" >>${service_name}.conf
-    echo "" >>${service_name}.conf
-    echo "[ v3_ext ]" >>${service_name}.conf
-    echo "authorityKeyIdentifier=keyid,issuer:always" >>${service_name}.conf
-    echo "basicConstraints=CA:FALSE" >>${service_name}.conf
-    echo "keyUsage=keyEncipherment,dataEncipherment" >>${service_name}.conf
-    echo "extendedKeyUsage=serverAuth,clientAuth" >>${service_name}.conf
-    echo "subjectAltName=@alt_names" >>${service_name}.conf
-    echo "" >>${service_name}.conf
+    cat >${service_name}.conf <<EOF
+[ req ]
+default_bits = 4096
+prompt = no
+default_md = sha256
+req_extensions = req_ext
+distinguished_name = dn
 
-    # alt_names contains all the domain certified by this certificate, including the main domain
-    echo "[ alt_names ]" >>${service_name}.conf
-    echo "DNS.1 = ${domain_name}" >>${service_name}.conf
+[ dn ]
+C = US
+ST = Washington
+L = Bellevue
+O = Atlascode
+CN = ${domain_name}
+
+[ req_ext ]
+subjectAltName = @alt_names
+
+[ v3_ext ]
+authorityKeyIdentifier=keyid,issuer:always
+basicConstraints=CA:FALSE
+keyUsage=keyEncipherment,dataEncipherment
+extendedKeyUsage=serverAuth,clientAuth
+subjectAltName=@alt_names
+
+# alt_names contains all the domain certified by this certificate, including the main domain
+[ alt_names ]
+DNS.1 = ${domain_name}
+EOF
     
     if [ $has_extra_domains -eq 1 ]; then
         local dns_index=2
