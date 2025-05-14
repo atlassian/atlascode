@@ -13,13 +13,18 @@ import {
     window,
 } from 'vscode';
 
-import { createPrTerminalLinkDetectedEvent, createPrTerminalLinkPanelButtonClickedEvent } from '../../analytics';
+import {
+    createPrTerminalLinkDetectedEvent,
+    createPrTerminalLinkPanelButtonClickedEvent,
+    notificationChangeEvent,
+} from '../../analytics';
 import { AnalyticsClient } from '../../analytics-node-client/src/client.min.js';
 import { CreatePrTerminalSelection } from '../../analyticsTypes';
 import { ProductBitbucket } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
+import { NotificationSurface } from '../../views/notifications/notificationManager';
 
 interface BitbucketTerminalLink extends TerminalLink {
     url: string;
@@ -96,6 +101,10 @@ export class BitbucketCloudPullRequestLinkProvider extends Disposable implements
         }
         const yes = 'Yes';
         const neverShow = "Don't show again";
+
+        notificationChangeEvent(Uri.parse(PanelId), NotificationSurface.Banner, 1).then((event) => {
+            this._analyticsClient.sendTrackEvent(event);
+        });
 
         window
             .showInformationMessage(

@@ -35,7 +35,9 @@ jest.mock('../../container', () => ({
 jest.mock('../../analytics', () => ({
     createPrTerminalLinkDetectedEvent: jest.fn().mockResolvedValue({}),
     createPrTerminalLinkPanelButtonClickedEvent: jest.fn().mockResolvedValue({}),
+    notificationChangeEvent: jest.fn().mockResolvedValue({}),
 }));
+
 import { commands, env, TerminalLinkContext, Uri, window } from 'vscode';
 
 import { configuration } from '../../config/configuration';
