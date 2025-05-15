@@ -6,6 +6,10 @@ import { IssueSuggestionContextLevel, IssueSuggestionSettings, SimplifiedTodoIss
 
 export class IssueSuggestionManager {
     static getSuggestionEnabled(): boolean {
+        if (!FeatureFlagClient.checkGate(Features.EnableAiSuggestions)) {
+            return false;
+        }
+
         const config = workspace.getConfiguration('atlascode.issueSuggestion').get<boolean>('enabled');
         return config === true; // (as opposed to undefined)
     }
@@ -69,6 +73,8 @@ export class IssueSuggestionManager {
                     error: 'Unable to fetch issue suggestions. Sorry!',
                 };
             }
+
+            // window.showInformationMessage('BRUH - Issue suggestion generated successfully!: ' + issue.fieldValues.summary);
             return {
                 summary: issue.fieldValues.summary,
                 description: issue.fieldValues.description,

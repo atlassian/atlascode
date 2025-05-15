@@ -47,7 +47,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
         appearance: 'subtle' as ButtonAppearance,
     };
 
-    const [rteEnabled, setRteEnabled] = React.useState(true);
+    const [rteEnabled, setRteEnabled] = React.useState(false);
 
     const { viewHost, handleSave } = useEditor<User>({
         value,

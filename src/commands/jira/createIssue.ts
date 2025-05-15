@@ -49,7 +49,7 @@ export async function createIssue(data: Uri | TodoIssueData | undefined, source?
             const suggestionManager = new IssueSuggestionManager(settings);
 
             await suggestionManager.generate(todoData).then(async (suggestion) => {
-                await Container.createIssueWebview.forceUpdateFields({
+                await Container.createIssueWebview.fastUpdateFields({
                     summary: suggestion.summary,
                     description: suggestion.description,
                 });

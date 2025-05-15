@@ -236,6 +236,38 @@ export class CreateIssueWebview
         }
     }
 
+    async fastUpdateFields(fieldValues?: FieldValues) {
+        if (!this._siteDetails || !this._currentProject) {
+            return;
+        }
+
+        // wait for isRefreshing to be false, with timeout
+        const timeout = 10000;
+        const startTime = Date.now();
+
+        while (this.isRefeshing) {
+            if (Date.now() - startTime > timeout) {
+                // vscode.window.showErrorMessage('BRUH - Timeout while waiting for isRefreshing to be false');
+                throw new Error('Timeout while waiting for isRefreshing to be false');
+            }
+            await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
+        if (!this._selectedIssueTypeId) {
+            return;
+        }
+
+        const createData: CreateIssueData = this._screenData.issueTypeUIs[this._selectedIssueTypeId] as CreateIssueData;
+        createData.fieldValues = {
+            ...createData.fieldValues,
+            ...fieldValues,
+        };
+        createData.type = 'update';
+        createData.transformerProblems = Container.config.jira.showCreateIssueProblems ? this._screenData.problems : {};
+
+        this.postMessage(createData);
+    }
+
     async forceUpdateFields(fieldValues?: FieldValues) {
         if (this.isRefeshing || !this._siteDetails || !this._currentProject) {
             return;
@@ -544,7 +576,7 @@ export class CreateIssueWebview
                     const { todoData, suggestionSettings } = msg as any;
                     const suggestionManager = new IssueSuggestionManager(suggestionSettings);
                     suggestionManager.generate(todoData).then(async (suggestion) => {
-                        await this.forceUpdateFields({
+                        await this.fastUpdateFields({
                             summary: suggestion.summary,
                             description: suggestion.description,
                         });
@@ -554,6 +586,8 @@ export class CreateIssueWebview
 
                 case 'webviewReady': {
                     handled = true;
+                    const val = FeatureFlagClient.checkGate(Features.EnableAiSuggestions);
+                    console.log(val);
                     this.postMessage({
                         type: 'updateFeatureFlag',
                         value: FeatureFlagClient.checkGate(Features.EnableAiSuggestions),

@@ -109,38 +109,27 @@ const AISuggestionHeader: React.FC<{
 
     return isAvailable ? (
         <div>
-            <Checkbox label="Use AI to generate issue?" isChecked={isEnabled} onChange={handleCheckboxChange} />
+            <Checkbox label="Use AI to create issue" isChecked={isEnabled} onChange={handleCheckboxChange} />
             {isEnabled && (
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        justifyContent: 'space-between',
-                    }}
-                >
-                    <div style={{ flex: '1' }}>
-                        <HelperMessage>
-                            Please select the level of details you'd like to be used for the issue generation.
-                        </HelperMessage>
-                    </div>
-                    <div style={{ flex: '1' }}>
-                        <Select
-                            className="ac-form-select-container"
-                            classNamePrefix="ac-form-select"
-                            isSearchable={false}
-                            isLoading={isLoading}
-                            value={{
-                                label: contextLevelNames.get(level),
-                                value: level,
-                            }}
-                            options={Array.from(contextLevelNames.entries()).map(([value, label]) => ({
-                                value,
-                                label,
-                            }))}
-                            onChange={handleSelectChange}
-                        />
-                    </div>
+                <div style={{ marginBottom: '1rem', marginTop: '1rem' }}>
+                    <HelperMessage>
+                        Please select the level of details you'd like to be used for the issue generation.
+                    </HelperMessage>
+                    <Select
+                        className="ac-form-select-container"
+                        classNamePrefix="ac-form-select"
+                        isSearchable={false}
+                        isLoading={isLoading}
+                        value={{
+                            label: contextLevelNames.get(level),
+                            value: level,
+                        }}
+                        options={Array.from(contextLevelNames.entries()).map(([value, label]) => ({
+                            value,
+                            label,
+                        }))}
+                        onChange={handleSelectChange}
+                    />
                 </div>
             )}
         </div>
