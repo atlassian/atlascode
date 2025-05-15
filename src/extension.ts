@@ -61,9 +61,7 @@ export async function activate(context: ExtensionContext) {
             Container.siteManager.productHasAtLeastOneSite(ProductBitbucket),
         );
 
-        if (FeatureFlagClient.checkGate(Features.AuthBadgeNotification)) {
-            NotificationManagerImpl.getInstance().listen();
-        }
+        NotificationManagerImpl.getInstance().listen();
     } catch (e) {
         Logger.error(e, 'Error initializing atlascode!');
     }
