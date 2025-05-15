@@ -1,7 +1,6 @@
 export const enum Features {
     NoOpFeature = 'atlascode-noop',
     EnableErrorTelemetry = 'atlascode-send-error-telemetry',
-    AuthBadgeNotification = 'auth_notifications_badge_vscode',
 }
 
 export const enum Experiments {

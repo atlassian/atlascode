@@ -17,7 +17,6 @@ import { Commands } from '../../../commands';
 import { configuration } from '../../../config/configuration';
 import { Container } from '../../../container';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
-import { FeatureFlagClient, Features } from '../../../util/featureFlags';
 import { PromiseRacer } from '../../../util/promises';
 import { BadgeDelegate } from '../../notifications/badgeDelegate';
 import { JiraNotifier } from '../../notifications/jiraNotifier';
@@ -47,9 +46,7 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
 
         const treeView = window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
 
-        if (FeatureFlagClient.checkGate(Features.AuthBadgeNotification)) {
-            BadgeDelegate.initialize(treeView);
-        }
+        BadgeDelegate.initialize(treeView);
 
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
