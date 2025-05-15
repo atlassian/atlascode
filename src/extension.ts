@@ -8,8 +8,9 @@ import { startListening } from './atlclients/negotiate';
 import { BitbucketContext } from './bitbucket/bbContext';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
 import { CommandContext, setCommandContext } from './commandContext';
-import { Commands, registerCommands } from './commands';
+import { registerCommands } from './commands';
 import { Configuration, configuration, IConfig } from './config/configuration';
+import { onboardingProvider } from './config/onboardingProvider';
 import { ExtensionId, GlobalStateVersionKey } from './constants';
 import { Container } from './container';
 import { registerAnalyticsClient, registerErrorReporting, unregisterErrorReporting } from './errorReporting';
@@ -35,7 +36,7 @@ export async function activate(context: ExtensionContext) {
 
     const atlascode = extensions.getExtension(ExtensionId)!;
     const atlascodeVersion = atlascode.packageJSON.version;
-    const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
+    const previousVersion = undefined;
 
     registerResources(context);
 
@@ -72,7 +73,7 @@ export async function activate(context: ExtensionContext) {
 
     // new user for auth exp
     if (previousVersion === undefined) {
-        showOnboardingPage();
+        onboardingProvider.show();
     } else {
         showWelcomePage(atlascodeVersion, previousVersion);
     }
@@ -186,10 +187,6 @@ async function sendAnalytics(version: string, globalState: Memento) {
     ).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
-}
-
-function showOnboardingPage() {
-    commands.executeCommand(Commands.ShowOnboardingPage);
 }
 
 // this method is called when your extension is deactivated
