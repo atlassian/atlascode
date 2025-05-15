@@ -93,6 +93,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     });
                     break;
                 }
+
                 case 'epicChildrenUpdate': {
                     this.setState({ isSomethingLoading: false, loadingField: '', epicChildren: e.epicChildren });
                     break;

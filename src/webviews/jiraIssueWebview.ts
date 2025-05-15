@@ -146,6 +146,8 @@ export class JiraIssueWebview
 
             msg.type = 'update';
 
+            msg.featureGates = {} as Record<string, boolean>;
+
             const isRteEnabled = FeatureFlagClient.checkGate(Features.JiraRichText);
 
             msg.featureGates[Features.JiraRichText] = isRteEnabled;
