@@ -1,8 +1,7 @@
-import { env, ExtensionContext, UIKind, window, workspace } from 'vscode';
+import { env, ExtensionContext, UIKind, workspace } from 'vscode';
 
 import { featureFlagClientInitializedEvent } from './analytics';
 import { AnalyticsClient, analyticsClient } from './analytics-node-client/src/client.min.js';
-import { ProductJira } from './atlclients/authInfo';
 import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
@@ -13,7 +12,6 @@ import { PullRequest, WorkspaceRepo } from './bitbucket/model';
 import { BitbucketCloudPullRequestLinkProvider } from './bitbucket/terminal-link/createPrLinkProvider';
 import { openPullRequest } from './commands/bitbucket/pullRequest';
 import { configuration, IConfig } from './config/configuration';
-import { ATLASCODE_TEST_HOST, ATLASCODE_TEST_USER_EMAIL } from './constants';
 import { PmfStats } from './feedback/pmfStats';
 import { JQLManager } from './jira/jqlManager';
 import { JiraProjectManager } from './jira/projectManager';
@@ -267,43 +265,6 @@ export class Container {
 
     public static set configTarget(target: ConfigTarget) {
         this._context.globalState.update(ConfigTargetKey, target);
-    }
-
-    public static async testLogout() {
-        Container.siteManager.getSitesAvailable(ProductJira).forEach(async (site) => {
-            await Container.clientManager.removeClient(site);
-            Container.siteManager.removeSite(site);
-        });
-    }
-
-    public static async testLogin() {
-        if (!process.env.ATLASCODE_TEST_USER_API_TOKEN) {
-            // vscode notify user that this is for testing only
-            window.showInformationMessage(
-                'This is for testing only. Please set the ATLASCODE_TEST_USER_API_TOKEN environment variable to run this test',
-            );
-            return;
-        }
-        const authInfo = {
-            username: ATLASCODE_TEST_USER_EMAIL,
-            password: process.env.ATLASCODE_TEST_USER_API_TOKEN,
-            user: {
-                id: '',
-                displayName: '',
-                email: '',
-                avatarUrl: '',
-            },
-            state: 0,
-        };
-        const site = {
-            host: ATLASCODE_TEST_HOST,
-            protocol: 'https:',
-            product: {
-                name: 'Jira',
-                key: 'jira',
-            },
-        };
-        await Container.loginManager.userInitiatedServerLogin(site, authInfo);
     }
 
     private static _version: string;
