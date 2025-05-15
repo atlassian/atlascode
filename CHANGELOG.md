@@ -1,7 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
 ---
+## What's new in 3.8.2
 
+### Improvement 
+
+- Remove the word "Labs" from the title of the extension
 
 ## What's new in 3.8.1
 
