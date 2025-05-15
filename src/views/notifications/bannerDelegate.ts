@@ -70,11 +70,8 @@ export class BannerDelegate implements NotificationDelegate {
             let count = 0;
             if (event.action === NotificationAction.Added) {
                 event.notifications.forEach((notification) => {
-                    this.showNotification(
-                        notification,
-                        this.makeActionText(notification),
-                        this.makeActionFunction(notification),
-                    );
+                    const { text, action } = this.makeAction(notification);
+                    this.showNotification(notification, text, action);
                     count++;
                 });
             }
@@ -98,31 +95,27 @@ export class BannerDelegate implements NotificationDelegate {
         });
     }
 
-    private makeActionText(notification: AtlasCodeNotification): string {
+    private makeAction(notification: AtlasCodeNotification): { text: string; action: () => void } {
         switch (notification.notificationType) {
             case NotificationType.NewCommentOnJira:
-                return 'Reply';
+                return {
+                    text: 'Reply',
+                    action: () => {},
+                };
             case NotificationType.AssignedToYou:
-                return 'View Assigned Work Item';
+                return {
+                    text: 'View Assigned Work Item',
+                    action: () => {},
+                };
             case NotificationType.LoginNeeded:
-                return 'Log in to Jira';
-            default:
-                throw new Error(`Cannot make action text: Unknown notification type: ${notification.notificationType}`);
-        }
-    }
-
-    private makeActionFunction(notification: AtlasCodeNotification): () => void {
-        switch (notification.notificationType) {
-            case NotificationType.NewCommentOnJira:
-                return () => {};
-            case NotificationType.AssignedToYou:
-                return () => {};
-            case NotificationType.LoginNeeded:
-                return () => {
-                    commands.executeCommand(Commands.ShowJiraAuth);
+                return {
+                    text: 'Log in to Jira',
+                    action: () => {
+                        commands.executeCommand(Commands.ShowJiraAuth);
+                    },
                 };
             default:
-                throw new Error(`Cannot make action text: Unknown notification type: ${notification.notificationType}`);
+                throw new Error(`Cannot make action: Unknown notification type: ${notification.notificationType}`);
         }
     }
 
