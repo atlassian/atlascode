@@ -15,3 +15,6 @@ export const AxiosUserAgent = 'atlascode/2.x axios/0.19.2';
 
 export const bbAPIConnectivityError = new Error('cannot connect to bitbucket api');
 export const cannotGetClientFor = 'cannot get client for';
+
+export const ATLASCODE_TEST_USER_EMAIL = 'axontest2025@gmail.com';
+export const ATLASCODE_TEST_HOST = 'axontest2025.atlassian.net';

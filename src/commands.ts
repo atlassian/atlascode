@@ -69,6 +69,8 @@ export enum Commands {
     ShowJiraAuth = 'atlascode.showJiraAuth',
     ShowBitbucketAuth = 'atlascode.showBitbucketAuth',
     ShowOnboardingPage = 'atlascode.showOnboardingPage',
+    TestLogin = 'atlascode.testLogin',
+    TestLogout = 'atlascode.testLogout',
     ShowPullRequestDetailsPage = 'atlascode.showPullRequestDetailsPage',
     AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
     StartWorkOnIssue = 'atlascode.jira.startWorkOnIssue',
@@ -158,6 +160,8 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             });
         }),
         commands.registerCommand(Commands.ShowOnboardingPage, () => Container.onboardingWebviewFactory.createOrShow()),
+        commands.registerCommand(Commands.TestLogin, () => Container.testLogin()),
+        commands.registerCommand(Commands.TestLogout, () => Container.testLogout()),
         commands.registerCommand(
             Commands.ViewInWebBrowser,
             async (prNode: AbstractBaseNode, source?: string, linkId?: string) => {

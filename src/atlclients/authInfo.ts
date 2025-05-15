@@ -1,3 +1,5 @@
+import { ATLASCODE_TEST_HOST } from '../../src/constants';
+
 export enum AuthChangeType {
     Update = 'update',
     Remove = 'remove',
@@ -223,6 +225,11 @@ export function getSecretForAuthInfo(info: any): string {
 
 export function oauthProviderForSite(site: SiteInfo): OAuthProvider | undefined {
     const hostname = site.host.split(':')[0];
+
+    // Added to allow for testing flow of AXON-32
+    if (hostname.endsWith(ATLASCODE_TEST_HOST)) {
+        return undefined;
+    }
 
     if (hostname.endsWith('atlassian.net') || hostname.endsWith('jira.com')) {
         return OAuthProvider.JiraCloud;
