@@ -1,6 +1,6 @@
 import * as http from 'http';
 import { Disposable } from 'vscode';
-import { IMessage, server } from 'websocket';
+import { server } from 'websocket';
 
 export class UIWebsocket implements Disposable {
     private _port: number;
@@ -33,9 +33,9 @@ export class UIWebsocket implements Disposable {
             console.log(new Date() + ' Connection accepted.');
 
             // user sent some message
-            connection.on('message', (message: IMessage) => {
+            connection.on('message', (message) => {
                 console.log(new Date() + ` got message ${message}.`);
-                if (message.utf8Data) {
+                if (message.type === 'utf8' && message.utf8Data) {
                     try {
                         const json = JSON.parse(message.utf8Data);
                         messageHandler(json);

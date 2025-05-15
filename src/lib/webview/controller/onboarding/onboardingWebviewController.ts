@@ -1,9 +1,7 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
-// eslint-disable-next-line no-restricted-imports
 import { ConfigurationTarget, WebviewPanel } from 'vscode';
 
 import { configuration } from '../../../../../src/config/configuration';
-// eslint-disable-next-line no-restricted-imports
 import { Container } from '../../../../../src/container';
 import { isBasicAuthInfo, ProductBitbucket, ProductJira } from '../../../../atlclients/authInfo';
 import { AnalyticsApi } from '../../../analyticsApi';

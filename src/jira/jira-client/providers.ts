@@ -1,6 +1,6 @@
 import { AuthorizationProvider, TransportFactory } from '@atlassianlabs/jira-pi-client';
 import { AgentProvider, getProxyHostAndPort, shouldTunnelHost } from '@atlassianlabs/pi-client-common';
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
 import * as fs from 'fs';
 import * as https from 'https';
 import * as sslRootCas from 'ssl-root-cas';
@@ -17,7 +17,7 @@ import { ConnectionTimeout } from '../../util/time';
 
 const tunnel = require('tunnel');
 
-export function getAxiosInstance(): AxiosInstance {
+export function getAxiosInstance() {
     const instance = axios.create({
         timeout: ConnectionTimeout,
         headers: {

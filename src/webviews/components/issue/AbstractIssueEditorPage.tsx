@@ -28,7 +28,7 @@ import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
 import * as React from 'react';
 import EdiText, { EdiTextType } from 'react-editext';
-import uuid from 'uuid';
+import { v4 } from 'uuid';
 
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
@@ -243,7 +243,7 @@ export abstract class AbstractIssueEditorPage<
             issueObj = { key: issueOrKey, siteDetails: this.state.siteDetails };
         }
 
-        const nonce: string = uuid.v4();
+        const nonce: string = v4();
         this.postMessage({
             action: 'openJiraIssue',
             issueOrKey: issueObj,
@@ -264,7 +264,7 @@ export abstract class AbstractIssueEditorPage<
 
     protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
         return new Promise((resolve) => {
-            const nonce: string = uuid.v4();
+            const nonce: string = v4();
             // this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl, nonce: nonce });
             (async () => {
                 try {
@@ -308,7 +308,7 @@ export abstract class AbstractIssueEditorPage<
     protected loadSelectOptions = (input: string, url: string): Promise<any[]> => {
         this.setState({ isSomethingLoading: true });
         return new Promise((resolve) => {
-            const nonce: string = uuid.v4();
+            const nonce: string = v4();
             (async () => {
                 try {
                     const listEvent = await this.postMessageWithEventPromise(
@@ -341,7 +341,7 @@ export abstract class AbstractIssueEditorPage<
     handleSelectOptionCreate = debounce((field: SelectFieldUI, input: string): void => {
         if (field.createUrl.trim() !== '') {
             this.setState({ isSomethingLoading: true, loadingField: field.key });
-            const nonce: string = uuid.v4();
+            const nonce: string = v4();
 
             (async () => {
                 try {

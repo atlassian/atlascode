@@ -6,7 +6,7 @@ import { FieldUI, InputFieldUI, SelectFieldUI, UIType, ValueType } from '@atlass
 import { Box } from '@material-ui/core';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
-import uuid from 'uuid';
+import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
 import { EditIssueAction, IssueCommentAction } from '../../../../ipc/issueActions';
@@ -237,7 +237,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     handleEditIssue = async (fieldKey: string, newValue: any) => {
         this.setState({ isSomethingLoading: true, loadingField: fieldKey });
-        const nonce = uuid.v4();
+        const nonce = v4();
         await this.postMessageWithEventPromise(
             {
                 action: 'editIssue',

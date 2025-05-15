@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-restricted-imports
 import { AnalyticsErrorBoundary, AnalyticsListener, UIAnalyticsEvent } from '@atlaskit/analytics-next';
 import React, { useCallback } from 'react';
 

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import uuid from 'uuid';
+import { v4 } from 'uuid';
 
 import { Action, LegacyPMFData } from '../../ipc/messaging';
 import { OnMessageEventPromise } from '../../util/reactpromise';
@@ -117,7 +117,7 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
     }
 
     protected async fetchImage(url: string): Promise<any> {
-        const nonce = uuid.v4();
+        const nonce = v4();
         return (
             await this.postMessageWithEventPromise(
                 {
