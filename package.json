@@ -100,6 +100,16 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.devsphere.review.initialise",
+                "title": "Initialise Devsphere Review Settings",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.devsphere.custom.reset",
+                "title": "Reset Devsphere Custom Configuration",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.jira.searchIssues",
                 "title": "Search Jira Issue Results",
                 "icon": {

@@ -10,6 +10,7 @@ import { activate as activateCodebucket } from './codebucket/command/registerCom
 import { CommandContext, setCommandContext } from './commandContext';
 import { Commands, registerCommands } from './commands';
 import { Configuration, configuration, IConfig } from './config/configuration';
+import { registerDevsphereCommands } from './config/devsphere-config/registerDevsphereCommands';
 import { ExtensionId, GlobalStateVersionKey } from './constants';
 import { Container } from './container';
 import { registerAnalyticsClient, registerErrorReporting, unregisterErrorReporting } from './errorReporting';
@@ -92,7 +93,7 @@ export async function activate(context: ExtensionContext) {
     // icon to appear in the activity bar
     activateBitbucketFeatures();
     activateYamlFeatures(context);
-
+    registerDevsphereCommands(context);
     Logger.info(
         `Atlassian for VS Code (v${atlascodeVersion}) activated in ${
             duration[0] * 1000 + Math.floor(duration[1] / 1000000)
