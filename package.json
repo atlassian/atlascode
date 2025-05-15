@@ -300,16 +300,6 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.testLogin",
-                "title": "Test Login",
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.testLogout",
-                "title": "Test Logout",
-                "category": "Atlassian"
-            },
-            {
                 "command": "atlascode.bb.openInBitbucket",
                 "title": "Open in Bitbucket",
                 "category": "Atlassian"
@@ -1343,7 +1333,6 @@
         "@jest/globals": "^29.7.0",
         "@playwright/test": "^1.52.0",
         "@stylistic/eslint-plugin-js": "^2.8.0",
-        "@types/chai": "^4",
         "@types/express": "^5.0.1",
         "@types/filesize": "^4.1.0",
         "@types/git-url-parse": "^9.0.1",
@@ -1351,7 +1340,6 @@
         "@types/lodash.debounce": "^4.0.6",
         "@types/lodash.orderby": "^4.6.6",
         "@types/lodash.truncate": "^4.4.6",
-        "@types/mocha": "^10.0.10",
         "@types/node": "^18.16.19",
         "@types/node-ipc": "^9.2.0",
         "@types/prosemirror-state": "^1.2.5",
@@ -1370,7 +1358,6 @@
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
         "autoprefixer": "^10.4.20",
-        "chai": "^4",
         "concurrently": "^9.1.2",
         "css-loader": "^7.1.2",
         "css-minimizer-webpack-plugin": "^7.0.0",
@@ -1407,7 +1394,6 @@
         "ts-loader": "^8.4.0",
         "tsconfig-paths-webpack-plugin": "^3.2.0",
         "typescript": "^5.7.3",
-        "vscode-extension-tester": "^8.10.0",
         "webpack": "^5",
         "webpack-cli": "^5.1.4",
         "webpack-manifest-plugin": "^5.0.0",
