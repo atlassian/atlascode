@@ -85,7 +85,11 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                     const issueData = e as CreateIssueData;
                     this.updateInternals(issueData);
                     this.setState(issueData, () => {
-                        this.setState({ isSomethingLoading: false, loadingField: '' });
+                        this.setState({
+                            isSomethingLoading: false,
+                            loadingField: '',
+                            isRteEnabled: issueData.featureGates['atlascode-jira-rte'],
+                        });
                     });
 
                     break;

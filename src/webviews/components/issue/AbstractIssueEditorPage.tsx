@@ -73,6 +73,7 @@ export interface CommonEditorViewState extends Message {
     showPMF: boolean;
     errorDetails: any;
     commentInputValue: string;
+    isRteEnabled: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -88,6 +89,7 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     isErrorBannerOpen: false,
     errorDetails: undefined,
     commentInputValue: '',
+    isRteEnabled: false,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -493,6 +495,7 @@ export abstract class AbstractIssueEditorPage<
                                                     : `[~${user.name}]`,
                                             }))
                                         }
+                                        featureGateEnabled={this.state.isRteEnabled}
                                     />
                                 );
                             }
