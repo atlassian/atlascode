@@ -20,6 +20,7 @@ export interface EditIssueData extends EditIssueUI<DetailedSiteInfo> {
     currentUser: User;
     workInProgress: boolean;
     recentPullRequests: PullRequestData[];
+    featureGates: Record<string, boolean>;
 }
 
 export const emptyEditIssueData: EditIssueData = {
@@ -28,6 +29,7 @@ export const emptyEditIssueData: EditIssueData = {
     currentUser: emptyUser,
     workInProgress: false,
     recentPullRequests: [],
+    featureGates: {},
 };
 
 export interface IssueProblemsData extends Message {
@@ -39,6 +41,7 @@ export interface CreateIssueData extends Message {}
 export interface CreateIssueData extends IssueTypeUI<DetailedSiteInfo> {
     currentUser: User;
     transformerProblems: CreateMetaTransformerProblems;
+    featureGates: Record<string, boolean>;
 }
 
 export const emptyCreateIssueData: CreateIssueData = {
@@ -46,6 +49,7 @@ export const emptyCreateIssueData: CreateIssueData = {
     ...createEmptyIssueTypeUI(emptySiteInfo),
     currentUser: emptyUser,
     transformerProblems: {},
+    featureGates: {},
 };
 
 export interface IssueEditError extends HostErrorMessage {

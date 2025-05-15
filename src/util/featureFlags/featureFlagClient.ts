@@ -160,7 +160,6 @@ export abstract class FeatureFlagClient {
                 experiment,
                 experimentGate.parameter,
                 experimentGate.defaultValue,
-                { fireExperimentExposure: true },
             );
         }
 
@@ -218,7 +217,6 @@ export abstract class FeatureFlagClient {
                 experiment,
                 experimentGate.parameter,
                 experimentGate.defaultValue,
-                { fireExperimentExposure: true },
             );
 
             if (gateValue === experimentGate.defaultValue) {

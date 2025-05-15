@@ -89,9 +89,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             isSomethingLoading: false,
                             loadingField: '',
                         },
+                        isRteEnabled: issueData.featureGates['atlascode-jira-rte'],
                     });
                     break;
                 }
+
                 case 'epicChildrenUpdate': {
                     this.setState({ isSomethingLoading: false, loadingField: '', epicChildren: e.epicChildren });
                     break;
@@ -520,6 +522,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         }))
                     }
                     fetchImage={(img) => this.fetchImage(img)}
+                    isRteEnabled={this.state.isRteEnabled}
                 />
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (
@@ -546,6 +549,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 this.state.fieldValues['project'] &&
                                 this.state.fieldValues['project'].projectTypeKey === 'service_desk'
                             }
+                            isRteEnabled={this.state.isRteEnabled}
                         />
                     </div>
                 )}
