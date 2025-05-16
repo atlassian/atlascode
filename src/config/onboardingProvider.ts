@@ -1,16 +1,18 @@
 // import { AnalyticsClient } from 'src/analytics-node-client/src/client.min';
-import { Product, ProductBitbucket, ProductJira } from 'src/atlclients/authInfo';
+import { BasicAuthInfo, Product, ProductBitbucket, ProductJira, SiteInfo } from 'src/atlclients/authInfo';
 import { Commands } from 'src/commands';
 import { Container } from 'src/container';
 import { EXTENSION_URL } from 'src/uriHandler/atlascodeUriHandler';
 import {
     commands,
     env,
+    InputBox,
     QuickInputButton,
     QuickInputButtons,
     QuickPick,
     QuickPickItem,
     ThemeIcon,
+    Uri,
     window,
 } from 'vscode';
 
@@ -20,9 +22,16 @@ class OnboardingProvider {
     private _jiraItems: OnboardingQuickPickItem[] = [];
     private _bitbucketItems: OnboardingQuickPickItem[] = [];
 
+    private _quickInputServer: InputBox[];
+
+    // private _currentStep: number = 0;
+
     constructor() {
         // this._analyticsClient = Container.analyticsClient;
         this._quickPick = window.createQuickPick<OnboardingQuickPickItem>();
+
+        this._quickInputServer = [];
+
         this._initialize();
     }
 
@@ -43,6 +52,19 @@ class OnboardingProvider {
         this._quickPick.onDidAccept(this._quickPickOnDidAccept.bind(this));
         this._initializeJiraItems();
         this._initializeBitbucketItems();
+
+        this._initializeServerLogin();
+    }
+
+    private _initializeServerLogin() {
+        for (let i = 0; i < 3; i++) {
+            this._quickInputServer[i] = window.createInputBox();
+            this._quickInputServer[i].totalSteps = 3;
+            this._quickInputServer[i].step = i + 1;
+            this._quickInputServer[i].ignoreFocusOut = true;
+            this._quickInputServer[i].buttons = [QuickInputButtons.Back];
+            this._quickInputServer[i].onDidTriggerButton(this._quickPickOnDidTriggerButton.bind(this)); // TODO
+        }
     }
 
     private _quickPickOnDidTriggerButton(e: QuickInputButton) {
@@ -74,10 +96,12 @@ class OnboardingProvider {
     }
 
     private async _quickPickOnDidAccept() {
-        switch (this._quickPick.activeItems[0].onboardingId) {
+        const onboardingId = this._quickPick.activeItems[0].onboardingId;
+
+        switch (onboardingId) {
             case 'onboarding:jira-cloud':
                 this.getIsRemote()
-                    ? this.handleRemoteLogin()
+                    ? this.handleServerLoginSteps(ProductJira, 'Cloud', 0)
                     : this.handleCloudLogin(ProductJira).then(() => {
                           this.handleNext();
                       });
@@ -85,7 +109,7 @@ class OnboardingProvider {
                 break;
             case 'onboarding:jira-server':
                 // this._analyticsClient.sendUIEvent('onboarding:jira-server');
-                this.handleServerLogin();
+                this.handleServerLoginSteps(ProductJira, 'Server', 0);
                 break;
             case 'onboarding:jira-skip':
                 // this._analyticsClient.sendUIEvent('onboarding:jira-skip');
@@ -93,14 +117,14 @@ class OnboardingProvider {
                 break;
             case 'onboarding:bitbucket-cloud':
                 this.getIsRemote()
-                    ? this.handleRemoteLogin()
+                    ? this.handleServerLoginSteps(ProductBitbucket, 'Cloud', 0)
                     : this.handleCloudLogin(ProductBitbucket).then(() => {
                           this.handleNext();
                       });
                 // this._analyticsClient.sendUIEvent('onboarding:bitbucket-cloud');
                 break;
             case 'onboarding:bitbucket-server':
-                this.handleServerLogin();
+                this.handleServerLoginSteps(ProductBitbucket, 'Server', 0);
                 // this._analyticsClient.sendUIEvent('onboarding:bitbucket-server');
                 break;
             case 'onboarding:bitbucket-skip':
@@ -223,16 +247,121 @@ class OnboardingProvider {
         this._quickPick.busy = false;
     }
 
-    private handleRemoteLogin() {
-        return;
+    private handleServerLoginSteps(product: Product, env: string, step: number) {
+        switch (step) {
+            case 0:
+                this._quickInputServer[step].prompt = this.helperText(product, env);
+                this._quickInputServer[step].placeholder = 'Enter your site URL';
+                this._quickInputServer[step].title = `Enter your ${product.name} ${env} URL`;
+                this._quickInputServer[step].onDidAccept(() => {
+                    this._quickInputServer[step].hide();
+                    this.handleServerLoginSteps(product, env, step + 1);
+                });
+                this._quickInputServer[step].show();
+                break;
+            case 1:
+                this._quickInputServer[step].prompt = 'Enter your username';
+                this._quickInputServer[step].placeholder = 'Enter your username';
+                this._quickInputServer[step].title = `Enter your ${product.name} ${env} username`;
+                this._quickInputServer[step].onDidAccept(() => {
+                    this._quickInputServer[step].hide();
+                    this.handleServerLoginSteps(product, env, step + 1);
+                });
+                this._quickInputServer[step].show();
+                break;
+
+            case 2:
+                if (product.key === ProductJira.key && env === 'Cloud') {
+                    this._quickInputServer[step].prompt = 'You can use an API token to connect to this site.';
+                    this._quickInputServer[step].placeholder = 'Enter your API token';
+
+                    this._quickInputServer[step].buttons = [
+                        ...this._quickInputServer[step].buttons,
+                        {
+                            iconPath: new ThemeIcon('link-external'),
+                            tooltip: 'Create API tokens',
+                        },
+                    ];
+
+                    this._quickInputServer[step].onDidTriggerButton((e) => {
+                        if (e.tooltip === 'Create API tokens') {
+                            this.handleOpenCreateApiToken();
+                        }
+                    });
+                } else {
+                    this._quickInputServer[step].prompt = 'Enter your password';
+                    this._quickInputServer[step].placeholder = 'Enter your password';
+                }
+
+                this._quickInputServer[step].password = true;
+                this._quickInputServer[step].title = `Enter your ${product.name} ${env} password`;
+                this._quickInputServer[step].onDidAccept(() => {
+                    this.handleServerLogin(product)
+                        .then(() => {
+                            this._quickInputServer[step].hide();
+                            this._quickInputServer[step].busy = false;
+                        })
+                        .catch((e) => {}); // TODO;
+                });
+                this._quickInputServer[step].show();
+                break;
+            default:
+                break;
+        }
     }
 
-    private handleServerLogin() {
-        return;
+    private async handleServerLogin(product: Product) {
+        const baseUrl = new URL(this._quickInputServer[0].value);
+
+        console.log('baseUrl', baseUrl);
+        const username = this._quickInputServer[1].value;
+        const password = this._quickInputServer[2].value;
+
+        if (!baseUrl || !username || !password) {
+            return;
+        }
+
+        this._quickInputServer[2].busy = true;
+        // this._quickInputServer[2].enabled = false;
+
+        const siteInfo = {
+            host: baseUrl.host,
+            protocol: baseUrl.protocol,
+            product,
+        } as SiteInfo;
+
+        const authInfo = {
+            username,
+            password,
+        } as BasicAuthInfo;
+
+        await Container.loginManager.userInitiatedServerLogin(siteInfo, authInfo, true);
     }
 
     private getIsRemote() {
         return env.remoteName !== undefined;
+    }
+
+    private helperText = (product: Product, env: string) => {
+        if (product.key === ProductJira.key) {
+            const site = env === 'Cloud' ? 'cloud' : 'server';
+
+            const baseUrl = env === 'Cloud' ? 'https://jira.atlassian.net' : 'https://jira.mydomain.com';
+
+            return `You can enter a ${site} url like ${baseUrl}\n`;
+        } else if (product.key === ProductBitbucket.key) {
+            const site = env === 'Cloud' ? 'cloud' : 'server';
+
+            const baseUrl = env === 'Cloud' ? 'https://bitbucket.org' : 'https://bitbucket.mydomain.com';
+
+            return `You can enter a ${site} url like ${baseUrl}\n`;
+        }
+
+        return '';
+    };
+
+    private handleOpenCreateApiToken() {
+        env.openExternal(Uri.parse('https://id.atlassian.com/manage-profile/security/api-tokens'));
     }
 }
 
