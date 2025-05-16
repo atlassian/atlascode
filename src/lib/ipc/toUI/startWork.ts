@@ -39,6 +39,8 @@ export interface RepoData {
     workspaceRepo: WorkspaceRepo;
     href?: string;
     avatarUrl?: string;
+    userName: string;
+    userEmail: string;
     localBranches: Branch[];
     remoteBranches: Branch[];
     branchTypes: BranchType[];
@@ -73,6 +75,8 @@ export const emptyRepoData: RepoData = {
     },
     href: undefined,
     avatarUrl: undefined,
+    userName: '',
+    userEmail: '',
     localBranches: [],
     remoteBranches: [],
     branchTypes: [],
