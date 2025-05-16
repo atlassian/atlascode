@@ -42,10 +42,13 @@ bitbucket-pipelines.yml
 *.crt
 *.p12
 *.vsix
+*.orig
 node_modules/
 webpack.*
 build/**/*.map
+.readme/
 devhtml/
 jest.config.ts
 jest.react.config.ts
 jest.unit.config.ts
+playwright.config.js
