@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 
 test("Onboarding flow's navigation among pages works", async ({ page }) => {
-    await page.setViewportSize({ width: 1600, height: 800 });
     await page.goto('http://[::1]:9988/');
 
     await page.getByRole('tab', { name: 'Atlassian' }).click();
@@ -58,7 +57,6 @@ test("Onboarding flow's navigation among pages works", async ({ page }) => {
 });
 
 test('Authenticating with Jira works, and assigned items are displayed', async ({ page }) => {
-    await page.setViewportSize({ width: 1600, height: 800 });
     await page.goto('http://[::1]:9988/');
 
     await page.getByRole('tab', { name: 'Atlassian' }).click();

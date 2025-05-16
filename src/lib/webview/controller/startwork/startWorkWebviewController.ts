@@ -2,7 +2,6 @@ import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel } from '../../../../bitbucket/model';
-// eslint-disable-next-line no-restricted-imports
 import { Container } from '../../../../container';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';

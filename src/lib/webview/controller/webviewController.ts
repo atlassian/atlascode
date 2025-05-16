@@ -1,5 +1,4 @@
 import { Experiments, Features } from 'src/util/featureFlags';
-// eslint-disable-next-line no-restricted-imports
 import { WebviewPanel } from 'vscode';
 
 import { DetailedSiteInfo, Product } from '../../../atlclients/authInfo';

@@ -1,13 +1,10 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
-import uuid from 'uuid';
-// TODO AXON-46 - figure out why linter is mad here
-// This is most likely a configuration error, since it makes sense to prevent imports of
-// `vscode` and `container` in react files - but this is NOT a react file :thinking:
-import vscode from 'vscode'; // eslint-disable-line
+import { v4 } from 'uuid';
+import vscode from 'vscode';
 
 import { isBasicAuthInfo, isEmptySiteInfo, isPATAuthInfo } from '../../../../atlclients/authInfo';
-import { Container } from '../../../../container'; //eslint-disable-line
+import { Container } from '../../../../container';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { ConfigAction, ConfigActionType } from '../../../ipc/fromUI/config';
@@ -150,7 +147,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
             case ConfigActionType.RemoteLogin: {
                 const uri = vscode.Uri.parse('vscode://atlassian.atlascode/auth');
                 vscode.env.asExternalUri(uri).then((uri) => {
-                    const state = { deeplink: uri.toString(true), attemptId: uuid.v4() };
+                    const state = { deeplink: uri.toString(true), attemptId: v4() };
                     Container.loginManager.initRemoteAuth(state);
                 });
                 break;

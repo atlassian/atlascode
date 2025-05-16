@@ -7,13 +7,12 @@ node_modules
 launch.json
 !.vscode/launch.json.example
 *.vsix
-.yo-*
 yarn-error.log
-charles-ssl-proxying-certificate.pem
 *.pem
-TEMP-*
+*.crt
+*.p12
 .DS_Store
-.yalc
-yalc.lock
 yarn*
 package-lock.json
+e2e/wiremock-mappings/**/*.json
+*.css
