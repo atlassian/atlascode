@@ -1,4 +1,11 @@
-const _baseConfig = (project, testExtension) => ({
+import type { Config } from 'jest';
+
+const config: Config = {
+    projects: ['<rootDir>/jest.*.config.js'],
+    verbose: true,
+};
+
+export const baseConfigFor = (project: string, testExtension: string): Config => ({
     displayName: project,
     roots: ['<rootDir>'],
 
@@ -13,8 +20,7 @@ const _baseConfig = (project, testExtension) => ({
         '^.+\\.(js|ts|tsx)$': [
             'ts-jest',
             {
-                tsconfig: project === 'react' ? ({ esModuleInterop: true }) : false,
-                isolatedModules: project === 'react',
+                tsconfig: project === 'react' ? ({ esModuleInterop: true, isolatedModules: true }) : false,
             },
         ],
         '^.+\\.(css|styl|less|sass|scss)$': 'jest-css-modules-transform',
@@ -46,9 +52,4 @@ const _baseConfig = (project, testExtension) => ({
     },
 });
 
-module.exports = {
-    projects: ['<rootDir>/jest.*.config.js'],
-    verbose: true,
-    // custom exports for individual projects
-    _baseConfig,
-};
+export default config;

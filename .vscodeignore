@@ -46,6 +46,6 @@ node_modules/
 webpack.*
 build/**/*.map
 devhtml/
-jest.config.js
-jest.react.config.js
-jest.unit.config.js
+jest.config.ts
+jest.react.config.ts
+jest.unit.config.ts
