@@ -1,9 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
 import { v4 } from 'uuid';
-// TODO AXON-46 - figure out why linter is mad here
-// This is most likely a configuration error, since it makes sense to prevent imports of
-// `vscode` and `container` in react files - but this is NOT a react file :thinking:
 import vscode from 'vscode';
 
 import { isBasicAuthInfo, isEmptySiteInfo, isPATAuthInfo } from '../../../../atlclients/authInfo';
