@@ -1,5 +1,6 @@
 import { Uri } from 'vscode';
 
+import { ProductJira } from '../../atlclients/authInfo';
 import { NotificationManagerImpl } from './notificationManager';
 import { AtlasCodeNotification, NotificationSurface, NotificationType } from './notificationManager';
 
@@ -16,6 +17,18 @@ jest.mock('../../container', () => ({
     Container: {
         analyticsClient: {
             sendTrackEvent: jest.fn(),
+        },
+        credentialManager: {
+            onDidAuthChange: jest.fn(),
+            getAllValidAuthInfo: jest.fn(() => Promise.resolve([])),
+        },
+        config: {
+            jira: {
+                enabled: true,
+            },
+            bitbucket: {
+                enabled: true,
+            },
         },
     },
 }));
@@ -76,20 +89,24 @@ describe('NotificationManagerImpl', () => {
         };
         notificationManager.registerDelegate(mockDelegate);
         const uri = Uri.parse(generateRandomFileUri());
-        notificationManager.addNotification(uri, {
+        notificationManager.addNotification({
             id: '1',
             message: 'Test Notification',
             notificationType: NotificationType.AssignedToYou,
+            uri: uri,
+            product: ProductJira,
         });
 
         expect(mockDelegate.onNotificationChange).toHaveBeenCalledTimes(1);
 
         notificationManager.unregisterDelegate(mockDelegate);
 
-        notificationManager.addNotification(uri, {
+        notificationManager.addNotification({
             id: '2',
             message: 'Another Test Notification',
             notificationType: NotificationType.AssignedToYou,
+            uri: uri,
+            product: ProductJira,
         });
         expect(mockDelegate.onNotificationChange).toHaveBeenCalledTimes(1);
     });
@@ -100,9 +117,11 @@ describe('NotificationManagerImpl', () => {
             id: '1',
             message: 'Test Notification',
             notificationType: NotificationType.AssignedToYou,
+            uri: uri,
+            product: ProductJira,
         };
 
-        notificationManager.addNotification(uri, notification);
+        notificationManager.addNotification(notification);
         const notifications = notificationManager.getNotificationsByUri(uri, NotificationSurface.All);
         expect(notifications.size).toBe(1);
         expect(notifications.get(notification.id)).toEqual(notification);
@@ -114,10 +133,12 @@ describe('NotificationManagerImpl', () => {
             id: '1',
             message: 'Test Notification',
             notificationType: NotificationType.AssignedToYou,
+            uri: uri,
+            product: ProductJira,
         };
 
-        notificationManager.addNotification(uri, notification);
-        notificationManager.addNotification(uri, notification);
+        notificationManager.addNotification(notification);
+        notificationManager.addNotification(notification);
         const notifications = notificationManager.getNotificationsByUri(uri, NotificationSurface.All);
         expect(notifications.size).toBe(1);
     });
@@ -128,16 +149,20 @@ describe('NotificationManagerImpl', () => {
             id: '1',
             message: 'Test Notification 1',
             notificationType: NotificationType.AssignedToYou,
+            uri: uri,
+            product: ProductJira,
         };
         const notification2: AtlasCodeNotification = {
             id: '2',
             message: 'Test Notification 2',
             notificationType: NotificationType.NewCommentOnJira,
+            uri: uri,
+            product: ProductJira,
         };
 
-        notificationManager.addNotification(uri, notification1);
-        notificationManager.addNotification(uri, notification2);
-        notificationManager.clearNotifications(uri);
+        notificationManager.addNotification(notification1);
+        notificationManager.addNotification(notification2);
+        notificationManager.clearNotificationsByUri(uri);
         const notifications = notificationManager.getNotificationsByUri(uri, NotificationSurface.All);
         expect(notifications.size).toBe(0);
     });
@@ -148,15 +173,19 @@ describe('NotificationManagerImpl', () => {
             id: '1',
             message: 'Banner Notification',
             notificationType: NotificationType.AssignedToYou,
+            uri: uri,
+            product: ProductJira,
         };
         const badgeAndBannerNotification: AtlasCodeNotification = {
             id: '2',
             message: 'Badge and Badge Notification',
             notificationType: NotificationType.LoginNeeded,
+            uri: uri,
+            product: ProductJira,
         };
 
-        notificationManager.addNotification(uri, bannerOnlyNotification);
-        notificationManager.addNotification(uri, badgeAndBannerNotification);
+        notificationManager.addNotification(bannerOnlyNotification);
+        notificationManager.addNotification(badgeAndBannerNotification);
 
         const bannerNotifications = notificationManager.getNotificationsByUri(uri, NotificationSurface.Banner);
         expect(bannerNotifications.size).toBe(2);

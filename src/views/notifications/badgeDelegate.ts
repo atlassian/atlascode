@@ -4,6 +4,7 @@ import { notificationChangeEvent } from '../../analytics';
 import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
 import { Container } from '../../container';
 import {
+    NotificationAction,
     NotificationChangeEvent,
     NotificationDelegate,
     NotificationManagerImpl,
@@ -41,28 +42,47 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
     }
 
     public onNotificationChange(event: NotificationChangeEvent): void {
-        const { uri } = event;
-        const newBadgeValue = NotificationManagerImpl.getInstance().getNotificationsByUri(
-            uri,
-            NotificationSurface.Badge,
-        ).size;
-        const oldBadgeValue = this.badgesRegistration[uri.toString()];
-        this.registerBadgeValueByUri(newBadgeValue, uri);
-        const badgeCountDelta = this.updateOverallCount(newBadgeValue, oldBadgeValue);
-        this.analytics(uri, badgeCountDelta);
-        this.setExtensionBadge();
-        this._onDidChangeFileDecorations.fire(uri);
+        this.updateOverallCount(event);
+
+        const uniqueUris = new Set<Uri>();
+        event.notifications.forEach((notification) => {
+            const uri = notification.uri;
+            if (uri) {
+                uniqueUris.add(uri);
+            }
+        });
+        uniqueUris.forEach((uri) => {
+            this._onDidChangeFileDecorations.fire(uri);
+        });
     }
 
     private _onDidChangeFileDecorations = new EventEmitter<undefined | Uri | Uri[]>();
 
     public readonly onDidChangeFileDecorations = this._onDidChangeFileDecorations.event;
 
+    private updateOverallCount(event: NotificationChangeEvent) {
+        switch (event.action) {
+            case NotificationAction.Removed:
+                this.overallCount -= event.notifications.size;
+                break;
+            case NotificationAction.Added:
+                this.overallCount += event.notifications.size;
+                break;
+            default:
+                return;
+        }
+        this.setExtensionBadge();
+    }
+
     public provideFileDecoration(uri: Uri, token: CancellationToken) {
+        const oldBadgeValue = this.badgesRegistration[uri.toString()];
         const newBadgeValue = NotificationManagerImpl.getInstance().getNotificationsByUri(
             uri,
             NotificationSurface.Badge,
         ).size;
+        this.registerBadgeValueByUri(newBadgeValue, uri);
+
+        this.analytics(uri, newBadgeValue, oldBadgeValue);
         return this.constructItemBadge(newBadgeValue);
     }
 
@@ -91,24 +111,6 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
             color: new ThemeColor('editorForeground'),
             propagate: false,
         };
-    }
-
-    private updateOverallCount(newBadgeValue: number | undefined, oldBadgeValue: number | undefined): number {
-        if (newBadgeValue === undefined) {
-            newBadgeValue = 0;
-        }
-        if (oldBadgeValue === undefined) {
-            oldBadgeValue = 0;
-        }
-
-        const delta = newBadgeValue - oldBadgeValue;
-        this.overallCount += delta;
-
-        if (this.overallCount < 0) {
-            this.overallCount = 0;
-        }
-
-        return delta;
     }
 
     private overallToolTip(): string {
@@ -144,7 +146,11 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
         }
     }
 
-    private analytics(uri: Uri, badgeCountDelta: number): void {
+    private analytics(uri: Uri, newBadgeValue: number, oldBadgeValue: number): void {
+        const safeNewBadgeValue = newBadgeValue ?? 0;
+        const safeOldBadgeValue = oldBadgeValue ?? 0;
+        const badgeCountDelta = safeNewBadgeValue - safeOldBadgeValue;
+
         if (badgeCountDelta === 0) {
             return;
         }

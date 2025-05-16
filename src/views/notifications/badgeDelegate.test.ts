@@ -1,7 +1,14 @@
 import { ThemeColor, TreeView, Uri, window } from 'vscode';
 
+import { ProductJira } from '../../atlclients/authInfo';
 import { BadgeDelegate } from './badgeDelegate';
-import { NotificationAction, NotificationManagerImpl, NotificationSurface } from './notificationManager';
+import {
+    AtlasCodeNotification,
+    NotificationAction,
+    NotificationManagerImpl,
+    NotificationSurface,
+    NotificationType,
+} from './notificationManager';
 
 jest.mock('vscode', () => ({
     EventEmitter: jest.fn().mockImplementation(() => ({
@@ -41,6 +48,9 @@ jest.mock('./notificationManager', () => ({
         Added: 'Added',
         Removed: 'Removed',
     },
+    NotificationType: {
+        LoinNeeded: 'LoginNeeded',
+    },
 }));
 
 describe('BadgeDelegate', () => {
@@ -72,65 +82,78 @@ describe('BadgeDelegate', () => {
     });
 
     it('should update badge values for different notification counts', () => {
-        const uri = Uri.parse('file://test');
+        const uri = Uri.parse('file://test1');
+        const notification1: AtlasCodeNotification = {
+            id: 'notification1',
+            message: 'Test notification 1',
+            notificationType: NotificationType.LoginNeeded,
+            uri: uri,
+            product: ProductJira,
+        };
+        const notification2: AtlasCodeNotification = {
+            id: 'notification2',
+            message: 'Test notification 2',
+            notificationType: NotificationType.LoginNeeded,
+            uri: uri,
+            product: ProductJira,
+        };
 
         // Case 1: 0 notifications
-        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(new Set());
-        badgeDelegate.onNotificationChange({ action: NotificationAction.Added, uri: uri, notifications: new Map() });
-        expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
-            uri,
-            NotificationSurface.Badge,
-        );
+        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(new Map());
+        badgeDelegate.onNotificationChange({ action: NotificationAction.Added, notifications: new Map() });
+        expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledTimes(0);
         expect(treeViewMock.badge).toEqual({
             value: 0,
             tooltip: '0 notifications',
         });
 
         // Case 2: 1 notification
-        const oneNotification = new Set(['notification1']);
-        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(oneNotification);
-        badgeDelegate.onNotificationChange({ action: NotificationAction.Added, uri: uri, notifications: new Map() });
-        expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
-            uri,
-            NotificationSurface.Badge,
+        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(
+            new Map([[notification1.id, notification1]]),
         );
+        // Create a real Map with a notification object that includes the uri
+        const notificationsMap = new Map([['notification1', notification1]]);
+        badgeDelegate.onNotificationChange({ action: NotificationAction.Added, notifications: notificationsMap });
         expect(treeViewMock.badge).toEqual({
             value: 1,
             tooltip: '1 notification',
         });
 
         // Case 3: 2 notifications
-        const twoNotifications = new Set(['notification1', 'notification2']);
-        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(twoNotifications);
-        badgeDelegate.onNotificationChange({ action: NotificationAction.Added, uri: uri, notifications: new Map() });
-        expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
-            uri,
-            NotificationSurface.Badge,
+        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(
+            new Map([
+                [notification1.id, notification1],
+                [notification2.id, notification2],
+            ]),
         );
+        badgeDelegate.onNotificationChange({
+            action: NotificationAction.Added,
+            notifications: new Map([[notification2.id, notification2]]),
+        });
         expect(treeViewMock.badge).toEqual({
             value: 2,
             tooltip: '2 notifications',
         });
 
         // Case 4: Back to 1 notification
-        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(oneNotification);
-        badgeDelegate.onNotificationChange({ action: NotificationAction.Removed, uri: uri, notifications: new Map() });
-        expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
-            uri,
-            NotificationSurface.Badge,
+        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(
+            new Map([[notification1.id, notification1]]),
         );
+        badgeDelegate.onNotificationChange({
+            action: NotificationAction.Removed,
+            notifications: new Map([[notification2.id, notification2]]),
+        });
         expect(treeViewMock.badge).toEqual({
             value: 1,
             tooltip: '1 notification',
         });
 
         // Case 5: Back to 0 notifications
-        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(new Set());
-        badgeDelegate.onNotificationChange({ action: NotificationAction.Removed, uri: uri, notifications: new Map() });
-        expect(NotificationManagerImpl.getInstance().getNotificationsByUri).toHaveBeenCalledWith(
-            uri,
-            NotificationSurface.Badge,
-        );
+        (NotificationManagerImpl.getInstance().getNotificationsByUri as jest.Mock).mockReturnValue(new Map());
+        badgeDelegate.onNotificationChange({
+            action: NotificationAction.Removed,
+            notifications: new Map([[notification1.id, notification1]]),
+        });
         expect(treeViewMock.badge).toEqual({
             value: 0,
             tooltip: '0 notifications',
