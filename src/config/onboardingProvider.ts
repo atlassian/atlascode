@@ -1,7 +1,18 @@
 // import { AnalyticsClient } from 'src/analytics-node-client/src/client.min';
-// import { Container } from 'src/container';
+import { Product, ProductBitbucket, ProductJira } from 'src/atlclients/authInfo';
 import { Commands } from 'src/commands';
-import { commands, QuickInputButton, QuickPick, QuickPickItem, ThemeIcon, window } from 'vscode';
+import { Container } from 'src/container';
+import { EXTENSION_URL } from 'src/uriHandler/atlascodeUriHandler';
+import {
+    commands,
+    env,
+    QuickInputButton,
+    QuickInputButtons,
+    QuickPick,
+    QuickPickItem,
+    ThemeIcon,
+    window,
+} from 'vscode';
 
 class OnboardingProvider {
     // private _analyticsClient: AnalyticsClient;
@@ -28,24 +39,17 @@ class OnboardingProvider {
             },
         ];
 
-        this._quickPick.onDidTriggerButton(this._quickPickOnDidTriggerSettingsButton.bind(this));
-        this._quickPick.onDidAccept(() => {
-            if (this._quickPick.step === 1) {
-                // this._analyticsClient.sendUIEvent(e[0].onboardingId);
-                // commands.executeCommand(Commands.ShowJiraAuth);
-                this._quickPick.step = 2;
-                this.show();
-            }
-            if (this._quickPick.step === 2) {
-                // this._quickPick.hide();
-            }
-        });
+        this._quickPick.onDidTriggerButton(this._quickPickOnDidTriggerButton.bind(this));
+        this._quickPick.onDidAccept(this._quickPickOnDidAccept.bind(this));
         this._initializeJiraItems();
         this._initializeBitbucketItems();
     }
 
-    private _quickPickOnDidTriggerSettingsButton(e: QuickInputButton) {
+    private _quickPickOnDidTriggerButton(e: QuickInputButton) {
         if (e.tooltip === 'Configure in settings') {
+            if (!this._quickPick.step || this._quickPick.step < 0 || this._quickPick.step > 2) {
+                return;
+            }
             // Open settings
             if (this._quickPick.step === 1) {
                 // this._analyticsClient.sendUIEvent('onboarding:jira-settings');
@@ -56,9 +60,58 @@ class OnboardingProvider {
             }
 
             this._quickPick.hide();
+        } else if (e === QuickInputButtons.Back) {
+            if (!this._quickPick.step || this._quickPick.step < 0 || this._quickPick.step > 2) {
+                return;
+            }
+
+            if (this._quickPick.step === 2) {
+                this._quickPick.step = 1;
+                this._quickPick.hide();
+                this.show();
+            }
         }
     }
 
+    private async _quickPickOnDidAccept() {
+        switch (this._quickPick.activeItems[0].onboardingId) {
+            case 'onboarding:jira-cloud':
+                this.getIsRemote()
+                    ? this.handleRemoteLogin()
+                    : this.handleCloudLogin(ProductJira).then(() => {
+                          this.handleNext();
+                      });
+                // this._analyticsClient.sendUIEvent('onboarding:jira-cloud');
+                break;
+            case 'onboarding:jira-server':
+                // this._analyticsClient.sendUIEvent('onboarding:jira-server');
+                this.handleServerLogin();
+                break;
+            case 'onboarding:jira-skip':
+                // this._analyticsClient.sendUIEvent('onboarding:jira-skip');
+                this.handleNext();
+                break;
+            case 'onboarding:bitbucket-cloud':
+                this.getIsRemote()
+                    ? this.handleRemoteLogin()
+                    : this.handleCloudLogin(ProductBitbucket).then(() => {
+                          this.handleNext();
+                      });
+                // this._analyticsClient.sendUIEvent('onboarding:bitbucket-cloud');
+                break;
+            case 'onboarding:bitbucket-server':
+                this.handleServerLogin();
+                // this._analyticsClient.sendUIEvent('onboarding:bitbucket-server');
+                break;
+            case 'onboarding:bitbucket-skip':
+                // this._analyticsClient.sendUIEvent('onboarding:bitbucket-skip');
+                this.handleNext();
+                break;
+            default:
+                // this._analyticsClient.sendUIEvent('onboarding:unknown');
+                break;
+        }
+    }
     private _initializeJiraItems() {
         this._jiraItems = [
             {
@@ -112,17 +165,74 @@ class OnboardingProvider {
     }
 
     show() {
+        if (!this._quickPick.step) {
+            return;
+        }
+
         if (this._quickPick.step === 1) {
             this._quickPick.items = this._jiraItems;
+
             this._quickPick.activeItems = [this._jiraItems[0]];
+            this._quickPick.buttons = [this._quickPick.buttons[0]];
             this._quickPick.placeholder = 'Select your Jira site type';
         } else if (this._quickPick.step === 2) {
             this._quickPick.items = this._bitbucketItems;
+
             this._quickPick.activeItems = [this._bitbucketItems[0]];
+            this._quickPick.buttons = [...this._quickPick.buttons, QuickInputButtons.Back];
             this._quickPick.placeholder = 'Select your Bitbucket site type';
+        } else {
+            return;
         }
 
         this._quickPick.show();
+    }
+
+    private handleNext() {
+        if (!this._quickPick.step) {
+            return;
+        }
+
+        if (this._quickPick.step === 1) {
+            commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
+            commands.executeCommand(Commands.RefreshCustomJqlExplorer);
+        } else if (this._quickPick.step === 2) {
+            commands.executeCommand(Commands.BitbucketRefreshPullRequests);
+            commands.executeCommand(Commands.RefreshPipelines);
+        } else {
+            return;
+        }
+
+        this._quickPick.hide();
+        this._quickPick.step++;
+
+        this.show();
+    }
+
+    private async handleCloudLogin(product: Product) {
+        this._quickPick.busy = true;
+        await Container.loginManager.userInitiatedOAuthLogin(
+            {
+                product,
+                host: product.key === ProductJira.key ? 'atlassian.net' : 'bitbucket.org',
+            },
+            EXTENSION_URL,
+            true,
+        );
+
+        this._quickPick.busy = false;
+    }
+
+    private handleRemoteLogin() {
+        return;
+    }
+
+    private handleServerLogin() {
+        return;
+    }
+
+    private getIsRemote() {
+        return env.remoteName !== undefined;
     }
 }
 

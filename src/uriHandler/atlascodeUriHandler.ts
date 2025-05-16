@@ -13,7 +13,7 @@ import { UriHandlerNotFoundHandler } from './actions/uriHandlerNotFoundHandler';
 
 export const SETTINGS_URL = `${env.uriScheme || 'vscode'}://${ExtensionId}/openSettings`;
 export const ONBOARDING_URL = `${env.uriScheme || 'vscode'}://${ExtensionId}/openOnboarding`;
-
+export const EXTENSION_URL = `${env.uriScheme || 'vscode'}://${ExtensionId}/extension`;
 export class AtlascodeUriHandler extends Disposable implements UriHandler {
     private static singleton: AtlascodeUriHandler;
 
@@ -22,6 +22,7 @@ export class AtlascodeUriHandler extends Disposable implements UriHandler {
             this.singleton = new AtlascodeUriHandler(analyticsApi, [
                 new BasicUriHandler('openSettings', () => Container.settingsWebviewFactory.createOrShow()),
                 new BasicUriHandler('openOnboarding', () => Container.onboardingWebviewFactory.createOrShow()),
+                new BasicUriHandler('extension', () => Promise.resolve(Container.focus())),
                 new OpenPullRequestUriHandler(bitbucketHelper),
                 new CloneRepositoryUriHandler(bitbucketHelper),
                 new OpenOrWorkOnJiraIssueUriHandler('openJiraIssue'),
