@@ -3,7 +3,6 @@ const fs = require('fs');
 const webpack = require('webpack');
 const dotenv = require('dotenv');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
-const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);

@@ -36,7 +36,6 @@
         "acceptance-tests",
         "webpack",
         "jest",
-        "src/setupTests.ts",
         ".vscode-test",
         ".yalc"
     ]

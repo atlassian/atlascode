@@ -7,8 +7,8 @@ import { emptyIssueType, IssueType, MinimalIssueOrKeyAndSite } from '@atlassianl
 import { Box } from '@material-ui/core';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
-import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
+import { DetailedSiteInfo } from '../../../../../atlclients/authInfo';
 import IssueList from '../../IssueList';
 
 export type SummaryAndIssueType = {

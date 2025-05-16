@@ -4,5 +4,5 @@ module.exports = {
     ..._baseConfig('react', 'tsx'),
 
     testEnvironment: 'jsdom',
-    setupFilesAfterEnv: ['<rootDir>/setupTestsReact.js'],
+    setupFilesAfterEnv: ['<rootDir>/__tests__/setupTestsReact.js'],
 };
