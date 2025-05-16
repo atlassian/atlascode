@@ -19,6 +19,7 @@ export enum ConfigActionType {
     ViewJiraIssue = 'viewJiraIssue',
     CreatePullRequest = 'createPullRequest',
     ViewPullRequest = 'viewPullRequest',
+    FetchWorkspacesRequest = 'fetchWorkspacesRequest',
 }
 
 export type ConfigAction =
@@ -31,6 +32,7 @@ export type ConfigAction =
     | ReducerAction<ConfigActionType.JQLSuggestionsRequest, JQLSuggestionsRequestAction>
     | ReducerAction<ConfigActionType.FilterSearchRequest, FilterSearchRequestAction>
     | ReducerAction<ConfigActionType.ValidateJqlRequest, ValidateJqlRequestAction>
+    | ReducerAction<ConfigActionType.FetchWorkspacesRequest, FetchWorkspacesRequestAction>
     | ReducerAction<ConfigActionType.SetTarget, TargetUpdateAction>
     | ReducerAction<ConfigActionType.CreateJiraIssue>
     | ReducerAction<ConfigActionType.ViewJiraIssue>
@@ -89,5 +91,11 @@ export interface JQLSuggestionsRequestAction {
 export interface ValidateJqlRequestAction {
     site: DetailedSiteInfo;
     jql: string;
+    abortKey?: string;
+}
+
+export interface FetchWorkspacesRequestAction {
+    site: DetailedSiteInfo;
+    query: string;
     abortKey?: string;
 }

@@ -6,6 +6,7 @@ import { ConfigurationChangeEvent, Disposable, ExtensionContext } from 'vscode';
 import { commands, window } from 'vscode';
 
 import { CloudPullRequestApi } from '../bitbucket/bitbucket-cloud/pullRequests';
+import { PullRequestsOverviewApi } from '../bitbucket/bitbucket-cloud/pullRequestsOverview';
 import { CloudRepositoriesApi } from '../bitbucket/bitbucket-cloud/repositories';
 import { ServerPullRequestApi } from '../bitbucket/bitbucket-server/pullRequests';
 import { ServerRepositoriesApi } from '../bitbucket/bitbucket-server/repositories';
@@ -124,6 +125,9 @@ export class ClientManager implements Disposable {
                     pullrequests: isOAuthInfo(info)
                         ? new CloudPullRequestApi(this.createOAuthHTTPClient(site, info.access))
                         : undefined!,
+                    pullrequestsOverview: isOAuthInfo(info)
+                        ? new PullRequestsOverviewApi(this.createOAuthHTTPClient(site, info.access))
+                        : undefined!,
                     pipelines: isOAuthInfo(info)
                         ? new PipelineApiImpl(this.createOAuthHTTPClient(site, info.access))
                         : undefined!,
@@ -138,6 +142,8 @@ export class ClientManager implements Disposable {
                         isBasicAuthInfo(info) || isPATAuthInfo(info)
                             ? new ServerPullRequestApi(this.createHTTPClient(site, info))
                             : undefined!,
+                    // Note: For now Internal Pull Requests are not supported for Server
+                    pullrequestsOverview: undefined,
                     pipelines: undefined,
                 };
             }

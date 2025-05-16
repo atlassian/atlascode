@@ -1,3 +1,5 @@
+import { CancelToken } from 'axios';
+
 import { CacheMap } from '../../util/cachemap';
 import { HTTPClient } from '../httpClient';
 import { BitbucketBranchingModel, BitbucketSite, Commit, Repo, RepositoriesApi, UnknownUser } from '../model';
@@ -134,5 +136,16 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             branchingModel: branchingModel,
             issueTrackerEnabled: !!bbRepo.has_issues,
         };
+    }
+
+    async fetchWorkspaces(query: string, cancelToken?: CancelToken): Promise<string[]> {
+        const { data } = await this.client.get(
+            `/user/permissions/workspaces`,
+            {
+                q: `workspace.slug ~ "${query}"`,
+            },
+            cancelToken,
+        );
+        return data.values.map((workspaceMembership: any) => workspaceMembership.workspace.slug);
     }
 }

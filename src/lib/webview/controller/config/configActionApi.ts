@@ -31,6 +31,7 @@ export interface ConfigActionApi {
         abortKey?: string,
     ) => Promise<FilterSearchResults>;
     validateJql: (site: DetailedSiteInfo, jql: string, abortKey?: string) => Promise<JQLErrors>;
+    fetchWorkspaces: (site: DetailedSiteInfo, query: string, abortKey?: string) => Promise<string[]>;
     updateSettings(target: ConfigTarget, changes: { [key: string]: any }, removes?: string[]): Promise<void>;
     getSitesAvailable(): [DetailedSiteInfo[], DetailedSiteInfo[]];
 
