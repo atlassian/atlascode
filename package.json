@@ -396,6 +396,11 @@
                 "command": "atlascode.disableHelpExplorer",
                 "title": "Disable Help Explorer",
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.showOnboardingFlow",
+                "title": "Show Onboarding Flow",
+                "category": "Atlassian"
             }
         ],
         "viewsContainers": {

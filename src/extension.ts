@@ -8,9 +8,8 @@ import { startListening } from './atlclients/negotiate';
 import { BitbucketContext } from './bitbucket/bbContext';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
 import { CommandContext, setCommandContext } from './commandContext';
-import { registerCommands } from './commands';
+import { Commands, registerCommands } from './commands';
 import { Configuration, configuration, IConfig } from './config/configuration';
-import { onboardingProvider } from './config/onboardingProvider';
 import { ExtensionId, GlobalStateVersionKey } from './constants';
 import { Container } from './container';
 import { registerAnalyticsClient, registerErrorReporting, unregisterErrorReporting } from './errorReporting';
@@ -73,7 +72,7 @@ export async function activate(context: ExtensionContext) {
 
     // new user for auth exp
     if (previousVersion === undefined) {
-        onboardingProvider.show();
+        commands.executeCommand(Commands.ShowOnboardingFlow);
     } else {
         showWelcomePage(atlascodeVersion, previousVersion);
     }
