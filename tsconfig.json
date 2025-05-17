@@ -11,7 +11,7 @@
         "sourceMap": true,
         "allowJs": true,
         "jsx": "react",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "rootDir": ".",
         "allowSyntheticDefaultImports": true,
         "forceConsistentCasingInFileNames": true,

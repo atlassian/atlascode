@@ -1,9 +1,16 @@
 import type { Config } from 'jest';
 
 const config: Config = {
-    projects: ['<rootDir>/jest.*.config.js'],
+    projects: ['<rootDir>/jest.*.config.ts'],
     verbose: true,
 };
+
+function modulesPattern(...args: string[]): string[] | undefined {
+    if (args.length === 0) {
+        return undefined;
+    }
+    return [`/node_modules/(?!(${args.join('|')}))`];
+}
 
 export const baseConfigFor = (project: string, testExtension: string): Config => ({
     displayName: project,
@@ -26,7 +33,17 @@ export const baseConfigFor = (project: string, testExtension: string): Config =>
         '^.+\\.(css|styl|less|sass|scss)$': 'jest-css-modules-transform',
     },
 
-    transformIgnorePatterns: ['/node_modules/(?!(@vscode/webview-ui-toolkit/|@microsoft/|exenv-es6/|@atlaskit/))'],
+    transformIgnorePatterns: modulesPattern(
+        '@vscode/webview-ui-toolkit/',
+        '@microsoft/',
+        'exenv-es6/',
+        '@atlaskit/',
+        'flatten-anything/',
+        'filter-anything/',
+        'merge-anything',
+        'is-what/',
+        'axios-curlirize/',
+    ),
 
     collectCoverage: true,
     collectCoverageFrom: [
