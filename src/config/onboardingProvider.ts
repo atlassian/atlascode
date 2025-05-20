@@ -1,8 +1,4 @@
-// import { AnalyticsClient } from 'src/analytics-node-client/src/client.min';
-import { BasicAuthInfo, Product, ProductBitbucket, ProductJira, SiteInfo } from 'src/atlclients/authInfo';
-import { Commands } from 'src/commands';
-import { Container } from 'src/container';
-import { EXTENSION_URL } from 'src/uriHandler/atlascodeUriHandler';
+// import { AnalyticsClient } from '../analytics-node-client/src/client.min';
 import {
     commands,
     env,
@@ -16,6 +12,11 @@ import {
     window,
 } from 'vscode';
 
+import { BasicAuthInfo, Product, ProductBitbucket, ProductJira, SiteInfo } from '../atlclients/authInfo';
+import { Commands } from '../commands';
+import { Container } from '../container';
+import { EXTENSION_URL } from '../uriHandler/atlascodeUriHandler';
+
 class OnboardingProvider {
     // private _analyticsClient: AnalyticsClient;
     private _quickPick: QuickPick<OnboardingQuickPickItem>;
@@ -23,8 +24,6 @@ class OnboardingProvider {
     private _bitbucketItems: OnboardingQuickPickItem[] = [];
 
     private _quickInputServer: InputBox[];
-
-    // private _currentStep: number = 0;
 
     constructor() {
         // this._analyticsClient = Container.analyticsClient;
@@ -206,6 +205,13 @@ class OnboardingProvider {
             this._quickPick.buttons = [...this._quickPick.buttons, QuickInputButtons.Back];
             this._quickPick.placeholder = 'Select your Bitbucket site type';
         } else {
+            //reset
+            this._quickPick.step = 1;
+            this._quickPick.items = this._jiraItems;
+
+            this._quickPick.activeItems = [this._jiraItems[0]];
+            this._quickPick.buttons = [this._quickPick.buttons[0]];
+            this._quickPick.placeholder = 'Select your Jira site type';
             return;
         }
 
@@ -369,4 +375,4 @@ interface OnboardingQuickPickItem extends QuickPickItem {
     onboardingId: string;
 }
 
-export const onboardingProvider = new OnboardingProvider();
+export default OnboardingProvider;

@@ -12,6 +12,7 @@ import { PullRequest, WorkspaceRepo } from './bitbucket/model';
 import { BitbucketCloudPullRequestLinkProvider } from './bitbucket/terminal-link/createPrLinkProvider';
 import { openPullRequest } from './commands/bitbucket/pullRequest';
 import { configuration, IConfig } from './config/configuration';
+import OnboardingProvider from './config/onboardingProvider';
 import { PmfStats } from './feedback/pmfStats';
 import { JQLManager } from './jira/jqlManager';
 import { JiraProjectManager } from './jira/projectManager';
@@ -195,6 +196,8 @@ export class Container {
         SearchJiraHelper.initialize();
         context.subscriptions.push(new CustomJQLViewProvider());
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
+
+        this._onboardingProvider = new OnboardingProvider();
     }
 
     static focus() {
@@ -390,5 +393,10 @@ export class Container {
     private static _pmfStats: PmfStats;
     public static get pmfStats() {
         return this._pmfStats;
+    }
+
+    private static _onboardingProvider: OnboardingProvider;
+    public static get onboardingProvider() {
+        return this._onboardingProvider;
     }
 }

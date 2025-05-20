@@ -17,7 +17,6 @@ import { createIssue } from './commands/jira/createIssue';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { configuration } from './config/configuration';
-import { onboardingProvider } from './config/onboardingProvider';
 import { HelpTreeViewId } from './constants';
 import { Container } from './container';
 import { knownLinkIdMap } from './lib/ipc/models/common';
@@ -237,6 +236,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(Commands.BitbucketOpenPullRequest, (data: { pullRequestUrl: string }) => {
             Container.openPullRequestHandler(data.pullRequestUrl);
         }),
-        commands.registerCommand(Commands.ShowOnboardingFlow, () => onboardingProvider.show()),
+        commands.registerCommand(Commands.ShowOnboardingFlow, () => Container.onboardingProvider.show()),
     );
 }
