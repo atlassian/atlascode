@@ -1,4 +1,5 @@
-import FeatureGates, { FeatureGateEnvironment, Identifiers } from '@atlaskit/feature-gate-js-client';
+import FeatureGates, { ClientOptions, FeatureGateEnvironment, Identifiers } from '@atlaskit/feature-gate-js-client';
+import { NewFeatureGateOptions } from '@atlaskit/feature-gate-js-client/dist/types/client/types';
 
 import {
     ClientInitializedErrorType,
@@ -14,6 +15,7 @@ export type FeatureFlagClientOptions = {
     identifiers: Identifiers;
 };
 
+type Options = ClientOptions & Omit<NewFeatureGateOptions, keyof ClientOptions>;
 export class FeatureFlagClientInitError {
     constructor(
         public errorType: ClientInitializedErrorType,
@@ -51,16 +53,17 @@ export abstract class FeatureFlagClient {
 
         Logger.debug(`FeatureGates: initializing, target: ${targetApp}, environment: ${environment}`);
 
+        const clientOptions: Options = {
+            apiKey,
+            environment,
+            targetApp,
+            fetchTimeoutMs: Number.parseInt(timeout),
+            loggingEnabled: 'always',
+            ignoreWindowUndefined: true,
+        };
+
         try {
-            await FeatureGates.initialize(
-                {
-                    apiKey,
-                    environment,
-                    targetApp,
-                    fetchTimeoutMs: Number.parseInt(timeout),
-                },
-                options.identifiers,
-            );
+            await FeatureGates.initialize(clientOptions, options.identifiers);
         } catch (err) {
             return Promise.reject(new FeatureFlagClientInitError(ClientInitializedErrorType.Failed, err));
         }
@@ -136,7 +139,7 @@ export abstract class FeatureFlagClient {
         let gateValue = false;
         if (this.isInitialized()) {
             // FeatureGates.checkGate returns false if any errors
-            gateValue = FeatureGates.checkGate(gate, { fireGateExposure: true });
+            gateValue = FeatureGates.checkGate(gate);
         }
 
         Logger.debug(`FeatureGates ${gate} -> ${gateValue}`);
@@ -160,7 +163,6 @@ export abstract class FeatureFlagClient {
                 experiment,
                 experimentGate.parameter,
                 experimentGate.defaultValue,
-                { fireExperimentExposure: true },
             );
         }
 
@@ -180,7 +182,7 @@ export abstract class FeatureFlagClient {
         let gateValue = false;
         if (FeatureGates.initializeCompleted()) {
             // FeatureGates.checkGate returns false if any errors
-            gateValue = FeatureGates.checkGate(gate, { fireGateExposure: true });
+            gateValue = FeatureGates.checkGate(gate);
             featureGateExposureBoolEvent(gate, true, gateValue, 0).then((e) => {
                 this.analyticsClient.sendTrackEvent(e);
             });
@@ -218,7 +220,6 @@ export abstract class FeatureFlagClient {
                 experiment,
                 experimentGate.parameter,
                 experimentGate.defaultValue,
-                { fireExperimentExposure: true },
             );
 
             if (gateValue === experimentGate.defaultValue) {
