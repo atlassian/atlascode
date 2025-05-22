@@ -46,7 +46,6 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
-import { FeatureFlagClient, Features } from '../util/featureFlags';
 import { getJiraIssueUri } from '../views/jira/treeViews/utils';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
@@ -145,12 +144,6 @@ export class JiraIssueWebview
             const msg = this._editUIData;
 
             msg.type = 'update';
-
-            msg.featureGates = {} as Record<string, boolean>;
-
-            const isRteEnabled = FeatureFlagClient.checkGate(Features.JiraRichText);
-
-            msg.featureGates[Features.JiraRichText] = isRteEnabled;
 
             this.postMessage(msg);
 

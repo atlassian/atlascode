@@ -187,6 +187,10 @@ export abstract class AbstractIssueEditorPage<
                 this.setState({ showPMF: e.showPMF });
                 break;
             }
+            case 'updateFeatureFlags': {
+                this.setState({ isRteEnabled: e.featureFlags.rteEnabled });
+                break;
+            }
         }
 
         return handled;

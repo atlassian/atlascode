@@ -211,7 +211,12 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
 }) => {
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', paddingTop: '8px' }}>
-            <AddCommentComponent fetchUsers={fetchUsers} user={currentUser} onCreate={onCreate} isRteEnabled />
+            <AddCommentComponent
+                fetchUsers={fetchUsers}
+                user={currentUser}
+                onCreate={onCreate}
+                isRteEnabled={isRteEnabled}
+            />
             {comments
                 .sort((a, b) => (a.created > b.created ? -1 : 1))
                 .map((comment: JiraComment) => (
@@ -224,7 +229,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                         onDelete={onDelete}
                         fetchUsers={fetchUsers}
                         isServiceDeskProject={isServiceDeskProject}
-                        isRteEnabled
+                        isRteEnabled={isRteEnabled}
                     />
                 ))}
         </Box>

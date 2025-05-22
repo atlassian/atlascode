@@ -89,7 +89,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             isSomethingLoading: false,
                             loadingField: '',
                         },
-                        isRteEnabled: issueData.featureGates['atlascode-jira-rte'],
                     });
                     break;
                 }

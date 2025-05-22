@@ -22,7 +22,6 @@ import { Action } from '../ipc/messaging';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { WebViewID } from '../lib/ipc/models/common';
 import { Logger } from '../logger';
-import { FeatureFlagClient, Features } from '../util/featureFlags';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
 
@@ -254,15 +253,11 @@ export class CreateIssueWebview
             const createData: CreateIssueData = this._screenData.issueTypeUIs[
                 this._selectedIssueTypeId
             ] as CreateIssueData;
-            createData.featureGates = {} as Record<string, boolean>;
+
             createData.type = 'update';
             createData.transformerProblems = Container.config.jira.showCreateIssueProblems
                 ? this._screenData.problems
                 : {};
-
-            const isRteEnabled = FeatureFlagClient.checkGate(Features.JiraRichText);
-
-            createData.featureGates[Features.JiraRichText] = isRteEnabled;
 
             this.postMessage(createData);
         } catch (e) {

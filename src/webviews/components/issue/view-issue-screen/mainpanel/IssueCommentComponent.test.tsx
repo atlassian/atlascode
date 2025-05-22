@@ -196,6 +196,7 @@ describe('IssueCommentComponent', () => {
                 fetchUsers={mockFetchUsers}
                 fetchImage={mockFetchImage}
                 onDelete={mockOnDelete}
+                isRteEnabled={true}
             />,
         );
 
