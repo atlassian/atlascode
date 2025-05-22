@@ -50,6 +50,7 @@ export const BitbucketPanel: React.FunctionComponent<BitbucketPanelProps> = ({
                         <Grid item>
                             <PRExplorerPanel
                                 visible={visible}
+                                site={sites.find((site) => site.site.isCloud)?.site}
                                 expanded={selectedSubSections.includes(ConfigSubSection.PR)}
                                 onSubsectionChange={onSubsectionChange}
                                 enabled={config[`${ConfigSection.Bitbucket}.explorer.enabled`]}
@@ -61,6 +62,15 @@ export const BitbucketPanel: React.FunctionComponent<BitbucketPanelProps> = ({
                                 }
                                 pullRequestCreated={
                                     config[`${ConfigSection.Bitbucket}.explorer.notifications.pullRequestCreated`]
+                                }
+                                pullRequestsEnabled={
+                                    config[`${ConfigSection.Bitbucket}.explorer.repositoryBasedPullRequestView.enabled`]
+                                }
+                                pullRequestsOverviewEnabled={
+                                    config[`${ConfigSection.Bitbucket}.explorer.pullRequestsOverview.enabled`]
+                                }
+                                pullRequestsOverviewWorkspace={
+                                    config[`${ConfigSection.Bitbucket}.explorer.pullRequestsOverview.workspace`]
                                 }
                                 nestFiles={config[`${ConfigSection.Bitbucket}.explorer.nestFilesEnabled`]}
                                 refreshInterval={config[`${ConfigSection.Bitbucket}.explorer.refreshInterval`]}

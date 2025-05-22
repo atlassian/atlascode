@@ -396,6 +396,14 @@
                 "command": "atlascode.disableHelpExplorer",
                 "title": "Disable Help Explorer",
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bitbucket.pullRequestsOverview.refresh",
+                "title": "Refresh",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
             }
         ],
         "viewsContainers": {
@@ -422,7 +430,12 @@
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
-                    "when": "atlascode:bitbucketExplorerEnabled && config.atlascode.bitbucket.enabled"
+                    "when": "atlascode:bitbucketExplorerEnabled && config.atlascode.bitbucket.enabled && config.atlascode.bitbucket.explorer.repositoryBasedPullRequestView.enabled"
+                },
+                {
+                    "id": "atlascode.views.bb.pullRequestsOverviewTreeView",
+                    "name": "Relevant Bitbucket workspace pull requests",
+                    "when": "atlascode:bitbucketExplorerEnabled && config.atlascode.bitbucket.enabled && config.atlascode.bitbucket.explorer.pullRequestsOverview.enabled"
                 },
                 {
                     "id": "atlascode.views.bb.pipelinesTreeView",
@@ -569,6 +582,11 @@
                 {
                     "command": "atlascode.disableHelpExplorer",
                     "when": "view == atlascode.views.helpTreeView"
+                },
+                {
+                    "command": "atlascode.bitbucket.pullRequestsOverview.refresh",
+                    "when": "view == atlascode.views.bb.pullRequestsOverviewTreeView",
+                    "group": "navigation@1"
                 }
             ],
             "view/item/context": [
@@ -1084,6 +1102,24 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enables the Bitbucket Pull Request Explorer",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.explorer.repositoryBasedPullRequestView.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable repository based pull requests tree view",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.explorer.pullRequestsOverview.enabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable pull requests overview tree view",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.explorer.pullRequestsOverview.workspace": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Workspace used for pull requests overview tree view",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.explorer.nestFilesEnabled": {

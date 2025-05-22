@@ -1,3 +1,5 @@
+import { CancelToken } from 'axios';
+
 import { CacheMap } from '../../util/cachemap';
 import { HTTPClient } from '../httpClient';
 import { BitbucketBranchingModel, BitbucketSite, Commit, Repo, RepositoriesApi } from '../model';
@@ -178,5 +180,9 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             branchingModel: branchingModel,
             issueTrackerEnabled: false,
         };
+    }
+
+    async fetchWorkspaces(query: string, cancelToken?: CancelToken): Promise<string[]> {
+        throw new Error("Workspaces don't exist in Bitbucket DC");
     }
 }

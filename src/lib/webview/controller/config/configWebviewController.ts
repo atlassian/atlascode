@@ -254,6 +254,14 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 }
                 break;
             }
+            case ConfigActionType.FetchWorkspacesRequest: {
+                if (!isEmptySiteInfo(msg.site)) {
+                    const data = await this._api.fetchWorkspaces(msg.site, msg.query, msg.abortKey);
+
+                    this.postMessage({ type: ConfigMessageType.FetchWorkspacesResponse, data: data });
+                }
+                break;
+            }
             case ConfigActionType.SaveSettings: {
                 try {
                     this._api.updateSettings(msg.target, msg.changes, msg.removes);
