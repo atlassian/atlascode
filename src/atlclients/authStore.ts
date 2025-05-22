@@ -62,6 +62,18 @@ export class CredentialManager implements Disposable {
         return this.getAuthInfoForProductAndCredentialId(site, allowCache);
     }
 
+    public async getAllValidAuthInfo(product: Product): Promise<AuthInfo[]> {
+        // Get all unique sites by credentialId
+        const sites = Container.siteManager.getSitesAvailable(product);
+        const uniquelyCredentialedSites = Array.from(new Map(sites.map((site) => [site.credentialId, site])).values());
+
+        const authInfos = await Promise.all(uniquelyCredentialedSites.map((site) => this.getAuthInfo(site, true)));
+
+        return authInfos.filter(
+            (authInfo): authInfo is AuthInfo => !!authInfo && authInfo.state !== AuthInfoState.Invalid,
+        );
+    }
+
     /**
      * Saves the auth info to both the in-memory store and the secretstorage.
      */
@@ -253,7 +265,7 @@ export class CredentialManager implements Disposable {
         return wasKeyDeleted;
     }
 
-    private async getAuthInfoFromSecretStorage(
+    public async getAuthInfoFromSecretStorage(
         productKey: string,
         credentialId: string,
         serviceName?: string,

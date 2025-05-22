@@ -67,15 +67,12 @@ export class BannerDelegate implements NotificationDelegate {
     private aggregateAndShowNotifications() {
         // for now, this simply shows all notifications in the pile with no aggregation. In the future, this should group notifications by notification type.
         this.pile.forEach((event) => {
-            let count = 0;
             if (event.action === NotificationAction.Added) {
                 event.notifications.forEach((notification) => {
                     const { text, action } = this.makeAction(notification);
                     this.showNotification(notification, text, action);
-                    count++;
                 });
             }
-            this.analyticsBannerShown(event.uri, count);
         });
         this.pile.clear();
         this.timer = undefined;
@@ -83,6 +80,7 @@ export class BannerDelegate implements NotificationDelegate {
 
     private showNotification(notification: AtlasCodeNotification, yesText: string, yesAction: () => void) {
         const displayedNotification = window.showInformationMessage(notification.message, yesText);
+        this.analyticsBannerShown(notification.uri, 1);
 
         displayedNotification.then((selection) => {
             switch (selection) {

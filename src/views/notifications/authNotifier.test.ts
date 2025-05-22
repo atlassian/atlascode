@@ -22,12 +22,12 @@ jest.mock('../../config/configuration', () => ({
 }));
 
 const addNotificationSpy = jest.fn();
-const clearNotificationSpy = jest.fn();
+const clearNotificationByUriSpy = jest.fn();
 jest.mock('./notificationManager', () => {
     const NotificationManagerImpl = {
         getInstance: jest.fn().mockReturnValue({
             addNotification: addNotificationSpy,
-            clearNotifications: clearNotificationSpy,
+            clearNotificationsByUri: clearNotificationByUriSpy,
         }),
     };
     const NotificationType = {
@@ -60,7 +60,7 @@ describe('AuthNotifier', () => {
         authNotifier.fetchNotifications();
 
         expect(addNotificationSpy).toHaveBeenCalled();
-        expect(clearNotificationSpy).not.toHaveBeenCalled();
+        expect(clearNotificationByUriSpy).not.toHaveBeenCalled();
     });
 
     it('should clear notifications when there are authenticated sites', () => {
@@ -70,7 +70,7 @@ describe('AuthNotifier', () => {
         authNotifier.fetchNotifications();
 
         expect(addNotificationSpy).not.toHaveBeenCalled();
-        expect(clearNotificationSpy).toHaveBeenCalled();
+        expect(clearNotificationByUriSpy).toHaveBeenCalled();
     });
 
     it('should clear notifications when jira is disabled', () => {
@@ -83,6 +83,6 @@ describe('AuthNotifier', () => {
         authNotifier.fetchNotifications();
 
         expect(addNotificationSpy).not.toHaveBeenCalled();
-        expect(clearNotificationSpy).toHaveBeenCalled();
+        expect(clearNotificationByUriSpy).toHaveBeenCalled();
     });
 });

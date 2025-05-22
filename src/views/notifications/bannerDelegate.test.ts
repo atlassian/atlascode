@@ -1,5 +1,6 @@
 import { Uri, window } from 'vscode';
 
+import { ProductJira } from '../../atlclients/authInfo';
 import { BannerDelegate } from './bannerDelegate';
 import {
     NotificationAction,
@@ -75,7 +76,6 @@ describe('BannerDelegate', () => {
         jest.useFakeTimers();
         const event: NotificationChangeEvent = {
             action: NotificationAction.Added,
-            uri: Uri.parse('file://test'),
             notifications: new Map([
                 [
                     'testKey',
@@ -83,6 +83,8 @@ describe('BannerDelegate', () => {
                         id: 'testId',
                         message: 'Test notification',
                         notificationType: NotificationType.LoginNeeded,
+                        uri: Uri.parse('file://test'),
+                        product: ProductJira,
                     },
                 ],
             ]),
@@ -108,7 +110,6 @@ describe('BannerDelegate', () => {
         jest.useFakeTimers();
         const event1: NotificationChangeEvent = {
             action: NotificationAction.Added,
-            uri: Uri.parse('file://test1'),
             notifications: new Map([
                 [
                     'testKey1',
@@ -116,13 +117,14 @@ describe('BannerDelegate', () => {
                         id: 'testId1',
                         message: 'Test notification 1',
                         notificationType: NotificationType.LoginNeeded,
+                        uri: Uri.parse('file://test1'),
+                        product: ProductJira,
                     },
                 ],
             ]),
         };
         const event2: NotificationChangeEvent = {
             action: NotificationAction.Added,
-            uri: Uri.parse('file://test2'),
             notifications: new Map([
                 [
                     'testKey2',
@@ -130,6 +132,8 @@ describe('BannerDelegate', () => {
                         id: 'testId2',
                         message: 'Test notification 2',
                         notificationType: NotificationType.LoginNeeded,
+                        uri: Uri.parse('file://test2'),
+                        product: ProductJira,
                     },
                 ],
             ]),
@@ -166,7 +170,6 @@ describe('BannerDelegate', () => {
 
         const event: NotificationChangeEvent = {
             action: NotificationAction.Removed,
-            uri: Uri.parse('file://test'),
             notifications: new Map(),
         };
 

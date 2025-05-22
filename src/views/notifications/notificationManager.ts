@@ -1,13 +1,20 @@
-import { Uri } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Uri, window } from 'vscode';
 
+import { AuthInfoEvent, isRemoveAuthEvent, Product, ProductBitbucket, ProductJira } from '../../atlclients/authInfo';
+import { configuration } from '../../config/configuration';
+import { Container } from '../../container';
 import { Logger } from '../../logger';
+import { AtlassianNotificationNotifier } from './atlassianNotificationNotifier';
 import { AuthNotifier } from './authNotifier';
 import { BannerDelegate } from './bannerDelegate';
 
 export interface AtlasCodeNotification {
     id: string;
+    uri: Uri;
     message: string;
     notificationType: NotificationType;
+    product: Product;
+    credentialId?: string;
 }
 export interface NotificationDelegate {
     onNotificationChange(event: NotificationChangeEvent): void;
@@ -16,7 +23,6 @@ export interface NotificationDelegate {
 
 export interface NotificationChangeEvent {
     action: NotificationAction;
-    uri: Uri;
     notifications: Map<string, AtlasCodeNotification>;
 }
 
@@ -72,14 +78,31 @@ export class NotificationManagerImpl {
     private delegates: Set<NotificationDelegate> = new Set();
     private notifiers: Set<NotificationNotifier> = new Set();
     private listenerId: NodeJS.Timeout | undefined;
+    private _jiraEnabled: boolean;
+    private _bitbucketEnabled: boolean;
+    private _disposable: Disposable[] = [];
 
-    private constructor() {}
+    private constructor() {
+        this._disposable.push(Disposable.from(Container.credentialManager.onDidAuthChange(this.onDidAuthChange, this)));
+        this._disposable.push(Disposable.from(configuration.onDidChange(this.onDidChangeConfiguration, this)));
+        this._disposable.push(Disposable.from(window.onDidChangeWindowState(this.runNotifiers, this)));
+        this._jiraEnabled = Container.config.jira.enabled;
+        this._bitbucketEnabled = Container.config.bitbucket.enabled;
+    }
+
+    public onDidAuthChange(e: AuthInfoEvent): void {
+        if (isRemoveAuthEvent(e)) {
+            this.clearNotificationsByCredentialId(e.credentialId);
+            return;
+        }
+    }
 
     public static getInstance(): NotificationManagerImpl {
         if (!NotificationManagerImpl.instance) {
             NotificationManagerImpl.instance = new NotificationManagerImpl();
 
             NotificationManagerImpl.instance.notifiers.add(AuthNotifier.getInstance());
+            NotificationManagerImpl.instance.notifiers.add(AtlassianNotificationNotifier.getInstance());
 
             // Note: the badge delegate is not registered here as it needs the context of the tree view
             NotificationManagerImpl.instance.registerDelegate(BannerDelegate.getInstance());
@@ -128,7 +151,8 @@ export class NotificationManagerImpl {
         return this.filterNotificationsBySurface(notificationsForUri, notificationSurface);
     }
 
-    public addNotification(uri: Uri, notification: AtlasCodeNotification): void {
+    public addNotification(notification: AtlasCodeNotification): void {
+        const uri = notification.uri;
         Logger.debug(`Adding notification with id ${notification.id} for uri ${uri}`);
         if (!this.notifications.has(uri.toString())) {
             Logger.debug(`No notifications found for uri ${uri}, creating new map`);
@@ -142,36 +166,64 @@ export class NotificationManagerImpl {
         }
 
         notificationsForUri.set(notification.id, notification);
-        this.onNotificationChange(NotificationAction.Added, uri, new Map([[notification.id, notification]]));
+        this.onNotificationChange(NotificationAction.Added, new Map([[notification.id, notification]]));
     }
 
-    public clearNotifications(uri: Uri): void {
+    public clearNotificationsByUri(uri: Uri): void {
         Logger.debug(`Clearing notifications for uri ${uri}`);
         const removedNotifications = this.notifications.get(uri.toString());
         this.notifications.delete(uri.toString());
-        this.onNotificationChange(NotificationAction.Removed, uri, removedNotifications);
+        this.onNotificationChange(NotificationAction.Removed, removedNotifications);
+    }
+
+    private clearNotificationsByProduct(product: Product): void {
+        Logger.debug(`Clearing notifications for product ${product}`);
+        const removedNotifications = new Map<string, AtlasCodeNotification>();
+        this.notifications.forEach((notificationsForUri, uri) => {
+            notificationsForUri.forEach((notification) => {
+                if (notification.product === product) {
+                    removedNotifications.set(notification.id, notification);
+                    notificationsForUri.delete(notification.id);
+                }
+            });
+            if (notificationsForUri.size === 0) {
+                this.notifications.delete(uri);
+            }
+        });
+        this.onNotificationChange(NotificationAction.Removed, removedNotifications);
+    }
+
+    private clearNotificationsByCredentialId(credentialId: string): void {
+        Logger.debug(`Clearing notifications for credentialId ${credentialId}`);
+        const removedNotifications = new Map<string, AtlasCodeNotification>();
+        this.notifications.forEach((notificationsForUri) => {
+            notificationsForUri.forEach((notification) => {
+                if (notification.credentialId === credentialId) {
+                    removedNotifications.set(notification.id, notification);
+                    notificationsForUri.delete(notification.id);
+                }
+            });
+        });
+        this.onNotificationChange(NotificationAction.Removed, removedNotifications);
     }
 
     private onNotificationChange(
         action: NotificationAction,
-        uri: Uri,
         notifications: Map<string, AtlasCodeNotification> | undefined,
     ): void {
         notifications = notifications || new Map();
-        Logger.debug(`Sending notification change for ${uri}`);
         this.delegates.forEach((delegate) => {
             const filteredNotifications = this.filterNotificationsBySurface(notifications, delegate.getSurface());
             if (filteredNotifications.size === 0) {
-                Logger.debug(`No notifications for delegate ${delegate} for uri ${uri}`);
+                Logger.debug(`No notifications for delegate ${delegate}`);
                 return;
             }
             const notificationChangeEvent: NotificationChangeEvent = {
                 action,
-                uri,
                 notifications: filteredNotifications,
             };
             delegate.onNotificationChange(notificationChangeEvent);
-            Logger.debug(`Delegate ${delegate} notified for uri ${uri}`);
+            Logger.debug(`Delegate ${delegate} notified`);
         });
     }
 
@@ -200,7 +252,11 @@ export class NotificationManagerImpl {
         return filteredNotifications;
     }
 
-    private runNotifiers() {
+    private runNotifiers(): void {
+        if (!window.state.focused) {
+            Logger.debug('Window is not focused, skipping notification check');
+        }
+
         this.notifiers.forEach((notifier) => {
             notifier.fetchNotifications();
         });
@@ -220,6 +276,37 @@ export class NotificationManagerImpl {
             default:
                 Logger.debug(`Unknown notification surface: ${notificationSurface}`);
                 return new Map();
+        }
+    }
+
+    public onDidChangeConfiguration(e: ConfigurationChangeEvent): void {
+        if (configuration.changed(e, 'jira.enabled')) {
+            this._jiraEnabled = Container.config.jira.enabled;
+            this.onJiraNotificationChange();
+        }
+        if (configuration.changed(e, 'bitbucket.enabled')) {
+            this._bitbucketEnabled = Container.config.bitbucket.enabled;
+            this.onBitbucketNotificationChange();
+        }
+    }
+
+    private onJiraNotificationChange(): void {
+        if (this._jiraEnabled) {
+            Logger.debug('Jira notifications enabled');
+            this.runNotifiers();
+        } else {
+            Logger.debug('Jira notifications disabled');
+            this.clearNotificationsByProduct(ProductJira);
+        }
+    }
+
+    private onBitbucketNotificationChange(): void {
+        if (this._bitbucketEnabled) {
+            Logger.debug('Bitbucket notifications enabled');
+            this.runNotifiers();
+        } else {
+            Logger.debug('Bitbucket notifications disabled');
+            this.clearNotificationsByProduct(ProductBitbucket);
         }
     }
 }
