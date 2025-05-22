@@ -1232,7 +1232,7 @@
         "@atlaskit/comment": "^10.3.0",
         "@atlaskit/datetime-picker": "^11.1.1",
         "@atlaskit/dropdown-menu": "^12.26.5",
-        "@atlaskit/feature-gate-js-client": "^5.3.0",
+        "@atlaskit/feature-gate-js-client": "^5.3.1",
         "@atlaskit/form": "^11.2.0",
         "@atlaskit/icon": "^21.12.8",
         "@atlaskit/icon-lab": "^2.8.0",
