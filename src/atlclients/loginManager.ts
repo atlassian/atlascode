@@ -28,6 +28,8 @@ import { BitbucketAuthenticator } from './bitbucketAuthenticator';
 import { JiraAuthentictor as JiraAuthenticator } from './jiraAuthenticator';
 import { OAuthDancer } from './oauthDancer';
 
+const CLOUD_TLD = 'atlassian.net';
+
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
     private _jiraAuthenticator: JiraAuthenticator;
@@ -233,6 +235,13 @@ export class LoginManager {
             pfxPassphrase: site.pfxPassphrase,
         };
 
+        if (site.host.endsWith(CLOUD_TLD)) {
+            // Special case to accomodate for API key login to cloud instances
+            siteDetails.isCloud = true;
+            siteDetails.userId = json.accountId;
+            siteDetails.id = await fetchSiteId(siteDetails.host);
+        }
+
         if (site.product.key === ProductJira.key) {
             credentials.user = {
                 displayName: json.displayName,
@@ -256,3 +265,9 @@ export class LoginManager {
         return siteDetails;
     }
 }
+
+const fetchSiteId = async (host: string): Promise<string> => {
+    const response = await fetch(`https://${host}/_edge/tenant_info`);
+    const data = await response.json();
+    return data.cloudId;
+};
