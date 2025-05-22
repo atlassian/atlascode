@@ -253,10 +253,12 @@ export class CreateIssueWebview
             const createData: CreateIssueData = this._screenData.issueTypeUIs[
                 this._selectedIssueTypeId
             ] as CreateIssueData;
+
             createData.type = 'update';
             createData.transformerProblems = Container.config.jira.showCreateIssueProblems
                 ? this._screenData.problems
                 : {};
+
             this.postMessage(createData);
         } catch (e) {
             Logger.error(e, 'error updating issue fields');

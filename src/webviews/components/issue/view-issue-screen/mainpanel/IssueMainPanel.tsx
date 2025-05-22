@@ -33,6 +33,7 @@ type Props = {
     onFetchIssues: (input: string) => Promise<any>;
     fetchUsers: (input: string) => Promise<any[]>;
     fetchImage: (url: string) => Promise<string>;
+    isRteEnabled?: boolean;
 };
 
 const IssueMainPanel: React.FC<Props> = ({
@@ -51,6 +52,7 @@ const IssueMainPanel: React.FC<Props> = ({
     onFetchIssues,
     fetchUsers,
     fetchImage,
+    isRteEnabled = false,
 }) => {
     //field values
     const attachments = fields['attachment'] && fieldValues['attachment'] ? fieldValues['attachment'] : undefined;
@@ -155,6 +157,7 @@ const IssueMainPanel: React.FC<Props> = ({
                             fetchUsers={fetchUsers}
                             isDescription
                             saving={loadingField === 'description'}
+                            featureGateEnabled={isRteEnabled}
                         />
                     ) : (
                         <div
