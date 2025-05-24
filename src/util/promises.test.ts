@@ -41,9 +41,9 @@ describe('promises util', () => {
 
         it('should return promises in the order they resolve', async () => {
             const promises = [
-                new Promise<number>((_, reject) => setTimeout(() => reject(new Error('Error 1')), 100)),
-                new Promise<number>((resolve) => setTimeout(() => resolve(2), 50)),
-                new Promise<number>((resolve) => setTimeout(() => resolve(3), 150)),
+                new Promise<number>((_, reject) => setTimeout(() => reject(new Error('Error 1')), 500)),
+                new Promise<number>((resolve) => setTimeout(() => resolve(2), 250)),
+                new Promise<number>((resolve) => setTimeout(() => resolve(3), 750)),
             ];
 
             const racer = new PromiseRacer(promises);

@@ -4,6 +4,7 @@ import axios from 'axios';
 import * as fs from 'fs';
 import * as https from 'https';
 import * as sslRootCas from 'ssl-root-cas';
+import tunnel from 'tunnel';
 
 import { DetailedSiteInfo, SiteInfo } from '../../atlclients/authInfo';
 import { BasicInterceptor } from '../../atlclients/basicInterceptor';
@@ -14,8 +15,6 @@ import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { Resources } from '../../resources';
 import { ConnectionTimeout } from '../../util/time';
-
-const tunnel = require('tunnel');
 
 export function getAxiosInstance() {
     const instance = axios.create({
@@ -35,16 +34,16 @@ export function getAxiosInstance() {
 }
 
 export function oauthJiraTransportFactory(site: DetailedSiteInfo): TransportFactory {
-    const axios = getAxiosInstance();
-    rewriteSecureImageRequests(axios);
-    return () => axios;
+    const axiosInstance = getAxiosInstance();
+    rewriteSecureImageRequests(axiosInstance);
+    return (() => axiosInstance) as TransportFactory;
 }
 
 export function basicJiraTransportFactory(site: DetailedSiteInfo): TransportFactory {
-    const axios = getAxiosInstance();
+    const axiosInstance = getAxiosInstance();
     const interceptor = new BasicInterceptor(site, Container.credentialManager);
-    interceptor.attachToAxios(axios);
-    return () => axios;
+    interceptor.attachToAxios(axiosInstance);
+    return (() => axiosInstance) as TransportFactory;
 }
 
 export const jiraTokenAuthProvider = (token: string): AuthorizationProvider => {
@@ -106,7 +105,7 @@ export const getAgent: AgentProvider = (site?: SiteInfo) => {
                             httpsAgent: tunnel.httpsOverHttp({
                                 proxy: {
                                     host: host,
-                                    port: numPort,
+                                    port: numPort!,
                                 },
                             }),
                             proxy: false,
