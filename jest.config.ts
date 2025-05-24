@@ -1,7 +1,7 @@
 import type { Config } from 'jest';
 
 const config: Config = {
-    projects: ['<rootDir>/jest.*.config.js'],
+    projects: ['<rootDir>/jest.*.config.ts'],
     verbose: true,
 };
 
@@ -39,15 +39,15 @@ export const baseConfigFor = (project: string, testExtension: string): Config =>
 
     coverageThreshold: {
         global: testExtension === 'ts' ? {
-            statements: 22,
-            branches: 8,
-            functions: 9,
-            lines: 22,
+            statements: 28,
+            branches: 14,
+            functions: 22,
+            lines: 28,
         } : /* tsx */{
-            statements: 5,
-            branches: 4,
-            functions: 4,
-            lines: 5,
+            statements: 7,
+            branches: 5,
+            functions: 5,
+            lines: 7,
         },
     },
 });
