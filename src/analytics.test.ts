@@ -1,13 +1,18 @@
-import { viewScreenEvent } from './analytics';
+import * as analytics from './analytics';
+import { ClientInitializedErrorType, DeepLinkEventErrorType } from './analytics';
+import { UIErrorInfo } from './analyticsTypes';
 
 interface MockedData {
-    getFirstAAID_value?: boolean;
+    getFirstAAID_value?: string | undefined;
 }
 
 const mockedData: MockedData = {};
 
 jest.mock('./container', () => ({
-    Container: { siteManager: { getFirstAAID: () => mockedData.getFirstAAID_value } },
+    Container: {
+        siteManager: { getFirstAAID: () => mockedData.getFirstAAID_value },
+        machineId: 'test-machine-id',
+    },
 }));
 
 function setProcessPlatform(platform: NodeJS.Platform) {
@@ -17,87 +22,835 @@ function setProcessPlatform(platform: NodeJS.Platform) {
     });
 }
 
-describe('viewScreenEvent', () => {
-    const originalPlatform = process.platform;
+describe('analytics', () => {
+    describe('viewScreenEvent', () => {
+        const originalPlatform = process.platform;
 
-    beforeEach(() => {
-        setProcessPlatform('win32');
-        mockedData.getFirstAAID_value = true;
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        afterAll(() => {
+            setProcessPlatform(originalPlatform);
+        });
+
+        it('should create a screen event with the correct screen name', async () => {
+            const screenName = 'testScreen';
+            const event = await analytics.viewScreenEvent(screenName);
+            expect(event.name).toEqual(screenName);
+            expect(event.screenEvent.attributes).toBeUndefined();
+        });
+
+        it('should exclude from activity if screen name is atlascodeWelcomeScreen', async () => {
+            const screenName = 'atlascodeWelcomeScreen';
+            const event = await analytics.viewScreenEvent(screenName);
+            expect(event.screenEvent.attributes.excludeFromActivity).toBeTruthy();
+        });
+
+        it('should include site information if provided (cloud)', async () => {
+            const screenName = 'testScreen';
+            const site: any = {
+                id: 'siteId',
+                product: { name: 'Jira', key: 'jira' },
+                isCloud: true,
+            };
+            const event = await analytics.viewScreenEvent(screenName, site);
+            expect(event.screenEvent.attributes.instanceType).toEqual('cloud');
+            expect(event.screenEvent.attributes.hostProduct).toEqual('Jira');
+        });
+
+        it('should include site information if provided (server)', async () => {
+            const screenName = 'testScreen';
+            const site: any = {
+                id: 'siteId',
+                product: { name: 'Jira', key: 'jira' },
+                isCloud: false,
+            };
+            const event = await analytics.viewScreenEvent(screenName, site);
+            expect(event.screenEvent.attributes.instanceType).toEqual('server');
+            expect(event.screenEvent.attributes.hostProduct).toEqual('Jira');
+        });
+
+        it('should include product information if provided', async () => {
+            const screenName = 'testScreen';
+            const product = { name: 'Bitbucket', key: 'bitbucket' };
+            const event = await analytics.viewScreenEvent(screenName, undefined, product);
+            expect(event.screenEvent.attributes.hostProduct).toEqual('Bitbucket');
+        });
+
+        it('should set platform based on process.platform (win32)', async () => {
+            setProcessPlatform('win32');
+            const screenName = 'testScreen';
+            const event = await analytics.viewScreenEvent(screenName);
+            expect(event.screenEvent.platform).toEqual('windows');
+        });
+
+        it('should set platform based on process.platform (darwin)', async () => {
+            setProcessPlatform('darwin');
+            const screenName = 'testScreen';
+            const event = await analytics.viewScreenEvent(screenName);
+            expect(event.screenEvent.platform).toEqual('mac');
+        });
+
+        it('should set platform based on process.platform (linux)', async () => {
+            setProcessPlatform('linux');
+            const screenName = 'testScreen';
+            const event = await analytics.viewScreenEvent(screenName);
+            expect(event.screenEvent.platform).toEqual('linux');
+        });
+
+        it('should set platform based on process.platform (aix)', async () => {
+            setProcessPlatform('aix');
+            const screenName = 'testScreen';
+            const event = await analytics.viewScreenEvent(screenName);
+            expect(event.screenEvent.platform).toEqual('desktop');
+        });
     });
 
-    afterAll(() => {
-        setProcessPlatform(originalPlatform);
+    // Extension lifecycle event tests
+    describe('Extension lifecycle events', () => {
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        it('should create installedEvent with version information', async () => {
+            const version = '1.0.0';
+            const event = await analytics.installedEvent(version);
+
+            expect(event.trackEvent.action).toEqual('installed');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.version).toEqual(version);
+            expect(event.trackEvent.attributes.machineId).toEqual('test-machine-id');
+        });
+
+        it('should create upgradedEvent with version information', async () => {
+            const version = '1.0.1';
+            const previousVersion = '1.0.0';
+            const event = await analytics.upgradedEvent(version, previousVersion);
+
+            expect(event.trackEvent.action).toEqual('upgraded');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.version).toEqual(version);
+            expect(event.trackEvent.attributes.previousVersion).toEqual(previousVersion);
+            expect(event.trackEvent.attributes.machineId).toEqual('test-machine-id');
+        });
+
+        it('should create launchedEvent with authentication counts', async () => {
+            const location = 'test-location';
+            const numJiraCloudAuthed = 1;
+            const numJiraDcAuthed = 2;
+            const numBitbucketCloudAuthed = 3;
+            const numBitbucketDcAuthed = 4;
+
+            const event = await analytics.launchedEvent(
+                location,
+                numJiraCloudAuthed,
+                numJiraDcAuthed,
+                numBitbucketCloudAuthed,
+                numBitbucketDcAuthed,
+            );
+
+            expect(event.trackEvent.action).toEqual('launched');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.extensionLocation).toEqual(location);
+            expect(event.trackEvent.attributes.numJiraCloudAuthed).toEqual(numJiraCloudAuthed);
+            expect(event.trackEvent.attributes.numJiraDcAuthed).toEqual(numJiraDcAuthed);
+            expect(event.trackEvent.attributes.numBitbucketCloudAuthed).toEqual(numBitbucketCloudAuthed);
+            expect(event.trackEvent.attributes.numBitbucketDcAuthed).toEqual(numBitbucketDcAuthed);
+            expect(event.trackEvent.attributes.machineId).toEqual('test-machine-id');
+        });
+
+        it('should create featureChangeEvent when feature is enabled', async () => {
+            const featureId = 'test-feature';
+            const enabled = true;
+            const event = await analytics.featureChangeEvent(featureId, enabled);
+
+            expect(event.trackEvent.action).toEqual('enabled');
+            expect(event.trackEvent.actionSubject).toEqual('feature');
+            expect(event.trackEvent.actionSubjectId).toEqual(featureId);
+        });
+
+        it('should create featureChangeEvent when feature is disabled', async () => {
+            const featureId = 'test-feature';
+            const enabled = false;
+            const event = await analytics.featureChangeEvent(featureId, enabled);
+
+            expect(event.trackEvent.action).toEqual('disabled');
+            expect(event.trackEvent.actionSubject).toEqual('feature');
+            expect(event.trackEvent.actionSubjectId).toEqual(featureId);
+        });
     });
 
-    it('should create a screen event with the correct screen name', async () => {
-        const screenName = 'testScreen';
-        const event = await viewScreenEvent(screenName);
-        expect(event.name).toEqual(screenName);
-        expect(event.screenEvent.attributes).toBeUndefined();
-    });
-
-    it('should exclude from activity if screen name is atlascodeWelcomeScreen', async () => {
-        const screenName = 'atlascodeWelcomeScreen';
-        const event = await viewScreenEvent(screenName);
-        expect(event.screenEvent.attributes.excludeFromActivity).toBeTruthy();
-    });
-
-    it('should include site information if provided (cloud)', async () => {
-        const screenName = 'testScreen';
-        const site: any = {
-            id: 'siteId',
+    // Authentication event tests
+    describe('Authentication events', () => {
+        const mockSite = {
+            id: 'site-id',
             product: { name: 'Jira', key: 'jira' },
             isCloud: true,
         };
-        const event = await viewScreenEvent(screenName, site);
-        expect(event.screenEvent.attributes.instanceType).toEqual('cloud');
-        expect(event.screenEvent.attributes.hostProduct).toEqual('Jira');
+
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        it('should create authenticatedEvent with site information', async () => {
+            const isOnboarding = true;
+            const event = await analytics.authenticatedEvent(mockSite as any, isOnboarding);
+
+            expect(event.trackEvent.action).toEqual('authenticated');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.machineId).toEqual('test-machine-id');
+            expect(event.trackEvent.attributes.hostProduct).toEqual('Jira');
+            expect(event.trackEvent.attributes.onboarding).toEqual(isOnboarding);
+        });
+
+        it('should create editedEvent with site information', async () => {
+            const event = await analytics.editedEvent(mockSite as any);
+
+            expect(event.trackEvent.action).toEqual('edited');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.machineId).toEqual('test-machine-id');
+            expect(event.trackEvent.attributes.hostProduct).toEqual('Jira');
+        });
+
+        it('should create loggedOutEvent with site information', async () => {
+            const event = await analytics.loggedOutEvent(mockSite as any);
+
+            expect(event.trackEvent.action).toEqual('unauthenticated');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.machineId).toEqual('test-machine-id');
+            expect(event.trackEvent.attributes.hostProduct).toEqual('Jira');
+        });
     });
 
-    it('should include site information if provided (server)', async () => {
-        const screenName = 'testScreen';
-        const site: any = {
-            id: 'siteId',
+    // Error reporting tests
+    describe('Error events', () => {
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        it('should create errorEvent with error information', async () => {
+            const errorMessage = 'Test error message';
+            const error = new Error('Test error');
+            error.stack = 'Error: Test error\n    at TestFunction (/Users/testuser/test.js:10:15)';
+            const capturedBy = 'test-function';
+            const additionalParams = 'additional-info';
+
+            const event = await analytics.errorEvent(errorMessage, error, capturedBy, additionalParams);
+
+            expect(event.trackEvent.action).toEqual('errorEvent_v2');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.message).toEqual(errorMessage);
+            expect(event.trackEvent.attributes.name).toEqual('Error');
+            expect(event.trackEvent.attributes.capturedBy).toEqual(capturedBy);
+            expect(event.trackEvent.attributes.stack).toBeDefined();
+            expect(event.trackEvent.attributes.additionalParams).toEqual(additionalParams);
+        });
+
+        it('should sanitize stack traces in errorEvent', async () => {
+            const errorMessage = 'Test error message';
+            const error = new Error('Test error');
+            error.stack = 'Error: Test error\n    at TestFunction (/Users/realuser/test.js:10:15)';
+
+            const event = await analytics.errorEvent(errorMessage, error);
+
+            // Check if the username was sanitized
+            expect(event.trackEvent.attributes.stack).toContain('/Users/<user>/');
+            expect(event.trackEvent.attributes.stack).not.toContain('/Users/realuser/');
+        });
+
+        it('should create uiErrorEvent with UI error information', async () => {
+            const errorInfo: UIErrorInfo = {
+                view: 'test-view',
+                stack: 'Error stack',
+                errorName: 'TestError',
+                errorMessage: 'Test UI error',
+                errorCause: 'Test cause',
+            };
+
+            const event = await analytics.uiErrorEvent(errorInfo);
+
+            expect(event.trackEvent.action).toEqual('failedTest');
+            expect(event.trackEvent.actionSubject).toEqual('ui');
+            expect(event.trackEvent.attributes).toEqual(errorInfo);
+        });
+    });
+
+    // Jira issue event tests
+    describe('Issue events', () => {
+        const mockSite = {
+            id: 'site-id',
             product: { name: 'Jira', key: 'jira' },
-            isCloud: false,
+            isCloud: true,
         };
-        const event = await viewScreenEvent(screenName, site);
-        expect(event.screenEvent.attributes.instanceType).toEqual('server');
-        expect(event.screenEvent.attributes.hostProduct).toEqual('Jira');
+
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        it('should create issueCreatedEvent with issue key', async () => {
+            const issueKey = 'TEST-123';
+            const event = await analytics.issueCreatedEvent(mockSite as any, issueKey);
+
+            expect(event.trackEvent.action).toEqual('created');
+            expect(event.trackEvent.actionSubject).toEqual('issue');
+            expect(event.trackEvent.actionSubjectId).toEqual(issueKey);
+        });
+
+        it('should create issueTransitionedEvent with issue key', async () => {
+            const issueKey = 'TEST-123';
+            const event = await analytics.issueTransitionedEvent(mockSite as any, issueKey);
+
+            expect(event.trackEvent.action).toEqual('transitioned');
+            expect(event.trackEvent.actionSubject).toEqual('issue');
+            expect(event.trackEvent.actionSubjectId).toEqual(issueKey);
+        });
+
+        it('should create issueUrlCopiedEvent', async () => {
+            const event = await analytics.issueUrlCopiedEvent();
+
+            expect(event.trackEvent.action).toEqual('copied');
+            expect(event.trackEvent.actionSubject).toEqual('issueUrl');
+        });
     });
 
-    it('should include product information if provided', async () => {
-        const screenName = 'testScreen';
-        const product = { name: 'Bitbucket', key: 'bitbucket' };
-        const event = await viewScreenEvent(screenName, undefined, product);
-        expect(event.screenEvent.attributes.hostProduct).toEqual('Bitbucket');
+    // Pull request event tests
+    describe('Pull request events', () => {
+        const mockSite = {
+            id: 'site-id',
+            product: { name: 'Bitbucket', key: 'bitbucket' },
+            isCloud: true,
+        };
+
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        it('should create prCreatedEvent with site information', async () => {
+            const event = await analytics.prCreatedEvent(mockSite as any);
+
+            expect(event.trackEvent.action).toEqual('created');
+            expect(event.trackEvent.actionSubject).toEqual('pullRequest');
+            expect(event.trackEvent.attributes.instanceType).toEqual('cloud');
+            expect(event.trackEvent.attributes.hostProduct).toEqual('Bitbucket');
+        });
+
+        it('should create prCommentEvent with site information', async () => {
+            const event = await analytics.prCommentEvent(mockSite as any);
+
+            expect(event.trackEvent.action).toEqual('created');
+            expect(event.trackEvent.actionSubject).toEqual('pullRequestComment');
+            expect(event.trackEvent.attributes.instanceType).toEqual('cloud');
+            expect(event.trackEvent.attributes.hostProduct).toEqual('Bitbucket');
+        });
+
+        it('should create prUrlCopiedEvent', async () => {
+            const event = await analytics.prUrlCopiedEvent();
+
+            expect(event.trackEvent.action).toEqual('copied');
+            expect(event.trackEvent.actionSubject).toEqual('pullRequestUrl');
+        });
     });
 
-    it('should set platform based on process.platform (win32)', async () => {
-        setProcessPlatform('win32');
-        const screenName = 'testScreen';
-        const event = await viewScreenEvent(screenName);
-        expect(event.screenEvent.platform).toEqual('windows');
+    // PMF event tests
+    describe('PMF events', () => {
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        it('should create pmfSubmitted event with level information', async () => {
+            const level = 'promoter';
+            const event = await analytics.pmfSubmitted(level);
+
+            expect(event.trackEvent.action).toEqual('submitted');
+            expect(event.trackEvent.actionSubject).toEqual('atlascodePmf');
+            expect(event.trackEvent.attributes.level).toEqual(level);
+        });
+
+        it('should create pmfSnoozed event', async () => {
+            const event = await analytics.pmfSnoozed();
+
+            expect(event.trackEvent.action).toEqual('snoozed');
+            expect(event.trackEvent.actionSubject).toEqual('atlascodePmf');
+        });
+
+        it('should create pmfClosed event', async () => {
+            const event = await analytics.pmfClosed();
+
+            expect(event.trackEvent.action).toEqual('closed');
+            expect(event.trackEvent.actionSubject).toEqual('atlascodePmf');
+        });
     });
 
-    it('should set platform based on process.platform (darwin)', async () => {
-        setProcessPlatform('darwin');
-        const screenName = 'testScreen';
-        const event = await viewScreenEvent(screenName);
-        expect(event.screenEvent.platform).toEqual('mac');
+    // Deep link and external link event tests
+    describe('Link events', () => {
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        it('should create deepLinkEvent with source, target, and error type', async () => {
+            const source = 'test-source';
+            const target = 'test-target';
+            const errorType: DeepLinkEventErrorType = 'Success';
+
+            const event = await analytics.deepLinkEvent(source, target, errorType);
+
+            expect(event.trackEvent.action).toEqual('opened');
+            expect(event.trackEvent.actionSubject).toEqual('deepLink');
+            expect(event.trackEvent.attributes.source).toEqual(source);
+            expect(event.trackEvent.attributes.target).toEqual(target);
+            expect(event.trackEvent.attributes.errorType).toEqual(errorType);
+        });
+
+        it('should create externalLinkEvent with source and link ID', async () => {
+            const source = 'test-source';
+            const linkId = 'test-link-id';
+
+            const event = await analytics.externalLinkEvent(source, linkId);
+
+            expect(event.trackEvent.action).toEqual('opened');
+            expect(event.trackEvent.actionSubject).toEqual('externalLink');
+            expect(event.trackEvent.attributes.source).toEqual(source);
+            expect(event.trackEvent.attributes.linkType).toEqual(linkId);
+        });
     });
 
-    it('should set platform based on process.platform (linux)', async () => {
-        setProcessPlatform('linux');
-        const screenName = 'testScreen';
-        const event = await viewScreenEvent(screenName);
-        expect(event.screenEvent.platform).toEqual('linux');
+    // UI Button event tests
+    describe('UI Button events', () => {
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        it('should create moreSettingsButtonEvent with source', async () => {
+            const source = 'test-source';
+            const event = await analytics.moreSettingsButtonEvent(source);
+
+            expect(event.uiEvent.action).toEqual('clicked');
+            expect(event.uiEvent.actionSubject).toEqual('button');
+            expect(event.uiEvent.actionSubjectId).toEqual('moreSettingsButton');
+            expect(event.uiEvent.source).toEqual(source);
+            expect(event.uiEvent.platform).toEqual('windows');
+        });
+
+        it('should create focusCreateIssueEvent with source', async () => {
+            const source = 'test-source';
+            const event = await analytics.focusCreateIssueEvent(source);
+
+            expect(event.uiEvent.action).toEqual('clicked');
+            expect(event.uiEvent.actionSubject).toEqual('button');
+            expect(event.uiEvent.actionSubjectId).toEqual('focusCreateIssue');
+            expect(event.uiEvent.source).toEqual(source);
+        });
+
+        it('should create focusIssueEvent with source', async () => {
+            const source = 'test-source';
+            const event = await analytics.focusIssueEvent(source);
+
+            expect(event.uiEvent.action).toEqual('clicked');
+            expect(event.uiEvent.actionSubject).toEqual('button');
+            expect(event.uiEvent.actionSubjectId).toEqual('focusIssue');
+            expect(event.uiEvent.source).toEqual(source);
+        });
+
+        it('should create focusCreatePullRequestEvent with source', async () => {
+            const source = 'test-source';
+            const event = await analytics.focusCreatePullRequestEvent(source);
+
+            expect(event.uiEvent.action).toEqual('clicked');
+            expect(event.uiEvent.actionSubject).toEqual('button');
+            expect(event.uiEvent.actionSubjectId).toEqual('focusCreatePullRequest');
+            expect(event.uiEvent.source).toEqual(source);
+        });
+
+        it('should create focusPullRequestEvent with source', async () => {
+            const source = 'test-source';
+            const event = await analytics.focusPullRequestEvent(source);
+
+            expect(event.uiEvent.action).toEqual('clicked');
+            expect(event.uiEvent.actionSubject).toEqual('button');
+            expect(event.uiEvent.actionSubjectId).toEqual('focusPullRequest');
+            expect(event.uiEvent.source).toEqual(source);
+        });
+
+        it('should create doneButtonEvent with source', async () => {
+            const source = 'test-source';
+            const event = await analytics.doneButtonEvent(source);
+
+            expect(event.uiEvent.action).toEqual('clicked');
+            expect(event.uiEvent.actionSubject).toEqual('button');
+            expect(event.uiEvent.actionSubjectId).toEqual('doneButton');
+            expect(event.uiEvent.source).toEqual(source);
+        });
+
+        it('should create authenticateButtonEvent with all parameters', async () => {
+            const source = 'test-source';
+            const site = {
+                product: { name: 'Jira', key: 'jira' },
+            };
+            const isCloud = true;
+            const isRemote = true;
+            const isWebUI = false;
+
+            const event = await analytics.authenticateButtonEvent(source, site as any, isCloud, isRemote, isWebUI);
+
+            expect(event.uiEvent.action).toEqual('clicked');
+            expect(event.uiEvent.actionSubject).toEqual('button');
+            expect(event.uiEvent.actionSubjectId).toEqual('authenticateButton');
+            expect(event.uiEvent.source).toEqual(source);
+            expect(event.uiEvent.attributes.instanceType).toEqual('cloud');
+            expect(event.uiEvent.attributes.hostProduct).toEqual('Jira');
+            expect(event.uiEvent.attributes.isRemote).toEqual(isRemote);
+            expect(event.uiEvent.attributes.isWebUI).toEqual(isWebUI);
+        });
+
+        it('should create editButtonEvent with source', async () => {
+            const source = 'test-source';
+            const event = await analytics.editButtonEvent(source);
+
+            expect(event.uiEvent.action).toEqual('clicked');
+            expect(event.uiEvent.actionSubject).toEqual('button');
+            expect(event.uiEvent.actionSubjectId).toEqual('editCredentialsButton');
+            expect(event.uiEvent.source).toEqual(source);
+        });
+
+        it('should create logoutButtonEvent with source', async () => {
+            const source = 'test-source';
+            const event = await analytics.logoutButtonEvent(source);
+
+            expect(event.uiEvent.action).toEqual('clicked');
+            expect(event.uiEvent.actionSubject).toEqual('button');
+            expect(event.uiEvent.actionSubjectId).toEqual('logoutButton');
+            expect(event.uiEvent.source).toEqual(source);
+        });
+
+        it('should create saveManualCodeEvent with source', async () => {
+            const source = 'test-source';
+            const event = await analytics.saveManualCodeEvent(source);
+
+            expect(event.uiEvent.action).toEqual('clicked');
+            expect(event.uiEvent.actionSubject).toEqual('button');
+            expect(event.uiEvent.actionSubjectId).toEqual('saveCodeButton');
+            expect(event.uiEvent.source).toEqual(source);
+        });
+
+        it('should create configureJQLButtonEvent with source', async () => {
+            const source = 'test-source';
+            const event = await analytics.configureJQLButtonEvent(source);
+
+            expect(event.uiEvent.action).toEqual('clicked');
+            expect(event.uiEvent.actionSubject).toEqual('button');
+            expect(event.uiEvent.actionSubjectId).toEqual('configureJQLButton');
+            expect(event.uiEvent.source).toEqual(source);
+        });
+
+        it('should create openSettingsButtonEvent with source', async () => {
+            const source = 'test-source';
+            const event = await analytics.openSettingsButtonEvent(source);
+
+            expect(event.uiEvent.action).toEqual('clicked');
+            expect(event.uiEvent.actionSubject).toEqual('button');
+            expect(event.uiEvent.actionSubjectId).toEqual('openSettingsButton');
+            expect(event.uiEvent.source).toEqual(source);
+        });
+
+        it('should create exploreFeaturesButtonEvent with source', async () => {
+            const source = 'test-source';
+            const event = await analytics.exploreFeaturesButtonEvent(source);
+
+            expect(event.uiEvent.action).toEqual('clicked');
+            expect(event.uiEvent.actionSubject).toEqual('button');
+            expect(event.uiEvent.actionSubjectId).toEqual('exploreFeaturesButton');
+            expect(event.uiEvent.source).toEqual(source);
+        });
     });
 
-    it('should set platform based on process.platform (aix)', async () => {
-        setProcessPlatform('aix');
-        const screenName = 'testScreen';
-        const event = await viewScreenEvent(screenName);
-        expect(event.screenEvent.platform).toEqual('desktop');
+    // Pagination event tests
+    describe('Pagination events', () => {
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        it('should create bbIssuesPaginationEvent for Bitbucket issues pagination', async () => {
+            const event = await analytics.bbIssuesPaginationEvent();
+
+            expect(event.uiEvent.action).toEqual('clicked');
+            expect(event.uiEvent.actionSubject).toEqual('button');
+            expect(event.uiEvent.containerType).toEqual('treeview');
+            expect(event.uiEvent.objectType).toEqual('treenode');
+            expect(event.uiEvent.objectId).toEqual('paginationNode');
+        });
+
+        it('should create prPaginationEvent for PR pagination', async () => {
+            const event = await analytics.prPaginationEvent();
+
+            expect(event.uiEvent.action).toEqual('clicked');
+            expect(event.uiEvent.actionSubject).toEqual('button');
+            expect(event.uiEvent.containerType).toEqual('treeview');
+            expect(event.uiEvent.objectType).toEqual('treenode');
+            expect(event.uiEvent.objectId).toEqual('paginationNode');
+        });
+    });
+
+    // Other PR-related event tests
+    describe('Additional PR events', () => {
+        const mockSite = {
+            id: 'site-id',
+            product: { name: 'Bitbucket', key: 'bitbucket' },
+            isCloud: true,
+        };
+
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        it('should create prTaskEvent with site and source', async () => {
+            const source = 'prlevel';
+            const event = await analytics.prTaskEvent(mockSite as any, source);
+
+            expect(event.trackEvent.action).toEqual('created');
+            expect(event.trackEvent.actionSubject).toEqual('pullRequestComment');
+            expect(event.trackEvent.attributes.source).toEqual(source);
+            expect(event.trackEvent.attributes.instanceType).toEqual('cloud');
+            expect(event.trackEvent.attributes.hostProduct).toEqual('Bitbucket');
+        });
+
+        it('should create prCheckoutEvent with site', async () => {
+            const event = await analytics.prCheckoutEvent(mockSite as any);
+
+            expect(event.trackEvent.action).toEqual('checkedOut');
+            expect(event.trackEvent.actionSubject).toEqual('pullRequestBranch');
+            expect(event.trackEvent.attributes.instanceType).toEqual('cloud');
+            expect(event.trackEvent.attributes.hostProduct).toEqual('Bitbucket');
+        });
+
+        it('should create fileCheckoutEvent with site', async () => {
+            const event = await analytics.fileCheckoutEvent(mockSite as any);
+
+            expect(event.trackEvent.action).toEqual('fileCheckedOut');
+            expect(event.trackEvent.actionSubject).toEqual('pullRequestBranch');
+            expect(event.trackEvent.attributes.instanceType).toEqual('cloud');
+            expect(event.trackEvent.attributes.hostProduct).toEqual('Bitbucket');
+        });
+
+        it('should create prApproveEvent with site', async () => {
+            const event = await analytics.prApproveEvent(mockSite as any);
+
+            expect(event.trackEvent.action).toEqual('approved');
+            expect(event.trackEvent.actionSubject).toEqual('pullRequest');
+            expect(event.trackEvent.attributes.instanceType).toEqual('cloud');
+            expect(event.trackEvent.attributes.hostProduct).toEqual('Bitbucket');
+        });
+
+        it('should create prMergeEvent with site', async () => {
+            const event = await analytics.prMergeEvent(mockSite as any);
+
+            expect(event.trackEvent.action).toEqual('merged');
+            expect(event.trackEvent.actionSubject).toEqual('pullRequest');
+            expect(event.trackEvent.attributes.instanceType).toEqual('cloud');
+            expect(event.trackEvent.attributes.hostProduct).toEqual('Bitbucket');
+        });
+    });
+
+    // Pipeline event tests
+    describe('Pipeline events', () => {
+        const mockSite = {
+            id: 'site-id',
+            product: { name: 'Bitbucket', key: 'bitbucket' },
+            isCloud: true,
+        };
+
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        it('should create pipelineStartEvent with site', async () => {
+            const event = await analytics.pipelineStartEvent(mockSite as any);
+
+            expect(event.trackEvent.action).toEqual('start');
+            expect(event.trackEvent.actionSubject).toEqual('pipeline');
+            expect(event.trackEvent.attributes.instanceType).toEqual('cloud');
+            expect(event.trackEvent.attributes.hostProduct).toEqual('Bitbucket');
+        });
+
+        it('should create pipelineRerunEvent with site and source', async () => {
+            const source = 'test-source';
+            const event = await analytics.pipelineRerunEvent(mockSite as any, source);
+
+            expect(event.trackEvent.action).toEqual('rerun');
+            expect(event.trackEvent.actionSubject).toEqual('pipeline');
+            expect(event.trackEvent.attributes.source).toEqual(source);
+            expect(event.trackEvent.attributes.instanceType).toEqual('cloud');
+            expect(event.trackEvent.attributes.hostProduct).toEqual('Bitbucket');
+        });
+    });
+
+    // Feature Flag event tests
+    describe('Feature Flag events', () => {
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        it('should create featureFlagClientInitializedEvent when successful', async () => {
+            const event = await analytics.featureFlagClientInitializedEvent(true);
+
+            expect(event.trackEvent.action).toEqual('initialized');
+            expect(event.trackEvent.actionSubject).toEqual('featureFlagClient');
+            expect(event.trackEvent.attributes.success).toEqual(true);
+            expect(event.trackEvent.attributes.errorType).toEqual(0);
+            expect(event.trackEvent.attributes.reason).toBeUndefined();
+        });
+
+        it('should create featureFlagClientInitializedEvent when failed', async () => {
+            const errorType = ClientInitializedErrorType.Failed;
+            const reason = 'test-failure-reason';
+            const event = await analytics.featureFlagClientInitializedEvent(false, errorType, reason);
+
+            expect(event.trackEvent.action).toEqual('initialized');
+            expect(event.trackEvent.actionSubject).toEqual('featureFlagClient');
+            expect(event.trackEvent.attributes.success).toEqual(false);
+            expect(event.trackEvent.attributes.errorType).toEqual(errorType);
+            expect(event.trackEvent.attributes.reason).toEqual(reason);
+        });
+
+        it('should create featureGateExposureBoolEvent with correct attributes', async () => {
+            const ffName = 'test-feature-flag';
+            const success = true;
+            const value = true;
+            const errorType = 0;
+
+            const event = await analytics.featureGateExposureBoolEvent(ffName, success, value, errorType);
+
+            expect(event.trackEvent.action).toEqual('gateExposureBool');
+            expect(event.trackEvent.actionSubject).toEqual('featureFlagClient');
+            expect(event.trackEvent.attributes.ffName).toEqual(ffName);
+            expect(event.trackEvent.attributes.success).toEqual(success);
+            expect(event.trackEvent.attributes.value).toEqual(value);
+            expect(event.trackEvent.attributes.errorType).toEqual(errorType);
+        });
+
+        it('should create featureGateExposureStringEvent with correct attributes', async () => {
+            const ffName = 'test-feature-flag';
+            const success = true;
+            const value = 'variant-a';
+            const errorType = 0;
+
+            const event = await analytics.featureGateExposureStringEvent(ffName, success, value, errorType);
+
+            expect(event.trackEvent.action).toEqual('gateExposureString');
+            expect(event.trackEvent.actionSubject).toEqual('featureFlagClient');
+            expect(event.trackEvent.attributes.ffName).toEqual(ffName);
+            expect(event.trackEvent.attributes.success).toEqual(success);
+            expect(event.trackEvent.attributes.value).toEqual(value);
+            expect(event.trackEvent.attributes.errorType).toEqual(errorType);
+        });
+    });
+
+    // Utility function tests
+    describe('Analytics utility functions', () => {
+        // We need to directly access the utility functions to test them
+        // Since they are not exported, we'll test their behavior through the APIs that use them
+
+        it('should sanitize IP addresses in error messages', async () => {
+            const ipErrorMessage = 'connect error 192.168.1.1 failed';
+            const event = await analytics.errorEvent(ipErrorMessage);
+
+            expect(event.trackEvent.attributes.message).not.toContain('192.168.1.1');
+            expect(event.trackEvent.attributes.message).toContain('<ip>');
+        });
+
+        it('should sanitize domain names in getaddrinfo errors', async () => {
+            const domainErrorMessage = 'getaddrinfo ENOTFOUND example.com';
+            const event = await analytics.errorEvent(domainErrorMessage);
+
+            expect(event.trackEvent.attributes.message).not.toContain('example.com');
+            expect(event.trackEvent.attributes.message).toContain('<domain>');
+        });
+
+        it('should handle null error messages', async () => {
+            const event = await analytics.errorEvent(undefined as any);
+
+            expect(event.trackEvent.attributes.message).toBeUndefined();
+        });
+
+        it('should handle anonymous user for analytics events when AAID is not available', async () => {
+            mockedData.getFirstAAID_value = undefined;
+            const event = await analytics.pmfClosed();
+
+            expect(event.userId).toBeUndefined();
+            expect(event.anonymousId).toEqual('test-machine-id');
+        });
+
+        it('should include user ID for analytics events when AAID is available', async () => {
+            mockedData.getFirstAAID_value = 'test-user-id';
+            const event = await analytics.pmfClosed();
+
+            expect(event.userId).toEqual('test-user-id');
+            expect(event.userIdType).toEqual('atlassianAccount');
+            expect(event.anonymousId).toEqual('test-machine-id');
+        });
+
+        it('should respect tenant ID when provided', async () => {
+            const mockSite = {
+                id: 'tenant-id',
+                product: { name: 'Jira', key: 'jira' },
+                isCloud: true,
+            };
+
+            const event = await analytics.issueCreatedEvent(mockSite as any, 'TEST-123');
+
+            expect(event.tenantId).toEqual('tenant-id');
+            expect(event.tenantIdType).toEqual('cloudId');
+        });
+
+        it('should set tenant type to null when no tenant ID provided', async () => {
+            const event = await analytics.issueUrlCopiedEvent();
+
+            expect(event.tenantId).toBeUndefined();
+            expect(event.tenantIdType).toBeNull();
+        });
+    });
+
+    // Platform detection tests
+    describe('AnalyticsPlatform', () => {
+        beforeEach(() => {
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        it('should map different platforms correctly', async () => {
+            // Test through events that use the platform mapping
+            setProcessPlatform('win32');
+            let event = await analytics.issueUrlCopiedEvent();
+            expect(event.trackEvent.platform).toEqual('windows');
+
+            setProcessPlatform('darwin');
+            event = await analytics.issueUrlCopiedEvent();
+            expect(event.trackEvent.platform).toEqual('mac');
+
+            setProcessPlatform('linux');
+            event = await analytics.issueUrlCopiedEvent();
+            expect(event.trackEvent.platform).toEqual('linux');
+
+            setProcessPlatform('aix');
+            event = await analytics.issueUrlCopiedEvent();
+            expect(event.trackEvent.platform).toEqual('desktop');
+
+            // Test an unknown platform
+            setProcessPlatform('haiku' as NodeJS.Platform);
+            event = await analytics.issueUrlCopiedEvent();
+            expect(event.trackEvent.platform).toEqual('unknown');
+        });
     });
 });
