@@ -239,7 +239,7 @@ export class LoginManager {
             // Special case to accomodate for API key login to cloud instances
             siteDetails.isCloud = true;
             siteDetails.userId = json.accountId;
-            siteDetails.id = await fetchSiteId(siteDetails.host);
+            siteDetails.id = await this.fetchCloudSiteId(siteDetails.host);
         }
 
         if (site.product.key === ProductJira.key) {
@@ -264,10 +264,10 @@ export class LoginManager {
 
         return siteDetails;
     }
-}
 
-const fetchSiteId = async (host: string): Promise<string> => {
-    const response = await fetch(`https://${host}/_edge/tenant_info`);
-    const data = await response.json();
-    return data.cloudId;
-};
+    private async fetchCloudSiteId(host: string): Promise<string> {
+        const response = await fetch(`https://${host}/_edge/tenant_info`);
+        const data = await response.json();
+        return data.cloudId;
+    }
+}
