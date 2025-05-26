@@ -162,7 +162,7 @@ describe('LoginManager', () => {
 
     describe('userInitiatedServerLogin', () => {
         it.each([ProductJira, ProductBitbucket])(
-            'should call saveDetailsForServerSite with correct parameters for BasicAuthInfo',
+            'should call saveDetailsForSite with correct parameters for BasicAuthInfo',
             async (product: Product) => {
                 const site: SiteInfo = { host: `${product.key}.atlassian.com`, product };
                 const user = forceCastTo<UserInfo>({ id: 'user' });
@@ -174,35 +174,33 @@ describe('LoginManager', () => {
                 };
                 const siteDetails = forceCastTo<DetailedSiteInfo>({ host: `${product.key}.atlassian.com`, product });
 
-                jest.spyOn(loginManager as any, 'saveDetailsForServerSite').mockResolvedValue(
-                    Promise.resolve(siteDetails),
-                );
+                jest.spyOn(loginManager as any, 'saveDetailsForSite').mockResolvedValue(Promise.resolve(siteDetails));
                 jest.spyOn(authInfo, 'isBasicAuthInfo').mockReturnValue(true);
                 jest.spyOn(authInfo, 'isPATAuthInfo').mockReturnValue(false);
                 jest.spyOn(loginManager['_analyticsClient'], 'sendTrackEvent');
 
                 await loginManager.userInitiatedServerLogin(site, authInfoData);
 
-                expect(loginManager['saveDetailsForServerSite']).toHaveBeenCalledWith(site, authInfoData);
+                expect(loginManager['saveDetailsForSite']).toHaveBeenCalledWith(site, authInfoData);
                 expect(loginManager['_analyticsClient'].sendTrackEvent).toHaveBeenCalled();
             },
         );
 
         it.each([ProductJira, ProductBitbucket])(
-            'should call saveDetailsForServerSite with correct parameters for PATAuthInfo',
+            'should call saveDetailsForSite with correct parameters for PATAuthInfo',
             async (product: Product) => {
                 const site: SiteInfo = { host: `${product.key}.atlassian.com`, product };
                 const authInfoData = { token: 'token' } as unknown as PATAuthInfo;
                 const siteDetails = forceCastTo<DetailedSiteInfo>({ host: `${product.key}.atlassian.com`, product });
 
-                jest.spyOn(loginManager as any, 'saveDetailsForServerSite').mockResolvedValue(siteDetails);
+                jest.spyOn(loginManager as any, 'saveDetailsForSite').mockResolvedValue(siteDetails);
                 jest.spyOn(authInfo, 'isBasicAuthInfo').mockReturnValue(false);
                 jest.spyOn(authInfo, 'isPATAuthInfo').mockReturnValue(true);
                 jest.spyOn(loginManager['_analyticsClient'], 'sendTrackEvent');
 
                 await loginManager.userInitiatedServerLogin(site, authInfoData);
 
-                expect(loginManager['saveDetailsForServerSite']).toHaveBeenCalledWith(site, authInfoData);
+                expect(loginManager['saveDetailsForSite']).toHaveBeenCalledWith(site, authInfoData);
                 expect(loginManager['_analyticsClient'].sendTrackEvent).toHaveBeenCalled();
             },
         );
@@ -219,7 +217,7 @@ describe('LoginManager', () => {
                     state: AuthInfoState.Valid,
                 };
 
-                jest.spyOn(loginManager as any, 'saveDetailsForServerSite').mockRejectedValue(
+                jest.spyOn(loginManager as any, 'saveDetailsForSite').mockRejectedValue(
                     new Error('Authentication failed'),
                 );
                 jest.spyOn(authInfo, 'isBasicAuthInfo').mockReturnValue(true);
@@ -256,7 +254,7 @@ describe('LoginManager', () => {
     });
 
     describe('updatedServerInfo', () => {
-        it('should call saveDetailsForServerSite with correct parameters for BasicAuthInfo', async () => {
+        it('should call saveDetailsForSite with correct parameters for BasicAuthInfo', async () => {
             const site: SiteInfo = { host: 'jira.atlassian.com', product: ProductJira };
             const user = forceCastTo<UserInfo>({ id: 'user' });
             const authInfoData: BasicAuthInfo = {
@@ -266,13 +264,13 @@ describe('LoginManager', () => {
                 state: AuthInfoState.Valid,
             };
 
-            jest.spyOn(loginManager as any, 'saveDetailsForServerSite').mockResolvedValue(site);
+            jest.spyOn(loginManager as any, 'saveDetailsForSite').mockResolvedValue(site);
             jest.spyOn(authInfo, 'isBasicAuthInfo').mockReturnValue(true);
             jest.spyOn(loginManager['_analyticsClient'], 'sendTrackEvent');
 
-            await loginManager.updatedServerInfo(site, authInfoData);
+            await loginManager.updateInfo(site, authInfoData);
 
-            expect(loginManager['saveDetailsForServerSite']).toHaveBeenCalledWith(site, authInfoData);
+            expect(loginManager['saveDetailsForSite']).toHaveBeenCalledWith(site, authInfoData);
             expect(loginManager['_analyticsClient'].sendTrackEvent).toHaveBeenCalled();
         });
 
@@ -286,12 +284,10 @@ describe('LoginManager', () => {
                 state: AuthInfoState.Valid,
             };
 
-            jest.spyOn(loginManager as any, 'saveDetailsForServerSite').mockRejectedValue(
-                new Error('Authentication failed'),
-            );
+            jest.spyOn(loginManager as any, 'saveDetailsForSite').mockRejectedValue(new Error('Authentication failed'));
             jest.spyOn(authInfo, 'isBasicAuthInfo').mockReturnValue(true);
 
-            await expect(loginManager.updatedServerInfo(site, authInfoData)).rejects.toEqual(
+            await expect(loginManager.updateInfo(site, authInfoData)).rejects.toEqual(
                 'Error authenticating with Jira: Error: Authentication failed',
             );
         });

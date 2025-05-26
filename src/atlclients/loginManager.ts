@@ -125,7 +125,7 @@ export class LoginManager {
     public async userInitiatedServerLogin(site: SiteInfo, authInfo: AuthInfo, isOnboarding?: boolean): Promise<void> {
         if (isBasicAuthInfo(authInfo) || isPATAuthInfo(authInfo)) {
             try {
-                const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
+                const siteDetails = await this.saveDetailsForSite(site, authInfo);
 
                 authenticatedEvent(siteDetails, isOnboarding).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
@@ -137,10 +137,10 @@ export class LoginManager {
         }
     }
 
-    public async updatedServerInfo(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
+    public async updateInfo(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
         if (isBasicAuthInfo(authInfo)) {
             try {
-                const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
+                const siteDetails = await this.saveDetailsForSite(site, authInfo);
                 editedEvent(siteDetails).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
@@ -161,7 +161,7 @@ export class LoginManager {
         return '';
     }
 
-    private async saveDetailsForServerSite(
+    private async saveDetailsForSite(
         site: SiteInfo,
         credentials: BasicAuthInfo | PATAuthInfo,
     ): Promise<DetailedSiteInfo> {
