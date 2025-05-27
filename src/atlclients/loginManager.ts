@@ -28,7 +28,7 @@ import { BitbucketAuthenticator } from './bitbucketAuthenticator';
 import { JiraAuthentictor as JiraAuthenticator } from './jiraAuthenticator';
 import { OAuthDancer } from './oauthDancer';
 
-const CLOUD_TLD = 'atlassian.net';
+const CLOUD_TLD = '.atlassian.net';
 
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
