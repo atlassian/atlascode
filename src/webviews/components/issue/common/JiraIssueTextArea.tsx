@@ -20,6 +20,7 @@ type Props = {
     onInternalCommentSave?: () => void;
     isDescription?: boolean;
     saving?: boolean;
+    featureGateEnabled?: boolean;
 };
 
 interface User {
@@ -39,6 +40,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
     onInternalCommentSave,
     isDescription,
     saving,
+    featureGateEnabled = false,
 }) => {
     const inputTextAreaRef = React.useRef<HTMLTextAreaElement>(null);
     const [cursorPosition, setCursorPosition] = React.useState(value?.length || 0);
@@ -47,7 +49,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
         appearance: 'subtle' as ButtonAppearance,
     };
 
-    const [rteEnabled, setRteEnabled] = React.useState(true);
+    const [rteEnabled, setRteEnabled] = React.useState(featureGateEnabled);
 
     const { viewHost, handleSave } = useEditor<User>({
         value,
@@ -149,9 +151,11 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                         />
                     )}
                 </div>
-                <Tooltip content="Toggle rich text editor" position="top">
-                    <Toggle label="rte toggle" defaultChecked onChange={(e) => setRteEnabled(e.target.checked)} />
-                </Tooltip>
+                {featureGateEnabled && (
+                    <Tooltip content="Toggle rich text editor" position="top">
+                        <Toggle label="rte toggle" defaultChecked onChange={(e) => setRteEnabled(e.target.checked)} />
+                    </Tooltip>
+                )}
             </div>
         </div>
     );

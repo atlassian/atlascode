@@ -25,6 +25,7 @@ type IssueCommentComponentProps = {
     fetchUsers: (input: string) => Promise<any[]>;
     fetchImage: (url: string) => Promise<string>;
     onDelete: (commentId: string) => void;
+    isRteEnabled?: boolean;
 };
 const CommentComponent: React.FC<{
     siteDetails: DetailedSiteInfo;
@@ -34,7 +35,17 @@ const CommentComponent: React.FC<{
     onDelete: (commentId: string) => void;
     fetchUsers: (input: string) => Promise<any[]>;
     isServiceDeskProject?: boolean;
-}> = ({ siteDetails, comment, onSave, fetchImage, onDelete, fetchUsers, isServiceDeskProject }) => {
+    isRteEnabled?: boolean;
+}> = ({
+    siteDetails,
+    comment,
+    onSave,
+    fetchImage,
+    onDelete,
+    fetchUsers,
+    isServiceDeskProject,
+    isRteEnabled = false,
+}) => {
     const [isEditing, setIsEditing] = React.useState(false);
     const [isSaving, setIsSaving] = React.useState(false);
     const bodyText = comment.renderedBody ? comment.renderedBody : comment.body;
@@ -105,6 +116,7 @@ const CommentComponent: React.FC<{
                                 setIsEditing(false);
                                 onSave(commentText, comment.id, JsdInternalCommentVisibility);
                             }}
+                            featureGateEnabled={isRteEnabled}
                         />
                     ) : (
                         <RenderedContent html={bodyText} fetchImage={fetchImage} />
@@ -124,7 +136,8 @@ const AddCommentComponent: React.FC<{
     user: User;
     onCreate: (t: string, restriction?: CommentVisibility) => void;
     isServiceDeskProject?: boolean;
-}> = ({ fetchUsers, user, onCreate, isServiceDeskProject }) => {
+    isRteEnabled?: boolean;
+}> = ({ fetchUsers, user, onCreate, isServiceDeskProject, isRteEnabled = false }) => {
     const [commentText, setCommentText] = React.useState('');
     const [isEditing, setIsEditing] = React.useState(false);
 
@@ -177,6 +190,7 @@ const AddCommentComponent: React.FC<{
                             setCommentText('');
                             setIsEditing(false);
                         }}
+                        featureGateEnabled={isRteEnabled}
                     />
                 )}
             </Box>
@@ -193,10 +207,16 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
     fetchUsers,
     fetchImage,
     onDelete,
+    isRteEnabled = false,
 }) => {
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', paddingTop: '8px' }}>
-            <AddCommentComponent fetchUsers={fetchUsers} user={currentUser} onCreate={onCreate} />
+            <AddCommentComponent
+                fetchUsers={fetchUsers}
+                user={currentUser}
+                onCreate={onCreate}
+                isRteEnabled={isRteEnabled}
+            />
             {comments
                 .sort((a, b) => (a.created > b.created ? -1 : 1))
                 .map((comment: JiraComment) => (
@@ -209,6 +229,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                         onDelete={onDelete}
                         fetchUsers={fetchUsers}
                         isServiceDeskProject={isServiceDeskProject}
+                        isRteEnabled={isRteEnabled}
                     />
                 ))}
         </Box>
