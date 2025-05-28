@@ -201,6 +201,10 @@ class OnboardingProvider {
         viewScreenEvent(this.id).then((e) => {
             this._analyticsClient.sendScreenEvent(e);
         });
+        if (this._quickPick.step !== 1) {
+            this._quickPick.step = 1;
+        }
+
         this.show();
     }
 
