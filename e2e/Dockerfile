@@ -31,7 +31,7 @@ update-ca-certificates
 echo "installing dependencies for atlascode extension"
 code-server --install-extension ../redhat.vscode-yaml-1.18.0.vsix --force
 echo "installing atlascode"
-code-server --install-extension atlascode-0.0.0.vsix --force
+code-server --install-extension atlascode-*.vsix --force
 
 echo "starting code-server"
 code-server --auth none --bind-addr localhost:9988 &

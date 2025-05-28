@@ -18,7 +18,10 @@ import { Container } from '../container';
 import { submitLegacyJSDPMF } from '../feedback/pmfJSDSubmitter';
 import { isAction, isAlertable, isPMFSubmitAction } from '../ipc/messaging';
 import { CommonActionType } from '../lib/ipc/fromUI/common';
+import { CommonMessageType } from '../lib/ipc/toUI/common';
 import { iconSet, Resources } from '../resources';
+import { Experiments, FeatureFlagClient, Features } from '../util/featureFlags';
+import { ExperimentGateValues, FeatureGateValues } from '../util/featureFlags/features';
 import { UIWebsocket } from '../ws';
 
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
@@ -132,6 +135,25 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 this.id,
             );
             this._panel.reveal(column ? column : ViewColumn.Active); // , false);
+        }
+
+        this.fireFeatureGates([Features.JiraRichText]);
+        this.fireExperimentGates([]);
+    }
+
+    private fireFeatureGates(features: Features[]) {
+        if (features.length) {
+            const featureFlags = {} as FeatureGateValues;
+            features.forEach((x) => (featureFlags[x] = FeatureFlagClient.checkGate(x)));
+            this.postMessage({ type: CommonMessageType.UpdateFeatureFlags, featureFlags });
+        }
+    }
+
+    private fireExperimentGates(experiments: Experiments[]) {
+        if (experiments.length) {
+            const experimentValues = {} as ExperimentGateValues;
+            experiments.forEach((x) => (experimentValues[x] = FeatureFlagClient.checkExperimentValue(x)));
+            this.postMessage({ type: CommonMessageType.UpdateExperimentValues, experimentValues });
         }
     }
 

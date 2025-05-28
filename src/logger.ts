@@ -137,7 +137,7 @@ export class Logger {
     }
 
     public static warn(message?: any, ...params: any[]): void {
-        this.Instance.debug(message, params);
+        this.Instance.warn(message, params);
     }
 
     public warn(message?: any, ...params: any[]): void {

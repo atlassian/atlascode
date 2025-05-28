@@ -1,32 +1,32 @@
 networks:
-  e2e:
+    e2e:
 
-services: 
-  wiremock-mockedteams:
-    image: wiremock/wiremock
-    command: >
-      --https-port 443
-      --verbose
-      --https-keystore /home/wiremock_ssl_certs/wiremock-mockedteams.p12
-    volumes:
-      - ./wiremock-mappings/mockedteams:/home/wiremock/mappings
-      - ./sslcerts:/home/wiremock_ssl_certs
-    networks:
-      e2e:
-        aliases:
-          - mockedteams.atlassian.net
-    expose:
-      - 443
+services:
+    wiremock-mockedteams:
+        image: wiremock/wiremock
+        command: >
+            --https-port 443
+            --verbose
+            --https-keystore /home/wiremock_ssl_certs/wiremock-mockedteams.p12
+        volumes:
+            - ./wiremock-mappings/mockedteams:/home/wiremock/mappings
+            - ./sslcerts:/home/wiremock_ssl_certs
+        networks:
+            e2e:
+                aliases:
+                    - mockedteams.atlassian.net
+        expose:
+            - 443
 
-  atlascode-e2e:
-    image: atlascode-e2e
-    volumes:
-      - ${PWD}/..:/atlascode
-    environment:
-      - NODE_TLS_REJECT_UNAUTHORIZED=0
-    depends_on:
-      - wiremock-mockedteams
-    networks:
-      - e2e
-    ports:
-      - "9988:9988"
+    atlascode-e2e:
+        image: atlascode-e2e
+        volumes:
+            - ${PWD}/..:/atlascode
+        environment:
+            - NODE_TLS_REJECT_UNAUTHORIZED=0
+        depends_on:
+            - wiremock-mockedteams
+        networks:
+            - e2e
+        ports:
+            - '9988:9988'

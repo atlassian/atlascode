@@ -1,0 +1,42 @@
+### What is this?
+
+This is the WIP suite of end-to-end (E2E) tests we've implemented for Atlascode.
+
+How does it work? In summary:
+
+- We mock the various API calls made from the extension using wiremock
+- We spin up a browser-based extension and use playwright to perform various actions
+- All of that is run during the build in a docker container, with a supporting `wiremock` instance using docker-compose
+
+### How do I use it?
+
+To run the tests locally, it should be enough to do the following:
+
+1.  First, prepare mock certificates for wiremock, using
+
+```sh
+ npm run test:e2e:sslcerts
+```
+
+2.  Build a docker image that we use for testing:
+
+```sh
+npm run test:e2e:docker:build
+```
+
+3.  Run tests headless in a docker container:
+
+```sh
+npm run test:e2e:docker
+```
+
+4. Check the output, and the artifacts provided in `./test-results`
+
+---
+
+⚠️ **Note**: Please be aware that the tests leverage a `.vsix` artifact produced by the build
+To run E2E tests against changed code, you might need to re-build the extension by running
+
+```sh
+npm run extension:package
+```

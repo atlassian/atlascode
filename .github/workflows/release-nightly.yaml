@@ -45,8 +45,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build and package the extension
-        run: npm run extension:package
+      - name: Build and package the extension for pre-release
+        run: npm run extension:package:prerelease
 
       - name: Run linter
         run: npm run lint

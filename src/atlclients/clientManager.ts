@@ -168,6 +168,14 @@ export class ClientManager implements Disposable {
                             jiraTokenAuthProvider(info.access),
                             getAgent,
                         );
+                    } else if (isBasicAuthInfo(info) && site.isCloud) {
+                        Logger.debug(`${tag}: creating cloud client for ${site.baseApiUrl}`);
+                        client = new JiraCloudClient(
+                            site,
+                            basicJiraTransportFactory(site),
+                            jiraBasicAuthProvider(info.username, info.password),
+                            getAgent,
+                        );
                     } else if (isBasicAuthInfo(info)) {
                         client = new JiraServerClient(
                             site,

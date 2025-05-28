@@ -20,6 +20,7 @@ describe('JiraIssueTextAreaEditor', () => {
         onCancel: mockOnCancel,
         fetchUsers: mockFetchUsers,
         saving: false,
+        featureGateEnabled: true,
     };
 
     beforeAll(() => {
