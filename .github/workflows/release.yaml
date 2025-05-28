@@ -49,7 +49,7 @@ jobs:
         run: npm -no-git-tag-version --allow-same-version -f version $PACKAGE_VERSION
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci --no-audit
 
       - name: Build and package the extension
         run: npm run extension:package
