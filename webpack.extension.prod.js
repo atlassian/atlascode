@@ -48,7 +48,7 @@ module.exports = [
             plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.notest.json') })],
             alias: {
                 parse5$: 'parse5/dist/cjs/index.js',
-                axios: path.resolve(__dirname, 'node_modules/axios'),
+                axios: path.resolve(__dirname, 'node_modules/axios/lib/axios.js'),
                 semver: path.resolve(__dirname, 'node_modules/semver'),
                 bufferutil: path.resolve(__dirname, 'node_modules/bufferutil'),
             },
@@ -144,7 +144,6 @@ module.exports = [
         resolve: {
             extensions: ['.tsx', '.ts', '.js'],
             alias: {
-                axios: path.resolve(__dirname, 'node_modules/axios'),
                 semver: path.resolve(__dirname, 'node_modules/semver'),
                 bufferutil: path.resolve(__dirname, 'node_modules/bufferutil'),
             },

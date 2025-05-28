@@ -54,7 +54,7 @@ module.exports = [
             plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.json') })],
             alias: {
                 parse5$: 'parse5/dist/cjs/index.js',
-                axios: path.resolve(__dirname, 'node_modules/axios'),
+                axios: path.resolve(__dirname, 'node_modules/axios/lib/axios.js'),
             },
         },
         output: {
@@ -115,9 +115,6 @@ module.exports = [
         },
         resolve: {
             extensions: ['.tsx', '.ts', '.js'],
-            alias: {
-                axios: path.resolve(__dirname, 'node_modules/axios'),
-            },
         },
 
         output: {
