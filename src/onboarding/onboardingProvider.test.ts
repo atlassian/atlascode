@@ -113,6 +113,11 @@ jest.mock('./utils', () => ({
         { label: 'Bitbucket Server', onboardingId: 'onboarding:bitbucket-server' },
         { label: 'Skip', onboardingId: 'onboarding:bitbucket-skip' },
     ],
+    OnboardingButtons: {
+        settings: { iconPath: 'settings', tooltip: 'Settings' },
+        createApiToken: { iconPath: 'api-token', tooltip: 'Create API Token' },
+        back: { iconPath: 'back', tooltip: 'Back' },
+    },
 }));
 
 describe('OnboardingProvider', () => {
@@ -143,7 +148,7 @@ describe('OnboardingProvider', () => {
 
     it('should call commands on handleNext for step 1', () => {
         provider._quickPick.step = 1;
-        provider.handleNext();
+        provider._handleNext();
         expect(commands.executeCommand).toHaveBeenCalledWith(
             expect.stringContaining('RefreshAssignedWorkItemsExplorer'),
         );
@@ -151,40 +156,28 @@ describe('OnboardingProvider', () => {
 
     it('should call commands on handleNext for step 2', () => {
         provider._quickPick.step = 2;
-        provider.handleNext();
+        provider._handleNext();
         expect(commands.executeCommand).toHaveBeenCalledWith(expect.stringContaining('BitbucketRefreshPullRequests'));
     });
 
     it('should open external link for API token', () => {
-        provider.handleOpenCreateApiToken();
+        provider._handleOpenCreateApiToken();
         expect(env.openExternal).toHaveBeenCalled();
-    });
-
-    it('should return correct helper text for Jira Cloud', () => {
-        const text = provider.helperText(ProductJira, 'Cloud');
-        expect(text).toContain('cloud');
-        expect(text).toContain('atlassian.net');
-    });
-
-    it('should return correct helper text for Bitbucket Server', () => {
-        const text = provider.helperText(ProductBitbucket, 'Server');
-        expect(text).toContain('server');
-        expect(text).toContain('bitbucket.mydomain.com');
     });
 
     it('should reset server input values', () => {
         provider._quickInputServer[0].value = 'foo';
         provider._quickInputServer[1].value = 'bar';
         provider._quickInputServer[2].value = 'baz';
-        provider.resetServerInputValues();
+        provider._resetServerInputValues();
         expect(provider._quickInputServer[0].value).toBe('');
         expect(provider._quickInputServer[1].value).toBe('');
         expect(provider._quickInputServer[2].value).toBe('');
     });
 
     it('should detect remote and web UI', () => {
-        expect(provider.getIsRemote()).toBe(false);
-        expect(provider.getIsWebUi()).toBe(false);
+        expect(provider._getIsRemote()).toBe(false);
+        expect(provider._getIsWebUi()).toBe(false);
     });
 
     it('should call Oauth login on cloud Jira selection', async () => {
@@ -217,8 +210,10 @@ describe('OnboardingProvider', () => {
         provider._quickInputServer[0].value = 'https://jira.mydomain.com';
         provider._quickInputServer[1].value = 'username';
         provider._quickInputServer[2].value = 'password';
+        provider._quickInputServer[2].product = ProductJira;
+        provider._quickInputServer[2].env = 'Server';
 
-        await provider.onDidServerLoginAccept(provider._quickInputServer[2], ProductJira);
+        await provider._onDidInputAccept(2);
 
         expect(Container.loginManager.userInitiatedServerLogin).toHaveBeenCalledWith(
             {

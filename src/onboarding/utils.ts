@@ -1,4 +1,6 @@
-import { ThemeIcon } from 'vscode';
+import { InputBox, QuickInputButton, QuickPickItem, ThemeIcon } from 'vscode';
+
+import { Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 
 export const jiraOnboardingItems = [
     {
@@ -47,3 +49,40 @@ export const bitbucketOnboardingItems = [
         onboardingId: 'onboarding:bitbucket-skip',
     },
 ];
+
+export const onboardingHelperText = (product: Product, env: string) => {
+    if (product.key === ProductJira.key) {
+        const site = env === 'Cloud' ? 'cloud' : 'server';
+        const baseUrl = env === 'Cloud' ? 'https://jira.atlassian.net' : 'https://jira.mydomain.com';
+        return `You can enter a ${site} url like ${baseUrl}\n`;
+    } else if (product.key === ProductBitbucket.key) {
+        const site = env === 'Cloud' ? 'cloud' : 'server';
+        const baseUrl = env === 'Cloud' ? 'https://bitbucket.org' : 'https://bitbucket.mydomain.com';
+        return `You can enter a ${site} url like ${baseUrl}\n`;
+    }
+    return '';
+};
+
+export interface OnboardingQuickPickItem extends QuickPickItem {
+    onboardingId: string;
+}
+
+export interface OnboardingInputBox extends InputBox {
+    product?: Product;
+    env?: string;
+}
+export const OnboardingButtons: Record<string, QuickInputButton> = {
+    settings: {
+        iconPath: new ThemeIcon('gear'),
+        tooltip: 'Configure in settings',
+    },
+    createApiToken: {
+        iconPath: new ThemeIcon('link-external'),
+        tooltip: 'Create API tokens',
+    },
+};
+
+export enum OnboardingStep {
+    Jira = 1,
+    Bitbucket = 2,
+}
