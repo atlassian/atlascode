@@ -12,7 +12,7 @@ import {
     window,
 } from 'vscode';
 
-import { authenticateButtonEvent, viewScreenEvent } from '../analytics';
+import { authenticateButtonEvent, errorEvent, viewScreenEvent } from '../analytics';
 import { type AnalyticsClient } from '../analytics-node-client/src/client.min';
 import { BasicAuthInfo, Product, ProductBitbucket, ProductJira, SiteInfo } from '../atlclients/authInfo';
 import { Commands } from '../commands';
@@ -150,7 +150,16 @@ class OnboardingProvider {
             case 'onboarding:jira-cloud':
                 this.getIsRemote()
                     ? this.handleServerLoginSteps(ProductJira, 'Cloud', 0)
-                    : this.handleCloudLogin(ProductJira);
+                    : this.handleCloudLogin(ProductJira).catch((e) => {
+                          const message = e.message || `Failed to authenticate with Jira Cloud`;
+
+                          window.showErrorMessage(message);
+
+                          errorEvent(message, e, this.id).then((event) => {
+                              this._analyticsClient.sendTrackEvent(event);
+                          });
+                      });
+
                 break;
             case 'onboarding:jira-server':
                 this.handleServerLoginSteps(ProductJira, 'Server', 0);
@@ -170,12 +179,20 @@ class OnboardingProvider {
                 this.handleNext();
                 break;
             case 'onboarding:bitbucket-cloud':
-                this.getIsRemote()
-                    ? this.handleServerLoginSteps(ProductBitbucket, 'Cloud', 0)
-                    : this.handleCloudLogin(ProductBitbucket);
+                this.handleCloudLogin(ProductBitbucket).catch((e) => {
+                    const message = e.message || `Failed to authenticate with Bitbucket Cloud`;
+
+                    window.showErrorMessage(message);
+
+                    errorEvent(message, e, this.id).then((event) => {
+                        this._analyticsClient.sendTrackEvent(event);
+                    });
+                });
+
                 break;
             case 'onboarding:bitbucket-server':
                 this.handleServerLoginSteps(ProductBitbucket, 'Server', 0);
+
                 break;
             case 'onboarding:bitbucket-skip':
                 siteInfo = {
@@ -190,6 +207,7 @@ class OnboardingProvider {
                 );
 
                 this.handleNext();
+
                 break;
             default:
                 break;
@@ -282,14 +300,14 @@ class OnboardingProvider {
             this.handleNext();
             this._quickPick.busy = false;
         } catch (e) {
-            window.showErrorMessage(`Failed to authenticate with ${product.name} Cloud: ${e.message || e}`);
+            throw Error(`Failed to authenticate with ${product.name} Cloud: ${e.message || e}`);
         }
     }
 
     // --- Server Login Steps Handler ---
     private async handleServerLoginSteps(product: Product, env: string, step: number) {
         switch (step) {
-            case 0:
+            case 0: // Input server URL
                 this._quickInputStep = step;
                 this._quickInputServer[step].prompt = this.helperText(product, env);
                 this._quickInputServer[step].placeholder = 'Enter your site URL';
@@ -299,14 +317,18 @@ class OnboardingProvider {
                         this._quickInputServer[step].validationMessage = 'Please enter a valid URL';
                         return;
                     }
+
                     this._quickInputServer[step].hide();
+
                     this._quickInputServer[step].validationMessage = undefined;
+
                     this.handleServerLoginSteps(product, env, step + 1);
                 });
                 this._quickInputServer[step].show();
+
                 break;
 
-            case 1:
+            case 1: // Input username
                 this._quickInputStep = step;
                 this._quickInputServer[step].prompt = 'Enter your username';
                 this._quickInputServer[step].placeholder = 'Enter your username';
@@ -316,23 +338,28 @@ class OnboardingProvider {
                         this._quickInputServer[step].validationMessage = 'Please enter a username';
                         return;
                     }
+
                     this._quickInputServer[step].hide();
+
                     this._quickInputServer[step].validationMessage = undefined;
+
                     this.handleServerLoginSteps(product, env, step + 1);
                 });
+
                 this._quickInputServer[step].show();
                 break;
 
-            case 2:
+            case 2: // Input password
                 this._quickInputStep = step;
 
                 if (product.key === ProductJira.key && env === 'Cloud') {
                     this._quickInputServer[step].prompt =
                         'Use an API token to connect. Click the link button above to create one.';
+
                     this._quickInputServer[step].placeholder = 'Enter your API token';
 
                     this._quickInputServer[step].buttons = [
-                        ...this._quickInputServer[step].buttons,
+                        this._quickInputServer[step].buttons[0], // Back button
                         {
                             iconPath: new ThemeIcon('link-external'),
                             tooltip: 'Create API tokens',
@@ -351,12 +378,30 @@ class OnboardingProvider {
                         this._quickInputServer[step].validationMessage = 'Please enter a password';
                         return;
                     }
-                    this.handleServerLogin(product).then(() => {
-                        this._quickInputServer[step].busy = false;
-                        this.resetServerInputValues();
-                        this._quickInputServer[step].validationMessage = undefined;
-                        this.handleNext();
-                    });
+
+                    this.handleServerLogin(product)
+                        .then(() => {
+                            this._quickInputServer[step].busy = false;
+
+                            this.resetServerInputValues();
+
+                            this._quickInputServer[step].validationMessage = undefined;
+
+                            this.handleNext();
+                        })
+                        .catch((e) => {
+                            this._quickInputServer[step].busy = false;
+
+                            this._quickInputServer[step].validationMessage = e.message || 'Login failed';
+
+                            const errorMessage = e.message || 'Failed to authenticate with server';
+
+                            window.showErrorMessage(errorMessage);
+
+                            errorEvent(errorMessage, e, this.id).then((event) => {
+                                this._analyticsClient.sendTrackEvent(event);
+                            });
+                        });
                 });
 
                 this._quickInputServer[step].show();
@@ -369,35 +414,35 @@ class OnboardingProvider {
 
     // --- Server Login Handler ---
     private async handleServerLogin(product: Product) {
-        const baseUrl = new URL(this._quickInputServer[0].value);
-        const username = this._quickInputServer[1].value;
-        const password = this._quickInputServer[2].value;
-
-        if (!baseUrl || !username || !password) {
-            return;
-        }
-
-        this._quickInputServer[2].busy = true;
-
-        const siteInfo = {
-            host: baseUrl.host,
-            protocol: baseUrl.protocol,
-            product,
-        } as SiteInfo;
-
-        const authInfo = {
-            username,
-            password,
-        } as BasicAuthInfo;
-
-        authenticateButtonEvent(this.id, siteInfo, false, this.getIsRemote(), this.getIsWebUi()).then((e) => {
-            this._analyticsClient.sendUIEvent(e);
-        });
-
         try {
+            const baseUrl = new URL(this._quickInputServer[0].value);
+            const username = this._quickInputServer[1].value;
+            const password = this._quickInputServer[2].value;
+
+            if (!baseUrl || !username || !password) {
+                return;
+            }
+
+            this._quickInputServer[2].busy = true;
+
+            const siteInfo = {
+                host: baseUrl.host,
+                protocol: baseUrl.protocol,
+                product,
+            } as SiteInfo;
+
+            const authInfo = {
+                username,
+                password,
+            } as BasicAuthInfo;
+
+            authenticateButtonEvent(this.id, siteInfo, false, this.getIsRemote(), this.getIsWebUi()).then((e) => {
+                this._analyticsClient.sendUIEvent(e);
+            });
+
             await Container.loginManager.userInitiatedServerLogin(siteInfo, authInfo, true, this.id);
         } catch (e) {
-            window.showErrorMessage(`Failed to authenticate with ${product.name} server: ${e.message || e}`);
+            throw Error(`Failed to authenticate with ${product.name} server: ${e.message || e}`);
         }
     }
 
