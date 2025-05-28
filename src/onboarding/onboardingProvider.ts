@@ -19,6 +19,7 @@ import { Commands } from '../commands';
 import { Container } from '../container';
 import { EXTENSION_URL } from '../uriHandler/atlascodeUriHandler';
 import { isValidUrl } from '../webviews/components/fieldValidators';
+import { bitbucketOnboardingItems, jiraOnboardingItems } from './utils';
 
 class OnboardingProvider {
     private id = 'atlascodeOnboardingQuickPick';
@@ -57,62 +58,10 @@ class OnboardingProvider {
         this._quickPick.onDidTriggerButton(this._quickPickOnDidTriggerButton.bind(this));
         this._quickPick.onDidAccept(this._quickPickOnDidAccept.bind(this));
 
-        this._initializeJiraItems();
-        this._initializeBitbucketItems();
+        this._jiraItems = jiraOnboardingItems;
+        this._bitbucketItems = bitbucketOnboardingItems;
+
         this._initializeServerLogin();
-    }
-
-    // --- Initialize QuickPick Items ---
-    private _initializeJiraItems() {
-        this._jiraItems = [
-            {
-                iconPath: new ThemeIcon('cloud'),
-                label: 'Sign in to Jira Cloud',
-                description: 'For most of our users.',
-                detail: 'The URL for accessing your site will typically be in the format mysite.atlassian.net.',
-                onboardingId: 'onboarding:jira-cloud',
-            },
-            {
-                iconPath: new ThemeIcon('server'),
-                label: 'Sign in to Jira Server',
-                description: 'For users with a custom site.',
-                detail: 'The URL is usually a custom domain or IP address set up by your organization.',
-                onboardingId: 'onboarding:jira-server',
-            },
-            {
-                iconPath: new ThemeIcon('chevron-right'),
-                label: "I don't have Jira",
-                description: 'Skip this step',
-                detail: 'You can always set up a new Jira account later.',
-                onboardingId: 'onboarding:jira-skip',
-            },
-        ];
-    }
-
-    private _initializeBitbucketItems() {
-        this._bitbucketItems = [
-            {
-                iconPath: new ThemeIcon('cloud'),
-                label: 'Sign in to Bitbucket Cloud',
-                description: 'For most of our users.',
-                detail: 'The URL for accessing your site will typically be in the format mysite.atlassian.net.',
-                onboardingId: 'onboarding:bitbucket-cloud',
-            },
-            {
-                iconPath: new ThemeIcon('server'),
-                label: 'Sign in to Bitbucket Server',
-                description: 'For users with a custom site.',
-                detail: 'The URL is usually a custom domain or IP address set up by your organization.',
-                onboardingId: 'onboarding:bitbucket-server',
-            },
-            {
-                iconPath: new ThemeIcon('chevron-right'),
-                label: "I don't have Bitbucket",
-                description: 'Skip this step',
-                detail: 'You can always set up a new Bitbucket account later.',
-                onboardingId: 'onboarding:bitbucket-skip',
-            },
-        ];
     }
 
     // --- Initialize Server Login Inputs ---
@@ -157,8 +106,10 @@ class OnboardingProvider {
 
     // --- QuickInput Button Handler ---
     private _quickInputOnDidTriggerButton(e: QuickInputButton) {
+        const step = this._quickInputStep;
+        this._quickInputServer[step].validationMessage = undefined;
         if (e === QuickInputButtons.Back) {
-            switch (this._quickInputStep) {
+            switch (step) {
                 case 0:
                     this._quickInputServer[0].hide();
                     this.show();
