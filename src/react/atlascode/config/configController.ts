@@ -16,6 +16,7 @@ import {
     ConfigMessageType,
     ConfigResponse,
     emptyConfigInitMessage,
+    FetchWorkspacesResponseMessage,
     FilterSearchResponseMessage,
     JQLOptionsResponseMessage,
     JQLSuggestionsResponseMessage,
@@ -55,6 +56,7 @@ export interface ConfigControllerApi {
     viewPullRequest: () => void;
     createJiraIssue: () => void;
     viewJiraIssue: () => void;
+    fetchWorkspaces: (site: DetailedSiteInfo, query: string, abortSignal?: AbortSignal) => Promise<string[]>;
 }
 
 export const emptyApi: ConfigControllerApi = {
@@ -112,6 +114,11 @@ export const emptyApi: ConfigControllerApi = {
     validateJql: (site: DetailedSiteInfo, jql: string, abortSignal?: AbortSignal): Promise<JQLErrors> => {
         return new Promise<JQLErrors>((resolve, reject) => {
             resolve({ errors: [] });
+        });
+    },
+    fetchWorkspaces: (site: DetailedSiteInfo, query: string, abortSignal?: AbortSignal): Promise<string[]> => {
+        return new Promise<string[]>((resolve, reject) => {
+            resolve([]);
         });
     },
     createPullRequest: (): void => {
@@ -484,6 +491,44 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         [postMessage, postMessagePromise],
     );
 
+    const fetchWorkspaces = useCallback(
+        (site: DetailedSiteInfo, query: string, abortSignal?: AbortSignal): Promise<string[]> => {
+            return new Promise<string[]>((resolve, reject) => {
+                (async () => {
+                    try {
+                        let abortKey: string = '';
+
+                        if (abortSignal) {
+                            abortKey = v4();
+                            abortSignal.onabort = () => {
+                                postMessage({
+                                    type: CommonActionType.Cancel,
+                                    abortKey: abortKey,
+                                    reason: 'fetchWorkspaces cancelled by client',
+                                });
+                            };
+                        }
+
+                        const response = await postMessagePromise(
+                            {
+                                type: ConfigActionType.FetchWorkspacesRequest,
+                                site: site,
+                                query: query,
+                                abortKey: abortSignal ? abortKey : undefined,
+                            },
+                            ConfigMessageType.FetchWorkspacesResponse,
+                            ConnectionTimeout,
+                        );
+                        resolve((response as FetchWorkspacesResponseMessage).data);
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessage, postMessagePromise],
+    );
+
     const createPullRequest = useCallback((): void => {
         dispatch({ type: ConfigUIActionType.Loading });
         postMessage({ type: ConfigActionType.CreatePullRequest });
@@ -522,6 +567,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             createPullRequest: createPullRequest,
             viewPullRequest: viewPullRequest,
             viewJiraIssue: viewJiraIssue,
+            fetchWorkspaces: fetchWorkspaces,
         };
     }, [
         handleConfigChange,
@@ -540,6 +586,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         createPullRequest,
         viewPullRequest,
         viewJiraIssue,
+        fetchWorkspaces,
     ]);
 
     return [state, controllerApi];

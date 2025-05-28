@@ -111,6 +111,20 @@ export class VSCConfigActionApi implements ConfigActionApi {
         return await client.validateJql(jql, cancelToken);
     }
 
+    public async fetchWorkspaces(site: DetailedSiteInfo, query: string, abortKey?: string): Promise<string[]> {
+        const client = await Container.clientManager.bbClient(site);
+
+        let cancelToken: CancelToken | undefined = undefined;
+
+        if (abortKey) {
+            const signal: CancelTokenSource = axios.CancelToken.source();
+            cancelToken = signal.token;
+            this._cancelMan.set(abortKey, signal);
+        }
+
+        return (await client.repositories.fetchWorkspaces(query, cancelToken)) ?? [];
+    }
+
     public getSitesAvailable(): [DetailedSiteInfo[], DetailedSiteInfo[]] {
         const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
         const bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);

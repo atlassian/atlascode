@@ -4,6 +4,7 @@ import { DetailedSiteInfo, emptySiteInfo } from '../atlclients/authInfo';
 import { PipelineApiImpl } from '../pipelines/pipelines';
 import { Remote, Repository } from '../typings/git';
 import { FileDiffQueryParams } from '../views/pullrequest/diffViewHelper';
+import { OverviewViewState } from './bitbucket-cloud/pullRequestsOverview';
 
 export type BitbucketSite = {
     details: DetailedSiteInfo;
@@ -369,6 +370,10 @@ export interface PullRequestApi {
     getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string>;
 }
 
+export interface PullRequestsOverviewApi {
+    getOverviewViewState(ownerSlug: string, site: DetailedSiteInfo, minUpdatedTs: string): Promise<OverviewViewState>;
+}
+
 export interface RepositoriesApi {
     getMirrorHosts(): Promise<string[]>;
     get(site: BitbucketSite): Promise<Repo>;
@@ -378,11 +383,13 @@ export interface RepositoriesApi {
     getCommitsForRefs(site: BitbucketSite, includeRef: string, excludeRef: string): Promise<Commit[]>;
     getPullRequestIdsForCommit(site: BitbucketSite, commitHash: string): Promise<string[]>;
     fetchImage(url: string): Promise<string>;
+    fetchWorkspaces(query: string, cancelToken?: CancelToken): Promise<string[]>;
 }
 
 export interface BitbucketApi {
     repositories: RepositoriesApi;
     pullrequests: PullRequestApi;
+    pullrequestsOverview?: PullRequestsOverviewApi;
     pipelines?: PipelineApiImpl;
 }
 

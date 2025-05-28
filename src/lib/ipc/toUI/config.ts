@@ -21,6 +21,7 @@ export enum ConfigMessageType {
     JQLSuggestionsResponse = 'JQLSuggestionsResponse',
     FilterSearchResponse = 'filterSearchResponse',
     ValidateJqlResponse = 'validateJqlResponse',
+    FetchWorkspacesResponse = 'fetchWorkspacesResponse',
 }
 
 export type ConfigMessage =
@@ -33,7 +34,8 @@ export type ConfigResponse =
     | ReducerAction<ConfigMessageType.JQLOptionsResponse, JQLOptionsResponseMessage>
     | ReducerAction<ConfigMessageType.JQLSuggestionsResponse, JQLSuggestionsResponseMessage>
     | ReducerAction<ConfigMessageType.FilterSearchResponse, FilterSearchResponseMessage>
-    | ReducerAction<ConfigMessageType.ValidateJqlResponse, ValidateJqlResponseMessage>;
+    | ReducerAction<ConfigMessageType.ValidateJqlResponse, ValidateJqlResponseMessage>
+    | ReducerAction<ConfigMessageType.FetchWorkspacesResponse, FetchWorkspacesResponseMessage>;
 
 export interface ConfigInitMessage {
     config: FlattenedConfig;
@@ -92,6 +94,10 @@ export interface FilterSearchResponseMessage {
 
 export interface ValidateJqlResponseMessage {
     data: JQLErrors;
+}
+
+export interface FetchWorkspacesResponseMessage {
+    data: string[];
 }
 
 export interface SectionChangeMessage {

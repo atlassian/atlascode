@@ -159,24 +159,35 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             bbApi.pullrequests.getConflictedFiles(this.pr),
             bbApi.pullrequests.getTasks(this.pr),
         ]);
-        // Critical data - files, comments, and fileChangedNodes
-        [fileDiffs, allComments, fileChangedNodes] = await this.criticalData(criticalPromise);
-        // get commitsData
-        const commits = await commitsPromise;
-        // update loadedChildren with commits data
-        this.loadedChildren = [
-            new DescriptionNode(this.pr),
-            ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, commits)] : []),
-            ...fileChangedNodes,
-        ];
-        // refresh TreeView
-        this.refresh();
-        // Additional data - conflicts, commits, tasks
-        await this.nonCriticalData(nonCriticalPromise, fileDiffs, allComments, commits);
-        // update Loading to false
-        this.isLoading = false;
-        // refresh TreeView
-        this.refresh();
+        try {
+            // Critical data - files, comments, and fileChangedNodes
+            [fileDiffs, allComments, fileChangedNodes] = await this.criticalData(criticalPromise);
+            // get commitsData
+            const commits = await commitsPromise;
+            // update loadedChildren with commits data
+            this.loadedChildren = [
+                new DescriptionNode(this.pr),
+                ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, commits)] : []),
+                ...fileChangedNodes,
+            ];
+            // refresh TreeView
+            this.refresh();
+            // Additional data - conflicts, commits, tasks
+            try {
+                await this.nonCriticalData(nonCriticalPromise, fileDiffs, allComments, commits);
+            } catch (error) {
+                Logger.debug('error fetching non-critical pull request details', error);
+                // Keep existing nodes if additional data fetch fails
+            }
+        } catch (error) {
+            Logger.debug('error fetching pull request details', error);
+            this.loadedChildren = [new SimpleNode('⚠️ Error: fetching pull request details failed')];
+        } finally {
+            // update Loading to false regardless of success or failure
+            this.isLoading = false;
+            // refresh TreeView
+            this.refresh();
+        }
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {

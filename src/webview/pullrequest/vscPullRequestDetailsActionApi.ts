@@ -113,11 +113,13 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         return newStatus;
     }
 
-    getCurrentBranchName(pr: PullRequest): string {
-        let currentBranchName = '';
+    getCurrentBranchName(pr: PullRequest): string | null {
+        let currentBranchName = null;
         if (pr.workspaceRepo) {
-            const scm = Container.bitbucketContext.getRepositoryScm(pr.workspaceRepo!.rootUri)!;
-            currentBranchName = scm.state.HEAD ? scm.state.HEAD.name! : '';
+            const scm = Container.bitbucketContext?.getRepositoryScm?.(pr.workspaceRepo.rootUri);
+            if (scm && scm.state && scm.state.HEAD) {
+                currentBranchName = scm.state.HEAD.name || null;
+            }
         }
 
         return currentBranchName;
