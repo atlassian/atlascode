@@ -373,36 +373,9 @@ class OnboardingProvider {
                 this._quickInputServer[step].password = true;
                 this._quickInputServer[step].title = `Enter your ${product.name} ${env} password`;
 
-                this._quickInputServer[step].onDidAccept(() => {
-                    if (!this._quickInputServer[step].value || this._quickInputServer[step].value.trim() === '') {
-                        this._quickInputServer[step].validationMessage = 'Please enter a password';
-                        return;
-                    }
-
-                    this.handleServerLogin(product)
-                        .then(() => {
-                            this._quickInputServer[step].busy = false;
-
-                            this.resetServerInputValues();
-
-                            this._quickInputServer[step].validationMessage = undefined;
-
-                            this.handleNext();
-                        })
-                        .catch((e) => {
-                            this._quickInputServer[step].busy = false;
-
-                            this._quickInputServer[step].validationMessage = e.message || 'Login failed';
-
-                            const errorMessage = e.message || 'Failed to authenticate with server';
-
-                            window.showErrorMessage(errorMessage);
-
-                            errorEvent(errorMessage, e, this.id).then((event) => {
-                                this._analyticsClient.sendTrackEvent(event);
-                            });
-                        });
-                });
+                this._quickInputServer[step].onDidAccept(
+                    this.onDidServerLoginAccept.bind(this, this._quickInputServer[step], product),
+                );
 
                 this._quickInputServer[step].show();
                 break;
@@ -410,6 +383,38 @@ class OnboardingProvider {
             default:
                 break;
         }
+    }
+
+    // --- Server Login Accept Handler ---
+    private async onDidServerLoginAccept(quickInput: InputBox, product: Product) {
+        if (!quickInput.value || quickInput.value.trim() === '') {
+            quickInput.validationMessage = 'Please enter a password';
+            return;
+        }
+
+        await this.handleServerLogin(product)
+            .then(() => {
+                quickInput.busy = false;
+
+                this.resetServerInputValues();
+
+                quickInput.validationMessage = undefined;
+
+                this.handleNext();
+            })
+            .catch((e) => {
+                quickInput.busy = false;
+
+                quickInput.validationMessage = e.message || 'Login failed';
+
+                const errorMessage = e.message || 'Failed to authenticate with server';
+
+                window.showErrorMessage(errorMessage);
+
+                errorEvent(errorMessage, e, this.id).then((event) => {
+                    this._analyticsClient.sendTrackEvent(event);
+                });
+            });
     }
 
     // --- Server Login Handler ---
