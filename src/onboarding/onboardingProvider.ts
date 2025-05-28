@@ -12,7 +12,7 @@ import {
     window,
 } from 'vscode';
 
-import { authenticateButtonEvent } from '../analytics';
+import { authenticateButtonEvent, viewScreenEvent } from '../analytics';
 import { type AnalyticsClient } from '../analytics-node-client/src/client.min';
 import { BasicAuthInfo, Product, ProductBitbucket, ProductJira, SiteInfo } from '../atlclients/authInfo';
 import { Commands } from '../commands';
@@ -194,6 +194,14 @@ class OnboardingProvider {
             default:
                 break;
         }
+    }
+
+    // --- Start Onboarding ---
+    start() {
+        viewScreenEvent(this.id).then((e) => {
+            this._analyticsClient.sendScreenEvent(e);
+        });
+        this.show();
     }
 
     // --- Show QuickPick ---
