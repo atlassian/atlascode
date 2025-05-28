@@ -107,7 +107,11 @@ class OnboardingProvider {
     // --- QuickInput Button Handler ---
     private _quickInputOnDidTriggerButton(e: QuickInputButton) {
         const step = this._quickInputStep;
+
         this._quickInputServer[step].validationMessage = undefined;
+
+        this.resetServerInputValues();
+
         if (e === QuickInputButtons.Back) {
             switch (step) {
                 case 0:
@@ -311,7 +315,8 @@ class OnboardingProvider {
                 this._quickInputStep = step;
 
                 if (product.key === ProductJira.key && env === 'Cloud') {
-                    this._quickInputServer[step].prompt = 'You can use an API token to connect to this site.';
+                    this._quickInputServer[step].prompt =
+                        'Use an API token to connect. Click the link button above to create one.';
                     this._quickInputServer[step].placeholder = 'Enter your API token';
 
                     this._quickInputServer[step].buttons = [
@@ -321,12 +326,6 @@ class OnboardingProvider {
                             tooltip: 'Create API tokens',
                         },
                     ];
-
-                    this._quickInputServer[step].onDidTriggerButton((e) => {
-                        if (e.tooltip === 'Create API tokens') {
-                            this.handleOpenCreateApiToken();
-                        }
-                    });
                 } else {
                     this._quickInputServer[step].prompt = 'Enter your password';
                     this._quickInputServer[step].placeholder = 'Enter your password';

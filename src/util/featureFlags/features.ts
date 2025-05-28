@@ -6,12 +6,17 @@ export const enum Features {
 
 export const enum Experiments {
     AtlascodeAA = 'atlascode_aa_experiment',
+    AtlascodeOnboardingExperiment = 'atlascode_quick_pick_onboarding_experiment',
 }
 
 export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
     [Experiments.AtlascodeAA]: {
         parameter: 'isEnabled2',
         defaultValue: 'Default',
+    },
+    [Experiments.AtlascodeOnboardingExperiment]: {
+        parameter: 'enableQuickPickOnboarding',
+        defaultValue: false,
     },
 };
 
