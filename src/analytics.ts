@@ -76,9 +76,18 @@ export async function featureChangeEvent(featureId: string, enabled: boolean): P
     return trackEvent(action, 'feature', { actionSubjectId: featureId });
 }
 
-export async function authenticatedEvent(site: DetailedSiteInfo, isOnboarding?: boolean): Promise<TrackEvent> {
+export async function authenticatedEvent(
+    site: DetailedSiteInfo,
+    isOnboarding?: boolean,
+    source?: string,
+): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'authenticated', 'atlascode', {
-        attributes: { machineId: Container.machineId, hostProduct: site.product.name, onboarding: isOnboarding },
+        attributes: {
+            machineId: Container.machineId,
+            hostProduct: site.product.name,
+            onboarding: isOnboarding,
+            authSource: source,
+        },
     });
 }
 
@@ -503,6 +512,7 @@ export async function authenticateButtonEvent(
     isCloud: boolean,
     isRemote: boolean,
     isWebUI: boolean,
+    isSkipped: boolean = false,
 ): Promise<UIEvent> {
     const e = {
         tenantIdType: null,
@@ -518,6 +528,7 @@ export async function authenticateButtonEvent(
                 hostProduct: site.product.name,
                 isRemote: isRemote,
                 isWebUI: isWebUI,
+                isSkipped: isSkipped,
             },
         },
     };

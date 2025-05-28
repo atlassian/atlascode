@@ -45,7 +45,12 @@ export class LoginManager {
     }
 
     // this is *only* called when login buttons are clicked by the user
-    public async userInitiatedOAuthLogin(site: SiteInfo, callback: string, isOnboarding?: boolean): Promise<void> {
+    public async userInitiatedOAuthLogin(
+        site: SiteInfo,
+        callback: string,
+        isOnboarding?: boolean,
+        source?: string,
+    ): Promise<void> {
         const provider = oauthProviderForSite(site);
         if (!provider) {
             throw new Error(`No provider found for ${site.host}`);
@@ -72,7 +77,13 @@ export class LoginManager {
         await this.saveDetails(provider, site, resp, false);
     }
 
-    private async saveDetails(provider: OAuthProvider, site: SiteInfo, resp: OAuthResponse, isOnboarding?: boolean) {
+    private async saveDetails(
+        provider: OAuthProvider,
+        site: SiteInfo,
+        resp: OAuthResponse,
+        isOnboarding?: boolean,
+        source?: string,
+    ) {
         try {
             const oauthInfo: OAuthInfo = {
                 access: resp.access,
@@ -95,7 +106,7 @@ export class LoginManager {
                 siteDetails.map(async (siteInfo) => {
                     await this._credentialManager.saveAuthInfo(siteInfo, oauthInfo);
                     this._siteManager.addSites([siteInfo]);
-                    authenticatedEvent(siteInfo, isOnboarding).then((e) => {
+                    authenticatedEvent(siteInfo, isOnboarding, source).then((e) => {
                         this._analyticsClient.sendTrackEvent(e);
                     });
                 }),
@@ -122,12 +133,17 @@ export class LoginManager {
         return [];
     }
 
-    public async userInitiatedServerLogin(site: SiteInfo, authInfo: AuthInfo, isOnboarding?: boolean): Promise<void> {
+    public async userInitiatedServerLogin(
+        site: SiteInfo,
+        authInfo: AuthInfo,
+        isOnboarding?: boolean,
+        source?: string,
+    ): Promise<void> {
         if (isBasicAuthInfo(authInfo) || isPATAuthInfo(authInfo)) {
             try {
                 const siteDetails = await this.saveDetailsForSite(site, authInfo);
 
-                authenticatedEvent(siteDetails, isOnboarding).then((e) => {
+                authenticatedEvent(siteDetails, isOnboarding, source).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
             } catch (err) {
