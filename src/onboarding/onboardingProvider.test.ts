@@ -74,12 +74,13 @@ jest.mock('../uriHandler/atlascodeUriHandler', () => ({
     AtlascodeUriHandler: jest.fn(),
 }));
 
-import { commands, env } from 'vscode';
+import { window } from 'vscode';
 
-import { ProductBitbucket, ProductJira } from '../atlclients/authInfo';
+import { ProductJira } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { EXTENSION_URL } from '../uriHandler/atlascodeUriHandler';
 import OnboardingProvider from './onboardingProvider';
+import { OnboardingStep } from './utils';
 
 jest.mock('../container', () => ({
     Container: {
@@ -99,7 +100,7 @@ jest.mock('../container', () => ({
 jest.mock('../analytics', () => ({
     authenticateButtonEvent: jest.fn(() => Promise.resolve({})),
     errorEvent: jest.fn(() => Promise.resolve({})),
-    viewScreenEvent: jest.fn(() => Promise.resolve({})),
+    viewScreenEvent: jest.fn((id) => Promise.resolve(id)),
 }));
 
 jest.mock('./utils', () => ({
@@ -118,7 +119,56 @@ jest.mock('./utils', () => ({
         createApiToken: { iconPath: 'api-token', tooltip: 'Create API Token' },
         back: { iconPath: 'back', tooltip: 'Back' },
     },
+    OnboardingStep: {
+        Jira: 1,
+        Bitbucket: 2,
+    },
+    OnboardingInputBoxStep: {
+        Domain: 0,
+        Username: 1,
+        Password: 2,
+    },
 }));
+
+jest.mock('./onboardingQuickPickManager', () => {
+    return {
+        default: jest.fn().mockImplementation(() => ({
+            show: jest.fn(),
+            hide: jest.fn(),
+            onDidAccept: jest.fn(),
+            onDidTriggerButton: jest.fn(),
+            items: [],
+            activeItems: [],
+            buttons: [],
+            step: 1,
+            totalSteps: 2,
+            ignoreFocusOut: true,
+            placeholder: '',
+            title: '',
+            setBusy: jest.fn(),
+        })),
+    };
+});
+
+jest.mock('./onboardingQuickInputManager', () => {
+    return {
+        default: jest.fn().mockImplementation(() => ({
+            start: jest.fn(),
+            show: jest.fn(),
+            hide: jest.fn(),
+            onDidAccept: jest.fn(),
+            onDidTriggerButton: jest.fn(),
+            items: [],
+            activeItems: [],
+            buttons: [],
+            step: 1,
+            totalSteps: 2,
+            ignoreFocusOut: true,
+            placeholder: '',
+            title: '',
+        })),
+    };
+});
 
 describe('OnboardingProvider', () => {
     let provider: OnboardingProvider;
@@ -128,105 +178,74 @@ describe('OnboardingProvider', () => {
         provider = new OnboardingProvider();
     });
 
-    it('should initialize with correct steps and items', () => {
-        expect(provider._quickPick.step).toBe(1);
-        expect(provider._jiraItems.length).toBeGreaterThan(0);
-        expect(provider._bitbucketItems.length).toBeGreaterThan(0);
+    it('should initialize with correct objects', () => {
+        expect(provider).toBeDefined();
+        expect(provider._analyticsClient).toBeDefined();
+        expect(provider._jiraQuickPickManager).toBeDefined();
+        expect(provider._bitbucketQuickPickManager).toBeDefined();
+        expect(provider._quickInputManager).toBeDefined();
     });
 
-    it('should show Jira items on step 1', () => {
-        provider._quickPick.step = 1;
-        provider.show();
-        expect(provider._quickPick.items[0].onboardingId).toBe('onboarding:jira-cloud');
+    it('should show Jira onboarding quick pick on start', () => {
+        provider.start();
+
+        expect(Container.focus).toHaveBeenCalled();
+        expect(provider._jiraQuickPickManager.show).toHaveBeenCalled();
     });
 
-    it('should show Bitbucket items on step 2', () => {
-        provider._quickPick.step = 2;
-        provider.show();
-        expect(provider._quickPick.items[0].onboardingId).toBe('onboarding:bitbucket-cloud');
+    it('should handle Jira quick pick accept for cloud', async () => {
+        const item = { onboardingId: 'onboarding:jira-cloud' };
+        const showSpy = jest.spyOn(provider, '_handleCloud');
+
+        await provider._jiraQuickPickOnDidAccept(item);
+
+        expect(showSpy).toHaveBeenCalledWith(ProductJira);
     });
 
-    it('should call commands on handleNext for step 1', () => {
-        provider._quickPick.step = 1;
-        provider._handleNext();
-        expect(commands.executeCommand).toHaveBeenCalledWith(
-            expect.stringContaining('RefreshAssignedWorkItemsExplorer'),
-        );
+    it('should handle Jira quick pick accept for server', async () => {
+        const item = { onboardingId: 'onboarding:jira-server' };
+
+        await provider._jiraQuickPickOnDidAccept(item);
+
+        expect(provider._quickInputManager.start).toHaveBeenCalledWith(ProductJira, 'Server');
     });
 
-    it('should call commands on handleNext for step 2', () => {
-        provider._quickPick.step = 2;
-        provider._handleNext();
-        expect(commands.executeCommand).toHaveBeenCalledWith(expect.stringContaining('BitbucketRefreshPullRequests'));
+    it('should handle Jira quick pick accept for skip', async () => {
+        const item = { onboardingId: 'onboarding:jira-skip' };
+        const skipSpy = jest.spyOn(provider, '_handleSkip');
+        await provider._jiraQuickPickOnDidAccept(item);
+
+        expect(skipSpy).toHaveBeenCalledWith(ProductJira);
     });
 
-    it('should open external link for API token', () => {
-        provider._handleOpenCreateApiToken();
-        expect(env.openExternal).toHaveBeenCalled();
-    });
+    it('should envoke userInitiatedOAuthLogin on Jira cloud onboarding', async () => {
+        const item = { onboardingId: 'onboarding:jira-cloud' };
+        const siteInfo = { product: ProductJira, host: 'atlassian.net' };
+        const nextSpy = jest.spyOn(provider, '_handleNext');
+        await provider._jiraQuickPickOnDidAccept(item);
 
-    it('should reset server input values', () => {
-        provider._quickInputServer[0].value = 'foo';
-        provider._quickInputServer[1].value = 'bar';
-        provider._quickInputServer[2].value = 'baz';
-        provider._resetServerInputValues();
-        expect(provider._quickInputServer[0].value).toBe('');
-        expect(provider._quickInputServer[1].value).toBe('');
-        expect(provider._quickInputServer[2].value).toBe('');
-    });
-
-    it('should detect remote and web UI', () => {
-        expect(provider._getIsRemote()).toBe(false);
-        expect(provider._getIsWebUi()).toBe(false);
-    });
-
-    it('should call Oauth login on cloud Jira selection', async () => {
-        const site = { host: 'atlassian.net', product: ProductJira };
-        provider._quickPick.step = 1;
-        provider._quickPick.activeItems[0] = provider._jiraItems[0]; // Select Jira Cloud
-        await provider._quickPickOnDidAccept();
         expect(Container.loginManager.userInitiatedOAuthLogin).toHaveBeenCalledWith(
-            site,
+            siteInfo,
             EXTENSION_URL,
             true,
             'atlascodeOnboardingQuickPick',
         );
+        expect(nextSpy).toHaveBeenCalledWith(OnboardingStep.Jira);
     });
 
-    it('should call Oauth login on cloud Bitbucket selection', async () => {
-        const site = { host: 'bitbucket.org', product: ProductBitbucket };
-        provider._quickPick.step = 2;
-        provider._quickPick.activeItems[0] = provider._bitbucketItems[0]; // Select BB Cloud
-        await provider._quickPickOnDidAccept();
-        expect(Container.loginManager.userInitiatedOAuthLogin).toHaveBeenCalledWith(
-            site,
-            EXTENSION_URL,
-            true,
-            'atlascodeOnboardingQuickPick',
-        );
-    });
+    it('should handle error during Jira cloud onboarding', async () => {
+        const item = { onboardingId: 'onboarding:jira-cloud' };
+        const error = new Error('Test error');
+        jest.spyOn(Container.loginManager, 'userInitiatedOAuthLogin').mockRejectedValue(error);
 
-    it('should call server login on server selection', async () => {
-        provider._quickInputServer[0].value = 'https://jira.mydomain.com';
-        provider._quickInputServer[1].value = 'username';
-        provider._quickInputServer[2].value = 'password';
-        provider._quickInputServer[2].product = ProductJira;
-        provider._quickInputServer[2].env = 'Server';
+        const returnMessage = 'Failed to authenticate with Jira Cloud: Test error';
 
-        await provider._onDidInputAccept(2);
+        const errorSpy = jest.spyOn(provider, '_handleError');
 
-        expect(Container.loginManager.userInitiatedServerLogin).toHaveBeenCalledWith(
-            {
-                host: 'jira.mydomain.com',
-                protocol: 'https:',
-                product: ProductJira,
-            },
-            {
-                username: 'username',
-                password: 'password',
-            },
-            true,
-            'atlascodeOnboardingQuickPick',
-        );
+        provider._jiraQuickPickOnDidAccept(item);
+
+        await new Promise(process.nextTick);
+        expect(errorSpy).toHaveBeenCalledWith(returnMessage, Error(returnMessage));
+        expect(window.showErrorMessage).toHaveBeenCalledWith(returnMessage);
     });
 });

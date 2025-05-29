@@ -1,4 +1,4 @@
-import { InputBox, QuickInputButton, QuickPickItem, ThemeIcon } from 'vscode';
+import { QuickInputButton, QuickPickItem, ThemeIcon } from 'vscode';
 
 import { Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 
@@ -67,10 +67,6 @@ export interface OnboardingQuickPickItem extends QuickPickItem {
     onboardingId: string;
 }
 
-export interface OnboardingInputBox extends InputBox {
-    product?: Product;
-    env?: string;
-}
 export const OnboardingButtons: Record<string, QuickInputButton> = {
     settings: {
         iconPath: new ThemeIcon('gear'),
@@ -85,4 +81,10 @@ export const OnboardingButtons: Record<string, QuickInputButton> = {
 export enum OnboardingStep {
     Jira = 1,
     Bitbucket = 2,
+}
+
+export enum OnboardingInputBoxStep {
+    Domain = 0,
+    Username = 1,
+    Password = 2,
 }
