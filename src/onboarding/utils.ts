@@ -51,16 +51,20 @@ export const bitbucketOnboardingItems = [
 ];
 
 export const onboardingHelperText = (product: Product, env: string) => {
-    if (product.key === ProductJira.key) {
-        const site = env === 'Cloud' ? 'cloud' : 'server';
-        const baseUrl = env === 'Cloud' ? 'https://jira.atlassian.net' : 'https://jira.mydomain.com';
-        return `You can enter a ${site} url like ${baseUrl}\n`;
-    } else if (product.key === ProductBitbucket.key) {
-        const site = env === 'Cloud' ? 'cloud' : 'server';
-        const baseUrl = env === 'Cloud' ? 'https://bitbucket.org' : 'https://bitbucket.mydomain.com';
-        return `You can enter a ${site} url like ${baseUrl}\n`;
+    if (product !== ProductJira && product !== ProductBitbucket) {
+        return '';
     }
-    return '';
+
+    const site = env === 'Cloud' ? 'cloud' : 'server';
+    let baseUrl = '';
+
+    if (product.key === ProductJira.key) {
+        baseUrl = env === 'Cloud' ? 'https://jira.atlassian.net' : 'https://jira.mydomain.com';
+    } else if (product.key === ProductBitbucket.key) {
+        baseUrl = env === 'Cloud' ? 'https://bitbucket.org' : 'https://bitbucket.mydomain.com';
+    }
+
+    return `You can enter a ${site} url like ${baseUrl}\n`;
 };
 
 export interface OnboardingQuickPickItem extends QuickPickItem {
@@ -73,7 +77,7 @@ export const OnboardingButtons: Record<string, QuickInputButton> = {
         tooltip: 'Configure in settings',
     },
     createApiToken: {
-        iconPath: new ThemeIcon('link-external'),
+        iconPath: new ThemeIcon('key'),
         tooltip: 'Create API tokens',
     },
 };

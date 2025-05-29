@@ -104,29 +104,9 @@ jest.mock('../analytics', () => ({
 }));
 
 jest.mock('./utils', () => ({
-    jiraOnboardingItems: [
-        { label: 'Jira Cloud', onboardingId: 'onboarding:jira-cloud' },
-        { label: 'Jira Server', onboardingId: 'onboarding:jira-server' },
-        { label: 'Skip', onboardingId: 'onboarding:jira-skip' },
-    ],
-    bitbucketOnboardingItems: [
-        { label: 'Bitbucket Cloud', onboardingId: 'onboarding:bitbucket-cloud' },
-        { label: 'Bitbucket Server', onboardingId: 'onboarding:bitbucket-server' },
-        { label: 'Skip', onboardingId: 'onboarding:bitbucket-skip' },
-    ],
-    OnboardingButtons: {
-        settings: { iconPath: 'settings', tooltip: 'Settings' },
-        createApiToken: { iconPath: 'api-token', tooltip: 'Create API Token' },
-        back: { iconPath: 'back', tooltip: 'Back' },
-    },
     OnboardingStep: {
         Jira: 1,
         Bitbucket: 2,
-    },
-    OnboardingInputBoxStep: {
-        Domain: 0,
-        Username: 1,
-        Password: 2,
     },
 }));
 

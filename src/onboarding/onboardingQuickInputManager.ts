@@ -80,9 +80,9 @@ class OnboardingQuickInputManager {
             const mainStep = this._state.product === ProductJira ? OnboardingStep.Jira : OnboardingStep.Bitbucket;
             this._resetServerInputValues();
             this._handleNext(mainStep);
+        } else {
+            this._handleServerLoginSteps(step + 1);
         }
-
-        this._handleServerLoginSteps(step + 1);
     }
 
     private _back(step: OnboardingInputBoxStep) {
@@ -93,7 +93,7 @@ class OnboardingQuickInputManager {
             const mainStep = this._state.product === ProductJira ? OnboardingStep.Jira : OnboardingStep.Bitbucket;
             this._handleBack(mainStep);
         } else {
-            this._show(step - 1);
+            this._handleServerLoginSteps(step - 1);
         }
     }
 
@@ -210,9 +210,9 @@ class OnboardingQuickInputManager {
 
                 // Jira cloud remote login
                 if (product === ProductJira && env === 'Cloud') {
-                    this._quickInput[step].prompt =
-                        'Use an API token to connect. Click the link button above to create one.';
-                    this._quickInput[step].placeholder = 'Enter your API token';
+                    this._quickInput[step].prompt = 'Use an API token to connect.';
+                    this._quickInput[step].placeholder =
+                        'Enter your API token. Click the key button above to create one.';
                     this._quickInput[step].buttons = [QuickInputButtons.Back, OnboardingButtons.createApiToken];
                 } else {
                     this._quickInput[step].prompt = 'Enter your password';

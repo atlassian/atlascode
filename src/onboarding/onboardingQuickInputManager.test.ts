@@ -162,12 +162,12 @@ describe('OnboardingQuickInputManager', () => {
 
         acceptHandler();
 
-        expect(manager._quickInput[2].placeholder).toBe('Enter your API token');
+        expect(manager._quickInput[2].placeholder).toBe(
+            'Enter your API token. Click the key button above to create one.',
+        );
         expect(manager._quickInput[2].title).toBe('Enter your Jira Cloud password');
         expect(manager._quickInput[2].buttons).toContain(OnboardingButtons.createApiToken);
-        expect(manager._quickInput[2].prompt).toBe(
-            'Use an API token to connect. Click the link button above to create one.',
-        );
+        expect(manager._quickInput[2].prompt).toBe('Use an API token to connect.');
         expect(manager._quickInput[2].password).toBe(true);
         expect(manager._quickInput[2].show).toHaveBeenCalled();
     });

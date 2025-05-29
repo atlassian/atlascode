@@ -50,13 +50,15 @@ class OnboardingQuickPickManager {
             case ProductJira: {
                 this._quickPick.step = OnboardingStep.Jira;
                 this._quickPick.buttons = [OnboardingButtons.settings];
-                this._quickPick.placeholder = 'Select your Jira site type';
+                this._quickPick.placeholder =
+                    'Select your Jira site type. For more advanced options, click on the gear button.';
                 break;
             }
             case ProductBitbucket: {
                 this._quickPick.step = OnboardingStep.Bitbucket;
                 this._quickPick.buttons = [QuickInputButtons.Back, OnboardingButtons.settings];
-                this._quickPick.placeholder = 'Select your Bitbucket site type';
+                this._quickPick.placeholder =
+                    'Select your Bitbucket site type. For more advanced options, click on the gear button.';
                 break;
             }
         }

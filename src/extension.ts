@@ -35,7 +35,7 @@ export async function activate(context: ExtensionContext) {
 
     const atlascode = extensions.getExtension(ExtensionId)!;
     const atlascodeVersion = atlascode.packageJSON.version;
-    const previousVersion = undefined;
+    const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
 
     registerResources(context);
 
