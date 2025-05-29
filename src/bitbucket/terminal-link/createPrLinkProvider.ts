@@ -2,7 +2,6 @@ import {
     CancellationToken,
     commands,
     ConfigurationChangeEvent,
-    ConfigurationTarget,
     Disposable,
     env,
     ProviderResult,
@@ -149,6 +148,7 @@ export class BitbucketCloudPullRequestLinkProvider extends Disposable implements
         return env.openExternal(Uri.parse(url));
     }
 
-    private disable = () =>
-        configuration.update('bitbucket.showTerminalLinkPanel', false, ConfigurationTarget.Workspace);
+    private disable() {
+        configuration.updateEffective('bitbucket.showTerminalLinkPanel', false, null, true);
+    }
 }
