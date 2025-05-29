@@ -3,38 +3,6 @@
 jest.mock('vscode', () => {
     return {
         window: {
-            createQuickPick: jest.fn(() => ({
-                show: jest.fn(),
-                hide: jest.fn(),
-                onDidTriggerButton: jest.fn(),
-                onDidAccept: jest.fn(),
-                items: [],
-                activeItems: [],
-                buttons: [],
-                step: 1,
-                totalSteps: 2,
-                ignoreFocusOut: true,
-                placeholder: '',
-                title: '',
-                busy: false,
-            })),
-            createInputBox: jest.fn(() => ({
-                show: jest.fn(),
-                hide: jest.fn(),
-                onDidTriggerButton: jest.fn(),
-                onDidAccept: jest.fn(),
-                value: '',
-                prompt: '',
-                placeholder: '',
-                title: '',
-                busy: false,
-                password: false,
-                validationMessage: undefined,
-                buttons: [{ iconPath: 'back', tooltip: 'Back' }],
-                step: 1,
-                totalSteps: 3,
-                ignoreFocusOut: true,
-            })),
             showErrorMessage: jest.fn(),
         },
         commands: {
@@ -108,6 +76,7 @@ jest.mock('./utils', () => ({
         Jira: 1,
         Bitbucket: 2,
     },
+    onboardingQuickPickItems: jest.fn(),
 }));
 
 jest.mock('./onboardingQuickPickManager', () => {
@@ -115,16 +84,6 @@ jest.mock('./onboardingQuickPickManager', () => {
         default: jest.fn().mockImplementation(() => ({
             show: jest.fn(),
             hide: jest.fn(),
-            onDidAccept: jest.fn(),
-            onDidTriggerButton: jest.fn(),
-            items: [],
-            activeItems: [],
-            buttons: [],
-            step: 1,
-            totalSteps: 2,
-            ignoreFocusOut: true,
-            placeholder: '',
-            title: '',
             setBusy: jest.fn(),
         })),
     };
@@ -134,18 +93,6 @@ jest.mock('./onboardingQuickInputManager', () => {
     return {
         default: jest.fn().mockImplementation(() => ({
             start: jest.fn(),
-            show: jest.fn(),
-            hide: jest.fn(),
-            onDidAccept: jest.fn(),
-            onDidTriggerButton: jest.fn(),
-            items: [],
-            activeItems: [],
-            buttons: [],
-            step: 1,
-            totalSteps: 2,
-            ignoreFocusOut: true,
-            placeholder: '',
-            title: '',
         })),
     };
 });
@@ -174,35 +121,35 @@ describe('OnboardingProvider', () => {
     });
 
     it('should handle Jira quick pick accept for cloud', async () => {
-        const item = { onboardingId: 'onboarding:jira-cloud' };
+        const item = { onboardingId: 'onboarding:cloud' };
         const showSpy = jest.spyOn(provider, '_handleCloud');
 
-        await provider._jiraQuickPickOnDidAccept(item);
+        await provider._quickPickOnDidAccept(item, ProductJira);
 
         expect(showSpy).toHaveBeenCalledWith(ProductJira);
     });
 
     it('should handle Jira quick pick accept for server', async () => {
-        const item = { onboardingId: 'onboarding:jira-server' };
+        const item = { onboardingId: 'onboarding:server' };
 
-        await provider._jiraQuickPickOnDidAccept(item);
+        await provider._quickPickOnDidAccept(item, ProductJira);
 
         expect(provider._quickInputManager.start).toHaveBeenCalledWith(ProductJira, 'Server');
     });
 
     it('should handle Jira quick pick accept for skip', async () => {
-        const item = { onboardingId: 'onboarding:jira-skip' };
+        const item = { onboardingId: 'onboarding:skip' };
         const skipSpy = jest.spyOn(provider, '_handleSkip');
-        await provider._jiraQuickPickOnDidAccept(item);
+        await provider._quickPickOnDidAccept(item, ProductJira);
 
         expect(skipSpy).toHaveBeenCalledWith(ProductJira);
     });
 
     it('should envoke userInitiatedOAuthLogin on Jira cloud onboarding', async () => {
-        const item = { onboardingId: 'onboarding:jira-cloud' };
+        const item = { onboardingId: 'onboarding:cloud' };
         const siteInfo = { product: ProductJira, host: 'atlassian.net' };
         const nextSpy = jest.spyOn(provider, '_handleNext');
-        await provider._jiraQuickPickOnDidAccept(item);
+        await provider._quickPickOnDidAccept(item, ProductJira);
 
         expect(Container.loginManager.userInitiatedOAuthLogin).toHaveBeenCalledWith(
             siteInfo,
@@ -214,7 +161,7 @@ describe('OnboardingProvider', () => {
     });
 
     it('should handle error during Jira cloud onboarding', async () => {
-        const item = { onboardingId: 'onboarding:jira-cloud' };
+        const item = { onboardingId: 'onboarding:cloud' };
         const error = new Error('Test error');
         jest.spyOn(Container.loginManager, 'userInitiatedOAuthLogin').mockRejectedValue(error);
 
@@ -222,7 +169,7 @@ describe('OnboardingProvider', () => {
 
         const errorSpy = jest.spyOn(provider, '_handleError');
 
-        provider._jiraQuickPickOnDidAccept(item);
+        provider._quickPickOnDidAccept(item, ProductJira);
 
         await new Promise(process.nextTick);
         expect(errorSpy).toHaveBeenCalledWith(returnMessage, Error(returnMessage));

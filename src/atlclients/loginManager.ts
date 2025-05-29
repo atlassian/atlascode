@@ -57,7 +57,7 @@ export class LoginManager {
         }
 
         const resp = await this._dancer.doDance(provider, site, callback);
-        await this.saveDetails(provider, site, resp, isOnboarding);
+        await this.saveDetails(provider, site, resp, isOnboarding, source);
     }
 
     public async initRemoteAuth(state: Object) {

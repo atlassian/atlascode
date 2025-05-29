@@ -24,25 +24,18 @@ jest.mock('vscode', () => {
     };
 });
 
-const mockInputBox = (i: number) => {
-    return {
-        value: '',
-        validationMessage: undefined,
-        prompt: '',
-        placeholder: '',
-        title: '',
-        password: false,
-        totalSteps: 3,
-        step: i,
-        ignoreFocusOut: true,
-        buttons: [],
-        busy: false,
-        show: jest.fn(),
-        hide: jest.fn(),
-        onDidTriggerButton: jest.fn(),
-        onDidAccept: jest.fn(),
-    };
-};
+const mockInputBox = (i: number) => ({
+    value: '',
+    validationMessage: undefined,
+    placeholder: '',
+    title: '',
+    step: i,
+    password: false,
+    show: jest.fn(),
+    hide: jest.fn(),
+    onDidTriggerButton: jest.fn(),
+    onDidAccept: jest.fn(),
+});
 
 describe('OnboardingQuickInputManager', () => {
     let handleBack: jest.Mock;
@@ -110,7 +103,6 @@ describe('OnboardingQuickInputManager', () => {
     });
 
     it('should validate username input and show error if empty', async () => {
-        let acceptHandler: any;
         const manager = new OnboardingQuickInputManager(handleBack, handleNext, handleError, handleServerLogin);
         acceptHandler = (manager._quickInput[0].onDidAccept as jest.Mock).mock.calls[0][0];
 

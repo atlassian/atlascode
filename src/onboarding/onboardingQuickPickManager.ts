@@ -8,13 +8,13 @@ class OnboardingQuickPickManager {
     private _quickPick: QuickPick<OnboardingQuickPickItem>;
     private _items: OnboardingQuickPickItem[];
     private _product: Product;
-    private _onAccept: (item: OnboardingQuickPickItem) => void;
+    private _onAccept: (item: OnboardingQuickPickItem, product: Product) => void;
     private _onBack?: (step: OnboardingStep) => void;
 
     constructor(
         _items: OnboardingQuickPickItem[],
         _product: Product,
-        _onAccept: (item: OnboardingQuickPickItem) => void,
+        _onAccept: (item: OnboardingQuickPickItem, product: Product) => void,
         _onBack?: (step: OnboardingStep) => void,
     ) {
         this._items = _items;
@@ -32,7 +32,7 @@ class OnboardingQuickPickManager {
                 return;
             }
             const selected = this._quickPick.activeItems[0];
-            this._onAccept(selected);
+            this._onAccept(selected, this._product);
         });
         this._quickPick.onDidTriggerButton(this._quickPickOnDidTriggerButton.bind(this));
 

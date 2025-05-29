@@ -103,7 +103,7 @@ describe('OnboardingQuickPickManager', () => {
         quickPickMock.activeItems = [items[1]];
         acceptHandler();
 
-        expect(onAccept).toHaveBeenCalledWith(items[1]);
+        expect(onAccept).toHaveBeenCalledWith(items[1], ProductJira);
     });
 
     it('should not call onAccept if no active items', () => {

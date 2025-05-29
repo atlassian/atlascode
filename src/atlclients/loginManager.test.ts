@@ -115,7 +115,7 @@ describe('LoginManager', () => {
             await loginManager.userInitiatedOAuthLogin(site, 'callback');
 
             expect(oauthDancer.doDance).toHaveBeenCalledWith(provider, site, 'callback');
-            expect(loginManager['saveDetails']).toHaveBeenCalledWith(provider, site, resp, undefined);
+            expect(loginManager['saveDetails']).toHaveBeenCalledWith(provider, site, resp, undefined, undefined);
         });
     });
 

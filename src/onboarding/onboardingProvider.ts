@@ -8,13 +8,7 @@ import { Container } from '../container';
 import { EXTENSION_URL } from '../uriHandler/atlascodeUriHandler';
 import OnboardingQuickInputManager from './onboardingQuickInputManager';
 import OnboardingQuickPickManager from './onboardingQuickPickManager';
-import {
-    bitbucketOnboardingItems,
-    jiraOnboardingItems,
-    OnboardingInputBoxStep,
-    OnboardingQuickPickItem,
-    OnboardingStep,
-} from './utils';
+import { OnboardingInputBoxStep, OnboardingQuickPickItem, onboardingQuickPickItems, OnboardingStep } from './utils';
 
 class OnboardingProvider {
     private id = 'atlascodeOnboardingQuickPick';
@@ -37,21 +31,21 @@ class OnboardingProvider {
         );
 
         this._jiraQuickPickManager = new OnboardingQuickPickManager(
-            jiraOnboardingItems,
+            onboardingQuickPickItems(ProductJira),
             ProductJira,
-            this._jiraQuickPickOnDidAccept.bind(this),
+            this._quickPickOnDidAccept.bind(this),
         );
 
         this._bitbucketQuickPickManager = new OnboardingQuickPickManager(
-            bitbucketOnboardingItems,
+            onboardingQuickPickItems(ProductBitbucket),
             ProductBitbucket,
-            this._bitbucketQuickPickOnDidAccept.bind(this),
+            this._quickPickOnDidAccept.bind(this, ProductBitbucket),
             this._handleBack.bind(this),
         );
     }
 
-    // --- Jira QuickPick Accept Handler ---
-    private async _jiraQuickPickOnDidAccept(item: OnboardingQuickPickItem) {
+    // --- Handle Quick Pick Accept ---
+    private async _quickPickOnDidAccept(item: OnboardingQuickPickItem, product: Product) {
         const onboardingId = item.onboardingId;
 
         if (!onboardingId) {
@@ -59,43 +53,15 @@ class OnboardingProvider {
         }
 
         switch (onboardingId) {
-            case 'onboarding:jira-cloud':
-                this._getIsRemote()
-                    ? this._quickInputManager.start(ProductJira, 'Cloud')
-                    : this._handleCloud(ProductJira);
+            case 'onboarding:cloud':
+                this._getIsRemote() ? this._quickInputManager.start(product, 'Cloud') : this._handleCloud(ProductJira);
 
                 break;
-            case 'onboarding:jira-server':
-                this._quickInputManager.start(ProductJira, 'Server');
+            case 'onboarding:server':
+                this._quickInputManager.start(product, 'Server');
                 break;
-            case 'onboarding:jira-skip':
-                this._handleSkip(ProductJira);
-                break;
-            default:
-                break;
-        }
-    }
-
-    // --- Bitbucket QuickPick Accept Handler ---
-    private async _bitbucketQuickPickOnDidAccept(item: OnboardingQuickPickItem) {
-        const onboardingId = item.onboardingId;
-
-        if (!onboardingId) {
-            return;
-        }
-
-        switch (onboardingId) {
-            case 'onboarding:bitbucket-cloud':
-                this._handleCloud(ProductBitbucket);
-
-                break;
-            case 'onboarding:bitbucket-server':
-                this._quickInputManager.start(ProductBitbucket, 'Server');
-
-                break;
-            case 'onboarding:bitbucket-skip':
-                this._handleSkip(ProductBitbucket);
-
+            case 'onboarding:skip':
+                this._handleSkip(product);
                 break;
             default:
                 break;
@@ -114,19 +80,14 @@ class OnboardingProvider {
             commands.executeCommand(Commands.BitbucketRefreshPullRequests);
 
             commands.executeCommand(Commands.RefreshPipelines);
+            return;
         } else {
             return;
         }
-
+        Container.focus();
         this.hideQuickPick(step);
 
-        if (step === OnboardingStep.Bitbucket) {
-            // If we are on Bitbucket step, we can end the onboarding
-            return;
-        }
-
         this.show(step + 1);
-        Container.focus();
     }
 
     // --- Start Onboarding ---
