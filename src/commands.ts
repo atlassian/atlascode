@@ -21,6 +21,7 @@ import { HelpTreeViewId } from './constants';
 import { Container } from './container';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
+import { toggleDiffNormalize } from './normalize';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
@@ -52,6 +53,7 @@ export enum Commands {
     BitbucketMarkTaskComplete = 'atlascode.bb.markTaskComplete',
     BitbucketMarkTaskIncomplete = 'atlascode.bb.markTaskIncomplete',
     BitbucketToggleCommentsVisibility = 'atlascode.bb.toggleCommentsVisibility',
+    BitbucketToggleDiffNormalize = 'atlascode.bb.togglediffNormalize',
     EditThisFile = 'atlascode.bb.editThisFile',
     CreateIssue = 'atlascode.jira.createIssue',
     RefreshAssignedWorkItemsExplorer = 'atlascode.jira.refreshAssignedWorkItemsExplorer',
@@ -208,6 +210,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             diffArgs[0]();
             commands.executeCommand('vscode.diff', ...diffArgs.slice(1));
         }),
+        commands.registerCommand(Commands.BitbucketToggleDiffNormalize, toggleDiffNormalize),
         commands.registerCommand(Commands.RerunPipeline, (node: PipelineNode) => {
             rerunPipeline(node.pipeline);
         }),
