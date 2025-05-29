@@ -70,7 +70,7 @@ describe('OnboardingQuickPickManager', () => {
         const manager = new OnboardingQuickPickManager(items, ProductJira, onAccept, onBack);
         manager.show();
 
-        expect(quickPickMock.title).toBe('Welcome to Atlascode');
+        expect(quickPickMock.title).toBe('Setup Jira & Bitbucket');
         expect(quickPickMock.ignoreFocusOut).toBe(true);
         expect(quickPickMock.items).toBe(items);
         expect(quickPickMock.totalSteps).toBe(2);

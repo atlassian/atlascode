@@ -39,7 +39,7 @@ class OnboardingProvider {
         this._bitbucketQuickPickManager = new OnboardingQuickPickManager(
             onboardingQuickPickItems(ProductBitbucket),
             ProductBitbucket,
-            this._quickPickOnDidAccept.bind(this, ProductBitbucket),
+            this._quickPickOnDidAccept.bind(this),
             this._handleBack.bind(this),
         );
     }

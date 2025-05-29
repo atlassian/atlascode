@@ -19,7 +19,7 @@ export const onboardingQuickPickItems = (product: Product) => {
             onboardingId: 'onboarding:server',
         },
         {
-            iconPath: new ThemeIcon('chevron-right'),
+            iconPath: new ThemeIcon('debug-step-over'),
             label: `I don't have ${product.name}`,
             description: 'Skip this step',
             detail: `You can always set up a new ${product.name} account later.`,

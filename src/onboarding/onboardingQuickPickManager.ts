@@ -40,7 +40,7 @@ class OnboardingQuickPickManager {
     }
 
     private _resetItems() {
-        this._quickPick.title = 'Welcome to Atlascode';
+        this._quickPick.title = 'Setup Jira & Bitbucket';
         this._quickPick.ignoreFocusOut = true;
         this._quickPick.items = this._items;
         this._quickPick.totalSteps = 2;
