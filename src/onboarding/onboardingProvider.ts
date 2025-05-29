@@ -82,6 +82,7 @@ class OnboardingProvider {
             commands.executeCommand(Commands.BitbucketRefreshPullRequests);
 
             commands.executeCommand(Commands.RefreshPipelines);
+            this.hideQuickPick(step);
             return;
         } else {
             return;
