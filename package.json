@@ -232,6 +232,11 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.jira.transitionIssue",
+                "title": "Transition Issue...",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.jira.assignIssueToMe",
                 "title": "Assign Jira Issue to Me",
                 "category": "Atlassian"
@@ -608,6 +613,11 @@
                     "group": "jiraContextMenuGroup1"
                 },
                 {
+                    "command": "atlascode.jira.transitionIssue",
+                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
+                    "group": "jiraContextMenuGroup3"
+                },
+                {
                     "command": "atlascode.jira.createIssue",
                     "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup2"
@@ -745,6 +755,10 @@
                 },
                 {
                     "command": "atlascode.bb.rerunPipeline",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.transitionIssue",
                     "when": "false"
                 },
                 {
