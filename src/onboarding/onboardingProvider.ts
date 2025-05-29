@@ -54,7 +54,9 @@ class OnboardingProvider {
 
         switch (onboardingId) {
             case 'onboarding:cloud':
-                this._getIsRemote() ? this._quickInputManager.start(product, 'Cloud') : this._handleCloud(ProductJira);
+                this._getIsRemote() && product === ProductJira
+                    ? this._quickInputManager.start(product, 'Cloud')
+                    : this._handleCloud(product);
 
                 break;
             case 'onboarding:server':
