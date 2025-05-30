@@ -201,9 +201,12 @@ export async function issueCreatedEvent(site: DetailedSiteInfo, issueKey: string
 export async function issueTransitionedEvent(
     site: DetailedSiteInfo,
     issueKey: string,
-    method?: string,
+    source?: string,
 ): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'transitioned', 'issue', { actionSubjectId: issueKey, method });
+    return instanceTrackEvent(site, 'transitioned', 'issue', {
+        actionSubjectId: issueKey,
+        ...(source && { source }), // Only include source if it is defined
+    });
 }
 
 export async function issueUrlCopiedEvent(): Promise<TrackEvent> {

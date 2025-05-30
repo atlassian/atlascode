@@ -22,6 +22,7 @@ import { Container } from './container';
 import { transitionIssue } from './jira/transitionIssue';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
+import { Logger } from './logger';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
@@ -127,6 +128,11 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         ),
         commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
         commands.registerCommand(Commands.TransitionIssue, async (issueNode: IssueNode) => {
+            if (!isMinimalIssue(issueNode.issue)) {
+                // Should be unreachable, but let's fail gracefully
+                return;
+            }
+
             const issue = issueNode.issue as MinimalIssue<DetailedSiteInfo>;
             Container.analyticsApi.fireViewScreenEvent('atlascodeTransitionQuickPick', issue.siteDetails, ProductJira);
             window
@@ -147,10 +153,11 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                     const target = issue.transitions.find((x) => x.name === transition.label);
                     if (!target) {
                         window.showErrorMessage(`Transition ${transition.label} not found`);
+                        Logger.error(new Error('Transition not found'));
                         return;
                     }
 
-                    await transitionIssue(issue, target, 'quickPick');
+                    await transitionIssue(issue, target, { source: 'quickPick' });
                 });
         }),
         commands.registerCommand(
