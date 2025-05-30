@@ -311,7 +311,7 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
         });
 
         if (data.issue && data.transition) {
-            await transitionIssue(data.issue, data.transition);
+            await transitionIssue(data.issue, data.transition, { source: 'createPullRequest' });
         }
 
         commands.executeCommand(Commands.BitbucketShowPullRequestDetails, pr);

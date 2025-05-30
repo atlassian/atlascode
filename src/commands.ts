@@ -196,6 +196,11 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         ),
         commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
         commands.registerCommand(Commands.TransitionIssue, async (issueNode: IssueNode) => {
+            if (!isMinimalIssue(issueNode.issue)) {
+                // Should be unreachable, but let's fail gracefully
+                return;
+            }
+
             const issue = issueNode.issue as MinimalIssue<DetailedSiteInfo>;
             Container.analyticsApi.fireViewScreenEvent('atlascodeTransitionQuickPick', issue.siteDetails, ProductJira);
             window
@@ -219,7 +224,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                         return;
                     }
 
-                    await transitionIssue(issue, target, 'quickPick');
+                    await transitionIssue(issue, target, { source: 'quickPick' });
                 });
         }),
         commands.registerCommand(
