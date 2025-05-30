@@ -15,10 +15,12 @@ function modulesPattern(...args: string[]): string[] | undefined {
 export const baseConfigFor = (project: string, testExtension: string): Config => ({
     displayName: project,
     roots: ['<rootDir>'],
+    modulePaths: ['<rootDir>'],
 
     moduleNameMapper: {
-        "^testsutil(/.+)?": "<rootDir>/testsutil$1"
-    },    
+        '^src(.*)$': '<rootDir>/src$1',
+        '^testsutil(/.+)?': '<rootDir>/testsutil$1',
+    },
 
     testMatch: [`**/*.test.${testExtension}`],
     testPathIgnorePatterns: ['/node_modules/', '/e2e/'],
@@ -27,7 +29,7 @@ export const baseConfigFor = (project: string, testExtension: string): Config =>
         '^.+\\.(js|ts|tsx)$': [
             'ts-jest',
             {
-                tsconfig: project === 'react' ? ({ esModuleInterop: true, isolatedModules: true }) : false,
+                tsconfig: project === 'react' ? { esModuleInterop: true, isolatedModules: true } : false,
             },
         ],
         '^.+\\.(css|styl|less|sass|scss)$': 'jest-css-modules-transform',
@@ -55,17 +57,20 @@ export const baseConfigFor = (project: string, testExtension: string): Config =>
     coverageReporters: ['json', 'lcov', 'text-summary', 'clover'],
 
     coverageThreshold: {
-        global: testExtension === 'ts' ? {
-            statements: 28,
-            branches: 14,
-            functions: 22,
-            lines: 28,
-        } : /* tsx */{
-            statements: 7,
-            branches: 5,
-            functions: 5,
-            lines: 7,
-        },
+        global:
+            testExtension === 'ts'
+                ? {
+                      statements: 28,
+                      branches: 14,
+                      functions: 22,
+                      lines: 28,
+                  }
+                : /* tsx */ {
+                      statements: 7,
+                      branches: 5,
+                      functions: 5,
+                      lines: 7,
+                  },
     },
 });
 
