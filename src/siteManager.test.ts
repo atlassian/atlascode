@@ -1,3 +1,4 @@
+import { SiteManager } from 'src/siteManager';
 import { expansionCastTo } from 'testsutil';
 import { EventEmitter, Memento } from 'vscode';
 
@@ -14,7 +15,6 @@ import {
 import { CredentialManager } from './atlclients/authStore';
 import { configuration } from './config/configuration';
 import { Container } from './container';
-import { SiteManager } from './siteManager';
 
 describe('SiteManager', () => {
     let siteManager: SiteManager;
