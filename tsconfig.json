@@ -24,17 +24,9 @@
         "strictPropertyInitialization": true,
         "typeRoots": ["node_modules/@types", "src/typings/"],
         "paths": {
-            "testsutil/*": ["testsutil/*"],
+            "testsutil/*": ["testsutil/*"]
         }
     },
     "include": ["**/src/**/*", "webpack.*.js", "e2e/**/*"],
-    "exclude": [
-        "out",
-        "node_modules",
-        "build",
-        "scripts",
-        "webpack",
-        "jest",
-        ".vscode-test",
-    ]
+    "exclude": ["out", "node_modules", "build", "scripts", "webpack", "jest", ".vscode-test"]
 }
