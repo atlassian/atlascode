@@ -42,6 +42,8 @@ import {
 } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
 import { ConnectionTimeout } from '../../../util/time';
+import AISuggestionFooter from '../aiCreateIssue/AISuggestionFooter';
+import AISuggestionHeader from '../aiCreateIssue/AISuggestionHeader';
 import { colorToLozengeAppearanceMap } from '../colors';
 import * as FieldValidators from '../fieldValidators';
 import { chain } from '../fieldValidators';
@@ -74,6 +76,7 @@ export interface CommonEditorViewState extends Message {
     errorDetails: any;
     commentInputValue: string;
     isRteEnabled: boolean;
+    isGeneratingSuggestions?: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -453,64 +456,77 @@ export abstract class AbstractIssueEditorPage<
                 }
 
                 return (
-                    <Field
-                        defaultValue={defaultVal}
-                        label={<span>{field.name}</span>}
-                        isRequired={field.required}
-                        id={field.key}
-                        name={field.key}
-                        validate={validateFunc}
-                    >
-                        {(fieldArgs: any) => {
-                            let errDiv = <span />;
-                            if (fieldArgs.error && fieldArgs.error !== '') {
-                                errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
-                            }
+                    <>
+                        {field.key === 'summary' && <AISuggestionHeader vscodeApi={this._api} />}
+                        <Field
+                            defaultValue={defaultVal}
+                            label={<span>{field.name}</span>}
+                            isRequired={field.required}
+                            id={field.key}
+                            name={field.key}
+                            validate={validateFunc}
+                        >
+                            {(fieldArgs: any) => {
+                                let errDiv = <span />;
+                                if (fieldArgs.error && fieldArgs.error !== '') {
+                                    errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
+                                }
 
-                            let markup = (
-                                <Textfield
-                                    {...fieldArgs.fieldProps}
-                                    className="ac-inputField"
-                                    isDisabled={this.state.isSomethingLoading}
-                                    onChange={(e: any) =>
-                                        chain(
-                                            fieldArgs.fieldProps.onChange,
-                                            this.handleInlineEdit(field, e.currentTarget.value),
-                                        )
-                                    }
-                                    placeholder={field.key === 'summary' && 'What needs to be done?'}
-                                />
-                            );
-                            if ((field as InputFieldUI).isMultiline) {
-                                markup = (
-                                    <JiraIssueTextAreaEditor
+                                let markup = (
+                                    <Textfield
                                         {...fieldArgs.fieldProps}
-                                        value={this.state.fieldValues[field.key]}
-                                        isDisabled={this.state.isSomethingLoading}
-                                        onChange={(e: string) =>
-                                            chain(fieldArgs.fieldProps.onChange, this.handleInlineEdit(field, e))
+                                        className="ac-inputField"
+                                        isDisabled={this.state.isSomethingLoading || this.state.isGeneratingSuggestions}
+                                        onChange={(e: any) =>
+                                            chain(
+                                                fieldArgs.fieldProps.onChange,
+                                                this.handleInlineEdit(field, e.currentTarget.value),
+                                            )
                                         }
-                                        fetchUsers={async (input: string) =>
-                                            (await this.fetchUsers(input)).map((user) => ({
-                                                displayName: user.displayName,
-                                                avatarUrl: user.avatarUrls?.['48x48'],
-                                                mention: this.state.siteDetails.isCloud
-                                                    ? `[~accountid:${user.accountId}]`
-                                                    : `[~${user.name}]`,
-                                            }))
-                                        }
-                                        featureGateEnabled={this.state.isRteEnabled}
+                                        placeholder={field.key === 'summary' && 'What needs to be done?'}
                                     />
                                 );
-                            }
-                            return (
-                                <div>
-                                    {markup}
-                                    {errDiv}
-                                </div>
-                            );
-                        }}
-                    </Field>
+                                if ((field as InputFieldUI).isMultiline) {
+                                    markup = (
+                                        <>
+                                            <JiraIssueTextAreaEditor
+                                                {...fieldArgs.fieldProps}
+                                                value={this.state.fieldValues[field.key] || ''}
+                                                isDisabled={
+                                                    this.state.isSomethingLoading || this.state.isGeneratingSuggestions
+                                                }
+                                                onChange={(e: string) =>
+                                                    chain(
+                                                        fieldArgs.fieldProps.onChange,
+                                                        this.handleInlineEdit(field, e),
+                                                    )
+                                                }
+                                                fetchUsers={async (input: string) =>
+                                                    (await this.fetchUsers(input)).map((user) => ({
+                                                        displayName: user.displayName,
+                                                        avatarUrl: user.avatarUrls?.['48x48'],
+                                                        mention: this.state.siteDetails.isCloud
+                                                            ? `[~accountid:${user.accountId}]`
+                                                            : `[~${user.name}]`,
+                                                    }))
+                                                }
+                                                featureGateEnabled={this.state.isRteEnabled}
+                                            />
+                                            {field.key === 'description' && (
+                                                <AISuggestionFooter vscodeApi={this._api} />
+                                            )}
+                                        </>
+                                    );
+                                }
+                                return (
+                                    <div>
+                                        {markup}
+                                        {errDiv}
+                                    </div>
+                                );
+                            }}
+                        </Field>
+                    </>
                 );
             }
             case UIType.Date: {

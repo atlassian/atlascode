@@ -3,12 +3,18 @@ import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from
 import { decode } from 'base64-arraybuffer-es6';
 import { format } from 'date-fns';
 import FormData from 'form-data';
-import { commands, Position, Uri, ViewColumn } from 'vscode';
+import { commands, ConfigurationTarget, Position, Uri, ViewColumn } from 'vscode';
 
 import { issueCreatedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { Commands } from '../commands';
-import { configuration } from '../config/configuration';
+import { IssueSuggestionManager } from '../commands/jira/issueSuggestionManager';
+import {
+    configuration,
+    IssueSuggestionContextLevel,
+    IssueSuggestionSettings,
+    SimplifiedTodoIssueData,
+} from '../config/configuration';
 import { Container } from '../container';
 import {
     CreateIssueAction,
@@ -22,6 +28,7 @@ import { Action } from '../ipc/messaging';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { WebViewID } from '../lib/ipc/models/common';
 import { Logger } from '../logger';
+import { FeatureFlagClient, Features } from '../util/featureFlags';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
 
@@ -61,6 +68,9 @@ export class CreateIssueWebview
     private _selectedIssueTypeId: string | undefined;
     private _siteDetails: DetailedSiteInfo;
 
+    private _issueSuggestionSettings: IssueSuggestionSettings | undefined;
+    private _todoData: SimplifiedTodoIssueData | undefined;
+
     constructor(extensionPath: string) {
         super(extensionPath);
         this._screenData = emptyCreateMetaResult;
@@ -92,10 +102,30 @@ export class CreateIssueWebview
         this._siteDetails = emptySiteInfo;
     }
 
-    async createOrShow(column?: ViewColumn, data?: PartialIssue): Promise<void> {
+    async createOrShow(
+        column?: ViewColumn,
+        data?: PartialIssue,
+        issueSuggestionSettings?: IssueSuggestionSettings,
+        todoData?: SimplifiedTodoIssueData,
+    ): Promise<void> {
+        this._issueSuggestionSettings = issueSuggestionSettings;
+        this._todoData = todoData;
         await super.createOrShow(column);
+        await this.initialize(data);
+    }
 
-        this.initialize(data);
+    async updateSuggestionData(data: { suggestions?: IssueSuggestionSettings; todoData?: SimplifiedTodoIssueData }) {
+        const suggestionSettings = data?.suggestions || {
+            isAvailable: false,
+            isEnabled: false,
+            level: IssueSuggestionContextLevel.CodeContext,
+        };
+
+        await this.postMessage({
+            type: 'updateAiSettings',
+            newState: suggestionSettings,
+            todoData: data?.todoData,
+        });
     }
 
     async initialize(data?: PartialIssue) {
@@ -109,7 +139,12 @@ export class CreateIssueWebview
             this._partialIssue = {};
         }
 
-        this.invalidate();
+        await this.invalidate();
+
+        await this.updateSuggestionData({
+            suggestions: this._issueSuggestionSettings,
+            todoData: this._todoData,
+        });
     }
 
     private async updateSiteAndProject(inputSite?: DetailedSiteInfo, inputProject?: Project) {
@@ -153,7 +188,7 @@ export class CreateIssueWebview
 
     public async invalidate() {
         await this.updateFields();
-        Container.pmfStats.touchActivity();
+        await Container.pmfStats.touchActivity();
     }
 
     async handleSelectOptionCreated(fieldKey: string, newValue: any, nonce?: string): Promise<void> {
@@ -195,8 +230,39 @@ export class CreateIssueWebview
         // only update if we don't have data.
         // e.g. the user may have started editing.
         if (Object.keys(this._screenData.issueTypeUIs).length < 1) {
-            this.forceUpdateFields();
+            await this.forceUpdateFields();
         }
+    }
+
+    async fastUpdateFields(fieldValues?: FieldValues) {
+        if (!this._siteDetails || !this._currentProject) {
+            return;
+        }
+
+        // wait for isRefreshing to be false, with timeout
+        const timeout = 10000;
+        const startTime = Date.now();
+
+        while (this.isRefeshing) {
+            if (Date.now() - startTime > timeout) {
+                throw new Error('Timeout while waiting for isRefreshing to be false');
+            }
+            await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
+        if (!this._selectedIssueTypeId) {
+            return;
+        }
+
+        const createData: CreateIssueData = this._screenData.issueTypeUIs[this._selectedIssueTypeId] as CreateIssueData;
+        createData.fieldValues = {
+            ...createData.fieldValues,
+            ...fieldValues,
+        };
+        createData.type = 'update';
+        createData.transformerProblems = Container.config.jira.showCreateIssueProblems ? this._screenData.problems : {};
+
+        this.postMessage(createData);
     }
 
     async forceUpdateFields(fieldValues?: FieldValues) {
@@ -485,6 +551,61 @@ export class CreateIssueWebview
                     );
                     break;
                 }
+                // AI-assisted issue creation
+                case 'updateAiSettings': {
+                    handled = true;
+                    const newState = (msg as any).newState as any;
+                    // update vscode settings accordingly
+                    await configuration.update(
+                        'issueSuggestion.enabled',
+                        newState.isEnabled,
+                        ConfigurationTarget.Global,
+                    );
+                    await configuration.update(
+                        'issueSuggestion.contextLevel',
+                        newState.level,
+                        ConfigurationTarget.Global,
+                    );
+                    break;
+                }
+
+                case 'generateIssueSuggestions': {
+                    handled = true;
+                    const { todoData, suggestionSettings } = msg as any;
+                    const suggestionManager = new IssueSuggestionManager(suggestionSettings);
+                    suggestionManager.generate(todoData).then(async (suggestion) => {
+                        await this.fastUpdateFields({
+                            summary: suggestion.summary,
+                            description: suggestion.description,
+                        });
+                    });
+                    break;
+                }
+
+                case 'webviewReady': {
+                    handled = true;
+                    const val = FeatureFlagClient.checkGate(Features.EnableAiSuggestions);
+                    console.log(val);
+                    this.postMessage({
+                        type: 'updateFeatureFlag',
+                        value: FeatureFlagClient.checkGate(Features.EnableAiSuggestions),
+                    });
+                    await this.updateSuggestionData({
+                        suggestions: this._issueSuggestionSettings,
+                        todoData: this._todoData,
+                    });
+                    break;
+                }
+
+                case 'aiSuggestionFeedback': {
+                    handled = true;
+                    const { isPositive, todoData } = msg as any;
+
+                    const suggestionManager = new IssueSuggestionManager(this._issueSuggestionSettings!);
+                    suggestionManager.sendFeedback(isPositive, todoData);
+                    break;
+                }
+
                 default: {
                     break;
                 }

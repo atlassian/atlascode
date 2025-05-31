@@ -80,6 +80,13 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
         if (!handled) {
             switch (e.type) {
+                case 'generateIssueSuggestions': {
+                    handled = true;
+                    this.setState({
+                        isGeneratingSuggestions: true,
+                    });
+                    break;
+                }
                 case 'update': {
                     handled = true;
                     const issueData = e as CreateIssueData;
@@ -88,6 +95,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                         this.setState({
                             isSomethingLoading: false,
                             loadingField: '',
+                            isGeneratingSuggestions: false,
                         });
                     });
 
@@ -298,11 +306,21 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         return (
             <div>
                 Create work item
-                {this.state.isSomethingLoading && (
-                    <div className="spinner" style={{ marginLeft: '15px' }}>
-                        <Spinner size="medium" />
-                    </div>
-                )}
+                {this.state.isSomethingLoading ||
+                    (this.state.isGeneratingSuggestions && (
+                        <div
+                            className="spinner"
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                margin: '10px 15px 0 0',
+                                zIndex: 1,
+                            }}
+                        >
+                            <Spinner size="medium" />
+                        </div>
+                    ))}
             </div>
         );
     };
@@ -375,6 +393,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                         Required fields are marked with an asterisk <RequiredAsterisk />
                                                     </p>
                                                 </FormHeader>
+
                                                 <Field
                                                     label={<span>Site</span>}
                                                     id="site"
