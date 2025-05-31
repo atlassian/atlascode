@@ -1,6 +1,7 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import Axios from 'axios';
+import { Uri } from 'vscode';
 
 import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import {
@@ -14,6 +15,7 @@ import {
     Task,
     User,
 } from '../../../../bitbucket/model';
+import { NotificationManagerImpl } from '../../../../views/notifications/notificationManager';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonAction, CommonActionType } from '../../../ipc/fromUI/common';
 import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../ipc/fromUI/pullRequestDetails';
@@ -63,7 +65,9 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
         this.commonHandler = commonHandler;
     }
 
-    public onShown(): void {}
+    public onShown(): void {
+        NotificationManagerImpl.getInstance().clearNotificationsByUri(Uri.parse(this.pr.data.url));
+    }
 
     private postMessage(message: PullRequestDetailsMessage | PullRequestDetailsResponse | CommonMessage) {
         this.messagePoster(message);

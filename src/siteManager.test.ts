@@ -213,6 +213,7 @@ describe('SiteManager', () => {
                 type: AuthChangeType.Remove,
                 product: ProductJira,
                 credentialId: site.credentialId,
+                userId: '',
             };
 
             siteManager.onDidAuthChange(removeEvent);

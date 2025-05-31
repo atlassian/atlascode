@@ -2,11 +2,13 @@ export const enum Features {
     NoOpFeature = 'atlascode-noop',
     EnableErrorTelemetry = 'atlascode-send-error-telemetry',
     JiraRichText = 'atlascode-jira-rte',
+    AtlassianNotifications = 'atlascode-atlassian-notifications-v2',
 }
 
 export const enum Experiments {
     AtlascodeAA = 'atlascode_aa_experiment',
     AtlascodeOnboardingExperiment = 'atlascode_quick_pick_onboarding_experiment',
+    AtlassianNotifications = 'atlascode_atlassian_notifications',
 }
 
 export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
@@ -16,6 +18,10 @@ export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
     },
     [Experiments.AtlascodeOnboardingExperiment]: {
         parameter: 'enableQuickPickOnboarding',
+        defaultValue: false,
+    },
+    [Experiments.AtlassianNotifications]: {
+        parameter: 'enableAtlassianNotifications',
         defaultValue: false,
     },
 };

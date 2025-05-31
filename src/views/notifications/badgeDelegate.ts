@@ -41,28 +41,28 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
     }
 
     public onNotificationChange(event: NotificationChangeEvent): void {
-        const { uri } = event;
-        const newBadgeValue = NotificationManagerImpl.getInstance().getNotificationsByUri(
-            uri,
-            NotificationSurface.Badge,
-        ).size;
-        const oldBadgeValue = this.badgesRegistration[uri.toString()];
-        this.registerBadgeValueByUri(newBadgeValue, uri);
-        const badgeCountDelta = this.updateOverallCount(newBadgeValue, oldBadgeValue);
-        this.analytics(uri, badgeCountDelta);
-        this.setExtensionBadge();
-        this._onDidChangeFileDecorations.fire(uri);
+        this._onDidChangeFileDecorations.fire(undefined);
     }
 
     private _onDidChangeFileDecorations = new EventEmitter<undefined | Uri | Uri[]>();
 
     public readonly onDidChangeFileDecorations = this._onDidChangeFileDecorations.event;
 
+    private updateOverallCount(oldBadgeValue: number, newBadgeValue: number): void {
+        this.overallCount += newBadgeValue - oldBadgeValue;
+
+        this.setExtensionBadge();
+    }
+
     public provideFileDecoration(uri: Uri, token: CancellationToken) {
+        const oldBadgeValue = this.badgesRegistration[uri.toString()] || 0;
         const newBadgeValue = NotificationManagerImpl.getInstance().getNotificationsByUri(
             uri,
             NotificationSurface.Badge,
         ).size;
+        this.registerBadgeValueByUri(newBadgeValue, uri);
+        this.updateOverallCount(oldBadgeValue, newBadgeValue);
+        this.analytics(uri, newBadgeValue, oldBadgeValue);
         return this.constructItemBadge(newBadgeValue);
     }
 
@@ -82,69 +82,27 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
     }
 
     private constructItemBadge(newBadgeValue: number) {
-        if (newBadgeValue === 0) {
+        if (newBadgeValue <= 0) {
             return undefined;
         }
+
         return {
-            badge: this.getBadgeSymbol(newBadgeValue),
+            badge: newBadgeValue > 10 ? '10+' : newBadgeValue.toString(),
             tooltip: newBadgeValue === 1 ? '1 notification' : `${newBadgeValue} notifications`,
-            color: new ThemeColor('editorForeground'),
+            color: new ThemeColor('activityBarBadge.background'),
             propagate: false,
         };
-    }
-
-    private updateOverallCount(newBadgeValue: number | undefined, oldBadgeValue: number | undefined): number {
-        if (newBadgeValue === undefined) {
-            newBadgeValue = 0;
-        }
-        if (oldBadgeValue === undefined) {
-            oldBadgeValue = 0;
-        }
-
-        const delta = newBadgeValue - oldBadgeValue;
-        this.overallCount += delta;
-
-        if (this.overallCount < 0) {
-            this.overallCount = 0;
-        }
-
-        return delta;
     }
 
     private overallToolTip(): string {
         return this.overallCount === 1 ? '1 notification' : `${this.overallCount} notifications`;
     }
 
-    private getBadgeSymbol(value: number): string {
-        switch (value) {
-            case 0:
-                return '';
-            case 1:
-                return '1️⃣';
-            case 2:
-                return '2️⃣';
-            case 3:
-                return '3️⃣';
-            case 4:
-                return '4️⃣';
-            case 5:
-                return '5️⃣';
-            case 6:
-                return '6️⃣';
-            case 7:
-                return '7️⃣';
-            case 8:
-                return '8️⃣';
-            case 9:
-                return '9️⃣';
-            case 10:
-                return '🔟';
-            default:
-                return '🔟+';
-        }
-    }
+    private analytics(uri: Uri, newBadgeValue: number, oldBadgeValue: number): void {
+        const safeNewBadgeValue = newBadgeValue ?? 0;
+        const safeOldBadgeValue = oldBadgeValue ?? 0;
+        const badgeCountDelta = safeNewBadgeValue - safeOldBadgeValue;
 
-    private analytics(uri: Uri, badgeCountDelta: number): void {
         if (badgeCountDelta === 0) {
             return;
         }

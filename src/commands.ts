@@ -14,7 +14,7 @@ import { rerunPipeline } from './commands/bitbucket/rerunPipeline';
 import { runPipeline } from './commands/bitbucket/runPipeline';
 import { assignIssue } from './commands/jira/assignIssue';
 import { createIssue } from './commands/jira/createIssue';
-import { showIssue, showIssueForKey, showIssueForSiteIdAndKey } from './commands/jira/showIssue';
+import { showIssue, showIssueForKey, showIssueForSiteIdAndKey, showIssueForURL } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { configuration } from './config/configuration';
 import { HelpTreeViewId } from './constants';
@@ -62,6 +62,7 @@ export enum Commands {
     ShowPipelineSettings = 'atlascode.bb.showPipelineSettings',
     ShowExploreSettings = 'atlascode.showExploreSettings',
     ShowIssue = 'atlascode.jira.showIssue',
+    ShowIssueForURL = 'atlascode.jira.showIssueForURL',
     ShowIssueForKey = 'atlascode.jira.showIssueForKey',
     ShowIssueForSiteIdAndKey = 'atlascode.jira.showIssueForSiteIdAndKey',
     ShowConfigPage = 'atlascode.showConfigPage',
@@ -184,6 +185,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             Commands.ShowIssueForSiteIdAndKey,
             async (siteId: string, issueKey: string) => await showIssueForSiteIdAndKey(siteId, issueKey),
         ),
+        commands.registerCommand(Commands.ShowIssueForURL, async (issueURL: string) => await showIssueForURL(issueURL)),
         commands.registerCommand(Commands.ToDoIssue, (issueNode) =>
             commands.executeCommand(Commands.ShowIssue, issueNode.issue),
         ),

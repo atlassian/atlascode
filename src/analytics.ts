@@ -5,7 +5,7 @@ import { CreatePrTerminalSelection, UIErrorInfo } from './analyticsTypes';
 import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira, SiteInfo } from './atlclients/authInfo';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
-import { NotificationSurface } from './views/notifications/notificationManager';
+import { NotificationSurface, NotificationType } from './views/notifications/notificationManager';
 
 // IMPORTANT
 // Make sure there is a corresponding event with the correct attributes in the Data Portal for any event created here.
@@ -711,6 +711,31 @@ export async function createPrTerminalLinkPanelButtonClickedEvent(
             source: source,
             attributes: {
                 buttonType: type,
+            },
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function notificationActionButtonClickedEvent(
+    uri: Uri,
+    notificationData: { surface: NotificationSurface; type: NotificationType },
+    action: string,
+): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'notificationActionButton',
+            attributes: {
+                uri: uri.toString(),
+                action: action,
+                notificationSurface: notificationData.surface,
+                notificationType: notificationData.type,
             },
         },
     };
