@@ -1,9 +1,8 @@
+import { fileCheckoutEvent, prCommentEvent, prTaskEvent } from 'src/analytics';
 import TurndownService from 'turndown';
 import { v4 } from 'uuid';
-import * as vscode from 'vscode';
-import { commands, CommentThread, MarkdownString } from 'vscode';
+import vscode, { commands, CommentThread, MarkdownString } from 'vscode';
 
-import { fileCheckoutEvent, prCommentEvent, prTaskEvent } from '../../analytics';
 import { BitbucketMentionsCompletionProvider } from '../../bitbucket/bbMentionsCompletionProvider';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, Comment, emptyTask, Task } from '../../bitbucket/model';
@@ -791,7 +790,7 @@ export class PullRequestCommentController implements vscode.Disposable {
 
     provideComments(uri: vscode.Uri) {
         const { site, commentThreads, prHref, prId } = JSON.parse(uri.query) as PRFileDiffQueryParams;
-        const promises = (commentThreads || []).map(async (commentThread: Comment[]) => {
+        (commentThreads || []).forEach(async (commentThread: Comment[]) => {
             let range = new vscode.Range(0, 0, 0, 0);
             if (commentThread[0].inline!.from) {
                 range = new vscode.Range(commentThread[0].inline!.from! - 1, 0, commentThread[0].inline!.from! - 1, 0);
@@ -808,8 +807,6 @@ export class PullRequestCommentController implements vscode.Disposable {
                 await this.createOrUpdateThread(commentThread[0].id!, uri, range, comments);
             }
         });
-
-        return Promise.all(promises);
     }
 
     private async insertTasks(comments: PullRequestComment[]): Promise<vscode.Comment[]> {
