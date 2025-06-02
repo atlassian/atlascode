@@ -10,9 +10,8 @@ import {
     ProductBitbucket,
     ProductJira,
 } from '../atlclients/authInfo';
-import { Commands } from '../commands';
 import { configuration } from '../config/configuration';
-import { BitbucketEnabledKey, JiraEnabledKey } from '../constants';
+import { BitbucketEnabledKey, Commands, JiraEnabledKey } from '../constants';
 import { Container } from '../container';
 import { Resources } from '../resources';
 

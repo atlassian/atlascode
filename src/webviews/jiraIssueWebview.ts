@@ -19,9 +19,9 @@ import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../an
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
 import { PullRequestData } from '../bitbucket/model';
-import { Commands } from '../commands';
 import { postComment } from '../commands/jira/postComment';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
+import { Commands } from '../constants';
 import { Container } from '../container';
 import {
     EditIssueAction,

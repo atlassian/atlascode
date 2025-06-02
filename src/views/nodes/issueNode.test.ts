@@ -1,11 +1,3 @@
-jest.mock('../../commands', () => {
-    return {
-        Commands: {
-            WorkbenchOpenRepository: 'workbench.openRepository',
-            ShowIssue: 'showIssue',
-        },
-    };
-});
 jest.mock('@atlassianlabs/jira-pi-common-models', () => {
     return {
         isMinimalIssue: jest.fn(() => true),
@@ -104,7 +96,11 @@ describe('IssueNode', () => {
         it('should return a TreeItem with a command to show the issue', () => {
             const issueNode = new IssueNode(mockIssue);
             const treeItem = issueNode.getTreeItem();
-            expect(treeItem.command).toEqual({ command: 'showIssue', title: 'Show Issue', arguments: [mockIssue] });
+            expect(treeItem.command).toEqual({
+                command: 'atlascode.jira.showIssue',
+                title: 'Show Issue',
+                arguments: [mockIssue],
+            });
         });
     });
 

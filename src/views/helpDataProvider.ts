@@ -1,4 +1,4 @@
-import { Commands } from '../commands';
+import { Commands } from '../constants';
 import { KnownLinkID } from '../lib/ipc/models/common';
 import { iconSet } from '../resources';
 import { BaseTreeDataProvider } from './Explorer';

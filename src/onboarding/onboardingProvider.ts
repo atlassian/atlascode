@@ -3,7 +3,7 @@ import { commands, env, InputBox, UIKind, window } from 'vscode';
 import { authenticateButtonEvent, errorEvent, viewScreenEvent } from '../analytics';
 import { type AnalyticsClient } from '../analytics-node-client/src/client.min';
 import { BasicAuthInfo, Product, ProductBitbucket, ProductJira, SiteInfo } from '../atlclients/authInfo';
-import { Commands } from '../commands';
+import { Commands } from '../constants';
 import { Container } from '../container';
 import { EXTENSION_URL } from '../uriHandler/atlascodeUriHandler';
 import OnboardingQuickInputManager from './onboardingQuickInputManager';

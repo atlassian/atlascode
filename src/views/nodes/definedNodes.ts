@@ -1,4 +1,4 @@
-import { Commands } from '../../commands';
+import { Commands } from '../../constants';
 import { SimpleNode } from './simpleNode';
 
 export const emptyBitbucketNodes: SimpleNode[] = [

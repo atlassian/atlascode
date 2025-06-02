@@ -5,7 +5,7 @@ import { commands, Uri } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, Commit, FileDiff, FileStatus, PullRequest, User, WorkspaceRepo } from '../../bitbucket/model';
-import { Commands } from '../../commands';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { issueForKey } from '../../jira/issueForKey';
 import { parseJiraIssueKeys } from '../../jira/issueKeyParser';

@@ -21,8 +21,8 @@ import {
 import { AnalyticsClient } from '../../analytics-node-client/src/client.min.js';
 import { CreatePrTerminalSelection } from '../../analyticsTypes';
 import { ProductBitbucket } from '../../atlclients/authInfo';
-import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { NotificationSurface } from '../../views/notifications/notificationManager';
 

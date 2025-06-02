@@ -4,9 +4,8 @@ import { commands, ConfigurationChangeEvent, QuickPickItem, window } from 'vscod
 import { BitbucketContext } from '../../bitbucket/bbContext';
 import { PullRequest, WorkspaceRepo } from '../../bitbucket/model';
 import { CommandContext, setCommandContext } from '../../commandContext';
-import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
-import { PullRequestTreeViewId } from '../../constants';
+import { Commands, PullRequestTreeViewId } from '../../constants';
 import { Container } from '../../container';
 import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 import { BitbucketExplorer } from '../BitbucketExplorer';

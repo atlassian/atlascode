@@ -2,8 +2,8 @@ import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-mode
 import { Command, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
-import { Commands } from '../../../commands';
 import { JQLEntry } from '../../../config/model';
+import { Commands } from '../../../constants';
 import { Container } from '../../../container';
 import { issuesForJQL } from '../../../jira/issuesForJql';
 import { Logger } from '../../../logger';

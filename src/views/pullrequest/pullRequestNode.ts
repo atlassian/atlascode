@@ -13,7 +13,7 @@ import {
     PullRequest,
     Task,
 } from '../../bitbucket/model';
-import { Commands } from '../../commands';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { Resources } from '../../resources';

@@ -19,8 +19,8 @@ import {
     Task,
     User,
 } from '../../bitbucket/model';
-import { Commands } from '../../commands';
 import { showIssue } from '../../commands/jira/showIssue';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { issueForKey } from '../../jira/issueForKey';
 import { transitionIssue } from '../../jira/transitionIssue';

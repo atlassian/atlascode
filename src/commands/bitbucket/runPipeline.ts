@@ -4,7 +4,7 @@ import { commands, QuickPickItem, window } from 'vscode';
 import { pipelineStartEvent } from '../../analytics';
 import { bitbucketSiteForRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
 import { BitbucketApi, BitbucketSite, WorkspaceRepo } from '../../bitbucket/model';
-import { Commands } from '../../commands';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { PipelineReferenceTarget, PipelineReferenceType, PipelineTargetType } from '../../pipelines/model';

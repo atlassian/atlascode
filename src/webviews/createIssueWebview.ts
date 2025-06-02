@@ -7,8 +7,8 @@ import { commands, Position, Uri, ViewColumn } from 'vscode';
 
 import { issueCreatedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
-import { Commands } from '../commands';
 import { configuration } from '../config/configuration';
+import { Commands } from '../constants';
 import { Container } from '../container';
 import {
     CreateIssueAction,

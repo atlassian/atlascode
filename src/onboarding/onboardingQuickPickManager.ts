@@ -1,7 +1,7 @@
 import { commands, QuickInputButton, QuickInputButtons, QuickPick, window } from 'vscode';
 
 import { Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
-import { Commands } from '../commands';
+import { Commands } from '../constants';
 import { OnboardingButtons, OnboardingQuickPickItem, OnboardingStep } from './utils';
 
 class OnboardingQuickPickManager {

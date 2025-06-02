@@ -9,12 +9,11 @@ import {
     window,
 } from 'vscode';
 
-import { AssignedJiraItemsViewId } from '../../../../src/constants';
 import { viewScreenEvent } from '../../../analytics';
 import { ProductJira } from '../../../atlclients/authInfo';
 import { CommandContext, setCommandContext } from '../../../commandContext';
-import { Commands } from '../../../commands';
 import { configuration } from '../../../config/configuration';
+import { AssignedJiraItemsViewId, Commands } from '../../../constants';
 import { Container } from '../../../container';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { PromiseRacer } from '../../../util/promises';

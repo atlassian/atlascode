@@ -1,7 +1,6 @@
 import vscode, { TreeItem, TreeItemCollapsibleState } from 'vscode';
 
-import { Commands } from '../../commands';
-import { HelpTreeViewId } from '../../constants';
+import { Commands, HelpTreeViewId } from '../../constants';
 import { KnownLinkID, knownLinkIdMap } from '../../lib/ipc/models/common';
 import { iconSet, Resources } from '../../resources';
 import { AbstractBaseNode } from './abstractBaseNode';

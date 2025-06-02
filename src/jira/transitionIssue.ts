@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 
 import { issueTransitionedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo } from '../atlclients/authInfo';
-import { Commands } from '../commands';
+import { Commands } from '../constants';
 import { Container } from '../container';
 import { Logger } from '../logger';
 

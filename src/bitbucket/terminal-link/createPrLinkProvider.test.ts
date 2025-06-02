@@ -5,13 +5,6 @@ const mockLink = {
     url: 'https://bitbucket.org/workspace/repo/pull-requests/new?source=branch',
 };
 
-jest.mock('../../commands', () => ({
-    Commands: {
-        CreatePullRequest: 'bitbucket.createPullRequest',
-        ShowBitbucketAuth: 'atlascode.showBitbucketAuth',
-    },
-}));
-
 jest.mock('../../container', () => ({
     Container: {
         config: {
@@ -126,7 +119,7 @@ describe('BitbucketPullRequestLinkProvider', () => {
 
             await provider.handleTerminalLink(mockLink);
 
-            expect(executeCommandSpy).toHaveBeenCalledWith('bitbucket.createPullRequest');
+            expect(executeCommandSpy).toHaveBeenCalledWith('atlascode.bb.createPullRequest');
         });
 
         it('should open bitbucket authentication if user selects "Yes" and no site is available', async () => {
@@ -153,7 +146,7 @@ describe('BitbucketPullRequestLinkProvider', () => {
 
             await provider.handleTerminalLink(mockLink);
 
-            expect(executeCommandSpy).not.toHaveBeenCalledWith('bitbucket.createPullRequest');
+            expect(executeCommandSpy).not.toHaveBeenCalledWith('atlascode.bb.createPullRequest');
             expect(env.openExternal).toHaveBeenCalledWith(mockUri);
         });
 
@@ -168,7 +161,7 @@ describe('BitbucketPullRequestLinkProvider', () => {
 
             await provider.handleTerminalLink(mockLink);
 
-            expect(executeCommandSpy).not.toHaveBeenCalledWith('bitbucket.createPullRequest');
+            expect(executeCommandSpy).not.toHaveBeenCalledWith('atlascode.bb.createPullRequest');
             expect(env.openExternal).toHaveBeenCalledWith(mockUri);
             expect(configSpy).toHaveBeenCalledWith('bitbucket.showTerminalLinkPanel', false, 2);
         });

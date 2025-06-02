@@ -2,7 +2,7 @@ import { commands, Uri, window } from 'vscode';
 
 import { notificationChangeEvent } from '../../analytics';
 import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
-import { Commands } from '../../commands';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
 import {
     AtlasCodeNotification,

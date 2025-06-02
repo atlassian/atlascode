@@ -2,8 +2,8 @@ import vscode, { ConfigurationChangeEvent, Disposable } from 'vscode';
 
 import { ProductBitbucket } from '../atlclients/authInfo';
 import { BitbucketContext } from '../bitbucket/bbContext';
-import { Commands } from '../commands';
 import { configuration } from '../config/configuration';
+import { Commands } from '../constants';
 import { BitbucketEnabledKey } from '../constants';
 import { Container } from '../container';
 import { FocusEvent, FocusEventActions } from '../webview/ExplorerFocusManager';

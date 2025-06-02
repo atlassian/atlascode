@@ -13,9 +13,9 @@ import {
 import { viewScreenEvent } from '../../../analytics';
 import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
 import { CommandContext, setCommandContext } from '../../../commandContext';
-import { Commands } from '../../../commands';
 import { configuration } from '../../../config/configuration';
 import { JQLEntry } from '../../../config/model';
+import { Commands } from '../../../constants';
 import { Container } from '../../../container';
 import { fetchMinimalIssue } from '../../../jira/fetchIssue';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';

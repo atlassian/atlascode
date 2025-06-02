@@ -2,7 +2,7 @@ import { isMinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-commo
 import * as vscode from 'vscode';
 
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
-import { Commands } from '../../commands';
+import { Commands } from '../../constants';
 import { AbstractBaseNode } from './abstractBaseNode';
 
 const ISSUE_NODE_CONTEXT_VALUE = 'jiraIssue';

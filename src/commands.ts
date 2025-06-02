@@ -17,82 +17,13 @@ import { createIssue } from './commands/jira/createIssue';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { configuration } from './config/configuration';
-import { HelpTreeViewId } from './constants';
+import { Commands, HelpTreeViewId } from './constants';
 import { Container } from './container';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
-
-export enum Commands {
-    BitbucketSelectContainer = 'atlascode.bb.selectContainer',
-    BitbucketFetchPullRequests = 'atlascode.bb.fetchPullRequests',
-    BitbucketRefreshPullRequests = 'atlascode.bb.refreshPullRequests',
-    BitbucketToggleFileNesting = 'atlascode.bb.toggleFileNesting',
-    BitbucketOpenPullRequest = 'atlascode.bb.openPullRequest',
-    BitbucketShowOpenPullRequests = 'atlascode.bb.showOpenPullRequests',
-    BitbucketShowPullRequestsToReview = 'atlascode.bb.showPullRequestsToReview',
-    BitbucketShowPullRequestsCreatedByMe = 'atlascode.bb.showOpenPullRequestsCreatedByMe',
-    BitbucketShowMergedPullRequests = 'atlascode.bb.showMergedPullRequests',
-    BitbucketShowDeclinedPullRequests = 'atlascode.bb.showDeclinedPullRequests',
-    BitbucketPullRequestFilters = 'atlascode.bb.showPullRequestFilters',
-    JiraSearchIssues = 'atlascode.jira.searchIssues',
-    BitbucketShowPullRequestDetails = 'atlascode.bb.showPullRequestDetails',
-    BitbucketPullRequestsNextPage = 'atlascode.bb.pullReqeustsNextPage',
-    RefreshPullRequestExplorerNode = 'atlascode.bb.refreshPullRequest',
-    ViewInWebBrowser = 'atlascode.viewInWebBrowser',
-    BitbucketAddComment = 'atlascode.bb.addComment',
-    BitbucketAddReply = 'atlascode.bb.addReply',
-    BitbucketDeleteComment = 'atlascode.bb.deleteComment',
-    BitbucketEditComment = 'atlascode.bb.editComment',
-    BitbucketDeleteTask = 'atlascode.bb.deleteTask',
-    BitbucketAddTask = 'atlascode.bb.addTask',
-    BitbucketEditTask = 'atlascode.bb.editTask',
-    BitbucketMarkTaskComplete = 'atlascode.bb.markTaskComplete',
-    BitbucketMarkTaskIncomplete = 'atlascode.bb.markTaskIncomplete',
-    BitbucketToggleCommentsVisibility = 'atlascode.bb.toggleCommentsVisibility',
-    EditThisFile = 'atlascode.bb.editThisFile',
-    CreateIssue = 'atlascode.jira.createIssue',
-    RefreshAssignedWorkItemsExplorer = 'atlascode.jira.refreshAssignedWorkItemsExplorer',
-    RefreshCustomJqlExplorer = 'atlascode.jira.refreshCustomJqlExplorer',
-    AddJiraSite = 'atlascode.jira.addJiraSite',
-    ShowJiraIssueSettings = 'atlascode.jira.showJiraIssueSettings',
-    ShowPullRequestSettings = 'atlascode.bb.showPullRequestSettings',
-    ShowPipelineSettings = 'atlascode.bb.showPipelineSettings',
-    ShowExploreSettings = 'atlascode.showExploreSettings',
-    ShowIssue = 'atlascode.jira.showIssue',
-    ShowIssueForKey = 'atlascode.jira.showIssueForKey',
-    ShowIssueForSiteIdAndKey = 'atlascode.jira.showIssueForSiteIdAndKey',
-    ShowConfigPage = 'atlascode.showConfigPage',
-    ShowConfigPageFromExtensionContext = 'atlascode.extensionContext.showConfigPage',
-    ShowJiraAuth = 'atlascode.showJiraAuth',
-    ShowBitbucketAuth = 'atlascode.showBitbucketAuth',
-    ShowOnboardingPage = 'atlascode.showOnboardingPage',
-    ShowPullRequestDetailsPage = 'atlascode.showPullRequestDetailsPage',
-    AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
-    StartWorkOnIssue = 'atlascode.jira.startWorkOnIssue',
-    CreatePullRequest = 'atlascode.bb.createPullRequest',
-    RerunPipeline = 'atlascode.bb.rerunPipeline',
-    RunPipelineForBranch = 'atlascode.bb.runPipelineForBranch',
-    RefreshPipelines = 'atlascode.bb.refreshPipelines',
-    ShowPipeline = 'atlascode.bb.showPipeline',
-    PipelinesNextPage = 'atlascode.bb.pipelinesNextPage',
-    BitbucketIssuesNextPage = 'atlascode.bb.issuesNextPage',
-    BBPRCancelAction = 'atlascode.bb.cancelCommentAction',
-    BBPRSaveAction = 'atlascode.bb.saveCommentAction',
-    ViewDiff = 'atlascode.viewDiff',
-    DebugBitbucketSites = 'atlascode.debug.bitbucketSites',
-    WorkbenchOpenRepository = 'atlascode.workbenchOpenRepository',
-    WorkbenchOpenWorkspace = 'atlascode.workbenchOpenWorkspace',
-    CloneRepository = 'atlascode.cloneRepository',
-    DisableHelpExplorer = 'atlascode.disableHelpExplorer',
-    CreateNewJql = 'atlascode.jira.createNewJql',
-    ToDoIssue = 'atlascode.jira.todoIssue',
-    InProgressIssue = 'atlascode.jira.inProgressIssue',
-    DoneIssue = 'atlascode.jira.doneIssue',
-    ShowOnboardingFlow = 'atlascode.showOnboardingFlow',
-}
 
 export function registerCommands(vscodeContext: ExtensionContext) {
     vscodeContext.subscriptions.push(

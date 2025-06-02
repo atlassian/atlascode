@@ -1,6 +1,6 @@
 import { commands, Memento, QuickPickItem, window } from 'vscode';
 
-import { Commands } from '../commands';
+import { Commands } from '../constants';
 import { Container } from '../container';
 import { ConfigSection, ConfigSubSection } from '../lib/ipc/models/config';
 import { Logger } from '../logger';
