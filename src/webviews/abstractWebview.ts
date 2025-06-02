@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import Mustache from 'mustache';
 import * as path from 'path';
+import * as vscode from 'vscode';
 import {
     Disposable,
     Event,
-    EventEmitter,
     Uri,
     ViewColumn,
     WebviewPanel,
@@ -41,7 +41,7 @@ export interface InitializingWebview<T> {
 
 // isInitializable tests to see if a webview is an InitializingWebview and casts it if it is.
 export function isInitializable(object: any): object is InitializingWebview<any> {
-    return (<InitializingWebview<any>>object).initialize !== undefined;
+    return (<InitializingWebview<any>>object)?.initialize !== undefined;
 }
 
 // AbstractReactWebview is the base class for atlascode react webviews.
@@ -54,7 +54,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
     protected _panel: WebviewPanel | undefined;
     private readonly _extensionPath: string;
     private static readonly viewType = 'react';
-    private _onDidPanelDispose = new EventEmitter<void>();
+    private _onDidPanelDispose = new vscode.EventEmitter<void>();
     protected isRefeshing: boolean = false;
     private _viewEventSent: boolean = false;
     private ws: UIWebsocket;

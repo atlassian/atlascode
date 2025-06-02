@@ -52,14 +52,14 @@ export const baseConfigFor = (project: string, testExtension: string): Config =>
         '!src/**/*.{spec,test}.{ts,tsx,js,jsx}', // Exclude test files
     ],
     coverageDirectory: `coverage/${project}`,
-    coverageReporters: ['json', 'lcov', 'text-summary', 'clover'],
+    coverageReporters: ['json', 'lcov', 'text-summary', 'clover', 'html'],
 
     coverageThreshold: {
         global: testExtension === 'ts' ? {
-            statements: 28,
-            branches: 14,
-            functions: 22,
-            lines: 28,
+            statements: 40,
+            branches: 27,
+            functions: 34,
+            lines: 40,
         } : /* tsx */{
             statements: 7,
             branches: 5,

@@ -1,4 +1,4 @@
-import { expansionCastTo } from 'testsutil/miscFunctions';
+import { expansionCastTo } from 'testsutil';
 
 import { OnMessageEventPromise } from './reactpromise';
 

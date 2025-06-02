@@ -8,17 +8,6 @@ import {
     NotificationType,
 } from './notificationManager';
 
-jest.mock('vscode', () => ({
-    commands: {
-        executeCommand: jest.fn(),
-    },
-    window: {
-        showInformationMessage: jest.fn(() => Promise.resolve()),
-    },
-    Uri: {
-        parse: jest.fn((uri: string) => ({ toString: () => uri })),
-    },
-}));
 jest.mock('../../commands', () => ({
     Commands: {
         ShowJiraAuth: 'ShowJiraAuth',

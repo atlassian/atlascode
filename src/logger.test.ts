@@ -1,4 +1,4 @@
-import { expansionCastTo } from 'testsutil/miscFunctions';
+import { expansionCastTo } from 'testsutil';
 import { ConfigurationChangeEvent, Disposable, ExtensionContext, LogOutputChannel, window } from 'vscode';
 
 import { configuration, OutputLevel } from './config/configuration';

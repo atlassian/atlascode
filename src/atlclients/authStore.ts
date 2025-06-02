@@ -391,9 +391,6 @@ export class CredentialManager implements Disposable {
     }
 
     public static generateCredentialId(siteId: string, userId: string): string {
-        return crypto
-            .createHash('md5')
-            .update(siteId + '::' + userId)
-            .digest('hex');
+        return crypto.createHash('md5').update(`${siteId}::${userId}`).digest('hex');
     }
 }
