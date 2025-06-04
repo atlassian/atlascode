@@ -212,20 +212,26 @@ const StartWorkPage: React.FunctionComponent = () => {
                 .toLowerCase()
                 .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
                 .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
-                .replace(/\W+/g, '-'),
+                .replace(/\W+/g, '-')
+                .replace(/-+/g, '-') // Collapse multiple dashes to one
+                .replace(/^-|-$/g, ''), // Trim leading/trailing dash
             Summary: state.issue.summary
                 .substring(0, 50)
                 .trim()
                 .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
                 .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
-                .replace(/\W+/g, '-'),
+                .replace(/\W+/g, '-')
+                .replace(/-+/g, '-') // Collapse multiple dashes to one
+                .replace(/^-|-$/g, ''), // Trim leading/trailing dash
             SUMMARY: state.issue.summary
                 .substring(0, 50)
                 .trim()
                 .toUpperCase()
                 .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
                 .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
-                .replace(/\W+/g, '-'),
+                .replace(/\W+/g, '-')
+                .replace(/-+/g, '-') // Collapse multiple dashes to one
+                .replace(/^-|-$/g, ''), // Trim leading/trailing dash
         };
 
         try {
