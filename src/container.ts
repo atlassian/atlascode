@@ -201,7 +201,7 @@ export class Container {
 
         this._onboardingProvider = new OnboardingProvider();
 
-        this.rovodevWebviewProvder = new RovoDevWebviewProvider(context.extensionPath);
+        this.rovodevWebviewProvder = new RovoDevWebviewProvider(context.extensionPath, context.globalState);
         context.subscriptions.push(this.rovodevWebviewProvder);
     }
 

@@ -13,6 +13,7 @@ import {
     window,
     workspace,
 } from 'vscode';
+import { Memento } from 'vscode';
 
 import { FetchPayload, FetchResponseData } from './utils';
 
@@ -22,10 +23,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private _disposables: Disposable[] = [];
 
-    constructor(private extensionPath: string) {
+    private _globalState: Memento;
+    private _extensionPath: string;
+
+    constructor(extensionPath: string, globalState: import('vscode').Memento) {
         super(() => {
             this._dispose();
         });
+        this._extensionPath = extensionPath;
+        this._globalState = globalState;
         // Register the webview view provider
         this._disposables.push(
             window.registerWebviewViewProvider('atlascode.views.rovoDev.webView', this, {
@@ -44,12 +50,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._webView.options = {
             enableCommandUris: true,
             enableScripts: true,
-            localResourceRoots: [Uri.file(path.join(this.extensionPath, 'build'))],
+            localResourceRoots: [Uri.file(path.join(this._extensionPath, 'build'))],
         };
 
         this._webView.html = getHtmlForView(
-            this.extensionPath,
-            webviewView.webview.asWebviewUri(Uri.file(this.extensionPath)),
+            this._extensionPath,
+            webviewView.webview.asWebviewUri(Uri.file(this._extensionPath)),
             webviewView.webview.cspSource,
             this.viewType,
         );
@@ -104,8 +110,28 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
+    private getWorkspacePort(): number | undefined {
+        const workspaceFolders = workspace.workspaceFolders;
+        if (!workspaceFolders || workspaceFolders.length === 0) {
+            return undefined;
+        }
+        const wsPath = workspaceFolders[0].uri.fsPath;
+        const mapping = this._globalState.get<{ [key: string]: number }>('workspacePortMapping');
+        if (mapping && mapping[wsPath]) {
+            return mapping[wsPath];
+        }
+        return undefined;
+    }
+
     private async processPromptMessage(message: string) {
-        const url = 'http://localhost:8899/v2/chat';
+        const port = this.getWorkspacePort();
+        if (!port) {
+            window.showErrorMessage(
+                'No port mapping found for this workspace. Please ensure the background service is running.',
+            );
+            return;
+        }
+        const url = `http://localhost:${port}/v2/chat`;
 
         const payload: FetchPayload = {
             message: message,
