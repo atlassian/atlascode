@@ -7,6 +7,7 @@
 ### Features
 
 - Implement native Vscode onboarding experiment
+- It is now possible to transition Jira work items to a different status from the sidebar, via `Transition Issue...` context menu option
 
 ## What's new in 3.8.2
 

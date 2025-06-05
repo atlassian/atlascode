@@ -40,25 +40,23 @@ class OnboardingQuickPickManager {
     }
 
     private _resetItems() {
-        this._quickPick.title = 'Setup Jira & Bitbucket';
         this._quickPick.ignoreFocusOut = true;
         this._quickPick.items = this._items;
         this._quickPick.totalSteps = 2;
         this._quickPick.activeItems = [this._items[0]];
-
+        this._quickPick.placeholder = 'Type to search. Select settings for advanced options.';
         switch (this.product) {
             case ProductJira: {
+                this._quickPick.title = 'Sign in to Jira';
                 this._quickPick.step = OnboardingStep.Jira;
                 this._quickPick.buttons = [OnboardingButtons.settings];
-                this._quickPick.placeholder =
-                    'Select your Jira site type. For more advanced options, click on the gear button.';
+
                 break;
             }
             case ProductBitbucket: {
+                this._quickPick.title = 'Sign in to Bitbucket';
                 this._quickPick.step = OnboardingStep.Bitbucket;
                 this._quickPick.buttons = [QuickInputButtons.Back, OnboardingButtons.settings];
-                this._quickPick.placeholder =
-                    'Select your Bitbucket site type. For more advanced options, click on the gear button.';
                 break;
             }
         }
