@@ -29,6 +29,7 @@ import { CommonActionMessageHandler } from './lib/webview/controller/common/comm
 import { Logger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
 import { Pipeline } from './pipelines/model';
+import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
 import { Experiments, FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
@@ -70,6 +71,7 @@ export class Container {
     private static _commonMessageHandler: CommonActionMessageHandler;
     private static _bitbucketHelper: CheckoutHelper;
     private static _assignedWorkItemsView: AssignedWorkItemsViewProvider;
+    public static rovodevWebviewProvder: RovoDevWebviewProvider;
 
     static async initialize(context: ExtensionContext, config: IConfig, version: string) {
         const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
@@ -198,6 +200,9 @@ export class Container {
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
 
         this._onboardingProvider = new OnboardingProvider();
+
+        this.rovodevWebviewProvder = new RovoDevWebviewProvider(context.extensionPath, context.globalState);
+        context.subscriptions.push(this.rovodevWebviewProvder);
     }
 
     static focus() {

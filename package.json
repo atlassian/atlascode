@@ -78,6 +78,19 @@
     "contributes": {
         "commands": [
             {
+                "command": "atlascode.rovodev.askRovoDev",
+                "title": "Ask rovodev"
+            },
+            {
+                "command": "atlascode.rovodev.newChatSession",
+                "title": "New chat session",
+                "icon": {
+                    "dark": "resources/dark/add.svg",
+                    "light": "resources/light/add.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.jira.todoIssue",
                 "title": "TO DO"
             },
@@ -414,6 +427,11 @@
                     "id": "atlascode-drawer",
                     "title": "Atlassian",
                     "icon": "resources/atlassian-icon.svg"
+                },
+                {
+                    "id": "atlascode-rovo-dev",
+                    "title": "Rovo Dev",
+                    "icon": "$(rocket)"
                 }
             ]
         },
@@ -443,6 +461,13 @@
                     "id": "atlascode.views.helpTreeView",
                     "name": "Help and Feedback",
                     "when": "config.atlascode.helpExplorerEnabled"
+                }
+            ],
+            "atlascode-rovo-dev": [
+                {
+                    "id": "atlascode.views.rovoDev.webView",
+                    "name": "Rovo Dev",
+                    "type": "webview"
                 }
             ]
         },
@@ -509,6 +534,11 @@
                 }
             ],
             "view/title": [
+                {
+                    "command": "atlascode.rovodev.newChatSession",
+                    "when": "view == atlascode.views.rovoDev.webView",
+                    "group": "navigation@1"
+                },
                 {
                     "command": "atlascode.jira.createIssue",
                     "when": "view =~ /(atlascode.views.jira.assignedWorkItemsTreeView)/ && atlascode:isJiraAuthenticated",
@@ -823,6 +853,18 @@
             "type": "object",
             "title": "Atlassian",
             "properties": {
+                "atlascode.rovodev.email": {
+                    "type": "string",
+                    "description": "The email address used to authenticate with Rovo Dev"
+                },
+                "atlascode.rovodev.apiKey": {
+                    "type": "string",
+                    "description": "The API key used to authenticate with Rovo Dev"
+                },
+                "atlascode.rovodev.executablePath": {
+                    "type": "string",
+                    "description": "The absolute path to the Rovo Dev executable"
+                },
                 "atlascode.outputLevel": {
                     "type": "string",
                     "default": "silent",
@@ -1298,6 +1340,7 @@
         "flatten-anything": "^4.0.2",
         "form-data": "^2.5.2",
         "git-url-parse": "^15.0.0",
+        "highlight.js": "^11.11.1",
         "jwt-decode": "^4.0.0",
         "keytar": "^7.9.0",
         "lodash": "^4.17.21",
@@ -1305,6 +1348,8 @@
         "lodash.orderby": "^4.6.0",
         "lodash.truncate": "^4.4.2",
         "macaddress": "^0.5.3",
+        "markdown-it": "^14.1.0",
+        "markdown-it-highlightjs": "^4.2.0",
         "merge-anything": "^6.0.6",
         "mustache": "^4.0.1",
         "node-ipc": "^9.2.1",
