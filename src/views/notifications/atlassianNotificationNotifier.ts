@@ -21,6 +21,8 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
     private _lastUnseenNotificationCount: Record<string, number> = {};
     private _lastPull: Record<string, number> = {};
     private static readonly NOTIFICATION_INTERVAL_MS = 60 * 1000; // 1 minute
+    private _lastFullPull: Record<string, number> = {};
+    private static readonly NOTIFICATION_FULL_PULL_INTERVAL_MS = 20 * this.NOTIFICATION_INTERVAL_MS;
     private _disposable: Disposable[] = [];
 
     public static getInstance(): AtlassianNotificationNotifier {
@@ -56,8 +58,15 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
 
         const numUnseenNotifications = await this.getNumberOfUnseenNotifications(authInfo);
         if (numUnseenNotifications === this._lastUnseenNotificationCount[authInfo.user.id]) {
-            Logger.debug(`No changes in unseen notifications for ${authInfo.user.id}`);
-            return;
+            // if we haven't checked in a while, we still want to fetch the notifications
+            if (this.shouldFetchFullNotifications(authInfo)) {
+                Logger.debug(
+                    `No changes in unseen notifications for ${authInfo.user.id}, but pulling full feed as it has been a while`,
+                );
+            } else {
+                Logger.debug(`No changes in unseen notifications for ${authInfo.user.id}`);
+                return;
+            }
         }
         this._lastUnseenNotificationCount[authInfo.user.id] = numUnseenNotifications;
 
@@ -65,11 +74,17 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
         this.getNotificationDetailsByAuthInfo(authInfo, numUnseenNotifications);
     }
 
+    private shouldFetchFullNotifications(authInfo: AuthInfo) {
+        const lastFullPull = this._lastFullPull[authInfo.user.id] || 0;
+        return Date.now() - lastFullPull > AtlassianNotificationNotifier.NOTIFICATION_FULL_PULL_INTERVAL_MS;
+    }
+
     private getNotificationDetailsByAuthInfo(authInfo: AuthInfo, numberToFetch: number): void {
         if (numberToFetch <= 0) {
             Logger.debug(`No unseen notifications to fetch for ${authInfo.user.id}`);
             return;
         }
+        this._lastFullPull[authInfo.user.id] = Date.now();
         Logger.debug(`Fetching notifications for ${authInfo.user.id}`);
         graphqlRequest(notificationFeedVSCode, { first: numberToFetch }, authInfo)
             .then((response) => {
