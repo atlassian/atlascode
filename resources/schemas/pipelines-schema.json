@@ -17,12 +17,31 @@
       "artifacts_expanded": {
         "properties": {
           "download": {
-            "default": true,
-            "description": "Enables downloading of all available artifacts at the start of a step.",
-            "type": "boolean"
+            "oneOf": [
+              {
+                "default": true,
+                "description": "Enables downloading of all available artifacts at the end of a step.",
+                "type": "boolean"
+              },
+              {
+                "description": "Define the list of filtered artifacts to be downloaded by the step.",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "type": "array"
+              }
+            ]
           },
           "paths": {
             "$ref": "#/components/schemas/artifacts_paths"
+          },
+          "upload": {
+            "items": {
+              "$ref": "#/components/schemas/artifacts_upload"
+            },
+            "minItems": 1,
+            "type": "array"
           }
         },
         "type": "object"
@@ -35,6 +54,62 @@
         },
         "minItems": 1,
         "type": "array"
+      },
+      "artifacts_upload": {
+        "description": "The artifact to be uploaded.",
+        "properties": {
+          "capture-on": {
+            "description": "The capture on field for the artifact.",
+            "enum": [
+              "success",
+              "failed",
+              "always"
+            ],
+            "title": "Artifact Capture On",
+            "type": "string"
+          },
+          "depth": {
+            "description": "The depth to search for the artifact files.",
+            "minimum": 1,
+            "title": "Artifact Depth",
+            "type": "integer"
+          },
+          "ignore-paths": {
+            "description": "The ignore paths for the artifact.",
+            "items": {
+              "description": "Glob pattern for paths to ignore when capturing artifacts.",
+              "title": "Ignore Path Pattern",
+              "type": "string"
+            },
+            "title": "Artifact Ignore Paths",
+            "type": "array"
+          },
+          "name": {
+            "description": "The name of the artifact.",
+            "title": "Artifact Name",
+            "type": "string"
+          },
+          "paths": {
+            "$ref": "#/components/schemas/artifacts_paths"
+          },
+          "type": {
+            "default": "shared",
+            "description": "The type of the artifact.",
+            "enum": [
+              "shared",
+              "unshared",
+              "test-reports"
+            ],
+            "title": "Artifact Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "paths"
+        ],
+        "title": "Artifact Upload object",
+        "type": "object"
       },
       "cache": {
         "oneOf": [
@@ -107,10 +182,6 @@
             "description": "Enables cloning of the repository.",
             "type": "boolean"
           },
-          "filter": {
-            "description": "The partial clone filter argument of Git fetch operation. It can be either \"blob:none\" or \"tree:\u003Cn\u003E\" value",
-            "type": "string"
-          },
           "lfs": {
             "default": false,
             "description": "Enables the download of files from LFS storage when cloning.",
@@ -120,45 +191,6 @@
             "default": false,
             "description": "Disables SSL verification during Git clone operation, allowing the use of self-signed certificates.",
             "type": "boolean"
-          },
-          "sparse-checkout": {
-            "description": "When this is provided, the repository will be cloned using sparse checkout using the provided settings.",
-            "properties": {
-              "cone-mode": {
-                "default": true,
-                "description": "Controls whether to use cone-mode or non-cone-mode.",
-                "type": "boolean"
-              },
-              "enabled": {
-                "default": true,
-                "description": "Enables sparse checkout.",
-                "type": "boolean"
-              },
-              "patterns": {
-                "description": "List of patterns to include in sparse checkout. The patterns should be directories or gitignore-style patterns based on the cone-mode settings.",
-                "items": {
-                  "description": "A directory for cone-mode, or a gitignore-style pattern for no-cone-mode.",
-                  "type": "string"
-                },
-                "type": "array"
-              }
-            },
-            "title": "Sparse Checkout Settings",
-            "type": "object"
-          },
-          "strategy": {
-            "default": "fetch",
-            "description": "Set the Git clone strategy to use. \"fetch\" is the new default strategy, \"clone\" is the legacy strategy.",
-            "enum": [
-              "clone",
-              "fetch"
-            ],
-            "type": "string"
-          },
-          "tags": {
-            "default": false,
-            "description": "Enables fetching tags when cloning.",
-            "type": "boolean"
           }
         },
         "title": "Clone Repository Settings",
@@ -167,19 +199,19 @@
       "cloud": {
         "description": "Custom cloud step runtime",
         "properties": {
+          "arch": {
+            "default": "x86",
+            "description": "Architecture type used to run the step.",
+            "enum": [
+              "x86",
+              "arm"
+            ],
+            "type": "string"
+          },
           "atlassian-ip-ranges": {
             "default": false,
             "description": "Whether it uses Atlassian ip ranges.",
             "type": "boolean"
-          },
-          "arch": {
-            "default": "x86",
-            "description": "The architecture type cloud step runtime used.",
-            "type": "string",
-            "enum": [
-              "x86",
-              "arm"
-            ]
           },
           "version": {
             "description": "Cloud Runtime version.",
@@ -192,8 +224,21 @@
       "condition": {
         "properties": {
           "changesets": {
+            "additionalProperties": false,
             "description": "Condition on the changesets involved in the pipeline.",
+            "maxProperties": 1,
             "properties": {
+              "excludePaths": {
+                "description": "Condition which holds only if all of the modified files match any of the specified patterns.",
+                "items": {
+                  "description": "Glob pattern to match the file path.",
+                  "title": "File Path Pattern",
+                  "type": "string"
+                },
+                "minItems": 1,
+                "title": "Exclude Paths",
+                "type": "array"
+              },
               "includePaths": {
                 "description": "Condition which holds only if any of the modified files match any of the specified patterns.",
                 "items": {
@@ -206,9 +251,6 @@
                 "type": "array"
               }
             },
-            "required": [
-              "includePaths"
-            ],
             "title": "Changeset Condition",
             "type": "object"
           }
