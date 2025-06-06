@@ -189,12 +189,26 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     if (trimmed.startsWith('data:')) {
                         try {
                             const data: FetchResponseData = JSON.parse(trimmed.substring(5).trim());
+                            const part_kind = data.part_kind;
 
-                            // Still send individual chunks for streaming UI effect
-                            await this._webView.postMessage({
-                                type: 'response',
-                                dataObject: data,
-                            });
+                            if (part_kind === 'tool-call') {
+                                // Handle tool call response
+                                await this._webView.postMessage({
+                                    type: 'toolCall',
+                                    dataObject: data,
+                                });
+                            } else if (part_kind === 'tool-result') {
+                                // Handle tool result response
+                                await this._webView.postMessage({
+                                    type: 'toolResult',
+                                    dataObject: data,
+                                });
+                            } else {
+                                await this._webView.postMessage({
+                                    type: 'response',
+                                    dataObject: data,
+                                });
+                            }
                         } catch (err) {
                             // Ignore JSON parse errors for incomplete lines
                             console.error('Error parsing JSON from response:', err);

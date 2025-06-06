@@ -2,7 +2,6 @@ export const rovoDevContainerStyles: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    padding: '20px',
     height: '100vh',
     boxSizing: 'border-box',
     backgroundColor: 'var(--vscode-editor-background)',
@@ -19,22 +18,37 @@ export const rovoDevPromptContainerStyles: React.CSSProperties = {
     left: 0,
     padding: '10px 20px',
     borderTop: '1px solid var(--vscode-panel-border)',
-    background: 'var(--vscode-sideBar-background)',
+    background: 'var(--vscode-editor-background)',
     zIndex: 1000,
     boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.05)',
 };
 
 export const rovoDevTextareaStyles: React.CSSProperties = {
     width: '100%',
+    background: 'inherit',
+    color: 'var(--vscode-input-foreground)',
+    resize: 'none',
+    fontSize: '12px',
+    outline: 'none',
+    border: 'none',
+    display: 'flex',
+    flexDirection: 'column',
+};
+
+export const rovoDevButtonStyles: React.CSSProperties = {
+    marginLeft: 'auto',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+};
+
+export const rovoDevTextareaContainerStyles: React.CSSProperties = {
+    width: '100%',
     border: '1px solid var(--vscode-input-border)',
     borderRadius: '2px',
     background: 'var(--vscode-input-background)',
-    color: 'var(--vscode-input-foreground)',
-    resize: 'none',
-    padding: '12px 15px',
-    outline: 'none',
-    fontSize: '14px',
-    marginRight: '10px',
+    padding: '8px',
 };
 
 export const chatMessagesContainerStyles: React.CSSProperties = {
@@ -42,7 +56,7 @@ export const chatMessagesContainerStyles: React.CSSProperties = {
     maxWidth: '800px',
     flex: '1 1 auto',
     overflowY: 'auto',
-    padding: '20px',
+    padding: '4px',
     marginBottom: '110px',
     display: 'flex',
     flexDirection: 'column',
@@ -51,7 +65,7 @@ export const chatMessagesContainerStyles: React.CSSProperties = {
 export const chatMessageStyles: React.CSSProperties = {
     width: '100%',
     marginBottom: '16px',
-    padding: '12px',
+    padding: '4px',
     borderRadius: '8px',
     position: 'relative',
 };
@@ -111,11 +125,6 @@ export const toolCallHeaderStyles: React.CSSProperties = {
     color: 'var(--vscode-terminal-foreground)',
 };
 
-export const toolCallIconStyles: React.CSSProperties = {
-    marginRight: '8px',
-    fontSize: '16px',
-};
-
 export const toolCallNameStyles: React.CSSProperties = {
     color: 'var(--vscode-terminal-ansiGreen)',
     fontSize: '14px',
@@ -126,13 +135,22 @@ export const toolCallArgsStyles: React.CSSProperties = {
     alignItems: 'center',
     backgroundColor: 'inherit',
     borderRadius: '4px',
-    border: '1px solid var(--vscode-editor-foreground)',
+    border: '1px solid var(--vscode-input-border)',
 };
 
 export const toolCallArgsPreStyles: React.CSSProperties = {
     margin: 0,
     fontSize: '12px',
-    color: 'var(--vscode-terminal-foreground)',
+    background: 'inherit',
+    color: 'var(--vscode-descriptionForeground)',
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-all',
+};
+
+export const toolIconStyles: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    marginBottom: 'auto',
 };

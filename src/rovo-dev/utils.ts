@@ -11,7 +11,7 @@ export interface FetchResponseData {
 
 export interface ChatMessage {
     text: string;
-    author: 'User' | 'Agent';
+    author: 'User' | 'Agent' | 'Tool';
     timestamp: number;
 }
 
