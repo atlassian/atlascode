@@ -12,9 +12,6 @@ jest.mock('../../util/featureFlags', () => ({
     FeatureFlagClient: {
         checkExperimentValue: jest.fn(() => true),
     },
-    Experiments: {
-        AtlassianNotifications: 'atlassian-notifications',
-    },
 }));
 
 const mockGraphqlRequest = graphqlRequest as jest.MockedFunction<typeof graphqlRequest>;

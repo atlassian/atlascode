@@ -5,6 +5,7 @@ import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
 import { extractPullRequestComponents } from '../../commands/bitbucket/pullRequest';
 import { Commands } from '../../constants';
 import { Container } from '../../container';
+import { parseJiraIssueKeys } from '../../jira/issueKeyParser';
 import {
     AtlasCodeNotification,
     NotificationAction,
@@ -20,8 +21,6 @@ export class BannerDelegate implements NotificationDelegate {
     private _analyticsClient: AnalyticsClient;
     private pile: Set<NotificationChangeEvent> = new Set();
     private timer: NodeJS.Timeout | undefined;
-
-    private readonly jiraPathRegex = /\/([A-Z][A-Z0-9]+-\d+)/i; // Matches Jira issue keys like AXON-123
 
     public static getInstance(): BannerDelegate {
         if (!this.bannerDelegateSingleton) {
@@ -161,8 +160,8 @@ export class BannerDelegate implements NotificationDelegate {
 
     private getNotificationSourceKeyFromUri(uri: Uri, notificationType: NotificationType): string | undefined {
         if (notificationType === NotificationType.JiraComment) {
-            const match = uri.path.match(this.jiraPathRegex);
-            const issueKey = match ? match[1] : undefined;
+            const match = parseJiraIssueKeys(uri.path);
+            const issueKey = match && match.length ? match[0] : undefined;
 
             return issueKey;
         }

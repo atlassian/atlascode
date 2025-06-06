@@ -136,7 +136,7 @@ export class BitbucketCheckoutHelper implements CheckoutHelper {
                 workspaceRepo: wsRepo,
             });
         } catch (e) {
-            Logger.error(e);
+            Logger.error(e, 'Error opening pull request');
             this.showLoginMessage(
                 'Cannot open pull request. Authenticate with Bitbucket in the extension settings and try again.',
             );

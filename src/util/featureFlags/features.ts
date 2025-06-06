@@ -8,7 +8,6 @@ export const enum Features {
 export const enum Experiments {
     AtlascodeAA = 'atlascode_aa_experiment',
     AtlascodeOnboardingExperiment = 'atlascode_quick_pick_onboarding_experiment',
-    AtlassianNotifications = 'atlascode_atlassian_notifications',
 }
 
 export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
@@ -18,10 +17,6 @@ export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
     },
     [Experiments.AtlascodeOnboardingExperiment]: {
         parameter: 'enableQuickPickOnboarding',
-        defaultValue: false,
-    },
-    [Experiments.AtlassianNotifications]: {
-        parameter: 'enableAtlassianNotifications',
         defaultValue: false,
     },
 };

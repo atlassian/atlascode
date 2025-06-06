@@ -5,7 +5,6 @@ import { graphqlRequest } from '../../atlclients/graphql/graphqlClient';
 import { notificationFeedVSCode, unseenNotificationCountVSCode } from '../../atlclients/graphql/graphqlDocuments';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
-import { Experiments, FeatureFlagClient } from '../../util/featureFlags';
 import { Time } from '../../util/time';
 import {
     AtlasCodeNotification,
@@ -13,6 +12,8 @@ import {
     NotificationNotifier,
     NotificationType,
 } from './notificationManager';
+
+export const allowedBitbucketHosts = ['bitbucket.org'];
 
 export class AtlassianNotificationNotifier extends Disposable implements NotificationNotifier {
     private static instance: AtlassianNotificationNotifier;
@@ -81,9 +82,7 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
                     .map((node: any) => {
                         const notification = this.mapper(authInfo, node);
                         if (notification) {
-                            if (FeatureFlagClient.checkExperimentValue(Experiments.AtlassianNotifications)) {
-                                NotificationManagerImpl.getInstance().addNotification(notification);
-                            }
+                            NotificationManagerImpl.getInstance().addNotification(notification);
                         }
                     });
             })
@@ -143,7 +142,7 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
         try {
             adfData = JSON.parse(bodyItem.document.data);
         } catch (error) {
-            Logger.error(new Error(`Error parsing ADF data: ${error}`));
+            Logger.error(error, 'Error parsing ADF data');
             return '';
         }
 
@@ -181,10 +180,10 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
     private isBitbucketNotification(node: any): boolean {
         try {
             const parsedUrl = new URL(node.headNotification.content.url);
-            const allowedHosts = ['bitbucket.org'];
-            return allowedHosts.includes(parsedUrl.host);
+
+            return allowedBitbucketHosts.includes(parsedUrl.host);
         } catch (error) {
-            Logger.error(new Error(`Error parsing URL: ${error}`));
+            Logger.error(error, 'Error parsing URL');
             return false;
         }
     }
@@ -229,7 +228,7 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
                 return response.notifications.unseenNotificationCount;
             })
             .catch((error) => {
-                Logger.error(new Error(`Error fetching unseen notification count: ${error}`));
+                Logger.error(error, 'Error fetching unseen notification count');
                 return 0;
             });
     }

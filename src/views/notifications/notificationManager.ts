@@ -290,6 +290,7 @@ export class NotificationManagerImpl extends Disposable {
     private runNotifiers(): void {
         if (!window.state.focused) {
             Logger.debug('Window is not focused, skipping notification check');
+            return;
         }
 
         this.notifiers.forEach((notifier) => {
