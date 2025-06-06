@@ -49,14 +49,18 @@ class OnboardingQuickPickManager {
             case ProductJira: {
                 this._quickPick.title = 'Sign in to Jira';
                 this._quickPick.step = OnboardingStep.Jira;
-                this._quickPick.buttons = [OnboardingButtons.settings];
+                this._quickPick.buttons = [OnboardingButtons.settings, OnboardingButtons.dismiss];
 
                 break;
             }
             case ProductBitbucket: {
                 this._quickPick.title = 'Sign in to Bitbucket';
                 this._quickPick.step = OnboardingStep.Bitbucket;
-                this._quickPick.buttons = [QuickInputButtons.Back, OnboardingButtons.settings];
+                this._quickPick.buttons = [
+                    QuickInputButtons.Back,
+                    OnboardingButtons.settings,
+                    OnboardingButtons.dismiss,
+                ];
                 break;
             }
         }
@@ -93,6 +97,9 @@ class OnboardingQuickPickManager {
         } else if (e === QuickInputButtons.Back && this._onBack) {
             // Only bb has a back button
             this._onBack(OnboardingStep.Bitbucket);
+        } else if (e === OnboardingButtons.dismiss) {
+            // Dismiss the onboarding quick pick
+            this.hide();
         }
     }
 

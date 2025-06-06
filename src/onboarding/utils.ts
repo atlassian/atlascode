@@ -54,6 +54,10 @@ export const OnboardingButtons: Record<string, QuickInputButton> = {
         iconPath: new ThemeIcon('key'),
         tooltip: 'Create API tokens',
     },
+    dismiss: {
+        iconPath: new ThemeIcon('close'),
+        tooltip: 'Dismiss',
+    },
 };
 
 export enum OnboardingStep {
