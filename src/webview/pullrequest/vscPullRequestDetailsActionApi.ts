@@ -261,7 +261,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
             if (isMinimalIssue(issue)) {
                 const transition = issue.transitions.find((t) => t.to.id === issue.status.id);
                 if (transition) {
-                    await transitionIssue(issue, transition);
+                    await transitionIssue(issue, transition, { source: 'mergePullRequest' });
                 }
             }
         });

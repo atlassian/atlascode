@@ -977,7 +977,7 @@ describe('JiraIssueWebview', () => {
 
             await jiraIssueWebview['onMessageReceived'](msg);
 
-            expect(transitionIssue).toHaveBeenCalledWith(mockIssue, transition);
+            expect(transitionIssue).toHaveBeenCalledWith(mockIssue, transition, { source: 'jiraIssueWebview' });
             expect(jiraIssueWebview['_editUIData'].fieldValues['status']).toBe(transition.to);
             expect(forceUpdateSpy).toHaveBeenCalledWith(true);
         });

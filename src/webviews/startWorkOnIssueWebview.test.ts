@@ -509,7 +509,9 @@ describe('StartWorkOnIssueWebview', () => {
             // Verify that all operations were called
             expect(createOrCheckoutBranchSpy).toHaveBeenCalled();
             expect(assignIssue).toHaveBeenCalledWith(mockIssue, 'user-1');
-            expect(transitionIssue).toHaveBeenCalledWith(mockIssue, startWorkAction.transition);
+            expect(transitionIssue).toHaveBeenCalledWith(mockIssue, startWorkAction.transition, {
+                source: 'startWork',
+            });
             expect(postMessageSpy).toHaveBeenCalledWith({
                 type: 'startWorkOnIssueResult',
                 successMessage: expect.stringContaining('Assigned the issue to you'),

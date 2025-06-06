@@ -62,6 +62,7 @@ export const enum Commands {
     ShowOnboardingPage = 'atlascode.showOnboardingPage',
     ShowPullRequestDetailsPage = 'atlascode.showPullRequestDetailsPage',
     AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
+    TransitionIssue = 'atlascode.jira.transitionIssue',
     StartWorkOnIssue = 'atlascode.jira.startWorkOnIssue',
     CreatePullRequest = 'atlascode.bb.createPullRequest',
     RerunPipeline = 'atlascode.bb.rerunPipeline',

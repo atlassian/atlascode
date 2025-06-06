@@ -70,16 +70,14 @@ describe('OnboardingQuickPickManager', () => {
         const manager = new OnboardingQuickPickManager(items, ProductJira, onAccept, onBack);
         manager.show();
 
-        expect(quickPickMock.title).toBe('Setup Jira & Bitbucket');
+        expect(quickPickMock.title).toBe('Sign in to Jira');
         expect(quickPickMock.ignoreFocusOut).toBe(true);
         expect(quickPickMock.items).toBe(items);
         expect(quickPickMock.totalSteps).toBe(2);
         expect(quickPickMock.activeItems).toEqual([items[0]]);
         expect(quickPickMock.step).toBe(OnboardingStep.Jira);
         expect(quickPickMock.buttons).toEqual([OnboardingButtons.settings]);
-        expect(quickPickMock.placeholder).toBe(
-            'Select your Jira site type. For more advanced options, click on the gear button.',
-        );
+        expect(quickPickMock.placeholder).toBe('Type to search. Select settings for advanced options.');
         expect(quickPickMock.show).toHaveBeenCalled();
     });
 
@@ -89,9 +87,7 @@ describe('OnboardingQuickPickManager', () => {
 
         expect(quickPickMock.step).toBe(OnboardingStep.Bitbucket);
         expect(quickPickMock.buttons).toEqual([QuickInputButtons.Back, OnboardingButtons.settings]);
-        expect(quickPickMock.placeholder).toBe(
-            'Select your Bitbucket site type. For more advanced options, click on the gear button.',
-        );
+        expect(quickPickMock.placeholder).toBe('Type to search. Select settings for advanced options.');
         expect(quickPickMock.show).toHaveBeenCalled();
     });
 

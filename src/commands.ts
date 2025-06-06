@@ -8,7 +8,7 @@ import {
     Registry,
     viewScreenEvent,
 } from './analytics';
-import { DetailedSiteInfo, ProductBitbucket } from './atlclients/authInfo';
+import { DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
 import { rerunPipeline } from './commands/bitbucket/rerunPipeline';
 import { runPipeline } from './commands/bitbucket/runPipeline';
@@ -19,8 +19,10 @@ import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { configuration } from './config/configuration';
 import { Commands, HelpTreeViewId } from './constants';
 import { Container } from './container';
+import { transitionIssue } from './jira/transitionIssue';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
+import { Logger } from './logger';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
@@ -140,6 +142,39 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             commands.executeCommand(Commands.ShowIssue, issueNode.issue),
         ),
         commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
+        commands.registerCommand(Commands.TransitionIssue, async (issueNode: IssueNode) => {
+            if (!isMinimalIssue(issueNode.issue)) {
+                // Should be unreachable, but let's fail gracefully
+                return;
+            }
+
+            const issue = issueNode.issue as MinimalIssue<DetailedSiteInfo>;
+            Container.analyticsApi.fireViewScreenEvent('atlascodeTransitionQuickPick', issue.siteDetails, ProductJira);
+            window
+                .showQuickPick(
+                    issue.transitions.map((x) => ({
+                        label: x.name,
+                        detail: x.name !== x.to.name ? `${x.to.name}` : '',
+                    })),
+                    {
+                        placeHolder: `Select a transition for ${issue.key}`,
+                    },
+                )
+                .then(async (transition) => {
+                    if (!transition) {
+                        return;
+                    }
+
+                    const target = issue.transitions.find((x) => x.name === transition.label);
+                    if (!target) {
+                        window.showErrorMessage(`Transition ${transition.label} not found`);
+                        Logger.error(new Error('Transition not found'));
+                        return;
+                    }
+
+                    await transitionIssue(issue, target, { source: 'quickPick' });
+                });
+        }),
         commands.registerCommand(
             Commands.StartWorkOnIssue,
             (issueNodeOrMinimalIssue: IssueNode | MinimalIssue<DetailedSiteInfo>) =>

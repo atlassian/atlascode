@@ -198,8 +198,15 @@ export async function issueCreatedEvent(site: DetailedSiteInfo, issueKey: string
     return instanceTrackEvent(site, 'created', 'issue', { actionSubjectId: issueKey });
 }
 
-export async function issueTransitionedEvent(site: DetailedSiteInfo, issueKey: string): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'transitioned', 'issue', { actionSubjectId: issueKey });
+export async function issueTransitionedEvent(
+    site: DetailedSiteInfo,
+    issueKey: string,
+    source?: string,
+): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'transitioned', 'issue', {
+        actionSubjectId: issueKey,
+        ...(source && { source }), // Only include source if it is defined
+    });
 }
 
 export async function issueUrlCopiedEvent(): Promise<TrackEvent> {
