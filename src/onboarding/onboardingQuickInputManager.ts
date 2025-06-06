@@ -42,7 +42,7 @@ class OnboardingQuickInputManager {
             input.totalSteps = 3;
             input.step = i + 1;
             input.ignoreFocusOut = true;
-            input.buttons = [QuickInputButtons.Back];
+            input.buttons = [QuickInputButtons.Back, OnboardingButtons.dismiss];
             input.onDidTriggerButton((e) => this._quickInputOnDidTriggerButton(e, i));
             input.onDidAccept(() => this._onDidInputAccept(i));
             return input;
@@ -175,6 +175,8 @@ class OnboardingQuickInputManager {
             }
         } else if (e === OnboardingButtons.createApiToken) {
             this._handleOpenCreateApiToken();
+        } else if (e === OnboardingButtons.dismiss) {
+            this._hideInput(step);
         }
     }
 
@@ -213,7 +215,11 @@ class OnboardingQuickInputManager {
                     this._quickInput[step].prompt = 'Use an API token to connect.';
                     this._quickInput[step].placeholder =
                         'Enter your API token. Click the key button above to create one.';
-                    this._quickInput[step].buttons = [QuickInputButtons.Back, OnboardingButtons.createApiToken];
+                    this._quickInput[step].buttons = [
+                        QuickInputButtons.Back,
+                        OnboardingButtons.createApiToken,
+                        OnboardingButtons.dismiss,
+                    ];
                 } else {
                     this._quickInput[step].prompt = 'Enter your password';
                     this._quickInput[step].placeholder = 'Enter your password';
