@@ -6,6 +6,7 @@ import { notificationFeedVSCode, unseenNotificationCountVSCode } from '../../atl
 import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { Experiments, FeatureFlagClient } from '../../util/featureFlags';
+import { Time } from '../../util/time';
 import {
     AtlasCodeNotification,
     NotificationManagerImpl,
@@ -195,7 +196,7 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
     private filter(node: any): boolean {
         // Check that notification is within the past week
         const notificationDate = new Date(node.headNotification.timestamp);
-        const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const oneWeekAgo = new Date(Date.now() - 7 * Time.DAYS);
         if (notificationDate < oneWeekAgo) {
             Logger.debug('Notification is older than one week, skipping');
             return false;

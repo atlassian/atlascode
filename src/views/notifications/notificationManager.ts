@@ -354,7 +354,11 @@ class NotificationDB {
             [],
         );
 
-        return inDB.filter((notification) => NotificationDB.isGoodTTL(notification));
+        const results = inDB.filter((notification) => NotificationDB.isGoodTTL(notification));
+        if (results.length !== inDB.length) {
+            Container.context.globalState.update(NotificationDB.USER_READ_NOTIFICATIONS_KEY, results);
+        }
+        return results;
     }
 
     public static setReadNotifications(notifications: { id: string; timestamp: number }[]): void {
