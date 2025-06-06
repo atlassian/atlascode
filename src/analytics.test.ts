@@ -139,6 +139,7 @@ describe('analytics', () => {
 
         it('should create launchedEvent with authentication counts', async () => {
             const location = 'test-location';
+            const ideName = 'application.com.microsoft.VSCode';
             const numJiraCloudAuthed = 1;
             const numJiraDcAuthed = 2;
             const numBitbucketCloudAuthed = 3;
@@ -146,6 +147,7 @@ describe('analytics', () => {
 
             const event = await analytics.launchedEvent(
                 location,
+                ideName,
                 numJiraCloudAuthed,
                 numJiraDcAuthed,
                 numBitbucketCloudAuthed,
