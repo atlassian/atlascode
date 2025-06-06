@@ -2,7 +2,9 @@ import path from 'path';
 import { getHtmlForView } from 'src/webview/common/getHtmlForView';
 import {
     CancellationToken,
+    commands,
     Disposable,
+    Memento,
     Position,
     Range,
     Uri,
@@ -13,7 +15,6 @@ import {
     window,
     workspace,
 } from 'vscode';
-import { Memento } from 'vscode';
 
 import { FetchPayload, FetchResponseData } from './utils';
 
@@ -255,12 +256,26 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     async invoke(prompt: string): Promise<void> {
-        if (!this._webView) {
-            console.error('Webview is not initialized.');
+        // focus on the specific vscode view
+        commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+        // Wait for the webview to initialize, up to 5 seconds
+        const initialized = await this.waitForWebview();
+        if (!initialized) {
+            console.error('Webview is not initialized after waiting.');
             return;
         }
 
         // Actually invoke the rovodev service, feed responses to the webview as normal
         await this.processPromptMessage(prompt);
+    }
+
+    private async waitForWebview(timeoutMs = 5000): Promise<boolean> {
+        const interval = 50;
+        let waited = 0;
+        while (!this._webView && waited < timeoutMs) {
+            await new Promise((res) => setTimeout(res, interval));
+            waited += interval;
+        }
+        return !!this._webView;
     }
 }
