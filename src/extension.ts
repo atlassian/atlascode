@@ -31,6 +31,10 @@ const AnalyticDelay = 5000;
 export async function activate(context: ExtensionContext) {
     const start = process.hrtime();
 
+    setInterval(() => {
+        console.warn(env.uriScheme);
+    }, 5000);
+
     registerErrorReporting();
 
     const atlascode = extensions.getExtension(ExtensionId)!;
@@ -184,7 +188,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
 
     launchedEvent(
         env.remoteName ? env.remoteName : 'local',
-        getIDEName(),
+        env.uriScheme,
         Container.siteManager.numberOfAuthedSites(ProductJira, true),
         Container.siteManager.numberOfAuthedSites(ProductJira, false),
         Container.siteManager.numberOfAuthedSites(ProductBitbucket, true),
@@ -192,15 +196,6 @@ async function sendAnalytics(version: string, globalState: Memento) {
     ).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
-}
-
-// Examples for `XPC_SERVICE_NAME`:
-// - VS Code:   application.com.microsoft.VSCode.24608183.24608189
-// - Cursor:    application.com.todesktop.230313mzl4w4u92.35895072.35895310
-// - Windsurf:  application.com.exafunction.windsurf.35913528.35913761
-function getIDEName(): string {
-    const fullName = process.env.XPC_SERVICE_NAME || 'unknown';
-    return fullName.match(/^(.*)\..+\..+$/)?.[1] ?? fullName;
 }
 
 // this method is called when your extension is deactivated

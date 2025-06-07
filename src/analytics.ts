@@ -54,7 +54,7 @@ export async function upgradedEvent(version: string, previousVersion: string): P
 
 export async function launchedEvent(
     location: string,
-    ideName: string,
+    ideUriScheme: string,
     numJiraCloudAuthed: number,
     numJiraDcAuthed: number,
     numBitbucketCloudAuthed: number,
@@ -64,7 +64,7 @@ export async function launchedEvent(
         attributes: {
             machineId: Container.machineId,
             extensionLocation: location,
-            ideName,
+            ideUriScheme,
             numJiraCloudAuthed,
             numJiraDcAuthed,
             numBitbucketCloudAuthed,
