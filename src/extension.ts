@@ -31,10 +31,6 @@ const AnalyticDelay = 5000;
 export async function activate(context: ExtensionContext) {
     const start = process.hrtime();
 
-    setInterval(() => {
-        console.warn(env.uriScheme);
-    }, 5000);
-
     registerErrorReporting();
 
     const atlascode = extensions.getExtension(ExtensionId)!;

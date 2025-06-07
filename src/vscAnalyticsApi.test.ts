@@ -99,7 +99,7 @@ describe('VSCAnalyticsApi', () => {
 
         it('should fire launched event', async () => {
             const location = 'test-location';
-            const ideUriScheme = 'application.com.microsoft.VSCode';
+            const ideUriScheme = 'vscode';
             const numJiraCloudAuthed = 1;
             const numJiraDcAuthed = 2;
             const numBitbucketCloudAuthed = 3;
