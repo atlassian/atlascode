@@ -74,6 +74,7 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async fireLaunchedEvent(
         location: string,
+        ideUriScheme: string,
         numJiraCloudAuthed: number,
         numJiraDcAuthed: number,
         numBitbucketCloudAuthed: number,
@@ -81,6 +82,7 @@ export class VSCAnalyticsApi implements AnalyticsApi {
     ): Promise<void> {
         return launchedEvent(
             location,
+            ideUriScheme,
             numJiraCloudAuthed,
             numJiraDcAuthed,
             numBitbucketCloudAuthed,

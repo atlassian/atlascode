@@ -184,6 +184,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
 
     launchedEvent(
         env.remoteName ? env.remoteName : 'local',
+        env.uriScheme,
         Container.siteManager.numberOfAuthedSites(ProductJira, true),
         Container.siteManager.numberOfAuthedSites(ProductJira, false),
         Container.siteManager.numberOfAuthedSites(ProductBitbucket, true),
