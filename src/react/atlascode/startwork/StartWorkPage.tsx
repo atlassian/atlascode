@@ -51,6 +51,7 @@ import { ErrorDisplay } from '../common/ErrorDisplay';
 import Lozenge from '../common/Lozenge';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { PrepareCommitTip } from '../common/PrepareCommitTip';
+import { buildBranchName } from './branchNameUtils';
 import { StartWorkControllerContext, useStartWorkController } from './startWorkController';
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -199,34 +200,11 @@ const StartWorkPage: React.FunctionComponent = () => {
         [setUpstream],
     );
 
-    const buildBranchName = useCallback(() => {
-        const view = {
-            prefix: branchType.prefix.replace(/ /g, '-').toLowerCase(),
-            Prefix: branchType.prefix.replace(/ /g, '-'),
-            PREFIX: branchType.prefix.replace(/ /g, '-').toUpperCase(),
-            issueKey: state.issue.key,
-            issuekey: state.issue.key.toLowerCase(),
-            summary: state.issue.summary
-                .substring(0, 50)
-                .trim()
-                .toLowerCase()
-                .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
-                .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
-                .replace(/\W+/g, '-'),
-            Summary: state.issue.summary
-                .substring(0, 50)
-                .trim()
-                .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
-                .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
-                .replace(/\W+/g, '-'),
-            SUMMARY: state.issue.summary
-                .substring(0, 50)
-                .trim()
-                .toUpperCase()
-                .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
-                .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
-                .replace(/\W+/g, '-'),
-        };
+    const buildBranchNameView = useCallback(() => {
+        const view = buildBranchName({
+            branchType,
+            issue: state.issue,
+        });
 
         try {
             const generatedBranchTitle = Mustache.render(state.customTemplate, view);
@@ -234,11 +212,11 @@ const StartWorkPage: React.FunctionComponent = () => {
         } catch {
             setLocalBranch('Invalid template: please follow the format described above');
         }
-    }, [state.issue.key, state.issue.summary, branchType.prefix, state.customTemplate]);
+    }, [branchType, state.issue, state.customTemplate]);
 
     useEffect(() => {
-        buildBranchName();
-    }, [branchType, buildBranchName]);
+        buildBranchNameView();
+    }, [branchType, buildBranchNameView]);
     const handleSuccessSnackbarClose = useCallback(() => setSuccessSnackbarOpen(false), [setSuccessSnackbarOpen]);
 
     const handleStartWorkSubmit = useCallback(async () => {
