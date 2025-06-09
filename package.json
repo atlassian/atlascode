@@ -38,8 +38,7 @@
         "onStartupFinished"
     ],
     "extensionDependencies": [
-        "vscode.git",
-        "redhat.vscode-yaml"
+        "vscode.git"
     ],
     "extensionKind": [
         "workspace"
@@ -1276,6 +1275,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Shows the help explorer treeview",
+                    "scope": "window"
+                },
+                "atlascode.disableOnboarding": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Hide initial onboarding and help screens",
                     "scope": "window"
                 }
             }

@@ -19,6 +19,7 @@ export interface IConfig {
     enableHttpsTunnel: boolean;
     onlineCheckerUrls: string[];
     helpExplorerEnabled: boolean;
+    disableOnboarding: boolean;
 }
 
 export interface JiraConfig {
@@ -268,4 +269,5 @@ export const emptyConfig: IConfig = {
     enableHttpsTunnel: false,
     onlineCheckerUrls: [],
     helpExplorerEnabled: true,
+    disableOnboarding: false,
 };
