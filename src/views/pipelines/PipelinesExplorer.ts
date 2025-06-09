@@ -2,14 +2,13 @@ import { commands, ConfigurationChangeEvent } from 'vscode';
 
 import { BitbucketContext } from '../../bitbucket/bbContext';
 import { CommandContext, setCommandContext } from '../../commandContext';
-import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
-import { PipelinesTreeViewId } from '../../constants';
+import { Commands, PipelinesTreeViewId } from '../../constants';
 import { Container } from '../../container';
 import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 import { BitbucketExplorer } from '../BitbucketExplorer';
 import { BaseTreeDataProvider } from '../Explorer';
-import { PipelinesMonitor } from './PipelinesMonitor';
+import { PipelinesMonitor } from '../notifications/PipelinesMonitor';
 import { PipelinesTree } from './PipelinesTree';
 
 export class PipelinesExplorer extends BitbucketExplorer {

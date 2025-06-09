@@ -1,6 +1,6 @@
 import { commands, Memento, QuickPickItem, window } from 'vscode';
 
-import { Commands } from '../commands';
+import { Commands } from '../constants';
 import { Container } from '../container';
 import { ConfigSection, ConfigSubSection } from '../lib/ipc/models/config';
 import { Logger } from '../logger';
@@ -135,10 +135,12 @@ export class BitbucketCheckoutHelper implements CheckoutHelper {
                 ...pr,
                 workspaceRepo: wsRepo,
             });
-        } catch {
+        } catch (e) {
+            Logger.error(e, 'Error opening pull request');
             this.showLoginMessage(
                 'Cannot open pull request. Authenticate with Bitbucket in the extension settings and try again.',
             );
+            commands.executeCommand(Commands.ShowBitbucketAuth);
         }
     }
 

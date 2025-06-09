@@ -9,15 +9,9 @@ import {
     ExtensionContext,
     Uri,
     workspace,
-    WorkspaceConfiguration,
 } from 'vscode';
 
-import {
-    extensionId,
-    JiraCreateSiteAndProjectKey,
-    JiraLegacyWorkingSiteConfigurationKey,
-    JiraV1WorkingProjectConfigurationKey,
-} from '../constants';
+import { ConfigNamespace, JiraCreateSiteAndProjectKey } from '../constants';
 import { SiteIdAndProjectKey } from './model';
 
 /*
@@ -47,7 +41,7 @@ export class Configuration extends Disposable {
 
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
         // only fire if it's a config for our extension
-        if (!e.affectsConfiguration(extensionId, null!)) {
+        if (!e.affectsConfiguration(ConfigNamespace, null!)) {
             return;
         }
 
@@ -64,16 +58,16 @@ export class Configuration extends Disposable {
     get<T>(section?: string, resource?: Uri | null, defaultValue?: T): T {
         return defaultValue === undefined
             ? workspace
-                  .getConfiguration(section === undefined ? undefined : extensionId, resource!)
-                  .get<T>(section === undefined ? extensionId : section)!
+                  .getConfiguration(section === undefined ? undefined : ConfigNamespace, resource!)
+                  .get<T>(section === undefined ? ConfigNamespace : section)!
             : workspace
-                  .getConfiguration(section === undefined ? undefined : extensionId, resource!)
-                  .get<T>(section === undefined ? extensionId : section, defaultValue)!;
+                  .getConfiguration(section === undefined ? undefined : ConfigNamespace, resource!)
+                  .get<T>(section === undefined ? ConfigNamespace : section, defaultValue)!;
     }
 
-    // changed can be called to see if the passed in section (minus the extensionId) was affect by the change
+    // changed can be called to see if the passed in section (minus the ConfigNamespace) was affect by the change
     changed(e: ConfigurationChangeEvent, section: string, resource?: Uri | null): boolean {
-        return e.affectsConfiguration(`${extensionId}.${section}`, resource!);
+        return e.affectsConfiguration(`${ConfigNamespace}.${section}`, resource!);
     }
 
     // initializing takes an event and returns if it is an initalizing event or not
@@ -87,8 +81,8 @@ export class Configuration extends Disposable {
         resource?: Uri | null,
     ): { key: string; defaultValue?: T; globalValue?: T; workspaceValue?: T; workspaceFolderValue?: T } {
         const inspect = workspace
-            .getConfiguration(section === undefined ? undefined : extensionId, resource!)
-            .inspect<T>(section === undefined ? extensionId : section);
+            .getConfiguration(section === undefined ? undefined : ConfigNamespace, resource!)
+            .inspect<T>(section === undefined ? ConfigNamespace : section);
 
         return inspect ? inspect : { key: '' };
     }
@@ -110,62 +104,12 @@ export class Configuration extends Disposable {
         }
 
         return await workspace
-            .getConfiguration(extensionId, target === ConfigurationTarget.Global ? undefined : resource!)
+            .getConfiguration(ConfigNamespace, target === ConfigurationTarget.Global ? undefined : resource!)
             .update(section, value, target);
-    }
-
-    // Moving from V1 to V2 working site became default site.
-    async clearVersion1WorkingSite() {
-        await this.updateForWorkspace(JiraLegacyWorkingSiteConfigurationKey, undefined);
-    }
-
-    // Migrates the workspace level site settings. This needs to be done for every workspace /directory
-    // the first time it's opened unlike global migrations that can happen on first run of the extension only.
-    async migrateLocalVersion1WorkingSite(deletePrevious: boolean) {
-        let inspect = configuration.inspect(JiraLegacyWorkingSiteConfigurationKey);
-        if (inspect.workspaceValue) {
-            const config = this.configForOpenWorkspace();
-            if (config && deletePrevious) {
-                await config.update(JiraLegacyWorkingSiteConfigurationKey, undefined);
-            }
-        }
-        inspect = configuration.inspect(JiraV1WorkingProjectConfigurationKey);
-        if (inspect.workspaceValue) {
-            const config = this.configForOpenWorkspace();
-            if (config && deletePrevious) {
-                await config.update(JiraV1WorkingProjectConfigurationKey, undefined);
-            }
-        }
     }
 
     async setLastCreateSiteAndProject(siteAndProject?: SiteIdAndProjectKey) {
         await this.updateEffective(JiraCreateSiteAndProjectKey, siteAndProject, null, true);
-    }
-
-    async clearVersion1WorkingProject() {
-        // for now, we keep the global v1 project so we can use it to migrate jql later
-        await this.update(JiraV1WorkingProjectConfigurationKey, undefined, ConfigurationTarget.Workspace);
-    }
-
-    private configForOpenWorkspace(): WorkspaceConfiguration | undefined {
-        const f = workspace.workspaceFolders;
-        if (f && f.length > 0) {
-            return workspace.getConfiguration(extensionId, f[0].uri);
-        }
-        return undefined;
-    }
-
-    // Will attempt to update the value for both the Workspace and Global. If that fails (no folder is open) it will only set the value globaly.
-    private async updateForWorkspace(section: string, value: any) {
-        const config = this.configForOpenWorkspace();
-        if (config) {
-            await Promise.all([
-                config.update(section, value, ConfigurationTarget.Workspace),
-                config.update(section, value, ConfigurationTarget.Global),
-            ]);
-        } else {
-            await this.updateEffective(section, value);
-        }
     }
 
     // this tries to figure out where the current value is set and update it there

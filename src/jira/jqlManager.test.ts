@@ -1,24 +1,19 @@
-import { JiraClient } from '@atlassianlabs/jira-pi-client';
 import { it } from '@jest/globals';
+import { expansionCastTo } from 'testsutil';
 
-import { expansionCastTo } from '../../testsutil';
 import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
-import { configuration } from '../config/configuration';
 import { JQLEntry } from '../config/model';
 import { Container } from '../container';
 import { JQLManager } from './jqlManager';
-//import { EventEmitter } from 'vscode';
 
 const mockedSites = [
     expansionCastTo<DetailedSiteInfo>({
         id: 'siteDetailsId1',
         name: 'MockedSite1',
-        hasResolutionField: true,
     }),
     expansionCastTo<DetailedSiteInfo>({
         id: 'siteDetailsId2',
         name: 'MockedSite2',
-        hasResolutionField: false,
     }),
 ];
 
@@ -131,7 +126,6 @@ describe('JQLManager', () => {
     });
 
     afterEach(() => {
-        jqlManager.dispose();
         jest.restoreAllMocks();
     });
 
@@ -159,6 +153,7 @@ describe('JQLManager', () => {
         expect(entries).toHaveLength(2);
 
         entries.forEach((entry) => {
+            expect(entry.name).toEqual(expect.any(String));
             expect(entry.query).toEqual('assignee = currentUser() AND StatusCategory != Done ORDER BY updated DESC');
             expect(entry.enabled).toBeTruthy();
             expect(entry.monitor).toBeTruthy();
@@ -166,69 +161,5 @@ describe('JQLManager', () => {
 
         expect(entries[0].id).toEqual('siteDetailsId1');
         expect(entries[1].id).toEqual('siteDetailsId2');
-    });
-
-    it('getCustomJQLEntries retrieves the list of customized and enabled JQL entries', () => {
-        const entries = jqlManager.getCustomJQLEntries();
-
-        expect(entries).toHaveLength(3);
-        expect(entries).toEqual([mockedJqlEntries[2], mockedJqlEntries[3], mockedJqlEntries[4]]);
-    });
-
-    it.each([
-        ['resolution', true],
-        ['anotherField', false],
-    ])(
-        'backFillOldDetailedSiteInfos should backfill old site info with resolution field',
-        async (fieldId, expectedHasResolutionField) => {
-            const mockSite = expansionCastTo<DetailedSiteInfo>({
-                id: 'site1',
-                name: 'Site 1',
-                hasResolutionField: undefined,
-            });
-
-            (Container.siteManager.getSitesAvailable as jest.Mock).mockReturnValue([mockSite]);
-            jest.spyOn(Container.clientManager, 'jiraClient').mockResolvedValue(
-                expansionCastTo<JiraClient<DetailedSiteInfo>>({
-                    getFields: jest.fn().mockResolvedValue([{ id: fieldId }]),
-                }),
-            );
-
-            jest.spyOn(Container.siteManager, 'addOrUpdateSite');
-
-            await JQLManager.backFillOldDetailedSiteInfos();
-
-            expect(Container.siteManager.addOrUpdateSite).toHaveBeenCalledWith(mockSite);
-            expect(mockSite.hasResolutionField).toBe(expectedHasResolutionField);
-        },
-    );
-
-    it('initializeJQL should initialize JQL entries for new sites', async () => {
-        const mockSite = expansionCastTo<DetailedSiteInfo>({
-            id: 'site1',
-            name: 'Site 1',
-            hasResolutionField: undefined,
-        });
-
-        let actualValue: JQLEntry[] = [];
-
-        jest.spyOn(configuration, 'update').mockImplementation((section, value, target) => {
-            actualValue = value;
-            return Promise.resolve();
-        });
-
-        Container.config.jira.jqlList = [];
-        await jqlManager.initializeJQL([mockSite]);
-
-        expect(configuration.update).toHaveBeenCalledWith(
-            'jira.jqlList',
-            expect.anything(),
-            1 /*vscode.ConfigurationTarget.Global*/,
-        );
-        expect(actualValue).toHaveLength(1);
-
-        expect(actualValue[0].siteId).toBe('site1');
-        expect(actualValue[0].id).toBeDefined();
-        expect(actualValue[0].id).not.toEqual(actualValue[0].siteId);
     });
 });

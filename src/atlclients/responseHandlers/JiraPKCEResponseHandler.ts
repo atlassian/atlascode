@@ -29,11 +29,11 @@ export class JiraPKCEResponseHandler extends ResponseHandler {
             const data = tokenResponse.data;
             return { accessToken: data.access_token, refreshToken: data.refresh_token, receivedAt: Date.now() };
         } catch (err) {
+            Logger.error(err, 'Error fetching Jira tokens');
             const data = err?.response?.data;
             const newErr = new Error(`Error fetching Jira tokens: ${err}
             
             Response: ${JSON.stringify(data ?? {})}`);
-            Logger.error(newErr);
             throw newErr;
         }
     }
@@ -62,9 +62,8 @@ export class JiraPKCEResponseHandler extends ResponseHandler {
                 avatarUrl: data.avatarUrls['48x48'],
             };
         } catch (err) {
-            const newErr = new Error(`Error fetching Jira user: ${err}`);
-            Logger.error(newErr);
-            throw newErr;
+            Logger.error(err, 'Error fetching Jira user');
+            throw new Error(`Error fetching Jira user: ${err}`);
         }
     }
 
@@ -88,9 +87,8 @@ export class JiraPKCEResponseHandler extends ResponseHandler {
 
             return resources;
         } catch (err) {
-            const newErr = new Error(`Error fetching Jira resources: ${err}`);
-            Logger.error(newErr);
-            throw newErr;
+            Logger.error(err, 'Error fetching Jira resources');
+            throw new Error(`Error fetching Jira resources: ${err}`);
         }
     }
 }

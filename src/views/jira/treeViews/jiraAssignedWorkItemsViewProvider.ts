@@ -9,18 +9,18 @@ import {
     window,
 } from 'vscode';
 
-import { AssignedJiraItemsViewId } from '../../../../src/constants';
 import { viewScreenEvent } from '../../../analytics';
 import { ProductJira } from '../../../atlclients/authInfo';
 import { CommandContext, setCommandContext } from '../../../commandContext';
-import { Commands } from '../../../commands';
 import { configuration } from '../../../config/configuration';
+import { AssignedJiraItemsViewId, Commands } from '../../../constants';
 import { Container } from '../../../container';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { PromiseRacer } from '../../../util/promises';
+import { BadgeDelegate } from '../../notifications/badgeDelegate';
+import { JiraNotifier } from '../../notifications/jiraNotifier';
 import { RefreshTimer } from '../../RefreshTimer';
 import { SearchJiraHelper } from '../searchJiraHelper';
-import { JiraNotifier } from './jiraNotifier';
 import { executeJqlQuery, JiraIssueNode, loginToJiraMessageNode, TreeViewIssue } from './utils';
 
 const AssignedWorkItemsViewProviderId = AssignedJiraItemsViewId;
@@ -44,12 +44,14 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
         setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
 
         const treeView = window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
-        treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e));
+
+        BadgeDelegate.initialize(treeView);
 
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () => this.refresh()),
             commands.registerCommand(Commands.RefreshAssignedWorkItemsExplorer, this.refresh, this),
+            treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e)),
             treeView,
         );
 

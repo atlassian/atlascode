@@ -6,15 +6,13 @@ import { FieldUI, InputFieldUI, SelectFieldUI, UIType, ValueType } from '@atlass
 import { Box } from '@material-ui/core';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
-import { AnalyticsView } from 'src/analyticsTypes';
-import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
-// NOTE: for now we have to use react-collapsible and NOT Panel because panel uses display:none
-// which totally screws up react-select when select boxes are in an initially hidden panel.
-import uuid from 'uuid';
+import { v4 } from 'uuid';
 
+import { AnalyticsView } from '../../../../analyticsTypes';
 import { EditIssueAction, IssueCommentAction } from '../../../../ipc/issueActions';
 import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../../ipc/issueMessaging';
 import { LegacyPMFData } from '../../../../ipc/messaging';
+import { AtlascodeErrorBoundary } from '../../../../react/atlascode/common/ErrorBoundary';
 import { readFilesContentAsync } from '../../../../util/files';
 import { ConnectionTimeout } from '../../../../util/time';
 import { AtlLoader } from '../../AtlLoader';
@@ -94,6 +92,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     });
                     break;
                 }
+
                 case 'epicChildrenUpdate': {
                     this.setState({ isSomethingLoading: false, loadingField: '', epicChildren: e.epicChildren });
                     break;
@@ -239,7 +238,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     handleEditIssue = async (fieldKey: string, newValue: any) => {
         this.setState({ isSomethingLoading: true, loadingField: fieldKey });
-        const nonce = uuid.v4();
+        const nonce = v4();
         await this.postMessageWithEventPromise(
             {
                 action: 'editIssue',
@@ -464,7 +463,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     onItemClick={() =>
                                         this.handleOpenIssue({
                                             siteDetails: this.state.siteDetails,
-                                            key: this.state.fieldValues['parent'],
+                                            key: this.state.fieldValues['parent'].key,
                                         })
                                     }
                                 />
@@ -522,6 +521,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         }))
                     }
                     fetchImage={(img) => this.fetchImage(img)}
+                    isRteEnabled={this.state.isRteEnabled}
                 />
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (
@@ -548,6 +548,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 this.state.fieldValues['project'] &&
                                 this.state.fieldValues['project'].projectTypeKey === 'service_desk'
                             }
+                            isRteEnabled={this.state.isRteEnabled}
                         />
                     </div>
                 )}

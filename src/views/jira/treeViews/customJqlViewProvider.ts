@@ -13,9 +13,9 @@ import {
 import { viewScreenEvent } from '../../../analytics';
 import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
 import { CommandContext, setCommandContext } from '../../../commandContext';
-import { Commands } from '../../../commands';
 import { configuration } from '../../../config/configuration';
 import { JQLEntry } from '../../../config/model';
+import { Commands } from '../../../constants';
 import { Container } from '../../../container';
 import { fetchMinimalIssue } from '../../../jira/fetchIssue';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
@@ -47,16 +47,16 @@ export class CustomJQLViewProvider extends Disposable implements TreeDataProvide
         super(() => this.dispose());
 
         const treeView = window.createTreeView(CustomJQLViewProviderId, { treeDataProvider: this });
-        treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e));
 
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () => this.refresh()),
             commands.registerCommand(Commands.RefreshCustomJqlExplorer, this.refresh, this),
+            treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e)),
             treeView,
         );
 
-        const jqlEntries = Container.jqlManager.getCustomJQLEntries();
+        const jqlEntries = Container.jqlManager.enabledJQLEntries();
         if (jqlEntries.length) {
             setCommandContext(CommandContext.CustomJQLExplorer, Container.config.jira.explorer.enabled);
         }
@@ -79,8 +79,8 @@ export class CustomJQLViewProvider extends Disposable implements TreeDataProvide
             configuration.changed(e, 'jira.explorer') ||
             configuration.changed(e, 'jira.explorer.enabled')
         ) {
-            const jqlEntries = Container.jqlManager.getCustomJQLEntries();
-            if (jqlEntries.length > 0) {
+            const jqlEntries = Container.jqlManager.enabledJQLEntries();
+            if (jqlEntries.length) {
                 setCommandContext(CommandContext.CustomJQLExplorer, Container.config.jira.explorer.enabled);
             } else {
                 setCommandContext(CommandContext.CustomJQLExplorer, false);
@@ -91,9 +91,6 @@ export class CustomJQLViewProvider extends Disposable implements TreeDataProvide
 
     private async onSitesDidChange(e: SitesAvailableUpdateEvent) {
         if (e.product.key === ProductJira.key) {
-            if (e.newSites) {
-                Container.jqlManager.initializeJQL(e.newSites);
-            }
             this.refresh();
         }
     }
@@ -119,7 +116,7 @@ export class CustomJQLViewProvider extends Disposable implements TreeDataProvide
         } else {
             SearchJiraHelper.clearIssues(CustomJQLViewProviderId);
 
-            const jqlEntries = Container.jqlManager.getCustomJQLEntries();
+            const jqlEntries = Container.jqlManager.enabledJQLEntries();
             return jqlEntries.length
                 ? jqlEntries.map((jqlEntry) => new JiraIssueQueryNode(jqlEntry))
                 : [CustomJQLViewProvider._treeItemConfigureJqlMessage];
@@ -208,7 +205,7 @@ class JiraIssueQueryNode extends TreeItem {
         return await Promise.all(
             keys.map(async (issueKey) => {
                 const parent = (await fetchMinimalIssue(issueKey, site)) as TreeViewIssue;
-                parent.jqlSource = this.jqlEntry;
+                parent.source = this.jqlEntry;
                 parent.children = [];
                 return parent;
             }),

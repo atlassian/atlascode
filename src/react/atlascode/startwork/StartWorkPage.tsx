@@ -35,7 +35,7 @@ import { Alert, AlertTitle, Autocomplete } from '@material-ui/lab';
 import Mustache from 'mustache';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
-import uuid from 'uuid';
+import { v4 } from 'uuid';
 
 import { StartWorkAction, StartWorkActionType } from '../../../lib/ipc/fromUI/startWork';
 import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
@@ -332,14 +332,14 @@ const StartWorkPage: React.FunctionComponent = () => {
         send: StartWorkAction,
         waitForEvent: string,
         timeout: number,
-        nonce?: string,
+        nonce: string,
     ): Promise<any> => {
         controller.postMessage(send);
         return OnMessageEventPromise(waitForEvent, timeout, nonce);
     };
 
     const fetchImage = async (url: string): Promise<any> => {
-        const nonce = uuid.v4();
+        const nonce = v4();
         return (
             await postMessageWithEventPromise(
                 {

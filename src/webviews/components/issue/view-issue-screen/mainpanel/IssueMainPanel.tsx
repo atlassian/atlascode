@@ -4,7 +4,6 @@ import InlineDialog from '@atlaskit/inline-dialog';
 import Tooltip from '@atlaskit/tooltip';
 import { IssueType, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atlassianlabs/jira-pi-meta-models';
-import { Box } from '@material-ui/core';
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
@@ -34,6 +33,7 @@ type Props = {
     onFetchIssues: (input: string) => Promise<any>;
     fetchUsers: (input: string) => Promise<any[]>;
     fetchImage: (url: string) => Promise<string>;
+    isRteEnabled?: boolean;
 };
 
 const IssueMainPanel: React.FC<Props> = ({
@@ -52,6 +52,7 @@ const IssueMainPanel: React.FC<Props> = ({
     onFetchIssues,
     fetchUsers,
     fetchImage,
+    isRteEnabled = false,
 }) => {
     //field values
     const attachments = fields['attachment'] && fieldValues['attachment'] ? fieldValues['attachment'] : undefined;
@@ -102,9 +103,9 @@ const IssueMainPanel: React.FC<Props> = ({
                     onCancel={() => setIsModalOpen(false)}
                 />
             )}
-            <Box style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center', paddingTop: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center', paddingTop: '8px' }}>
                 {fields['worklog'] ? (
-                    <Box
+                    <div
                         style={{
                             display: 'flex',
                             flexDirection: 'row',
@@ -128,11 +129,11 @@ const IssueMainPanel: React.FC<Props> = ({
                                 {addContentDropDown}
                             </InlineDialog>
                         </div>
-                    </Box>
+                    </div>
                 ) : (
                     { addContentDropDown }
                 )}
-            </Box>
+            </div>
             {fields['description'] && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div style={{ display: 'flex', gap: '8px', flexDirection: 'row', alignItems: 'flex-start' }}>
@@ -142,9 +143,11 @@ const IssueMainPanel: React.FC<Props> = ({
                     {isEditingDescription || loadingField === 'description' ? (
                         <JiraIssueTextAreaEditor
                             value={descriptionText}
-                            onChange={(e: string) => setDescriptionText(e)}
-                            onSave={() => {
-                                handleInlineEdit(fields['description'], descriptionText);
+                            onChange={(e: string) => {
+                                setDescriptionText(e);
+                            }}
+                            onSave={(i: string) => {
+                                handleInlineEdit(fields['description'], i);
                                 setIsEditingDescription(false);
                             }}
                             onCancel={() => {
@@ -154,9 +157,10 @@ const IssueMainPanel: React.FC<Props> = ({
                             fetchUsers={fetchUsers}
                             isDescription
                             saving={loadingField === 'description'}
+                            featureGateEnabled={isRteEnabled}
                         />
                     ) : (
-                        <Box
+                        <div
                             css={{
                                 ':hover': {
                                     backgroundColor: 'var(--vscode-editor-selectionHighlightBackground)!important',
@@ -175,7 +179,7 @@ const IssueMainPanel: React.FC<Props> = ({
                             ) : (
                                 <p style={{ margin: 0 }}>{descriptionText}</p>
                             )}
-                        </Box>
+                        </div>
                     )}
                 </div>
             )}
@@ -222,7 +226,7 @@ const IssueMainPanel: React.FC<Props> = ({
                 Array.isArray(fieldValues['worklog']?.worklogs) &&
                 fieldValues['worklog'].worklogs.length > 0 && (
                     <div className="ac-vpadding">
-                        <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <label className="ac-field-label">Work log</label>
                             <Button
                                 className="ac-button-secondary"
@@ -230,7 +234,7 @@ const IssueMainPanel: React.FC<Props> = ({
                                 iconBefore={<AddIcon size="small" label="Add" />}
                                 onClick={() => setIsInlineDialogOpen(true)}
                             ></Button>
-                        </Box>
+                        </div>
                         <Worklogs worklogs={fieldValues['worklog']} />
                     </div>
                 )}

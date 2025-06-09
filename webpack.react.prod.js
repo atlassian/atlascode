@@ -35,6 +35,7 @@ module.exports = {
             new TerserPlugin({
                 extractComments: false,
                 terserOptions: {
+                    keep_fnames: true,
                     compress: {
                         comparisons: false,
                     },
@@ -93,7 +94,6 @@ module.exports = {
             'process.env.ATLASCODE_FX3_ENVIRONMENT': JSON.stringify(process.env.ATLASCODE_FX3_ENVIRONMENT),
             'process.env.ATLASCODE_FX3_TARGET_APP': JSON.stringify(process.env.ATLASCODE_FX3_TARGET_APP),
             'process.env.ATLASCODE_FX3_TIMEOUT': JSON.stringify(process.env.ATLASCODE_FX3_TIMEOUT),
-            'process.env.ATLASCODE_TEST_USER_API_TOKEN': JSON.stringify(process.env.ATLASCODE_TEST_USER_API_TOKEN),
             'process.env.ATLASCODE_FF_OVERRIDES': JSON.stringify(process.env.ATLASCODE_FF_OVERRIDES),
             'process.env.ATLASCODE_EXP_OVERRIDES_BOOL': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_BOOL),
             'process.env.ATLASCODE_EXP_OVERRIDES_STRING': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_STRING),
@@ -101,10 +101,8 @@ module.exports = {
         }),
     ],
     performance: {
-        // About twice the default value of 244 Kib, to remove the warning
-        // Shouldn't be a problem since this is an extension
-        maxEntrypointSize: 512000,
-        maxAssetSize: 512000,
+        maxEntrypointSize: 307200,  // overridden to 300KiB, reccomended is 244KiB
+        maxAssetSize: 614400,       // overridden to 600KiB, reccomended is 244KiB
     },
     watchOptions: {
         ignored: /node_modules/,

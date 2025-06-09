@@ -1,6 +1,6 @@
 {
     "name": "atlascode",
-    "displayName": "Jira and Bitbucket (Atlassian Labs)",
+    "displayName": "Atlassian: Jira & Bitbucket",
     "description": "Bringing the power of Jira and Bitbucket to VS Code - With Atlassian for VS Code you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!",
     "keywords": [
         "bitbucket",
@@ -46,7 +46,6 @@
     ],
     "main": "./build/extension/extension",
     "scripts": {
-        "precommit": "pretty-quick --staged",
         "vscode:uninstall": "node ./build/extension/uninstall.js",
         "vscode:prepublish": "npm run compile",
         "clean": "rm -rf ./build",
@@ -54,49 +53,27 @@
         "lint": "eslint ./src ./e2e --ext .js,.jsx,.ts,.tsx",
         "lint:fix": "eslint --fix ./src ./e2e --ext .js,.jsx,.ts,.tsx",
         "compile": "npm run clean && npm run compile:react && npm run compile:extension",
-        "compile:extension": "NODE_OPTIONS=--openssl-legacy-provider webpack --mode production --config webpack.extension.prod.js",
-        "compile:react": "NODE_OPTIONS=--openssl-legacy-provider webpack --mode production --config webpack.react.prod.js",
-        "postinstall": "cp ./scripts/githooks/* ./.git/hooks && patch-package",
+        "compile:extension": "NODE_OPTIONS=--openssl-legacy-provider webpack --mode production --config webpack.extension.prod.js --fail-on-warnings",
+        "compile:react": "NODE_OPTIONS=--openssl-legacy-provider webpack --mode production --config webpack.react.prod.js --fail-on-warnings",
+        "postinstall": "cp ./scripts/githooks/* ./.git/hooks",
         "extension:clean": "rm -rf ./atlascode-*.vsix",
         "extension:package:prerelease": "npm run extension:clean && vsce package --pre-release --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",
         "extension:package": "npm run extension:clean && vsce package --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",
         "extension:install": "npm run extension:package && code --install-extension ./atlascode-*.vsix --force",
         "test": "rm -rf coverage && npm run test:unit && npm run test:react && istanbul-merge --out coverage/coverage-final.json coverage/react/coverage-final.json coverage/unit/coverage-final.json && echo '\n\nTotal test coverage:' && nyc report --reporter clover --reporter lcov --reporter html --reporter text-summary -t coverage/ --report-dir coverage/",
-        "test:unit": "jest -c jest.unit.config.js",
-        "test:react": "jest -c jest.react.config.js",
-        "test:e2e": "echo 'token length' && echo ${#ATLASCODE_TEST_USER_API_TOKEN} && npm run test:e2e:compile && e2e/scripts/run",
-        "test:e2e:compile": "tsc --project e2e/tsconfig.e2e.json",
-        "test:e2e:rerun": "npm run test:e2e:compile && e2e/scripts/run --rerun",
-        "test:e2e:docker": "e2e/scripts/in-docker npm run test:e2e",
-        "test:e2e:docker:build": "e2e/scripts/build-docker",
-        "test:e2e:docker:rerun": "e2e/scripts/in-docker npm run test:e2e:rerun",
-        "devcompile": "npm-run-all --parallel devcompile:react devcompile:extension",
-        "devcompile:react": "webpack --mode development --config webpack.react.dev.js",
-        "devcompile:extension": "webpack --mode development --config webpack.extension.dev.js",
+        "test:unit": "jest -c jest.unit.config.ts",
+        "test:react": "jest -c jest.react.config.ts",
+        "test:e2e:sslcerts": "cd e2e/sslcerts && ./generate-certs.sh",
+        "test:e2e:docker": "cd e2e && docker compose run atlascode-e2e; docker compose down",
+        "test:e2e:docker:build": "docker build --tag atlascode-e2e - <e2e/Dockerfile",
+        "devcompile": "npm run clean && npm run devcompile:react && npm run devcompile:extension",
+        "devcompile:react": "webpack --mode development --config webpack.react.dev.js --fail-on-warnings",
+        "devcompile:extension": "webpack --mode development --config webpack.extension.dev.js --fail-on-warnings",
         "release:stable": "scripts/release.sh",
         "watch": "concurrently -r \"npm:watch:*\"",
         "watch:extension": "WATCH=true webpack --mode development --config webpack.react.dev.js --progress --watch",
         "watch:react": "WATCH=true webpack --mode development --config webpack.extension.dev.js --progress --watch",
-        "dev": "concurrently -r npm:watch:extension npm:watch:react",
-        "mui:atlascodeSettings:dark": "cross-env PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettingsV2\" THEME=\"dark\" webpack-dev-server --open --config webpack.mui.webview.js",
-        "mui:atlascodeSettings:light": "cross-env PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettingsV2\" THEME=\"light\" webpack-dev-server --open --config webpack.mui.webview.js",
-        "mui:atlascodeOnboarding:dark": "cross-env PAGETSX=\"onboarding/OnboardingPage.tsx\" VIEW=\"atlascodeOnboardingV2\" THEME=\"dark\" webpack-dev-server --open --config webpack.mui.webview.js",
-        "mui:atlascodeOnboarding:light": "cross-env PAGETSX=\"onboarding/OnboardingPage.tsx\" VIEW=\"atlascodeOnboardingV2\" THEME=\"light\" webpack-dev-server --open --config webpack.mui.webview.js",
-        "mui:bitbucketIssuePage:light": "cross-env PAGETSX=\"bbissue/BitbucketIssuePage.tsx\" VIEW=\"bitbucketIssuePageV2\" THEME=\"light\" webpack-dev-server --open --config webpack.mui.webview.js",
-        "mui:bitbucketIssuePage:dark": "cross-env PAGETSX=\"bbissue/BitbucketIssuePage.tsx\" VIEW=\"bitbucketIssuePageV2\" THEME=\"dark\" webpack-dev-server --open --config webpack.mui.webview.js",
-        "mui:createBitbucketIssuePage:light": "cross-env PAGETSX=\"bbissue/CreateBitbucketIssuePage.tsx\" VIEW=\"createBitbucketIssuePageV2\" THEME=\"light\" webpack-dev-server --open --config webpack.mui.webview.js",
-        "mui:welcomePage:light": "cross-env  PAGETSX=\"welcome/Welcome.tsx\" VIEW=\"welcomePageV2\" THEME=\"light\" webpack-dev-server --open --config webpack.mui.webview.js",
-        "mui:startWorkPage:dark": "cross-env PAGETSX=\"startwork/StartWorkPage.tsx\" VIEW=\"startWorkPageV2\" THEME=\"dark\" webpack-dev-server --open --config webpack.mui.webview.js",
-        "mui:startWorkPage:light": "cross-env PAGETSX=\"startwork/StartWorkPage.tsx\" VIEW=\"startWorkPageV2\" THEME=\"light\" webpack-dev-server --open --config webpack.mui.webview.js",
-        "mui:pullRequestDetailsPage:dark": "cross-env  PAGETSX=\"pullrequest/PullRequestDetailsPage.tsx\" VIEW=\"pullRequestDetailsPageV2\" THEME=\"dark\" webpack-dev-server --open --config webpack.mui.webview.js",
-        "mui:pullRequestDetailsPage:light": "cross-env PAGETSX=\"pullrequest/PullRequestDetailsPage.tsx\" VIEW=\"pullRequestDetailsPageV2\" THEME=\"light\" webpack-dev-server --open --config webpack.mui.webview.js",
-        "mui:createPullRequestPage:light": "cross-env PAGETSX=\"pullrequest/CreatePullRequestPage.tsx\" VIEW=\"createPullRequestPageV2\" THEME=\"light\" webpack-dev-server --open --config webpack.mui.webview.js",
-        "mui:createJiraIssue:dark": "cross-env PAGETSX=\"issue/CreateJiraIssuePage.tsx\" VIEW=\"createIssueScreenV2\" THEME=\"dark\" webpack-dev-server --open --config webpack.mui.webview.js",
-        "mui:createJiraIssue:light": "cross-env PAGETSX=\"issue/CreateJiraIssuePage.tsx\" VIEW=\"createIssueScreenV2\" THEME=\"light\" webpack-dev-server --open --config webpack.mui.webview.js",
-        "webview:viewJiraIssue:dark": "cross-env PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.js",
-        "webview:viewJiraIssue:light": "cross-env PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.js",
-        "webview:viewPullRequestScreen:dark": "cross-env PAGETSX=\"pullrequest/PullRequestPage.tsx\" VIEW=\"pullRequestDetailsScreen\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.js",
-        "webview:viewPullRequestScreen:light": "cross-env PAGETSX=\"pullrequest/PullRequestPage.tsx\" VIEW=\"pullRequestDetailsScreen\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.js"
+        "dev": "concurrently -r npm:watch:extension npm:watch:react"
     },
     "contributes": {
         "commands": [
@@ -255,6 +232,11 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.jira.transitionIssue",
+                "title": "Transition Issue...",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.jira.assignIssueToMe",
                 "title": "Assign Jira Issue to Me",
                 "category": "Atlassian"
@@ -317,23 +299,8 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.showWelcomePage",
-                "title": "Open Welcome Page",
-                "category": "Atlassian"
-            },
-            {
                 "command": "atlascode.showOnboardingPage",
                 "title": "Open Onboarding Page",
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.testLogin",
-                "title": "Test Login",
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.testLogout",
-                "title": "Test Logout",
                 "category": "Atlassian"
             },
             {
@@ -407,33 +374,6 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.bb.createIssue",
-                "title": "Create Bitbucket Issue",
-                "icon": {
-                    "dark": "resources/dark/add.svg",
-                    "light": "resources/light/add.svg"
-                },
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.bb.refreshIssues",
-                "title": "Refresh Bitbucket Issues",
-                "icon": {
-                    "dark": "resources/dark/refresh.svg",
-                    "light": "resources/light/refresh.svg"
-                },
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.bb.showBitbucketIssueSettings",
-                "title": "Bitbucket Issue Settings",
-                "icon": {
-                    "dark": "resources/dark/settings.svg",
-                    "light": "resources/light/settings.svg"
-                },
-                "category": "Atlassian"
-            },
-            {
                 "command": "atlascode.bb.addComment",
                 "title": "Add comment",
                 "category": "Atlassian"
@@ -460,6 +400,11 @@
             {
                 "command": "atlascode.disableHelpExplorer",
                 "title": "Disable Help Explorer",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.showOnboardingFlow",
+                "title": "Show Onboarding Flow",
                 "category": "Atlassian"
             }
         ],
@@ -493,11 +438,6 @@
                     "id": "atlascode.views.bb.pipelinesTreeView",
                     "name": "Bitbucket pipelines",
                     "when": "atlascode:pipelineExplorerEnabled && config.atlascode.bitbucket.enabled"
-                },
-                {
-                    "id": "atlascode.views.bb.issuesTreeView",
-                    "name": "Bitbucket issues",
-                    "when": "atlascode:bitbucketIssuesExplorerEnabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "id": "atlascode.views.helpTreeView",
@@ -637,21 +577,6 @@
                     "group": "navigation@3"
                 },
                 {
-                    "command": "atlascode.bb.createIssue",
-                    "when": "atlascode:isBBAuthenticated && view == atlascode.views.bb.issuesTreeView",
-                    "group": "navigation@1"
-                },
-                {
-                    "command": "atlascode.bb.refreshIssues",
-                    "when": "view == atlascode.views.bb.issuesTreeView && atlascode:isBBAuthenticated",
-                    "group": "navigation@2"
-                },
-                {
-                    "command": "atlascode.bb.showBitbucketIssueSettings",
-                    "when": "view == atlascode.views.bb.issuesTreeView",
-                    "group": "navigation@3"
-                },
-                {
                     "command": "atlascode.disableHelpExplorer",
                     "when": "view == atlascode.views.helpTreeView"
                 }
@@ -688,13 +613,18 @@
                     "group": "jiraContextMenuGroup1"
                 },
                 {
+                    "command": "atlascode.jira.transitionIssue",
+                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
+                    "group": "jiraContextMenuGroup3"
+                },
+                {
                     "command": "atlascode.jira.createIssue",
                     "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup2"
                 },
                 {
                     "command": "atlascode.viewInWebBrowser",
-                    "when": "viewItem =~ /(pullrequest|pipelineBuild|bitbucketIssue)/"
+                    "when": "viewItem =~ /(pullrequest|pipelineBuild)/"
                 },
                 {
                     "command": "atlascode.bb.rerunPipeline",
@@ -796,10 +726,6 @@
                     "when": "false"
                 },
                 {
-                    "command": "atlascode.bb.showBitbucketIssueSettings",
-                    "when": "false"
-                },
-                {
                     "command": "atlascode.bb.openChangeset",
                     "when": "false"
                 },
@@ -832,7 +758,7 @@
                     "when": "false"
                 },
                 {
-                    "command": "atlascode.bb.refreshIssues",
+                    "command": "atlascode.jira.transitionIssue",
                     "when": "false"
                 },
                 {
@@ -954,12 +880,6 @@
                     "description": "Enables UI websocket for debugging webviews",
                     "scope": "window"
                 },
-                "atlascode.offlineMode": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enables offline mode",
-                    "scope": "window"
-                },
                 "atlascode.showWelcomeOnInstall": {
                     "type": "boolean",
                     "default": true,
@@ -1009,36 +929,6 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enables the Jira Issue Explorer",
-                    "scope": "window"
-                },
-                "atlascode.jira.explorer.showCustomJql": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enables Custom Jql Explorer",
-                    "scope": "window"
-                },
-                "atlascode.jira.explorer.showOpenIssues": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enables the Open Issues in the Jira Issue Explorer",
-                    "scope": "window"
-                },
-                "atlascode.jira.explorer.openIssueJql": {
-                    "type": "string",
-                    "default": "assignee in (EMPTY) and project=currentProject() and resolution = Unresolved and statusCategory != Done order by lastViewed DESC",
-                    "description": "JQL to retrieve open issues",
-                    "scope": "window"
-                },
-                "atlascode.jira.explorer.showAssignedIssues": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enables the Assigned Issues in the Jira Issue Explorer",
-                    "scope": "window"
-                },
-                "atlascode.jira.explorer.assignedIssueJql": {
-                    "type": "string",
-                    "default": "assignee=currentUser() and project=currentProject() and resolution = Unresolved and statusCategory != Done",
-                    "description": "JQL to retrieve issues assigned to you",
                     "scope": "window"
                 },
                 "atlascode.jira.explorer.monitorEnabled": {
@@ -1095,55 +985,6 @@
                     "description": "Shows active Jira issue key in the status bar",
                     "scope": "window"
                 },
-                "atlascode.jira.workingProject": {
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                            "default": ""
-                        },
-                        "id": {
-                            "type": "string",
-                            "default": ""
-                        },
-                        "key": {
-                            "type": "string",
-                            "default": ""
-                        }
-                    },
-                    "description": "Jira project for workspace",
-                    "scope": "resource"
-                },
-                "atlascode.jira.workingSite": {
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                            "default": ""
-                        },
-                        "id": {
-                            "type": "string",
-                            "default": ""
-                        },
-                        "scopes": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            },
-                            "uniqueItems": true
-                        },
-                        "avatarUrl": {
-                            "type": "string",
-                            "default": ""
-                        },
-                        "baseUrlSuffix": {
-                            "type": "string",
-                            "default": "atlassian.net"
-                        }
-                    },
-                    "description": "Jira site for workspace",
-                    "scope": "resource"
-                },
                 "atlascode.jira.lastCreateSiteAndProject": {
                     "type": "object",
                     "description": "the last used site id and project key for create issue",
@@ -1156,42 +997,6 @@
                         "projectKey": {
                             "type": "string",
                             "default": ""
-                        }
-                    }
-                },
-                "atlascode.jira.customJql": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "siteId": {
-                                "type": "string",
-                                "default": ""
-                            },
-                            "jql": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "id": {
-                                            "type": "string",
-                                            "default": ""
-                                        },
-                                        "enabled": {
-                                            "type": "boolean",
-                                            "default": true
-                                        },
-                                        "name": {
-                                            "type": "string",
-                                            "default": ""
-                                        },
-                                        "query": {
-                                            "type": "string",
-                                            "default": ""
-                                        }
-                                    }
-                                }
-                            }
                         }
                     }
                 },
@@ -1347,30 +1152,6 @@
                     "description": "Bitbucket Pipeline results for branch names that don't contain one of these strings will be hidden.",
                     "scope": "window"
                 },
-                "atlascode.bitbucket.issues.explorerEnabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enables the Bitbucket Issues Explorer",
-                    "scope": "window"
-                },
-                "atlascode.bitbucket.issues.createJiraEnabled": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Shows a create jira issue button on the Bitbucket issue screen",
-                    "scope": "window"
-                },
-                "atlascode.bitbucket.issues.monitorEnabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Show notifications when new Bitbucket Issues are created",
-                    "scope": "window"
-                },
-                "atlascode.bitbucket.issues.refreshInterval": {
-                    "type": "integer",
-                    "default": 15,
-                    "description": "Time (in minutes) to wait before refreshing the Bitbucket Issues",
-                    "scope": "window"
-                },
                 "atlascode.bitbucket.explorer.refreshInterval": {
                     "type": "integer",
                     "default": 5,
@@ -1381,12 +1162,6 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Show related Jira issues for Bitbucket pull requests",
-                    "scope": "window"
-                },
-                "atlascode.bitbucket.explorer.relatedBitbucketIssues.enabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Show related Bitbucket issues for Bitbucket pull requests",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.explorer.notifications.pullRequestCreated": {
@@ -1451,6 +1226,12 @@
                     "description": "Shows a login button in the status bar",
                     "scope": "window"
                 },
+                "atlascode.bitbucket.showTerminalLinkPanel": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Asks whether to create pull requests in extension or browser",
+                    "scope": "window"
+                },
                 "atlascode.helpExplorerEnabled": {
                     "type": "boolean",
                     "default": true,
@@ -1470,27 +1251,23 @@
         "@atlaskit/comment": "^10.3.0",
         "@atlaskit/datetime-picker": "^11.1.1",
         "@atlaskit/dropdown-menu": "^12.26.5",
-        "@atlaskit/feature-gate-js-client": "^4.20.0",
+        "@atlaskit/feature-gate-js-client": "^5.3.1",
         "@atlaskit/form": "^11.2.0",
-        "@atlaskit/heading": "^4.3.1",
-        "@atlaskit/icon": "^21.9.3",
+        "@atlaskit/icon": "^21.12.8",
         "@atlaskit/icon-lab": "^2.8.0",
         "@atlaskit/inline-dialog": "^13.1.8",
         "@atlaskit/lozenge": "^11.14.0",
         "@atlaskit/modal-dialog": "^12.1.0",
         "@atlaskit/page": "^12.0.7",
         "@atlaskit/page-header": "^10.2.2",
-        "@atlaskit/panel": "^0.4.7",
         "@atlaskit/radio": "^5.3.3",
         "@atlaskit/section-message": "^6.8.2",
         "@atlaskit/select": "^15.2.4",
         "@atlaskit/spinner": "^15.1.3",
         "@atlaskit/table-tree": "^9.0.12",
-        "@atlaskit/tag": "^13.1.0",
         "@atlaskit/textarea": "^7.1.0",
         "@atlaskit/textfield": "^7.0.0",
-        "@atlaskit/theme": "^16.0.0",
-        "@atlaskit/tokens": "^3.3.2",
+        "@atlaskit/toggle": "^14.2.0",
         "@atlaskit/tooltip": "^17.5.1",
         "@atlaskit/width-detector": "^3.0.6",
         "@atlassianlabs/guipi-core-components": "^0.1.2",
@@ -1501,158 +1278,133 @@
         "@atlassianlabs/jira-pi-common-models": "^1.1.0",
         "@atlassianlabs/jira-pi-meta-models": "^1.1.0",
         "@atlassianlabs/pi-client-common": "^1.1.0",
-        "@material-ui/core": "^4.9.14",
-        "@material-ui/icons": "^4.9.1",
-        "@material-ui/lab": "^4.0.0-alpha.52",
-        "@material-ui/styles": "^4.10.0",
+        "@material-ui/core": "^4.12.4",
+        "@material-ui/icons": "^4.11.3",
+        "@material-ui/lab": "^4.0.0-alpha.61",
+        "@material-ui/styles": "^4.11.5",
         "@segment/analytics-node": "^2.1.3",
-        "@testing-library/react": "^12.1.5",
-        "@types/mustache": "^4.0.1",
         "@vscode/webview-ui-toolkit": "^1.4.0",
         "awesome-debounce-promise": "^2.1.0",
-        "axios": "^1.7.4",
-        "axios-curlirize": "^1.3.4",
+        "axios": "1.9.0",
+        "axios-curlirize": "^2.0.0",
         "base64-arraybuffer-es6": "^3.1.0",
-        "clsx": "^1.1.0",
-        "date-fns": "^3.2.0",
+        "clsx": "^2.1.1",
+        "date-fns": "^4.1.0",
         "dotenv": "^16.4.5",
-        "eslint-plugin-prettier": "^5.2.1",
-        "eventemitter3": "^4.0.0",
-        "express": "^4.21.2",
+        "eventemitter3": "^5.0.1",
+        "express": "^5.1.0",
         "fast-deep-equal": "^3.1.1",
-        "filesize": "^4.1.2",
-        "flatten-anything": "^2.0.1",
+        "filesize": "^10.1.6",
+        "flatten-anything": "^4.0.2",
         "form-data": "^2.5.2",
         "git-url-parse": "^15.0.0",
-        "jwt-decode": "^3.1.2",
+        "graphql-request": "^6",
+        "jwt-decode": "^4.0.0",
         "keytar": "^7.9.0",
         "lodash": "^4.17.21",
         "lodash.debounce": "^4.0.8",
         "lodash.orderby": "^4.6.0",
         "lodash.truncate": "^4.4.2",
-        "macaddress": "^0.2.9",
-        "merge-anything": "^3.0.3",
+        "macaddress": "^0.5.3",
+        "merge-anything": "^6.0.6",
         "mustache": "^4.0.1",
         "node-ipc": "^9.2.1",
         "p-cancelable": "^2.0.0",
         "p-queue": "^6.3.0",
-        "p-retry": "^4.2.0",
         "p-settle": "^3.1.0",
         "p-timeout": "^3.2.0",
-        "path-browserify": "^1.0.1",
-        "prosemirror-commands": "^1.1.4",
-        "prosemirror-dropcursor": "^1.3.2",
-        "prosemirror-example-setup": "^1.1.2",
-        "prosemirror-gapcursor": "^1.1.5",
-        "prosemirror-history": "^1.1.3",
-        "prosemirror-inputrules": "^1.1.2",
-        "prosemirror-keymap": "^1.1.4",
-        "prosemirror-markdown": "^1.10.1",
-        "prosemirror-mentions": "^1.0.0",
-        "prosemirror-menu": "^1.1.4",
-        "prosemirror-model": "^1.11.0",
-        "prosemirror-state": "^1.3.3",
-        "prosemirror-view": "^1.15.2",
+        "prosemirror-commands": "^1.7.1",
+        "prosemirror-dropcursor": "^1.8.2",
+        "prosemirror-example-setup": "^1.2.3",
+        "prosemirror-gapcursor": "^1.3.2",
+        "prosemirror-history": "^1.4.1",
+        "prosemirror-inputrules": "^1.5.0",
+        "prosemirror-keymap": "^1.2.3",
+        "prosemirror-markdown": "^1.13.2",
+        "prosemirror-mentions": "^1.0.2",
+        "prosemirror-menu": "^1.2.5",
+        "prosemirror-model": "^1.25.1",
+        "prosemirror-state": "^1.4.3",
+        "prosemirror-view": "^1.39.3",
         "react": "^16.13.1",
-        "react-async-hook": "^3.6.1",
-        "react-collapsible": "2.6.3",
+        "react-async-hook": "^4.0.0",
         "react-dom": "^16.13.1",
-        "react-dropzone": "^10.2.1",
+        "react-dropzone": "^14.3.8",
         "react-editext": "3.6.1",
         "react-hook-form": "^4.9.8",
         "react-uid": "^2.2.0",
         "scheduler": "^0.19.0",
-        "semver": "^7.6.3",
-        "slash": "^3.0.0",
+        "semver": "^7.7.2",
+        "slash": "^5.1.0",
         "ssl-root-cas": "^1.3.1",
-        "styled-components": "^3.2.6",
         "tunnel": "^0.0.6",
         "turndown": "^7.2.0",
-        "use-constant": "^1.0.0",
-        "uuid": "^3.4.0",
+        "use-constant": "^2.0.0",
+        "uuid": "^11.1.0",
         "websocket": "^1.0.35"
     },
     "devDependencies": {
-        "@babel/core": "^7.26.9",
-        "@jest/globals": "^29.7.0",
-        "@stylistic/eslint-plugin-js": "^2.8.0",
-        "@types/analytics-node": "^3.1.7",
-        "@types/chai": "^4",
-        "@types/filesize": "^4.1.0",
+        "@jest/globals": "^30.0.0-beta.3",
+        "@playwright/test": "^1.52.0",
+        "@testing-library/react": "^12.1.5",
+        "@types/express": "^5.0.2",
         "@types/git-url-parse": "^9.0.1",
-        "@types/html-webpack-plugin": "^3.2.2",
         "@types/jest": "^29.5.14",
         "@types/lodash.debounce": "^4.0.6",
         "@types/lodash.orderby": "^4.6.6",
         "@types/lodash.truncate": "^4.4.6",
-        "@types/mocha": "^10.0.10",
-        "@types/node": "^18.16.19",
+        "@types/mustache": "^4.0.1",
+        "@types/node": "^22.15.23",
         "@types/node-ipc": "^9.2.0",
-        "@types/prosemirror-state": "^1.2.5",
-        "@types/prosemirror-view": "^1.15.0",
         "@types/react": "^16.9.34",
         "@types/react-dom": "^16.9.6",
-        "@types/react-tabs": "^2.3.1",
         "@types/scheduler": "^0.16.1",
         "@types/semver": "^7.1.0",
-        "@types/terser-webpack-plugin": "^2.2.0",
+        "@types/tunnel": "^0.0.7",
         "@types/turndown": "^5.0.1",
-        "@types/uuid": "^3.4.7",
-        "@types/vscode": "^1.77.0",
-        "@types/webpack": "^5.28.5",
-        "@types/webpack-manifest-plugin": "^2.1.0",
+        "@types/uuid": "^10.0.0",
+        "@types/vscode": ">=1.77.0 <=1.96.0",
         "@types/websocket": "^1.0.0",
-        "@typescript-eslint/eslint-plugin": "^8.7.0",
-        "@typescript-eslint/parser": "^8.7.0",
-        "@vscode/vsce": "^3.1.0",
+        "@vscode/vsce": "^3.4.2",
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
         "autoprefixer": "^10.4.20",
-        "chai": "^4",
         "concurrently": "^9.1.2",
-        "cross-env": "^7.0.2",
         "css-loader": "^7.1.2",
         "css-minimizer-webpack-plugin": "^7.0.0",
-        "eslint": "^8.57.0",
-        "eslint-config-prettier": "^9.1.0",
-        "eslint-import-resolver-typescript": "^3.6.3",
+        "eslint": "^9.27.0",
+        "eslint-import-resolver-typescript": "^4.4.1",
         "eslint-plugin-import": "^2.30.0",
+        "eslint-plugin-prettier": "^5.2.1",
         "eslint-plugin-react": "^7.36.0",
-        "eslint-plugin-react-hooks": "^4.6.2",
+        "eslint-plugin-react-hooks": "^5.2.0",
         "eslint-plugin-simple-import-sort": "^12.1.1",
         "fork-ts-checker-notifier-webpack-plugin": "^9.0.0",
         "fork-ts-checker-webpack-plugin": "^9.0.2",
-        "html-webpack-plugin": "^5.6.0",
         "istanbul-merge": "^2.0.0",
         "jest": "^29.7.0",
         "jest-css-modules-transform": "^4.4.2",
-        "jest-environment-jsdom": "^29.7.0",
-        "jest-mock-vscode": "^4.0.4",
+        "jest-environment-jsdom": "^30.0.0-beta.3",
+        "jest-mock-vscode": "^4.4.0",
         "mini-css-extract-plugin": "^2.9.1",
-        "npm-run-all": "^4.1.5",
         "nyc": "^17.1.0",
         "ovsx": "^0.10.1",
-        "patch-package": "^6.2.2",
+        "path-browserify": "^1.0.1",
+        "playwright": "^1.52.0",
         "postcss-flexbugs-fixes": "^5.0.2",
         "postcss-loader": "^8.1.1",
-        "postcss-preset-env": "^10.0.5",
-        "prettier": "^3.3.3",
-        "pretty-quick": "^2.0.1",
-        "source-map-loader": "^0.2.4",
-        "speed-measure-webpack-plugin": "^1.5",
+        "postcss-preset-env": "^10.2.0",
+        "prettier": "^3.5.3",
+        "source-map-loader": "^5.0.0",
         "terser-webpack-plugin": "^5.3.0",
-        "ts-jest": "^29.2.5",
-        "ts-loader": "^8.4.0",
-        "ts-node": "^8.8.2",
-        "tsconfig-paths": "^3.9.0",
-        "tsconfig-paths-webpack-plugin": "^3.2.0",
-        "typescript": "^5.7.3",
-        "vsce": "^2.15.0",
-        "vscode-extension-tester": "^8.10.0",
-        "vue": "^3.2.23",
-        "webpack": "^5",
-        "webpack-cli": "^5.1.4",
-        "webpack-dev-server": "^5.1.0",
+        "ts-jest": "^29.3.4",
+        "ts-loader": "^9.5.2",
+        "ts-node": "^10.9.2",
+        "tsconfig-paths-webpack-plugin": "^4.2.0",
+        "typescript": "^5.8.3",
+        "typescript-eslint": "^8.33.0",
+        "webpack": "^5.99.9",
+        "webpack-cli": "^6.0.1",
         "webpack-manifest-plugin": "^5.0.0",
         "webpack-node-externals": "^3.0.0"
     },

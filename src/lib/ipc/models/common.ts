@@ -28,11 +28,7 @@ export enum KnownLinkID {
     ReportAnIssue = 'reportAnIssueLink',
     WhatIsJQL = 'whatIsJQLLink',
     Contribute = 'contributeLink',
-    TweetAboutUs = 'tweetaboutus',
 }
-
-const twitterPrefilledMessage: string =
-    "Check out Atlassian's awesome Bitbucket and Jira extension for VS Code! https://marketplace.visualstudio.com/items/Atlassian.atlascode";
 
 export const knownLinkIdMap: Map<string, string> = new Map([
     [KnownLinkID.AtlascodeRepo, 'https://github.com/atlassian/atlascode'],
@@ -46,7 +42,6 @@ export const knownLinkIdMap: Map<string, string> = new Map([
     [KnownLinkID.ReportAnIssue, 'https://github.com/atlassian/atlascode/issues'],
     [KnownLinkID.WhatIsJQL, 'https://www.atlassian.com/blog/jira-software/jql-the-most-flexible-way-to-search-jira-14'],
     [KnownLinkID.Contribute, 'https://github.com/atlassian/atlascode'],
-    [KnownLinkID.TweetAboutUs, `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterPrefilledMessage)}`],
 ]);
 
 export interface FeedbackData {

@@ -1,5 +1,3 @@
-import { ATLASCODE_TEST_HOST } from '../../src/constants';
-
 export enum AuthChangeType {
     Update = 'update',
     Remove = 'remove',
@@ -17,6 +15,7 @@ export interface RemoveAuthInfoEvent extends AuthInfoEvent {
     type: AuthChangeType.Remove;
     product: Product;
     credentialId: string;
+    userId: string;
 }
 
 export interface Product {
@@ -24,12 +23,12 @@ export interface Product {
     key: string;
 }
 
-export const ProductJira = {
+export const ProductJira: Product = {
     name: 'Jira',
     key: 'jira',
 };
 
-export const ProductBitbucket = {
+export const ProductBitbucket: Product = {
     name: 'Bitbucket',
     key: 'bitbucket',
 };
@@ -40,18 +39,6 @@ export enum OAuthProvider {
     JiraCloud = 'jiracloud',
     JiraCloudStaging = 'jiracloudstaging',
     JiraCloudRemote = 'jiracloudremote',
-}
-export interface AuthInfoV1 {
-    access: string;
-    refresh: string;
-    user: UserInfoV1;
-    accessibleResources?: Array<AccessibleResourceV1>;
-}
-
-export interface UserInfoV1 {
-    id: string;
-    displayName: string;
-    provider: OAuthProvider;
 }
 
 export interface OAuthResponse {
@@ -117,8 +104,6 @@ export interface DetailedSiteInfo extends SiteInfo {
     isCloud: boolean;
     userId: string;
     credentialId: string;
-    /** Jira only -- Indicates if the site's schema contains a field named 'resolution' */
-    hasResolutionField: boolean;
 }
 
 // You MUST send source
@@ -128,14 +113,6 @@ export interface IntegrationsLinkParams {
     aaid?: string; // Atlassian Account ID
     aid: string; // Anonymous ID
     s: string; // source
-}
-
-export interface AccessibleResourceV1 {
-    id: string;
-    name: string;
-    scopes: Array<string>;
-    avatarUrl: string;
-    baseUrlSuffix: string;
 }
 
 export interface AccessibleResource {
@@ -169,23 +146,6 @@ export const emptySiteInfo: DetailedSiteInfo = {
     isCloud: true,
     userId: '',
     credentialId: '',
-    hasResolutionField: false,
-};
-
-export const emptyAccessibleResource: AccessibleResource = {
-    id: '',
-    name: '',
-    avatarUrl: '',
-    scopes: [],
-    url: '',
-};
-
-export const emptyAccessibleResourceV1: AccessibleResourceV1 = {
-    id: '',
-    name: '',
-    avatarUrl: '',
-    scopes: [],
-    baseUrlSuffix: 'atlassian.net',
 };
 
 export const emptyAuthInfo: AuthInfo = {
@@ -197,12 +157,6 @@ export const emptyBasicAuthInfo: BasicAuthInfo = {
     user: emptyUserInfo,
     username: '',
     password: '',
-    state: AuthInfoState.Valid,
-};
-
-export const emptyPATAuthInfo: PATAuthInfo = {
-    user: emptyUserInfo,
-    token: '',
     state: AuthInfoState.Valid,
 };
 
@@ -218,7 +172,7 @@ export function isRemoveAuthEvent(a: AuthInfoEvent): a is RemoveAuthInfoEvent {
     return a && (<RemoveAuthInfoEvent>a).type === AuthChangeType.Remove;
 }
 
-export function isDetailedSiteInfo(a: any): a is DetailedSiteInfo {
+function isDetailedSiteInfo(a: any): a is DetailedSiteInfo {
     return (
         a &&
         (<DetailedSiteInfo>a).id !== undefined &&
@@ -270,11 +224,6 @@ export function getSecretForAuthInfo(info: any): string {
 
 export function oauthProviderForSite(site: SiteInfo): OAuthProvider | undefined {
     const hostname = site.host.split(':')[0];
-
-    // Added to allow for testing flow of AXON-32
-    if (hostname.endsWith(ATLASCODE_TEST_HOST)) {
-        return undefined;
-    }
 
     if (hostname.endsWith('atlassian.net') || hostname.endsWith('jira.com')) {
         return OAuthProvider.JiraCloud;

@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { HoverProvider } from 'vscode';
 
 import { viewScreenEvent } from '../../analytics';
-import { Commands } from '../../commands';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { issueForKey } from '../../jira/issueForKey';
 import { IssueKeyRegEx } from '../../jira/issueKeyParser';

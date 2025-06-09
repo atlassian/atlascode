@@ -2,8 +2,8 @@ import path from 'path';
 import * as vscode from 'vscode';
 
 import { FileStatus } from '../../bitbucket/model';
-import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
+import { Commands } from '../../constants';
 import { Resources } from '../../resources';
 import { DiffViewArgs } from '../pullrequest/diffViewHelper';
 import { PullRequestContextValue } from '../pullrequest/pullRequestNode';

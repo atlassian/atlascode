@@ -8,12 +8,11 @@ import { startListening } from './atlclients/negotiate';
 import { BitbucketContext } from './bitbucket/bbContext';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
 import { CommandContext, setCommandContext } from './commandContext';
-import { Commands, registerCommands } from './commands';
+import { registerCommands } from './commands';
 import { Configuration, configuration, IConfig } from './config/configuration';
-import { GlobalStateVersionKey } from './constants';
+import { Commands, ExtensionId, GlobalStateVersionKey } from './constants';
 import { Container } from './container';
 import { registerAnalyticsClient, registerErrorReporting, unregisterErrorReporting } from './errorReporting';
-import { JQLManager } from './jira/jqlManager';
 import { provideCodeLenses } from './jira/todoObserver';
 import { Logger } from './logger';
 import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
@@ -24,7 +23,8 @@ import {
 } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
-import { FeatureFlagClient } from './util/featureFlags';
+import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
+import { NotificationManagerImpl } from './views/notifications/notificationManager';
 
 const AnalyticDelay = 5000;
 
@@ -33,7 +33,7 @@ export async function activate(context: ExtensionContext) {
 
     registerErrorReporting();
 
-    const atlascode = extensions.getExtension('atlassian.atlascode')!;
+    const atlascode = extensions.getExtension(ExtensionId)!;
     const atlascodeVersion = atlascode.packageJSON.version;
     const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
 
@@ -48,7 +48,7 @@ export async function activate(context: ExtensionContext) {
     try {
         await Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
 
-        registerAnalyticsClient(Container.analyticsClient);
+        activateErrorReporting();
         registerCommands(context);
         activateCodebucket(context);
 
@@ -61,7 +61,7 @@ export async function activate(context: ExtensionContext) {
             Container.siteManager.productHasAtLeastOneSite(ProductBitbucket),
         );
 
-        await JQLManager.backFillOldDetailedSiteInfos();
+        NotificationManagerImpl.getInstance().listen();
     } catch (e) {
         Logger.error(e, 'Error initializing atlascode!');
     }
@@ -72,7 +72,12 @@ export async function activate(context: ExtensionContext) {
 
     // new user for auth exp
     if (previousVersion === undefined) {
-        showOnboardingPage();
+        const expVal = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeOnboardingExperiment);
+        if (expVal) {
+            commands.executeCommand(Commands.ShowOnboardingFlow);
+        } else {
+            commands.executeCommand(Commands.ShowOnboardingPage);
+        }
     } else {
         showWelcomePage(atlascodeVersion, previousVersion);
     }
@@ -96,6 +101,14 @@ export async function activate(context: ExtensionContext) {
             duration[0] * 1000 + Math.floor(duration[1] / 1000000)
         } ms`,
     );
+}
+
+function activateErrorReporting(): void {
+    if (FeatureFlagClient.checkGate(Features.EnableErrorTelemetry)) {
+        registerAnalyticsClient(Container.analyticsClient);
+    } else {
+        unregisterErrorReporting();
+    }
 }
 
 async function activateBitbucketFeatures() {
@@ -145,7 +158,7 @@ async function showWelcomePage(version: string, previousVersion: string | undefi
             .showInformationMessage(`Jira and Bitbucket (Official) has been updated to v${version}`, 'Release notes')
             .then((userChoice) => {
                 if (userChoice === 'Release notes') {
-                    commands.executeCommand(Commands.ShowWelcomePage);
+                    commands.executeCommand('extension.open', ExtensionId, 'changelog');
                 }
             });
     }
@@ -169,17 +182,21 @@ async function sendAnalytics(version: string, globalState: Memento) {
         });
     }
 
-    launchedEvent(env.remoteName ? env.remoteName : 'local').then((e) => {
+    launchedEvent(
+        env.remoteName ? env.remoteName : 'local',
+        env.uriScheme,
+        Container.siteManager.numberOfAuthedSites(ProductJira, true),
+        Container.siteManager.numberOfAuthedSites(ProductJira, false),
+        Container.siteManager.numberOfAuthedSites(ProductBitbucket, true),
+        Container.siteManager.numberOfAuthedSites(ProductBitbucket, false),
+    ).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
-}
-
-function showOnboardingPage() {
-    commands.executeCommand(Commands.ShowOnboardingPage);
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {
     unregisterErrorReporting();
     FeatureFlagClient.dispose();
+    NotificationManagerImpl.getInstance().stopListening();
 }

@@ -2,7 +2,7 @@ import { commands, window } from 'vscode';
 
 import { pipelineRerunEvent } from '../../analytics';
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { Commands } from '../../commands';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { Pipeline } from '../../pipelines/model';
@@ -20,7 +20,7 @@ export async function rerunPipeline(pipeline: Pipeline) {
             commands.executeCommand(Commands.RefreshPipelines);
         }, 500);
     } catch (e) {
-        Logger.error(e);
+        Logger.error(e, 'Error rerunning build');
         window.showErrorMessage(`Error rerunning build`);
     }
 }

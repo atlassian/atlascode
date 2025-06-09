@@ -2,7 +2,9 @@ import { parseISO } from 'date-fns';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import * as vscode from 'vscode';
 
+import { ProductJira } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
+import { extractIssueKeys } from '../../bitbucket/issueKeysExtractor';
 import {
     Commit,
     type FileDiff,
@@ -11,12 +13,12 @@ import {
     PullRequest,
     Task,
 } from '../../bitbucket/model';
-import { Commands } from '../../commands';
+import { Commands } from '../../constants';
+import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { Resources } from '../../resources';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { CommitSectionNode } from '../nodes/commitSectionNode';
-import { RelatedBitbucketIssuesNode } from '../nodes/relatedBitbucketIssuesNode';
 import { RelatedIssuesNode } from '../nodes/relatedIssuesNode';
 import { SimpleNode } from '../nodes/simpleNode';
 import { createFileChangesNodes } from './diffViewHelper';
@@ -31,9 +33,9 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     constructor(
         private pr: PullRequest,
         shouldPreload: boolean,
-        parent: AbstractBaseNode | undefined,
     ) {
-        super(parent);
+        super();
+
         this.treeItem = this.createTreeItem();
         this.prHref = pr.data!.url;
 
@@ -52,10 +54,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             .map((approver) => `Approved-by: ${approver.displayName}`)
             .join('\n');
 
-        const item = new vscode.TreeItem(
-            `#${this.pr.data.id!} ${this.pr.data.title!}`,
-            vscode.TreeItemCollapsibleState.Collapsed,
-        );
+        const item = new vscode.TreeItem(`${this.pr.data.title!}`, vscode.TreeItemCollapsibleState.Collapsed);
         item.tooltip = `#${this.pr.data.id!} ${this.pr.data.title!}${
             approvalText.length > 0 ? `\n\n${approvalText}` : ''
         }`;
@@ -100,7 +99,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             fileChangedNodes = await createFileChangesNodes(this.pr, comments, files, [], []);
             // update loadedChildren with critical data without commits
             this.loadedChildren = [
-                new DescriptionNode(this.pr, this),
+                new DescriptionNode(this.pr),
                 ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, [], true)] : []),
                 ...fileChangedNodes,
             ];
@@ -122,17 +121,15 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     ): Promise<void> {
         try {
             const [conflictedFiles, tasks] = await nonCriticalPromise;
-            const [jiraIssueNodes, bbIssueNodes, fileNodes] = await Promise.all([
+            const [jiraIssueNodes, fileNodes] = await Promise.all([
                 this.createRelatedJiraIssueNode(commits, allComments),
-                this.createRelatedBitbucketIssueNode(commits, allComments),
                 createFileChangesNodes(this.pr, allComments, fileDiffs, conflictedFiles, tasks),
             ]);
             // update loadedChildren with additional data
             this.loadedChildren = [
-                new DescriptionNode(this.pr, this),
+                new DescriptionNode(this.pr),
                 ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, commits)] : []),
                 ...jiraIssueNodes,
-                ...bbIssueNodes,
                 ...fileNodes,
             ];
         } catch (error) {
@@ -148,7 +145,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         }
 
         this.isLoading = true;
-        this.loadedChildren = [new DescriptionNode(this.pr, this), new SimpleNode('Loading...')];
+        this.loadedChildren = [new DescriptionNode(this.pr), new SimpleNode('Loading...')];
         let fileDiffs: FileDiff[] = [];
         let allComments: PaginatedComments = { data: [] };
         let fileChangedNodes: AbstractBaseNode[] = [];
@@ -168,7 +165,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         const commits = await commitsPromise;
         // update loadedChildren with commits data
         this.loadedChildren = [
-            new DescriptionNode(this.pr, this),
+            new DescriptionNode(this.pr),
             ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, commits)] : []),
             ...fileChangedNodes,
         ];
@@ -196,33 +193,22 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         commits: Commit[],
         allComments: PaginatedComments,
     ): Promise<AbstractBaseNode[]> {
-        const result: AbstractBaseNode[] = [];
-        const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, commits, allComments.data);
-        if (relatedIssuesNode) {
-            result.push(relatedIssuesNode);
+        // TODO: [VSCODE-503] handle related issues across cloud/server
+        if (
+            !Container.siteManager.productHasAtLeastOneSite(ProductJira) ||
+            !Container.config.bitbucket.explorer.relatedJiraIssues.enabled
+        ) {
+            return [];
         }
-        return result;
-    }
 
-    private async createRelatedBitbucketIssueNode(
-        commits: Commit[],
-        allComments: PaginatedComments,
-    ): Promise<AbstractBaseNode[]> {
-        const result: AbstractBaseNode[] = [];
-        const relatedIssuesNode = await RelatedBitbucketIssuesNode.create(this.pr, commits, allComments.data);
-        if (relatedIssuesNode) {
-            result.push(relatedIssuesNode);
-        }
-        return result;
+        const issueKeys = await extractIssueKeys(this.pr, commits, allComments.data);
+        return issueKeys.length ? [new RelatedIssuesNode(this.pr.data.id, issueKeys, 'Related Jira issues')] : [];
     }
 }
 
 export class DescriptionNode extends AbstractBaseNode {
-    constructor(
-        private pr: PullRequest,
-        parent?: AbstractBaseNode | undefined,
-    ) {
-        super(parent);
+    constructor(private pr: PullRequest) {
+        super();
     }
 
     getTreeItem(): vscode.TreeItem {

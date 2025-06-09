@@ -7,6 +7,7 @@ import Lozenge from '@atlaskit/lozenge';
 import { RadioGroup } from '@atlaskit/radio';
 import Select, { AsyncCreatableSelect, AsyncSelect, CreatableSelect } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
+import Textfield from '@atlaskit/textfield';
 import {
     CommentVisibility,
     IssuePickerIssue,
@@ -27,7 +28,7 @@ import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
 import * as React from 'react';
 import EdiText, { EdiTextType } from 'react-editext';
-import uuid from 'uuid';
+import { v4 } from 'uuid';
 
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
@@ -43,9 +44,11 @@ import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
 import { ConnectionTimeout } from '../../../util/time';
 import { colorToLozengeAppearanceMap } from '../colors';
 import * as FieldValidators from '../fieldValidators';
+import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
+import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
@@ -70,6 +73,7 @@ export interface CommonEditorViewState extends Message {
     showPMF: boolean;
     errorDetails: any;
     commentInputValue: string;
+    isRteEnabled: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -85,6 +89,7 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     isErrorBannerOpen: false,
     errorDetails: undefined,
     commentInputValue: '',
+    isRteEnabled: false,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -182,6 +187,10 @@ export abstract class AbstractIssueEditorPage<
                 this.setState({ showPMF: e.showPMF });
                 break;
             }
+            case 'updateFeatureFlags': {
+                this.setState({ isRteEnabled: e.featureFlags.rteEnabled });
+                break;
+            }
         }
 
         return handled;
@@ -240,7 +249,7 @@ export abstract class AbstractIssueEditorPage<
             issueObj = { key: issueOrKey, siteDetails: this.state.siteDetails };
         }
 
-        const nonce: string = uuid.v4();
+        const nonce: string = v4();
         this.postMessage({
             action: 'openJiraIssue',
             issueOrKey: issueObj,
@@ -261,7 +270,7 @@ export abstract class AbstractIssueEditorPage<
 
     protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
         return new Promise((resolve) => {
-            const nonce: string = uuid.v4();
+            const nonce: string = v4();
             // this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl, nonce: nonce });
             (async () => {
                 try {
@@ -305,7 +314,7 @@ export abstract class AbstractIssueEditorPage<
     protected loadSelectOptions = (input: string, url: string): Promise<any[]> => {
         this.setState({ isSomethingLoading: true });
         return new Promise((resolve) => {
-            const nonce: string = uuid.v4();
+            const nonce: string = v4();
             (async () => {
                 try {
                     const listEvent = await this.postMessageWithEventPromise(
@@ -338,7 +347,7 @@ export abstract class AbstractIssueEditorPage<
     handleSelectOptionCreate = debounce((field: SelectFieldUI, input: string): void => {
         if (field.createUrl.trim() !== '') {
             this.setState({ isSomethingLoading: true, loadingField: field.key });
-            const nonce: string = uuid.v4();
+            const nonce: string = v4();
 
             (async () => {
                 try {
@@ -446,7 +455,7 @@ export abstract class AbstractIssueEditorPage<
                 return (
                     <Field
                         defaultValue={defaultVal}
-                        label={field.name}
+                        label={<span>{field.name}</span>}
                         isRequired={field.required}
                         id={field.key}
                         name={field.key}
@@ -459,21 +468,28 @@ export abstract class AbstractIssueEditorPage<
                             }
 
                             let markup = (
-                                <input
+                                <Textfield
                                     {...fieldArgs.fieldProps}
-                                    style={{ width: '100%', display: 'block' }}
                                     className="ac-inputField"
-                                    disabled={this.state.isSomethingLoading}
-                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
-                                        this.handleInlineInputEdit(field, val);
-                                    })}
+                                    isDisabled={this.state.isSomethingLoading}
+                                    onChange={(e: any) =>
+                                        chain(
+                                            fieldArgs.fieldProps.onChange,
+                                            this.handleInlineEdit(field, e.currentTarget.value),
+                                        )
+                                    }
+                                    placeholder={field.key === 'summary' && 'What needs to be done?'}
                                 />
                             );
                             if ((field as InputFieldUI).isMultiline) {
                                 markup = (
-                                    <TextAreaEditor
+                                    <JiraIssueTextAreaEditor
                                         {...fieldArgs.fieldProps}
-                                        rows={5}
+                                        value={this.state.fieldValues[field.key]}
+                                        isDisabled={this.state.isSomethingLoading}
+                                        onChange={(e: string) =>
+                                            chain(fieldArgs.fieldProps.onChange, this.handleInlineEdit(field, e))
+                                        }
                                         fetchUsers={async (input: string) =>
                                             (await this.fetchUsers(input)).map((user) => ({
                                                 displayName: user.displayName,
@@ -483,10 +499,7 @@ export abstract class AbstractIssueEditorPage<
                                                     : `[~${user.name}]`,
                                             }))
                                         }
-                                        disabled={this.state.isSomethingLoading}
-                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
-                                            this.handleInlineEdit(field, val);
-                                        })}
+                                        featureGateEnabled={this.state.isRteEnabled}
                                     />
                                 );
                             }
@@ -527,7 +540,7 @@ export abstract class AbstractIssueEditorPage<
 
                 return (
                     <Field
-                        label={field.name}
+                        label={<span>{field.name}</span>}
                         isRequired={field.required}
                         id={field.key}
                         name={field.key}
@@ -592,7 +605,7 @@ export abstract class AbstractIssueEditorPage<
 
                 return (
                     <Field
-                        label={field.name}
+                        label={<span>{field.name}</span>}
                         isRequired={field.required}
                         id={field.key}
                         name={field.key}

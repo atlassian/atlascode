@@ -71,10 +71,6 @@ export function registerResources(vscodeContext: ExtensionContext) {
         iconSet.ATLASSIANICON,
         Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'atlassian-icon.svg'))),
     );
-    Resources.icons.set(
-        iconSet.TWITTERLOGOBLUE,
-        Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'TwitterLogoBlue.svg'))),
-    );
     Resources.icons.set(iconSet.PULLREQUEST, {
         light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'pullrequests.svg'))),
         dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'pullrequests.svg'))),

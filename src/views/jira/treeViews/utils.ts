@@ -2,20 +2,22 @@ import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-mode
 import { Command, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
-import { Commands } from '../../../commands';
 import { JQLEntry } from '../../../config/model';
+import { Commands } from '../../../constants';
 import { Container } from '../../../container';
 import { issuesForJQL } from '../../../jira/issuesForJql';
 import { Logger } from '../../../logger';
+import { AbstractBaseNode } from '../../../views/nodes/abstractBaseNode';
 
 export function createLabelItem(label: string, command?: Command): TreeItem {
     const item = new TreeItem(label);
+    item.resourceUri = Uri.parse(label);
     item.command = command;
     return item;
 }
 
 export interface TreeViewIssue extends MinimalIssue<DetailedSiteInfo> {
-    jqlSource: JQLEntry;
+    source: { id: string };
     children: TreeViewIssue[];
 }
 
@@ -28,7 +30,7 @@ export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<TreeViewIssue
                 const issues = (await issuesForJQL(jqlEntry.query, jqlSite)) as TreeViewIssue[];
 
                 issues.forEach((i) => {
-                    i.jqlSource = jqlEntry;
+                    i.source = jqlEntry;
                     i.children = [];
                 });
 
@@ -36,10 +38,14 @@ export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<TreeViewIssue
             }
         }
     } catch (e) {
-        Logger.error(new Error(`Failed to execute default JQL query for site "${jqlEntry.siteId}": ${e}`));
+        Logger.error(e, 'Failed to execute default JQL query for site', jqlEntry.siteId);
     }
 
     return [];
+}
+
+export function getJiraIssueUri(issue: MinimalIssue<DetailedSiteInfo>): Uri {
+    return Uri.parse(`${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`);
 }
 
 export const loginToJiraMessageNode = createLabelItem('Please login to Jira', {
@@ -48,7 +54,7 @@ export const loginToJiraMessageNode = createLabelItem('Please login to Jira', {
     arguments: [ProductJira],
 });
 
-export class JiraIssueNode extends TreeItem {
+export class JiraIssueNode extends TreeItem implements AbstractBaseNode {
     private children: JiraIssueNode[];
 
     constructor(
@@ -62,15 +68,14 @@ export class JiraIssueNode extends TreeItem {
 
         // this id is constructed to ensure unique values for the same jira issue across multiple jql queries.
         // therefore, multiple jql entries must have a unique id for the same site.
-        this.id = `${issue.key}_${issue.siteDetails.id}_${issue.jqlSource.id}`;
+        this.id = `${issue.key}_${issue.siteDetails.id}_${issue.source.id}`;
 
         this.description = isMinimalIssue(issue) && issue.isEpic ? issue.epicName : issue.summary;
         this.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [issue] };
         this.iconPath = Uri.parse(issue.issuetype.iconUrl);
         this.contextValue = this.getIssueContextValue(nodeType, issue);
         this.tooltip = `${issue.key} - ${issue.summary}\n\n${issue.priority.name}    |    ${issue.status.name}`;
-        this.resourceUri = Uri.parse(`${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`);
-
+        this.resourceUri = getJiraIssueUri(issue);
         this.children = issue.children.map((x) => new JiraIssueNode(nodeType, x));
     }
 
@@ -92,20 +97,21 @@ export class JiraIssueNode extends TreeItem {
         }
     }
 
-    async getTreeItem(): Promise<any> {
-        return {
-            resourceUri: this.resourceUri,
-        };
+    getTreeItem(): Promise<TreeItem> | TreeItem {
+        return this;
     }
 
-    getChildren(): Promise<TreeItem[]> {
+    getChildren(): Promise<JiraIssueNode[]> {
         return Promise.resolve(this.children);
     }
+
+    dispose(): void {}
 }
 
 export namespace JiraIssueNode {
     export enum NodeType {
         JiraAssignedIssuesNode = 'assignedJiraIssue',
         CustomJqlQueriesNode = 'jiraIssue',
+        RelatedJiraIssueInBitbucketPR = 'relatedJiraIssueBB',
     }
 }

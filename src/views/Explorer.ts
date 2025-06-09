@@ -51,7 +51,7 @@ export abstract class Explorer extends Disposable {
         try {
             await this.treeView.reveal(node, options);
         } catch (e) {
-            Logger.error(e);
+            Logger.error(e, 'Error executing Explorer.reveal treeView.reveal');
         }
     }
 
@@ -73,7 +73,4 @@ export abstract class BaseTreeDataProvider implements TreeDataProvider<AbstractB
 
     refresh() {}
     dispose() {}
-    getParent(node: AbstractBaseNode): AbstractBaseNode | undefined {
-        return node.getParent();
-    }
 }

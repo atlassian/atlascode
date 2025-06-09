@@ -1,20 +1,3 @@
-jest.mock('./simpleJiraIssueNode', () => {
-    return {
-        SimpleJiraIssueNode: jest.fn().mockImplementation(() => {
-            return {
-                getTreeItem: jest.fn().mockReturnValue({}),
-            };
-        }),
-    };
-});
-jest.mock('../../commands', () => {
-    return {
-        Commands: {
-            WorkbenchOpenRepository: 'workbench.openRepository',
-            ShowIssue: 'showIssue',
-        },
-    };
-});
 jest.mock('@atlassianlabs/jira-pi-common-models', () => {
     return {
         isMinimalIssue: jest.fn(() => true),
@@ -42,7 +25,6 @@ const mockIssue: MinimalORIssueLink<DetailedSiteInfo> = {
         credentialId: '',
         host: '',
         product: ProductJira,
-        hasResolutionField: true,
     },
     epicLink: '',
     id: '1',
@@ -93,47 +75,51 @@ describe('IssueNode', () => {
 
     describe('getTreeItem', () => {
         it('should return a TreeItem with the issue key and summary in title', () => {
-            const issueNode = new IssueNode(mockIssue, undefined);
+            const issueNode = new IssueNode(mockIssue);
             const treeItem = issueNode.getTreeItem();
             expect(treeItem.label).toBe(`${mockIssue.key} ${mockIssue.summary}`);
             expect(treeItem.description).toBeUndefined();
         });
 
         it('should return a TreeItem with a collapsible state of Expanded if the issue has subtasks or epic children', () => {
-            const issueNode = new IssueNode({ ...mockIssue, subtasks: [mockIssue] }, undefined);
+            const issueNode = new IssueNode({ ...mockIssue, subtasks: [mockIssue] });
             const treeItem = issueNode.getTreeItem();
             expect(treeItem.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
         });
 
         it('should return a TreeItem with a collapsible state of None if the issue does not have subtasks or epic children', () => {
-            const issueNode = new IssueNode(mockIssue, undefined);
+            const issueNode = new IssueNode(mockIssue);
             const treeItem = issueNode.getTreeItem();
             expect(treeItem.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
         });
 
         it('should return a TreeItem with a command to show the issue', () => {
-            const issueNode = new IssueNode(mockIssue, undefined);
+            const issueNode = new IssueNode(mockIssue);
             const treeItem = issueNode.getTreeItem();
-            expect(treeItem.command).toEqual({ command: 'showIssue', title: 'Show Issue', arguments: [mockIssue] });
+            expect(treeItem.command).toEqual({
+                command: 'atlascode.jira.showIssue',
+                title: 'Show Issue',
+                arguments: [mockIssue],
+            });
         });
     });
 
     describe('getChildren', () => {
         it('should return an empty array if the issue does not have subtasks or epic children', async () => {
-            const issueNode = new IssueNode(mockIssue, undefined);
+            const issueNode = new IssueNode(mockIssue);
             const children = await issueNode.getChildren();
             expect(children).toEqual([]);
         });
 
         it('should return an array of IssueNodes for each subtask if the issue has subtasks', async () => {
-            const issueNode = new IssueNode({ ...mockIssue, subtasks: [mockIssue] }, undefined);
+            const issueNode = new IssueNode({ ...mockIssue, subtasks: [mockIssue] });
             const children = await issueNode.getChildren();
             expect(children).toHaveLength(1);
             expect(children[0]).toBeInstanceOf(IssueNode);
         });
 
         it('should return an array of IssueNodes for each epic child if the issue has epic children', async () => {
-            const issueNode = new IssueNode({ ...mockIssue, epicChildren: [mockIssue] }, undefined);
+            const issueNode = new IssueNode({ ...mockIssue, epicChildren: [mockIssue] });
             const children = await issueNode.getChildren();
             expect(children).toHaveLength(1);
             expect(children[0]).toBeInstanceOf(IssueNode);

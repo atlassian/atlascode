@@ -1,26 +1,8 @@
-import { AccessibleResourceV1, emptyAccessibleResourceV1 } from '../atlclients/authInfo';
-
-export enum SettingSource {
-    JiraIssue = 'jiraIssue',
-    BBPullRequest = 'bbPullRequest',
-    BBPipeline = 'bbPipeline',
-    BBIssue = 'bbIssue',
-    JiraAuth = 'jiraAuth',
-    BBAuth = 'bbAuth',
-    Default = 'default',
-}
-
 export enum OutputLevel {
     Silent = 'silent',
     Errors = 'errors',
     Info = 'info',
     Debug = 'debug',
-}
-
-export interface WorkingProjectV1 {
-    name: string;
-    id: string;
-    key: string;
 }
 
 export interface IConfig {
@@ -41,14 +23,11 @@ export interface IConfig {
 
 export interface JiraConfig {
     enabled: boolean;
-    workingProject: WorkingProjectV1;
-    workingSite: AccessibleResourceV1;
     lastCreateSiteAndProject: SiteIdAndProjectKey;
     explorer: JiraExplorer;
     issueMonitor: JiraIssueMonitor;
     statusbar: JiraStatusBar;
     hover: JiraHover;
-    customJql: SiteJQLV1[];
     jqlList: JQLEntry[];
     todoIssues: TodoIssues;
     startWorkBranchTemplate: StartWorkBranchTemplate;
@@ -59,6 +38,7 @@ export type SiteIdAndProjectKey = {
     siteId: string;
     projectKey: string;
 };
+
 export interface JiraStatusBar {
     enabled: boolean;
     showProduct: boolean;
@@ -74,10 +54,6 @@ export interface JiraIssueMonitor {
 export interface JiraExplorer {
     enabled: boolean;
     monitorEnabled: boolean;
-    showOpenIssues: boolean;
-    openIssueJql: string;
-    showAssignedIssues: boolean;
-    assignedIssueJql: string;
     refreshInterval: number;
     nestSubtasks: boolean;
     fetchAllQueryResults: boolean;
@@ -90,11 +66,6 @@ export interface StartWorkBranchTemplate {
 
 export interface JiraHover {
     enabled: boolean;
-}
-
-export interface SiteJQLV1 {
-    siteId: string;
-    jql: JQLEntryV1[];
 }
 
 export interface TodoIssues {
@@ -112,13 +83,6 @@ export interface JQLEntry {
     filterId?: string;
 }
 
-export interface JQLEntryV1 {
-    id: string;
-    enabled: boolean;
-    name: string;
-    query: string;
-}
-
 export interface BitbucketConfig {
     enabled: boolean;
     explorer: BitbucketExplorer;
@@ -127,6 +91,7 @@ export interface BitbucketConfig {
     pipelines: BitbucketPipelinesConfig;
     issues: BitbucketIssuesConfig;
     preferredRemotes: string[];
+    showTerminalLinkPanel: boolean;
 }
 
 export interface BitbucketPipelinesConfig {
@@ -178,40 +143,19 @@ export interface BitbucketContextMenus {
     enabled: boolean;
 }
 
-export const emptyWorkingProjectV1: WorkingProjectV1 = {
-    name: '',
-    id: '',
-    key: '',
-};
-
-export function notEmptyProjectV1(p: WorkingProjectV1): p is WorkingProjectV1 {
-    return (
-        (<WorkingProjectV1>p).name !== undefined &&
-        (<WorkingProjectV1>p).name !== '' &&
-        (<WorkingProjectV1>p).id !== undefined &&
-        (<WorkingProjectV1>p).id !== '' &&
-        (<WorkingProjectV1>p).key !== undefined &&
-        (<WorkingProjectV1>p).key !== ''
-    );
-}
-
-export const emptyJiraExplorer: JiraExplorer = {
+const emptyJiraExplorer: JiraExplorer = {
     enabled: true,
     monitorEnabled: true,
-    showOpenIssues: true,
-    openIssueJql: '',
-    showAssignedIssues: true,
-    assignedIssueJql: '',
     refreshInterval: 5,
     nestSubtasks: true,
     fetchAllQueryResults: false,
 };
 
-export const emtpyIssueMonitor: JiraIssueMonitor = {
+const emtpyIssueMonitor: JiraIssueMonitor = {
     refreshInterval: 5,
 };
 
-export const emptyJiraStatusBar: JiraStatusBar = {
+const emptyJiraStatusBar: JiraStatusBar = {
     enabled: true,
     showProduct: true,
     showUser: true,
@@ -219,59 +163,47 @@ export const emptyJiraStatusBar: JiraStatusBar = {
     showActiveIssue: true,
 };
 
-export const emptyJiraHover: JiraHover = {
+const emptyJiraHover: JiraHover = {
     enabled: true,
 };
 
-export const emptyJQLEntry: JQLEntry = {
-    id: '',
-    enabled: true,
-    monitor: true,
-    name: '',
-    query: '',
-    siteId: '',
-};
-
-export const emptyTodoIssues: TodoIssues = {
+const emptyTodoIssues: TodoIssues = {
     enabled: true,
     triggers: [],
 };
 
-export const emptyStartWorkBranchTemplate: StartWorkBranchTemplate = {
+const emptyStartWorkBranchTemplate: StartWorkBranchTemplate = {
     customPrefixes: [],
     customTemplate: '{{prefix}}/{{issueKey}}-{{summary}}',
 };
 
-export const emptyJiraConfig: JiraConfig = {
+const emptyJiraConfig: JiraConfig = {
     enabled: true,
-    workingProject: emptyWorkingProjectV1,
-    workingSite: emptyAccessibleResourceV1,
     lastCreateSiteAndProject: { siteId: '', projectKey: '' },
     explorer: emptyJiraExplorer,
     issueMonitor: emtpyIssueMonitor,
     statusbar: emptyJiraStatusBar,
     hover: emptyJiraHover,
-    customJql: [],
     jqlList: [],
     todoIssues: emptyTodoIssues,
     startWorkBranchTemplate: emptyStartWorkBranchTemplate,
     showCreateIssueProblems: false,
 };
 
-export const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {
+const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {
     enabled: true,
 };
 
-export const emptyRelatedBitbucketIssues: BitbucketRelatedBitbucketIssues = {
+const emptyRelatedBitbucketIssues: BitbucketRelatedBitbucketIssues = {
     enabled: true,
 };
 
-export const emptyBitbucketNotfications: BitbucketNotifications = {
+const emptyBitbucketNotfications: BitbucketNotifications = {
     refreshInterval: 10,
     pullRequestCreated: true,
 };
 
-export const emptyBitbucketExplorer: BitbucketExplorer = {
+const emptyBitbucketExplorer: BitbucketExplorer = {
     enabled: true,
     nestFilesEnabled: true,
     refreshInterval: 5,
@@ -280,18 +212,18 @@ export const emptyBitbucketExplorer: BitbucketExplorer = {
     notifications: emptyBitbucketNotfications,
 };
 
-export const emptyBitbucketStatusBar: BitbucketStatusBar = {
+const emptyBitbucketStatusBar: BitbucketStatusBar = {
     enabled: true,
     showProduct: true,
     showUser: true,
     showLogin: true,
 };
 
-export const emptyBitbucketContextMenus: BitbucketContextMenus = {
+const emptyBitbucketContextMenus: BitbucketContextMenus = {
     enabled: true,
 };
 
-export const emptyPipelinesConfig: BitbucketPipelinesConfig = {
+const emptyPipelinesConfig: BitbucketPipelinesConfig = {
     explorerEnabled: true,
     monitorEnabled: true,
     refreshInterval: 5,
@@ -300,14 +232,14 @@ export const emptyPipelinesConfig: BitbucketPipelinesConfig = {
     branchFilters: [],
 };
 
-export const emptyIssuesConfig: BitbucketIssuesConfig = {
+const emptyIssuesConfig: BitbucketIssuesConfig = {
     explorerEnabled: true,
     monitorEnabled: true,
     refreshInterval: 15,
     createJiraEnabled: false,
 };
 
-export const emptyBitbucketConfig: BitbucketConfig = {
+const emptyBitbucketConfig: BitbucketConfig = {
     enabled: true,
     explorer: emptyBitbucketExplorer,
     statusbar: emptyBitbucketStatusBar,
@@ -315,6 +247,7 @@ export const emptyBitbucketConfig: BitbucketConfig = {
     pipelines: emptyPipelinesConfig,
     issues: emptyIssuesConfig,
     preferredRemotes: ['upstream', 'origin'],
+    showTerminalLinkPanel: true,
 };
 
 export const emptyConfig: IConfig = {

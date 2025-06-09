@@ -15,7 +15,7 @@ export class JiraAuthentictor implements Authenticator {
         //TODO: [VSCODE-505] call serverInfo endpoint when it supports OAuth
         //const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${newResource.id}/rest/2`, authInfo.access);
 
-        newSites = resources.map((r) => {
+        newSites = resources.map((r): DetailedSiteInfo => {
             const credentialId = CredentialManager.generateCredentialId(ProductJira.key, userId);
 
             return {
@@ -29,7 +29,6 @@ export class JiraAuthentictor implements Authenticator {
                 isCloud: true,
                 userId: userId,
                 credentialId: credentialId,
-                hasResolutionField: false, // this field is populated in loginManager.ts
             };
         });
 

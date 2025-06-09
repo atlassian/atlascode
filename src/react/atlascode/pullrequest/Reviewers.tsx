@@ -90,7 +90,7 @@ export const Reviewers: React.FunctionComponent<ReviewersProps> = ({
                 </Grid>
             )}
 
-            <Grid item>
+            <Grid style={{ width: '100%' }} item>
                 <AddReviewers site={site} reviewers={activeParticipants} updateReviewers={handleUpdateReviewers} />
             </Grid>
         </Grid>

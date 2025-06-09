@@ -2,6 +2,7 @@ import { Comment as JiraComment, User } from '@atlassianlabs/jira-pi-common-mode
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
+import { disableConsole } from 'testsutil';
 
 import { IssueCommentComponent } from './IssueCommentComponent';
 
@@ -14,7 +15,6 @@ const mockSiteDetails: DetailedSiteInfo = {
     baseApiUrl: '',
     isCloud: false,
     credentialId: '',
-    hasResolutionField: false,
     host: '',
     product: {
         name: 'JIRA',
@@ -98,6 +98,10 @@ const mockFetchImage = jest.fn();
 const mockOnDelete = jest.fn();
 
 describe('IssueCommentComponent', () => {
+    beforeAll(() => {
+        disableConsole('warn', 'error');
+    });
+
     it('renders the AddCommentComponent', () => {
         render(
             <IssueCommentComponent
@@ -147,11 +151,13 @@ describe('IssueCommentComponent', () => {
                 fetchUsers={mockFetchUsers}
                 fetchImage={mockFetchImage}
                 onDelete={mockOnDelete}
+                isRteEnabled={true}
             />,
         );
 
         fireEvent.click(screen.getAllByText('Edit')[0]);
-        const textArea = screen.getByText('Another test comment');
+        fireEvent.click(screen.getByLabelText('rte toggle'));
+        const textArea = screen.getAllByRole('textbox')[1];
         fireEvent.change(textArea, { target: { value: 'Updated comment' } });
         fireEvent.click(screen.getByText('Save'));
 
@@ -190,12 +196,14 @@ describe('IssueCommentComponent', () => {
                 fetchUsers={mockFetchUsers}
                 fetchImage={mockFetchImage}
                 onDelete={mockOnDelete}
+                isRteEnabled={true}
             />,
         );
 
         fireEvent.click(screen.getByPlaceholderText('Add a comment...'));
-        const textArea = screen.getByRole('textbox');
-        fireEvent.change(textArea, { target: { value: 'New comment' } });
+        fireEvent.click(screen.getByLabelText('rte toggle'));
+        fireEvent.focus(screen.getByRole('textbox'));
+        fireEvent.input(screen.getByRole('textbox'), { target: { value: 'New comment' } });
         fireEvent.click(screen.getByText('Save'));
 
         expect(mockOnCreate).toHaveBeenCalledWith('New comment', undefined);

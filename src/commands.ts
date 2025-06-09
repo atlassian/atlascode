@@ -1,5 +1,5 @@
 import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import { commands, env, ExtensionContext, Uri } from 'vscode';
+import { commands, env, ExtensionContext, Uri, window } from 'vscode';
 
 import {
     cloneRepositoryButtonEvent,
@@ -8,99 +8,24 @@ import {
     Registry,
     viewScreenEvent,
 } from './analytics';
-import { DetailedSiteInfo, ProductBitbucket } from './atlclients/authInfo';
+import { DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
-import { BitbucketIssue } from './bitbucket/model';
 import { rerunPipeline } from './commands/bitbucket/rerunPipeline';
 import { runPipeline } from './commands/bitbucket/runPipeline';
 import { assignIssue } from './commands/jira/assignIssue';
 import { createIssue } from './commands/jira/createIssue';
-import { showIssue, showIssueForKey, showIssueForSiteIdAndKey } from './commands/jira/showIssue';
+import { showIssue, showIssueForKey, showIssueForSiteIdAndKey, showIssueForURL } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { configuration } from './config/configuration';
-import { HelpTreeViewId } from './constants';
+import { Commands, HelpTreeViewId } from './constants';
 import { Container } from './container';
+import { transitionIssue } from './jira/transitionIssue';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
+import { Logger } from './logger';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
-
-export enum Commands {
-    BitbucketSelectContainer = 'atlascode.bb.selectContainer',
-    BitbucketFetchPullRequests = 'atlascode.bb.fetchPullRequests',
-    BitbucketRefreshPullRequests = 'atlascode.bb.refreshPullRequests',
-    BitbucketToggleFileNesting = 'atlascode.bb.toggleFileNesting',
-    BitbucketOpenPullRequest = 'atlascode.bb.openPullRequest',
-    BitbucketShowOpenPullRequests = 'atlascode.bb.showOpenPullRequests',
-    BitbucketShowPullRequestsToReview = 'atlascode.bb.showPullRequestsToReview',
-    BitbucketShowPullRequestsCreatedByMe = 'atlascode.bb.showOpenPullRequestsCreatedByMe',
-    BitbucketShowMergedPullRequests = 'atlascode.bb.showMergedPullRequests',
-    BitbucketShowDeclinedPullRequests = 'atlascode.bb.showDeclinedPullRequests',
-    BitbucketPullRequestFilters = 'atlascode.bb.showPullRequestFilters',
-    JiraSearchIssues = 'atlascode.jira.searchIssues',
-    BitbucketShowPullRequestDetails = 'atlascode.bb.showPullRequestDetails',
-    BitbucketPullRequestsNextPage = 'atlascode.bb.pullReqeustsNextPage',
-    RefreshPullRequestExplorerNode = 'atlascode.bb.refreshPullRequest',
-    ViewInWebBrowser = 'atlascode.viewInWebBrowser',
-    BitbucketAddComment = 'atlascode.bb.addComment',
-    BitbucketAddReply = 'atlascode.bb.addReply',
-    BitbucketDeleteComment = 'atlascode.bb.deleteComment',
-    BitbucketEditComment = 'atlascode.bb.editComment',
-    BitbucketDeleteTask = 'atlascode.bb.deleteTask',
-    BitbucketAddTask = 'atlascode.bb.addTask',
-    BitbucketEditTask = 'atlascode.bb.editTask',
-    BitbucketMarkTaskComplete = 'atlascode.bb.markTaskComplete',
-    BitbucketMarkTaskIncomplete = 'atlascode.bb.markTaskIncomplete',
-    BitbucketToggleCommentsVisibility = 'atlascode.bb.toggleCommentsVisibility',
-    EditThisFile = 'atlascode.bb.editThisFile',
-    CreateIssue = 'atlascode.jira.createIssue',
-    RefreshAssignedWorkItemsExplorer = 'atlascode.jira.refreshAssignedWorkItemsExplorer',
-    RefreshCustomJqlExplorer = 'atlascode.jira.refreshCustomJqlExplorer',
-    AddJiraSite = 'atlascode.jira.addJiraSite',
-    ShowJiraIssueSettings = 'atlascode.jira.showJiraIssueSettings',
-    ShowPullRequestSettings = 'atlascode.bb.showPullRequestSettings',
-    ShowPipelineSettings = 'atlascode.bb.showPipelineSettings',
-    ShowBitbucketIssueSettings = 'atlascode.bb.showBitbucketIssueSettings',
-    ShowExploreSettings = 'atlascode.showExploreSettings',
-    ShowIssue = 'atlascode.jira.showIssue',
-    ShowIssueForKey = 'atlascode.jira.showIssueForKey',
-    ShowIssueForSiteIdAndKey = 'atlascode.jira.showIssueForSiteIdAndKey',
-    ShowConfigPage = 'atlascode.showConfigPage',
-    ShowConfigPageFromExtensionContext = 'atlascode.extensionContext.showConfigPage',
-    ShowJiraAuth = 'atlascode.showJiraAuth',
-    ShowBitbucketAuth = 'atlascode.showBitbucketAuth',
-    ShowWelcomePage = 'atlascode.showWelcomePage',
-    ShowOnboardingPage = 'atlascode.showOnboardingPage',
-    TestLogin = 'atlascode.testLogin',
-    TestLogout = 'atlascode.testLogout',
-    ShowPullRequestDetailsPage = 'atlascode.showPullRequestDetailsPage',
-    AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
-    StartWorkOnIssue = 'atlascode.jira.startWorkOnIssue',
-    CreatePullRequest = 'atlascode.bb.createPullRequest',
-    RerunPipeline = 'atlascode.bb.rerunPipeline',
-    RunPipelineForBranch = 'atlascode.bb.runPipelineForBranch',
-    RefreshPipelines = 'atlascode.bb.refreshPipelines',
-    ShowPipeline = 'atlascode.bb.showPipeline',
-    PipelinesNextPage = 'atlascode.bb.pipelinesNextPage',
-    BitbucketIssuesNextPage = 'atlascode.bb.issuesNextPage',
-    BitbucketIssuesRefresh = 'atlascode.bb.refreshIssues',
-    CreateBitbucketIssue = 'atlascode.bb.createIssue',
-    ShowBitbucketIssue = 'atlascode.bb.showIssue',
-    StartWorkOnBitbucketIssue = 'atlascode.bb.startWorkOnIssue',
-    BBPRCancelAction = 'atlascode.bb.cancelCommentAction',
-    BBPRSaveAction = 'atlascode.bb.saveCommentAction',
-    ViewDiff = 'atlascode.viewDiff',
-    DebugBitbucketSites = 'atlascode.debug.bitbucketSites',
-    WorkbenchOpenRepository = 'atlascode.workbenchOpenRepository',
-    WorkbenchOpenWorkspace = 'atlascode.workbenchOpenWorkspace',
-    CloneRepository = 'atlascode.cloneRepository',
-    DisableHelpExplorer = 'atlascode.disableHelpExplorer',
-    CreateNewJql = 'atlascode.jira.createNewJql',
-    ToDoIssue = 'atlascode.jira.todoIssue',
-    InProgressIssue = 'atlascode.jira.inProgressIssue',
-    DoneIssue = 'atlascode.jira.doneIssue',
-}
 
 export function registerCommands(vscodeContext: ExtensionContext) {
     vscodeContext.subscriptions.push(
@@ -159,12 +84,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 subSection: ConfigSubSection.Pipelines,
             }),
         ),
-        commands.registerCommand(Commands.ShowBitbucketIssueSettings, () =>
-            Container.settingsWebviewFactory.createOrShow({
-                section: ConfigSection.Bitbucket,
-                subSection: ConfigSubSection.Issues,
-            }),
-        ),
         commands.registerCommand(Commands.ShowExploreSettings, () => {
             Container.analyticsApi.fireExploreFeaturesButtonEvent(HelpTreeViewId);
             Container.settingsWebviewFactory.createOrShow({
@@ -172,10 +91,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 subSection: undefined,
             });
         }),
-        commands.registerCommand(Commands.ShowWelcomePage, () => Container.welcomeWebviewFactory.createOrShow()),
         commands.registerCommand(Commands.ShowOnboardingPage, () => Container.onboardingWebviewFactory.createOrShow()),
-        commands.registerCommand(Commands.TestLogin, () => Container.testLogin()),
-        commands.registerCommand(Commands.TestLogout, () => Container.testLogout()),
         commands.registerCommand(
             Commands.ViewInWebBrowser,
             async (prNode: AbstractBaseNode, source?: string, linkId?: string) => {
@@ -201,6 +117,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             Commands.ShowIssueForSiteIdAndKey,
             async (siteId: string, issueKey: string) => await showIssueForSiteIdAndKey(siteId, issueKey),
         ),
+        commands.registerCommand(Commands.ShowIssueForURL, async (issueURL: string) => await showIssueForURL(issueURL)),
         commands.registerCommand(Commands.ToDoIssue, (issueNode) =>
             commands.executeCommand(Commands.ShowIssue, issueNode.issue),
         ),
@@ -211,15 +128,45 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             commands.executeCommand(Commands.ShowIssue, issueNode.issue),
         ),
         commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
+        commands.registerCommand(Commands.TransitionIssue, async (issueNode: IssueNode) => {
+            if (!isMinimalIssue(issueNode.issue)) {
+                // Should be unreachable, but let's fail gracefully
+                return;
+            }
+
+            const issue = issueNode.issue as MinimalIssue<DetailedSiteInfo>;
+            Container.analyticsApi.fireViewScreenEvent('atlascodeTransitionQuickPick', issue.siteDetails, ProductJira);
+            window
+                .showQuickPick(
+                    issue.transitions.map((x) => ({
+                        label: x.name,
+                        detail: x.name !== x.to.name ? `${x.to.name}` : '',
+                    })),
+                    {
+                        placeHolder: `Select a transition for ${issue.key}`,
+                    },
+                )
+                .then(async (transition) => {
+                    if (!transition) {
+                        return;
+                    }
+
+                    const target = issue.transitions.find((x) => x.name === transition.label);
+                    if (!target) {
+                        window.showErrorMessage(`Transition ${transition.label} not found`);
+                        Logger.error(new Error('Transition not found'));
+                        return;
+                    }
+
+                    await transitionIssue(issue, target, { source: 'quickPick' });
+                });
+        }),
         commands.registerCommand(
             Commands.StartWorkOnIssue,
             (issueNodeOrMinimalIssue: IssueNode | MinimalIssue<DetailedSiteInfo>) =>
                 startWorkOnIssue(
                     isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue,
                 ),
-        ),
-        commands.registerCommand(Commands.StartWorkOnBitbucketIssue, (issue: BitbucketIssue) =>
-            Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue),
         ),
         commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, Uri, Uri, string]) => {
             viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then((e) => {
@@ -237,9 +184,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(Commands.ShowPipeline, (pipelineInfo: any) => {
             Container.pipelinesSummaryWebview.createOrShow(pipelineInfo.uuid, pipelineInfo);
         }),
-        commands.registerCommand(Commands.ShowBitbucketIssue, (issue: BitbucketIssue) =>
-            Container.bitbucketIssueWebviewFactory.createOrShow(issue.data.links?.self?.href, issue),
-        ),
         commands.registerCommand(Commands.DebugBitbucketSites, showBitbucketDebugInfo),
         commands.registerCommand(Commands.WorkbenchOpenRepository, (source: string) => {
             openWorkbenchRepositoryButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
@@ -259,5 +203,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(Commands.BitbucketOpenPullRequest, (data: { pullRequestUrl: string }) => {
             Container.openPullRequestHandler(data.pullRequestUrl);
         }),
+        commands.registerCommand(Commands.ShowOnboardingFlow, () => Container.onboardingProvider.start()),
     );
 }

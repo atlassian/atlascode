@@ -4,7 +4,7 @@ import { commands, QuickPickItem, window } from 'vscode';
 import { pipelineStartEvent } from '../../analytics';
 import { bitbucketSiteForRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
 import { BitbucketApi, BitbucketSite, WorkspaceRepo } from '../../bitbucket/model';
-import { Commands } from '../../commands';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { PipelineReferenceTarget, PipelineReferenceType, PipelineTargetType } from '../../pipelines/model';
@@ -63,7 +63,7 @@ async function showBranchPicker(remote: Remote) {
                 try {
                     await bbApi.pipelines!.triggerPipeline(bbSite!, target);
                 } catch (e) {
-                    Logger.error(e);
+                    Logger.error(e, 'Error building branch');
                     window.showErrorMessage(`Error building branch`);
                 }
                 // Seems like there's a bit of lag between a build starting and it showing up in the list API.

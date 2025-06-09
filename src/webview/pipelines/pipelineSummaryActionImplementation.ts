@@ -2,7 +2,7 @@ import { commands } from 'vscode';
 
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite } from '../../bitbucket/model';
-import { Commands } from '../../commands';
+import { Commands } from '../../constants';
 import { PipelinesSummaryActionApi } from '../../lib/webview/controller/pipelines/pipelinesSummaryActionApi';
 import { Logger } from '../../logger';
 import { Pipeline, PipelineLogRange, PipelineStep, PipelineStepLogRanges } from '../../pipelines/model';
@@ -62,7 +62,7 @@ export class PipelineSummaryActionImplementation implements PipelinesSummaryActi
             const newPipeline = await bbApi.pipelines!.triggerPipeline(pipeline.site, pipeline.target);
             commands.executeCommand(Commands.ShowPipeline, newPipeline);
         } catch (e) {
-            Logger.error(e);
+            Logger.error(e, 'Error executing PipelineSummaryActionImplementation.rerunPipeline');
         }
     }
 }

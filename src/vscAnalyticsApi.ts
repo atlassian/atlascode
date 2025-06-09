@@ -1,14 +1,10 @@
 import {
     authenticateButtonEvent,
     authenticatedEvent,
-    bbIssueCommentEvent,
-    bbIssueCreatedEvent,
     bbIssuesPaginationEvent,
-    bbIssueTransitionedEvent,
-    bbIssueUrlCopiedEvent,
-    bbIssueWorkStartedEvent,
     customJQLCreatedEvent,
     deepLinkEvent,
+    DeepLinkEventErrorType,
     doneButtonEvent,
     exploreFeaturesButtonEvent,
     externalLinkEvent,
@@ -76,8 +72,22 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
-    public async fireLaunchedEvent(location: string): Promise<void> {
-        return launchedEvent(location).then((e) => {
+    public async fireLaunchedEvent(
+        location: string,
+        ideUriScheme: string,
+        numJiraCloudAuthed: number,
+        numJiraDcAuthed: number,
+        numBitbucketCloudAuthed: number,
+        numBitbucketDcAuthed: number,
+    ): Promise<void> {
+        return launchedEvent(
+            location,
+            ideUriScheme,
+            numJiraCloudAuthed,
+            numJiraDcAuthed,
+            numBitbucketCloudAuthed,
+            numBitbucketDcAuthed,
+        ).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }
@@ -143,36 +153,6 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async fireStartIssueCreationEvent(source: string, product: Product): Promise<void> {
         return startIssueCreationEvent(source, product).then((e) => {
-            this._analyticsClient.sendTrackEvent(e);
-        });
-    }
-
-    public async fireBBIssueCreatedEvent(site: DetailedSiteInfo): Promise<void> {
-        return bbIssueCreatedEvent(site).then((e) => {
-            this._analyticsClient.sendTrackEvent(e);
-        });
-    }
-
-    public async fireBBIssueTransitionedEvent(site: DetailedSiteInfo): Promise<void> {
-        return bbIssueTransitionedEvent(site).then((e) => {
-            this._analyticsClient.sendTrackEvent(e);
-        });
-    }
-
-    public async fireBBIssueUrlCopiedEvent(): Promise<void> {
-        return bbIssueUrlCopiedEvent().then((e) => {
-            this._analyticsClient.sendTrackEvent(e);
-        });
-    }
-
-    public async fireBBIssueCommentEvent(site: DetailedSiteInfo): Promise<void> {
-        return bbIssueCommentEvent(site).then((e) => {
-            this._analyticsClient.sendTrackEvent(e);
-        });
-    }
-
-    public async fireBBIssueWorkStartedEvent(site: DetailedSiteInfo): Promise<void> {
-        return bbIssueWorkStartedEvent(site).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }
@@ -249,8 +229,8 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
-    public async fireDeepLinkEvent(source: string, target: string): Promise<void> {
-        return deepLinkEvent(source, target).then((e) => {
+    public async fireDeepLinkEvent(source: string, target: string, errorType: DeepLinkEventErrorType): Promise<void> {
+        return deepLinkEvent(source, target, errorType).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

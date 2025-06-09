@@ -1,19 +1,25 @@
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { cloneDeep } from 'lodash';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { JQLEntry } from 'src/config/model';
+import { expansionCastTo, forceCastTo } from 'testsutil';
 import { Uri } from 'vscode';
 
-import { expansionCastTo, forceCastTo } from '../../../../testsutil';
-import { JiraIssueNode, TreeViewIssue } from './utils';
+import { Container } from '../../../container';
+import * as issuesForJQL from '../../../jira/issuesForJql';
+import { Logger } from '../../../logger';
+import { executeJqlQuery, JiraIssueNode, TreeViewIssue } from './utils';
 
 jest.mock('../../../container', () => ({
     Container: {
         siteManager: {
-            getSiteForId: jest.fn(() =>
+            getSiteForId: () =>
                 expansionCastTo<DetailedSiteInfo>({ id: 'siteDetailsId', baseLinkUrl: '/siteDetails/' }),
-            ),
         },
     },
+}));
+jest.mock('../../../jira/issuesForJql', () => ({
+    issuesForJQL: () => Promise.resolve([]),
 }));
 jest.mock('../../../commands', () => ({
     Commands: {
@@ -41,7 +47,7 @@ const mockedIssue1 = forceCastTo<TreeViewIssue>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockedJqlEntry,
+    source: mockedJqlEntry,
     children: [],
 });
 
@@ -54,7 +60,7 @@ const mockedIssue2 = forceCastTo<TreeViewIssue>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockedJqlEntry,
+    source: mockedJqlEntry,
     children: [mockedIssue1],
 });
 
@@ -67,15 +73,68 @@ const mockedIssue3 = forceCastTo<TreeViewIssue>({
     siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails' },
     issuetype: { iconUrl: '/issueType/' },
     subtasks: [],
-    jqlSource: mockedJqlEntry,
+    source: mockedJqlEntry,
     children: [],
 });
 
-afterEach(() => {
-    jest.clearAllMocks();
-});
-
 describe('utils', () => {
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+    });
+
+    describe('executeJqlQuery', () => {
+        it('returns an empty collection of issues for no JQL', async () => {
+            const issues = await executeJqlQuery(undefined as unknown as JQLEntry);
+            expect(issues).toHaveLength(0);
+            expect(Logger.error).not.toHaveBeenCalled();
+        });
+
+        it('returns an empty collection of issues for no corresponding site', async () => {
+            const jqlEntry = expansionCastTo<JQLEntry>({ id: 'id1', query: 'query1', siteId: 'site-id-guid' });
+            jest.spyOn(Container.siteManager, 'getSiteForId').mockReturnValue(undefined);
+
+            const issues = await executeJqlQuery(jqlEntry);
+            expect(issues).toHaveLength(0);
+            expect(Logger.error).not.toHaveBeenCalled();
+        });
+
+        it('initializes the `source` and the `children` fields', async () => {
+            const jqlEntry = expansionCastTo<JQLEntry>({ id: 'id1', query: 'query1', siteId: 'site-id-guid' });
+            const mockedMinimalIssues = [
+                expansionCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'AXON-1' }),
+                expansionCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'AXON-2' }),
+                expansionCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'AXON-3' }),
+            ];
+            jest.spyOn(issuesForJQL, 'issuesForJQL').mockResolvedValue(mockedMinimalIssues);
+
+            const issues = await executeJqlQuery(jqlEntry);
+
+            expect(issues).toHaveLength(3);
+            for (const issue of issues) {
+                expect(issue.source).toBe(jqlEntry);
+                expect(issue.children).toBeDefined();
+                expect(issue.children).toHaveLength(0);
+            }
+
+            expect(Logger.error).not.toHaveBeenCalled();
+        });
+
+        it('logs an error in case of failure, and returns an empty collection of issues', async () => {
+            const error = new Error('this is a failure');
+            const jqlEntry = expansionCastTo<JQLEntry>({ id: 'id1', query: 'query1', siteId: 'site-id-guid' });
+            jest.spyOn(issuesForJQL, 'issuesForJQL').mockRejectedValue(error);
+
+            const issues = await executeJqlQuery(jqlEntry);
+            expect(issues).toHaveLength(0);
+            expect(Logger.error).toHaveBeenCalledWith(
+                error,
+                'Failed to execute default JQL query for site',
+                'site-id-guid',
+            );
+        });
+    });
+
     describe('JiraIssueNode', () => {
         it('should create a JiraIssueNode', () => {
             const jiraIssueNode = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue1);
@@ -105,16 +164,14 @@ describe('utils', () => {
 
         it('JiraIssueNode id is unique for the same Jira issue across different JQL entries', () => {
             const _mockedIssue1 = cloneDeep(mockedIssue1);
-            _mockedIssue1.jqlSource = expansionCastTo<JQLEntry>({
+            _mockedIssue1.source = {
                 id: 'jqlId1',
-                siteId: 'siteDetailsId',
-            });
+            };
 
             const _mockedIssue2 = cloneDeep(mockedIssue1);
-            _mockedIssue2.jqlSource = expansionCastTo<JQLEntry>({
+            _mockedIssue2.source = {
                 id: 'jqlId2',
-                siteId: 'siteDetailsId',
-            });
+            };
 
             const jiraIssueNode1 = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, _mockedIssue1);
             const jiraIssueNode2 = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, _mockedIssue2);

@@ -6,9 +6,6 @@ This extension combines the power of Jira and Bitbucket to streamline the develo
 
 With Atlassian for VS Code you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!
 
-**Note:** 'Atlassian for VS Code' is published as an Atlassian Labs project.
-Although you may find unique and highly useful functionality in the Atlassian Labs apps, Atlassian takes no responsibility for your use of these apps.
-
 ## Getting Started
 
 -   Make sure you have VS Code version 1.40.0 or above

@@ -5,7 +5,6 @@ import PQueue from 'p-queue';
 import { ConfigurationChangeEvent, Disposable, ExtensionContext } from 'vscode';
 import { commands, window } from 'vscode';
 
-import { BitbucketIssuesApiImpl } from '../bitbucket/bitbucket-cloud/bbIssues';
 import { CloudPullRequestApi } from '../bitbucket/bitbucket-cloud/pullRequests';
 import { CloudRepositoriesApi } from '../bitbucket/bitbucket-cloud/repositories';
 import { ServerPullRequestApi } from '../bitbucket/bitbucket-server/pullRequests';
@@ -125,9 +124,6 @@ export class ClientManager implements Disposable {
                     pullrequests: isOAuthInfo(info)
                         ? new CloudPullRequestApi(this.createOAuthHTTPClient(site, info.access))
                         : undefined!,
-                    issues: isOAuthInfo(info)
-                        ? new BitbucketIssuesApiImpl(this.createOAuthHTTPClient(site, info.access))
-                        : undefined!,
                     pipelines: isOAuthInfo(info)
                         ? new PipelineApiImpl(this.createOAuthHTTPClient(site, info.access))
                         : undefined!,
@@ -142,7 +138,6 @@ export class ClientManager implements Disposable {
                         isBasicAuthInfo(info) || isPATAuthInfo(info)
                             ? new ServerPullRequestApi(this.createHTTPClient(site, info))
                             : undefined!,
-                    issues: undefined,
                     pipelines: undefined,
                 };
             }
@@ -173,6 +168,14 @@ export class ClientManager implements Disposable {
                             jiraTokenAuthProvider(info.access),
                             getAgent,
                         );
+                    } else if (isBasicAuthInfo(info) && site.isCloud) {
+                        Logger.debug(`${tag}: creating cloud client for ${site.baseApiUrl}`);
+                        client = new JiraCloudClient(
+                            site,
+                            basicJiraTransportFactory(site),
+                            jiraBasicAuthProvider(info.username, info.password),
+                            getAgent,
+                        );
                     } else if (isBasicAuthInfo(info)) {
                         client = new JiraServerClient(
                             site,
@@ -193,7 +196,7 @@ export class ClientManager implements Disposable {
                 });
             });
         } catch (e) {
-            Logger.error(e, `${tag}: Failed to refresh tokens`);
+            Logger.error(e, `Failed to refresh tokens`);
             throw e;
         }
         return newClient!;
@@ -263,6 +266,7 @@ export class ClientManager implements Disposable {
         let credentials = await Container.credentialManager.getAuthInfo(site, false);
 
         if (credentials?.state === AuthInfoState.Invalid) {
+            Logger.error(new Error('Error creating client: credentials state is Invalid'));
             if (!this.hasWarnedOfFailure) {
                 window
                     .showErrorMessage(

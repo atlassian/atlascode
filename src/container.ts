@@ -1,43 +1,37 @@
-import { env, ExtensionContext, UIKind, window, workspace } from 'vscode';
+import { env, ExtensionContext, UIKind, workspace } from 'vscode';
 
 import { featureFlagClientInitializedEvent } from './analytics';
 import { AnalyticsClient, analyticsClient } from './analytics-node-client/src/client.min.js';
-import { ProductJira } from './atlclients/authInfo';
 import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
 import { BitbucketContext } from './bitbucket/bbContext';
 import { BitbucketCheckoutHelper } from './bitbucket/checkoutHelper';
 import { CheckoutHelper } from './bitbucket/interfaces';
-import { BitbucketIssue, BitbucketSite, PullRequest, WorkspaceRepo } from './bitbucket/model';
+import { PullRequest, WorkspaceRepo } from './bitbucket/model';
+import { BitbucketCloudPullRequestLinkProvider } from './bitbucket/terminal-link/createPrLinkProvider';
 import { openPullRequest } from './commands/bitbucket/pullRequest';
 import { configuration, IConfig } from './config/configuration';
-import { ATLASCODE_TEST_HOST, ATLASCODE_TEST_USER_EMAIL } from './constants';
 import { PmfStats } from './feedback/pmfStats';
 import { JQLManager } from './jira/jqlManager';
 import { JiraProjectManager } from './jira/projectManager';
 import { JiraSettingsManager } from './jira/settingsManager';
 import { CancellationManager } from './lib/cancellation';
-import { BitbucketIssueAction } from './lib/ipc/fromUI/bbIssue';
 import { ConfigAction } from './lib/ipc/fromUI/config';
-import { CreateBitbucketIssueAction } from './lib/ipc/fromUI/createBitbucketIssue';
 import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
 import { PipelineSummaryAction } from './lib/ipc/fromUI/pipelineSummary';
 import { PullRequestDetailsAction } from './lib/ipc/fromUI/pullRequestDetails';
 import { StartWorkAction } from './lib/ipc/fromUI/startWork';
-import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { ConfigTarget } from './lib/ipc/models/config';
 import { SectionChangeMessage } from './lib/ipc/toUI/config';
 import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
-import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { Logger } from './logger';
+import OnboardingProvider from './onboarding/onboardingProvider';
 import { Pipeline } from './pipelines/model';
 import { SiteManager } from './siteManager';
-import { AtlascodeUriHandler } from './uriHandler';
-import { LegacyAtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler/legacyUriHandler';
+import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
 import { Experiments, FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
-import { OnlineDetector } from './util/online';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -47,10 +41,6 @@ import { CustomJQLViewProvider } from './views/jira/treeViews/customJqlViewProvi
 import { AssignedWorkItemsViewProvider } from './views/jira/treeViews/jiraAssignedWorkItemsViewProvider';
 import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
 import { VSCAnalyticsApi } from './vscAnalyticsApi';
-import { VSCBitbucketIssueActionApi } from './webview/bbIssue/vscBitbucketIssueActionApi';
-import { VSCBitbucketIssueWebviewControllerFactory } from './webview/bbIssue/vscBitbucketIssueWebviewControllerFactory';
-import { VSCCreateBitbucketIssueActionImpl } from './webview/bbIssue/vscCreateBitbucketIssueActionApi';
-import { VSCCreateBitbucketIssueWebviewControllerFactory } from './webview/bbIssue/vscCreateBitbucketIssueWebviewControllerFactory';
 import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
 import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
@@ -67,12 +57,9 @@ import { VSCPullRequestDetailsWebviewControllerFactory } from './webview/pullreq
 import { SingleWebview } from './webview/singleViewFactory';
 import { VSCStartWorkActionApi } from './webview/startwork/vscStartWorkActionApi';
 import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscStartWorkWebviewControllerFactory';
-import { VSCWelcomeActionApi } from './webview/welcome/vscWelcomeActionApi';
-import { VSCWelcomeWebviewControllerFactory } from './webview/welcome/vscWelcomeWebviewControllerFactory';
 import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
-import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucketIssueWebview';
 import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
@@ -107,7 +94,6 @@ export class Container {
         context.subscriptions.push((this._credentialManager = new CredentialManager(this._analyticsClient)));
         context.subscriptions.push((this._siteManager = new SiteManager(context.globalState)));
         context.subscriptions.push((this._clientManager = new ClientManager(context)));
-        context.subscriptions.push((this._onlineDetector = new OnlineDetector()));
         context.subscriptions.push((this._jiraProjectManager = new JiraProjectManager()));
         context.subscriptions.push((this._jiraSettingsManager = new JiraSettingsManager()));
         context.subscriptions.push((this._createIssueWebview = new CreateIssueWebview(context.extensionPath)));
@@ -116,9 +102,6 @@ export class Container {
         );
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
         context.subscriptions.push(new StartWorkOnIssueWebview(context.extensionPath));
-        context.subscriptions.push(
-            (this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath)),
-        );
         context.subscriptions.push(new IssueHoverProviderManager());
         context.subscriptions.push(new AuthStatusBar());
         context.subscriptions.push((this._jqlManager = new JQLManager()));
@@ -146,12 +129,6 @@ export class Container {
             this.analyticsApi,
         );
 
-        const welcomeV2ViewFactory = new SingleWebview<WelcomeInitMessage, WelcomeAction>(
-            context.extensionPath,
-            new VSCWelcomeWebviewControllerFactory(new VSCWelcomeActionApi(), this._commonMessageHandler),
-            this._analyticsApi,
-        );
-
         const startWorkV2ViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
             context.extensionPath,
             new VSCStartWorkWebviewControllerFactory(
@@ -174,7 +151,6 @@ export class Container {
 
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
         context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
-        context.subscriptions.push((this._welcomeWebviewFactory = welcomeV2ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
         context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
 
@@ -190,7 +166,6 @@ export class Container {
 
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
         this._bitbucketHelper = new BitbucketCheckoutHelper(context.globalState);
-
         context.subscriptions.push(new HelpExplorer());
 
         try {
@@ -216,11 +191,13 @@ export class Container {
         FeatureFlagClient.checkExperimentStringValueWithInstrumentation(Experiments.AtlascodeAA);
         FeatureFlagClient.checkGateValueWithInstrumentation(Features.NoOpFeature);
 
-        this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
+        context.subscriptions.push(AtlascodeUriHandler.create(this._analyticsApi, this._bitbucketHelper));
 
         SearchJiraHelper.initialize();
         context.subscriptions.push(new CustomJQLViewProvider());
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
+
+        this._onboardingProvider = new OnboardingProvider();
     }
 
     static focus() {
@@ -236,42 +213,9 @@ export class Container {
         return telemetryConfig.get<boolean>('enableTelemetry', true);
     }
 
-    private static initializeUriHandler(
-        context: ExtensionContext,
-        analyticsApi: VSCAnalyticsApi,
-        bitbucketHelper: CheckoutHelper,
-    ) {
-        if (FeatureFlagClient.checkGate(Features.EnableNewUriHandler)) {
-            Logger.debug('Using new URI handler');
-            context.subscriptions.push(AtlascodeUriHandler.create(analyticsApi, bitbucketHelper));
-        } else {
-            context.subscriptions.push(new LegacyAtlascodeUriHandler(analyticsApi, bitbucketHelper));
-        }
-    }
-
     static initializeBitbucket(bbCtx: BitbucketContext) {
         this._bitbucketContext = bbCtx;
         new PipelinesExplorer(bbCtx);
-        this._context.subscriptions.push(
-            (this._bitbucketIssueWebviewFactory = new MultiWebview<BitbucketIssue, BitbucketIssueAction>(
-                this._context.extensionPath,
-                new VSCBitbucketIssueWebviewControllerFactory(
-                    new VSCBitbucketIssueActionApi(this._cancellationManager),
-                    this._commonMessageHandler,
-                    this._analyticsApi,
-                ),
-                this._analyticsApi,
-            )),
-            (this._createBitbucketIssueWebviewFactory = new SingleWebview<BitbucketSite, CreateBitbucketIssueAction>(
-                this._context.extensionPath,
-                new VSCCreateBitbucketIssueWebviewControllerFactory(
-                    new VSCCreateBitbucketIssueActionImpl(),
-                    this._commonMessageHandler,
-                    this._analyticsApi,
-                ),
-                this._analyticsApi,
-            )),
-        );
         this._context.subscriptions.push(
             (this._pullRequestDetailsWebviewFactory = new MultiWebview<PullRequest, PullRequestDetailsAction>(
                 this._context.extensionPath,
@@ -284,6 +228,8 @@ export class Container {
             )),
         );
         this._context.subscriptions.push((this._jiraActiveIssueStatusBar = new JiraActiveIssueStatusBar(bbCtx)));
+
+        this._context.subscriptions.push(new BitbucketCloudPullRequestLinkProvider());
         // It seems to take a bit of time for VS Code to initialize git, if we try and find repos before that completes
         // we'll fail. Wait a few seconds before trying to check out a branch.
         setTimeout(() => {
@@ -322,43 +268,6 @@ export class Container {
 
     public static set configTarget(target: ConfigTarget) {
         this._context.globalState.update(ConfigTargetKey, target);
-    }
-
-    public static async testLogout() {
-        Container.siteManager.getSitesAvailable(ProductJira).forEach(async (site) => {
-            await Container.clientManager.removeClient(site);
-            Container.siteManager.removeSite(site);
-        });
-    }
-
-    public static async testLogin() {
-        if (!process.env.ATLASCODE_TEST_USER_API_TOKEN) {
-            // vscode notify user that this is for testing only
-            window.showInformationMessage(
-                'This is for testing only. Please set the ATLASCODE_TEST_USER_API_TOKEN environment variable to run this test',
-            );
-            return;
-        }
-        const authInfo = {
-            username: ATLASCODE_TEST_USER_EMAIL,
-            password: process.env.ATLASCODE_TEST_USER_API_TOKEN,
-            user: {
-                id: '',
-                displayName: '',
-                email: '',
-                avatarUrl: '',
-            },
-            state: 0,
-        };
-        const site = {
-            host: ATLASCODE_TEST_HOST,
-            protocol: 'https:',
-            product: {
-                name: 'Jira',
-                key: 'jira',
-            },
-        };
-        await Container.loginManager.userInitiatedServerLogin(site, authInfo);
     }
 
     private static _version: string;
@@ -411,11 +320,6 @@ export class Container {
         return this._pipelinesSummaryWebview;
     }
 
-    private static _welcomeWebviewFactory: SingleWebview<WelcomeInitMessage, WelcomeAction>;
-    public static get welcomeWebviewFactory() {
-        return this._welcomeWebviewFactory;
-    }
-
     private static _startWorkWebviewFactory: SingleWebview<StartWorkIssueMessage, StartWorkAction>;
     public static get startWorkWebviewFactory() {
         return this._startWorkWebviewFactory;
@@ -426,16 +330,6 @@ export class Container {
         return this._createPullRequestWebviewFactory;
     }
 
-    private static _bitbucketIssueWebviewFactory: MultiWebview<BitbucketIssue, BitbucketIssueAction>;
-    public static get bitbucketIssueWebviewFactory() {
-        return this._bitbucketIssueWebviewFactory;
-    }
-
-    private static _createBitbucketIssueWebviewFactory: SingleWebview<BitbucketSite, CreateBitbucketIssueAction>;
-    public static get createBitbucketIssueWebviewFactory() {
-        return this._createBitbucketIssueWebviewFactory;
-    }
-
     private static _createIssueWebview: CreateIssueWebview;
     public static get createIssueWebview() {
         return this._createIssueWebview;
@@ -444,11 +338,6 @@ export class Container {
     private static _createIssueProblemsWebview: CreateIssueProblemsWebview;
     public static get createIssueProblemsWebview() {
         return this._createIssueProblemsWebview;
-    }
-
-    private static _startWorkOnBitbucketIssueWebview: StartWorkOnBitbucketIssueWebview;
-    public static get startWorkOnBitbucketIssueWebview() {
-        return this._startWorkOnBitbucketIssueWebview;
     }
 
     private static _jiraIssueViewManager: JiraIssueViewManager;
@@ -469,11 +358,6 @@ export class Container {
     private static _credentialManager: CredentialManager;
     public static get credentialManager() {
         return this._credentialManager;
-    }
-
-    private static _onlineDetector: OnlineDetector;
-    public static get onlineDetector() {
-        return this._onlineDetector;
     }
 
     private static _jiraActiveIssueStatusBar: JiraActiveIssueStatusBar;
@@ -509,5 +393,10 @@ export class Container {
     private static _pmfStats: PmfStats;
     public static get pmfStats() {
         return this._pmfStats;
+    }
+
+    private static _onboardingProvider: OnboardingProvider;
+    public static get onboardingProvider() {
+        return this._onboardingProvider;
     }
 }

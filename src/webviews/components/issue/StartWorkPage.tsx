@@ -16,13 +16,10 @@ import {
 import * as path from 'path';
 import * as React from 'react';
 import EdiText from 'react-editext';
-import { AnalyticsView } from 'src/analyticsTypes';
-import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
 
+import { AnalyticsView } from '../../../analyticsTypes';
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
-import { BitbucketIssue, emptyBitbucketSite, SiteRemote } from '../../../bitbucket/model';
-import { CopyBitbucketIssueLink, OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
-import { isStartWorkOnBitbucketIssueData, StartWorkOnBitbucketIssueData } from '../../../ipc/bitbucketIssueMessaging';
+import { emptyBitbucketSite, SiteRemote } from '../../../bitbucket/model';
 import {
     CopyJiraIssueLinkAction,
     OpenJiraIssueAction,
@@ -37,6 +34,7 @@ import {
 } from '../../../ipc/issueMessaging';
 import { HostErrorMessage } from '../../../ipc/messaging';
 import { BranchType, RepoData } from '../../../ipc/prMessaging';
+import { AtlascodeErrorBoundary } from '../../../react/atlascode/common/ErrorBoundary';
 import { Branch } from '../../../typings/git';
 import { AtlLoader } from '../AtlLoader';
 import ErrorBanner from '../ErrorBanner';
@@ -46,14 +44,9 @@ import { WebviewComponent } from '../WebviewComponent';
 import NavItem from './NavItem';
 import { TransitionMenu } from './TransitionMenu';
 
-type Emit =
-    | RefreshIssueAction
-    | StartWorkAction
-    | OpenJiraIssueAction
-    | CopyJiraIssueLinkAction
-    | OpenBitbucketIssueAction
-    | CopyBitbucketIssueLink;
-type Accept = StartWorkOnIssueData | StartWorkOnBitbucketIssueData | HostErrorMessage;
+type Emit = RefreshIssueAction | StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction;
+
+type Accept = StartWorkOnIssueData | HostErrorMessage;
 
 const emptyRepoData: RepoData = {
     workspaceRepo: {
@@ -68,7 +61,7 @@ const emptyRepoData: RepoData = {
 };
 
 type State = {
-    data: StartWorkOnIssueData | StartWorkOnBitbucketIssueData;
+    data: StartWorkOnIssueData;
     issueType: 'jiraIssue' | 'bitbucketIssue';
     jiraSetupEnabled: boolean;
     bitbucketSetupEnabled: boolean;
@@ -135,27 +128,6 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                 break;
             }
 
-            case 'startWorkOnBitbucketIssueData': {
-                if (isStartWorkOnBitbucketIssueData(e)) {
-                    let repo = this.state.repo;
-                    if (this.isEmptyRepo(this.state.repo) && e.repoData.length > 0) {
-                        const issueRepo =
-                            e.repoData.find((r) => r.href === e.issue.data.repository!.links!.html!.href) ||
-                            e.repoData[0];
-                        repo = issueRepo;
-                    }
-
-                    const issueType = 'bitbucketIssue';
-                    const issueId = `issue-#${e.issue.data.id!.toString()}`;
-                    const issueTitle = e.issue.data.title!;
-                    this.updateState(e, issueType, repo, issueId, issueTitle, emptyTransition);
-                } else {
-                    // empty issue
-                    this.setState(emptyState);
-                }
-                break;
-            }
-
             case 'startWorkOnIssueResult': {
                 if (isStartWorkOnIssueResult(e)) {
                     this.setState({
@@ -182,25 +154,21 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
     }
 
     handleStatusChange = (item: Transition) => {
-        if (isStartWorkOnIssueData(this.state.data)) {
-            this.setState({
-                // there must be a better way to update the transition dropdown!!
-                data: {
-                    ...this.state.data,
-                    issue: {
-                        ...this.state.data.issue,
-                        status: { ...this.state.data.issue.status, id: item.to.id, name: item.to.name },
-                    },
+        this.setState({
+            // there must be a better way to update the transition dropdown!!
+            data: {
+                ...this.state.data,
+                issue: {
+                    ...this.state.data.issue,
+                    status: { ...this.state.data.issue.status, id: item.to.id, name: item.to.name },
                 },
-                transition: item,
-            });
-        }
+            },
+            transition: item,
+        });
     };
 
     handleRepoChange = (repo: RepoData) => {
-        const issueId = isStartWorkOnIssueData(this.state.data)
-            ? this.state.data.issue.key
-            : `issue-#${this.state.data.issue.data.id}`;
+        const issueId = this.state.data.issue.key;
         const sourceBranchValue = repo.localBranches.find(
             (b) => b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1,
         );
@@ -286,7 +254,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
     }
 
     private updateState(
-        data: StartWorkOnIssueData | StartWorkOnBitbucketIssueData,
+        data: StartWorkOnIssueData,
         issueType: 'jiraIssue' | 'bitbucketIssue',
         repo: RepoData,
         issueId: string,
@@ -328,12 +296,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
     }
 
     render() {
-        if (
-            isStartWorkOnIssueData(this.state.data) &&
-            this.state.data.issue.key === '' &&
-            !this.state.isErrorBannerOpen &&
-            this.state.isOnline
-        ) {
+        if (this.state.data.issue.key === '' && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refreshIssue' });
             return <AtlLoader />;
         }
@@ -409,52 +372,6 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                         <p>{issue.summary}</p>
                     </PageHeader>
                     <p dangerouslySetInnerHTML={{ __html: issue.descriptionHtml }} />
-                </GridColumn>
-            );
-        } else if (this.state.issueType === 'bitbucketIssue') {
-            const bbIssue = issue as BitbucketIssue;
-            pageHeader = (
-                <GridColumn medium={8}>
-                    <em>
-                        <p>Start work on:</p>
-                    </em>
-                    <PageHeader
-                        actions={undefined}
-                        breadcrumbs={
-                            <Breadcrumbs>
-                                <BreadcrumbsItem
-                                    component={() => (
-                                        <NavItem
-                                            text={bbIssue.data.repository!.name!}
-                                            href={bbIssue.data.repository!.links!.html!.href}
-                                        />
-                                    )}
-                                />
-                                <BreadcrumbsItem
-                                    component={() => (
-                                        <NavItem
-                                            text="Issues"
-                                            href={`${bbIssue.data.repository!.links!.html!.href}/issues`}
-                                        />
-                                    )}
-                                />
-                                <BreadcrumbsItem
-                                    component={() => (
-                                        <NavItem
-                                            text={`Issue #${bbIssue.data.id}`}
-                                            onItemClick={() =>
-                                                this.postMessage({ action: 'openBitbucketIssue', issue: bbIssue })
-                                            }
-                                            onCopy={() => this.postMessage({ action: 'copyBitbucketIssueLink' })}
-                                        />
-                                    )}
-                                />
-                            </Breadcrumbs>
-                        }
-                    >
-                        <p>{bbIssue.data.title}</p>
-                    </PageHeader>
-                    <p dangerouslySetInnerHTML={{ __html: bbIssue.data.content!.html! }} />
                 </GridColumn>
             );
         }

@@ -2,7 +2,7 @@ import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-mode
 import { commands } from 'vscode';
 
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
-import { Commands } from '../../commands';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { IssueNode } from '../../views/nodes/issueNode';

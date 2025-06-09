@@ -5,24 +5,22 @@ import * as vscode from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { extractBitbucketIssueKeys, extractIssueKeys } from '../../bitbucket/issueKeysExtractor';
+import { extractIssueKeys } from '../../bitbucket/issueKeysExtractor';
 import {
     ApprovalStatus,
-    BitbucketIssue,
     BitbucketSite,
     BuildStatus,
     Comment,
     Commit,
     FileDiff,
-    isBitbucketIssue,
     MergeStrategy,
     PullRequest,
     Reviewer,
     Task,
     User,
 } from '../../bitbucket/model';
-import { Commands } from '../../commands';
 import { showIssue } from '../../commands/jira/showIssue';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { issueForKey } from '../../jira/issueForKey';
 import { transitionIssue } from '../../jira/transitionIssue';
@@ -234,31 +232,12 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         }
     }
 
-    async fetchRelatedBitbucketIssues(
-        pr: PullRequest,
-        commits: Commit[],
-        comments: Comment[],
-    ): Promise<BitbucketIssue[]> {
-        let result: BitbucketIssue[] = [];
-        try {
-            const issueKeys = await extractBitbucketIssueKeys(pr, commits, comments);
-            const bbApi = await clientForSite(pr.site);
-            if (bbApi.issues) {
-                result = await bbApi.issues.getIssuesForKeys(pr.site, issueKeys);
-            }
-        } catch (e) {
-            result = [];
-            Logger.debug('error fetching related bitbucket issues: ', e);
-        }
-        return result;
-    }
-
     async merge(
         pr: PullRequest,
         mergeStrategy: MergeStrategy,
         commitMessage: string,
         closeSourceBranch: boolean,
-        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[],
+        issues: MinimalIssue<DetailedSiteInfo>[],
     ): Promise<PullRequest> {
         const bbApi = await clientForSite(pr.site);
         const updatedPullRequest = await bbApi.pullrequests.merge(
@@ -274,7 +253,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         return updatedPullRequest;
     }
 
-    private async updateIssues(issues?: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[]) {
+    private async updateIssues(issues?: MinimalIssue<DetailedSiteInfo>[]) {
         if (!issues) {
             return;
         }
@@ -282,20 +261,14 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
             if (isMinimalIssue(issue)) {
                 const transition = issue.transitions.find((t) => t.to.id === issue.status.id);
                 if (transition) {
-                    await transitionIssue(issue, transition);
+                    await transitionIssue(issue, transition, { source: 'mergePullRequest' });
                 }
-            } else if (isBitbucketIssue(issue)) {
-                const bbApi = await clientForSite(issue.site);
-                await bbApi.issues!.postChange(issue, issue.data.state!);
             }
         });
     }
 
     async openJiraIssue(issue: MinimalIssue<DetailedSiteInfo>) {
         await showIssue(issue);
-    }
-    async openBitbucketIssue(issue: BitbucketIssue) {
-        await vscode.commands.executeCommand(Commands.ShowBitbucketIssue, issue);
     }
 
     async openBuildStatus(pr: PullRequest, status: BuildStatus) {

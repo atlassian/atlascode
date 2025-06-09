@@ -34,7 +34,6 @@ export class BitbucketAuthenticator implements Authenticator {
                     isCloud: true,
                     userId: userId,
                     credentialId: credentialId,
-                    hasResolutionField: false,
                 },
             ];
         }

@@ -1,49 +1,43 @@
-import * as vscode from 'vscode';
+import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 
-import { ProductJira } from '../../atlclients/authInfo';
-import { extractIssueKeys } from '../../bitbucket/issueKeysExtractor';
-import { Comment, Commit, PullRequest } from '../../bitbucket/model';
-import { Container } from '../../container';
-import { StaticIssuesNode } from '../jira/staticIssuesNode';
+import { issueForKey } from '../../jira/issueForKey';
+import { Resources } from '../../resources';
+import { Promise_allSucceeded } from '../../util/promises';
+import { JiraIssueNode, TreeViewIssue } from '../jira/treeViews/utils';
 import { AbstractBaseNode } from './abstractBaseNode';
-import { IssueNode } from './issueNode';
+import { SimpleNode } from './simpleNode';
 
-export class RelatedIssuesNode extends AbstractBaseNode {
-    private _delegate: StaticIssuesNode | undefined;
+export class RelatedIssuesNode extends TreeItem implements AbstractBaseNode {
+    private readonly childrenPromises: Promise<JiraIssueNode[]>;
 
-    private constructor() {
-        super();
+    constructor(prId: string, jiraKeys: string[], label: string) {
+        const collapsibleState = jiraKeys.length ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None;
+        super(label, collapsibleState);
+
+        this.iconPath = Resources.icons.get('issues');
+
+        this.childrenPromises = Promise_allSucceeded(
+            jiraKeys.map((key) =>
+                issueForKey(key).then((issue) => {
+                    (issue as TreeViewIssue).children = [];
+                    (issue as TreeViewIssue).source = { id: prId };
+                    return new JiraIssueNode(
+                        JiraIssueNode.NodeType.RelatedJiraIssueInBitbucketPR,
+                        issue as TreeViewIssue,
+                    );
+                }),
+            ),
+        );
     }
 
-    public static async create(
-        pr: PullRequest,
-        commits: Commit[],
-        allComments: Comment[],
-    ): Promise<AbstractBaseNode | undefined> {
-        // TODO: [VSCODE-503] handle related issues across cloud/server
-        if (
-            !Container.siteManager.productHasAtLeastOneSite(ProductJira) ||
-            !Container.config.bitbucket.explorer.relatedJiraIssues.enabled
-        ) {
-            return undefined;
-        }
-
-        // [mmura] TODO is this broken now? or at least it should migrate to a simpler logic
-        const issueKeys = await extractIssueKeys(pr, commits, allComments);
-        if (issueKeys.length > 0) {
-            const node = new RelatedIssuesNode();
-            node._delegate = new StaticIssuesNode(issueKeys, 'Related Jira issues');
-            await node._delegate.updateJqlEntry();
-            return node;
-        }
-        return undefined;
+    getTreeItem(): Promise<TreeItem> | TreeItem {
+        return this;
     }
 
-    async getTreeItem(): Promise<vscode.TreeItem> {
-        return this._delegate!.getTreeItem();
+    async getChildren(): Promise<AbstractBaseNode[]> {
+        const children = await this.childrenPromises;
+        return children.length ? children : [new SimpleNode('No issues found')];
     }
 
-    getChildren(element?: IssueNode): Promise<IssueNode[]> {
-        return this._delegate!.getChildren(element);
-    }
+    dispose(): void {}
 }

@@ -4,7 +4,7 @@ import TrashIcon from '@atlaskit/icon/glyph/trash';
 import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
-import filesize from 'filesize';
+import { filesize } from 'filesize';
 import React, { useState } from 'react';
 
 import { RenderedContent } from '../RenderedContent';

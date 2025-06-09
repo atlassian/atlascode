@@ -36,8 +36,7 @@ export function startListening(requestSite: (site: DetailedSiteInfo) => void) {
             try {
                 requestSite(site);
             } catch (e) {
-                Logger.debug(e.stack);
-                Logger.error(e, `${tag} something failed while trying to update`);
+                Logger.error(e, 'Error in Negotiate.startListening requestSite');
             }
             Logger.debug(`${tag}: done requesting site`);
             ipc.server.emit(socket, ACK_MESSAGE);

@@ -43,7 +43,10 @@ jobs:
           npm -no-git-tag-version --allow-same-version -f version $PACKAGE_VERSION
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci --no-audit
+
+      - name: Build and package the extension for pre-release
+        run: npm run extension:package:prerelease
 
       - name: Run linter
         run: npm run lint
@@ -51,19 +54,16 @@ jobs:
       - name: Run unit tests
         run: npm run test
 
+      - name: Generate SSL certs for E2E test
+        run: npm run test:e2e:sslcerts
+
       - name: Fetch E2E image
         run: |
           docker pull ghcr.io/atlassian/atlascode-e2e:latest
           docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e
 
       - name: Run E2E tests
-        env:
-            ATLASCODE_TEST_USER_API_TOKEN: ${{ secrets.ATLASCODE_TEST_USER_API_TOKEN }}
         run: npm run test:e2e:docker
-
-      # TODO: might want to run this first, and reuse the .vsix in E2E tests instead
-      - name: Build the extension
-        run: npm run extension:package:prerelease
 
       - name: Publish the pre-release extension
         run: |
@@ -73,7 +73,9 @@ jobs:
             -p ${{ secrets.VSCE_MARKETPLACE_TOKEN }} \
             --packagePath atlascode-${PACKAGE_VERSION}.vsix
 
+      # This step is optional, so setting 'continue-on-error' to true
       - name: Publish the pre-release to OpenVSX
+        continue-on-error: true
         run: |
           npx ovsx publish \
             --pre-release \

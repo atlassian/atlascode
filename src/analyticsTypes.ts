@@ -29,10 +29,8 @@ export enum AnalyticsView {
 
     OnboardingPage = 'page:v2:onboarding',
     SettingsPage = 'page:v2:settings',
-    WelcomePage = 'page:v2:welcome',
 
     BitbucketIssuePage = 'page:v2:bitbucket:issue',
-    CreateBitbucketIssuePage = 'page:v2:bitbucket:createIssue',
 
     PullRequestPage = 'page:v2:bitbucket:pullRequest',
     CreatePullRequestPage = 'page:v2:bitbucket:createPullRequest',
@@ -56,3 +54,9 @@ export type UIErrorInfo = UIAnalyticsContext & {
     errorMessage: string;
     errorCause: string;
 };
+
+export enum CreatePrTerminalSelection {
+    Yes = 'yes',
+    Ignore = 'ignore',
+    Disable = 'disable',
+}

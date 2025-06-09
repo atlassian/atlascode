@@ -62,6 +62,18 @@ export class CredentialManager implements Disposable {
         return this.getAuthInfoForProductAndCredentialId(site, allowCache);
     }
 
+    public async getAllValidAuthInfo(product: Product): Promise<AuthInfo[]> {
+        // Get all unique sites by credentialId
+        const sites = Container.siteManager.getSitesAvailable(product);
+        const uniquelyCredentialedSites = Array.from(new Map(sites.map((site) => [site.credentialId, site])).values());
+
+        const authInfos = await Promise.all(uniquelyCredentialedSites.map((site) => this.getAuthInfo(site, true)));
+
+        return authInfos.filter(
+            (authInfo): authInfo is AuthInfo => !!authInfo && authInfo.state !== AuthInfoState.Invalid,
+        );
+    }
+
     /**
      * Saves the auth info to both the in-memory store and the secretstorage.
      */
@@ -139,10 +151,12 @@ export class CredentialManager implements Disposable {
                             await this.removeSiteInformationFromKeychain(site.product.key, site.credentialId);
                         } else if (Container.siteManager.getSiteForId(site.product, site.id)) {
                             // if keychain does not have any auth info for the current site but the site has been saved, we need to remove it
-                            Logger.debug(
-                                `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`,
+                            Logger.error(
+                                new Error(
+                                    `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`,
+                                ),
+                                `Removing dead site for product ${site.product.key}: auth info not found in keychain`,
                             );
-
                             await Container.clientManager.removeClient(site);
                             Container.siteManager.removeSite(site);
                         }
@@ -150,7 +164,10 @@ export class CredentialManager implements Disposable {
                         // else if keychain does not exist, we check if the current site has been saved, if yes then we should remove it
                         if (Container.siteManager.getSiteForId(site.product, site.id)) {
                             Logger.debug(
-                                `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`,
+                                new Error(
+                                    `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`,
+                                ),
+                                `Removing dead site for product ${site.product.key}: keychain not found`,
                             );
                             await Container.clientManager.removeClient(site);
                             Container.siteManager.removeSite(site);
@@ -343,7 +360,9 @@ export class CredentialManager implements Disposable {
         const productAuths = this._memStore.get(site.product.key);
         let wasKeyDeleted = false;
         let wasMemDeleted = false;
+        let userId = '';
         if (productAuths) {
+            userId = productAuths.get(site.credentialId)?.user.id || '';
             wasMemDeleted = productAuths.delete(site.credentialId);
             this._memStore.set(site.product.key, productAuths);
         }
@@ -361,6 +380,7 @@ export class CredentialManager implements Disposable {
                 type: AuthChangeType.Remove,
                 product: site.product,
                 credentialId: site.credentialId,
+                userId: userId,
             };
             this._onDidAuthChange.fire(removeEvent);
 
@@ -386,9 +406,6 @@ export class CredentialManager implements Disposable {
     }
 
     public static generateCredentialId(siteId: string, userId: string): string {
-        return crypto
-            .createHash('md5')
-            .update(siteId + '::' + userId)
-            .digest('hex');
+        return crypto.createHash('md5').update(`${siteId}::${userId}`).digest('hex');
     }
 }

@@ -1,42 +1,42 @@
-### What am I looking at?
+### What is this?
 
-This folder is for end-to-end ("e2e") tests and their configuration.
+This is the WIP suite of end-to-end (E2E) tests we've implemented for Atlascode.
 
-In `atlascode`, we use [vscode-extension-tester](https://github.com/redhat-developer/vscode-extension-tester) to run browser automation-style tests agains ta developer instance of VSCode with the extension installed
+How does it work? In summary:
 
-How do these tests work?
+- We mock the various API calls made from the extension using wiremock
+- We spin up a browser-based extension and use playwright to perform various actions
+- All of that is run during the build in a docker container, with a supporting `wiremock` instance using docker-compose
 
--   `extester`, the executable from `vscode-extension-tester`, compiles and packages the extensions using `vsce`
--   A new instance of `vscode` is spun up, with `atlascode` and prerequisites installed
--   A special automation performs the actions we describe in test suites
+### How do I use it?
 
-What do these tests use?
+To run the tests locally, it should be enough to do the following:
 
--   `mocha` for orchestration
--   `chai` for assertions
+1.  First, prepare mock certificates for wiremock, using
 
-Commands related to e2e tests:
+```sh
+ npm run test:e2e:sslcerts
+```
 
-    # Compile the tests in this folder into JS
-    npm run test:e2e:compile
+2.  Build a docker image that we use for testing:
 
-    # Build the extension, e2e tests, configure the test runner,
-    # then run the E2E tests
-    npm run test:e2e
+```sh
+npm run test:e2e:docker:build
+```
 
-    # Run the tests without rebuilding the extension
-    # Use this one when iterating
-    npm run test:e2e:rerun
+3.  Run tests headless in a docker container:
 
-### Running E2E Tests Headless
+```sh
+npm run test:e2e:docker
+```
 
-I'm sure we all love looking at the VSCode UI - but sometimes one might want to take a break from that, and run their tests in console only 😉 Unfortunately, [vscode-extension-tester](https://github.com/redhat-developer/vscode-extension-tester) doesn't have built-in support for [headless](https://en.wikipedia.org/wiki/Headless_browser) execution.
+4. Check the output, and the artifacts provided in `./test-results`
 
-However, we can work around that - by running our tests in Docker! We can mount our whole working directory, and run tests in [xvfb](https://en.wikipedia.org/wiki/Xvfb).
+---
 
-In this folder, there's a `Dockerfile` with a rather lightweight image - `vscode`, `xvfb`, their dependencies, and `npm`/`node` - and some scripts to run it. The intended usage is as follows:
+⚠️ **Note**: Please be aware that the tests leverage a `.vsix` artifact produced by the build
+To run E2E tests against changed code, you might need to re-build the extension by running
 
--   Build the docker image by running `npm run test:e2e:docker:build`. You only need to do it once
--   Run one of the two commands:
-    -   `npm run test:e2e:docker` - this will do the full cycle of building the extension and setting up tests. You typically want to run this when you've just updated the extension
-    -   `npm run test:e2e:docker:rerun` - a much faster command to rerun the tests against an already prepared setup. Use this when iterating on tests themselves
+```sh
+npm run extension:package
+```

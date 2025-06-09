@@ -14,14 +14,14 @@ import {
 import { ProductBitbucket } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { WorkspaceRepo } from '../../bitbucket/model';
-import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { Pipeline } from '../../pipelines/model';
 import { Resources } from '../../resources';
 import { BaseTreeDataProvider } from '../Explorer';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
-import { emptyBitbucketNodes } from '../nodes/bitbucketEmptyNodeList';
+import { emptyBitbucketNodes } from '../nodes/definedNodes';
 import { SimpleNode } from '../nodes/simpleNode';
 import { descriptionForState, filtersActive, iconUriForPipeline, shouldDisplay } from './Helpers';
 

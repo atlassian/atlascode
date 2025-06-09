@@ -1,6 +1,6 @@
 import { CancellationToken, CodeLens, Position, Range, TextDocument } from 'vscode';
 
-import { Commands } from '../commands';
+import { Commands } from '../constants';
 import { Container } from '../container';
 import { parseJiraIssueKeys } from './issueKeyParser';
 

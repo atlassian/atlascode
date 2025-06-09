@@ -2,7 +2,6 @@ import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel } from '../../../../bitbucket/model';
-// eslint-disable-next-line no-restricted-imports
 import { Container } from '../../../../container';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
@@ -115,8 +114,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 ...this.api.getStartWorkConfig(),
             });
         } catch (e) {
-            const err = new Error(`error updating start work page: ${e}`);
-            this.logger.error(err);
+            this.logger.error(e, 'Error updating start work page');
             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
         } finally {
             this.isRefreshing = false;
@@ -153,7 +151,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                     });
                     this.analytics.fireIssueWorkStartedEvent(this.initData.issue.siteDetails, msg.pushBranchToRemote);
                 } catch (e) {
-                    this.logger.error(new Error(`error executing start work action: ${e}`));
+                    this.logger.error(e, 'Error executing start work action');
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error executing start work action'),
@@ -202,8 +200,8 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                         imgData: imgData,
                         nonce: msg.nonce,
                     } as any);
-                } catch {
-                    this.logger.error(new Error(`error fetching image: ${msg.url}`));
+                } catch (e) {
+                    this.logger.error(e, 'Error fetching image');
                     this.postMessage({
                         type: 'getImageDone',
                         imgData: '',
@@ -216,7 +214,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 try {
                     await this.invalidate();
                 } catch (e) {
-                    this.logger.error(new Error(`error refreshing start work page: ${e}`));
+                    this.logger.error(e, 'Error refeshing start work page');
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error refeshing start work page'),

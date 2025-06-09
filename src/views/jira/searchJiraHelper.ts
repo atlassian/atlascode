@@ -3,7 +3,7 @@ import { commands, QuickPickItem, window } from 'vscode';
 
 import { searchIssuesEvent } from '../../analytics';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
-import { Commands } from '../../commands';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
 
 interface QuickPickIssue extends QuickPickItem {

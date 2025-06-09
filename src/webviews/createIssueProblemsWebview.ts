@@ -44,8 +44,10 @@ export class CreateIssueProblemsWebview extends AbstractReactWebview {
 
         try {
             if (!this._site || !this._project) {
-                const err = new Error(`site or project is missing: site: ${this._site}, project: ${this._project}`);
-                Logger.error(err);
+                Logger.error(
+                    new Error(`site or project is missing: site: ${this._site}, project: ${this._project}`),
+                    'Site or project is missing',
+                );
                 this.postMessage({
                     type: 'error',
                     reason: `site or project is missing: site: ${this._site}, project: ${this._project}`,
@@ -57,8 +59,7 @@ export class CreateIssueProblemsWebview extends AbstractReactWebview {
 
             this.postMessage({ type: 'screenRefresh', problems: data.problems, project: this._project });
         } catch (e) {
-            const err = new Error(`error updating issue fields: ${e}`);
-            Logger.error(err);
+            Logger.error(e, 'error updating issue fields');
             this.postMessage({ type: 'error', reason: `error updating issue fields: ${e}` });
         } finally {
             this.isRefeshing = false;

@@ -1,16 +1,23 @@
 export const enum Features {
-    EnableNewUriHandler = 'atlascode-enable-new-uri-handler',
     NoOpFeature = 'atlascode-noop',
+    EnableErrorTelemetry = 'atlascode-send-error-telemetry',
+    JiraRichText = 'atlascode-jira-rte',
+    AtlassianNotifications = 'atlascode-atlassian-notifications-v2',
 }
 
 export const enum Experiments {
     AtlascodeAA = 'atlascode_aa_experiment',
+    AtlascodeOnboardingExperiment = 'atlascode_quick_pick_onboarding_experiment',
 }
 
 export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
     [Experiments.AtlascodeAA]: {
         parameter: 'isEnabled2',
         defaultValue: 'Default',
+    },
+    [Experiments.AtlascodeOnboardingExperiment]: {
+        parameter: 'enableQuickPickOnboarding',
+        defaultValue: false,
     },
 };
 

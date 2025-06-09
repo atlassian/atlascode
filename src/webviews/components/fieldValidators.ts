@@ -14,7 +14,10 @@ export function validateMultiSelect(value: string, state: any): string | undefin
 }
 
 export function validateString(value: string, state?: any): string | undefined {
-    return value === undefined || value.trim().length < 1 ? 'EMPTY' : undefined;
+    if (!value || value.trim().length < 1) {
+        return 'EMPTY';
+    }
+    return undefined;
 }
 
 export function isValidString(value: string): boolean {
@@ -67,7 +70,7 @@ export function isValidUrl(value: string): boolean {
 }
 
 export function validateRequiredNumber(value: any, state?: any): string | undefined {
-    let err = validateString(value, state);
+    let err = validateString(`${value}`, state);
 
     if (err === undefined) {
         err = validateNumber(value);

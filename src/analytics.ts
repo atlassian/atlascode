@@ -1,8 +1,11 @@
+import { Uri } from 'vscode';
+
 import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/types';
-import { UIErrorInfo } from './analyticsTypes';
+import { CreatePrTerminalSelection, UIErrorInfo } from './analyticsTypes';
 import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira, SiteInfo } from './atlclients/authInfo';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
+import { NotificationSurface, NotificationType } from './views/notifications/notificationManager';
 
 // IMPORTANT
 // Make sure there is a corresponding event with the correct attributes in the Data Portal for any event created here.
@@ -49,9 +52,24 @@ export async function upgradedEvent(version: string, previousVersion: string): P
     });
 }
 
-export async function launchedEvent(location: string): Promise<TrackEvent> {
+export async function launchedEvent(
+    location: string,
+    ideUriScheme: string,
+    numJiraCloudAuthed: number,
+    numJiraDcAuthed: number,
+    numBitbucketCloudAuthed: number,
+    numBitbucketDcAuthed: number,
+): Promise<TrackEvent> {
     return trackEvent('launched', 'atlascode', {
-        attributes: { machineId: Container.machineId, extensionLocation: location },
+        attributes: {
+            machineId: Container.machineId,
+            extensionLocation: location,
+            ideUriScheme,
+            numJiraCloudAuthed,
+            numJiraDcAuthed,
+            numBitbucketCloudAuthed,
+            numBitbucketDcAuthed,
+        },
     });
 }
 
@@ -60,9 +78,18 @@ export async function featureChangeEvent(featureId: string, enabled: boolean): P
     return trackEvent(action, 'feature', { actionSubjectId: featureId });
 }
 
-export async function authenticatedEvent(site: DetailedSiteInfo, isOnboarding?: boolean): Promise<TrackEvent> {
+export async function authenticatedEvent(
+    site: DetailedSiteInfo,
+    isOnboarding?: boolean,
+    source?: string,
+): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'authenticated', 'atlascode', {
-        attributes: { machineId: Container.machineId, hostProduct: site.product.name, onboarding: isOnboarding },
+        attributes: {
+            machineId: Container.machineId,
+            hostProduct: site.product.name,
+            onboarding: isOnboarding,
+            authSource: source,
+        },
     });
 }
 
@@ -80,17 +107,42 @@ export async function loggedOutEvent(site: DetailedSiteInfo): Promise<TrackEvent
 
 // Error/diagnostics events
 
-function sanitizeStackTrace(stack?: string): string | undefined {
-    return stack ? stack.replace(/\/Users\/[^/]+\//g, '/Users/<user>/') : stack;
+function sanitazeErrorMessage(message?: string): string | undefined {
+    if (message) {
+        message = message.replace(/^(connect \w+ )(\d+\.\d+\.\d+\.\d+)(.*)/, '$1<ip>$3');
+        message = message.replace(/^(getaddrinfo \w+ )(.*)/, '$1<domain>');
+    }
+    return message || undefined;
 }
 
-export async function errorEvent(error: Error | string): Promise<TrackEvent> {
-    const attributes: { name: string; message: string; stack?: string } =
-        typeof error === 'string'
-            ? { name: 'Error', message: error }
-            : { name: error.name || 'Error', message: error.message, stack: sanitizeStackTrace(error.stack) };
+function sanitizeStackTrace(stack?: string): string | undefined {
+    if (stack) {
+        stack = stack.replace(/\/Users\/[^/]+\//g, '/Users/<user>/');
+    }
+    return stack || undefined;
+}
 
-    return trackEvent('errorEvent', 'atlascode', { attributes });
+export async function errorEvent(
+    errorMessage: string,
+    error?: Error,
+    capturedBy?: string,
+    additionalParams?: string,
+): Promise<TrackEvent> {
+    const attributes: {
+        name: string;
+        message?: string;
+        capturedBy?: string;
+        stack?: string;
+        additionalParams?: string;
+    } = {
+        message: sanitazeErrorMessage(errorMessage),
+        name: error?.name || 'Error',
+        capturedBy,
+        stack: error?.stack ? sanitizeStackTrace(error.stack) : undefined,
+        additionalParams,
+    };
+
+    return trackEvent('errorEvent_v2', 'atlascode', { attributes });
 }
 
 // Feature Flag Events
@@ -148,8 +200,15 @@ export async function issueCreatedEvent(site: DetailedSiteInfo, issueKey: string
     return instanceTrackEvent(site, 'created', 'issue', { actionSubjectId: issueKey });
 }
 
-export async function issueTransitionedEvent(site: DetailedSiteInfo, issueKey: string): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'transitioned', 'issue', { actionSubjectId: issueKey });
+export async function issueTransitionedEvent(
+    site: DetailedSiteInfo,
+    issueKey: string,
+    source?: string,
+): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'transitioned', 'issue', {
+        actionSubjectId: issueKey,
+        ...(source && { source }), // Only include source if it is defined
+    });
 }
 
 export async function issueUrlCopiedEvent(): Promise<TrackEvent> {
@@ -189,29 +248,27 @@ export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {
     return trackEvent('searchIssues', 'issue', { attributes: { hostProduct: product.name } });
 }
 
-// Bitbucket issue events
-
-export async function bbIssueCreatedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'created', 'bbIssue');
-}
-
-export async function bbIssueTransitionedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'transitioned', 'bbIssue');
-}
-
-export async function bbIssueUrlCopiedEvent(): Promise<TrackEvent> {
-    return trackEvent('copied', 'bbIssueUrl');
-}
-
-export async function bbIssueCommentEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'created', 'bbIssueComment');
-}
-
-export async function bbIssueWorkStartedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'workStarted', 'bbIssue');
+export async function notificationChangeEvent(
+    uri: Uri,
+    notificationSurface: NotificationSurface,
+    delta: number,
+): Promise<TrackEvent> {
+    return trackEvent('changed', 'notification', {
+        attributes: {
+            uri: uri.toString(),
+            notificationSurface: notificationSurface,
+            delta: delta,
+        },
+    });
 }
 
 // PR events
+
+export async function createPrTerminalLinkDetectedEvent(isNotifEnabled: boolean): Promise<TrackEvent> {
+    return trackEvent('detected', 'createPrTerminalLink', {
+        attributes: { isNotificationEnabled: isNotifEnabled },
+    });
+}
 
 export async function prCreatedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'created', 'pullRequest');
@@ -273,8 +330,14 @@ export async function pmfClosed(): Promise<TrackEvent> {
     return trackEvent('closed', 'atlascodePmf');
 }
 
-export async function deepLinkEvent(source: string, target: string): Promise<TrackEvent> {
-    return trackEvent('opened', 'deepLink', { attributes: { source: source, target: target } });
+export type DeepLinkEventErrorType = 'Success' | 'NotFound' | 'Exception';
+
+export async function deepLinkEvent(
+    source: string,
+    target: string,
+    errorType: DeepLinkEventErrorType,
+): Promise<TrackEvent> {
+    return trackEvent('opened', 'deepLink', { attributes: { source, target, errorType } });
 }
 
 export async function externalLinkEvent(source: string, linkId: string): Promise<TrackEvent> {
@@ -458,6 +521,7 @@ export async function authenticateButtonEvent(
     isCloud: boolean,
     isRemote: boolean,
     isWebUI: boolean,
+    isSkipped: boolean = false,
 ): Promise<UIEvent> {
     const e = {
         tenantIdType: null,
@@ -473,6 +537,7 @@ export async function authenticateButtonEvent(
                 hostProduct: site.product.name,
                 isRemote: isRemote,
                 isWebUI: isWebUI,
+                isSkipped: isSkipped,
             },
         },
     };
@@ -640,6 +705,52 @@ export async function openActiveIssueEvent(): Promise<UIEvent> {
     return anyUserOrAnonymous<UIEvent>(e);
 }
 
+export async function createPrTerminalLinkPanelButtonClickedEvent(
+    source: string,
+    type: CreatePrTerminalSelection,
+): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'createPrTerminalLinkPanel',
+            source: source,
+            attributes: {
+                buttonType: type,
+            },
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function notificationActionButtonClickedEvent(
+    uri: Uri,
+    notificationData: { surface: NotificationSurface; type: NotificationType },
+    action: string,
+): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'notificationActionButton',
+            attributes: {
+                uri: uri.toString(),
+                action: action,
+                notificationSurface: notificationData.surface,
+                notificationType: notificationData.type,
+            },
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
 // Helper methods
 
 async function instanceTrackEvent(
