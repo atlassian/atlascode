@@ -25,7 +25,7 @@ export interface PullRequestDetailsActionApi {
     updateReviewers(pr: PullRequest, newReviewers: User[]): Promise<Reviewer[]>;
     updateApprovalStatus(pr: PullRequest, status: ApprovalStatus): Promise<ApprovalStatus>;
     checkout(pr: PullRequest): Promise<string>;
-    getCurrentBranchName(pr: PullRequest): string;
+    getCurrentBranchName(pr: PullRequest): string | null;
     getComments(pr: PullRequest): Promise<Comment[]>;
     postComment(comments: Comment[], pr: PullRequest, rawText: string, parentId?: string): Promise<Comment[]>;
     editComment(comments: Comment[], pr: PullRequest, content: string, commentId: string): Promise<Comment[]>;

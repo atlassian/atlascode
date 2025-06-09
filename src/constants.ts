@@ -6,7 +6,12 @@ export const JiraEnabledKey = 'jira.enabled';
 export const BitbucketEnabledKey = 'bitbucket.enabled';
 export const JiraHoverProviderConfigurationKey = 'jira.hover.enabled';
 export const AssignedJiraItemsViewId = 'atlascode.views.jira.assignedWorkItemsTreeView';
+export const BitbucketPullRequestsOverviewConfigurationKey = 'bitbucket.explorer.pullRequestsOverview.enabled';
+export const BitbucketRepositoryBasedPullRequestsConfigurationKey =
+    'bitbucket.explorer.repositoryBasedPullRequestView.enabled';
+export const CustomJQLTreeId = 'atlascode.views.jira.customJql';
 export const PullRequestTreeViewId = 'atlascode.views.bb.pullrequestsTreeView';
+export const PullRequestsOverviewTreeViewId = 'atlascode.views.bb.pullRequestsOverviewTreeView';
 export const PipelinesTreeViewId = 'atlascode.views.bb.pipelinesTreeView';
 export const BitbucketIssuesTreeViewId = 'atlascode.views.bb.issuesTreeView';
 export const HelpTreeViewId = 'atlascode.views.helpTreeView';
@@ -18,6 +23,10 @@ export const cannotGetClientFor = 'cannot get client for';
 
 export const enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
+    BitbucketPullRequestsOverviewRefresh = 'atlascode.bitbucket.pullRequestsOverview.refresh',
+    BitbucketPullRequestsOverviewFocus = 'atlascode.views.bb.pullRequestsOverviewTreeView.focus',
+    InitialiseDevsphereReviewSettings = 'atlascode.devsphere.review.initialise',
+    ResetDevsphereCustomConfiguration = 'atlascode.devsphere.custom.reset',
     BitbucketFetchPullRequests = 'atlascode.bb.fetchPullRequests',
     BitbucketRefreshPullRequests = 'atlascode.bb.refreshPullRequests',
     BitbucketToggleFileNesting = 'atlascode.bb.toggleFileNesting',
