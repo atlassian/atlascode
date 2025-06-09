@@ -4,14 +4,22 @@ import * as vscode from 'vscode';
 import { FileStatus } from '../../bitbucket/model';
 import { configuration } from '../../config/configuration';
 import { Commands } from '../../constants';
-import { Resources } from '../../resources';
 import { DiffViewArgs } from '../pullrequest/diffViewHelper';
-import { PullRequestContextValue } from '../pullrequest/pullRequestNode';
 import { AbstractBaseNode } from './abstractBaseNode';
 
 export class PullRequestFilesNode extends AbstractBaseNode {
     constructor(private diffViewData: DiffViewArgs) {
         super();
+    }
+
+    createFileChangeUri(fileName: string, status: FileStatus, prUrl: string, hasComments: boolean): vscode.Uri {
+        return vscode.Uri.parse(`${prUrl}/${fileName}`).with({
+            scheme: 'pullRequest',
+            query: JSON.stringify({
+                status: status,
+                hasComments: hasComments,
+            }),
+        });
     }
 
     async getTreeItem(): Promise<vscode.TreeItem> {
@@ -20,10 +28,7 @@ export class PullRequestFilesNode extends AbstractBaseNode {
         if (configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')) {
             fileDisplayString = path.basename(itemData.fileDisplayName);
         }
-        const item = new vscode.TreeItem(
-            `${itemData.numberOfComments > 0 ? '💬 ' : ''}${fileDisplayString}`,
-            vscode.TreeItemCollapsibleState.None,
-        );
+        const item = new vscode.TreeItem(fileDisplayString, vscode.TreeItemCollapsibleState.None);
         item.tooltip = itemData.fileDisplayName;
         item.command = {
             command: Commands.ViewDiff,
@@ -31,26 +36,13 @@ export class PullRequestFilesNode extends AbstractBaseNode {
             arguments: this.diffViewData.diffArgs,
         };
 
-        item.contextValue = PullRequestContextValue;
-        item.resourceUri = vscode.Uri.parse(`${itemData.prUrl}#chg-${itemData.fileDisplayName}`);
-        switch (itemData.fileDiffStatus) {
-            case FileStatus.ADDED:
-                item.iconPath = Resources.icons.get('add-circle');
-                break;
-            case FileStatus.DELETED:
-                item.iconPath = Resources.icons.get('delete');
-                break;
-            case FileStatus.CONFLICT:
-                item.iconPath = Resources.icons.get('warning');
-                break;
-            default:
-                item.iconPath = Resources.icons.get('edit');
-                break;
-        }
-
-        if (this.diffViewData.fileDisplayData.isConflicted) {
-            item.iconPath = Resources.icons.get('warning');
-        }
+        item.resourceUri = this.createFileChangeUri(
+            itemData.fileDisplayName,
+            itemData.fileDiffStatus,
+            itemData.prUrl,
+            itemData.numberOfComments > 0,
+        );
+        item.iconPath = undefined;
 
         return item;
     }
