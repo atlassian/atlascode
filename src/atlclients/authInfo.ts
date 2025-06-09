@@ -62,7 +62,7 @@ export interface AuthInfo {
 
 export interface OAuthInfo extends AuthInfo {
     access: string;
-    refresh: string;
+    refresh?: string;
     expirationDate?: number;
     iat?: number;
     recievedAt: number;
