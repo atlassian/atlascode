@@ -14,6 +14,7 @@ export class PullRequestsOverviewNodeDataProvider extends BaseTreeDataProvider {
     readonly onDidChangeTreeData: Event<AbstractBaseNode | null> = this._onDidChangeTreeData.event;
     private _prsTitleSectionMap: Map<string, PullRequestsOverviewSectionNode> = new Map();
     private _isFetchingPullRequests: boolean = false;
+    private readonly _minUpdatedTs: string;
 
     private _disposable: Disposable;
     private _ownerSlug: string = 'atlassian'; // Hardcoded for now as per requirements
@@ -23,6 +24,9 @@ export class PullRequestsOverviewNodeDataProvider extends BaseTreeDataProvider {
         this._disposable = Disposable.from(this._onDidChangeTreeData);
 
         this.updateChildren();
+
+        // TODO: Make this configurable
+        this._minUpdatedTs = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
     }
 
     dispose() {
@@ -52,6 +56,7 @@ export class PullRequestsOverviewNodeDataProvider extends BaseTreeDataProvider {
                     const overviewViewState = await bbApi.pullrequestsOverview.getOverviewViewState(
                         this._ownerSlug,
                         internalSite,
+                        this._minUpdatedTs,
                     );
 
                     // Create the "PRs to be reviewed" section

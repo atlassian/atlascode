@@ -371,7 +371,7 @@ export interface PullRequestApi {
 }
 
 export interface PullRequestsOverviewApi {
-    getOverviewViewState(ownerSlug: string, site: DetailedSiteInfo): Promise<OverviewViewState>;
+    getOverviewViewState(ownerSlug: string, site: DetailedSiteInfo, minUpdatedTs: string): Promise<OverviewViewState>;
 }
 
 export interface RepositoriesApi {

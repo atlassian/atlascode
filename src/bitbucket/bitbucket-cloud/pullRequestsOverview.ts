@@ -1,4 +1,5 @@
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
+import { toISOString } from '../../react/atlascode/util/date-fns';
 import { HTTPClient } from '../httpClient';
 import { BitbucketSite, PullRequest, WorkspaceRepo } from '../model';
 import { CloudPullRequestApi } from './pullRequests';
@@ -8,6 +9,21 @@ export interface OverviewViewState {
         authored: PullRequest[];
         reviewing: PullRequest[];
         closed: PullRequest[];
+    };
+}
+
+function updatedAfter(minUpdatedTs?: string) {
+    return (pr: PullRequest) => {
+        if (!minUpdatedTs) {
+            return true;
+        }
+
+        const updatedTsIsoString = toISOString(pr.data.updatedTs);
+        if (!updatedTsIsoString) {
+            return true;
+        }
+
+        return updatedTsIsoString > minUpdatedTs;
     };
 }
 
@@ -44,7 +60,11 @@ export class PullRequestsOverviewApi {
         };
     }
 
-    async getOverviewViewState(ownerSlug: string, site: DetailedSiteInfo): Promise<OverviewViewState> {
+    async getOverviewViewState(
+        ownerSlug: string,
+        site: DetailedSiteInfo,
+        minUpdatedTs: string,
+    ): Promise<OverviewViewState> {
         const fields = [
             '+pullRequests.*.author',
             '+pullRequests.*.closed_on',
@@ -74,24 +94,30 @@ export class PullRequestsOverviewApi {
             `/workspaces/${ownerSlug}/overview-view-state/?fields=${encodeURIComponent(fields)}`,
         );
 
-        const authored: PullRequest[] = data.pullRequests.authored.map((pr: any) => {
-            const bbSite = this.extractSiteFromPRData(pr, site);
-            const workspaceRepo = this.createWorkspaceRepoFromPRData(pr, bbSite);
+        const authored: PullRequest[] = data.pullRequests.authored
+            .map((pr: any) => {
+                const bbSite = this.extractSiteFromPRData(pr, site);
+                const workspaceRepo = this.createWorkspaceRepoFromPRData(pr, bbSite);
 
-            return CloudPullRequestApi.toPullRequestData(pr, bbSite, workspaceRepo);
-        });
+                return CloudPullRequestApi.toPullRequestData(pr, bbSite, workspaceRepo);
+            })
+            .filter(updatedAfter(minUpdatedTs));
 
-        const reviewing: PullRequest[] = data.pullRequests.reviewing.map((pr: any) => {
-            const bbSite = this.extractSiteFromPRData(pr, site);
-            const workspaceRepo = this.createWorkspaceRepoFromPRData(pr, bbSite);
-            return CloudPullRequestApi.toPullRequestData(pr, bbSite, workspaceRepo);
-        });
+        const reviewing: PullRequest[] = data.pullRequests.reviewing
+            .map((pr: any) => {
+                const bbSite = this.extractSiteFromPRData(pr, site);
+                const workspaceRepo = this.createWorkspaceRepoFromPRData(pr, bbSite);
+                return CloudPullRequestApi.toPullRequestData(pr, bbSite, workspaceRepo);
+            })
+            .filter(updatedAfter(minUpdatedTs));
 
-        const closed: PullRequest[] = data.pullRequests.closed.map((pr: any) => {
-            const bbSite = this.extractSiteFromPRData(pr, site);
-            const workspaceRepo = this.createWorkspaceRepoFromPRData(pr, bbSite);
-            return CloudPullRequestApi.toPullRequestData(pr, bbSite, workspaceRepo);
-        });
+        const closed: PullRequest[] = data.pullRequests.closed
+            .map((pr: any) => {
+                const bbSite = this.extractSiteFromPRData(pr, site);
+                const workspaceRepo = this.createWorkspaceRepoFromPRData(pr, bbSite);
+                return CloudPullRequestApi.toPullRequestData(pr, bbSite, workspaceRepo);
+            })
+            .filter(updatedAfter(minUpdatedTs));
 
         const response: OverviewViewState = {
             pullRequests: {

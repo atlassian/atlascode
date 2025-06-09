@@ -10,7 +10,7 @@ import { activate as activateCodebucket } from './codebucket/command/registerCom
 import { CommandContext, setCommandContext } from './commandContext';
 import { registerCommands } from './commands';
 import { Configuration, configuration, IConfig } from './config/configuration';
-import { registerDevsphereCommands } from './config/devsphereConfiguration';
+import { registerDevsphereCommands } from './config/devsphere-config/registerDevsphereCommands';
 import { Commands, ExtensionId, GlobalStateVersionKey } from './constants';
 import { Container } from './container';
 import { registerAnalyticsClient, registerErrorReporting, unregisterErrorReporting } from './errorReporting';
