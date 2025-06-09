@@ -1,3 +1,4 @@
+import { Mutex } from 'async-mutex';
 import crypto from 'crypto';
 import PQueue from 'p-queue';
 import { Disposable, Event, EventEmitter, version, window } from 'vscode';
@@ -34,10 +35,15 @@ enum Priority {
     Write,
 }
 
+function getKeyForSecrets(productKey: string, credentialId: string): string {
+    return `${productKey}-${credentialId}`;
+}
+
 export class CredentialManager implements Disposable {
     private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
     private _queue = new PQueue({ concurrency: 1 });
     private _refresher = new OAuthRefesher();
+    private mutex = new Mutex();
 
     constructor(private _analyticsClient: AnalyticsClient) {
         this._memStore.set(ProductJira.key, new Map<string, AuthInfo>());
@@ -59,21 +65,40 @@ export class CredentialManager implements Disposable {
      * it's available, otherwise will return the value in the secretstorage.
      */
     public async getAuthInfo(site: DetailedSiteInfo, allowCache = true): Promise<AuthInfo | undefined> {
-        return this.getAuthInfoForProductAndCredentialId(site, allowCache);
+        return this.mutex.runExclusive(() => {
+            return this.getAuthInfoForProductAndCredentialId(site, allowCache);
+        });
     }
 
     /**
      * Saves the auth info to both the in-memory store and the secretstorage.
      */
     public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
-        Logger.debug(`Saving auth info for site: ${site.baseApiUrl} credentialID: ${site.credentialId}`);
+        return this.mutex.runExclusive(() => {
+            return this.saveAuthInfoForProductAndCredentialId(site, info);
+        });
+    }
+
+    /**
+     * Removes an auth item from both the in-memory store and the secretstorage.
+     */
+    public async removeAuthInfo(site: DetailedSiteInfo): Promise<boolean> {
+        return this.mutex.runExclusive(() => {
+            return this.removeAuthInfoForProductAndCredentialId(site);
+        });
+    }
+
+    /**
+     * Saves the auth info to both the in-memory store and the secretstorage.
+     */
+    public async saveAuthInfoForProductAndCredentialId(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
         let productAuths = this._memStore.get(site.product.key);
 
         if (!productAuths) {
             productAuths = new Map<string, AuthInfo>();
         }
 
-        const existingInfo = await this.getAuthInfo(site, false);
+        const existingInfo = await this.getAuthInfoForProductAndCredentialId(site, false);
 
         this._memStore.set(site.product.key, productAuths.set(site.credentialId, info));
 
@@ -98,6 +123,29 @@ export class CredentialManager implements Disposable {
                 Logger.debug('error saving auth info to secretstorage: ', e);
             }
         }
+    }
+
+    /**
+     * Saves the auth info to both the in-memory store and the secretstorage for Bitbucket API key login
+     */
+    public async saveAuthInfoBBToken(site: DetailedSiteInfo, info: AuthInfo, id: number): Promise<void> {
+        Logger.debug(
+            `[id=${id}] Saving auth info for site: ${site.baseApiUrl} credentialID: ${site.credentialId} using BB token`,
+        );
+        const productAuths = this._memStore.get(site.product.key);
+        Logger.debug(`[id=${id}] productAuths: ${productAuths}`);
+        if (!productAuths) {
+            this._memStore.set(site.product.key, new Map<string, AuthInfo>().set(site.credentialId, info));
+            Logger.debug(`[id=${id}] productAuths is empty so setting it to the new auth info in memstore`);
+        } else {
+            productAuths.set(site.credentialId, info);
+            this._memStore.set(site.product.key, productAuths);
+            Logger.debug(
+                `[id=${id}] productAuths is not empty so setting it to productAuth: ${productAuths}in memstore`,
+            );
+        }
+        Logger.debug(`[id=${id}] Calling saveAuthInfo for site: ${site.baseApiUrl} credentialID: ${site.credentialId}`);
+        await this.saveAuthInfo(site, info);
     }
 
     private async getAuthInfoForProductAndCredentialId(
@@ -202,7 +250,10 @@ export class CredentialManager implements Disposable {
         await this._queue.add(
             async () => {
                 try {
-                    await Container.context.secrets.store(`${productKey}-${credentialId}`, JSON.stringify(info));
+                    await Container.context.secrets.store(
+                        getKeyForSecrets(productKey, credentialId),
+                        JSON.stringify(info),
+                    );
                 } catch (e) {
                     Logger.error(e, `Error writing to secretstorage`);
                 }
@@ -217,7 +268,7 @@ export class CredentialManager implements Disposable {
         let info: string | undefined = undefined;
         await this._queue.add(
             async () => {
-                info = await Container.context.secrets.get(`${productKey}-${credentialId}`);
+                info = await Container.context.secrets.get(getKeyForSecrets(productKey, credentialId));
             },
             { priority: Priority.Read },
         );
@@ -227,9 +278,9 @@ export class CredentialManager implements Disposable {
         let wasKeyDeleted = false;
         await this._queue.add(
             async () => {
-                const storedInfo = await Container.context.secrets.get(`${productKey}-${credentialId}`);
+                const storedInfo = await Container.context.secrets.get(getKeyForSecrets(productKey, credentialId));
                 if (storedInfo) {
-                    await Container.context.secrets.delete(`${productKey}-${credentialId}`);
+                    await Container.context.secrets.delete(getKeyForSecrets(productKey, credentialId));
                     wasKeyDeleted = true;
                 }
             },
@@ -244,7 +295,7 @@ export class CredentialManager implements Disposable {
                 if (keychain) {
                     wasKeyDeleted = await keychain.deletePassword(
                         keychainServiceNameV3,
-                        `${productKey}-${credentialId}`,
+                        getKeyForSecrets(productKey, credentialId),
                     );
                 }
             },
@@ -256,9 +307,7 @@ export class CredentialManager implements Disposable {
     private async getAuthInfoFromSecretStorage(
         productKey: string,
         credentialId: string,
-        serviceName?: string,
     ): Promise<AuthInfo | undefined> {
-        Logger.debug(`Retrieving secretstorage info for product: ${productKey} credentialID: ${credentialId}`);
         let authInfo: string | undefined = undefined;
         authInfo = await this.getSiteInformationFromSecretStorage(productKey, credentialId);
         if (!authInfo) {
@@ -288,7 +337,7 @@ export class CredentialManager implements Disposable {
         await this._queue.add(
             async () => {
                 if (keychain) {
-                    authInfo = await keychain.getPassword(svcName, `${productKey}-${credentialId}`);
+                    authInfo = await keychain.getPassword(svcName, getKeyForSecrets(productKey, credentialId));
                 }
             },
             { priority: Priority.Read },
@@ -320,7 +369,7 @@ export class CredentialManager implements Disposable {
 
         const provider: OAuthProvider | undefined = oauthProviderForSite(site);
         const newTokens = undefined;
-        if (provider && credentials) {
+        if (provider && credentials && credentials.refresh) {
             const tokenResponse = await this._refresher.getNewTokens(provider, credentials.refresh);
             if (tokenResponse.tokens) {
                 const newTokens = tokenResponse.tokens;
@@ -344,7 +393,7 @@ export class CredentialManager implements Disposable {
     /**
      * Removes an auth item from both the in-memory store and the secretstorage.
      */
-    public async removeAuthInfo(site: DetailedSiteInfo): Promise<boolean> {
+    public async removeAuthInfoForProductAndCredentialId(site: DetailedSiteInfo): Promise<boolean> {
         const productAuths = this._memStore.get(site.product.key);
         let wasKeyDeleted = false;
         let wasMemDeleted = false;

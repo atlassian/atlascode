@@ -88,6 +88,7 @@ export const enum Commands {
     WorkbenchOpenWorkspace = 'atlascode.workbenchOpenWorkspace',
     CloneRepository = 'atlascode.cloneRepository',
     DisableHelpExplorer = 'atlascode.disableHelpExplorer',
+    AuthenticateWithBitbucketToken = 'atlascode.authenticateWithBitbucketToken',
     CreateNewJql = 'atlascode.jira.createNewJql',
     ToDoIssue = 'atlascode.jira.todoIssue',
     InProgressIssue = 'atlascode.jira.inProgressIssue',
