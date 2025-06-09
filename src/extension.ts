@@ -7,6 +7,13 @@ import { DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/au
 import { startListening } from './atlclients/negotiate';
 import { BitbucketContext } from './bitbucket/bbContext';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
+// import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
+// import {
+//     activateYamlExtension,
+//     addPipelinesSchemaToYamlConfig,
+//     BB_PIPELINES_FILENAME,
+// } from './pipelines/yaml/pipelinesYamlHelper';
+import { activate as activateDecorators } from './codebucket/command/registerDecorators';
 import { CommandContext, setCommandContext } from './commandContext';
 import { registerCommands } from './commands';
 import { Configuration, configuration, IConfig } from './config/configuration';
@@ -16,12 +23,6 @@ import { Container } from './container';
 import { registerAnalyticsClient, registerErrorReporting, unregisterErrorReporting } from './errorReporting';
 import { provideCodeLenses } from './jira/todoObserver';
 import { Logger } from './logger';
-// import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
-// import {
-//     activateYamlExtension,
-//     addPipelinesSchemaToYamlConfig,
-//     BB_PIPELINES_FILENAME,
-// } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
 import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
@@ -52,6 +53,7 @@ export async function activate(context: ExtensionContext) {
         activateErrorReporting();
         registerCommands(context);
         activateCodebucket(context);
+        activateDecorators(context);
 
         setCommandContext(
             CommandContext.IsJiraAuthenticated,
