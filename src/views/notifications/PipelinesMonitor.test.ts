@@ -14,6 +14,14 @@ jest.mock('../../bitbucket/bbUtils');
 jest.mock('../../container');
 jest.mock('../pipelines/Helpers');
 jest.mock('../../config/configuration');
+jest.mock('../../container', () => ({
+    Container: {
+        analyticsClient: {
+            sendUIEvent: jest.fn(),
+            sendTrackEvent: jest.fn(),
+        },
+    },
+}));
 
 describe('PipelinesMonitor', () => {
     // Set up common test objects

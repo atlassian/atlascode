@@ -101,7 +101,7 @@ export class BitbucketCloudPullRequestLinkProvider extends Disposable implements
         const yes = 'Yes';
         const neverShow = "Don't show again";
 
-        notificationChangeEvent(Uri.parse(PanelId), NotificationSurface.Banner, 1).then((event) => {
+        notificationChangeEvent(PanelId, Uri.parse(PanelId), NotificationSurface.Banner, 1).then((event) => {
             this._analyticsClient.sendTrackEvent(event);
         });
 

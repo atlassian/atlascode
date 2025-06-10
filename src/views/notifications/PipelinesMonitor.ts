@@ -1,5 +1,6 @@
 import { commands, window } from 'vscode';
 
+import { notificationBannerClickedEvent, notificationChangeEvent } from '../../analytics';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { WorkspaceRepo } from '../../bitbucket/model';
 import { configuration } from '../../config/configuration';
@@ -8,6 +9,9 @@ import { Container } from '../../container';
 import { Pipeline, PipelineTarget } from '../../pipelines/model';
 import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 import { descriptionForState, generatePipelineTitle, shouldDisplay } from '../pipelines/Helpers';
+import { NotificationSurface } from './notificationManager';
+
+const NotificationBannerId = '';
 
 export class PipelinesMonitor implements BitbucketActivityMonitor {
     private _previousResults: Record<string, Pipeline[]> = {};
@@ -33,29 +37,42 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
                 return; //Bitbucket Server instances will not have pipelines
             }
 
-            return bbApi.pipelines.getRecentActivity(site).then((newResults) => {
-                let diffs = this.diffResults(previousResults, newResults);
-                diffs = diffs.filter((p) => this.shouldDisplayTarget(p.target));
+            const newResults = await bbApi.pipelines.getRecentActivity(site);
+            const diffs = this.diffResults(previousResults, newResults).filter((p) =>
+                this.shouldDisplayTarget(p.target),
+            );
+
+            if (diffs.length > 0) {
                 const buttonText = diffs.length === 1 ? 'View' : 'View Pipeline Explorer';
                 const neverShow = "Don't show again";
-                if (diffs.length > 0) {
-                    return window
-                        .showInformationMessage(this.composeMessage(diffs), buttonText, neverShow)
-                        .then((selection) => {
-                            if (selection === buttonText) {
-                                if (diffs.length === 1) {
-                                    commands.executeCommand(Commands.ShowPipeline, diffs[0]);
-                                } else {
-                                    commands.executeCommand('workbench.view.extension.atlascode-drawer');
-                                }
-                            } else if (selection === neverShow) {
-                                configuration.updateEffective('bitbucket.pipelines.monitorEnabled', false, null, true);
-                            }
-                        });
+
+                notificationChangeEvent(NotificationBannerId, undefined, NotificationSurface.Banner, 1).then(
+                    (event) => {
+                        Container.analyticsClient.sendTrackEvent(event);
+                    },
+                );
+
+                const selection = await window.showInformationMessage(
+                    this.composeMessage(diffs),
+                    buttonText,
+                    neverShow,
+                );
+                if (selection === buttonText) {
+                    if (diffs.length === 1) {
+                        commands.executeCommand(Commands.ShowPipeline, diffs[0]);
+                    } else {
+                        commands.executeCommand('workbench.view.extension.atlascode-drawer');
+                    }
+                } else if (selection === neverShow) {
+                    configuration.updateEffective('bitbucket.pipelines.monitorEnabled', false, null, true);
                 }
+
+                notificationBannerClickedEvent(NotificationBannerId, selection ?? '').then((event) => {
+                    Container.analyticsClient.sendUIEvent(event);
+                });
+            } else {
                 this._previousResults[wsRepo.rootUri] = newResults;
-                return undefined;
-            });
+            }
         }
     }
 

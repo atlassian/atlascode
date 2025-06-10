@@ -121,7 +121,7 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
         if (badgeCountDelta === 0) {
             return;
         }
-        notificationChangeEvent(uri, NotificationSurface.Badge, badgeCountDelta).then((e) => {
+        notificationChangeEvent(undefined, uri, NotificationSurface.Badge, badgeCountDelta).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }
