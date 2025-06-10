@@ -62,6 +62,18 @@ export class CredentialManager implements Disposable {
         return this.getAuthInfoForProductAndCredentialId(site, allowCache);
     }
 
+    public async getAllValidAuthInfo(product: Product): Promise<AuthInfo[]> {
+        // Get all unique sites by credentialId
+        const sites = Container.siteManager.getSitesAvailable(product);
+        const uniquelyCredentialedSites = Array.from(new Map(sites.map((site) => [site.credentialId, site])).values());
+
+        const authInfos = await Promise.all(uniquelyCredentialedSites.map((site) => this.getAuthInfo(site, true)));
+
+        return authInfos.filter(
+            (authInfo): authInfo is AuthInfo => !!authInfo && authInfo.state !== AuthInfoState.Invalid,
+        );
+    }
+
     /**
      * Saves the auth info to both the in-memory store and the secretstorage.
      */
@@ -348,7 +360,9 @@ export class CredentialManager implements Disposable {
         const productAuths = this._memStore.get(site.product.key);
         let wasKeyDeleted = false;
         let wasMemDeleted = false;
+        let userId = '';
         if (productAuths) {
+            userId = productAuths.get(site.credentialId)?.user.id || '';
             wasMemDeleted = productAuths.delete(site.credentialId);
             this._memStore.set(site.product.key, productAuths);
         }
@@ -366,6 +380,7 @@ export class CredentialManager implements Disposable {
                 type: AuthChangeType.Remove,
                 product: site.product,
                 credentialId: site.credentialId,
+                userId: userId,
             };
             this._onDidAuthChange.fire(removeEvent);
 

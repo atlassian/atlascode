@@ -337,6 +337,7 @@ describe('CredentialManager', () => {
                 type: AuthChangeType.Remove,
                 product: mockJiraSite.product,
                 credentialId: mockJiraSite.credentialId,
+                userId: mockAuthInfo.user.id,
             });
 
             // Verify info message was shown

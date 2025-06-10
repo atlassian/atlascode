@@ -7,6 +7,7 @@ case `uname -s` in
 esac
 
 OLDSTATE=`sqlite3 "${CODEPATH}/User/globalStorage/state.vscdb" 'select value from ItemTable where key = "atlassian.atlascode";'`
+
 if [ -z `command -v jq` ]
 then
 	echo "$0 requires the jq application to be installed"

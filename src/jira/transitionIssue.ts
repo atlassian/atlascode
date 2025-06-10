@@ -12,7 +12,13 @@ import { Commands } from '../constants';
 import { Container } from '../container';
 import { Logger } from '../logger';
 
-export async function transitionIssue(issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>, transition: Transition) {
+export async function transitionIssue(
+    issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>,
+    transition: Transition,
+    analyticsData?: {
+        source: string;
+    },
+) {
     let issueKey: string = '';
     let site: DetailedSiteInfo = emptySiteInfo;
 
@@ -27,7 +33,7 @@ export async function transitionIssue(issueOrKey: MinimalIssueOrKeyAndSite<Detai
     }
 
     try {
-        await performTransition(issueKey, transition, site);
+        await performTransition(issueKey, transition, site, analyticsData);
         return;
     } catch (e) {
         Logger.error(e, 'Error executing transitionIssue');
@@ -35,7 +41,14 @@ export async function transitionIssue(issueOrKey: MinimalIssueOrKeyAndSite<Detai
     }
 }
 
-async function performTransition(issueKey: string, transition: Transition, site: DetailedSiteInfo) {
+async function performTransition(
+    issueKey: string,
+    transition: Transition,
+    site: DetailedSiteInfo,
+    analyticsData?: {
+        source: string;
+    },
+) {
     try {
         const client = await Container.clientManager.jiraClient(site);
         await client.transitionIssue(issueKey, transition.id);
@@ -43,7 +56,7 @@ async function performTransition(issueKey: string, transition: Transition, site:
         vscode.commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
         vscode.commands.executeCommand(Commands.RefreshCustomJqlExplorer);
 
-        issueTransitionedEvent(site, issueKey).then((e) => {
+        issueTransitionedEvent(site, issueKey, analyticsData?.source).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
     } catch (err) {

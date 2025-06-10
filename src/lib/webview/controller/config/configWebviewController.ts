@@ -1,9 +1,10 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
 import { v4 } from 'uuid';
-import vscode from 'vscode';
+import vscode, { env } from 'vscode';
 
 import { isBasicAuthInfo, isEmptySiteInfo, isPATAuthInfo } from '../../../../atlclients/authInfo';
+import { ExtensionId } from '../../../../constants';
 import { Container } from '../../../../container';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
@@ -16,6 +17,8 @@ import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
 import { ConfigActionApi } from './configActionApi';
+
+const AUTH_URI = `${env.uriScheme || 'vscode'}://${ExtensionId}/auth`;
 
 export const id: string = 'atlascodeSettingsV2';
 
@@ -145,7 +148,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 break;
             }
             case ConfigActionType.RemoteLogin: {
-                const uri = vscode.Uri.parse('vscode://atlassian.atlascode/auth');
+                const uri = vscode.Uri.parse(AUTH_URI);
                 vscode.env.asExternalUri(uri).then((uri) => {
                     const state = { deeplink: uri.toString(true), attemptId: v4() };
                     Container.loginManager.initRemoteAuth(state);

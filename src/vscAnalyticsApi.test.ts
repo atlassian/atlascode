@@ -99,6 +99,7 @@ describe('VSCAnalyticsApi', () => {
 
         it('should fire launched event', async () => {
             const location = 'test-location';
+            const ideUriScheme = 'vscode';
             const numJiraCloudAuthed = 1;
             const numJiraDcAuthed = 2;
             const numBitbucketCloudAuthed = 3;
@@ -106,6 +107,7 @@ describe('VSCAnalyticsApi', () => {
 
             await analyticsApi.fireLaunchedEvent(
                 location,
+                ideUriScheme,
                 numJiraCloudAuthed,
                 numJiraDcAuthed,
                 numBitbucketCloudAuthed,
@@ -114,6 +116,7 @@ describe('VSCAnalyticsApi', () => {
 
             expect(analytics.launchedEvent).toHaveBeenCalledWith(
                 location,
+                ideUriScheme,
                 numJiraCloudAuthed,
                 numJiraDcAuthed,
                 numBitbucketCloudAuthed,

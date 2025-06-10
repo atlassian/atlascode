@@ -6,7 +6,7 @@ import { Container } from '../../container';
 import { loginToJiraMessageNode } from '../jira/treeViews/utils';
 import { NotificationManagerImpl, NotificationNotifier, NotificationType } from './notificationManager';
 
-export class AuthNotifier implements NotificationNotifier, Disposable {
+export class AuthNotifier extends Disposable implements NotificationNotifier {
     private static instance: AuthNotifier;
     private _disposable: Disposable[] = [];
     private _jiraEnabled: boolean;
@@ -19,6 +19,9 @@ export class AuthNotifier implements NotificationNotifier, Disposable {
     }
 
     private constructor() {
+        super(() => {
+            this.dispose();
+        });
         this._disposable.push(
             Disposable.from(Container.credentialManager.onDidAuthChange(this.fetchNotifications, this)),
         );
@@ -48,21 +51,24 @@ export class AuthNotifier implements NotificationNotifier, Disposable {
 
     private checkAuth(product: Product, notificationId: string, message: string, treeItem: TreeItem): void {
         if (!this.isEnabled(product)) {
-            NotificationManagerImpl.getInstance().clearNotifications(treeItem.resourceUri!);
+            NotificationManagerImpl.getInstance().clearNotificationsByUri(treeItem.resourceUri!);
             return;
         }
         const numberOfAuth =
             Container.siteManager.numberOfAuthedSites(product, false) +
             Container.siteManager.numberOfAuthedSites(product, true);
         if (numberOfAuth === 0) {
-            NotificationManagerImpl.getInstance().addNotification(treeItem.resourceUri!, {
+            NotificationManagerImpl.getInstance().addNotification({
                 id: notificationId,
+                uri: treeItem.resourceUri!,
                 notificationType: NotificationType.LoginNeeded,
                 message: message,
+                product: product,
+                timestamp: Date.now(),
             });
             return;
         }
-        NotificationManagerImpl.getInstance().clearNotifications(treeItem.resourceUri!);
+        NotificationManagerImpl.getInstance().clearNotificationsByUri(treeItem.resourceUri!);
     }
 
     private isEnabled(product: Product): boolean {
