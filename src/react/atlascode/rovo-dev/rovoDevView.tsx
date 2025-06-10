@@ -1,15 +1,21 @@
 import IconButton from '@atlaskit/button';
 import SearchIcon from '@atlaskit/icon/glyph/search';
 import SendIcon from '@atlaskit/icon/glyph/send';
-import markdownit from 'markdown-it';
+import { Marked } from '@ts-stack/markdown';
+import hljs from 'highlight.js';
 import React, { useCallback, useState } from 'react';
 import { ChatMessage, FetchResponseData } from 'src/rovo-dev/utils';
 
 import { useMessagingApi } from '../messagingApi';
 import * as styles from './rovoDevViewStyles';
 
-const md: markdownit = markdownit({
-    linkify: true,
+Marked.setOptions({
+    sanitize: true,
+    breaks: false,
+    highlight: (code, lang) => {
+        console.log('Highlighting code:', code, 'with language:', lang);
+        return lang ? hljs.highlight(code, { language: lang }).value : hljs.highlightAuto(code).value;
+    },
 });
 
 const RovoDevView: React.FC = () => {
@@ -213,9 +219,15 @@ const RovoDevView: React.FC = () => {
                     </div>
                 );
             } else {
-                const htmlContent = md.renderInline(part.trim());
-                // Regular text content
-                return htmlContent ? <div dangerouslySetInnerHTML={{ __html: htmlContent }} key={index} /> : null;
+                const htmlContent = Marked.parse(part);
+
+                return (
+                    <div
+                        key={index}
+                        // style={styles.messageContentStyles}
+                        dangerouslySetInnerHTML={{ __html: htmlContent }}
+                    />
+                );
             }
         });
     };
