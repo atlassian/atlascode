@@ -7,6 +7,8 @@
 ### Features
 
 - Added a `Don't show anymore` button in the pipeline notification to easily disable this type of notifications
+- It is now possible to transition Jira work items to a different status from the sidebar, via `Transition Issue...` context menu option
+- Notifications for unseen & recent comments on Jira and Bitbucket are now supported 
 
 ## What's new in 3.8.2
 

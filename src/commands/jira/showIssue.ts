@@ -12,6 +12,7 @@ import { DetailedSiteInfo, emptySiteInfo, ProductJira } from '../../atlclients/a
 import { Container } from '../../container';
 import { getCachedOrFetchMinimalIssue } from '../../jira/fetchIssue';
 import { issueForKey } from '../../jira/issueForKey';
+import { Logger } from '../../logger';
 
 export async function showIssue(issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) {
     let issue: MinimalIssue<DetailedSiteInfo>;
@@ -41,6 +42,31 @@ export async function showIssue(issueOrKeyAndSite: MinimalIssueOrKeyAndSite<Deta
     Container.jiraIssueViewManager.createOrShow(issue);
 }
 
+export async function showIssueForURL(issueURL: string) {
+    try {
+        const url = new URL(issueURL);
+        const hostname = url.hostname;
+        // Match something like /AXON-123 in the path
+        const match = url.pathname.match(/\/([A-Z][A-Z0-9]+-\d+)/i);
+        const issueKey = match ? match[1] : undefined;
+
+        if (!issueKey) {
+            throw new Error('Issue key not found in URL');
+        }
+
+        // Try to find the site by hostname
+        const site = Container.siteManager.getSiteForHostname(ProductJira, hostname);
+
+        if (!site) {
+            throw new Error(`No site found for hostname: ${hostname}`);
+        }
+
+        await showIssueForSiteIdAndKey(site.id, issueKey);
+    } catch (e) {
+        vscode.window.showErrorMessage('Invalid URL.');
+        Logger.error(e, 'Could not show issue for URL');
+    }
+}
 export async function showIssueForSiteIdAndKey(siteId: string, issueKey: string) {
     const site: DetailedSiteInfo | undefined = Container.siteManager.getSiteForId(ProductJira, siteId);
 

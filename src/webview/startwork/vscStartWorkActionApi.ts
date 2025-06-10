@@ -26,12 +26,18 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         return repoDetails;
     }
 
-    async getRepoScmState(
-        wsRepo: WorkspaceRepo,
-    ): Promise<{ localBranches: Branch[]; remoteBranches: Branch[]; hasSubmodules: boolean }> {
+    async getRepoScmState(wsRepo: WorkspaceRepo): Promise<{
+        userName: string;
+        userEmail: string;
+        localBranches: Branch[];
+        remoteBranches: Branch[];
+        hasSubmodules: boolean;
+    }> {
         const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
 
         return {
+            userName: (await scm.getConfig('user.name')) || (await scm.getGlobalConfig('user.name')),
+            userEmail: (await scm.getConfig('user.email')) || (await scm.getGlobalConfig('user.email')),
             localBranches: await scm.getBranches({ remote: false }),
             remoteBranches: await scm.getBranches({ remote: true }),
             hasSubmodules: scm.state.submodules.length > 0,

@@ -6,7 +6,7 @@ case `uname -s` in
     *)          CODEPATH=~/.config/Code;;
 esac
 
-OLDSTATE=`sqlite3 ${CODEPATH}/User/globalStorage/state.vscdb 'select value from ItemTable where key = "atlassian.atlascode";'`
+OLDSTATE=`sqlite3 "${CODEPATH}/User/globalStorage/state.vscdb" 'select value from ItemTable where key = "atlassian.atlascode";'`
 
 if [ -z `command -v jq` ]
 then
@@ -54,9 +54,9 @@ then
 	echo "Previous contents of global store $OLDSTATE"
 
 	NEWSTATE=`echo $OLDSTATE | jq -c "del(.$2)"`
-	sqlite3 ${CODEPATH}/User/globalStorage/state.vscdb "UPDATE ItemTable SET value = '$NEWSTATE' WHERE key = \"atlassian.atlascode\";"
+	sqlite3 "${CODEPATH}/User/globalStorage/state.vscdb" "UPDATE ItemTable SET value = '$NEWSTATE' WHERE key = \"atlassian.atlascode\";"
 
-	ACTUALNEWSTATE=`sqlite3 ${CODEPATH}/User/globalStorage/state.vscdb 'select value from ItemTable where key = "atlassian.atlascode";' | jq '.'`
+	ACTUALNEWSTATE=`sqlite3 "${CODEPATH}/User/globalStorage/state.vscdb" 'select value from ItemTable where key = "atlassian.atlascode";' | jq '.'`
 
 	echo "New contents of global store $ACTUALNEWSTATE"
 fi

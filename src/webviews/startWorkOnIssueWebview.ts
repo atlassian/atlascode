@@ -114,7 +114,7 @@ export class StartWorkOnIssueWebview
                             const currentUserId = issue.siteDetails.userId;
                             await assignIssue(issue, currentUserId);
                             if (e.setupJira && issue.status.id !== e.transition.to.id) {
-                                await transitionIssue(issue, e.transition);
+                                await transitionIssue(issue, e.transition, { source: 'startWork' });
                             }
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',

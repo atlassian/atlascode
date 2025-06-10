@@ -15,6 +15,7 @@ export interface RemoveAuthInfoEvent extends AuthInfoEvent {
     type: AuthChangeType.Remove;
     product: Product;
     credentialId: string;
+    userId: string;
 }
 
 export interface Product {

@@ -7,6 +7,7 @@ export interface AnalyticsApi {
     fireUpgradedEvent(version: string, previousVersion: string): Promise<void>;
     fireLaunchedEvent(
         location: string,
+        ideUriScheme: string,
         numJiraCloudAuthed: number,
         numJiraDcAuthed: number,
         numBitbucketCloudAuthed: number,

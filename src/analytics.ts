@@ -5,7 +5,7 @@ import { CreatePrTerminalSelection, UIErrorInfo } from './analyticsTypes';
 import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira, SiteInfo } from './atlclients/authInfo';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
-import { NotificationSurface } from './views/notifications/notificationManager';
+import { NotificationSurface, NotificationType } from './views/notifications/notificationManager';
 
 // IMPORTANT
 // Make sure there is a corresponding event with the correct attributes in the Data Portal for any event created here.
@@ -54,6 +54,7 @@ export async function upgradedEvent(version: string, previousVersion: string): P
 
 export async function launchedEvent(
     location: string,
+    ideUriScheme: string,
     numJiraCloudAuthed: number,
     numJiraDcAuthed: number,
     numBitbucketCloudAuthed: number,
@@ -63,10 +64,11 @@ export async function launchedEvent(
         attributes: {
             machineId: Container.machineId,
             extensionLocation: location,
-            numJiraCloudAuthed: numJiraCloudAuthed,
-            numJiraDcAuthed: numJiraDcAuthed,
-            numBitbucketCloudAuthed: numBitbucketCloudAuthed,
-            numBitbucketDcAuthed: numBitbucketDcAuthed,
+            ideUriScheme,
+            numJiraCloudAuthed,
+            numJiraDcAuthed,
+            numBitbucketCloudAuthed,
+            numBitbucketDcAuthed,
         },
     });
 }
@@ -198,8 +200,15 @@ export async function issueCreatedEvent(site: DetailedSiteInfo, issueKey: string
     return instanceTrackEvent(site, 'created', 'issue', { actionSubjectId: issueKey });
 }
 
-export async function issueTransitionedEvent(site: DetailedSiteInfo, issueKey: string): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'transitioned', 'issue', { actionSubjectId: issueKey });
+export async function issueTransitionedEvent(
+    site: DetailedSiteInfo,
+    issueKey: string,
+    source?: string,
+): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'transitioned', 'issue', {
+        actionSubjectId: issueKey,
+        ...(source && { source }), // Only include source if it is defined
+    });
 }
 
 export async function issueUrlCopiedEvent(): Promise<TrackEvent> {
@@ -711,6 +720,31 @@ export async function createPrTerminalLinkPanelButtonClickedEvent(
             source: source,
             attributes: {
                 buttonType: type,
+            },
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function notificationActionButtonClickedEvent(
+    uri: Uri,
+    notificationData: { surface: NotificationSurface; type: NotificationType },
+    action: string,
+): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'notificationActionButton',
+            attributes: {
+                uri: uri.toString(),
+                action: action,
+                notificationSurface: notificationData.surface,
+                notificationType: notificationData.type,
             },
         },
     };

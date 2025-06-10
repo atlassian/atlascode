@@ -124,7 +124,7 @@ describe('JiraIssueWebview', () => {
     };
 
     const mockNotificationManagerInstance = expansionCastTo<NotificationManagerImpl>({
-        clearNotifications: jest.fn(),
+        clearNotificationsByUri: jest.fn(),
     });
 
     beforeEach(() => {
@@ -197,7 +197,7 @@ describe('JiraIssueWebview', () => {
 
             expect(jiraIssueWebview['_issue']).toEqual(mockIssue);
             expect(invalidateSpy).toHaveBeenCalled();
-            expect(mockNotificationManagerInstance.clearNotifications).toHaveBeenCalled();
+            expect(mockNotificationManagerInstance.clearNotificationsByUri).toHaveBeenCalled();
         });
 
         test('should set icon path correctly', () => {
@@ -977,7 +977,7 @@ describe('JiraIssueWebview', () => {
 
             await jiraIssueWebview['onMessageReceived'](msg);
 
-            expect(transitionIssue).toHaveBeenCalledWith(mockIssue, transition);
+            expect(transitionIssue).toHaveBeenCalledWith(mockIssue, transition, { source: 'jiraIssueWebview' });
             expect(jiraIssueWebview['_editUIData'].fieldValues['status']).toBe(transition.to);
             expect(forceUpdateSpy).toHaveBeenCalledWith(true);
         });
