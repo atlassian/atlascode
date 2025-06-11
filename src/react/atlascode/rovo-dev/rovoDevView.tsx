@@ -4,7 +4,7 @@ import SendIcon from '@atlaskit/icon/glyph/send';
 import { Marked } from '@ts-stack/markdown';
 import hljs from 'highlight.js';
 import React, { useCallback, useState } from 'react';
-import { ChatMessage, FetchResponseData } from 'src/rovo-dev/utils';
+import { RovoDevResponse } from 'src/rovo-dev/responseParser';
 
 import { useMessagingApi } from '../messagingApi';
 import * as styles from './rovoDevViewStyles';
@@ -17,6 +17,12 @@ Marked.setOptions({
         return lang ? hljs.highlight(code, { language: lang }).value : hljs.highlightAuto(code).value;
     },
 });
+
+interface ChatMessage {
+    text: string;
+    author: 'User' | 'RovoDev' | 'Tool';
+    timestamp: number;
+}
 
 const RovoDevView: React.FC = () => {
     const [sendButtonDisabled, setSendButtonDisabled] = useState(false);
@@ -57,10 +63,10 @@ const RovoDevView: React.FC = () => {
     );
 
     const handleResponse = useCallback(
-        (data: FetchResponseData) => {
+        (data: RovoDevResponse) => {
             console.log('Received response data:', data);
-            switch (data.part_kind) {
-                case 'text-chunk':
+            switch (data.event_kind) {
+                case 'text':
                     if (data.content === '' || !data.content) {
                         break;
                     }
@@ -79,7 +85,7 @@ const RovoDevView: React.FC = () => {
                     appendCurrentResponse(`\n\nTool return: ${data.tool_name} -> ${data.content}\n\n`);
                     break;
                 default:
-                    appendCurrentResponse(`\n\nUnknown part_kind: ${data.part_kind}\n\n`);
+                    appendCurrentResponse(`\n\nUnknown part_kind: ${data.event_kind}\n\n`);
                     break;
             }
         },
@@ -90,8 +96,7 @@ const RovoDevView: React.FC = () => {
         (event: any): void => {
             switch (event.type) {
                 case 'response': {
-                    const data = event.dataObject;
-                    handleResponse(data);
+                    handleResponse(event.dataObject);
                     break;
                 }
 
@@ -102,8 +107,8 @@ const RovoDevView: React.FC = () => {
 
                 case 'completeMessage': {
                     const message: ChatMessage = {
-                        text: currentResponse,
-                        author: 'Agent',
+                        text: currentResponse === '...' ? 'Error: Unable to retrieve the response' : currentResponse,
+                        author: 'RovoDev',
                         timestamp: Date.now(),
                     };
                     handleAppendChatHistory(message);
@@ -116,7 +121,7 @@ const RovoDevView: React.FC = () => {
                     if (currentResponse !== '...' && currentResponse.trim()) {
                         const message: ChatMessage = {
                             text: currentResponse,
-                            author: 'Agent',
+                            author: 'RovoDev',
                             timestamp: Date.now(),
                         };
 
@@ -126,9 +131,7 @@ const RovoDevView: React.FC = () => {
                         setCurrentResponse(''); // Reset current response if it was just '...'
                     }
 
-                    const dataObject = event.dataObject;
-
-                    handleResponse(dataObject);
+                    handleResponse(event.dataObject);
                     break;
                 }
                 case 'errorMessage': {
@@ -338,7 +341,7 @@ const RovoDevView: React.FC = () => {
                         }}
                     >
                         <div style={styles.messageHeaderStyles}>
-                            <span style={styles.messageAuthorStyles}>Agent</span>
+                            <span style={styles.messageAuthorStyles}>RovoDev is typing...</span>
                             <span style={styles.messageTimestampStyles}>{new Date().toLocaleTimeString()}</span>
                         </div>
                         <div style={styles.messageContentStyles}>{renderMessageContent(currentResponse)}</div>

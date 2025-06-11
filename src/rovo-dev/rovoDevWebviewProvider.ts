@@ -1,5 +1,4 @@
 import path from 'path';
-import { getHtmlForView } from 'src/webview/common/getHtmlForView';
 import {
     CancellationToken,
     commands,
@@ -16,7 +15,8 @@ import {
     workspace,
 } from 'vscode';
 
-import { FetchPayload, FetchResponseData } from './utils';
+import { getHtmlForView } from '../webview/common/getHtmlForView';
+import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
     private readonly viewType = 'atlascodeRovoDev';
@@ -101,7 +101,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             type: 'errorMessage',
                             message: {
                                 text: `Error: ${error.message}`,
-                                author: 'Agent',
+                                author: 'RovoDev',
                                 timestamp: Date.now(),
                             },
                         });
@@ -134,10 +134,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
         const url = `http://localhost:${port}/v2/chat`;
 
-        const payload: FetchPayload = {
-            message: message,
-        };
-
         if (!this._webView) {
             console.error('Webview is not initialized.');
             return;
@@ -160,7 +156,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(payload),
+                body: JSON.stringify({
+                    message: message,
+                }),
             });
 
             if (!response.body) {
@@ -169,64 +167,70 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
-            let buffer = '';
+            const parser = new RovoDevResponseParser();
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) {
-                    // Send final complete message when stream ends
-                    await this._webView.postMessage({
-                        type: 'completeMessage',
-                    });
                     break;
                 }
-                buffer += decoder.decode(value, { stream: true });
 
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';
+                const data = decoder.decode(value, { stream: true });
+                const responses = parser.parse(data);
 
-                for (const line of lines) {
-                    const trimmed = line.trim();
-                    if (trimmed.startsWith('data:')) {
-                        try {
-                            const data: FetchResponseData = JSON.parse(trimmed.substring(5).trim());
-                            const part_kind = data.part_kind;
-
-                            if (part_kind === 'tool-call') {
-                                // Handle tool call response
-                                await this._webView.postMessage({
-                                    type: 'toolCall',
-                                    dataObject: data,
-                                });
-                            } else if (part_kind === 'tool-result') {
-                                // Handle tool result response
-                                await this._webView.postMessage({
-                                    type: 'toolResult',
-                                    dataObject: data,
-                                });
-                            } else {
-                                await this._webView.postMessage({
-                                    type: 'response',
-                                    dataObject: data,
-                                });
-                            }
-                        } catch (err) {
-                            // Ignore JSON parse errors for incomplete lines
-                            console.error('Error parsing JSON from response:', err);
-                        }
-                    }
+                for (const message of responses) {
+                    await this.processResponse(message);
                 }
             }
+
+            const lastMessage = parser.flush();
+            if (lastMessage) {
+                await this.processResponse(lastMessage);
+            }
+
+            // Send final complete message when stream ends
+            await this._webView.postMessage({
+                type: 'completeMessage',
+            });
         } catch (error) {
             console.error('Error fetching data:', error);
             await this._webView.postMessage({
                 type: 'errorMessage',
                 message: {
                     text: `Error: ${error.message}`,
-                    author: 'Agent',
+                    author: 'RovoDev',
                     timestamp: Date.now(),
                 },
             });
+        }
+    }
+
+    private processResponse(response: RovoDevResponse): Thenable<boolean> {
+        console.warn(`${response.event_kind} ${(response as any).content}`);
+        const webView = this._webView!;
+
+        switch (response.event_kind) {
+            case 'text':
+                return webView.postMessage({
+                    type: 'response',
+                    dataObject: response,
+                });
+
+            case 'tool-call':
+                return webView.postMessage({
+                    type: 'toolCall',
+                    dataObject: response,
+                });
+
+            case 'tool-return':
+            case 'retry-prompt':
+                return webView.postMessage({
+                    type: 'toolResult',
+                    dataObject: response,
+                });
+
+            default:
+                return Promise.resolve(false);
         }
     }
 
