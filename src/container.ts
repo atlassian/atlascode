@@ -39,6 +39,7 @@ import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManage
 import { SearchJiraHelper } from './views/jira/searchJiraHelper';
 import { CustomJQLViewProvider } from './views/jira/treeViews/customJqlViewProvider';
 import { AssignedWorkItemsViewProvider } from './views/jira/treeViews/jiraAssignedWorkItemsViewProvider';
+import { CheckboxStateManager } from './views/nodes/checkBoxStateManager';
 import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
 import { VSCAnalyticsApi } from './vscAnalyticsApi';
 import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
@@ -73,6 +74,8 @@ export class Container {
 
     static async initialize(context: ExtensionContext, config: IConfig, version: string) {
         const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
+
+        this._checkboxStateManager = new CheckboxStateManager(context);
 
         this._analyticsClient = analyticsClient({
             origin: 'desktop',
@@ -402,5 +405,10 @@ export class Container {
     private static _onboardingProvider: OnboardingProvider;
     public static get onboardingProvider() {
         return this._onboardingProvider;
+    }
+
+    private static _checkboxStateManager: CheckboxStateManager;
+    public static get checkboxStateManager() {
+        return this._checkboxStateManager;
     }
 }

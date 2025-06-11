@@ -1,5 +1,6 @@
 import path from 'path';
-import { commands, ConfigurationChangeEvent, QuickPickItem, window } from 'vscode';
+import { commands, ConfigurationChangeEvent, EventEmitter, QuickPickItem, TreeItemCheckboxState, window } from 'vscode';
+import { TreeView } from 'vscode';
 
 import { BitbucketContext } from '../../bitbucket/bbContext';
 import { PullRequest, WorkspaceRepo } from '../../bitbucket/model';
@@ -10,6 +11,9 @@ import { Container } from '../../container';
 import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 import { BitbucketExplorer } from '../BitbucketExplorer';
 import { BaseTreeDataProvider } from '../Explorer';
+import { AbstractBaseNode } from '../nodes/abstractBaseNode';
+import { DirectoryNode } from '../nodes/directoryNode';
+import { PullRequestFilesNode } from '../nodes/pullRequestFilesNode';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { PullRequestCreatedMonitor } from './pullRequestCreatedMonitor';
 
@@ -25,6 +29,29 @@ export class PullRequestsExplorer extends BitbucketExplorer {
             }),
             commands.registerCommand(Commands.CreatePullRequest, () => this.pickRepoAndShowCreatePR()),
         );
+    }
+
+    private _onDidChangeTreeData = new EventEmitter<AbstractBaseNode | undefined>();
+
+    protected newTreeView(): TreeView<AbstractBaseNode> | undefined {
+        super.newTreeView();
+        this.setupCheckboxHandling();
+        return this.treeView;
+    }
+
+    private setupCheckboxHandling(): void {
+        if (!this.treeView) {
+            return;
+        }
+        this.treeView.onDidChangeCheckboxState((event) => {
+            event.items.forEach(([item, state]) => {
+                const checked = state === TreeItemCheckboxState.Checked;
+                if (item instanceof PullRequestFilesNode || item instanceof DirectoryNode) {
+                    item.checked = checked;
+                    this._onDidChangeTreeData.fire(item);
+                }
+            });
+        });
     }
 
     private pickRepoAndShowCreatePR(): void {

@@ -19,6 +19,7 @@ import { Logger } from '../../logger';
 import { Resources } from '../../resources';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { CommitSectionNode } from '../nodes/commitSectionNode';
+import { FilesRootNode } from '../nodes/FilesRootNode';
 import { RelatedIssuesNode } from '../nodes/relatedIssuesNode';
 import { SimpleNode } from '../nodes/simpleNode';
 import { createFileChangesNodes } from './diffViewHelper';
@@ -105,7 +106,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             // update loadedChildren with critical data without commits
             this.loadedChildren = [
                 ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, [], true)] : []),
-                ...fileChangedNodes,
+                new FilesRootNode(fileChangedNodes, this),
             ];
         } catch (error) {
             Logger.debug('error fetching pull request details', error);
@@ -133,7 +134,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             this.loadedChildren = [
                 ...(this.pr.site.details.isCloud ? [new CommitSectionNode(this.pr, commits)] : []),
                 ...jiraIssueNodes,
-                ...fileNodes,
+                new FilesRootNode(fileNodes, this),
             ];
         } catch (error) {
             Logger.debug('error fetching additional pull request details', error);

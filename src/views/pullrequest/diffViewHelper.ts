@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import path from 'path';
 import * as vscode from 'vscode';
 
@@ -15,6 +16,7 @@ import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { addTasksToCommentHierarchy } from '../../webview/common/pullRequestHelperActions';
+import { GitContentProvider } from '../gitContentProvider';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { DirectoryNode } from '../nodes/directoryNode';
 import { PullRequestFilesNode } from '../nodes/pullRequestFilesNode';
@@ -24,6 +26,7 @@ import { PullRequestCommentController } from './prCommentController';
 
 export interface DiffViewArgs {
     diffArgs: any[];
+    latestFileContentHash?: string;
     fileDisplayData: {
         prUrl: string;
         fileDisplayName: string;
@@ -35,6 +38,7 @@ export interface DiffViewArgs {
 
 export interface PRDirectory {
     name: string;
+    dirPath: string;
     files: DiffViewArgs[];
     subdirs: Map<string, PRDirectory>;
 }
@@ -198,6 +202,13 @@ export async function getArgsForDiffView(
         fileDisplayName,
     ];
 
+    const gitContentProvider = new GitContentProvider(Container.bitbucketContext);
+    const [rhsContent] = await Promise.all([
+        gitContentProvider.provideTextDocumentContent(rhsUri, new vscode.CancellationTokenSource().token),
+    ]);
+    const contentHash = crypto.createHash('md5').update(`${rhsContent}`).digest('hex');
+    const latestFileContentHash = contentHash;
+
     return {
         diffArgs: diffArgs,
         fileDisplayData: {
@@ -208,6 +219,7 @@ export async function getArgsForDiffView(
             isConflicted:
                 conflictedFiles.includes(fileDiff.newPath || '') || conflictedFiles.includes(fileDiff.oldPath || ''),
         },
+        latestFileContentHash: latestFileContentHash,
     };
 }
 
@@ -266,6 +278,7 @@ export async function createFileChangesNodes(
     conflictedFiles: string[],
     tasks: Task[],
     commitRange?: { lhs: string; rhs: string },
+    section?: 'files' | 'commits',
 ): Promise<AbstractBaseNode[]> {
     const allDiffData = await Promise.all(
         fileDiffs.map(async (fileDiff) => {
@@ -287,6 +300,7 @@ export async function createFileChangesNodes(
             name: '',
             files: [],
             subdirs: new Map<string, PRDirectory>(),
+            dirPath: '',
         };
         allDiffData.forEach((diffData) => createdNestedFileStructure(diffData, rootDirectory));
         flattenFileStructure(rootDirectory);
@@ -294,16 +308,16 @@ export async function createFileChangesNodes(
         //While creating the directory, we actually put all the files/folders inside of a root directory. We now want to go one level in.
         const directoryNodes: DirectoryNode[] = Array.from(
             rootDirectory.subdirs.values(),
-            (subdir) => new DirectoryNode(subdir),
+            (subdir) => new DirectoryNode(subdir, section, pr, commitRange?.rhs),
         );
         const childNodes: AbstractBaseNode[] = rootDirectory.files.map(
-            (diffViewArg) => new PullRequestFilesNode(diffViewArg),
+            (diffViewArg) => new PullRequestFilesNode(diffViewArg, section, pr, commitRange?.rhs),
         );
         return childNodes.concat(directoryNodes);
     }
 
     const result: AbstractBaseNode[] = [];
-    result.push(...allDiffData.map((diffData) => new PullRequestFilesNode(diffData)));
+    result.push(...allDiffData.map((diffData) => new PullRequestFilesNode(diffData, section, pr)));
     if (allComments.next) {
         result.push(
             new SimpleNode(
@@ -320,16 +334,20 @@ function createdNestedFileStructure(diffViewData: DiffViewArgs, directory: PRDir
     //If we just have a file, the dirName will be '.', but we don't want to tuck that in the '.' directory, so there's a ternary operation to deal with that
     const splitFileName = [...(dirName === '.' ? [] : dirName.split('/')), baseName];
     let currentDirectory = directory;
+    let currentPath = '';
+
     for (let i = 0; i < splitFileName.length; i++) {
         if (i === splitFileName.length - 1) {
             currentDirectory.files.push(diffViewData); //The last name in the path is the name of the file, so we've reached the end of the file tree
         } else {
             //Traverse the file tree, and if a folder doesn't exist, add it
+            currentPath = currentPath ? `${currentPath}/${splitFileName[i]}` : splitFileName[i];
             if (!currentDirectory.subdirs.has(splitFileName[i])) {
                 currentDirectory.subdirs.set(splitFileName[i], {
                     name: splitFileName[i],
                     files: [],
                     subdirs: new Map<string, PRDirectory>(),
+                    dirPath: currentPath,
                 });
             }
             currentDirectory = currentDirectory.subdirs.get(splitFileName[i])!;
