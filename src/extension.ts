@@ -11,7 +11,7 @@ import { activate as activateCodebucket } from './codebucket/command/registerCom
 import { CommandContext, setCommandContext } from './commandContext';
 import { registerCommands } from './commands';
 import { Configuration, configuration, IConfig } from './config/configuration';
-import { Commands, ExtensionId, GlobalStateVersionKey } from './constants';
+import { Commands, ExtensionId, GlobalStateVersionKey, rovodevInfo } from './constants';
 import { Container } from './container';
 import { registerAnalyticsClient, registerErrorReporting, unregisterErrorReporting } from './errorReporting';
 import { provideCodeLenses } from './jira/todoObserver';
@@ -29,25 +29,20 @@ import { NotificationManagerImpl } from './views/notifications/notificationManag
 
 const AnalyticDelay = 5000;
 
-// Port mapping state key
-const PORT_MAPPING_KEY = 'workspacePortMapping';
-const PORT_RANGE_START = 40000;
-const PORT_RANGE_END = 41000;
-
 // Helper to get a unique port for a workspace
 function getOrAssignPortForWorkspace(context: ExtensionContext, workspacePath: string): number {
-    const mapping = context.globalState.get<{ [key: string]: number }>(PORT_MAPPING_KEY) || {};
+    const mapping = context.globalState.get<{ [key: string]: number }>(rovodevInfo.mappingKey) || {};
     if (mapping[workspacePath]) {
         return mapping[workspacePath];
     }
     // Find an unused port
     const usedPorts = new Set(Object.values(mapping));
-    let port = PORT_RANGE_START;
-    while (usedPorts.has(port) && port <= PORT_RANGE_END) {
+    let port = rovodevInfo.portRange.start;
+    while (usedPorts.has(port) && port <= rovodevInfo.portRange.end) {
         port++;
     }
     mapping[workspacePath] = port;
-    context.globalState.update(PORT_MAPPING_KEY, mapping);
+    context.globalState.update(rovodevInfo.mappingKey, mapping);
     return port;
 }
 
@@ -95,14 +90,25 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
 
 function showWorkspaceLoadedMessageAndStartProcess(context: ExtensionContext) {
     const folders = workspace.workspaceFolders;
-    if (folders && folders.length > 0) {
-        for (const folder of folders) {
-            const port = getOrAssignPortForWorkspace(context, folder.uri.fsPath);
-            window.showInformationMessage(`Workspace loaded: ${folder.name} (port ${port})`);
-            startWorkspaceProcess(context, folder.uri.fsPath, port);
-        }
-    } else {
+
+    if (!folders) {
         window.showInformationMessage('No workspace folders loaded.');
+        return;
+    }
+
+    const globalPort = process.env[rovodevInfo.envVars.port];
+    if (globalPort) {
+        Logger.info(`RovoDev CLI is already running on port ${globalPort}. No new process started.`);
+        window.showInformationMessage(
+            `Looks like we are running in a special fancy way, eh?\nExpecting RovoDev on port ${globalPort}.`,
+        );
+        return;
+    }
+
+    for (const folder of folders) {
+        const port = getOrAssignPortForWorkspace(context, folder.uri.fsPath);
+        window.showInformationMessage(`Workspace loaded: ${folder.name} (port ${port})`);
+        startWorkspaceProcess(context, folder.uri.fsPath, port);
     }
 }
 
