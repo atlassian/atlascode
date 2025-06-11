@@ -1,4 +1,5 @@
 import path from 'path';
+import { rovodevInfo } from 'src/constants';
 import {
     CancellationToken,
     commands,
@@ -116,8 +117,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (!workspaceFolders || workspaceFolders.length === 0) {
             return undefined;
         }
+
+        const globalPort = process.env[rovodevInfo.envVars.port];
+        if (globalPort) {
+            return parseInt(globalPort, 10);
+        }
+
         const wsPath = workspaceFolders[0].uri.fsPath;
-        const mapping = this._globalState.get<{ [key: string]: number }>('workspacePortMapping');
+        const mapping = this._globalState.get<{ [key: string]: number }>(rovodevInfo.mappingKey);
         if (mapping && mapping[wsPath]) {
             return mapping[wsPath];
         }

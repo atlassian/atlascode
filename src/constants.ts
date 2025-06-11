@@ -88,3 +88,15 @@ export const enum Commands {
     DoneIssue = 'atlascode.jira.doneIssue',
     ShowOnboardingFlow = 'atlascode.showOnboardingFlow',
 }
+
+// Rovodev port mapping settings
+export const rovodevInfo = {
+    mappingKey: 'workspacePortMapping',
+    envVars: {
+        port: 'ROVODEV_PORT',
+    },
+    portRange: {
+        start: 40000,
+        end: 41000,
+    },
+};
