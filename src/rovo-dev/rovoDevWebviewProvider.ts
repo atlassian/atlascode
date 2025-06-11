@@ -167,7 +167,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
+
             const parser = new RovoDevResponseParser();
+            parser.onNewMessage((msg) => this.processMessage(msg));
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -176,17 +178,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 }
 
                 const data = decoder.decode(value, { stream: true });
-                const responses = parser.parse(data);
-
-                for (const message of responses) {
-                    await this.processResponse(message);
-                }
+                await parser.parse(data);
             }
 
-            const lastMessage = parser.flush();
-            if (lastMessage) {
-                await this.processResponse(lastMessage);
-            }
+            await parser.flush();
 
             // Send final complete message when stream ends
             await this._webView.postMessage({
@@ -205,7 +200,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    private processResponse(response: RovoDevResponse): Thenable<boolean> {
+    private processMessage(response: RovoDevResponse): Thenable<boolean> {
         console.warn(`${response.event_kind} ${(response as any).content}`);
         const webView = this._webView!;
 
