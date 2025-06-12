@@ -22,7 +22,7 @@ import {
     addPipelinesSchemaToYamlConfig,
     BB_PIPELINES_FILENAME,
 } from './pipelines/yaml/pipelinesYamlHelper';
-import { registerResources } from './resources';
+import { registerResources, Resources } from './resources';
 import { GitExtension } from './typings/git';
 import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
 import { NotificationManagerImpl } from './views/notifications/notificationManager';
@@ -61,29 +61,35 @@ function stopWorkspaceProcess(workspacePath: string) {
 // Helper to start the background process
 function startWorkspaceProcess(context: ExtensionContext, workspacePath: string, port: number) {
     stopWorkspaceProcess(workspacePath);
-    const rovoDevPath = workspace.getConfiguration('atlascode.rovodev').get<string>('executablePath') || undefined;
+    const rovoDevPath = Resources.rovoDevPath;
     const userEmail = workspace.getConfiguration('atlascode.rovodev').get<string>('email') || undefined;
     const authToken = workspace.getConfiguration('atlascode.rovodev').get<string>('apiKey') || undefined;
     if (!rovoDevPath || !userEmail || !authToken) {
         window.showErrorMessage('Environment variables is not set for Rovo Dev. Cannot start the process.');
         return;
     }
-    // Use 'yes' as a dummy process, replace with your real service as needed
+    const logFilePath = `${workspacePath}/tmp/log`;
+    const logStream = require('fs').createWriteStream(logFilePath, { flags: 'a' });
+
     const proc = spawn(rovoDevPath, [`serve`, `${port}`], {
         cwd: workspacePath,
-        stdio: 'ignore', // Don't clutter output
+        stdio: 'pipe',
         detached: true,
         env: {
-            // pass vars one  by one
             USER_EMAIL: userEmail,
             USER_API_TOKEN: authToken,
         },
     });
+
+    proc.stdout?.pipe(logStream);
+    proc.stderr?.pipe(logStream);
+
     proc.on('exit', (code, signal) => {
         window.showErrorMessage(
             `Process for workspace ${workspacePath} exited unexpectedly with code ${code} and signal ${signal}`,
         );
         delete workspaceProcessMap[workspacePath];
+        logStream.end(); // Close the log stream
     });
     workspaceProcessMap[workspacePath] = proc;
 }

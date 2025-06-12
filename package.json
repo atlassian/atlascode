@@ -861,10 +861,6 @@
                     "type": "string",
                     "description": "The API key used to authenticate with Rovo Dev"
                 },
-                "atlascode.rovodev.executablePath": {
-                    "type": "string",
-                    "description": "The absolute path to the Rovo Dev executable"
-                },
                 "atlascode.outputLevel": {
                     "type": "string",
                     "default": "silent",
