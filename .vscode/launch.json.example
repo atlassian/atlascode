@@ -16,7 +16,8 @@
             "outFiles": [
                 "${workspaceFolder}/build/**/*.js"
             ],
-            "preLaunchTask": "npm: devcompile"
+            "preLaunchTask": "npm: devcompile",
+            "envFile": "${workspaceFolder}/.env"
         },
         {
             // This configuration requires npm run dev to be running externally
@@ -31,6 +32,7 @@
             "outFiles": [
                 "${workspaceFolder}/build/**/*.js"
             ],
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }
