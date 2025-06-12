@@ -71,7 +71,6 @@ export class Container {
     private static _commonMessageHandler: CommonActionMessageHandler;
     private static _bitbucketHelper: CheckoutHelper;
     private static _assignedWorkItemsView: AssignedWorkItemsViewProvider;
-    public static rovodevWebviewProvder: RovoDevWebviewProvider;
 
     static async initialize(context: ExtensionContext, config: IConfig, version: string) {
         const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
@@ -198,11 +197,11 @@ export class Container {
         SearchJiraHelper.initialize();
         context.subscriptions.push(new CustomJQLViewProvider());
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
+        context.subscriptions.push(
+            (this._rovodevWebviewProvder = new RovoDevWebviewProvider(context.extensionPath, context.globalState)),
+        );
 
         this._onboardingProvider = new OnboardingProvider();
-
-        this.rovodevWebviewProvder = new RovoDevWebviewProvider(context.extensionPath, context.globalState);
-        context.subscriptions.push(this.rovodevWebviewProvder);
     }
 
     static focus() {
@@ -403,5 +402,10 @@ export class Container {
     private static _onboardingProvider: OnboardingProvider;
     public static get onboardingProvider() {
         return this._onboardingProvider;
+    }
+
+    private static _rovodevWebviewProvder: RovoDevWebviewProvider;
+    public static get rovodevWebviewProvder() {
+        return this._rovodevWebviewProvder;
     }
 }

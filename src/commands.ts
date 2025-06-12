@@ -49,12 +49,12 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 })
                 .then((text) => {
                     if (text?.trim()) {
-                        Container.rovodevWebviewProvder.invoke(text);
+                        Container.rovodevWebviewProvder.invokePrompt(text);
                     }
                 });
         }),
         commands.registerCommand(Commands.RovodevNewSession, () => {
-            Container.rovodevWebviewProvder.reset();
+            Container.rovodevWebviewProvder.executeReset();
         }),
         commands.registerCommand(Commands.ShowConfigPage, () =>
             Container.settingsWebviewFactory.createOrShow({

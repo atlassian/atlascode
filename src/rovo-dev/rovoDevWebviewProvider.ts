@@ -1,5 +1,6 @@
 import path from 'path';
 import { rovodevInfo } from 'src/constants';
+import { setTimeout } from 'timers/promises';
 import {
     CancellationToken,
     commands,
@@ -22,18 +23,22 @@ import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
     private readonly viewType = 'atlascodeRovoDev';
     private _webView?: Webview;
+    private _rovoDevApiUrl?: string;
+    private _replayDone = false;
 
     private _disposables: Disposable[] = [];
 
     private _globalState: Memento;
     private _extensionPath: string;
 
-    constructor(extensionPath: string, globalState: import('vscode').Memento) {
+    constructor(extensionPath: string, globalState: Memento) {
         super(() => {
             this._dispose();
         });
+
         this._extensionPath = extensionPath;
         this._globalState = globalState;
+
         // Register the webview view provider
         this._disposables.push(
             window.registerWebviewViewProvider('atlascode.views.rovoDev.webView', this, {
@@ -110,6 +115,39 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     break;
             }
         });
+
+        this.waitFor(() => this.executeHealthcheck(), 10000, 500).then(async (result) => {
+            if (result) {
+                await this.executeReplay();
+            } else {
+                await webviewView.webview.postMessage({
+                    type: 'errorMessage',
+                    message: {
+                        text: `Error: Unable to initialize RovoDev at "${this._rovoDevApiUrl}". Service wasn't ready within 10000ms`,
+                        author: 'RovoDev',
+                        timestamp: Date.now(),
+                    },
+                });
+            }
+
+            // sets this flag regardless are we are not going to retry the replay anymore
+            this._replayDone = true;
+
+            // send this message regardless, so the UI can unblock the send button
+            await webviewView.webview.postMessage({
+                type: 'initialized',
+            });
+        });
+    }
+
+    private initializeApiUrl(): boolean {
+        const rovoDevPort = this.getWorkspacePort();
+        if (!rovoDevPort) {
+            return false;
+        } else {
+            this._rovoDevApiUrl = `http://localhost:${rovoDevPort}`;
+            return true;
+        }
     }
 
     private getWorkspacePort(): number | undefined {
@@ -120,7 +158,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         const globalPort = process.env[rovodevInfo.envVars.port];
         if (globalPort) {
-            return parseInt(globalPort, 10);
+            return parseInt(globalPort);
         }
 
         const wsPath = workspaceFolders[0].uri.fsPath;
@@ -128,19 +166,19 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (mapping && mapping[wsPath]) {
             return mapping[wsPath];
         }
+
         return undefined;
     }
 
-    private async processPromptMessage(message: string) {
-        const port = this.getWorkspacePort();
-        if (!port) {
-            window.showErrorMessage(
-                'No port mapping found for this workspace. Please ensure the background service is running.',
-            );
-            return;
+    private fetchApi(input: string, init?: RequestInit): Promise<Response> {
+        if (!this._rovoDevApiUrl && !this.initializeApiUrl()) {
+            throw new Error('Unable to initialize the RovoDev service URI');
         }
-        const url = `http://localhost:${port}/v2/chat`;
 
+        return fetch(this._rovoDevApiUrl + input, init);
+    }
+
+    private async processPromptMessage(message: string) {
         if (!this._webView) {
             console.error('Webview is not initialized.');
             return;
@@ -156,18 +194,25 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             },
         });
 
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    accept: 'text/event-stream',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    message: message,
-                }),
-            });
+        const fetchOp = this.fetchApi('/v2/chat', {
+            method: 'POST',
+            headers: {
+                accept: 'text/event-stream',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+            }),
+        });
 
+        await this.processResponse(fetchOp);
+    }
+
+    private async processResponse(fetchOp: Promise<Response>) {
+        const webview = this._webView!;
+
+        try {
+            const response = await fetchOp;
             if (!response.body) {
                 throw new Error('No response body');
             }
@@ -178,6 +223,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             const parser = new RovoDevResponseParser();
             parser.onNewMessage((msg) => this.processMessage(msg));
 
+            let messagesSent = 0;
+
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) {
@@ -185,18 +232,20 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 }
 
                 const data = decoder.decode(value, { stream: true });
-                await parser.parse(data);
+                messagesSent += parser.parse(data);
             }
 
-            await parser.flush();
+            messagesSent += parser.flush();
 
-            // Send final complete message when stream ends
-            await this._webView.postMessage({
-                type: 'completeMessage',
-            });
+            if (messagesSent) {
+                // Send final complete message when stream ends
+                await webview.postMessage({
+                    type: 'completeMessage',
+                });
+            }
         } catch (error) {
             console.error('Error fetching data:', error);
-            await this._webView.postMessage({
+            await webview.postMessage({
                 type: 'errorMessage',
                 message: {
                     text: `Error: ${error.message}`,
@@ -231,41 +280,81 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     dataObject: response,
                 });
 
+            case 'user-prompt':
+                if (!this._replayDone) {
+                    return webView.postMessage({
+                        type: 'userChatMessage',
+                        message: {
+                            text: response.content,
+                            author: 'User',
+                            timestamp: response.timestamp,
+                        },
+                    });
+                }
+                return Promise.resolve(false);
+
             default:
                 return Promise.resolve(false);
         }
     }
 
-    private _dispose() {
-        this._disposables.forEach((d) => d.dispose());
-        this._disposables = [];
-        if (this._webView) {
-            this._webView = undefined;
-        }
-    }
-
-    async reset(): Promise<void> {
+    async executeReset(): Promise<void> {
         if (!this._webView) {
             console.error('Webview is not initialized.');
             return;
         }
 
         try {
-            await fetch('http://localhost:8899/v2/reset', {
+            await this.fetchApi('/v2/reset', {
                 method: 'POST',
             });
-        } finally {
+
             await this._webView.postMessage({
                 type: 'newSession',
+            });
+        } catch (error) {
+            await this._webView.postMessage({
+                type: 'errorMessage',
+                message: {
+                    text: `Error: ${error.message}`,
+                    author: 'RovoDev',
+                    timestamp: Date.now(),
+                },
             });
         }
     }
 
-    async invoke(prompt: string): Promise<void> {
+    async executeReplay(): Promise<void> {
+        const fetchOp = this.fetchApi('/v2/replay', {
+            method: 'POST',
+            headers: {
+                accept: 'text/event-stream',
+                'Content-Type': 'application/json',
+            },
+        });
+
+        await this.processResponse(fetchOp);
+    }
+
+    async executeHealthcheck(): Promise<boolean> {
+        if (!this._webView) {
+            return false;
+        }
+
+        try {
+            await this.fetchApi('/v2/tools');
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    async invokePrompt(prompt: string): Promise<void> {
         // focus on the specific vscode view
         commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+
         // Wait for the webview to initialize, up to 5 seconds
-        const initialized = await this.waitForWebview();
+        const initialized = await this.waitFor(() => !!this._webView, 5000, 50);
         if (!initialized) {
             console.error('Webview is not initialized after waiting.');
             return;
@@ -275,13 +364,25 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await this.processPromptMessage(prompt);
     }
 
-    private async waitForWebview(timeoutMs = 5000): Promise<boolean> {
-        const interval = 50;
-        let waited = 0;
-        while (!this._webView && waited < timeoutMs) {
-            await new Promise((res) => setTimeout(res, interval));
-            waited += interval;
+    private async waitFor(
+        check: () => Promise<boolean> | boolean,
+        timeoutMs: number,
+        interval: number,
+    ): Promise<boolean> {
+        let result = await check();
+        while (!result && timeoutMs) {
+            await setTimeout(interval);
+            timeoutMs -= interval;
+            result = await check();
         }
-        return !!this._webView;
+        return result;
+    }
+
+    private _dispose() {
+        this._disposables.forEach((d) => d.dispose());
+        this._disposables = [];
+        if (this._webView) {
+            this._webView = undefined;
+        }
     }
 }

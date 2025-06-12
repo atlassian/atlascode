@@ -180,7 +180,9 @@ export class RovoDevResponseParser {
     private _onNewMessage = new EventEmitter<RovoDevResponse>();
     readonly onNewMessage = this._onNewMessage.event;
 
-    async parse(data: string): Promise<void> {
+    parse(data: string): number {
+        let messagesSent = 0;
+
         this.buffer += data;
         const responseChunks = this.buffer.split(/\r?\n\r?\n/g);
 
@@ -210,9 +212,7 @@ export class RovoDevResponseParser {
 
             if (event_kind === 'part_start') {
                 // flsuh previous type, this is the beginning of a new multi-part response
-                if (this.previousChunk) {
-                    this._onNewMessage.fire(this.previousChunk);
-                }
+                messagesSent += this.firePreviousChunk();
 
                 const event_kind_inner = data.part.part_kind;
                 const data_inner = data.part;
@@ -221,8 +221,7 @@ export class RovoDevResponseParser {
                 if (event_kind_inner === 'text') {
                     // if the event is a text message, send them out immediately instead
                     // of waiting for it to be fully reconstructed
-                    this._onNewMessage.fire(this.previousChunk);
-                    this.previousChunk = undefined;
+                    messagesSent += this.firePreviousChunk();
                 }
             } else if (event_kind === 'part_delta') {
                 // continuation of a multi-part response
@@ -233,32 +232,37 @@ export class RovoDevResponseParser {
                 if (event_kind_inner === 'text') {
                     // if the event is a text message, send them out immediately instead
                     // of waiting for it to be fully reconstructed
-                    this._onNewMessage.fire(this.previousChunk);
-                    this.previousChunk = undefined;
+                    messagesSent += this.firePreviousChunk();
                 }
             } else {
                 // flsuh previous type, this new event is not part of a multi-part response
-                if (this.previousChunk) {
-                    this._onNewMessage.fire(this.previousChunk);
-                    this.previousChunk = undefined;
-                }
+                messagesSent += this.firePreviousChunk();
 
-                const chunk = parseGenericReponse(event_kind, data);
-                this._onNewMessage.fire(chunk);
+                this.previousChunk = parseGenericReponse(event_kind, data);
+                messagesSent += this.firePreviousChunk();
             }
         }
+
+        return messagesSent;
     }
 
-    async flush(): Promise<void> {
+    flush(): number {
         // if there is still data in the buffer, something went wrong.
         if (this.buffer) {
             throw new Error('RovoDev parser error: flushed with non-empty buffer');
         }
 
+        return this.firePreviousChunk();
+    }
+
+    private firePreviousChunk(): number {
         if (this.previousChunk) {
             this._onNewMessage.fire(this.previousChunk);
             this.previousChunk = undefined;
+            return 1;
         }
+
+        return 0;
     }
 }
 

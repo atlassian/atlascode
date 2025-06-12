@@ -25,7 +25,7 @@ interface ChatMessage {
 }
 
 const RovoDevView: React.FC = () => {
-    const [sendButtonDisabled, setSendButtonDisabled] = useState(false);
+    const [sendButtonDisabled, setSendButtonDisabled] = useState(true);
     const [promptContainerFocused, setPromptContainerFocused] = useState(false);
 
     const [promptText, setPromptText] = useState('');
@@ -143,6 +143,11 @@ const RovoDevView: React.FC = () => {
 
                 case 'newSession': {
                     setChatHistory([]);
+                    break;
+                }
+
+                case 'initialized': {
+                    setSendButtonDisabled(false);
                     break;
                 }
 
