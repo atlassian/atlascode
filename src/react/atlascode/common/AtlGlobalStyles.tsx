@@ -19,6 +19,12 @@ const useStyles = makeStyles(
                     'overflow-x': 'auto',
                     'vertical-align': 'middle',
                 },
+                'pre code': {
+                    background: 'var(--vscode-editor-background)',
+                    'border-radius': '4px',
+                    border: '1px solid var(--vscode-editorWidget-border)',
+                    width: '100%',
+                },
                 'img.emoji': {
                     'max-height': '1.5em',
                     'vertical-align': 'middle',
@@ -259,11 +265,11 @@ const useStyles = makeStyles(
                 '.suggestion-item-list': { background: '#fff', border: '1px solid #999' },
                 '.suggestion-item': { padding: '5px' },
                 '.suggestion-item:before': { borderTop: '1px solid' },
+
                 'pre code.hljs': {
                     display: 'block',
                     'overflow-x': 'auto',
                     padding: '1em',
-                    background: 'var(--vscode-editor-background)',
                 },
                 'code.hljs': {
                     padding: '3px 5px',
@@ -288,73 +294,73 @@ const useStyles = makeStyles(
                     color: '#569CD6',
                 },
                 '.hljs-link': {
-                    color: '#569CD6',
+                    color: 'var(--vscode-textLink-foreground)',
                     'text-decoration': 'underline',
                 },
                 '.hljs-built_in': {
-                    color: '#4EC9B0',
+                    color: 'var(--vscode-symbolIcon-functionForeground)',
                 },
                 '.hljs-type': {
-                    color: '#4EC9B0',
+                    color: 'var(--vscode-symbolIcon-typeForeground)',
                 },
                 '.hljs-number': {
-                    color: '#B8D7A3',
+                    color: 'var(--vscode-symbolIcon-numberParameterForeground)',
                 },
                 '.hljs-class': {
-                    color: '#B8D7A3',
+                    color: 'var(--vscode-symbolIcon-classForeground)',
                 },
                 '.hljs-string': {
-                    color: '#D69D85',
+                    color: 'var(--vscode-symbolIcon-stringForeground)',
                 },
                 '.hljs-meta .hljs-string': {
-                    color: '#D69D85',
+                    color: 'var(--vscode-symbolIcon-stringForeground)',
                 },
                 '.hljs-regexp': {
-                    color: '#9A5334',
+                    color: 'var(--vscode-symbolIcon-regexForeground)',
                 },
                 '.hljs-template-tag': {
-                    color: '#9A5334',
+                    color: 'var(--vscode-symbolIcon-operatorForeground)',
                 },
                 '.hljs-subst': {
-                    color: '#DCDCDC',
+                    color: 'var(--vscode-editor-foreground)',
                 },
                 '.hljs-function': {
-                    color: '#DCDCDC',
+                    color: 'var(--vscode-symbolIcon-functionForeground)',
                 },
                 '.hljs-title': {
-                    color: '#DCDCDC',
+                    color: 'var(--vscode-editor-foreground)',
                 },
                 '.hljs-params': {
-                    color: '#DCDCDC',
+                    color: 'var(--vscode-editor-foreground)',
                 },
                 '.hljs-formula': {
-                    color: '#DCDCDC',
+                    color: 'var(--vscode-editor-foreground)',
                 },
                 '.hljs-comment': {
-                    color: '#57A64A',
+                    color: 'var(--vscode-textPreformat-foreground)',
                     'font-style': 'italic',
                 },
                 '.hljs-quote': {
-                    color: '#57A64A',
+                    color: 'var(--vscode-textPreformat-foreground)',
                     'font-style': 'italic',
                 },
                 '.hljs-doctag': {
                     color: '#608B4E',
                 },
                 '.hljs-meta': {
-                    color: '#9B9B9B',
+                    color: 'var(--vscode-editor-foreground)',
                 },
                 '.hljs-meta .hljs-keyword': {
-                    color: '#9B9B9B',
+                    color: 'var(--vscode-editor-foreground)',
                 },
                 '.hljs-tag': {
-                    color: '#9B9B9B',
+                    color: 'var(--vscode-editor-foreground)',
                 },
                 '.hljs-variable': {
-                    color: '#BD63C5',
+                    color: 'var(--vscode-symbolIcon-variableForeground)',
                 },
                 '.hljs-template-variable': {
-                    color: '#BD63C5',
+                    color: 'var(--vscode-symbolIcon-variableForeground)',
                 },
                 '.hljs-attr': {
                     color: '#9CDCFE',
@@ -373,30 +379,30 @@ const useStyles = makeStyles(
                 },
 
                 '.hljs-bullet': {
-                    color: '#D7BA7D',
+                    color: 'var(--vscode-symbolIcon-keywordForeground)',
                 },
                 '.hljs-selector-tag': {
-                    color: '#D7BA7D',
+                    color: 'var(--vscode-symbolIcon-keywordForeground)',
                 },
                 '.hljs-selector-id': {
-                    color: '#D7BA7D',
+                    color: 'var(--vscode-symbolIcon-constantForeground)',
                 },
                 '.hljs-selector-class': {
-                    color: '#D7BA7D',
+                    color: 'var(--vscode-symbolIcon-classForeground)',
                 },
                 '.hljs-selector-attr': {
-                    color: '#D7BA7D',
+                    color: 'var(--vscode-symbolIcon-propertyForeground)',
                 },
                 '.hljs-selector-pseudo': {
-                    color: '#D7BA7D',
+                    color: 'var(--vscode-symbolIcon-keywordForeground)',
                 },
                 '.hljs-addition': {
-                    'background-color': '#144212',
+                    'background-color': 'var(--vscode-diffEditor-insertedTextBackground)',
                     display: 'inline-block',
                     width: '100%',
                 },
                 '.hljs-deletion': {
-                    'background-color': '#600',
+                    'background-color': 'var(--vscode-diffEditor-removedTextBackground)',
                     display: 'inline-block',
                     width: '100%',
                 },

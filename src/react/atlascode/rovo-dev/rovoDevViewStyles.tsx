@@ -18,7 +18,7 @@ export const rovoDevPromptContainerStyles: React.CSSProperties = {
     left: 0,
     padding: '10px 20px',
     borderTop: '1px solid var(--vscode-panel-border)',
-    background: 'var(--vscode-editor-background)',
+    background: 'var(--vscode-sideBar-background)',
     zIndex: 1000,
     boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.05)',
 };
@@ -71,12 +71,12 @@ export const chatMessageStyles: React.CSSProperties = {
 };
 
 export const userMessageStyles: React.CSSProperties = {
-    backgroundColor: 'var(--vscode-editor-inactiveSelectionBackground)',
+    backgroundColor: 'var(--vscode-editor-selectionBackground)',
     alignSelf: 'flex-end',
 };
 
 export const agentMessageStyles: React.CSSProperties = {
-    backgroundColor: 'var(--vscode-editor-selectionBackground)',
+    backgroundColor: 'var(--vscode-sideBar-background)',
     alignSelf: 'flex-start',
 };
 
@@ -132,6 +132,7 @@ export const toolCallNameStyles: React.CSSProperties = {
 
 export const toolCallArgsStyles: React.CSSProperties = {
     padding: '8px',
+    width: '100%',
     alignItems: 'center',
     backgroundColor: 'inherit',
     borderRadius: '4px',

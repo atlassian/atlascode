@@ -276,7 +276,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             case 'tool-return':
             case 'retry-prompt':
                 return webView.postMessage({
-                    type: 'toolResult',
+                    type: 'toolReturn',
                     dataObject: response,
                 });
 

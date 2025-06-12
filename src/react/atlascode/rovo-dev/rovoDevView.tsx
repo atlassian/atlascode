@@ -1,4 +1,4 @@
-import IconButton from '@atlaskit/button';
+import LoadingButton from '@atlaskit/button/loading-button';
 import SearchIcon from '@atlaskit/icon/glyph/search';
 import SendIcon from '@atlaskit/icon/glyph/send';
 import { Marked } from '@ts-stack/markdown';
@@ -8,21 +8,14 @@ import { RovoDevResponse } from 'src/rovo-dev/responseParser';
 
 import { useMessagingApi } from '../messagingApi';
 import * as styles from './rovoDevViewStyles';
+import { ChatMessage, parseToolReturnMessage, ToolCallMessage, ToolReturnMessage } from './utils';
 
 Marked.setOptions({
     sanitize: true,
-    breaks: false,
     highlight: (code, lang) => {
-        console.log('Highlighting code:', code, 'with language:', lang);
         return lang ? hljs.highlight(code, { language: lang }).value : hljs.highlightAuto(code).value;
     },
 });
-
-interface ChatMessage {
-    text: string;
-    author: 'User' | 'RovoDev' | 'Tool';
-    timestamp: number;
-}
 
 const RovoDevView: React.FC = () => {
     const [sendButtonDisabled, setSendButtonDisabled] = useState(true);
@@ -31,6 +24,7 @@ const RovoDevView: React.FC = () => {
     const [promptText, setPromptText] = useState('');
     const [currentResponse, setCurrentResponse] = useState('');
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+    const [pendingToolCall, setPendingToolCall] = useState<ToolCallMessage | null>(null);
     const chatEndRef = React.useRef<HTMLDivElement>(null);
 
     // Scroll to bottom when chat updates
@@ -73,16 +67,24 @@ const RovoDevView: React.FC = () => {
                     appendCurrentResponse(data.content || '');
                     break;
                 case 'tool-call':
-                    const message: ChatMessage = {
-                        text: `\n\n<TOOL_CALL>${data.tool_name}@@@@${data.args}</TOOL_CALL>\n\n`,
-                        author: 'Tool',
-                        timestamp: Date.now(),
+                    const callMessage: ToolCallMessage = {
+                        author: 'ToolCall',
+                        tool_name: data.tool_name,
+                        args: data.args,
+                        tool_call_id: data.tool_call_id, // Optional ID for tracking
                     };
 
-                    handleAppendChatHistory(message);
+                    setPendingToolCall(callMessage);
                     break;
                 case 'tool-return':
-                    appendCurrentResponse(`\n\nTool return: ${data.tool_name} -> ${data.content}\n\n`);
+                    const returnMessage: ToolReturnMessage = {
+                        author: 'ToolReturn',
+                        tool_name: data.tool_name,
+                        content: data.content || '',
+                        tool_call_id: data.tool_call_id, // Optional ID for tracking
+                    };
+                    setPendingToolCall(null); // Clear pending tool call
+                    handleAppendChatHistory(returnMessage);
                     break;
                 default:
                     appendCurrentResponse(`\n\nUnknown part_kind: ${data.event_kind}\n\n`);
@@ -134,6 +136,23 @@ const RovoDevView: React.FC = () => {
                     handleResponse(event.dataObject);
                     break;
                 }
+
+                case 'toolReturn': {
+                    if (currentResponse !== '...' && currentResponse.trim()) {
+                        const message: ChatMessage = {
+                            text: currentResponse,
+                            author: 'RovoDev',
+                            timestamp: Date.now(),
+                        };
+                        handleAppendChatHistory(message);
+                        setCurrentResponse('');
+                    } else {
+                        setCurrentResponse(''); // Reset current response if it was just '...'
+                    }
+                    handleResponse(event.dataObject);
+                    break;
+                }
+
                 case 'errorMessage': {
                     handleAppendChatHistory(event.message);
                     setCurrentResponse('');
@@ -205,108 +224,72 @@ const RovoDevView: React.FC = () => {
         [sendPrompt, promptText],
     );
 
-    // Function to render message content with tool call highlighting
-    const renderMessageContent = (text: string) => {
-        // Split the text by tool call markers
-        const parts = text.trim().split(/(<TOOL_CALL>.*?<\/TOOL_CALL>)/g);
+    // Function to render message content with tool highlighting
+    const renderMessageContent = (message: ChatMessage) => {
+        // Split the text by tool markers
+        try {
+            switch (message.author) {
+                case 'ToolCall':
+                    const toolCall = message as ToolCallMessage;
 
-        return parts.map((part, index) => {
-            if (part.match(/^<TOOL_CALL>.*<\/TOOL_CALL>$/)) {
-                // Extract tool call information
-                const toolCallContent = part.replace(/^<TOOL_CALL>/, '').replace(/<\/TOOL_CALL>$/, '');
-                const [toolName, argsStr] = toolCallContent.split('@@@@');
+                    if (!toolCall.tool_name || !toolCall.args) {
+                        return <div>Error: Invalid tool call message</div>;
+                    }
 
-                return (
-                    <div style={styles.chatMessageStyles}>
-                        <div key={index} style={styles.toolCallBubbleStyles}>
-                            <div style={styles.toolIconStyles}>
-                                <SearchIcon size="medium" label="Tool Call" />
+                    return (
+                        <div style={styles.chatMessageStyles}>
+                            <div style={styles.toolCallBubbleStyles}>
+                                <div style={styles.toolIconStyles}>
+                                    <LoadingButton
+                                        iconBefore={<SearchIcon size="small" label="Tool Call" />}
+                                        isDisabled={true}
+                                        isLoading={true}
+                                    />
+                                </div>
+                                <div style={styles.toolCallArgsStyles}>{toolCall.tool_name}</div>
                             </div>
-                            <div style={styles.toolCallArgsStyles}>{handleToolCallArgs(toolName, argsStr)}</div>
                         </div>
-                    </div>
-                );
-            } else {
-                const htmlContent = Marked.parse(part);
+                    );
+                case 'ToolReturn':
+                    const toolReturn = message as ToolReturnMessage;
 
-                return (
-                    <div
-                        key={index}
-                        // style={styles.messageContentStyles}
-                        dangerouslySetInnerHTML={{ __html: htmlContent }}
-                    />
-                );
+                    if (!toolReturn.tool_name || !toolReturn.content) {
+                        return <div>Error: Invalid tool return message</div>;
+                    }
+
+                    const parsed = parseToolReturnMessage(toolReturn);
+
+                    return parsed.map(({ content, diff, filePath }) => (
+                        <div style={styles.chatMessageStyles}>
+                            <div style={styles.toolCallBubbleStyles}>
+                                <div style={styles.toolIconStyles}>
+                                    <SearchIcon size="small" label="Tool Return" />
+                                </div>
+                                <a onClick={() => filePath && openFile(filePath)} style={styles.toolCallArgsStyles}>
+                                    {content}
+                                </a>
+                            </div>
+                        </div>
+                    ));
+                default:
+                    const htmlContent = Marked.parse(message.text);
+
+                    return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
             }
-        });
+        } catch (error) {
+            console.error('Error rendering message content:', error);
+            return <div>Error rendering message content</div>;
+        }
     };
 
-    const handleToolCallArgs = useCallback(
-        (toolName: string, args: string) => {
-            console.log('Handling tool call args:', toolName, args);
-            try {
-                switch (toolName) {
-                    case 'open_files':
-                        const openFilesObj = JSON.parse(args);
-
-                        if (openFilesObj.file_paths) {
-                            return openFilesObj.file_paths.map((filePath: string) => {
-                                return (
-                                    <pre style={styles.toolCallArgsPreStyles}>
-                                        Opening file{' '}
-                                        <a onClick={() => openFile(filePath)} key={filePath}>
-                                            {filePath}
-                                        </a>
-                                    </pre>
-                                );
-                            });
-                        }
-                        break;
-
-                    case 'expand_code_chunks':
-                        const expandCodeObj = JSON.parse(args);
-                        if (!expandCodeObj.file_path) {
-                            return;
-                        }
-
-                        if (expandCodeObj.line_ranges) {
-                            const lineRanges = expandCodeObj.line_ranges;
-                            return lineRanges.map((lineRange: any[]) => {
-                                return (
-                                    <pre style={styles.toolCallArgsPreStyles}>
-                                        Expanding code chunks in{' '}
-                                        <a
-                                            onClick={() => openFile(expandCodeObj.file_path, lineRange)}
-                                            key={expandCodeObj.file_path}
-                                        >
-                                            {`${expandCodeObj.file_path} lines ${lineRange[0]}-${lineRange[1]}`}
-                                        </a>
-                                    </pre>
-                                );
-                            });
-                        } else {
-                            return (
-                                <pre style={styles.toolCallArgsPreStyles}>
-                                    Expanding code chunks in{' '}
-                                    <a onClick={() => openFile(expandCodeObj.file_path)} key={expandCodeObj.file_path}>
-                                        {expandCodeObj.file_path}
-                                    </a>
-                                </pre>
-                            );
-                        }
-                    default:
-                        return (
-                            <>
-                                <pre style={styles.toolCallArgsPreStyles}>{args}</pre>
-                            </>
-                        );
-                }
-            } catch (error) {
-                console.error('Error formatting tool call args:', error);
-                return String(args);
-            }
-        },
-        [openFile],
-    );
+    // const toolContent = (content: string, filePath?: string, range?: any[]) =>
+    //     filePath ? (
+    //         <pre style={styles.toolCallArgsPreStyles}>
+    //             {content} <a onClick={() => openFile(filePath, range)}>{filePath}</a>
+    //         </pre>
+    //     ) : (
+    //         <pre style={styles.toolCallArgsPreStyles}>{content}</pre>
+    //     );
 
     // Render chat message
     const renderChatMessage = (message: ChatMessage, index: number) => {
@@ -316,26 +299,23 @@ const RovoDevView: React.FC = () => {
             <div key={index} style={{ ...styles.chatMessageStyles, ...messageTypeStyles }}>
                 <div style={styles.messageHeaderStyles}>
                     <span style={styles.messageAuthorStyles}>{message.author}</span>
-                    <span style={styles.messageTimestampStyles}>
-                        {new Date(message.timestamp).toLocaleTimeString()}
-                    </span>
                 </div>
-                <div style={styles.messageContentStyles}>{renderMessageContent(message.text)}</div>
+                <div style={styles.messageContentStyles}>{renderMessageContent(message)}</div>
             </div>
         );
     };
 
     return (
-        <div style={styles.rovoDevContainerStyles}>
+        <div className="rovoDevChat" style={styles.rovoDevContainerStyles}>
             <div style={styles.chatMessagesContainerStyles}>
                 {chatHistory.map((msg, index) => {
-                    if (msg.author === 'Tool') {
-                        return renderMessageContent(msg.text);
+                    if (msg.author === 'ToolCall' || msg.author === 'ToolReturn') {
+                        return renderMessageContent(msg);
                     } else {
                         return renderChatMessage(msg, index);
                     }
                 })}
-
+                {pendingToolCall && renderMessageContent(pendingToolCall)}
                 {/* Show streaming response if available */}
                 {currentResponse && (
                     <div
@@ -349,7 +329,9 @@ const RovoDevView: React.FC = () => {
                             <span style={styles.messageAuthorStyles}>RovoDev is typing...</span>
                             <span style={styles.messageTimestampStyles}>{new Date().toLocaleTimeString()}</span>
                         </div>
-                        <div style={styles.messageContentStyles}>{renderMessageContent(currentResponse)}</div>
+                        <div style={styles.messageContentStyles}>
+                            {renderMessageContent({ text: currentResponse, author: 'RovoDev', timestamp: Date.now() })}
+                        </div>
                     </div>
                 )}
                 <div ref={chatEndRef} />
@@ -376,10 +358,11 @@ const RovoDevView: React.FC = () => {
                         value={promptText}
                     />
                     <div style={styles.rovoDevButtonStyles}>
-                        <IconButton
+                        <LoadingButton
                             style={{
                                 color: 'var(--vscode-input-foreground) !important',
                                 border: '1px solid var(--vscode-button-border) !important',
+                                backgroundColor: 'var(--vscode-input-background) !important',
                             }}
                             label="Send button"
                             iconBefore={<SendIcon size="small" label="Send" />}
