@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test("Onboarding flow's navigation among pages works", async ({ page }) => {
-    await page.goto('http://[::1]:9988/');
+    await page.goto('http://localhost:9988/');
 
     await page.getByRole('tab', { name: 'Atlassian' }).click();
     await page.waitForTimeout(250);
@@ -57,7 +57,7 @@ test("Onboarding flow's navigation among pages works", async ({ page }) => {
 });
 
 test('Authenticating with Jira works, and assigned items are displayed', async ({ page }) => {
-    await page.goto('http://[::1]:9988/');
+    await page.goto('http://localhost:9988/');
 
     await page.getByRole('tab', { name: 'Atlassian' }).click();
     await page.waitForTimeout(250);
