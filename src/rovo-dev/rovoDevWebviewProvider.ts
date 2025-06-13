@@ -79,7 +79,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 'core',
                 'dist',
                 'themes',
-                isDarkTheme ? 'default.css' : 'dark.css',
+                isDarkTheme ? 'dark.css' : 'default.css',
             ),
         );
 
