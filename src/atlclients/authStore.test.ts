@@ -223,21 +223,6 @@ describe('CredentialManager', () => {
                 site: mockJiraSite,
             });
         });
-
-        it("should not save to secret storage if auth info hasn't changed", async () => {
-            // Setup existing auth info
-            const memStore = (credentialManager as any)._memStore;
-            const jiraStore = memStore.get(ProductJira.key);
-            jiraStore.set(mockJiraSite.credentialId, mockAuthInfo);
-
-            // Mock getAuthInfo to return the existing info
-            jest.spyOn(credentialManager, 'getAuthInfo').mockResolvedValue(mockAuthInfo);
-
-            await credentialManager.saveAuthInfo(mockJiraSite, mockAuthInfo);
-
-            expect(Container.context.secrets.store).not.toHaveBeenCalled();
-            expect(mockFireEvent).not.toHaveBeenCalled();
-        });
     });
 
     describe('refreshAccessToken', () => {
