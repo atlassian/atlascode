@@ -249,13 +249,15 @@ export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {
 }
 
 export async function notificationChangeEvent(
-    uri: Uri,
+    source: string | undefined,
+    uri: Uri | undefined,
     notificationSurface: NotificationSurface,
     delta: number,
 ): Promise<TrackEvent> {
     return trackEvent('changed', 'notification', {
         attributes: {
-            uri: uri.toString(),
+            source,
+            uri: uri?.toString(),
             notificationSurface: notificationSurface,
             delta: delta,
         },
@@ -699,6 +701,25 @@ export async function openActiveIssueEvent(): Promise<UIEvent> {
             actionSubject: 'button',
             actionSubjectId: 'openActiveIssue',
             source: 'statusBar',
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function notificationBannerClickedEvent(source: string, buttonType: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'notificationBanner',
+            source,
+            attributes: {
+                buttonType,
+            },
         },
     };
 

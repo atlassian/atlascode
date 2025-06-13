@@ -87,7 +87,7 @@ export class Configuration extends Disposable {
         return inspect ? inspect : { key: '' };
     }
 
-    // update does what it sounds like
+    /** Use `updateEffective` unless you have a strong reason to change a specific config target value. */
     public async update(
         section: string,
         value: any,
