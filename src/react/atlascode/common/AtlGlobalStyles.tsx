@@ -18,12 +18,15 @@ const useStyles = makeStyles(
                     display: 'inline-block',
                     'overflow-x': 'auto',
                     'vertical-align': 'middle',
+                    color: 'var(--vscode-editor-foreground) !important',
                 },
                 'pre code': {
-                    background: 'var(--vscode-editor-background)',
+                    background: 'var(--vscode-editor-background) !important', // Ensure code blocks have the correct background
                     'border-radius': '4px',
                     border: '1px solid var(--vscode-editorWidget-border)',
                     width: '100%',
+                    'font-size': '14px !important', // Ensure code blocks have the correct font size
+                    'font-family': 'var(--vscode-font-family) !important', // Ensure code blocks have the correct font family
                 },
                 'img.emoji': {
                     'max-height': '1.5em',
@@ -265,147 +268,6 @@ const useStyles = makeStyles(
                 '.suggestion-item-list': { background: '#fff', border: '1px solid #999' },
                 '.suggestion-item': { padding: '5px' },
                 '.suggestion-item:before': { borderTop: '1px solid' },
-
-                'pre code.hljs': {
-                    display: 'block',
-                    'overflow-x': 'auto',
-                    padding: '1em',
-                },
-                'code.hljs': {
-                    padding: '3px 5px',
-                },
-                /*
-                 * Visual Studio 2015 dark style
-                 * Author: Nicolas LLOBERA <nllobera@gmail.com>
-                 */
-                '.hljs': {
-                    color: 'var(--vscode-editor-foreground)',
-                },
-                '.hljs-keyword': {
-                    color: '#569CD6',
-                },
-                '.hljs-literal': {
-                    color: '#569CD6',
-                },
-                '.hljs-symbol': {
-                    color: '#569CD6',
-                },
-                '.hljs-name': {
-                    color: '#569CD6',
-                },
-                '.hljs-link': {
-                    color: 'var(--vscode-textLink-foreground)',
-                    'text-decoration': 'underline',
-                },
-                '.hljs-built_in': {
-                    color: 'var(--vscode-symbolIcon-functionForeground)',
-                },
-                '.hljs-type': {
-                    color: 'var(--vscode-symbolIcon-typeForeground)',
-                },
-                '.hljs-number': {
-                    color: 'var(--vscode-symbolIcon-numberParameterForeground)',
-                },
-                '.hljs-class': {
-                    color: 'var(--vscode-symbolIcon-classForeground)',
-                },
-                '.hljs-string': {
-                    color: 'var(--vscode-symbolIcon-stringForeground)',
-                },
-                '.hljs-meta .hljs-string': {
-                    color: 'var(--vscode-symbolIcon-stringForeground)',
-                },
-                '.hljs-regexp': {
-                    color: 'var(--vscode-symbolIcon-regexForeground)',
-                },
-                '.hljs-template-tag': {
-                    color: 'var(--vscode-symbolIcon-operatorForeground)',
-                },
-                '.hljs-subst': {
-                    color: 'var(--vscode-editor-foreground)',
-                },
-                '.hljs-function': {
-                    color: 'var(--vscode-symbolIcon-functionForeground)',
-                },
-                '.hljs-title': {
-                    color: 'var(--vscode-editor-foreground)',
-                },
-                '.hljs-params': {
-                    color: 'var(--vscode-editor-foreground)',
-                },
-                '.hljs-formula': {
-                    color: 'var(--vscode-editor-foreground)',
-                },
-                '.hljs-comment': {
-                    color: 'var(--vscode-textPreformat-foreground)',
-                    'font-style': 'italic',
-                },
-                '.hljs-quote': {
-                    color: 'var(--vscode-textPreformat-foreground)',
-                    'font-style': 'italic',
-                },
-                '.hljs-doctag': {
-                    color: '#608B4E',
-                },
-                '.hljs-meta': {
-                    color: 'var(--vscode-editor-foreground)',
-                },
-                '.hljs-meta .hljs-keyword': {
-                    color: 'var(--vscode-editor-foreground)',
-                },
-                '.hljs-tag': {
-                    color: 'var(--vscode-editor-foreground)',
-                },
-                '.hljs-variable': {
-                    color: 'var(--vscode-symbolIcon-variableForeground)',
-                },
-                '.hljs-template-variable': {
-                    color: 'var(--vscode-symbolIcon-variableForeground)',
-                },
-                '.hljs-attr': {
-                    color: '#9CDCFE',
-                },
-                '.hljs-attribute': {
-                    color: '#9CDCFE',
-                },
-                '.hljs-section': {
-                    color: 'gold',
-                },
-                '.hljs-emphasis': {
-                    'font-style': 'italic',
-                },
-                '.hljs-strong': {
-                    'font-weight': 'bold',
-                },
-
-                '.hljs-bullet': {
-                    color: 'var(--vscode-symbolIcon-keywordForeground)',
-                },
-                '.hljs-selector-tag': {
-                    color: 'var(--vscode-symbolIcon-keywordForeground)',
-                },
-                '.hljs-selector-id': {
-                    color: 'var(--vscode-symbolIcon-constantForeground)',
-                },
-                '.hljs-selector-class': {
-                    color: 'var(--vscode-symbolIcon-classForeground)',
-                },
-                '.hljs-selector-attr': {
-                    color: 'var(--vscode-symbolIcon-propertyForeground)',
-                },
-                '.hljs-selector-pseudo': {
-                    color: 'var(--vscode-symbolIcon-keywordForeground)',
-                },
-                '.hljs-addition': {
-                    'background-color': 'var(--vscode-diffEditor-insertedTextBackground)',
-                    display: 'inline-block',
-                    width: '100%',
-                },
-                '.hljs-deletion': {
-                    'background-color': 'var(--vscode-diffEditor-removedTextBackground)',
-                    display: 'inline-block',
-                    width: '100%',
-                },
             },
         }) as const,
 );

@@ -1,20 +1,18 @@
 import LoadingButton from '@atlaskit/button/loading-button';
 import SearchIcon from '@atlaskit/icon/glyph/search';
 import SendIcon from '@atlaskit/icon/glyph/send';
+import { highlightElement } from '@speed-highlight/core';
+import { detectLanguage } from '@speed-highlight/core/detect';
 import { Marked } from '@ts-stack/markdown';
-import hljs from 'highlight.js';
 import React, { useCallback, useState } from 'react';
 import { RovoDevResponse } from 'src/rovo-dev/responseParser';
 
 import { useMessagingApi } from '../messagingApi';
 import * as styles from './rovoDevViewStyles';
-import { ChatMessage, parseToolReturnMessage, ToolCallMessage, ToolReturnMessage } from './utils';
+import { ChatMessage, parseToolReturnMessage, ToolCallMessage, toolNameIconMap, ToolReturnMessage } from './utils';
 
 Marked.setOptions({
     sanitize: true,
-    highlight: (code, lang) => {
-        return lang ? hljs.highlight(code, { language: lang }).value : hljs.highlightAuto(code).value;
-    },
 });
 
 const RovoDevView: React.FC = () => {
@@ -32,6 +30,12 @@ const RovoDevView: React.FC = () => {
         if (chatEndRef.current) {
             chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
+
+        const codeBlocks = document.querySelectorAll('pre code');
+
+        codeBlocks.forEach((block) => {
+            highlightElement(block, detectLanguage(block.textContent || ''));
+        });
     }, [chatHistory, currentResponse]);
 
     const handleAppendChatHistory = useCallback(
@@ -82,6 +86,7 @@ const RovoDevView: React.FC = () => {
                         tool_name: data.tool_name,
                         content: data.content || '',
                         tool_call_id: data.tool_call_id, // Optional ID for tracking
+                        args: pendingToolCall?.args || undefined, // Use args from pending tool call if available
                     };
                     setPendingToolCall(null); // Clear pending tool call
                     handleAppendChatHistory(returnMessage);
@@ -91,7 +96,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [appendCurrentResponse, handleAppendChatHistory],
+        [appendCurrentResponse, handleAppendChatHistory, pendingToolCall],
     );
 
     const onMessageHandler = useCallback(
@@ -259,18 +264,29 @@ const RovoDevView: React.FC = () => {
 
                     const parsed = parseToolReturnMessage(toolReturn);
 
-                    return parsed.map(({ content, diff, filePath }) => (
-                        <div style={styles.chatMessageStyles}>
-                            <div style={styles.toolCallBubbleStyles}>
-                                <div style={styles.toolIconStyles}>
-                                    <SearchIcon size="small" label="Tool Return" />
+                    return parsed.map(({ content, filePath, title }) => {
+                        const iconClass = toolNameIconMap[toolReturn.tool_name] || 'codicon codicon-tools';
+                        return (
+                            <div style={styles.chatMessageStyles}>
+                                <div style={styles.toolCallBubbleStyles}>
+                                    <a
+                                        onClick={() => filePath && openFile(filePath)}
+                                        style={
+                                            filePath
+                                                ? { ...styles.toolCallArgsStyles, cursor: 'pointer' }
+                                                : styles.toolCallArgsStyles
+                                        }
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <i className={iconClass} />
+                                            {title && <div style={{ fontWeight: 'bold' }}>{title}</div>}
+                                        </div>
+                                        <div style={{ fontSize: '9px', textAlign: 'right' }}>{content}</div>
+                                    </a>
                                 </div>
-                                <a onClick={() => filePath && openFile(filePath)} style={styles.toolCallArgsStyles}>
-                                    {content}
-                                </a>
                             </div>
-                        </div>
-                    ));
+                        );
+                    });
                 default:
                     const htmlContent = Marked.parse(message.text);
 

@@ -30,6 +30,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private _globalState: Memento;
     private _extensionPath: string;
+    private _extensionUri: Uri;
 
     constructor(extensionPath: string, globalState: Memento) {
         super(() => {
@@ -37,6 +38,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
 
         this._extensionPath = extensionPath;
+        this._extensionUri = Uri.file(this._extensionPath);
         this._globalState = globalState;
 
         // Register the webview view provider
@@ -57,14 +59,37 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._webView.options = {
             enableCommandUris: true,
             enableScripts: true,
-            localResourceRoots: [Uri.file(path.join(this._extensionPath, 'build'))],
+            localResourceRoots: [
+                Uri.file(path.join(this._extensionPath, 'build')),
+                Uri.file(path.join(this._extensionPath, 'node_modules', '@vscode', 'codicons', 'dist')),
+                Uri.file(path.join(this._extensionPath, 'node_modules', '@speed-highlight', 'core', 'dist')),
+            ],
         };
+
+        const isDarkTheme = window.activeColorTheme.kind === 3 || 2; // Dark theme
+
+        const codiconsUri = this._webView.asWebviewUri(
+            Uri.joinPath(this._extensionUri, 'node_modules', '@vscode', 'codicons', 'dist', 'codicon.css'),
+        );
+        const syntaxStylesUri = this._webView.asWebviewUri(
+            Uri.joinPath(
+                this._extensionUri,
+                'node_modules',
+                '@speed-highlight',
+                'core',
+                'dist',
+                'themes',
+                isDarkTheme ? 'default.css' : 'dark.css',
+            ),
+        );
 
         this._webView.html = getHtmlForView(
             this._extensionPath,
-            webviewView.webview.asWebviewUri(Uri.file(this._extensionPath)),
-            webviewView.webview.cspSource,
+            this._webView.asWebviewUri(this._extensionUri),
+            this._webView.cspSource,
             this.viewType,
+            codiconsUri,
+            syntaxStylesUri,
         );
 
         this._webView.onDidReceiveMessage(async (e) => {
