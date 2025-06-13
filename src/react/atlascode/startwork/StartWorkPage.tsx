@@ -51,6 +51,7 @@ import { ErrorDisplay } from '../common/ErrorDisplay';
 import Lozenge from '../common/Lozenge';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { PrepareCommitTip } from '../common/PrepareCommitTip';
+import { buildBranchName } from './branchNameUtils';
 import { StartWorkControllerContext, useStartWorkController } from './startWorkController';
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -131,54 +132,27 @@ const StartWorkPage: React.FunctionComponent = () => {
         [setTransition],
     );
 
-    const buildBranchName = useCallback(
-        (repo: RepoData, branchType: BranchType) => {
-            const usernameBase = repo.userEmail
-                ? repo.userEmail
-                      .split('@')[0]
-                      .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
-                      .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
-                : 'username';
-            const prefixBase = branchType.prefix.replace(/ /g, '-');
-            const summaryBase = state.issue.summary
-                .substring(0, 50)
-                .trim()
-                .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
-                .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
-                .replace(/\W+/g, '-');
+    const buildBranchNameView = useCallback(() => {
+        const view = buildBranchName({
+            branchType,
+            issue: state.issue,
+            userEmail: repository.userEmail,
+        });
 
-            const view = {
-                username: usernameBase.toLowerCase(),
-                UserName: usernameBase,
-                USERNAME: usernameBase.toUpperCase(),
-                prefix: prefixBase.toLowerCase(),
-                Prefix: prefixBase,
-                PREFIX: prefixBase.toUpperCase(),
-                issuekey: state.issue.key.toLowerCase(),
-                IssueKey: state.issue.key,
-                issueKey: state.issue.key,
-                ISSUEKEY: state.issue.key.toUpperCase(),
-                summary: summaryBase.toLowerCase(),
-                Summary: summaryBase,
-                SUMMARY: summaryBase.toUpperCase(),
-            };
-
-            try {
-                const generatedBranchTitle = Mustache.render(state.customTemplate, view);
-                setLocalBranch(generatedBranchTitle);
-            } catch {
-                setLocalBranch('Invalid template: please follow the format described above');
-            }
-        },
-        [state.issue.key, state.issue.summary, state.customTemplate],
-    );
+        try {
+            const generatedBranchTitle = Mustache.render(state.customTemplate, view);
+            setLocalBranch(generatedBranchTitle);
+        } catch {
+            setLocalBranch('Invalid template: please follow the format described above');
+        }
+    }, [branchType, state.issue, state.customTemplate, repository.userEmail]);
 
     const handleRepositoryChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
             setRepository(event.target.value);
-            buildBranchName(event.target.value, branchType);
+            buildBranchNameView();
         },
-        [setRepository, buildBranchName, branchType],
+        [setRepository, buildBranchNameView],
     );
 
     const handleSourceBranchChange = useCallback(
@@ -191,9 +165,9 @@ const StartWorkPage: React.FunctionComponent = () => {
     const handleBranchTypeChange = useCallback(
         (event: React.ChangeEvent, value: BranchType) => {
             setBranchType(value);
-            buildBranchName(repository, value);
+            buildBranchNameView();
         },
-        [setBranchType, buildBranchName, repository],
+        [setBranchType, buildBranchNameView],
     );
 
     const handleExistingBranchClick = useCallback(
@@ -284,9 +258,12 @@ const StartWorkPage: React.FunctionComponent = () => {
         console.log(`JS-1324 selected repo ${repository.workspaceRepo.rootUri}`);
         if (repository.workspaceRepo.rootUri === '' && state.repoData.length > 0) {
             setRepository(state.repoData?.[0]);
-            buildBranchName(state.repoData?.[0], branchType);
+            // Only build branch name if we have both branchType and issue
+            if (branchType && state.issue) {
+                buildBranchNameView();
+            }
         }
-    }, [repository, branchType, setRepository, state.repoData, buildBranchName]);
+    }, [repository, branchType, setRepository, state.repoData, state.issue, state.customTemplate, buildBranchNameView]);
 
     useEffect(() => {
         console.log(`JS-1324 repos: ${JSON.stringify(state.repoData.map((r) => r.workspaceRepo.rootUri))}`);
@@ -311,8 +288,8 @@ const StartWorkPage: React.FunctionComponent = () => {
                         !repository.localBranches.some((localBranch) => remoteBranch.name!.endsWith(localBranch.name!)),
                 ),
         ]);
-        buildBranchName(repository, newBranchType);
-    }, [repository, state.issue, buildBranchName]);
+        buildBranchNameView();
+    }, [repository, state.issue, buildBranchNameView]);
 
     useEffect(() => {
         setSubmitState('initial');
