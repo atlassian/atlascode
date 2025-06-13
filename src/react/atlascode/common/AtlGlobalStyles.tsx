@@ -25,7 +25,7 @@ const useStyles = makeStyles(
                     'border-radius': '4px',
                     border: '1px solid var(--vscode-editorWidget-border)',
                     width: '100%',
-                    'font-size': '14px !important', // Ensure code blocks have the correct font size
+                    'font-size': '12px !important', // Ensure code blocks have the correct font size
                     'font-family': 'var(--vscode-font-family) !important', // Ensure code blocks have the correct font family
                 },
                 'img.emoji': {
