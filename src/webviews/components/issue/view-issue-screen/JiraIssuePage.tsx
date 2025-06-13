@@ -12,6 +12,7 @@ import { AnalyticsView } from '../../../../analyticsTypes';
 import { EditIssueAction, IssueCommentAction } from '../../../../ipc/issueActions';
 import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../../ipc/issueMessaging';
 import { LegacyPMFData } from '../../../../ipc/messaging';
+import { TOP_LEVEL_ISSUE_TYPES } from '../../../../lib/jira/constants';
 import { AtlascodeErrorBoundary } from '../../../../react/atlascode/common/ErrorBoundary';
 import { readFilesContentAsync } from '../../../../util/files';
 import { ConnectionTimeout } from '../../../../util/time';
@@ -92,7 +93,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     });
                     break;
                 }
-
                 case 'epicChildrenUpdate': {
                     this.setState({ isSomethingLoading: false, loadingField: '', epicChildren: e.epicChildren });
                     break;
@@ -415,22 +415,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     getMainPanelNavMarkup(): any {
-        const epicLinkValue = this.state.fieldValues[this.state.epicFieldInfo.epicLink.id];
-        let epicLinkKey: string = '';
-
-        if (epicLinkValue) {
-            if (typeof epicLinkValue === 'object' && epicLinkValue.value) {
-                epicLinkKey = epicLinkValue.value;
-            } else if (typeof epicLinkValue === 'string') {
-                epicLinkKey = epicLinkValue;
-            }
-        }
-
-        const parentIconUrl =
-            this.state.fieldValues['parent'] && this.state.fieldValues['parent'].issuetype
-                ? this.state.fieldValues['parent'].issuetype.iconUrl
-                : undefined;
         const itIconUrl = this.state.fieldValues['issuetype'] ? this.state.fieldValues['issuetype'].iconUrl : undefined;
+        const isTopLevel = TOP_LEVEL_ISSUE_TYPES.includes(this.state.fieldValues['issuetype']?.name);
+        const hasNoParent = !this.state.fieldValues['parent'];
+
         return (
             <div>
                 {this.state.showPMF && (
@@ -444,45 +432,76 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 )}
                 <div className="ac-page-header">
                     <div className="ac-breadcrumbs">
-                        {epicLinkValue && epicLinkKey !== '' && (
-                            <React.Fragment>
-                                <NavItem
-                                    text={epicLinkKey}
-                                    onItemClick={() =>
-                                        this.handleOpenIssue({ siteDetails: this.state.siteDetails, key: epicLinkKey })
-                                    }
-                                />
-                                <span className="ac-breadcrumb-divider">/</span>
-                            </React.Fragment>
-                        )}
-                        {this.state.fieldValues['parent'] && (
-                            <React.Fragment>
-                                <NavItem
-                                    text={this.state.fieldValues['parent'].key}
-                                    iconUrl={parentIconUrl}
-                                    onItemClick={() =>
-                                        this.handleOpenIssue({
-                                            siteDetails: this.state.siteDetails,
-                                            key: this.state.fieldValues['parent'].key,
-                                        })
-                                    }
-                                />
-                                <span className="ac-breadcrumb-divider">/</span>
-                            </React.Fragment>
-                        )}
+                        {this.state.hierarchy && this.state.hierarchy.length > 0 && (
+                            <>
+                                {this.state.hierarchy.map((issue, index) => {
+                                    const isLastItem = index === this.state.hierarchy.length - 1;
+                                    const shouldOpenInJira = isLastItem && (isTopLevel || hasNoParent);
+                                    const handleItemClick = !shouldOpenInJira
+                                        ? () =>
+                                              this.handleOpenIssue({
+                                                  siteDetails: this.state.siteDetails,
+                                                  key: issue.key,
+                                              })
+                                        : undefined;
 
-                        <Tooltip
-                            content={`Created on ${
-                                this.state.fieldValues['created.rendered'] || this.state.fieldValues['created']
-                            }`}
-                        >
-                            <NavItem
-                                text={`${this.state.key}`}
-                                href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`}
-                                iconUrl={itIconUrl}
-                                onCopy={this.handleCopyIssueLink}
-                            />
-                        </Tooltip>
+                                    // Determine if we should show divider after this item
+                                    const currentIssueWillBeRendered =
+                                        this.state.hierarchy[this.state.hierarchy.length - 1]?.key !== this.state.key;
+                                    const shouldShowDivider = !isLastItem || currentIssueWillBeRendered;
+
+                                    // Only show copy functionality on the final item in the breadcrumb chain
+                                    const shouldShowCopy = isLastItem && !currentIssueWillBeRendered;
+
+                                    return (
+                                        <React.Fragment key={issue.key}>
+                                            <NavItem
+                                                text={issue.key}
+                                                iconUrl={issue.issuetype?.iconUrl}
+                                                href={
+                                                    shouldOpenInJira
+                                                        ? `${this.state.siteDetails.baseLinkUrl}/browse/${issue.key}`
+                                                        : undefined
+                                                }
+                                                onItemClick={handleItemClick}
+                                                onCopy={shouldShowCopy ? this.handleCopyIssueLink : undefined}
+                                            />
+                                            {shouldShowDivider && <span className="ac-breadcrumb-divider">/</span>}
+                                        </React.Fragment>
+                                    );
+                                })}
+                                {/* Only render current issue if it's not already the last item in hierarchy */}
+                                {this.state.hierarchy[this.state.hierarchy.length - 1]?.key !== this.state.key && (
+                                    <Tooltip
+                                        content={`Created on ${
+                                            this.state.fieldValues['created.rendered'] ||
+                                            this.state.fieldValues['created']
+                                        }`}
+                                    >
+                                        <NavItem
+                                            text={`${this.state.key}`}
+                                            href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`}
+                                            iconUrl={itIconUrl}
+                                            onCopy={this.handleCopyIssueLink}
+                                        />
+                                    </Tooltip>
+                                )}
+                            </>
+                        )}
+                        {(!this.state.hierarchy || this.state.hierarchy.length === 0) && (
+                            <Tooltip
+                                content={`Created on ${
+                                    this.state.fieldValues['created.rendered'] || this.state.fieldValues['created']
+                                }`}
+                            >
+                                <NavItem
+                                    text={`${this.state.key}`}
+                                    href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`}
+                                    iconUrl={itIconUrl}
+                                    onCopy={this.handleCopyIssueLink}
+                                />
+                            </Tooltip>
+                        )}
                     </div>
                 </div>
                 {this.state.isErrorBannerOpen && (
