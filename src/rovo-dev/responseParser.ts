@@ -1,10 +1,5 @@
 import { EventEmitter } from 'vscode';
 
-type SpecialEventKinds = 'part_start' | 'part_delta';
-type EventKinds = 'text' | 'user-prompt' | 'tool-call' | 'tool-return' | 'retry-prompt';
-// it looks like PydanticAI is bugged and it throws some of these instead of the right ones
-type WeirdEventKinds = 'user_prompt' | 'tool_call' | 'tool_return' | 'retry_prompt';
-
 // interfaces for the raw responses from the rovo dev agent
 
 interface RovoDevUserPromptResponseRaw {
@@ -13,10 +8,20 @@ interface RovoDevUserPromptResponseRaw {
     timestamp: string;
 }
 
+interface RovoDevUserPromptChunk {
+    event_kind: 'user-prompt' | 'user_prompt';
+    data: RovoDevUserPromptResponseRaw;
+}
+
 interface RovoDevTextResponseRaw {
     index: number;
     content?: string;
     content_delta?: string;
+}
+
+interface RovoDevTextChunk {
+    event_kind: 'text';
+    data: RovoDevTextResponseRaw;
 }
 
 interface RovoDevToolCallResponseRaw {
@@ -25,6 +30,11 @@ interface RovoDevToolCallResponseRaw {
     args?: string;
     args_delta?: string;
     tool_call_id: string;
+}
+
+interface RovoDevToolCallChunk {
+    event_kind: 'tool-call' | 'tool_call';
+    data: RovoDevToolCallResponseRaw;
 }
 
 interface RovoDevToolReturnResponseRaw {
@@ -36,6 +46,11 @@ interface RovoDevToolReturnResponseRaw {
     timestamp: string;
 }
 
+interface RovoDevToolReturnChunk {
+    event_kind: 'tool-return' | 'tool_return';
+    data: RovoDevToolReturnResponseRaw;
+}
+
 interface RovoDevRetryPromptResponseRaw {
     content?: string;
     content_delta?: string;
@@ -43,6 +58,43 @@ interface RovoDevRetryPromptResponseRaw {
     tool_name_delta?: string;
     tool_call_id: string;
     timestamp: string;
+}
+
+interface RovoDevRetryPromptChunk {
+    event_kind: 'retry-prompt' | 'retry_prompt';
+    data: RovoDevRetryPromptResponseRaw;
+}
+
+type RovoDevSingleResponseRaw =
+    | RovoDevUserPromptResponseRaw
+    | RovoDevTextResponseRaw
+    | RovoDevToolCallResponseRaw
+    | RovoDevToolReturnResponseRaw
+    | RovoDevRetryPromptResponseRaw;
+
+type RovoDevSingleChunk =
+    | RovoDevUserPromptChunk
+    | RovoDevTextChunk
+    | RovoDevToolCallChunk
+    | RovoDevToolReturnChunk
+    | RovoDevRetryPromptChunk;
+
+interface RovoDevPartStartResponseRaw {
+    part: RovoDevSingleResponseRaw & { part_kind: RovoDevSingleChunk['event_kind'] };
+}
+
+interface RovoDevPartStartChunk {
+    event_kind: 'part_start';
+    data: RovoDevPartStartResponseRaw;
+}
+
+interface RovoDevPartDeltaResponseRaw {
+    delta: RovoDevSingleResponseRaw & { part_delta_kind: RovoDevSingleChunk['event_kind'] };
+}
+
+interface RovoDevPartDeltaChunk {
+    event_kind: 'part_delta';
+    data: RovoDevPartDeltaResponseRaw;
 }
 
 // abstracted responses' interfaces
@@ -74,7 +126,7 @@ export interface RovoDevToolReturnResponse {
     timestamp: string;
 }
 
-interface RovoDevRetryPromptResponse {
+export interface RovoDevRetryPromptResponse {
     event_kind: 'retry-prompt';
     content: string;
     tool_name: string;
@@ -196,38 +248,50 @@ export class RovoDevResponseParser {
             responseLines.push(...chunk.split(/\r?\n/).filter((x) => !!x));
         }
 
-        for (const chunk of responseChunks) {
+        for (const chunkRaw of responseChunks) {
             // it seems sometimes RovoDev sends a ping back - we just ignore it
-            if (chunk.startsWith(': ping - ')) {
+            if (chunkRaw.startsWith(': ping - ')) {
                 continue;
             }
 
-            const match = chunk.match(/^event: ([^\r\n]+)\r?\ndata: (.*)$/);
+            const match = chunkRaw.match(/^event: ([^\r\n]+)\r?\ndata: (.*)$/);
             if (!match) {
-                throw new Error(`RovoDev parser error: unable to parse chunk: "${chunk}"`);
+                throw new Error(`RovoDev parser error: unable to parse chunk: "${chunkRaw}"`);
             }
 
-            const event_kind = match[1].trim() as EventKinds | WeirdEventKinds | SpecialEventKinds;
-            const data = JSON.parse(match[2]);
+            const chunk: RovoDevSingleChunk | RovoDevPartStartChunk | RovoDevPartDeltaChunk = {
+                event_kind: match[1].trim() as any,
+                data: JSON.parse(match[2]),
+            };
 
-            if (event_kind === 'part_start') {
+            if (chunk.event_kind === 'part_start') {
                 // flsuh previous type, this is the beginning of a new multi-part response
                 messagesSent += this.firePreviousChunk();
 
-                const event_kind_inner = data.part.part_kind;
-                const data_inner = data.part;
-                this.previousChunk = parseGenericReponse(event_kind_inner, data_inner);
+                const data_inner = chunk.data.part;
+                const event_kind_inner = data_inner.part_kind;
+                const partStartChunk = {
+                    event_kind: event_kind_inner,
+                    data: data_inner,
+                } as RovoDevSingleChunk;
+
+                this.previousChunk = parseGenericReponse(partStartChunk);
 
                 if (event_kind_inner === 'text') {
                     // if the event is a text message, send them out immediately instead
                     // of waiting for it to be fully reconstructed
                     messagesSent += this.firePreviousChunk();
                 }
-            } else if (event_kind === 'part_delta') {
+            } else if (chunk.event_kind === 'part_delta') {
                 // continuation of a multi-part response
-                const event_kind_inner = data.delta.part_delta_kind;
-                const data_inner = data.delta;
-                this.previousChunk = parseGenericReponse(event_kind_inner, data_inner, this.previousChunk);
+                const data_inner = chunk.data.delta;
+                const event_kind_inner = data_inner.part_delta_kind;
+                const partDeltaChunk = {
+                    event_kind: event_kind_inner,
+                    data: data_inner,
+                } as RovoDevSingleChunk;
+
+                this.previousChunk = parseGenericReponse(partDeltaChunk, this.previousChunk);
 
                 if (event_kind_inner === 'text') {
                     // if the event is a text message, send them out immediately instead
@@ -238,7 +302,7 @@ export class RovoDevResponseParser {
                 // flsuh previous type, this new event is not part of a multi-part response
                 messagesSent += this.firePreviousChunk();
 
-                this.previousChunk = parseGenericReponse(event_kind, data);
+                this.previousChunk = parseGenericReponse(chunk);
                 messagesSent += this.firePreviousChunk();
             }
         }
@@ -266,34 +330,30 @@ export class RovoDevResponseParser {
     }
 }
 
-function parseGenericReponse(
-    event_kind: EventKinds | WeirdEventKinds,
-    data: any,
-    buffer?: RovoDevResponse,
-): RovoDevResponse {
-    switch (event_kind) {
+function parseGenericReponse(chunk: RovoDevSingleChunk, buffer?: RovoDevResponse): RovoDevResponse {
+    switch (chunk.event_kind) {
         case 'user-prompt':
         case 'user_prompt':
-            return parseResponseUserPrompt(data, buffer as RovoDevUserPromptResponse);
+            return parseResponseUserPrompt(chunk.data, buffer as RovoDevUserPromptResponse);
 
         // text is a special case, where we don't care about reconstructing the delta messages,
         // but we just want to send every single chunk as individual messages
         case 'text':
-            return parseResponseText(data);
+            return parseResponseText(chunk.data);
 
         case 'tool-call':
         case 'tool_call':
-            return parseResponseToolCall(data, buffer as RovoDevToolCallResponse);
+            return parseResponseToolCall(chunk.data, buffer as RovoDevToolCallResponse);
 
         case 'tool-return':
         case 'tool_return':
-            return parseResponseToolReturn(data, buffer as RovoDevToolReturnResponse);
+            return parseResponseToolReturn(chunk.data, buffer as RovoDevToolReturnResponse);
 
         case 'retry-prompt':
         case 'retry_prompt':
-            return parseResponseRetryPrompt(data, buffer as RovoDevRetryPromptResponse);
+            return parseResponseRetryPrompt(chunk.data, buffer as RovoDevRetryPromptResponse);
 
         default:
-            throw new Error(`RovoDev parser error: unknown event kind: ${event_kind}`);
+            throw new Error(`RovoDev parser error: unknown event kind: ${(chunk as any).event_kind}`);
     }
 }
