@@ -2,6 +2,7 @@ import { EventEmitter } from 'vscode';
 
 // interfaces for the raw responses from the rovo dev agent
 
+// https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.UserPromptPart
 interface RovoDevUserPromptResponseRaw {
     content?: string;
     content_delta?: string;
@@ -13,6 +14,7 @@ interface RovoDevUserPromptChunk {
     data: RovoDevUserPromptResponseRaw;
 }
 
+// https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.TextPart
 interface RovoDevTextResponseRaw {
     index: number;
     content?: string;
@@ -24,6 +26,7 @@ interface RovoDevTextChunk {
     data: RovoDevTextResponseRaw;
 }
 
+// https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.ToolCallPart
 interface RovoDevToolCallResponseRaw {
     tool_name?: string;
     tool_name_delta?: string;
@@ -37,6 +40,7 @@ interface RovoDevToolCallChunk {
     data: RovoDevToolCallResponseRaw;
 }
 
+// https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.ToolReturnPart
 interface RovoDevToolReturnResponseRaw {
     tool_name?: string;
     tool_name_delta?: string;
@@ -51,6 +55,7 @@ interface RovoDevToolReturnChunk {
     data: RovoDevToolReturnResponseRaw;
 }
 
+// https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.RetryPromptPart
 interface RovoDevRetryPromptResponseRaw {
     content?: string;
     content_delta?: string;
@@ -79,6 +84,7 @@ type RovoDevSingleChunk =
     | RovoDevToolReturnChunk
     | RovoDevRetryPromptChunk;
 
+// https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.PartStartEvent
 interface RovoDevPartStartResponseRaw {
     part: RovoDevSingleResponseRaw & { part_kind: RovoDevSingleChunk['event_kind'] };
 }
@@ -88,6 +94,7 @@ interface RovoDevPartStartChunk {
     data: RovoDevPartStartResponseRaw;
 }
 
+// https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.PartDeltaEvent
 interface RovoDevPartDeltaResponseRaw {
     delta: RovoDevSingleResponseRaw & { part_delta_kind: RovoDevSingleChunk['event_kind'] };
 }
