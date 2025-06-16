@@ -367,7 +367,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
 
         try {
-            await this.fetchApi('/v2/tools');
+            await this.fetchApi('/v2/healthcheck');
             return true;
         } catch {
             return false;
