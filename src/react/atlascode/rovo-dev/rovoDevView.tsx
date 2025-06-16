@@ -1,5 +1,4 @@
 import LoadingButton from '@atlaskit/button/loading-button';
-import SearchIcon from '@atlaskit/icon/glyph/search';
 import SendIcon from '@atlaskit/icon/glyph/send';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
@@ -244,14 +243,12 @@ const RovoDevView: React.FC = () => {
                     return (
                         <div style={styles.chatMessageStyles}>
                             <div style={styles.toolCallBubbleStyles}>
-                                <div style={styles.toolIconStyles}>
-                                    <LoadingButton
-                                        iconBefore={<SearchIcon size="small" label="Tool Call" />}
-                                        isDisabled={true}
-                                        isLoading={true}
-                                    />
+                                <div style={styles.toolCallArgsStyles}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <i className="codicon codicon-loading codicon-modifier-spin" />
+                                        {toolCall.tool_name}
+                                    </div>
                                 </div>
-                                <div style={styles.toolCallArgsStyles}>{toolCall.tool_name}</div>
                             </div>
                         </div>
                     );

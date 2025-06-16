@@ -5,7 +5,8 @@ export const rovoDevContainerStyles: React.CSSProperties = {
     height: '100vh',
     boxSizing: 'border-box',
     backgroundColor: 'var(--vscode-editor-background)',
-    fontSize: '12px',
+    fontSize: 'var(--vscode-font-size)',
+    fontFamily: 'var(--vscode-font-family)',
 };
 
 export const rovoDevPromptContainerStyles: React.CSSProperties = {
@@ -29,7 +30,6 @@ export const rovoDevTextareaStyles: React.CSSProperties = {
     background: 'inherit',
     color: 'var(--vscode-input-foreground)',
     resize: 'none',
-    fontSize: '12px',
     outline: 'none',
     border: 'none',
     display: 'flex',

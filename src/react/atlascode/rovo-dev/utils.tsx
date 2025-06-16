@@ -47,7 +47,6 @@ export function parseToolReturnMessage(msg: ToolReturnMessage): ToolReturnParseR
             const contentArray = rawContent.split('\n\n');
 
             for (const line of contentArray) {
-                console.log(`Parsing line: ${line}`);
                 const matches = line.match(
                     /^Successfully\s+(expanded code chunks|replaced code|opened|created|deleted)(?:\s+in)?\s+(.+)?$/,
                 );
