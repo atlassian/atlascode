@@ -111,6 +111,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     }
                     break;
                 }
+                case 'hierarchyUpdate':
+                    this.setState({
+                        hierarchy: e.hierarchy,
+                    });
+                    break;
+                case 'error':
+                    this.setState({ errorDetails: e.reason });
+                    break;
             }
         }
         return handled;
