@@ -135,6 +135,11 @@ export class JiraIssueWebview
             //     : [];
 
             this._editUIData = editUI as EditIssueData;
+
+            // msg.workInProgress = this._issue.assignee.accountId === this._currentUserId &&
+            //     issue.transitions.find(t => t.isInitial && t.to.id === issue.status.id) === undefined &&
+            //     currentBranches.find(b => b.toLowerCase().indexOf(issue.key.toLowerCase()) !== -1) !== undefined;
+
             this._editUIData.recentPullRequests = [];
             this._editUIData.currentUser = emptyUser;
 
