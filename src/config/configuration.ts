@@ -132,7 +132,10 @@ export class Configuration extends Disposable {
             return configuration.update(section, value, ConfigurationTarget.Workspace);
         }
 
-        if (inspect.globalValue === value || (inspect.globalValue === undefined && !force)) {
+        if (
+            inspect.globalValue === value ||
+            (inspect.globalValue === undefined && inspect.defaultValue === value && !force)
+        ) {
             return undefined;
         }
 
