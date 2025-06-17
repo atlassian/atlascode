@@ -8,7 +8,13 @@ import { RovoDevResponse } from 'src/rovo-dev/responseParser';
 
 import { useMessagingApi } from '../messagingApi';
 import * as styles from './rovoDevViewStyles';
-import { ChatMessage, parseToolReturnMessage, ToolCallMessage, toolNameIconMap, ToolReturnMessage } from './utils';
+import {
+    ChatMessage,
+    parseToolReturnMessage,
+    ToolCallMessage,
+    toolNameIconMap,
+    ToolReturnGenericMessage,
+} from './utils';
 
 Marked.setOptions({
     sanitize: true,
@@ -64,11 +70,12 @@ const RovoDevView: React.FC = () => {
             console.log('Received response data:', data);
             switch (data.event_kind) {
                 case 'text':
-                    if (data.content === '' || !data.content) {
+                    if (!data.content) {
                         break;
                     }
-                    appendCurrentResponse(data.content || '');
+                    appendCurrentResponse(data.content);
                     break;
+
                 case 'tool-call':
                     const callMessage: ToolCallMessage = {
                         author: 'ToolCall',
@@ -76,11 +83,11 @@ const RovoDevView: React.FC = () => {
                         args: data.args,
                         tool_call_id: data.tool_call_id, // Optional ID for tracking
                     };
-
                     setPendingToolCall(callMessage);
                     break;
+
                 case 'tool-return':
-                    const returnMessage: ToolReturnMessage = {
+                    const returnMessage: ToolReturnGenericMessage = {
                         author: 'ToolReturn',
                         tool_name: data.tool_name,
                         content: data.content || '',
@@ -90,6 +97,7 @@ const RovoDevView: React.FC = () => {
                     setPendingToolCall(null); // Clear pending tool call
                     handleAppendChatHistory(returnMessage);
                     break;
+
                 default:
                     appendCurrentResponse(`\n\nUnknown part_kind: ${data.event_kind}\n\n`);
                     break;
@@ -234,9 +242,7 @@ const RovoDevView: React.FC = () => {
         try {
             switch (message.author) {
                 case 'ToolCall':
-                    const toolCall = message as ToolCallMessage;
-
-                    if (!toolCall.tool_name || !toolCall.args) {
+                    if (!message.tool_name || !message.args) {
                         return <div>Error: Invalid tool call message</div>;
                     }
 
@@ -246,23 +252,26 @@ const RovoDevView: React.FC = () => {
                                 <div style={styles.toolCallArgsStyles}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                         <i className="codicon codicon-loading codicon-modifier-spin" />
-                                        {toolCall.tool_name}
+                                        {message.tool_name}
                                     </div>
                                 </div>
                             </div>
                         </div>
                     );
-                case 'ToolReturn':
-                    const toolReturn = message as ToolReturnMessage;
 
-                    if (!toolReturn.tool_name || !toolReturn.content) {
+                case 'ToolReturn':
+                    if (!message.tool_name) {
                         return <div>Error: Invalid tool return message</div>;
                     }
 
-                    const parsed = parseToolReturnMessage(toolReturn);
+                    const parsed = parseToolReturnMessage(message);
 
                     return parsed.map(({ content, filePath, title }) => {
-                        const iconClass = toolNameIconMap[toolReturn.tool_name] || 'codicon codicon-tools';
+                        if (typeof content === 'object') {
+                            content = JSON.stringify(content);
+                        }
+
+                        const iconClass = toolNameIconMap[message.tool_name] || 'codicon codicon-tools';
                         return (
                             <div style={styles.chatMessageStyles}>
                                 <div style={styles.toolCallBubbleStyles}>
@@ -284,9 +293,9 @@ const RovoDevView: React.FC = () => {
                             </div>
                         );
                     });
+
                 default:
                     const htmlContent = Marked.parse(message.text);
-
                     return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
             }
         } catch (error) {

@@ -42,10 +42,8 @@ interface RovoDevToolCallChunk {
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.ToolReturnPart
 interface RovoDevToolReturnResponseRaw {
-    tool_name?: string;
-    tool_name_delta?: string;
-    content?: string;
-    content_delta?: string;
+    tool_name: string;
+    content: string | object;
     tool_call_id: string;
     timestamp: string;
 }
@@ -128,7 +126,8 @@ export interface RovoDevToolCallResponse {
 export interface RovoDevToolReturnResponse {
     event_kind: 'tool-return';
     tool_name: string;
-    content: string;
+    content?: string;
+    parsedContent?: object;
     tool_call_id: string;
     timestamp: string;
 }
@@ -192,23 +191,15 @@ function parseResponseToolCall(
     }
 }
 
-function parseResponseToolReturn(
-    data: RovoDevToolReturnResponseRaw,
-    buffer?: RovoDevToolReturnResponse,
-): RovoDevToolReturnResponse {
-    if (buffer) {
-        buffer.tool_name += data.tool_name_delta || '';
-        buffer.content += data.content_delta || '';
-        return buffer;
-    } else {
-        return {
-            event_kind: 'tool-return',
-            tool_name: data.tool_name || '',
-            content: data.content || '',
-            tool_call_id: data.tool_call_id,
-            timestamp: data.timestamp,
-        };
-    }
+function parseResponseToolReturn(data: RovoDevToolReturnResponseRaw): RovoDevToolReturnResponse {
+    return {
+        event_kind: 'tool-return',
+        tool_name: data.tool_name || '',
+        content: typeof data.content === 'string' ? data.content : undefined,
+        parsedContent: typeof data.content === 'object' ? data.content : undefined,
+        tool_call_id: data.tool_call_id,
+        timestamp: data.timestamp,
+    };
 }
 
 function parseResponseRetryPrompt(
@@ -346,15 +337,22 @@ function parseGenericReponse(chunk: RovoDevSingleChunk, buffer?: RovoDevResponse
         // text is a special case, where we don't care about reconstructing the delta messages,
         // but we just want to send every single chunk as individual messages
         case 'text':
+            if (buffer) {
+                throw new Error('RovoDev parser error: text should not have buffer set');
+            }
             return parseResponseText(chunk.data);
 
         case 'tool-call':
         case 'tool_call':
             return parseResponseToolCall(chunk.data, buffer as RovoDevToolCallResponse);
 
+        // it doesn't seem like tool-return can be split in parts
         case 'tool-return':
         case 'tool_return':
-            return parseResponseToolReturn(chunk.data, buffer as RovoDevToolReturnResponse);
+            if (buffer) {
+                throw new Error('RovoDev parser error: tool-return seem to be split');
+            }
+            return parseResponseToolReturn(chunk.data);
 
         case 'retry-prompt':
         case 'retry_prompt':

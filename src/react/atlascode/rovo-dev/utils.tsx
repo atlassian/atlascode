@@ -1,8 +1,9 @@
-export type ChatMessage = DefaultMessage | ToolCallMessage | ToolReturnMessage;
+export type ToolReturnMessage = ToolReturnFileMessage | ToolReturnBashMessage | ToolReturnTechnicalPlanMessage;
+export type ChatMessage = DefaultMessage | ToolCallMessage | ToolReturnGenericMessage;
 
 export interface DefaultMessage {
     text: string;
-    author: 'User' | 'RovoDev' | 'ToolCall' | 'ToolReturn';
+    author: 'User' | 'RovoDev';
     timestamp: number;
 }
 
@@ -13,12 +14,50 @@ export interface ToolCallMessage {
     tool_call_id: string; // Optional ID for tracking tool calls
 }
 
-export interface ToolReturnMessage {
-    tool_name: string;
+export interface ToolReturnFileMessage {
+    tool_name: 'expand_code_chunks' | 'find_and_replace_code' | 'open_files' | 'create_file' | 'delete_file';
     author: 'ToolReturn';
     content: string;
-    tool_call_id: string; // Optional ID for tracking tool returns
-    args?: string; // Optional arguments from the tool call
+    tool_call_id: string;
+    args?: string;
+}
+
+export interface ToolReturnBashMessage {
+    tool_name: 'bash';
+    author: 'ToolReturn';
+    tool_call_id: string;
+    args?: string;
+}
+
+export interface ToolReturnTechnicalPlanMessage {
+    tool_name: 'create_technical_plan';
+    author: 'ToolReturn';
+    content: TechnicalPlan;
+    tool_call_id: string;
+    args?: string;
+}
+
+export interface ToolReturnGenericMessage {
+    tool_name: string;
+    author: 'ToolReturn';
+    content?: any;
+    tool_call_id: string;
+    args?: string;
+}
+
+export interface TechnicalPlanFileToChange {
+    filePath: string;
+    descriptionOfChange: string;
+    clarifyingQuestionIfAny?: string | null;
+}
+
+export interface TechnicalPlanLogicalChange {
+    summary: string;
+    filesToChange: TechnicalPlanFileToChange[];
+}
+
+export interface TechnicalPlan {
+    logicalChanges: TechnicalPlanLogicalChange[];
 }
 
 export interface ToolReturnParseResult {
@@ -26,7 +65,9 @@ export interface ToolReturnParseResult {
     diff?: string;
     filePath?: string;
     title?: string;
+    technicalPlan?: TechnicalPlan;
 }
+
 /**
  * Parses the content of a ToolReturnMessage and extracts relevant information.
  * The function handles different tool names and formats the output accordingly.
@@ -34,9 +75,10 @@ export interface ToolReturnParseResult {
  * @param msg - The ToolReturnMessage to parse.
  * @returns An array of objects containing content, diff, and filePath.
  */
-export function parseToolReturnMessage(msg: ToolReturnMessage): ToolReturnParseResult[] {
-    const rawContent = msg.content;
+export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolReturnParseResult[] {
     const resp: ToolReturnParseResult[] = [];
+
+    const msg = rawMsg as ToolReturnMessage;
 
     switch (msg.tool_name) {
         case 'expand_code_chunks':
@@ -44,7 +86,7 @@ export function parseToolReturnMessage(msg: ToolReturnMessage): ToolReturnParseR
         case 'open_files':
         case 'create_file':
         case 'delete_file':
-            const contentArray = rawContent.split('\n\n');
+            const contentArray = msg.content.split('\n\n');
 
             for (const line of contentArray) {
                 const matches = line.match(
@@ -69,10 +111,11 @@ export function parseToolReturnMessage(msg: ToolReturnMessage): ToolReturnParseR
             if (resp.length === 0) {
                 // If no matches found, return the raw content
                 resp.push({
-                    content: rawContent,
+                    content: msg.content,
                 });
             }
             break;
+
         case 'bash':
             const args = msg.args && JSON.parse(msg.args);
             let command = '';
@@ -86,10 +129,18 @@ export function parseToolReturnMessage(msg: ToolReturnMessage): ToolReturnParseR
                 content: 'EXECUTED',
             });
             break;
+
+        case 'create_technical_plan':
+            resp.push({
+                content: 'A cool technical plan',
+                technicalPlan: msg.content,
+            });
+            break;
+
         default:
             // For other tool names, we just return the raw content
             resp.push({
-                content: rawContent,
+                content: rawMsg.content,
             });
             break;
     }
