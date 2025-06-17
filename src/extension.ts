@@ -99,7 +99,7 @@ export async function activate(context: ExtensionContext) {
     Logger.info(
         `Atlassian for VS Code (v${atlascodeVersion}) activated in ${
             duration[0] * 1000 + Math.floor(duration[1] / 1000000)
-        } ms `,
+        } ms`,
     );
 }
 
