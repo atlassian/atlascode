@@ -545,7 +545,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             ts: commit.authorTimestamp,
             hash: commit.id,
             message: commit.message,
-            url: '',
+            url: `${pr.site.details.baseLinkUrl}/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/commits/${commit.id}`,
             htmlSummary: '',
             rawSummary: '',
         }));
