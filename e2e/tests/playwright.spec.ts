@@ -115,7 +115,7 @@ test('Authenticating with Jira works, and assigned items are displayed', async (
 });
 
 test('Assigning Jira issue to myself works', async ({ page }) => {
-    await page.goto('http://[::1]:9988/');
+    await page.goto('http://localhost:9988/');
 
     // Click the Atlassian tab
     await page.getByRole('tab', { name: 'Atlassian' }).click();
