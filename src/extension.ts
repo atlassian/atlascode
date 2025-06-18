@@ -23,7 +23,7 @@ import {
 } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
-import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
+import { FeatureFlagClient, Features } from './util/featureFlags';
 import { NotificationManagerImpl } from './views/notifications/notificationManager';
 
 const AnalyticDelay = 5000;
@@ -72,12 +72,7 @@ export async function activate(context: ExtensionContext) {
 
     // new user for auth exp
     if (previousVersion === undefined) {
-        const expVal = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeOnboardingExperiment);
-        if (expVal) {
-            commands.executeCommand(Commands.ShowOnboardingFlow);
-        } else {
-            commands.executeCommand(Commands.ShowOnboardingPage);
-        }
+        commands.executeCommand(Commands.ShowOnboardingPage);
     } else {
         showWelcomePage(atlascodeVersion, previousVersion);
     }
