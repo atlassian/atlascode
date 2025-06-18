@@ -140,7 +140,7 @@ export class BannerDelegate implements NotificationDelegate {
     }
 
     private analyticsBannerShown(uri: Uri, count: number) {
-        notificationChangeEvent(uri, NotificationSurface.Banner, count).then((e) => {
+        notificationChangeEvent(undefined, uri, NotificationSurface.Banner, count).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

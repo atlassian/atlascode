@@ -2,11 +2,16 @@
 
 ---
 
+## What's new in 3.8.4
+
+### Features
+
+- Added a `Don't show again` button in the pipeline notification to easily disable this type of notifications
+
 ## What's new in 3.8.3
 
 ### Features
 
-- Implement native Vscode onboarding experiment
 - It is now possible to transition Jira work items to a different status from the sidebar, via `Transition Issue...` context menu option
 - Notifications for unseen & recent comments on Jira and Bitbucket are now supported 
 
