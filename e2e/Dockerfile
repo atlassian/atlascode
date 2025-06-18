@@ -20,6 +20,9 @@ WORKDIR /atlascode
 # Where our vscode, chromedriver, images etc. will go
 ENV TEST_RESOURCES=/atlascode/e2e/.resources
 
+# Disables StatSig feature flag and experiments in code
+ENV ATLASCODE_NO_EXP=1
+
 RUN cat <<EOF > /usr/bin/entrypoint.sh && chmod +x /usr/bin/entrypoint.sh
 #!/usr/bin/env bash
 set -ex

@@ -1,11 +1,7 @@
 import FeatureGates, { ClientOptions, FeatureGateEnvironment, Identifiers } from '@atlaskit/feature-gate-js-client';
 import { NewFeatureGateOptions } from '@atlaskit/feature-gate-js-client/dist/types/client/types';
 
-import {
-    ClientInitializedErrorType,
-    featureGateExposureBoolEvent,
-    featureGateExposureStringEvent,
-} from '../../analytics';
+import { ClientInitializedErrorType } from '../../analytics';
 import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
 import { Logger } from '../../logger';
 import { ExperimentGates, ExperimentGateValues, Experiments, FeatureGateValues, Features } from './features';
@@ -24,15 +20,15 @@ export class FeatureFlagClientInitError {
 }
 
 export abstract class FeatureFlagClient {
-    private static analyticsClient: AnalyticsClient;
-
     private static featureGateOverrides: FeatureGateValues;
     private static experimentValueOverride: ExperimentGateValues;
+
+    private static isExperimentationDisabled = false;
 
     public static async initialize(options: FeatureFlagClientOptions): Promise<void> {
         this.initializeOverrides();
 
-        this.analyticsClient = options.analyticsClient;
+        this.isExperimentationDisabled = !!process.env.ATLASCODE_NO_EXP;
 
         const targetApp = process.env.ATLASCODE_FX3_TARGET_APP;
         const environment = process.env.ATLASCODE_FX3_ENVIRONMENT as FeatureGateEnvironment;
@@ -53,12 +49,13 @@ export abstract class FeatureFlagClient {
 
         Logger.debug(`FeatureGates: initializing, target: ${targetApp}, environment: ${environment}`);
 
+        const loggingEnabled = this.isExperimentationDisabled ? 'disabled' : 'always';
         const clientOptions: Options = {
             apiKey,
             environment,
             targetApp,
             fetchTimeoutMs: Number.parseInt(timeout),
-            loggingEnabled: 'always',
+            loggingEnabled,
             ignoreWindowUndefined: true,
         };
 
@@ -73,31 +70,37 @@ export abstract class FeatureFlagClient {
         this.featureGateOverrides = {} as FeatureGateValues;
         this.experimentValueOverride = {} as ExperimentGateValues;
 
-        const ffSplit = (process.env.ATLASCODE_FF_OVERRIDES || '')
-            .split(',')
-            .map(this.parseBoolOverride<Features>)
-            .filter((x) => !!x);
+        if (process.env.ATLASCODE_FF_OVERRIDES) {
+            const ffSplit = (process.env.ATLASCODE_FF_OVERRIDES || '')
+                .split(',')
+                .map(this.parseBoolOverride<Features>)
+                .filter((x) => !!x);
 
-        for (const { key, value } of ffSplit) {
-            this.featureGateOverrides[key] = value;
+            for (const { key, value } of ffSplit) {
+                this.featureGateOverrides[key] = value;
+            }
         }
 
-        const boolExpSplit = (process.env.ATLASCODE_EXP_OVERRIDES_BOOL || '')
-            .split(',')
-            .map(this.parseBoolOverride<Experiments>)
-            .filter((x) => !!x);
+        if (process.env.ATLASCODE_EXP_OVERRIDES_BOOL) {
+            const boolExpSplit = (process.env.ATLASCODE_EXP_OVERRIDES_BOOL || '')
+                .split(',')
+                .map(this.parseBoolOverride<Experiments>)
+                .filter((x) => !!x);
 
-        for (const { key, value } of boolExpSplit) {
-            this.experimentValueOverride[key] = value;
+            for (const { key, value } of boolExpSplit) {
+                this.experimentValueOverride[key] = value;
+            }
         }
 
-        const strExpSplit = (process.env.ATLASCODE_EXP_OVERRIDES_STRING || '')
-            .split(',')
-            .map(this.parseStringOverride)
-            .filter((x) => !!x);
+        if (process.env.ATLASCODE_EXP_OVERRIDES_STRING) {
+            const strExpSplit = (process.env.ATLASCODE_EXP_OVERRIDES_STRING || '')
+                .split(',')
+                .map(this.parseStringOverride)
+                .filter((x) => !!x);
 
-        for (const { key, value } of strExpSplit) {
-            this.experimentValueOverride[key] = value;
+            for (const { key, value } of strExpSplit) {
+                this.experimentValueOverride[key] = value;
+            }
         }
     }
 
@@ -128,7 +131,7 @@ export abstract class FeatureFlagClient {
     }
 
     public static isInitialized(): boolean {
-        return FeatureGates.initializeCompleted();
+        return !this.isExperimentationDisabled && FeatureGates.initializeCompleted();
     }
 
     public static checkGate(gate: Features): boolean {
@@ -164,77 +167,6 @@ export abstract class FeatureFlagClient {
                 experimentGate.parameter,
                 experimentGate.defaultValue,
             );
-        }
-
-        Logger.debug(`Experiment ${experiment} -> ${gateValue}`);
-        return gateValue;
-    }
-
-    public static checkGateValueWithInstrumentation(gate: Features): boolean {
-        if (this.featureGateOverrides.hasOwnProperty(gate)) {
-            const value = this.featureGateOverrides[gate];
-            featureGateExposureBoolEvent(gate, false, value, 3).then((e) => {
-                this.analyticsClient.sendTrackEvent(e);
-            });
-            return value;
-        }
-
-        let gateValue = false;
-        if (FeatureGates.initializeCompleted()) {
-            // FeatureGates.checkGate returns false if any errors
-            gateValue = FeatureGates.checkGate(gate);
-            featureGateExposureBoolEvent(gate, true, gateValue, 0).then((e) => {
-                this.analyticsClient.sendTrackEvent(e);
-            });
-        } else {
-            featureGateExposureBoolEvent(gate, false, gateValue, 1).then((e) => {
-                this.analyticsClient.sendTrackEvent(e);
-            });
-        }
-
-        Logger.debug(`FeatureGates ${gate} -> ${gateValue}`);
-        return gateValue;
-    }
-
-    public static checkExperimentStringValueWithInstrumentation(experiment: Experiments): string | undefined {
-        // unknown experiment name
-        if (!ExperimentGates.hasOwnProperty(experiment)) {
-            featureGateExposureStringEvent(experiment, false, '', 2).then((e) => {
-                this.analyticsClient.sendTrackEvent(e);
-            });
-            return undefined;
-        }
-
-        if (this.experimentValueOverride.hasOwnProperty(experiment)) {
-            const value = this.experimentValueOverride[experiment] as string;
-            featureGateExposureStringEvent(experiment, false, value, 3).then((e) => {
-                this.analyticsClient.sendTrackEvent(e);
-            });
-            return value;
-        }
-
-        const experimentGate = ExperimentGates[experiment];
-        let gateValue = experimentGate.defaultValue as string;
-        if (FeatureGates.initializeCompleted()) {
-            gateValue = FeatureGates.getExperimentValue(
-                experiment,
-                experimentGate.parameter,
-                experimentGate.defaultValue,
-            );
-
-            if (gateValue === experimentGate.defaultValue) {
-                featureGateExposureStringEvent(experiment, false, gateValue, 4).then((e) => {
-                    this.analyticsClient.sendTrackEvent(e);
-                });
-            } else {
-                featureGateExposureStringEvent(experiment, true, gateValue, 0).then((e) => {
-                    this.analyticsClient.sendTrackEvent(e);
-                });
-            }
-        } else {
-            featureGateExposureStringEvent(experiment, false, gateValue, 1).then((e) => {
-                this.analyticsClient.sendTrackEvent(e);
-            });
         }
 
         Logger.debug(`Experiment ${experiment} -> ${gateValue}`);
