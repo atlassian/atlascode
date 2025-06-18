@@ -1,5 +1,5 @@
 export type ToolReturnMessage = ToolReturnFileMessage | ToolReturnBashMessage | ToolReturnTechnicalPlanMessage;
-export type ChatMessage = DefaultMessage | ToolCallMessage | ToolReturnGenericMessage;
+export type ChatMessage = DefaultMessage | ToolCallMessage | ToolReturnGenericMessage | ToolReturnGroupedMessage;
 
 export interface DefaultMessage {
     text: string;
@@ -39,10 +39,15 @@ export interface ToolReturnTechnicalPlanMessage {
 
 export interface ToolReturnGenericMessage {
     tool_name: string;
-    author: 'ToolReturn';
+    author: 'ToolReturn' | 'ModifiedFile';
     content?: any;
     tool_call_id: string;
     args?: string;
+}
+
+export interface ToolReturnGroupedMessage {
+    author: 'ReturnGroup';
+    tool_returns: ToolReturnGenericMessage[];
 }
 
 export interface TechnicalPlanFileToChange {
@@ -96,7 +101,7 @@ export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolRe
                 if (matches && matches.length >= 3) {
                     let filePath = matches[2].trim();
                     // Remove trailing colon if present
-                    if (filePath.endsWith(':')) {
+                    if (filePath.endsWith(':') || filePath.endsWith('.')) {
                         filePath = filePath.slice(0, -1);
                     }
                     const title = filePath ? filePath.match(/([^/\\]+)$/)?.[0] : undefined;

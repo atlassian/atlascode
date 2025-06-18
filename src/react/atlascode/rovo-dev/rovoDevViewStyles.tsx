@@ -9,19 +9,23 @@ export const rovoDevContainerStyles: React.CSSProperties = {
     fontFamily: 'var(--vscode-font-family)',
 };
 
-export const rovoDevPromptContainerStyles: React.CSSProperties = {
+export const rovoDevInputSectionStyles: React.CSSProperties = {
     display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
     width: '100%',
-    height: '100px',
     position: 'fixed',
     bottom: 0,
     left: 0,
+    zIndex: 1000,
+};
+
+export const rovoDevPromptContainerStyles: React.CSSProperties = {
+    display: 'flex',
+    width: '100%',
+    height: '100px',
     padding: '10px 20px',
     borderTop: '1px solid var(--vscode-panel-border)',
     background: 'var(--vscode-sideBar-background)',
-    zIndex: 1000,
     boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.05)',
 };
 
@@ -66,7 +70,14 @@ export const chatMessagesContainerStyles: React.CSSProperties = {
 export const chatMessageStyles: React.CSSProperties = {
     width: '100%',
     marginBottom: '8px',
-    padding: '4px',
+    padding: '8px',
+    borderRadius: '8px',
+    position: 'relative',
+};
+
+export const toolReturnListItemStyles: React.CSSProperties = {
+    width: '100%',
+    marginBottom: '4px',
     borderRadius: '8px',
     position: 'relative',
 };
@@ -105,7 +116,7 @@ export const messageTimestampStyles: React.CSSProperties = {
 };
 
 export const messageContentStyles: React.CSSProperties = {
-    whiteSpace: 'pre-wrap',
+    whiteSpace: 'normal',
     wordBreak: 'break-word',
     color: 'var(--vscode-editor-foreground)',
 };
@@ -161,4 +172,15 @@ export const toolIconStyles: React.CSSProperties = {
     alignItems: 'center',
     justifyContent: 'flex-start',
     marginBottom: 'auto',
+};
+
+export const modifiedFileComponentStyles: React.CSSProperties = {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '6px',
+    borderRadius: '4px',
+    backgroundColor: 'var(--vscode-editorWidget-background)',
 };

@@ -2,23 +2,13 @@ import LoadingButton from '@atlaskit/button/loading-button';
 import SendIcon from '@atlaskit/icon/glyph/send';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
-import { Marked } from '@ts-stack/markdown';
 import React, { useCallback, useState } from 'react';
 import { RovoDevResponse } from 'src/rovo-dev/responseParser';
 
 import { useMessagingApi } from '../messagingApi';
+import { ChatMessageItem, renderChatHistory, ToolCallItem, ToolDrawer, UpdatedFilesComponent } from './common';
 import * as styles from './rovoDevViewStyles';
-import {
-    ChatMessage,
-    parseToolReturnMessage,
-    ToolCallMessage,
-    toolNameIconMap,
-    ToolReturnGenericMessage,
-} from './utils';
-
-Marked.setOptions({
-    sanitize: true,
-});
+import { ChatMessage, ToolCallMessage, ToolReturnGenericMessage } from './utils';
 
 const RovoDevView: React.FC = () => {
     const [sendButtonDisabled, setSendButtonDisabled] = useState(true);
@@ -28,6 +18,10 @@ const RovoDevView: React.FC = () => {
     const [currentResponse, setCurrentResponse] = useState('');
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
     const [pendingToolCall, setPendingToolCall] = useState<ToolCallMessage | null>(null);
+
+    const [currentTools, setCurrentTools] = useState<ToolReturnGenericMessage[]>([]);
+    // const [modifiedFilesCount, setModifiedFilesCount] = useState(0);
+
     const chatEndRef = React.useRef<HTMLDivElement>(null);
 
     // Scroll to bottom when chat updates
@@ -42,13 +36,6 @@ const RovoDevView: React.FC = () => {
             highlightElement(block, detectLanguage(block.textContent || ''));
         });
     }, [chatHistory, currentResponse]);
-
-    const handleAppendChatHistory = useCallback(
-        (message: ChatMessage) => {
-            setChatHistory((prev) => [...prev, message]);
-        },
-        [setChatHistory],
-    );
 
     const appendCurrentResponse = useCallback(
         (text) => {
@@ -65,6 +52,24 @@ const RovoDevView: React.FC = () => {
         [setCurrentResponse],
     );
 
+    const handleAppendChatHistory = useCallback(
+        (msg: ChatMessage) => {
+            setChatHistory((prev) => {
+                return [...prev, msg];
+            });
+        },
+        [setChatHistory],
+    );
+
+    const handleAppendToolReturns = useCallback(
+        (toolReturn: ToolReturnGenericMessage) => {
+            setCurrentTools((prev) => {
+                return [...prev, toolReturn];
+            });
+        },
+        [setCurrentTools],
+    );
+
     const handleResponse = useCallback(
         (data: RovoDevResponse) => {
             console.log('Received response data:', data);
@@ -73,6 +78,14 @@ const RovoDevView: React.FC = () => {
                     if (!data.content) {
                         break;
                     }
+                    if (currentTools && currentTools.length > 0) {
+                        handleAppendChatHistory({
+                            author: 'ReturnGroup',
+                            tool_returns: currentTools,
+                        });
+                        setCurrentTools([]); // Clear tools if new text response comes in
+                    }
+
                     appendCurrentResponse(data.content);
                     break;
 
@@ -95,7 +108,7 @@ const RovoDevView: React.FC = () => {
                         args: pendingToolCall?.args || undefined, // Use args from pending tool call if available
                     };
                     setPendingToolCall(null); // Clear pending tool call
-                    handleAppendChatHistory(returnMessage);
+                    handleAppendToolReturns(returnMessage);
                     break;
 
                 default:
@@ -103,7 +116,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [appendCurrentResponse, handleAppendChatHistory, pendingToolCall],
+        [appendCurrentResponse, currentTools, handleAppendChatHistory, handleAppendToolReturns, pendingToolCall?.args],
     );
 
     const onMessageHandler = useCallback(
@@ -214,14 +227,22 @@ const RovoDevView: React.FC = () => {
         },
         [postMessage, setCurrentResponse, sendButtonDisabled, setSendButtonDisabled],
     );
+
     const openFile = useCallback(
         (filePath: string, range?: any[]) => {
             // Implement file opening logic here
-            postMessage({
-                type: 'openFile',
-                filePath,
-                range,
-            });
+            if (!range || range.length !== 2) {
+                postMessage({
+                    type: 'openFile',
+                    filePath,
+                });
+            } else {
+                postMessage({
+                    type: 'openFile',
+                    filePath,
+                    range,
+                });
+            }
         },
         [postMessage],
     );
@@ -236,109 +257,14 @@ const RovoDevView: React.FC = () => {
         [sendPrompt, promptText],
     );
 
-    // Function to render message content with tool highlighting
-    const renderMessageContent = (message: ChatMessage) => {
-        // Split the text by tool markers
-        try {
-            switch (message.author) {
-                case 'ToolCall':
-                    if (!message.tool_name || !message.args) {
-                        return <div>Error: Invalid tool call message</div>;
-                    }
-
-                    return (
-                        <div style={styles.chatMessageStyles}>
-                            <div style={styles.toolCallBubbleStyles}>
-                                <div style={styles.toolCallArgsStyles}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <i className="codicon codicon-loading codicon-modifier-spin" />
-                                        {message.tool_name}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    );
-
-                case 'ToolReturn':
-                    if (!message.tool_name) {
-                        return <div>Error: Invalid tool return message</div>;
-                    }
-
-                    const parsed = parseToolReturnMessage(message);
-
-                    return parsed.map(({ content, filePath, title }) => {
-                        if (typeof content === 'object') {
-                            content = JSON.stringify(content);
-                        }
-
-                        const iconClass = toolNameIconMap[message.tool_name] || 'codicon codicon-tools';
-                        return (
-                            <div style={styles.chatMessageStyles}>
-                                <div style={styles.toolCallBubbleStyles}>
-                                    <a
-                                        onClick={() => filePath && openFile(filePath)}
-                                        style={
-                                            filePath
-                                                ? { ...styles.toolCallArgsStyles, cursor: 'pointer' }
-                                                : styles.toolCallArgsStyles
-                                        }
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                            <i className={iconClass} />
-                                            {title && <div style={{ fontWeight: 'bold' }}>{title}</div>}
-                                        </div>
-                                        <div style={{ fontSize: '9px', textAlign: 'right' }}>{content}</div>
-                                    </a>
-                                </div>
-                            </div>
-                        );
-                    });
-
-                default:
-                    const htmlContent = Marked.parse(message.text);
-                    return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
-            }
-        } catch (error) {
-            console.error('Error rendering message content:', error);
-            return <div>Error rendering message content</div>;
-        }
-    };
-
-    // const toolContent = (content: string, filePath?: string, range?: any[]) =>
-    //     filePath ? (
-    //         <pre style={styles.toolCallArgsPreStyles}>
-    //             {content} <a onClick={() => openFile(filePath, range)}>{filePath}</a>
-    //         </pre>
-    //     ) : (
-    //         <pre style={styles.toolCallArgsPreStyles}>{content}</pre>
-    //     );
-
-    // Render chat message
-    const renderChatMessage = (message: ChatMessage, index: number) => {
-        const messageTypeStyles =
-            message.author.toLowerCase() === 'user' ? styles.userMessageStyles : styles.agentMessageStyles;
-        return (
-            <div key={index} style={{ ...styles.chatMessageStyles, ...messageTypeStyles }}>
-                <div style={styles.messageHeaderStyles}>
-                    <span style={styles.messageAuthorStyles}>{message.author}</span>
-                </div>
-                <div style={styles.messageContentStyles}>{renderMessageContent(message)}</div>
-            </div>
-        );
-    };
-
     return (
         <div className="rovoDevChat" style={styles.rovoDevContainerStyles}>
             <div style={styles.chatMessagesContainerStyles}>
-                {chatHistory.map((msg, index) => {
-                    if (msg.author === 'ToolCall' || msg.author === 'ToolReturn') {
-                        return renderMessageContent(msg);
-                    } else {
-                        return renderChatMessage(msg, index);
-                    }
-                })}
-                {pendingToolCall && renderMessageContent(pendingToolCall)}
-                {/* Show streaming response if available */}
+                {chatHistory.map((msg, index) => renderChatHistory(msg, index, openFile))}
+                {currentTools && currentTools.length > 0 && (
+                    <ToolDrawer content={currentTools} openFile={openFile} isStreaming={true} />
+                )}
+                {pendingToolCall && <ToolCallItem msg={pendingToolCall} />}
                 {currentResponse && (
                     <div
                         style={{
@@ -347,54 +273,67 @@ const RovoDevView: React.FC = () => {
                             ...styles.streamingMessageStyles,
                         }}
                     >
-                        <div style={styles.messageHeaderStyles}>
-                            <span style={styles.messageAuthorStyles}>RovoDev is typing...</span>
-                            <span style={styles.messageTimestampStyles}>{new Date().toLocaleTimeString()}</span>
-                        </div>
                         <div style={styles.messageContentStyles}>
-                            {renderMessageContent({ text: currentResponse, author: 'RovoDev', timestamp: Date.now() })}
+                            <ChatMessageItem
+                                msg={{
+                                    text: currentResponse,
+                                    author: 'RovoDev',
+                                    timestamp: Date.now(),
+                                }}
+                                index={chatHistory.length}
+                                isStreaming={true}
+                            />
                         </div>
                     </div>
                 )}
                 <div ref={chatEndRef} />
             </div>
-
-            <div style={styles.rovoDevPromptContainerStyles}>
-                <div
-                    onFocus={() => setPromptContainerFocused(true)}
-                    onBlur={() => setPromptContainerFocused(false)}
-                    style={
-                        promptContainerFocused
-                            ? {
-                                  ...styles.rovoDevTextareaContainerStyles,
-                                  outline: 'var(--vscode-focusBorder) solid 1px',
-                              }
-                            : styles.rovoDevTextareaContainerStyles
-                    }
-                >
-                    <textarea
-                        style={styles.rovoDevTextareaStyles}
-                        placeholder="Write a prompt to get started"
-                        onChange={(element) => setPromptText(element.target.value)}
-                        onKeyDown={handleKeyDown}
-                        value={promptText}
-                    />
-                    <div style={styles.rovoDevButtonStyles}>
-                        <LoadingButton
-                            style={{
-                                color: 'var(--vscode-input-foreground) !important',
-                                border: '1px solid var(--vscode-button-border) !important',
-                                backgroundColor: 'var(--vscode-input-background) !important',
-                            }}
-                            label="Send button"
-                            iconBefore={<SendIcon size="small" label="Send" />}
-                            isDisabled={sendButtonDisabled}
-                            onClick={() => sendPrompt(promptText)}
+            <div style={styles.rovoDevInputSectionStyles}>
+                <UpdatedFilesComponent
+                    updatedFilesCount={5}
+                    onUndo={() => {
+                        console.log('Undoing changes');
+                    }}
+                    onAccept={() => {
+                        console.log('Accepting changes');
+                    }}
+                />
+                <div style={styles.rovoDevPromptContainerStyles}>
+                    <div
+                        onFocus={() => setPromptContainerFocused(true)}
+                        onBlur={() => setPromptContainerFocused(false)}
+                        style={
+                            promptContainerFocused
+                                ? {
+                                      ...styles.rovoDevTextareaContainerStyles,
+                                      outline: 'var(--vscode-focusBorder) solid 1px',
+                                  }
+                                : styles.rovoDevTextareaContainerStyles
+                        }
+                    >
+                        <textarea
+                            style={styles.rovoDevTextareaStyles}
+                            placeholder={currentResponse ? 'Generating response...' : 'Type in a question'}
+                            onChange={(element) => setPromptText(element.target.value)}
+                            onKeyDown={handleKeyDown}
+                            value={promptText}
                         />
+                        <div style={styles.rovoDevButtonStyles}>
+                            <LoadingButton
+                                style={{
+                                    color: 'var(--vscode-input-foreground) !important',
+                                    border: '1px solid var(--vscode-button-border) !important',
+                                    backgroundColor: 'var(--vscode-input-background) !important',
+                                }}
+                                label="Send button"
+                                iconBefore={<SendIcon size="small" label="Send" />}
+                                isDisabled={sendButtonDisabled}
+                                onClick={() => sendPrompt(promptText)}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
-
             <br />
             <br />
         </div>
