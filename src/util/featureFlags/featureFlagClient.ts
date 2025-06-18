@@ -23,8 +23,12 @@ export abstract class FeatureFlagClient {
     private static featureGateOverrides: FeatureGateValues;
     private static experimentValueOverride: ExperimentGateValues;
 
+    private static isExperimentationDisabled = false;
+
     public static async initialize(options: FeatureFlagClientOptions): Promise<void> {
         this.initializeOverrides();
+
+        this.isExperimentationDisabled = !!process.env.ATLASCODE_NO_EXP;
 
         const targetApp = process.env.ATLASCODE_FX3_TARGET_APP;
         const environment = process.env.ATLASCODE_FX3_ENVIRONMENT as FeatureGateEnvironment;
@@ -45,9 +49,7 @@ export abstract class FeatureFlagClient {
 
         Logger.debug(`FeatureGates: initializing, target: ${targetApp}, environment: ${environment}`);
 
-        // disable StatSig logging exposure when running in GitHub
-        const loggingEnabled = !!process.env.ATLASCODE_NO_EXP ? 'disabled' : 'always';
-
+        const loggingEnabled = this.isExperimentationDisabled ? 'disabled' : 'always';
         const clientOptions: Options = {
             apiKey,
             environment,
@@ -68,31 +70,37 @@ export abstract class FeatureFlagClient {
         this.featureGateOverrides = {} as FeatureGateValues;
         this.experimentValueOverride = {} as ExperimentGateValues;
 
-        const ffSplit = (process.env.ATLASCODE_FF_OVERRIDES || '')
-            .split(',')
-            .map(this.parseBoolOverride<Features>)
-            .filter((x) => !!x);
+        if (process.env.ATLASCODE_FF_OVERRIDES) {
+            const ffSplit = (process.env.ATLASCODE_FF_OVERRIDES || '')
+                .split(',')
+                .map(this.parseBoolOverride<Features>)
+                .filter((x) => !!x);
 
-        for (const { key, value } of ffSplit) {
-            this.featureGateOverrides[key] = value;
+            for (const { key, value } of ffSplit) {
+                this.featureGateOverrides[key] = value;
+            }
         }
 
-        const boolExpSplit = (process.env.ATLASCODE_EXP_OVERRIDES_BOOL || '')
-            .split(',')
-            .map(this.parseBoolOverride<Experiments>)
-            .filter((x) => !!x);
+        if (process.env.ATLASCODE_EXP_OVERRIDES_BOOL) {
+            const boolExpSplit = (process.env.ATLASCODE_EXP_OVERRIDES_BOOL || '')
+                .split(',')
+                .map(this.parseBoolOverride<Experiments>)
+                .filter((x) => !!x);
 
-        for (const { key, value } of boolExpSplit) {
-            this.experimentValueOverride[key] = value;
+            for (const { key, value } of boolExpSplit) {
+                this.experimentValueOverride[key] = value;
+            }
         }
 
-        const strExpSplit = (process.env.ATLASCODE_EXP_OVERRIDES_STRING || '')
-            .split(',')
-            .map(this.parseStringOverride)
-            .filter((x) => !!x);
+        if (process.env.ATLASCODE_EXP_OVERRIDES_STRING) {
+            const strExpSplit = (process.env.ATLASCODE_EXP_OVERRIDES_STRING || '')
+                .split(',')
+                .map(this.parseStringOverride)
+                .filter((x) => !!x);
 
-        for (const { key, value } of strExpSplit) {
-            this.experimentValueOverride[key] = value;
+            for (const { key, value } of strExpSplit) {
+                this.experimentValueOverride[key] = value;
+            }
         }
     }
 
@@ -123,7 +131,7 @@ export abstract class FeatureFlagClient {
     }
 
     public static isInitialized(): boolean {
-        return FeatureGates.initializeCompleted();
+        return !this.isExperimentationDisabled && FeatureGates.initializeCompleted();
     }
 
     public static checkGate(gate: Features): boolean {
@@ -135,11 +143,6 @@ export abstract class FeatureFlagClient {
         if (this.isInitialized()) {
             // FeatureGates.checkGate returns false if any errors
             gateValue = FeatureGates.checkGate(gate);
-        }
-
-        // in GitHub pipeline, we always fail the gate check
-        if (process.env.ATLASCODE_NO_EXP) {
-            return false;
         }
 
         Logger.debug(`FeatureGates ${gate} -> ${gateValue}`);
@@ -164,11 +167,6 @@ export abstract class FeatureFlagClient {
                 experimentGate.parameter,
                 experimentGate.defaultValue,
             );
-        }
-
-        // in GitHub pipeline, we always pretend we are not part of the experiment
-        if (process.env.ATLASCODE_NO_EXP) {
-            return experimentGate.defaultValue;
         }
 
         Logger.debug(`Experiment ${experiment} -> ${gateValue}`);
