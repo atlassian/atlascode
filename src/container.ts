@@ -31,7 +31,7 @@ import OnboardingProvider from './onboarding/onboardingProvider';
 import { Pipeline } from './pipelines/model';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
-import { Experiments, FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
+import { FeatureFlagClient, FeatureFlagClientInitError } from './util/featureFlags';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -187,9 +187,6 @@ export class Container {
                 this.analyticsClient.sendTrackEvent(e);
             });
         }
-
-        FeatureFlagClient.checkExperimentStringValueWithInstrumentation(Experiments.AtlascodeAA);
-        FeatureFlagClient.checkGateValueWithInstrumentation(Features.NoOpFeature);
 
         context.subscriptions.push(AtlascodeUriHandler.create(this._analyticsApi, this._bitbucketHelper));
 
