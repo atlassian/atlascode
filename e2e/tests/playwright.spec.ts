@@ -113,3 +113,75 @@ test('Authenticating with Jira works, and assigned items are displayed', async (
 
     //await expect(page).toHaveScreenshot();
 });
+
+test('Assigning Jira issue to myself works', async ({ page }) => {
+    await page.goto('http://localhost:9988/');
+
+    // Click the Atlassian tab
+    await page.getByRole('tab', { name: 'Atlassian' }).click();
+
+    // Close onboarding tab
+    await page.getByRole('tab', { name: 'Getting Started' }).getByLabel(/close/i).click();
+
+    // Open Jira connection settings
+    await page.getByRole('treeitem', { name: 'Please login to Jira' }).click();
+    await page.getByRole('tab', { name: 'Atlassian Settings' }).click();
+
+    const settingsFrame = page.frameLocator('iframe.webview.ready').frameLocator('iframe[title="Atlassian Settings"]');
+
+    // Fill login form
+    await expect(settingsFrame.getByRole('button', { name: 'Login to Jira' })).toBeVisible();
+    await settingsFrame.getByRole('button', { name: 'Login to Jira' }).click();
+    await settingsFrame.getByLabel('Base URL').fill('https://mockedteams.atlassian.net');
+    await settingsFrame.getByLabel('Username').fill('mock@atlassian.code');
+    await settingsFrame.getByLabel('Password (API token)').fill('12345');
+    await settingsFrame.getByRole('button', { name: 'Save Site' }).click();
+
+    await page.waitForTimeout(250);
+
+    // Click on issue in tree
+    const issueInTree = page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' });
+    await expect(issueInTree).toBeVisible();
+    await issueInTree.click();
+
+    await page.waitForTimeout(2000);
+
+    // Close the settings tab
+    await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
+
+    const issueFrame = page.frameLocator('iframe.webview.ready').frameLocator('iframe[title="Jira Issue"]');
+
+    // Assignee should be set
+    const assigneeWithName = issueFrame.locator('#assignee', { hasText: 'Mocked McMock' });
+    await expect(assigneeWithName).toBeVisible();
+
+    // Clear assignee
+    const clearButton = issueFrame.locator('[aria-label="clear"]');
+    await expect(clearButton).toBeVisible();
+    await clearButton.click();
+
+    // Assignee should be cleared
+    await expect(assigneeWithName).toHaveCount(0);
+    await expect(issueFrame.locator('#assignee')).toBeVisible();
+
+    // Type to reassign
+    const assigneeInput = issueFrame.locator('#assignee input[type="text"]');
+    await expect(assigneeInput).toBeVisible();
+    await assigneeInput.fill('Mock');
+
+    await page.waitForTimeout(2000);
+
+    // Wait for dropdown
+    const menu = issueFrame.locator('.ac-select__menu');
+    await expect(menu).toBeVisible();
+
+    // Select user
+    const userOption = menu.locator('.ac-flex', { hasText: 'Mocked McMock' });
+    await expect(userOption).toBeVisible();
+    await userOption.click();
+
+    await page.waitForTimeout(2000);
+
+    // Assignee should be back
+    await expect(assigneeWithName).toBeVisible();
+});

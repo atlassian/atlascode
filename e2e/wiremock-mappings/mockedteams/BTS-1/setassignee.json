@@ -1,0 +1,25 @@
+{
+  "request": {
+    "method": "PUT",
+    "urlPath": "/rest/api/2/issue/BTS-1",
+    "bodyPatterns": [
+      {
+        "equalToJson": {
+          "fields": {
+            "assignee": {
+              "accountId": "712020:13354d79-beaa-49d6-a55f-b9510892e3f4"
+            }
+          }
+        },
+        "ignoreArrayOrder": true,
+        "ignoreExtraElements": true
+      }
+    ]
+  },
+  "response": {
+    "status": 204,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
