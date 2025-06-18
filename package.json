@@ -99,6 +99,16 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.devsphere.review.initialise",
+                "title": "Initialise Devsphere Review Settings",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.devsphere.custom.reset",
+                "title": "Reset Devsphere Custom Configuration",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.jira.searchIssues",
                 "title": "Search Jira Issue Results",
                 "icon": {
@@ -403,6 +413,14 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.bitbucket.pullRequestsOverview.refresh",
+                "title": "Refresh",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
                 "command": "atlascode.showOnboardingFlow",
                 "title": "Show Onboarding Flow",
                 "category": "Atlassian"
@@ -432,7 +450,12 @@
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
-                    "when": "atlascode:bitbucketExplorerEnabled && config.atlascode.bitbucket.enabled"
+                    "when": "atlascode:bitbucketExplorerEnabled && config.atlascode.bitbucket.enabled && config.atlascode.bitbucket.explorer.repositoryBasedPullRequestView.enabled"
+                },
+                {
+                    "id": "atlascode.views.bb.pullRequestsOverviewTreeView",
+                    "name": "Bitbucket pull requests overview",
+                    "when": "atlascode:bitbucketExplorerEnabled && config.atlascode.bitbucket.enabled && config.atlascode.bitbucket.explorer.pullRequestsOverview.enabled"
                 },
                 {
                     "id": "atlascode.views.bb.pipelinesTreeView",
@@ -579,6 +602,11 @@
                 {
                     "command": "atlascode.disableHelpExplorer",
                     "when": "view == atlascode.views.helpTreeView"
+                },
+                {
+                    "command": "atlascode.bitbucket.pullRequestsOverview.refresh",
+                    "when": "view == atlascode.views.bb.pullRequestsOverviewTreeView",
+                    "group": "navigation@1"
                 }
             ],
             "view/item/context": [
@@ -1103,6 +1131,18 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enables the Bitbucket Pull Request Explorer",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.explorer.repositoryBasedPullRequestView.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable repository based pull requests tree view",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.explorer.pullRequestsOverview.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable pull requests overview tree view",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.explorer.nestFilesEnabled": {

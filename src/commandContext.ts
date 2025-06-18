@@ -11,6 +11,8 @@ export enum CommandContext {
     JiraLoginTree = 'atlascode:jiraLoginTreeEnabled',
     IsJiraAuthenticated = 'atlascode:isJiraAuthenticated',
     IsBBAuthenticated = 'atlascode:isBBAuthenticated',
+    PullRequestOverviewEnabled = 'atlascode:bitbucketPullRequestOverviewEnabled',
+    RepositoryBasedPullRequestViewEnabled = 'atlascode:bitbucketRepositoryBasedPullRequestViewEnabled',
 }
 
 export function setCommandContext(key: CommandContext | string, value: any) {
