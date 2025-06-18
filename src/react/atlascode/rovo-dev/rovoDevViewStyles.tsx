@@ -2,7 +2,6 @@ export const rovoDevContainerStyles: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    height: '100vh',
     boxSizing: 'border-box',
     backgroundColor: 'var(--vscode-editor-background)',
     fontSize: 'var(--vscode-font-size)',
@@ -22,7 +21,6 @@ export const rovoDevInputSectionStyles: React.CSSProperties = {
 export const rovoDevPromptContainerStyles: React.CSSProperties = {
     display: 'flex',
     width: '100%',
-    height: '100px',
     padding: '10px 20px',
     borderTop: '1px solid var(--vscode-panel-border)',
     background: 'var(--vscode-sideBar-background)',
@@ -62,7 +60,6 @@ export const chatMessagesContainerStyles: React.CSSProperties = {
     flex: '1 1 auto',
     overflowY: 'auto',
     padding: '4px',
-    marginBottom: '110px',
     display: 'flex',
     flexDirection: 'column',
 };

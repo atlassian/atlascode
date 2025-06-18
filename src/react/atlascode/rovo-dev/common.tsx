@@ -31,7 +31,7 @@ export const ToolDrawer: React.FC<{
     openFile: (filePath: string, lineRange?: any[]) => void;
     isStreaming?: boolean;
 }> = ({ content, openFile, isStreaming = false }) => {
-    const [isOpen, setIsOpen] = React.useState(isStreaming);
+    const [isOpen, setIsOpen] = React.useState(false);
 
     const parsedMessages = content.flatMap((message) => parseToolReturnMessage(message));
     return (
@@ -181,65 +181,132 @@ export const renderChatHistory = (
 };
 
 export const UpdatedFilesComponent: React.FC<{
-    updatedFilesCount: number;
+    modidiedFiles: ToolReturnGenericMessage[];
     onUndo: () => void;
     onAccept: () => void;
-}> = ({ updatedFilesCount, onUndo, onAccept }) => {
+    openDiff: (filePath: string) => void;
+}> = ({ modidiedFiles, onUndo, onAccept, openDiff }) => {
     const [isUndoHovered, setIsUndoHovered] = React.useState(false);
     const [isAcceptHovered, setIsAcceptHovered] = React.useState(false);
-    return updatedFilesCount && updatedFilesCount > 0 ? (
+
+    const parsedReturns = modidiedFiles.flatMap((msg) => parseToolReturnMessage(msg));
+
+    const uniqueParsedReturns = Array.from(new Map(parsedReturns.map((item) => [item.filePath, item])).values()); // Ensure unique file paths
+
+    return modidiedFiles && modidiedFiles.length > 0 ? (
         <div
             style={{
+                width: '100%',
+                height: '100%',
                 display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                gap: '10px',
-                padding: '8px',
-                alignItems: 'center',
+                flexDirection: 'column',
+                gap: '4px',
                 background: 'var(--vscode-sideBar-background)',
                 borderRadius: '4px 4px 0 0',
             }}
         >
-            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
-                <i className="codicon codicon-source-control" />
-                <span style={{ fontWeight: 'bold' }}>{updatedFilesCount} Updated file(s)</span>
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    gap: '10px',
+                    padding: '8px',
+                    alignItems: 'center',
+                }}
+            >
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
+                    <i className="codicon codicon-source-control" />
+                    <span style={{ fontWeight: 'bold' }}>{uniqueParsedReturns.length} Updated file(s)</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}>
+                    <button
+                        style={{
+                            color: 'var(--vscode-button-secondaryForeground)',
+                            backgroundColor: isUndoHovered
+                                ? 'var(--vscode-button-secondaryHoverBackground)'
+                                : 'var(--vscode-button-secondaryBackground)',
+                            border: '1px solid var(--vscode-button-secondaryBorder)',
+                            cursor: 'pointer',
+                            padding: '2px 6px',
+                        }}
+                        onClick={() => onUndo()}
+                        onMouseEnter={() => setIsUndoHovered(true)}
+                        onMouseLeave={() => setIsUndoHovered(false)}
+                    >
+                        Undo
+                    </button>
+                    <button
+                        style={{
+                            color: 'var(--vscode-button-foreground)',
+                            backgroundColor: isAcceptHovered
+                                ? 'var(--vscode-button-hoverBackground)'
+                                : 'var(--vscode-button-background)',
+                            border: '1px solid var(--vscode-button-border)',
+                            cursor: 'pointer',
+                            padding: '2px 6px',
+                        }}
+                        onClick={() => onAccept()}
+                        onMouseEnter={() => setIsAcceptHovered(true)}
+                        onMouseLeave={() => setIsAcceptHovered(false)}
+                    >
+                        Accept
+                    </button>
+                </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}>
-                <button
-                    style={{
-                        color: 'var(--vscode-button-secondaryForeground)',
-                        backgroundColor: isUndoHovered
-                            ? 'var(--vscode-button-secondaryHoverBackground)'
-                            : 'var(--vscode-button-secondaryBackground)',
-                        border: '1px solid var(--vscode-button-secondaryBorder)',
-                        cursor: 'pointer',
-                        padding: '2px 6px',
-                    }}
-                    onClick={() => onUndo()}
-                    onMouseEnter={() => setIsUndoHovered(true)}
-                    onMouseLeave={() => setIsUndoHovered(false)}
-                >
-                    Undo
-                </button>
-                <button
-                    style={{
-                        color: 'var(--vscode-button-foreground)',
-                        backgroundColor: isAcceptHovered
-                            ? 'var(--vscode-button-hoverBackground)'
-                            : 'var(--vscode-button-background)',
-                        border: '1px solid var(--vscode-button-border)',
-                        cursor: 'pointer',
-                        padding: '2px 6px',
-                    }}
-                    onClick={() => onAccept()}
-                    onMouseEnter={() => setIsAcceptHovered(true)}
-                    onMouseLeave={() => setIsAcceptHovered(false)}
-                >
-                    Accept
-                </button>
+            <div
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'block',
+                    overflowY: 'auto',
+                    maxHeight: '100px',
+                    padding: '0 8px 8px',
+                }}
+            >
+                {uniqueParsedReturns &&
+                    uniqueParsedReturns.length > 0 &&
+                    uniqueParsedReturns.map((msg, index) => {
+                        return <ModifiedFileItem key={index} msg={msg} openDiff={openDiff} />;
+                    })}
             </div>
         </div>
-    ) : (
-        <div style={{ display: 'none' }}></div>
+    ) : null;
+};
+
+export const ModifiedFileItem: React.FC<{
+    msg: ToolReturnParseResult;
+    openDiff: (filePath: string) => void;
+}> = ({ msg, openDiff }) => {
+    const [isHovered, setIsHovered] = React.useState(false);
+
+    if (!msg.filePath || !msg.title) {
+        return null;
+    }
+
+    return (
+        <div
+            style={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: isHovered ? 'var(--vscode-list-hoverBackground)' : 'inherit',
+                cursor: 'pointer',
+                padding: '2px 8px',
+                lineHeight: '22px',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                borderRadius: '4px',
+                width: '100%',
+            }}
+            onClick={() => msg.filePath && openDiff(msg.filePath)}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <div>{msg.title}</div>
+            <div style={{ color: 'var(--vscode-descriptionForeground)', fontSize: '11px' }}>{msg.filePath}</div>
+        </div>
     );
 };
