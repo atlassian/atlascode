@@ -1,11 +1,7 @@
 import FeatureGates, { ClientOptions, FeatureGateEnvironment, Identifiers } from '@atlaskit/feature-gate-js-client';
 import { NewFeatureGateOptions } from '@atlaskit/feature-gate-js-client/dist/types/client/types';
 
-import {
-    ClientInitializedErrorType,
-    featureGateExposureBoolEvent,
-    featureGateExposureStringEvent,
-} from '../../analytics';
+import { ClientInitializedErrorType } from '../../analytics';
 import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
 import { Logger } from '../../logger';
 import { ExperimentGates, ExperimentGateValues, Experiments, FeatureGateValues, Features } from './features';
@@ -24,15 +20,11 @@ export class FeatureFlagClientInitError {
 }
 
 export abstract class FeatureFlagClient {
-    private static analyticsClient: AnalyticsClient;
-
     private static featureGateOverrides: FeatureGateValues;
     private static experimentValueOverride: ExperimentGateValues;
 
     public static async initialize(options: FeatureFlagClientOptions): Promise<void> {
         this.initializeOverrides();
-
-        this.analyticsClient = options.analyticsClient;
 
         const targetApp = process.env.ATLASCODE_FX3_TARGET_APP;
         const environment = process.env.ATLASCODE_FX3_ENVIRONMENT as FeatureGateEnvironment;
@@ -53,12 +45,15 @@ export abstract class FeatureFlagClient {
 
         Logger.debug(`FeatureGates: initializing, target: ${targetApp}, environment: ${environment}`);
 
+        // disable StatSig logging exposure when running in GitHub
+        const loggingEnabled = !!process.env.ATLASCODE_IS_GH_PIPELINE ? 'disabled' : 'always';
+
         const clientOptions: Options = {
             apiKey,
             environment,
             targetApp,
             fetchTimeoutMs: Number.parseInt(timeout),
-            loggingEnabled: 'always',
+            loggingEnabled,
             ignoreWindowUndefined: true,
         };
 
@@ -142,6 +137,11 @@ export abstract class FeatureFlagClient {
             gateValue = FeatureGates.checkGate(gate);
         }
 
+        // in GitHub pipeline, we always fail the gate check
+        if (process.env.ATLASCODE_IS_GH_PIPELINE) {
+            return false;
+        }
+
         Logger.debug(`FeatureGates ${gate} -> ${gateValue}`);
         return gateValue;
     }
@@ -166,75 +166,9 @@ export abstract class FeatureFlagClient {
             );
         }
 
-        Logger.debug(`Experiment ${experiment} -> ${gateValue}`);
-        return gateValue;
-    }
-
-    public static checkGateValueWithInstrumentation(gate: Features): boolean {
-        if (this.featureGateOverrides.hasOwnProperty(gate)) {
-            const value = this.featureGateOverrides[gate];
-            featureGateExposureBoolEvent(gate, false, value, 3).then((e) => {
-                this.analyticsClient.sendTrackEvent(e);
-            });
-            return value;
-        }
-
-        let gateValue = false;
-        if (FeatureGates.initializeCompleted()) {
-            // FeatureGates.checkGate returns false if any errors
-            gateValue = FeatureGates.checkGate(gate);
-            featureGateExposureBoolEvent(gate, true, gateValue, 0).then((e) => {
-                this.analyticsClient.sendTrackEvent(e);
-            });
-        } else {
-            featureGateExposureBoolEvent(gate, false, gateValue, 1).then((e) => {
-                this.analyticsClient.sendTrackEvent(e);
-            });
-        }
-
-        Logger.debug(`FeatureGates ${gate} -> ${gateValue}`);
-        return gateValue;
-    }
-
-    public static checkExperimentStringValueWithInstrumentation(experiment: Experiments): string | undefined {
-        // unknown experiment name
-        if (!ExperimentGates.hasOwnProperty(experiment)) {
-            featureGateExposureStringEvent(experiment, false, '', 2).then((e) => {
-                this.analyticsClient.sendTrackEvent(e);
-            });
-            return undefined;
-        }
-
-        if (this.experimentValueOverride.hasOwnProperty(experiment)) {
-            const value = this.experimentValueOverride[experiment] as string;
-            featureGateExposureStringEvent(experiment, false, value, 3).then((e) => {
-                this.analyticsClient.sendTrackEvent(e);
-            });
-            return value;
-        }
-
-        const experimentGate = ExperimentGates[experiment];
-        let gateValue = experimentGate.defaultValue as string;
-        if (FeatureGates.initializeCompleted()) {
-            gateValue = FeatureGates.getExperimentValue(
-                experiment,
-                experimentGate.parameter,
-                experimentGate.defaultValue,
-            );
-
-            if (gateValue === experimentGate.defaultValue) {
-                featureGateExposureStringEvent(experiment, false, gateValue, 4).then((e) => {
-                    this.analyticsClient.sendTrackEvent(e);
-                });
-            } else {
-                featureGateExposureStringEvent(experiment, true, gateValue, 0).then((e) => {
-                    this.analyticsClient.sendTrackEvent(e);
-                });
-            }
-        } else {
-            featureGateExposureStringEvent(experiment, false, gateValue, 1).then((e) => {
-                this.analyticsClient.sendTrackEvent(e);
-            });
+        // in GitHub pipeline, we always pretend we are not part of the experiment
+        if (process.env.ATLASCODE_IS_GH_PIPELINE) {
+            return experimentGate.defaultValue;
         }
 
         Logger.debug(`Experiment ${experiment} -> ${gateValue}`);
