@@ -46,7 +46,7 @@ export abstract class FeatureFlagClient {
         Logger.debug(`FeatureGates: initializing, target: ${targetApp}, environment: ${environment}`);
 
         // disable StatSig logging exposure when running in GitHub
-        const loggingEnabled = !!process.env.ATLASCODE_IS_GH_PIPELINE ? 'disabled' : 'always';
+        const loggingEnabled = !!process.env.ATLASCODE_NO_EXP ? 'disabled' : 'always';
 
         const clientOptions: Options = {
             apiKey,
@@ -138,7 +138,7 @@ export abstract class FeatureFlagClient {
         }
 
         // in GitHub pipeline, we always fail the gate check
-        if (process.env.ATLASCODE_IS_GH_PIPELINE) {
+        if (process.env.ATLASCODE_NO_EXP) {
             return false;
         }
 
@@ -167,7 +167,7 @@ export abstract class FeatureFlagClient {
         }
 
         // in GitHub pipeline, we always pretend we are not part of the experiment
-        if (process.env.ATLASCODE_IS_GH_PIPELINE) {
+        if (process.env.ATLASCODE_NO_EXP) {
             return experimentGate.defaultValue;
         }
 
