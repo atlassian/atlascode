@@ -5,9 +5,9 @@ interface FormatTimeOptions {
     daysPreference?: number;
 }
 
-export function formatTime(dateString: string | number | undefined, options: FormatTimeOptions = {}): string {
+export function toDate(dateString: string | number | undefined): Date | null {
     if (!dateString) {
-        return '';
+        return null;
     }
 
     let date: Date;
@@ -19,6 +19,15 @@ export function formatTime(dateString: string | number | undefined, options: For
     }
 
     if (Number.isNaN(date.getTime())) {
+        return null;
+    }
+
+    return date;
+}
+
+export function formatTime(dateString: string | number | undefined, options: FormatTimeOptions = {}): string {
+    const date = toDate(dateString);
+    if (!date) {
         return '';
     }
 
@@ -30,4 +39,13 @@ export function formatTime(dateString: string | number | undefined, options: For
     }
 
     return `${options.prefix ? `${options.prefix} ` : ''}${formatDistanceToNow(date, { addSuffix: true })}`;
+}
+
+export function toISOString(dateString: string | number | undefined): string | null {
+    const date = toDate(dateString);
+    if (!date) {
+        return null;
+    }
+
+    return date.toISOString();
 }

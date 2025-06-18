@@ -19,6 +19,7 @@ export interface IConfig {
     enableHttpsTunnel: boolean;
     onlineCheckerUrls: string[];
     helpExplorerEnabled: boolean;
+    disableOnboarding: boolean;
 }
 
 export interface JiraConfig {
@@ -114,6 +115,8 @@ export interface BitbucketExplorer {
     enabled: boolean;
     nestFilesEnabled: boolean;
     refreshInterval: number;
+    repositoryBasedPullRequestView: boolean;
+    pullRequestsOverview: boolean;
     relatedJiraIssues: BitbucketRelatedJiraIssues;
     relatedBitbucketIssues: BitbucketRelatedBitbucketIssues;
     notifications: BitbucketNotifications;
@@ -205,6 +208,8 @@ const emptyBitbucketNotfications: BitbucketNotifications = {
 
 const emptyBitbucketExplorer: BitbucketExplorer = {
     enabled: true,
+    repositoryBasedPullRequestView: true,
+    pullRequestsOverview: true,
     nestFilesEnabled: true,
     refreshInterval: 5,
     relatedJiraIssues: emptyRelatedJiraIssues,
@@ -264,4 +269,5 @@ export const emptyConfig: IConfig = {
     enableHttpsTunnel: false,
     onlineCheckerUrls: [],
     helpExplorerEnabled: true,
+    disableOnboarding: false,
 };

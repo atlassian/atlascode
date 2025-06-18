@@ -203,6 +203,9 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(Commands.BitbucketOpenPullRequest, (data: { pullRequestUrl: string }) => {
             Container.openPullRequestHandler(data.pullRequestUrl);
         }),
+        commands.registerCommand(Commands.AuthenticateWithBitbucketToken, () => {
+            Container.authenticateWithBitbucketToken();
+        }),
         commands.registerCommand(Commands.ShowOnboardingFlow, () => Container.onboardingProvider.start()),
     );
 }

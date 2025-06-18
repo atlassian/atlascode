@@ -10,17 +10,18 @@ import { activate as activateCodebucket } from './codebucket/command/registerCom
 import { CommandContext, setCommandContext } from './commandContext';
 import { registerCommands } from './commands';
 import { Configuration, configuration, IConfig } from './config/configuration';
+import { registerDevsphereCommands } from './config/devsphere-config/registerDevsphereCommands';
 import { Commands, ExtensionId, GlobalStateVersionKey } from './constants';
 import { Container } from './container';
 import { registerAnalyticsClient, registerErrorReporting, unregisterErrorReporting } from './errorReporting';
 import { provideCodeLenses } from './jira/todoObserver';
 import { Logger } from './logger';
-import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
-import {
-    activateYamlExtension,
-    addPipelinesSchemaToYamlConfig,
-    BB_PIPELINES_FILENAME,
-} from './pipelines/yaml/pipelinesYamlHelper';
+// import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
+// import {
+//     activateYamlExtension,
+//     addPipelinesSchemaToYamlConfig,
+//     BB_PIPELINES_FILENAME,
+// } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
 import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
@@ -30,6 +31,7 @@ const AnalyticDelay = 5000;
 
 export async function activate(context: ExtensionContext) {
     const start = process.hrtime();
+    Logger.configure(context);
 
     registerErrorReporting();
 
@@ -40,7 +42,6 @@ export async function activate(context: ExtensionContext) {
     registerResources(context);
 
     Configuration.configure(context);
-    Logger.configure(context);
 
     // Mark ourselves as the PID in charge of refreshing credentials and start listening for pings.
     context.globalState.update('rulingPid', pid);
@@ -71,15 +72,17 @@ export async function activate(context: ExtensionContext) {
     });
 
     // new user for auth exp
-    if (previousVersion === undefined) {
-        const expVal = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeOnboardingExperiment);
-        if (expVal) {
-            commands.executeCommand(Commands.ShowOnboardingFlow);
+    if (!Container.config.disableOnboarding) {
+        if (previousVersion === undefined) {
+            const expVal = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeOnboardingExperiment);
+            if (expVal) {
+                commands.executeCommand(Commands.ShowOnboardingFlow);
+            } else {
+                commands.executeCommand(Commands.ShowOnboardingPage);
+            }
         } else {
-            commands.executeCommand(Commands.ShowOnboardingPage);
+            showWelcomePage(atlascodeVersion, previousVersion);
         }
-    } else {
-        showWelcomePage(atlascodeVersion, previousVersion);
     }
 
     const delay = Math.floor(Math.random() * Math.floor(AnalyticDelay));
@@ -94,8 +97,9 @@ export async function activate(context: ExtensionContext) {
     // in the background and do not slow down the time taken for the extension
     // icon to appear in the activity bar
     activateBitbucketFeatures();
-    activateYamlFeatures(context);
-
+    // Removing this as it's causing issues in Devboxes
+    // await activateYamlExtension();
+    registerDevsphereCommands(context);
     Logger.info(
         `Atlassian for VS Code (v${atlascodeVersion}) activated in ${
             duration[0] * 1000 + Math.floor(duration[1] / 1000000)
@@ -137,16 +141,17 @@ async function activateBitbucketFeatures() {
     }
 }
 
-async function activateYamlFeatures(context: ExtensionContext) {
-    context.subscriptions.push(
-        languages.registerCompletionItemProvider(
-            { scheme: 'file', language: 'yaml', pattern: `**/*${BB_PIPELINES_FILENAME}` },
-            new PipelinesYamlCompletionProvider(),
-        ),
-    );
-    await addPipelinesSchemaToYamlConfig();
-    await activateYamlExtension();
-}
+// async function activateYamlFeatures(context: ExtensionContext) {
+//     context.subscriptions.push(
+//         languages.registerCompletionItemProvider(
+//             { scheme: 'file', language: 'yaml', pattern: `**/*${BB_PIPELINES_FILENAME}` },
+//             new PipelinesYamlCompletionProvider(),
+//         ),
+//     );
+//     await addPipelinesSchemaToYamlConfig();
+// // Removing this as it's causing issues in Devboxes
+// await activateYamlExtension();
+// }
 
 async function showWelcomePage(version: string, previousVersion: string | undefined) {
     if (

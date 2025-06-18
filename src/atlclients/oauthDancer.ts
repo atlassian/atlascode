@@ -295,4 +295,8 @@ export class OAuthDancer implements Disposable {
 
         this._shutdownCheck = setInterval(this.maybeShutdown, this._shutdownCheckInterval);
     }
+
+    public getAxiosInstance(): AxiosInstance {
+        return this._axios;
+    }
 }

@@ -13,6 +13,8 @@ type PRExplorerProps = {
     pullRequestCreated: boolean;
     nestFiles: boolean;
     refreshInterval: number;
+    pullRequestsEnabled: boolean;
+    pullRequestsOverviewEnabled: boolean;
 };
 
 const useStyles = makeStyles(
@@ -25,7 +27,16 @@ const useStyles = makeStyles(
 );
 
 export const PRExplorer: React.FunctionComponent<PRExplorerProps> = memo(
-    ({ enabled, relatedJiraIssues, relatedBitbucketIssues, pullRequestCreated, nestFiles, refreshInterval }) => {
+    ({
+        enabled,
+        relatedJiraIssues,
+        relatedBitbucketIssues,
+        pullRequestCreated,
+        nestFiles,
+        refreshInterval,
+        pullRequestsEnabled,
+        pullRequestsOverviewEnabled,
+    }) => {
         const classes = useStyles();
         const controller = useContext(ConfigControllerContext);
 
@@ -65,6 +76,44 @@ export const PRExplorer: React.FunctionComponent<PRExplorerProps> = memo(
                             />
                         }
                         label="Enable Bitbucket pull requests explorer"
+                        spacing={1}
+                        variant="body1"
+                    />
+                </Grid>
+                <Grid item>
+                    <ToggleWithLabel
+                        control={
+                            <Switch
+                                className={classes.indent}
+                                size="small"
+                                color="primary"
+                                id="bbPullRequestsOverviewEnabled"
+                                value="explorer.pullRequestsOverview.enabled"
+                                checked={!!pullRequestsOverviewEnabled}
+                                disabled={!enabled}
+                                onChange={handleChange}
+                            />
+                        }
+                        label="Enable Bitbucket pull requests overview explorer"
+                        spacing={1}
+                        variant="body1"
+                    />
+                </Grid>
+                <Grid item>
+                    <ToggleWithLabel
+                        control={
+                            <Switch
+                                className={classes.indent}
+                                size="small"
+                                color="primary"
+                                id="bbPullRequestsEnabled"
+                                value="explorer.repositoryBasedPullRequestView.enabled"
+                                checked={!!pullRequestsEnabled}
+                                disabled={!enabled}
+                                onChange={handleChange}
+                            />
+                        }
+                        label="Enable Repository based pull requests explorer"
                         spacing={1}
                         variant="body1"
                     />
