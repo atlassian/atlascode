@@ -20,6 +20,7 @@ export interface EditIssueData extends EditIssueUI<DetailedSiteInfo> {
     currentUser: User;
     workInProgress: boolean;
     recentPullRequests: PullRequestData[];
+    hierarchy: MinimalIssue<DetailedSiteInfo>[];
 }
 
 export const emptyEditIssueData: EditIssueData = {
@@ -28,6 +29,7 @@ export const emptyEditIssueData: EditIssueData = {
     currentUser: emptyUser,
     workInProgress: false,
     recentPullRequests: [],
+    hierarchy: [],
 };
 
 export interface IssueProblemsData extends Message {
