@@ -7,6 +7,7 @@ import {
     messageContentStyles,
     toolCallArgsStyles,
     toolReturnListItemStyles,
+    undoAcceptButtonStyles,
     userMessageStyles,
 } from './rovoDevViewStyles';
 import {
@@ -35,7 +36,6 @@ export const ToolDrawer: React.FC<{
         <div
             style={{
                 width: '100%',
-                height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
                 marginBottom: '8px',
@@ -184,12 +184,11 @@ export const UpdatedFilesComponent: React.FC<{
         <div
             style={{
                 width: '100%',
-                height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '4px',
+                gap: '8px',
                 background: 'var(--vscode-sideBar-background)',
-                borderRadius: '4px 4px 0 0',
+                paddingBottom: '4px',
             }}
         >
             <div
@@ -198,7 +197,7 @@ export const UpdatedFilesComponent: React.FC<{
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     gap: '10px',
-                    padding: '8px',
+                    padding: ' 0 8px',
                     alignItems: 'center',
                 }}
             >
@@ -214,8 +213,7 @@ export const UpdatedFilesComponent: React.FC<{
                                 ? 'var(--vscode-button-secondaryHoverBackground)'
                                 : 'var(--vscode-button-secondaryBackground)',
                             border: '1px solid var(--vscode-button-secondaryBorder)',
-                            cursor: 'pointer',
-                            padding: '2px 6px',
+                            ...undoAcceptButtonStyles,
                         }}
                         onClick={() => onUndo()}
                         onMouseEnter={() => setIsUndoHovered(true)}
@@ -230,8 +228,7 @@ export const UpdatedFilesComponent: React.FC<{
                                 ? 'var(--vscode-button-hoverBackground)'
                                 : 'var(--vscode-button-background)',
                             border: '1px solid var(--vscode-button-border)',
-                            cursor: 'pointer',
-                            padding: '2px 6px',
+                            ...undoAcceptButtonStyles,
                         }}
                         onClick={() => onAccept()}
                         onMouseEnter={() => setIsAcceptHovered(true)}
@@ -248,7 +245,11 @@ export const UpdatedFilesComponent: React.FC<{
                     display: 'block',
                     overflowY: 'auto',
                     maxHeight: '100px',
-                    padding: '0 8px 8px',
+                    padding: '4px 8px',
+                    borderTop:
+                        uniqueParsedReturns && uniqueParsedReturns.length > 0
+                            ? '1px solid var(--vscode-panel-border)'
+                            : '0',
                 }}
             >
                 {uniqueParsedReturns &&
@@ -281,11 +282,9 @@ export const ModifiedFileItem: React.FC<{
                 backgroundColor: isHovered ? 'var(--vscode-list-hoverBackground)' : 'inherit',
                 cursor: 'pointer',
                 padding: '2px 8px',
-                lineHeight: '22px',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
-                borderRadius: '4px',
                 width: '100%',
             }}
             onClick={() => msg.filePath && openDiff(msg.filePath)}

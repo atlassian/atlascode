@@ -291,21 +291,19 @@ const RovoDevView: React.FC = () => {
                 {currentResponse && (
                     <div
                         style={{
-                            ...styles.chatMessageStyles,
                             ...styles.agentMessageStyles,
                             ...styles.streamingMessageStyles,
+                            borderRadius: '8px',
                         }}
                     >
-                        <div style={styles.messageContentStyles}>
-                            <ChatMessageItem
-                                msg={{
-                                    text: currentResponse,
-                                    author: 'RovoDev',
-                                    timestamp: Date.now(),
-                                }}
-                                index={chatHistory.length}
-                            />
-                        </div>
+                        <ChatMessageItem
+                            msg={{
+                                text: currentResponse,
+                                author: 'RovoDev',
+                                timestamp: Date.now(),
+                            }}
+                            index={chatHistory.length}
+                        />
                     </div>
                 )}
                 <div ref={chatEndRef} />

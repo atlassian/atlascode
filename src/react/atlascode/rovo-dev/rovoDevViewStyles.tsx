@@ -12,15 +12,15 @@ export const rovoDevContainerStyles: React.CSSProperties = {
 
 export const rovoDevInputSectionStyles: React.CSSProperties = {
     width: '100%',
+    borderTop: '1px solid var(--vscode-panel-border)',
+    background: 'var(--vscode-sideBar-background)',
+    padding: '16px',
+    borderRadius: '12px 12px 0px 0px',
 };
 
 export const rovoDevPromptContainerStyles: React.CSSProperties = {
     display: 'flex',
     width: '100%',
-    padding: '10px 20px',
-    borderTop: '1px solid var(--vscode-panel-border)',
-    background: 'var(--vscode-sideBar-background)',
-    boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.05)',
 };
 
 export const rovoDevTextareaStyles: React.CSSProperties = {
@@ -57,11 +57,11 @@ export const chatMessagesContainerStyles: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     flexGrow: '1',
-    padding: '10px 24px 0 24px',
+    padding: '10px 16px 0 16px',
 };
 
 export const chatMessageStyles: React.CSSProperties = {
-    width: '100%',
+    maxWidth: '100%',
     marginBottom: '8px',
     padding: '8px 12px',
     borderRadius: '8px',
@@ -171,4 +171,10 @@ export const modifiedFileComponentStyles: React.CSSProperties = {
     padding: '6px',
     borderRadius: '4px',
     backgroundColor: 'var(--vscode-editorWidget-background)',
+};
+
+export const undoAcceptButtonStyles: React.CSSProperties = {
+    cursor: 'pointer',
+    padding: '2px 6px',
+    borderRadius: '2px',
 };
