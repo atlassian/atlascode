@@ -4,10 +4,7 @@ import React from 'react';
 import {
     agentMessageStyles,
     chatMessageStyles,
-    messageAuthorStyles,
     messageContentStyles,
-    messageHeaderStyles,
-    messageTimestampStyles,
     toolCallArgsStyles,
     toolReturnListItemStyles,
     userMessageStyles,
@@ -136,26 +133,16 @@ const ToolReturnParsedItem: React.FC<{
     );
 };
 
-export const ChatMessageItem: React.FC<{ msg: DefaultMessage; index?: number; isStreaming?: boolean }> = ({
-    msg,
-    index,
-    isStreaming = false,
-}) => {
+export const ChatMessageItem: React.FC<{ msg: DefaultMessage; index?: number }> = ({ msg, index }) => {
     const messageTypeStyles = msg.author.toLowerCase() === 'user' ? userMessageStyles : agentMessageStyles;
-
-    const author = msg.author === 'RovoDev' && isStreaming ? 'RovoDev is typing...' : msg.author;
 
     const htmlContent = Marked.parse(msg.text);
 
     return (
         <div key={index} style={{ ...chatMessageStyles, ...messageTypeStyles }}>
-            <div style={messageHeaderStyles}>
-                <span style={messageAuthorStyles}>{author}</span>
-                <span style={messageTimestampStyles}>{new Date().toLocaleTimeString()}</span>
-            </div>
             <div style={messageContentStyles}>
                 <div
-                    style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+                    style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
                     key="parsed-content"
                     dangerouslySetInnerHTML={{ __html: htmlContent }}
                 />

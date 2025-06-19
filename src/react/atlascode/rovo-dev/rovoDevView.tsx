@@ -13,7 +13,6 @@ import { ChatMessage, isCodeChangeTool, ToolCallMessage, ToolReturnGenericMessag
 const RovoDevView: React.FC = () => {
     const [sendButtonDisabled, setSendButtonDisabled] = useState(true);
     const [promptContainerFocused, setPromptContainerFocused] = useState(false);
-    const [inputAreaHeight, setInputAreaHeight] = useState<number | null>(null);
 
     const [promptText, setPromptText] = useState('');
     const [currentResponse, setCurrentResponse] = useState('');
@@ -38,26 +37,6 @@ const RovoDevView: React.FC = () => {
             highlightElement(block, detectLanguage(block.textContent || ''));
         });
     }, [chatHistory, currentResponse]);
-
-    React.useEffect(() => {
-        if (!inputAreaRef.current) {
-            return;
-        }
-
-        const resizeObserver = new ResizeObserver((entries) => {
-            entries.forEach((entry) => {
-                if (entry.target === inputAreaRef.current) {
-                    setInputAreaHeight(entry.contentRect.height); // Trigger a reflow
-                }
-            });
-        });
-
-        resizeObserver.observe(inputAreaRef.current);
-
-        return () => {
-            resizeObserver.disconnect();
-        };
-    }, [currentResponse, chatHistory, totalModifiedFiles, inputAreaRef]);
 
     const appendCurrentResponse = useCallback(
         (text) => {
@@ -303,12 +282,7 @@ const RovoDevView: React.FC = () => {
 
     return (
         <div className="rovoDevChat" style={styles.rovoDevContainerStyles}>
-            <div
-                style={{
-                    ...styles.chatMessagesContainerStyles,
-                    marginBottom: inputAreaHeight ? `${inputAreaHeight}px + 16px` : '100px + 16px',
-                }}
-            >
+            <div style={styles.chatMessagesContainerStyles}>
                 {chatHistory.map((msg, index) => renderChatHistory(msg, index, openFile))}
                 {currentTools && currentTools.length > 0 && (
                     <ToolDrawer content={currentTools} openFile={openFile} isStreaming={true} />
@@ -330,7 +304,6 @@ const RovoDevView: React.FC = () => {
                                     timestamp: Date.now(),
                                 }}
                                 index={chatHistory.length}
-                                isStreaming={true}
                             />
                         </div>
                     </div>

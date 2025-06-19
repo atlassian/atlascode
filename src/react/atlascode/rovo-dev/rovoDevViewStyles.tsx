@@ -63,7 +63,7 @@ export const chatMessagesContainerStyles: React.CSSProperties = {
 export const chatMessageStyles: React.CSSProperties = {
     width: '100%',
     marginBottom: '8px',
-    padding: '8px',
+    padding: '8px 12px',
     borderRadius: '8px',
     position: 'relative',
 };
@@ -130,17 +130,12 @@ export const toolCallHeaderStyles: React.CSSProperties = {
     color: 'var(--vscode-terminal-foreground)',
 };
 
-export const toolCallNameStyles: React.CSSProperties = {
-    color: 'var(--vscode-terminal-ansiGreen)',
-    fontSize: '14px',
-};
-
 export const toolCallArgsStyles: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '8px',
+    padding: '0 8px',
     width: '100%',
     backgroundColor: 'inherit',
     borderRadius: '4px',
