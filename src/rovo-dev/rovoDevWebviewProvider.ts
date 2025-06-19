@@ -97,6 +97,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 case 'prompt':
                     await this.processPromptMessage(e.text);
                     break;
+
+                case 'cancelResponse':
+                    await this.executeCancel();
+                    break;
+
                 case 'openFile':
                     try {
                         const filePath: string = e.filePath;
@@ -233,13 +238,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await this.processResponse(fetchOp);
     }
 
-    private async processResponse(fetchOp: Promise<Response>) {
+    private async processResponse(fetchOp: Promise<Response>, doNotParse?: boolean) {
         const webview = this._webView!;
 
         try {
             const response = await fetchOp;
             if (!response.body) {
                 throw new Error('No response body');
+            }
+
+            if (doNotParse) {
+                return;
             }
 
             const reader = response.body.getReader();
@@ -253,14 +262,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) {
+                    messagesSent += parser.flush();
                     break;
                 }
 
                 const data = decoder.decode(value, { stream: true });
                 messagesSent += parser.parse(data);
             }
-
-            messagesSent += parser.flush();
 
             if (messagesSent) {
                 // Send final complete message when stream ends
@@ -347,6 +355,18 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 },
             });
         }
+    }
+
+    async executeCancel(): Promise<void> {
+        const fetchOp = this.fetchApi('/v2/cancel', {
+            method: 'POST',
+            headers: {
+                accept: 'text/event-stream',
+                'Content-Type': 'application/json',
+            },
+        });
+
+        await this.processResponse(fetchOp, true);
     }
 
     async executeReplay(): Promise<void> {

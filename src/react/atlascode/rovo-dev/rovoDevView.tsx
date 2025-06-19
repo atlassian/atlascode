@@ -1,10 +1,11 @@
 import LoadingButton from '@atlaskit/button/loading-button';
 import SendIcon from '@atlaskit/icon/glyph/send';
+import PauseIcon from '@atlaskit/icon/glyph/vid-pause';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import React, { useCallback, useState } from 'react';
-import { RovoDevResponse } from 'src/rovo-dev/responseParser';
 
+import { RovoDevResponse } from '../../../rovo-dev/responseParser';
 import { useMessagingApi } from '../messagingApi';
 import { ChatMessageItem, renderChatHistory, ToolCallItem, ToolDrawer, UpdatedFilesComponent } from './common';
 import * as styles from './rovoDevViewStyles';
@@ -12,6 +13,8 @@ import { ChatMessage, isCodeChangeTool, ToolCallMessage, ToolReturnGenericMessag
 
 const RovoDevView: React.FC = () => {
     const [sendButtonDisabled, setSendButtonDisabled] = useState(true);
+    const [pauseButtonVisible, setPauseButtonVisible] = useState(false);
+    const [pauseButtonDisabled, setPauseButtonDisabled] = useState(false);
     const [promptContainerFocused, setPromptContainerFocused] = useState(false);
 
     const [promptText, setPromptText] = useState('');
@@ -164,6 +167,8 @@ const RovoDevView: React.FC = () => {
                     handleAppendChatHistory(message);
                     setCurrentResponse('');
                     setSendButtonDisabled(false);
+                    setPauseButtonVisible(false);
+                    setPauseButtonDisabled(false);
                     break;
                 }
 
@@ -205,6 +210,8 @@ const RovoDevView: React.FC = () => {
                     handleAppendChatHistory(event.message);
                     setCurrentResponse('');
                     setSendButtonDisabled(false);
+                    setPauseButtonVisible(false);
+                    setPauseButtonDisabled(false);
                     break;
                 }
 
@@ -223,7 +230,14 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [handleResponse, handleAppendChatHistory, currentResponse],
+        [
+            handleResponse,
+            handleAppendChatHistory,
+            currentResponse,
+            setSendButtonDisabled,
+            setPauseButtonVisible,
+            setPauseButtonDisabled,
+        ],
     );
 
     const [postMessage] = useMessagingApi<any, any, any>(onMessageHandler);
@@ -236,8 +250,9 @@ const RovoDevView: React.FC = () => {
 
             setCurrentResponse('...');
 
-            // Disable the send button
+            // Disable the send button, and enable the pause button
             setSendButtonDisabled(true);
+            setPauseButtonVisible(true);
 
             // Send the prompt to backend
             postMessage({
@@ -248,8 +263,21 @@ const RovoDevView: React.FC = () => {
             // Clear the input field
             setPromptText('');
         },
-        [postMessage, setCurrentResponse, sendButtonDisabled, setSendButtonDisabled],
+        [postMessage, setCurrentResponse, sendButtonDisabled, setSendButtonDisabled, setPauseButtonVisible],
     );
+
+    const cancelResponse = useCallback((): void => {
+        if (!pauseButtonVisible) {
+            return;
+        }
+
+        setPauseButtonDisabled(true);
+
+        // Send the signal to cancel the response
+        postMessage({
+            type: 'cancelResponse',
+        });
+    }, [postMessage, pauseButtonVisible, setPauseButtonDisabled]);
 
     const openFile = useCallback(
         (filePath: string, range?: any[]) => {
@@ -340,17 +368,32 @@ const RovoDevView: React.FC = () => {
                             value={promptText}
                         />
                         <div style={styles.rovoDevButtonStyles}>
-                            <LoadingButton
-                                style={{
-                                    color: 'var(--vscode-input-foreground) !important',
-                                    border: '1px solid var(--vscode-button-border) !important',
-                                    backgroundColor: 'var(--vscode-input-background) !important',
-                                }}
-                                label="Send button"
-                                iconBefore={<SendIcon size="small" label="Send" />}
-                                isDisabled={sendButtonDisabled}
-                                onClick={() => sendPrompt(promptText)}
-                            />
+                            {!pauseButtonVisible && (
+                                <LoadingButton
+                                    style={{
+                                        color: 'var(--vscode-input-foreground) !important',
+                                        border: '1px solid var(--vscode-button-border) !important',
+                                        backgroundColor: 'var(--vscode-input-background) !important',
+                                    }}
+                                    label="Send button"
+                                    iconBefore={<SendIcon size="small" label="Send" />}
+                                    isDisabled={sendButtonDisabled}
+                                    onClick={() => sendPrompt(promptText)}
+                                />
+                            )}
+                            {pauseButtonVisible && (
+                                <LoadingButton
+                                    style={{
+                                        color: 'var(--vscode-input-foreground) !important',
+                                        border: '1px solid var(--vscode-button-border) !important',
+                                        backgroundColor: 'var(--vscode-input-background) !important',
+                                    }}
+                                    label="Stop button"
+                                    iconBefore={<PauseIcon size="small" label="Stop" />}
+                                    isDisabled={pauseButtonDisabled}
+                                    onClick={() => cancelResponse()}
+                                />
+                            )}
                         </div>
                     </div>
                 </div>
