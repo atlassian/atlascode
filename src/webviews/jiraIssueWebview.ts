@@ -885,6 +885,10 @@ export class JiraIssueWebview
                     }
                     break;
                 }
+                case 'invokeRovodev': {
+                    Container.rovodevWebviewProvder.invokeRovoDevAskCommand((msg as any).prompt);
+                    break;
+                }
                 case 'openPullRequest': {
                     if (isOpenPullRequest(msg)) {
                         handled = true;
