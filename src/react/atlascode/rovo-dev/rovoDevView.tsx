@@ -188,6 +188,12 @@ const RovoDevView: React.FC = () => {
                     completeMessage(true);
                     setSendButtonDisabled(false);
                     setCurrentState(State.WaitingForPrompt);
+
+                    if (currentTools && currentTools.length > 0) {
+                        setCurrentTools([]);
+                        setPendingToolCall(null);
+                    }
+
                     break;
                 }
 
@@ -208,11 +214,19 @@ const RovoDevView: React.FC = () => {
                     setCurrentResponse('');
                     setSendButtonDisabled(false);
                     setCurrentState(State.WaitingForPrompt);
+
+                    if (currentTools && currentTools.length > 0) {
+                        setCurrentTools([]);
+                        setPendingToolCall(null);
+                    }
+
                     break;
                 }
 
                 case 'newSession': {
                     setChatHistory([]);
+                    setCurrentTools([]);
+                    setPendingToolCall(null);
                     break;
                 }
 
@@ -226,7 +240,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [handleResponse, handleAppendChatHistory, setSendButtonDisabled, setCurrentState, completeMessage],
+        [handleResponse, completeMessage, handleAppendChatHistory, currentTools],
     );
 
     const [postMessage] = useMessagingApi<any, any, any>(onMessageHandler);

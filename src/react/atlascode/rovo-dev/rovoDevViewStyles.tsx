@@ -78,11 +78,13 @@ export const toolReturnListItemStyles: React.CSSProperties = {
 export const userMessageStyles: React.CSSProperties = {
     backgroundColor: 'var(--vscode-editor-selectionBackground)',
     alignSelf: 'flex-end',
+    borderBottomRightRadius: '0px',
 };
 
 export const agentMessageStyles: React.CSSProperties = {
     backgroundColor: 'var(--vscode-sideBar-background)',
     alignSelf: 'flex-start',
+    borderBottomLeftRadius: '0px',
 };
 
 export const streamingMessageStyles: React.CSSProperties = {
