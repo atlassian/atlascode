@@ -11,10 +11,21 @@ import { ChatMessageItem, renderChatHistory, ToolCallItem, ToolDrawer, UpdatedFi
 import * as styles from './rovoDevViewStyles';
 import { ChatMessage, isCodeChangeTool, ToolCallMessage, ToolReturnGenericMessage } from './utils';
 
+const enum State {
+    WaitingForPrompt,
+    GeneratingResponse,
+    CancellingResponse,
+}
+
+const TextAreaMessages: Record<State, string> = {
+    [State.WaitingForPrompt]: 'Type in a question',
+    [State.GeneratingResponse]: 'Generating response...',
+    [State.CancellingResponse]: 'Cancelling the response...',
+};
+
 const RovoDevView: React.FC = () => {
     const [sendButtonDisabled, setSendButtonDisabled] = useState(true);
-    const [pauseButtonVisible, setPauseButtonVisible] = useState(false);
-    const [pauseButtonDisabled, setPauseButtonDisabled] = useState(false);
+    const [currentState, setCurrentState] = useState(State.WaitingForPrompt);
     const [promptContainerFocused, setPromptContainerFocused] = useState(false);
 
     const [promptText, setPromptText] = useState('');
@@ -167,8 +178,7 @@ const RovoDevView: React.FC = () => {
                     handleAppendChatHistory(message);
                     setCurrentResponse('');
                     setSendButtonDisabled(false);
-                    setPauseButtonVisible(false);
-                    setPauseButtonDisabled(false);
+                    setCurrentState(State.WaitingForPrompt);
                     break;
                 }
 
@@ -210,8 +220,7 @@ const RovoDevView: React.FC = () => {
                     handleAppendChatHistory(event.message);
                     setCurrentResponse('');
                     setSendButtonDisabled(false);
-                    setPauseButtonVisible(false);
-                    setPauseButtonDisabled(false);
+                    setCurrentState(State.WaitingForPrompt);
                     break;
                 }
 
@@ -230,21 +239,14 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [
-            handleResponse,
-            handleAppendChatHistory,
-            currentResponse,
-            setSendButtonDisabled,
-            setPauseButtonVisible,
-            setPauseButtonDisabled,
-        ],
+        [handleResponse, handleAppendChatHistory, currentResponse, setSendButtonDisabled, setCurrentState],
     );
 
     const [postMessage] = useMessagingApi<any, any, any>(onMessageHandler);
 
     const sendPrompt = useCallback(
         (text: string): void => {
-            if (sendButtonDisabled || text.trim() === '') {
+            if (sendButtonDisabled || text.trim() === '' || currentState !== State.WaitingForPrompt) {
                 return;
             }
 
@@ -252,7 +254,7 @@ const RovoDevView: React.FC = () => {
 
             // Disable the send button, and enable the pause button
             setSendButtonDisabled(true);
-            setPauseButtonVisible(true);
+            setCurrentState(State.GeneratingResponse);
 
             // Send the prompt to backend
             postMessage({
@@ -263,21 +265,21 @@ const RovoDevView: React.FC = () => {
             // Clear the input field
             setPromptText('');
         },
-        [postMessage, setCurrentResponse, sendButtonDisabled, setSendButtonDisabled, setPauseButtonVisible],
+        [postMessage, setCurrentResponse, sendButtonDisabled, setSendButtonDisabled, currentState, setCurrentState],
     );
 
     const cancelResponse = useCallback((): void => {
-        if (!pauseButtonVisible) {
+        if (currentState === State.CancellingResponse) {
             return;
         }
 
-        setPauseButtonDisabled(true);
+        setCurrentState(State.CancellingResponse);
 
         // Send the signal to cancel the response
         postMessage({
             type: 'cancelResponse',
         });
-    }, [postMessage, pauseButtonVisible, setPauseButtonDisabled]);
+    }, [postMessage, currentState, setCurrentState]);
 
     const openFile = useCallback(
         (filePath: string, range?: any[]) => {
@@ -362,13 +364,13 @@ const RovoDevView: React.FC = () => {
                     >
                         <textarea
                             style={styles.rovoDevTextareaStyles}
-                            placeholder={currentResponse ? 'Generating response...' : 'Type in a question'}
+                            placeholder={TextAreaMessages[currentState]}
                             onChange={(element) => setPromptText(element.target.value)}
                             onKeyDown={handleKeyDown}
                             value={promptText}
                         />
                         <div style={styles.rovoDevButtonStyles}>
-                            {!pauseButtonVisible && (
+                            {currentState === State.WaitingForPrompt && (
                                 <LoadingButton
                                     style={{
                                         color: 'var(--vscode-input-foreground) !important',
@@ -381,7 +383,7 @@ const RovoDevView: React.FC = () => {
                                     onClick={() => sendPrompt(promptText)}
                                 />
                             )}
-                            {pauseButtonVisible && (
+                            {currentState !== State.WaitingForPrompt && (
                                 <LoadingButton
                                     style={{
                                         color: 'var(--vscode-input-foreground) !important',
@@ -390,7 +392,7 @@ const RovoDevView: React.FC = () => {
                                     }}
                                     label="Stop button"
                                     iconBefore={<PauseIcon size="small" label="Stop" />}
-                                    isDisabled={pauseButtonDisabled}
+                                    isDisabled={currentState === State.CancellingResponse}
                                     onClick={() => cancelResponse()}
                                 />
                             )}
