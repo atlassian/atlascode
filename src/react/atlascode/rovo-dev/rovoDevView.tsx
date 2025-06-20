@@ -156,6 +156,20 @@ const RovoDevView: React.FC = () => {
         ],
     );
 
+    const completeMessage = useCallback(
+        (force?: boolean) => {
+            if (force || (currentResponse && currentResponse !== '...')) {
+                const message: ChatMessage = {
+                    text: currentResponse === '...' ? 'Error: Unable to retrieve the response' : currentResponse,
+                    author: 'RovoDev',
+                };
+                handleAppendChatHistory(message);
+            }
+            setCurrentResponse('');
+        },
+        [currentResponse, handleAppendChatHistory, setCurrentResponse],
+    );
+
     const onMessageHandler = useCallback(
         (event: any): void => {
             switch (event.type) {
@@ -165,53 +179,26 @@ const RovoDevView: React.FC = () => {
                 }
 
                 case 'userChatMessage': {
+                    completeMessage();
                     handleAppendChatHistory(event.message);
                     break;
                 }
 
                 case 'completeMessage': {
-                    const message: ChatMessage = {
-                        text: currentResponse === '...' ? 'Error: Unable to retrieve the response' : currentResponse,
-                        author: 'RovoDev',
-                        timestamp: Date.now(),
-                    };
-                    handleAppendChatHistory(message);
-                    setCurrentResponse('');
+                    completeMessage(true);
                     setSendButtonDisabled(false);
                     setCurrentState(State.WaitingForPrompt);
                     break;
                 }
 
                 case 'toolCall': {
-                    if (currentResponse !== '...' && currentResponse.trim()) {
-                        const message: ChatMessage = {
-                            text: currentResponse,
-                            author: 'RovoDev',
-                            timestamp: Date.now(),
-                        };
-
-                        handleAppendChatHistory(message);
-                        setCurrentResponse('');
-                    } else {
-                        setCurrentResponse(''); // Reset current response if it was just '...'
-                    }
-
+                    completeMessage();
                     handleResponse(event.dataObject);
                     break;
                 }
 
                 case 'toolReturn': {
-                    if (currentResponse !== '...' && currentResponse.trim()) {
-                        const message: ChatMessage = {
-                            text: currentResponse,
-                            author: 'RovoDev',
-                            timestamp: Date.now(),
-                        };
-                        handleAppendChatHistory(message);
-                        setCurrentResponse('');
-                    } else {
-                        setCurrentResponse(''); // Reset current response if it was just '...'
-                    }
+                    completeMessage();
                     handleResponse(event.dataObject);
                     break;
                 }
@@ -239,7 +226,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [handleResponse, handleAppendChatHistory, currentResponse, setSendButtonDisabled, setCurrentState],
+        [handleResponse, handleAppendChatHistory, setSendButtonDisabled, setCurrentState, completeMessage],
     );
 
     const [postMessage] = useMessagingApi<any, any, any>(onMessageHandler);
@@ -330,7 +317,6 @@ const RovoDevView: React.FC = () => {
                             msg={{
                                 text: currentResponse,
                                 author: 'RovoDev',
-                                timestamp: Date.now(),
                             }}
                             index={chatHistory.length}
                         />

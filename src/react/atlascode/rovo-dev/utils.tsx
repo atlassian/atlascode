@@ -4,7 +4,6 @@ export type ChatMessage = DefaultMessage | ToolCallMessage | ToolReturnGenericMe
 export interface DefaultMessage {
     text: string;
     author: 'User' | 'RovoDev';
-    timestamp: number;
 }
 
 export interface ToolCallMessage {

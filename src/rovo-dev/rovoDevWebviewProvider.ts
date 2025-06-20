@@ -87,9 +87,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         _context: WebviewViewResolveContext,
         _token: CancellationToken,
     ): Thenable<void> | void {
+        const webview = webviewView.webview;
         this._webView = webviewView.webview;
 
-        this._webView.options = {
+        webview.options = {
             enableCommandUris: true,
             enableScripts: true,
             localResourceRoots: [
@@ -103,10 +104,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             window.activeColorTheme.kind === ColorThemeKind.HighContrast ||
             window.activeColorTheme.kind === ColorThemeKind.Dark;
 
-        const codiconsUri = this._webView.asWebviewUri(
+        const codiconsUri = webview.asWebviewUri(
             Uri.joinPath(this._extensionUri, 'node_modules', '@vscode', 'codicons', 'dist', 'codicon.css'),
         );
-        const syntaxStylesUri = this._webView.asWebviewUri(
+        const syntaxStylesUri = webview.asWebviewUri(
             Uri.joinPath(
                 this._extensionUri,
                 'node_modules',
@@ -118,16 +119,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             ),
         );
 
-        this._webView.html = getHtmlForView(
+        webview.html = getHtmlForView(
             this._extensionPath,
-            this._webView.asWebviewUri(this._extensionUri),
-            this._webView.cspSource,
+            webview.asWebviewUri(this._extensionUri),
+            webview.cspSource,
             this.viewType,
             codiconsUri,
             syntaxStylesUri,
         );
 
-        this._webView.onDidReceiveMessage(async (e) => {
+        webview.onDidReceiveMessage(async (e) => {
             switch (e.type) {
                 case 'prompt':
                     await this.executeChat(e.text);
@@ -138,45 +139,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     break;
 
                 case 'openFile':
-                    try {
-                        const filePath: string = e.filePath;
-                        let range: Range | undefined;
-                        if (e.range && Array.isArray(e.range)) {
-                            const startPosition = new Position(e.range[0], 0);
-                            const endPosition = new Position(e.range[1], 0);
-                            range = e.range ? new Range(startPosition, endPosition) : undefined;
-                        }
-                        // Get workspace root and resolve the file path
-                        let resolvedPath: string;
-
-                        if (path.isAbsolute(filePath)) {
-                            // If already absolute, use as-is
-                            resolvedPath = filePath;
-                        } else {
-                            // If relative, resolve against workspace root
-                            const workspaceRoot = workspace.workspaceFolders?.[0]?.uri.fsPath;
-                            if (!workspaceRoot) {
-                                throw new Error('No workspace folder found');
-                            }
-                            resolvedPath = path.join(workspaceRoot, filePath);
-                        }
-
-                        const fileUri = Uri.file(resolvedPath);
-
-                        await window.showTextDocument(fileUri, {
-                            selection: range || undefined,
-                        });
-                    } catch (error) {
-                        console.error('Error opening file:', error);
-                        await this._webView?.postMessage({
-                            type: 'errorMessage',
-                            message: {
-                                text: `Error: ${error.message}`,
-                                author: 'RovoDev',
-                                timestamp: Date.now(),
-                            },
-                        });
-                    }
+                    await this.executeOpenFile(e.filePath, e.range);
                     break;
             }
         });
@@ -189,7 +152,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     ? `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within 10000ms`
                     : `Unable to initialize RovoDev's client within 10000ms`;
 
-                this.processApiError(new Error(errorMsg));
+                this.processError(new Error(errorMsg));
             }
 
             // sets this flag regardless are we are not going to retry the replay anymore
@@ -202,7 +165,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private async processChatResponse(fetchOp: Promise<Response>, doNotParse?: boolean) {
+    private async processChatResponse(fetchOp: Promise<Response>) {
         const webview = this._webView!;
 
         const response = await fetchOp;
@@ -210,27 +173,28 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             throw new Error('No response body');
         }
 
-        if (doNotParse) {
-            return;
-        }
-
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
         const parser = new RovoDevResponseParser();
-        parser.onNewMessage((msg) => this.processRovoDevResponse(msg));
 
         let messagesSent = 0;
 
         while (true) {
             const { done, value } = await reader.read();
             if (done) {
-                messagesSent += parser.flush();
+                for (const msg of parser.flush()) {
+                    ++messagesSent;
+                    await this.processRovoDevResponse(msg);
+                }
                 break;
             }
 
             const data = decoder.decode(value, { stream: true });
-            messagesSent += parser.parse(data);
+            for (const msg of parser.parse(data)) {
+                ++messagesSent;
+                await this.processRovoDevResponse(msg);
+            }
         }
 
         if (messagesSent) {
@@ -241,52 +205,54 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    private processApiError(error: Error) {
+    private processError(error: Error) {
         const webview = this._webView!;
         return webview.postMessage({
             type: 'errorMessage',
             message: {
                 text: `Error: ${error.message}`,
                 author: 'RovoDev',
-                timestamp: Date.now(),
+            },
+        });
+    }
+
+    private sendUserPromptToView(message: string) {
+        const webview = this._webView!;
+        return webview.postMessage({
+            type: 'userChatMessage',
+            message: {
+                text: message,
+                author: 'User',
             },
         });
     }
 
     private processRovoDevResponse(response: RovoDevResponse): Thenable<boolean> {
-        console.warn(`${response.event_kind} ${(response as any).content}`);
-        const webView = this._webView!;
+        const webview = this._webView!;
 
         switch (response.event_kind) {
             case 'text':
-                return webView.postMessage({
+                return webview.postMessage({
                     type: 'response',
                     dataObject: response,
                 });
 
             case 'tool-call':
-                return webView.postMessage({
+                return webview.postMessage({
                     type: 'toolCall',
                     dataObject: response,
                 });
 
             case 'tool-return':
             case 'retry-prompt':
-                return webView.postMessage({
+                return webview.postMessage({
                     type: 'toolReturn',
                     dataObject: response,
                 });
 
             case 'user-prompt':
                 if (!this._replayDone) {
-                    return webView.postMessage({
-                        type: 'userChatMessage',
-                        message: {
-                            text: response.content,
-                            author: 'User',
-                            timestamp: response.timestamp,
-                        },
-                    });
+                    return this.sendUserPromptToView(response.content);
                 }
                 return Promise.resolve(false);
 
@@ -296,67 +262,82 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async executeChat(message: string) {
-        const webview = this._webView!;
-
-        // First, send user message
-        await webview.postMessage({
-            type: 'userChatMessage',
-            message: {
-                text: message,
-                author: 'User',
-                timestamp: Date.now(),
-            },
+        await this.sendUserPromptToView(message);
+        await this.executeApiWithErrorHandling((client) => {
+            return this.processChatResponse(client.chat(message));
         });
-
-        if (this.rovoDevApiClient) {
-            try {
-                await this.processChatResponse(this.rovoDevApiClient.chat(message));
-            } catch (error) {
-                await this.processApiError(error);
-            }
-        } else {
-            await this.processApiError(new Error('RovoDev client not initialized'));
-        }
     }
 
     async executeReset(): Promise<void> {
-        if (this.rovoDevApiClient) {
-            try {
-                await this.rovoDevApiClient.reset();
-            } catch (error) {
-                this.processApiError(error);
-            }
-        } else {
-            await this.processApiError(new Error('RovoDev client not initialized'));
-        }
+        const webview = this._webView!;
+        await this.executeApiWithErrorHandling(async (client) => {
+            await client.reset();
+            await webview.postMessage({
+                type: 'newSession',
+            });
+        });
     }
 
     private async executeCancel(): Promise<void> {
-        if (this.rovoDevApiClient) {
-            try {
-                await this.rovoDevApiClient.cancel();
-            } catch (error) {
-                this.processApiError(error);
-            }
-        } else {
-            await this.processApiError(new Error('RovoDev client not initialized'));
-        }
+        await this.executeApiWithErrorHandling(async (client) => {
+            await client.cancel();
+        });
     }
 
     private async executeReplay(): Promise<void> {
-        if (this.rovoDevApiClient) {
-            try {
-                await this.processChatResponse(this.rovoDevApiClient.replay());
-            } catch (error) {
-                await this.processApiError(error);
-            }
-        } else {
-            await this.processApiError(new Error('RovoDev client not initialized'));
-        }
+        await this.executeApiWithErrorHandling(async (client) => {
+            return this.processChatResponse(client.replay());
+        });
     }
 
     private async executeHealthcheck(): Promise<boolean> {
-        return (await this.rovoDevApiClient?.healthcheck()) || false;
+        return (await this.rovoDevApiClient?.healthcheck(true)) || false;
+    }
+
+    private async executeOpenFile(filePath: string, _range?: any[]): Promise<void> {
+        try {
+            let range: Range | undefined;
+            if (_range && Array.isArray(_range)) {
+                const startPosition = new Position(_range[0], 0);
+                const endPosition = new Position(_range[1], 0);
+                range = new Range(startPosition, endPosition);
+            }
+            // Get workspace root and resolve the file path
+            let resolvedPath: string;
+
+            if (path.isAbsolute(filePath)) {
+                // If already absolute, use as-is
+                resolvedPath = filePath;
+            } else {
+                // If relative, resolve against workspace root
+                const workspaceRoot = workspace.workspaceFolders?.[0]?.uri.fsPath;
+                if (!workspaceRoot) {
+                    throw new Error('No workspace folder found');
+                }
+                resolvedPath = path.join(workspaceRoot, filePath);
+            }
+
+            const fileUri = Uri.file(resolvedPath);
+
+            await window.showTextDocument(fileUri, {
+                selection: range || undefined,
+            });
+        } catch (error) {
+            console.error('Error opening file:', error);
+            await this.processError(error);
+        }
+    }
+
+    private async executeApiWithErrorHandling(func: (client: RovoDevApiClient) => Promise<void>): Promise<void> {
+        if (this.rovoDevApiClient) {
+            try {
+                await func(this.rovoDevApiClient);
+            } catch (error) {
+                await this.processError(error);
+            }
+        } else {
+            await this.processError(new Error('RovoDev client not initialized'));
+        }
     }
 
     async invokeRovoDevAskCommand(prompt: string): Promise<void> {

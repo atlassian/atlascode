@@ -1,5 +1,3 @@
-import { EventEmitter } from 'vscode';
-
 // interfaces for the raw responses from the rovo dev agent
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.UserPromptPart
@@ -227,12 +225,7 @@ export class RovoDevResponseParser {
     private buffer = '';
     private previousChunk: RovoDevResponse | undefined;
 
-    private _onNewMessage = new EventEmitter<RovoDevResponse>();
-    readonly onNewMessage = this._onNewMessage.event;
-
-    parse(data: string): number {
-        let messagesSent = 0;
-
+    *parse(data: string) {
         this.buffer += data;
         const responseChunks = this.buffer.split(/\r?\n\r?\n/g);
 
@@ -262,9 +255,14 @@ export class RovoDevResponseParser {
                 data: JSON.parse(match[2]),
             };
 
+            let tmpChunkToFlush: RovoDevResponse | undefined;
+
             if (chunk.event_kind === 'part_start') {
                 // flsuh previous type, this is the beginning of a new multi-part response
-                messagesSent += this.firePreviousChunk();
+                tmpChunkToFlush = this.flushPreviousChunk();
+                if (tmpChunkToFlush) {
+                    yield tmpChunkToFlush;
+                }
 
                 const data_inner = chunk.data.part;
                 const event_kind_inner = data_inner.part_kind;
@@ -278,7 +276,10 @@ export class RovoDevResponseParser {
                 if (event_kind_inner === 'text') {
                     // if the event is a text message, send them out immediately instead
                     // of waiting for it to be fully reconstructed
-                    messagesSent += this.firePreviousChunk();
+                    tmpChunkToFlush = this.flushPreviousChunk();
+                    if (tmpChunkToFlush) {
+                        yield tmpChunkToFlush;
+                    }
                 }
             } else if (chunk.event_kind === 'part_delta') {
                 // continuation of a multi-part response
@@ -294,37 +295,39 @@ export class RovoDevResponseParser {
                 if (event_kind_inner === 'text') {
                     // if the event is a text message, send them out immediately instead
                     // of waiting for it to be fully reconstructed
-                    messagesSent += this.firePreviousChunk();
+                    tmpChunkToFlush = this.flushPreviousChunk();
+                    if (tmpChunkToFlush) {
+                        yield tmpChunkToFlush;
+                    }
                 }
             } else {
                 // flsuh previous type, this new event is not part of a multi-part response
-                messagesSent += this.firePreviousChunk();
+                tmpChunkToFlush = this.flushPreviousChunk();
+                if (tmpChunkToFlush) {
+                    yield tmpChunkToFlush;
+                }
 
-                this.previousChunk = parseGenericReponse(chunk);
-                messagesSent += this.firePreviousChunk();
+                yield parseGenericReponse(chunk);
             }
         }
-
-        return messagesSent;
     }
 
-    flush(): number {
+    *flush() {
         // if there is still data in the buffer, something went wrong.
         if (this.buffer) {
             throw new Error('RovoDev parser error: flushed with non-empty buffer');
         }
 
-        return this.firePreviousChunk();
+        const chunk = this.flushPreviousChunk();
+        if (chunk) {
+            yield chunk;
+        }
     }
 
-    private firePreviousChunk(): number {
-        if (this.previousChunk) {
-            this._onNewMessage.fire(this.previousChunk);
-            this.previousChunk = undefined;
-            return 1;
-        }
-
-        return 0;
+    private flushPreviousChunk() {
+        const chunk = this.previousChunk;
+        this.previousChunk = undefined;
+        return chunk;
     }
 }
 
