@@ -26,7 +26,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private readonly viewType = 'atlascodeRovoDev';
     private _webView?: Webview;
     private _rovoDevApiClient?: RovoDevApiClient;
-    private _replayDone = false;
+    private _initialized = false;
+    private _pendingPrompt: string | undefined;
 
     private _disposables: Disposable[] = [];
 
@@ -156,12 +157,18 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             }
 
             // sets this flag regardless are we are not going to retry the replay anymore
-            this._replayDone = true;
+            this._initialized = true;
 
             // send this message regardless, so the UI can unblock the send button
             await webviewView.webview.postMessage({
                 type: 'initialized',
             });
+
+            // re-send the buffered prompt
+            if (this._pendingPrompt) {
+                this.executeChat(this._pendingPrompt, true);
+                this._pendingPrompt = undefined;
+            }
         });
     }
 
@@ -251,7 +258,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 });
 
             case 'user-prompt':
-                if (!this._replayDone) {
+                // receiving a user-prompt pre-initialized means we are in the 'replay' response
+                if (!this._initialized) {
                     return this.sendUserPromptToView(response.content);
                 }
                 return Promise.resolve(false);
@@ -261,11 +269,22 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    private async executeChat(message: string) {
-        await this.sendUserPromptToView(message);
-        await this.executeApiWithErrorHandling((client) => {
-            return this.processChatResponse(client.chat(message));
-        });
+    private async executeChat(message: string, suppressEcho?: boolean) {
+        if (!message) {
+            return;
+        }
+
+        if (!suppressEcho) {
+            await this.sendUserPromptToView(message);
+        }
+
+        if (this._initialized) {
+            await this.executeApiWithErrorHandling((client) => {
+                return this.processChatResponse(client.chat(message));
+            });
+        } else {
+            this._pendingPrompt = message;
+        }
     }
 
     async executeReset(): Promise<void> {

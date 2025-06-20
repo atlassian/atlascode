@@ -234,11 +234,6 @@ export class RovoDevResponseParser {
         // if this is supposed to be the last blob of data, the last chunk will be an empty string.
         this.buffer = responseChunks.pop() || '';
 
-        const responseLines: string[] = [];
-        for (const chunk of responseChunks) {
-            responseLines.push(...chunk.split(/\r?\n/).filter((x) => !!x));
-        }
-
         for (const chunkRaw of responseChunks) {
             // it seems sometimes RovoDev sends a ping back - we just ignore it
             if (chunkRaw.startsWith(': ping - ')) {

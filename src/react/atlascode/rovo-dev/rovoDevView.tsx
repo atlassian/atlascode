@@ -24,7 +24,7 @@ const TextAreaMessages: Record<State, string> = {
 };
 
 const RovoDevView: React.FC = () => {
-    const [sendButtonDisabled, setSendButtonDisabled] = useState(true);
+    const [sendButtonDisabled, setSendButtonDisabled] = useState(false);
     const [currentState, setCurrentState] = useState(State.WaitingForPrompt);
     const [promptContainerFocused, setPromptContainerFocused] = useState(false);
 
