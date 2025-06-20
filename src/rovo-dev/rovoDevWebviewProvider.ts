@@ -1,8 +1,8 @@
 import path from 'path';
-import { rovodevInfo } from 'src/constants';
 import { setTimeout } from 'timers/promises';
 import {
     CancellationToken,
+    ColorThemeKind,
     commands,
     Disposable,
     Memento,
@@ -17,13 +17,15 @@ import {
     workspace,
 } from 'vscode';
 
+import { rovodevInfo } from '../constants';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
+import { RovoDevApiClient } from './rovoDevApiClient';
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
     private readonly viewType = 'atlascodeRovoDev';
     private _webView?: Webview;
-    private _rovoDevApiUrl?: string;
+    private _rovoDevApiClient?: RovoDevApiClient;
     private _replayDone = false;
 
     private _disposables: Disposable[] = [];
@@ -31,6 +33,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _globalState: Memento;
     private _extensionPath: string;
     private _extensionUri: Uri;
+
+    private get rovoDevApiClient() {
+        if (!this._rovoDevApiClient) {
+            const rovoDevPort = this.getWorkspacePort();
+            if (rovoDevPort) {
+                this._rovoDevApiClient = new RovoDevApiClient('localhost', rovoDevPort);
+            }
+        }
+
+        return this._rovoDevApiClient;
+    }
 
     constructor(extensionPath: string, globalState: Memento) {
         super(() => {
@@ -47,6 +60,26 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 webviewOptions: { retainContextWhenHidden: true },
             }),
         );
+    }
+
+    private getWorkspacePort(): number | undefined {
+        const workspaceFolders = workspace.workspaceFolders;
+        if (!workspaceFolders || workspaceFolders.length === 0) {
+            return undefined;
+        }
+
+        const globalPort = process.env[rovodevInfo.envVars.port];
+        if (globalPort) {
+            return parseInt(globalPort);
+        }
+
+        const wsPath = workspaceFolders[0].uri.fsPath;
+        const mapping = this._globalState.get<{ [key: string]: number }>(rovodevInfo.mappingKey);
+        if (mapping && mapping[wsPath]) {
+            return mapping[wsPath];
+        }
+
+        return undefined;
     }
 
     public resolveWebviewView(
@@ -66,7 +99,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             ],
         };
 
-        const isDarkTheme = window.activeColorTheme.kind === 3 || 2; // Dark theme
+        const isDarkTheme =
+            window.activeColorTheme.kind === ColorThemeKind.HighContrast ||
+            window.activeColorTheme.kind === ColorThemeKind.Dark;
 
         const codiconsUri = this._webView.asWebviewUri(
             Uri.joinPath(this._extensionUri, 'node_modules', '@vscode', 'codicons', 'dist', 'codicon.css'),
@@ -95,7 +130,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._webView.onDidReceiveMessage(async (e) => {
             switch (e.type) {
                 case 'prompt':
-                    await this.processPromptMessage(e.text);
+                    await this.executeChat(e.text);
                     break;
 
                 case 'cancelResponse':
@@ -150,14 +185,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             if (result) {
                 await this.executeReplay();
             } else {
-                await webviewView.webview.postMessage({
-                    type: 'errorMessage',
-                    message: {
-                        text: `Error: Unable to initialize RovoDev at "${this._rovoDevApiUrl}". Service wasn't ready within 10000ms`,
-                        author: 'RovoDev',
-                        timestamp: Date.now(),
-                    },
-                });
+                const errorMsg = this._rovoDevApiClient
+                    ? `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within 10000ms`
+                    : `Unable to initialize RovoDev's client within 10000ms`;
+
+                this.processApiError(new Error(errorMsg));
             }
 
             // sets this flag regardless are we are not going to retry the replay anymore
@@ -170,126 +202,58 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private initializeApiUrl(): boolean {
-        const rovoDevPort = this.getWorkspacePort();
-        if (!rovoDevPort) {
-            return false;
-        } else {
-            this._rovoDevApiUrl = `http://localhost:${rovoDevPort}`;
-            return true;
-        }
-    }
+    private async processChatResponse(fetchOp: Promise<Response>, doNotParse?: boolean) {
+        const webview = this._webView!;
 
-    private getWorkspacePort(): number | undefined {
-        const workspaceFolders = workspace.workspaceFolders;
-        if (!workspaceFolders || workspaceFolders.length === 0) {
-            return undefined;
+        const response = await fetchOp;
+        if (!response.body) {
+            throw new Error('No response body');
         }
 
-        const globalPort = process.env[rovodevInfo.envVars.port];
-        if (globalPort) {
-            return parseInt(globalPort);
-        }
-
-        const wsPath = workspaceFolders[0].uri.fsPath;
-        const mapping = this._globalState.get<{ [key: string]: number }>(rovodevInfo.mappingKey);
-        if (mapping && mapping[wsPath]) {
-            return mapping[wsPath];
-        }
-
-        return undefined;
-    }
-
-    private fetchApi(input: string, init?: RequestInit): Promise<Response> {
-        if (!this._rovoDevApiUrl && !this.initializeApiUrl()) {
-            throw new Error('Unable to initialize the RovoDev service URI');
-        }
-
-        return fetch(this._rovoDevApiUrl + input, init);
-    }
-
-    private async processPromptMessage(message: string) {
-        if (!this._webView) {
-            console.error('Webview is not initialized.');
+        if (doNotParse) {
             return;
         }
 
-        // First, send user message
-        await this._webView.postMessage({
-            type: 'userChatMessage',
-            message: {
-                text: message,
-                author: 'User',
-                timestamp: Date.now(),
-            },
-        });
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
 
-        const fetchOp = this.fetchApi('/v2/chat', {
-            method: 'POST',
-            headers: {
-                accept: 'text/event-stream',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                message: message,
-            }),
-        });
+        const parser = new RovoDevResponseParser();
+        parser.onNewMessage((msg) => this.processRovoDevResponse(msg));
 
-        await this.processResponse(fetchOp);
-    }
+        let messagesSent = 0;
 
-    private async processResponse(fetchOp: Promise<Response>, doNotParse?: boolean) {
-        const webview = this._webView!;
-
-        try {
-            const response = await fetchOp;
-            if (!response.body) {
-                throw new Error('No response body');
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+                messagesSent += parser.flush();
+                break;
             }
 
-            if (doNotParse) {
-                return;
-            }
+            const data = decoder.decode(value, { stream: true });
+            messagesSent += parser.parse(data);
+        }
 
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-
-            const parser = new RovoDevResponseParser();
-            parser.onNewMessage((msg) => this.processMessage(msg));
-
-            let messagesSent = 0;
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) {
-                    messagesSent += parser.flush();
-                    break;
-                }
-
-                const data = decoder.decode(value, { stream: true });
-                messagesSent += parser.parse(data);
-            }
-
-            if (messagesSent) {
-                // Send final complete message when stream ends
-                await webview.postMessage({
-                    type: 'completeMessage',
-                });
-            }
-        } catch (error) {
-            console.error('Error fetching data:', error);
+        if (messagesSent) {
+            // Send final complete message when stream ends
             await webview.postMessage({
-                type: 'errorMessage',
-                message: {
-                    text: `Error: ${error.message}`,
-                    author: 'RovoDev',
-                    timestamp: Date.now(),
-                },
+                type: 'completeMessage',
             });
         }
     }
 
-    private processMessage(response: RovoDevResponse): Thenable<boolean> {
+    private processApiError(error: Error) {
+        const webview = this._webView!;
+        return webview.postMessage({
+            type: 'errorMessage',
+            message: {
+                text: `Error: ${error.message}`,
+                author: 'RovoDev',
+                timestamp: Date.now(),
+            },
+        });
+    }
+
+    private processRovoDevResponse(response: RovoDevResponse): Thenable<boolean> {
         console.warn(`${response.event_kind} ${(response as any).content}`);
         const webView = this._webView!;
 
@@ -331,70 +295,71 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
+    private async executeChat(message: string) {
+        const webview = this._webView!;
+
+        // First, send user message
+        await webview.postMessage({
+            type: 'userChatMessage',
+            message: {
+                text: message,
+                author: 'User',
+                timestamp: Date.now(),
+            },
+        });
+
+        if (this.rovoDevApiClient) {
+            try {
+                await this.processChatResponse(this.rovoDevApiClient.chat(message));
+            } catch (error) {
+                await this.processApiError(error);
+            }
+        } else {
+            await this.processApiError(new Error('RovoDev client not initialized'));
+        }
+    }
+
     async executeReset(): Promise<void> {
-        if (!this._webView) {
-            console.error('Webview is not initialized.');
-            return;
-        }
-
-        try {
-            await this.fetchApi('/v2/reset', {
-                method: 'POST',
-            });
-
-            await this._webView.postMessage({
-                type: 'newSession',
-            });
-        } catch (error) {
-            await this._webView.postMessage({
-                type: 'errorMessage',
-                message: {
-                    text: `Error: ${error.message}`,
-                    author: 'RovoDev',
-                    timestamp: Date.now(),
-                },
-            });
+        if (this.rovoDevApiClient) {
+            try {
+                await this.rovoDevApiClient.reset();
+            } catch (error) {
+                this.processApiError(error);
+            }
+        } else {
+            await this.processApiError(new Error('RovoDev client not initialized'));
         }
     }
 
-    async executeCancel(): Promise<void> {
-        const fetchOp = this.fetchApi('/v2/cancel', {
-            method: 'POST',
-            headers: {
-                accept: 'text/event-stream',
-                'Content-Type': 'application/json',
-            },
-        });
-
-        await this.processResponse(fetchOp, true);
-    }
-
-    async executeReplay(): Promise<void> {
-        const fetchOp = this.fetchApi('/v2/replay', {
-            method: 'POST',
-            headers: {
-                accept: 'text/event-stream',
-                'Content-Type': 'application/json',
-            },
-        });
-
-        await this.processResponse(fetchOp);
-    }
-
-    async executeHealthcheck(): Promise<boolean> {
-        if (!this._webView) {
-            return false;
-        }
-
-        try {
-            await this.fetchApi('/v2/healthcheck');
-            return true;
-        } catch {
-            return false;
+    private async executeCancel(): Promise<void> {
+        if (this.rovoDevApiClient) {
+            try {
+                await this.rovoDevApiClient.cancel();
+            } catch (error) {
+                this.processApiError(error);
+            }
+        } else {
+            await this.processApiError(new Error('RovoDev client not initialized'));
         }
     }
 
-    async invokePrompt(prompt: string): Promise<void> {
+    private async executeReplay(): Promise<void> {
+        if (this.rovoDevApiClient) {
+            try {
+                await this.processChatResponse(this.rovoDevApiClient.replay());
+            } catch (error) {
+                await this.processApiError(error);
+            }
+        } else {
+            await this.processApiError(new Error('RovoDev client not initialized'));
+        }
+    }
+
+    private async executeHealthcheck(): Promise<boolean> {
+        return (await this.rovoDevApiClient?.healthcheck()) || false;
+    }
+
+    async invokeRovoDevAskCommand(prompt: string): Promise<void> {
         // focus on the specific vscode view
         commands.executeCommand('atlascode.views.rovoDev.webView.focus');
 
@@ -406,7 +371,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
 
         // Actually invoke the rovodev service, feed responses to the webview as normal
-        await this.processPromptMessage(prompt);
+        await this.executeChat(prompt);
     }
 
     private async waitFor(
