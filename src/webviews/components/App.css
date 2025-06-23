@@ -663,6 +663,12 @@ pre {
     margin: 0px 8px;
 }
 
+.ac-breadcrumb-loading {
+    color: var(--vscode-breadcrumb-foreground);
+    font-style: italic;
+    opacity: 0.7;
+}
+
 /* [class^=styled__StyledTitle-] p {
   margin: 0px;
   color: var(--vscode-editor-foreground);

@@ -118,6 +118,13 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 case 'hierarchyUpdate':
                     this.setState({
                         hierarchy: e.hierarchy,
+                        hierarchyLoading: false,
+                    });
+                    break;
+                case 'hierarchyLoading':
+                    this.setState({
+                        hierarchy: e.hierarchy,
+                        hierarchyLoading: true,
                     });
                     break;
                 case 'error':
@@ -495,6 +502,13 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     <div className="ac-breadcrumbs">
                         {this.state.hierarchy && this.state.hierarchy.length > 0 && (
                             <>
+                                {/* Show loading indicator at the beginning if we're fetching more parents */}
+                                {this.state.hierarchyLoading && (
+                                    <>
+                                        <span className="ac-breadcrumb-loading">...</span>
+                                        <span className="ac-breadcrumb-divider">/</span>
+                                    </>
+                                )}
                                 {this.state.hierarchy.map((issue, index) => {
                                     const isLastItem = index === this.state.hierarchy.length - 1;
 
