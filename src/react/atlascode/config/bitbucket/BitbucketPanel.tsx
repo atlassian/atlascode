@@ -62,6 +62,12 @@ export const BitbucketPanel: React.FunctionComponent<BitbucketPanelProps> = ({
                                 pullRequestCreated={
                                     config[`${ConfigSection.Bitbucket}.explorer.notifications.pullRequestCreated`]
                                 }
+                                pullRequestsEnabled={
+                                    config[`${ConfigSection.Bitbucket}.explorer.repositoryBasedPullRequestView.enabled`]
+                                }
+                                pullRequestsOverviewEnabled={
+                                    config[`${ConfigSection.Bitbucket}.explorer.pullRequestsOverview.enabled`]
+                                }
                                 nestFiles={config[`${ConfigSection.Bitbucket}.explorer.nestFilesEnabled`]}
                                 refreshInterval={config[`${ConfigSection.Bitbucket}.explorer.refreshInterval`]}
                             />
