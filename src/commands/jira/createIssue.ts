@@ -59,7 +59,7 @@ function annotateComment(data: CommentData) {
 function descriptionForUri(uri: Uri) {
     const linesText = getLineRange();
 
-    const wsRepos = Container.bitbucketContext.getAllRepositories();
+    const wsRepos = Container.bitbucketContext?.getAllRepositories() || [];
 
     const urls = wsRepos
         .map((wsRepo) => bitbucketUrlsInRepo(wsRepo, uri, linesText))
