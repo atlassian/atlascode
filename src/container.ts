@@ -225,7 +225,7 @@ export class Container {
             )),
         );
         this._context.subscriptions.push((this._jiraActiveIssueStatusBar = new JiraActiveIssueStatusBar(bbCtx)));
-
+        Container.authenticateWithBitbucketToken();
         this._context.subscriptions.push(new BitbucketCloudPullRequestLinkProvider());
         // It seems to take a bit of time for VS Code to initialize git, if we try and find repos before that completes
         // we'll fail. Wait a few seconds before trying to check out a branch.
@@ -305,6 +305,10 @@ export class Container {
     private static _onboardingWebviewFactory: SingleWebview<any, OnboardingAction>;
     public static get onboardingWebviewFactory() {
         return this._onboardingWebviewFactory;
+    }
+
+    static async authenticateWithBitbucketToken() {
+        Container.loginManager.authenticateWithBitbucketToken();
     }
 
     private static _pullRequestDetailsWebviewFactory: MultiWebview<any, PullRequestDetailsAction>;

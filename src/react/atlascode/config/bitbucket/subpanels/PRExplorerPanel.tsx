@@ -15,6 +15,8 @@ type PRExplorerPanelProps = CommonSubpanelProps & {
     pullRequestCreated: boolean;
     nestFiles: boolean;
     refreshInterval: number;
+    pullRequestsEnabled: boolean;
+    pullRequestsOverviewEnabled: boolean;
 };
 
 export const PRExplorerPanel: React.FunctionComponent<PRExplorerPanelProps> = memo(
@@ -28,6 +30,8 @@ export const PRExplorerPanel: React.FunctionComponent<PRExplorerPanelProps> = me
         pullRequestCreated,
         nestFiles,
         refreshInterval,
+        pullRequestsEnabled,
+        pullRequestsOverviewEnabled,
     }) => {
         const [internalExpanded, setInternalExpanded] = useState(expanded);
 
@@ -66,6 +70,8 @@ export const PRExplorerPanel: React.FunctionComponent<PRExplorerPanelProps> = me
                         pullRequestCreated={pullRequestCreated}
                         nestFiles={nestFiles}
                         refreshInterval={refreshInterval}
+                        pullRequestsEnabled={pullRequestsEnabled}
+                        pullRequestsOverviewEnabled={pullRequestsOverviewEnabled}
                     />
                 </ExpansionPanelDetails>
             </ExpansionPanel>

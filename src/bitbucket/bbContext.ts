@@ -9,6 +9,7 @@ import { CacheMap } from '../util/cachemap';
 import { Time } from '../util/time';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
 import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
+import { PullRequestsOverviewExplorer } from '../views/pullrequest/PullRequestsOverviewExplorer';
 import { clientForSite, getBitbucketCloudRemotes, getBitbucketRemotes, workspaceRepoFor } from './bbUtils';
 import { BitbucketSite, PullRequest, User, WorkspaceRepo } from './model';
 
@@ -21,6 +22,7 @@ export class BitbucketContext extends Disposable {
     private _gitApi: GitApi;
     private _repoMap: Map<string, WorkspaceRepo> = new Map();
     private _pullRequestsExplorer: PullRequestsExplorer;
+    private _pullRequestsOverviewExplorer: PullRequestsOverviewExplorer;
     private _disposable: Disposable;
     private _currentUsers: CacheMap;
     private _pullRequestCache = new CacheMap();
@@ -31,6 +33,7 @@ export class BitbucketContext extends Disposable {
         super(() => this.dispose());
         this._gitApi = gitApi;
         this._pullRequestsExplorer = new PullRequestsExplorer(this);
+        this._pullRequestsOverviewExplorer = new PullRequestsOverviewExplorer(this);
         this._currentUsers = new CacheMap();
 
         Container.context.subscriptions.push(
@@ -48,6 +51,7 @@ export class BitbucketContext extends Disposable {
             this._gitApi.onDidOpenRepository(() => this.refreshRepos()),
             this._gitApi.onDidCloseRepository(() => this.refreshRepos()),
             this._pullRequestsExplorer,
+            this._pullRequestsOverviewExplorer,
             this.prCommentController,
         );
 

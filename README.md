@@ -7,9 +7,10 @@ Stay in the flow by using Atlassian for VSCode to start work on a JIRA issue, ra
 
 [**Download now**](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode&ssr=false#overview)
 
+## [Devsphere specific changelog](/DEVSPHERE_CHANGELOG.md)
+We're adding certain features & updates to this fork which may or may not be suitable to push upstream. Refer to the [Devsphere specific changelog](/DEVSPHERE_CHANGELOG.md) to get more context.
 
 ## Usage
-
 
 ### Getting Started
 

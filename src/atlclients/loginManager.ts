@@ -1,3 +1,7 @@
+import * as cp from 'child_process';
+import { readFile } from 'fs/promises';
+import { homedir } from 'os';
+import { join } from 'path';
 import * as vscode from 'vscode';
 
 import { authenticatedEvent, editedEvent } from '../analytics';
@@ -27,6 +31,8 @@ import { CredentialManager } from './authStore';
 import { BitbucketAuthenticator } from './bitbucketAuthenticator';
 import { JiraAuthentictor as JiraAuthenticator } from './jiraAuthenticator';
 import { OAuthDancer } from './oauthDancer';
+import { BitbucketResponseHandler } from './responseHandlers/BitbucketResponseHandler';
+import { strategyForProvider } from './strategy';
 
 const CLOUD_TLD = '.atlassian.net';
 
@@ -34,6 +40,7 @@ export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
     private _jiraAuthenticator: JiraAuthenticator;
     private _bitbucketAuthenticator: BitbucketAuthenticator;
+    private _bitbucketResponseHandler: BitbucketResponseHandler;
 
     constructor(
         private _credentialManager: CredentialManager,
@@ -42,6 +49,13 @@ export class LoginManager {
     ) {
         this._bitbucketAuthenticator = new BitbucketAuthenticator();
         this._jiraAuthenticator = new JiraAuthenticator();
+        // Initialize BitbucketResponseHandler
+        const axiosInstance = this._dancer.getAxiosInstance();
+        this._bitbucketResponseHandler = new BitbucketResponseHandler(
+            strategyForProvider(OAuthProvider.BitbucketCloud),
+            this._analyticsClient,
+            axiosInstance,
+        );
     }
 
     // this is *only* called when login buttons are clicked by the user
@@ -117,7 +131,160 @@ export class LoginManager {
         }
     }
 
-    private async getOAuthSiteDetails(
+    // Look for https://x-token-auth:<token>@bitbucket.org pattern
+    private extractTokenFromGitRemoteRegex(line: string): string | null {
+        const tokenMatch = line.match(/https:\/\/x-token-auth:([^@]+)@bitbucket\.org/);
+        if (tokenMatch && tokenMatch[1]) {
+            Logger.debug('Auth token found in git remote');
+            return tokenMatch[1];
+        }
+        return null;
+    }
+
+    /**
+     * Extracts auth token from git remote URL
+     * @returns The auth token or null if not found
+     */
+    private async getAuthTokenFromGitRemote(): Promise<string | null> {
+        try {
+            // Get the workspace folder path
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (!workspaceFolders || workspaceFolders.length === 0) {
+                Logger.warn('No workspace folder found');
+                return null;
+            }
+            const workspacePath = workspaceFolders[0].uri.fsPath;
+            // Execute git remote -v command
+            const gitCommand = 'git remote -v';
+            const result = await new Promise<string>((resolve, reject) => {
+                cp.exec(gitCommand, { cwd: workspacePath }, (error, stdout) => {
+                    if (error) {
+                        reject(error);
+                        return;
+                    }
+                    resolve(stdout);
+                });
+            });
+            // Parse the output to find the token
+            const remoteLines = result.split('\n');
+            for (const line of remoteLines) {
+                const token = this.extractTokenFromGitRemoteRegex(line);
+                if (token) {
+                    Logger.debug('Auth token found in git remote');
+                    return token;
+                }
+            }
+            Logger.warn('No auth token found in git remote');
+            return null;
+        } catch (error) {
+            Logger.error(error, 'Error extracting auth token from git remote');
+            return null;
+        }
+    }
+
+    /**
+     * Extracts auth token from git remote URL
+     * @returns The auth token or null if not found
+     */
+    private async getAuthTokenFromHomeGitCredentials(): Promise<string | null> {
+        try {
+            const credentialsFullPath = join(homedir(), '.git-credentials');
+            const credentialsContents = await readFile(credentialsFullPath, 'utf-8');
+            const token = this.extractTokenFromGitRemoteRegex(credentialsContents);
+            if (token) {
+                Logger.debug('Auth token found in git credentials file');
+                return token;
+            }
+            Logger.warn('No auth token found in git credentials file');
+            return null;
+        } catch (error) {
+            Logger.error(error, 'Error extracting auth token from git remote');
+            return null;
+        }
+    }
+
+    private async refreshBitbucketToken(siteDetails: DetailedSiteInfo): Promise<boolean> {
+        const token = await this._credentialManager.getAuthInfo(siteDetails, false);
+        if (token) {
+            return this.authenticateWithBitbucketToken(true);
+        }
+        return false;
+    }
+
+    // Add a new method for token-based authentication
+    public async authenticateWithBitbucketToken(refresh: boolean = false): Promise<boolean> {
+        try {
+            const [tokenRemote, tokenCredentialsFile] = await Promise.allSettled([
+                this.getAuthTokenFromGitRemote(),
+                this.getAuthTokenFromHomeGitCredentials(),
+            ]);
+
+            let token: string | null = null;
+
+            if (tokenRemote.status === 'fulfilled' && tokenRemote.value) {
+                token = tokenRemote.value;
+            } else if (tokenCredentialsFile.status === 'fulfilled' && tokenCredentialsFile.value) {
+                token = tokenCredentialsFile.value;
+            }
+
+            if (!token) {
+                Logger.warn('No hardcoded Bitbucket auth token found');
+                vscode.window.showErrorMessage('No hardcoded Bitbucket auth token found');
+                return false;
+            }
+            Logger.debug('Authenticating with Bitbucket using auth token');
+            // Use the BitbucketResponseHandler to get user info
+            const userData = await this._bitbucketResponseHandler.user(token);
+            const [oAuthSiteDetails] = await this.getOAuthSiteDetails(
+                ProductBitbucket,
+                OAuthProvider.BitbucketCloud,
+                userData.id,
+                [
+                    {
+                        id: OAuthProvider.BitbucketCloud,
+                        name: ProductBitbucket.name,
+                        scopes: [],
+                        avatarUrl: '',
+                        url: 'https://api.bitbucket.org/2.0',
+                    },
+                ],
+            );
+            const oAuthInfo: OAuthInfo = {
+                access: token,
+                refresh: '',
+                recievedAt: Date.now(),
+                user: {
+                    id: userData.id,
+                    displayName: userData.displayName,
+                    email: userData.email,
+                    avatarUrl: userData.avatarUrl,
+                },
+                state: AuthInfoState.Valid,
+            };
+            await this._credentialManager.saveAuthInfo(oAuthSiteDetails, oAuthInfo);
+            setTimeout(
+                () => {
+                    this.refreshBitbucketToken(oAuthSiteDetails);
+                },
+                2 * 60 * 60 * 1000,
+            );
+            if (!refresh) {
+                this._siteManager.addSites([oAuthSiteDetails]);
+                // Fire authenticated event
+                authenticatedEvent(oAuthSiteDetails, false).then((e) => {
+                    this._analyticsClient.sendTrackEvent(e);
+                });
+                Logger.info('Successfully authenticated with Bitbucket using auth token');
+            }
+            return true;
+        } catch (e) {
+            Logger.error(e, 'Error authenticating with Bitbucket token');
+            vscode.window.showErrorMessage(`Error authenticating with Bitbucket token: ${e}`);
+            return false;
+        }
+    }
+
+    public async getOAuthSiteDetails(
         product: Product,
         provider: OAuthProvider,
         userId: string,

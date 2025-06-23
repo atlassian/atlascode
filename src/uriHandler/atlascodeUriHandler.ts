@@ -27,6 +27,9 @@ export class AtlascodeUriHandler extends Disposable implements UriHandler {
                 new CloneRepositoryUriHandler(bitbucketHelper),
                 new OpenOrWorkOnJiraIssueUriHandler('openJiraIssue'),
                 new OpenOrWorkOnJiraIssueUriHandler('startWorkOnJira'),
+                new BasicUriHandler('authenticateWithBitbucketToken', async () => {
+                    Container.authenticateWithBitbucketToken();
+                }),
                 new UriHandlerNotFoundHandler(), // this one must be the last one, because it always matches
             ]);
         }
