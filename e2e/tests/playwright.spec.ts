@@ -137,7 +137,7 @@ test('Assigning Jira issue to myself works', async ({ page }) => {
     await settingsFrame.getByLabel('Password (API token)').fill('12345');
     await settingsFrame.getByRole('button', { name: 'Save Site' }).click();
 
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(2000);
 
     // Click on issue in tree
     const issueInTree = page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' });
