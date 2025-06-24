@@ -170,7 +170,7 @@ test('Update description flow', async ({ page }) => {
     await settingsFrame.getByRole('textbox', { name: 'Password (API token)' }).fill('12345');
 
     await settingsFrame.getByRole('button', { name: 'Save Site' }).click();
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(1000);
 
     await page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' }).click();
     await page.waitForTimeout(250);
@@ -202,7 +202,7 @@ test('Update description flow', async ({ page }) => {
     const updatedIssue = updateIssueField(issueJSON, {
         description: newDescription,
     });
-    await api.post('/__admin/mappings', {
+    const response = await api.post('/__admin/mappings', {
         data: {
             request: {
                 method: 'GET',
@@ -217,10 +217,12 @@ test('Update description flow', async ({ page }) => {
             },
         },
     });
+    const { id } = await response.json();
 
     await issueFrame.getByRole('button', { name: 'Save' }).click();
     await page.waitForTimeout(2000);
 
     await expect(issueFrame.getByText(oldDescription)).not.toBeVisible();
     await expect(issueFrame.getByText(newDescription)).toBeVisible();
+    await api.delete(`/__admin/mappings/${id}`);
 });
