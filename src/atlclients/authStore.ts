@@ -71,7 +71,8 @@ export class CredentialManager implements Disposable {
      * it's available, otherwise will return the value in the secretstorage.
      */
     public async getAuthInfo(site: DetailedSiteInfo, allowCache = true): Promise<AuthInfo | undefined> {
-        return this.getAuthInfoForProductAndCredentialId(site, allowCache);
+        const authInfo = await this.getAuthInfoForProductAndCredentialId(site, allowCache);
+        return this.softRefreshAuthInfo(site, authInfo);
     }
 
     public async getAllValidAuthInfo(product: Product): Promise<AuthInfo[]> {
@@ -127,7 +128,6 @@ export class CredentialManager implements Disposable {
     private async getAuthInfoForProductAndCredentialId(
         site: DetailedSiteInfo,
         allowCache: boolean,
-        skipRefresh: boolean = false,
     ): Promise<AuthInfo | undefined> {
         Logger.debug(`Retrieving auth info for product: ${site.product.key} credentialID: ${site.credentialId}`);
         let foundInfo: AuthInfo | undefined = undefined;
@@ -201,9 +201,6 @@ export class CredentialManager implements Disposable {
                 Logger.info(`secretstorage error ${e}`);
             }
         }
-        if (!skipRefresh) {
-            this.softRefreshAuthInfo(site, foundInfo);
-        }
 
         return foundInfo;
     }
@@ -236,7 +233,7 @@ export class CredentialManager implements Disposable {
             await sleep(5000);
         }
 
-        return this.getAuthInfoForProductAndCredentialId(site, false, true);
+        return this.getAuthInfoForProductAndCredentialId(site, false);
     }
 
     /**
