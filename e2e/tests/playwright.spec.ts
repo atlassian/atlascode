@@ -239,13 +239,12 @@ test('Add comment flow', async ({ page }) => {
     await settingsFrame.getByRole('textbox', { name: 'Password (API token)' }).fill('12345');
 
     await settingsFrame.getByRole('button', { name: 'Save Site' }).click();
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
 
     await page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' }).click();
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(1000);
 
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
-    await page.waitForTimeout(250);
 
     const issueFrame = page.frameLocator('iframe.webview.ready').frameLocator('iframe[title="Jira Issue"]');
     await page.waitForTimeout(2000);
@@ -258,7 +257,7 @@ test('Add comment flow', async ({ page }) => {
     const textarea = issueFrame.locator('textarea').first();
     await expect(textarea).toBeVisible();
     await textarea.fill(commentText);
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(1000);
 
     // Set up WireMock API for comment creation
     const api = await request.newContext({
@@ -292,7 +291,7 @@ test('Add comment flow', async ({ page }) => {
     await expect(addCommentButton).toBeVisible();
     await addCommentButton.click();
 
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
 
     await expect(issueFrame.getByText(commentText)).toBeVisible();
 
