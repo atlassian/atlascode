@@ -36,22 +36,15 @@ import {
     ProductJira,
 } from './authInfo';
 import { BasicInterceptor } from './basicInterceptor';
-import { Negotiator } from './negotiate';
 
 const oauthTTL: number = 45 * Time.MINUTES;
 const serverTTL: number = Time.FOREVER;
-const GRACE_PERIOD = 10 * Time.MINUTES;
-
-function sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 export class ClientManager implements Disposable {
     private _clients: CacheMap = new CacheMap();
     private _queue = new PQueue({ concurrency: 1 });
     private _agentChanged: boolean = false;
     private hasWarnedOfFailure = false;
-    private negotiator: Negotiator;
 
     constructor(context: ExtensionContext) {
         context.subscriptions.push(
@@ -59,7 +52,6 @@ export class ClientManager implements Disposable {
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
         );
         this.onConfigurationChanged(configuration.initializingChangeEvent);
-        this.negotiator = new Negotiator(context.globalState);
     }
 
     dispose() {
@@ -263,7 +255,7 @@ export class ClientManager implements Disposable {
         let client: T | undefined = undefined;
 
         Logger.debug(`Creating client for ${site.baseApiUrl}`);
-        let credentials = await Container.credentialManager.getAuthInfo(site, false);
+        const credentials = await Container.credentialManager.getAuthInfo(site, false);
 
         if (credentials?.state === AuthInfoState.Invalid) {
             Logger.error(new Error('Error creating client: credentials state is Invalid'));
@@ -282,34 +274,6 @@ export class ClientManager implements Disposable {
             }
             return undefined;
         }
-
-        if (site.product.key === ProductJira.key && isOAuthInfo(credentials) && credentials.expirationDate) {
-            const diff = credentials.expirationDate - Date.now();
-            Logger.debug(`${Math.floor(diff / 1000)} seconds remaining for auth token.`);
-            if (diff > GRACE_PERIOD) {
-                Logger.debug(`Using existing auth token.`);
-                client = factory(credentials);
-                this._clients.setItem(this.keyForSite(site), client, diff);
-                return client;
-            }
-            Logger.debug(`Need new auth token.`);
-        }
-
-        if (this.negotiator.thisIsTheResponsibleProcess()) {
-            Logger.debug(`Refreshing credentials.`);
-            try {
-                await Container.credentialManager.refreshAccessToken(site);
-            } catch (e) {
-                Logger.debug(`error refreshing token ${e}`);
-                return Promise.reject(`${cannotGetClientFor}: ${site.product.name} ... ${e}`);
-            }
-        } else {
-            Logger.debug(`This process isn't in charge of refreshing credentials.`);
-            await this.negotiator.requestTokenRefreshForSite(JSON.stringify(site));
-            await sleep(5000);
-        }
-
-        credentials = await Container.credentialManager.getAuthInfo(site, false); // we might be able to take cached version
 
         if (credentials) {
             client = factory(credentials);

@@ -41,6 +41,10 @@ jest.mock('../container', () => ({
                 store: jest.fn(),
                 delete: jest.fn(),
             },
+            globalState: {
+                get: jest.fn(),
+                update: jest.fn(),
+            },
         },
         siteManager: {
             getSiteForId: jest.fn(),
@@ -132,7 +136,7 @@ describe('CredentialManager', () => {
         };
 
         // Create a new instance for each test
-        credentialManager = new CredentialManager(mockAnalyticsClient);
+        credentialManager = new CredentialManager(Container.context, mockAnalyticsClient);
 
         // Mock the event emitter
         (credentialManager as any)._onDidAuthChange = {

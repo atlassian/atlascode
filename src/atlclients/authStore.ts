@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import PQueue from 'p-queue';
-import { Disposable, Event, EventEmitter, version, window } from 'vscode';
+import { cannotGetClientFor } from 'src/constants';
+import { Disposable, Event, EventEmitter, ExtensionContext, version, window } from 'vscode';
 
 import { loggedOutEvent } from '../analytics';
 import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
@@ -8,6 +9,7 @@ import { CommandContext, setCommandContext } from '../commandContext';
 import { Container } from '../container';
 import { Logger } from '../logger';
 import { keychain } from '../util/keychain';
+import { Time } from '../util/time';
 import {
     AuthChangeType,
     AuthInfo,
@@ -25,6 +27,7 @@ import {
     RemoveAuthInfoEvent,
     UpdateAuthInfoEvent,
 } from './authInfo';
+import { Negotiator } from './negotiate';
 import { OAuthRefesher } from './oauthRefresher';
 import { Tokens } from './tokens';
 const keychainServiceNameV3 = version.endsWith('-insider') ? 'atlascode-insiders-authinfoV3' : 'atlascode-authinfoV3';
@@ -34,14 +37,23 @@ enum Priority {
     Write,
 }
 
+function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export class CredentialManager implements Disposable {
     private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
     private _queue = new PQueue({ concurrency: 1 });
     private _refresher = new OAuthRefesher();
+    private negotiator: Negotiator;
 
-    constructor(private _analyticsClient: AnalyticsClient) {
+    constructor(
+        context: ExtensionContext,
+        private _analyticsClient: AnalyticsClient,
+    ) {
         this._memStore.set(ProductJira.key, new Map<string, AuthInfo>());
         this._memStore.set(ProductBitbucket.key, new Map<string, AuthInfo>());
+        this.negotiator = new Negotiator(context.globalState);
     }
 
     private _onDidAuthChange = new EventEmitter<AuthInfoEvent>();
@@ -115,6 +127,7 @@ export class CredentialManager implements Disposable {
     private async getAuthInfoForProductAndCredentialId(
         site: DetailedSiteInfo,
         allowCache: boolean,
+        skipRefresh: boolean = false,
     ): Promise<AuthInfo | undefined> {
         Logger.debug(`Retrieving auth info for product: ${site.product.key} credentialID: ${site.credentialId}`);
         let foundInfo: AuthInfo | undefined = undefined;
@@ -188,9 +201,42 @@ export class CredentialManager implements Disposable {
                 Logger.info(`secretstorage error ${e}`);
             }
         }
+        if (!skipRefresh) {
+            this.softRefreshAuthInfo(site, foundInfo);
+        }
 
         return foundInfo;
-        //return foundInfo ? foundInfo : Promise.reject(`no authentication info found for site ${site.hostname}`);
+    }
+
+    private async softRefreshAuthInfo(site: DetailedSiteInfo, authInfo: AuthInfo | undefined) {
+        const GRACE_PERIOD = 10 * Time.MINUTES;
+
+        const credentials = authInfo;
+
+        if (isOAuthInfo(credentials) && credentials.expirationDate) {
+            const diff = credentials.expirationDate - Date.now();
+            Logger.debug(`${Math.floor(diff / 1000)} seconds remaining for auth token.`);
+            if (diff < GRACE_PERIOD) {
+                return credentials; // no need to refresh, we have enough time left
+            }
+            Logger.debug(`Need new auth token.`);
+        }
+
+        if (this.negotiator.thisIsTheResponsibleProcess()) {
+            Logger.debug(`Refreshing credentials.`);
+            try {
+                await Container.credentialManager.refreshAccessToken(site);
+            } catch (e) {
+                Logger.debug(`error refreshing token ${e}`);
+                return Promise.reject(`${cannotGetClientFor}: ${site.product.name} ... ${e}`);
+            }
+        } else {
+            Logger.debug(`This process isn't in charge of refreshing credentials.`);
+            await this.negotiator.requestTokenRefreshForSite(JSON.stringify(site));
+            await sleep(5000);
+        }
+
+        return this.getAuthInfoForProductAndCredentialId(site, false, true);
     }
 
     /**

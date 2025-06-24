@@ -9,7 +9,6 @@ import { ServerPullRequestApi } from '../bitbucket/bitbucket-server/pullRequests
 import { ServerRepositoriesApi } from '../bitbucket/bitbucket-server/repositories';
 import { HTTPClient } from '../bitbucket/httpClient';
 import { configuration } from '../config/configuration';
-import { cannotGetClientFor } from '../constants';
 import { Container } from '../container';
 import {
     basicJiraTransportFactory,
@@ -224,10 +223,6 @@ describe('ClientManager', () => {
             expect(mockSiteManager.onDidSitesAvailableChange).toHaveBeenCalled();
             expect(mockContext.subscriptions).toHaveLength(2);
         });
-
-        it('should create a negotiator with global state', () => {
-            expect(Negotiator).toHaveBeenCalledWith(mockContext.globalState);
-        });
     });
 
     describe('dispose', () => {
@@ -382,20 +377,6 @@ describe('ClientManager', () => {
             expect(mockCredentialManager.getAuthInfo).not.toHaveBeenCalled();
         });
 
-        it('should handle token refresh when not responsible process', async () => {
-            mockNegotiator.thisIsTheResponsibleProcess.mockReturnValue(false);
-            mockCredentialManager.getAuthInfo.mockResolvedValueOnce(null).mockResolvedValueOnce(mockOAuthInfo);
-            mockCacheMap.getItem.mockReturnValue(null);
-
-            // Mock sleep function to avoid actual delay in tests
-            jest.spyOn(global, 'setTimeout').mockImplementation((callback: any) => callback());
-
-            const result = await clientManager.jiraClient(mockCloudSite);
-
-            expect(mockNegotiator.requestTokenRefreshForSite).toHaveBeenCalled();
-            expect(result).toBeDefined();
-        });
-
         it('should handle invalid credentials', async () => {
             const invalidAuthInfo = { ...mockOAuthInfo, state: AuthInfoState.Invalid };
             mockCredentialManager.getAuthInfo.mockResolvedValue(invalidAuthInfo);
@@ -407,44 +388,6 @@ describe('ClientManager', () => {
 
             expect(window.showErrorMessage).toHaveBeenCalled();
             expect(Logger.error).toHaveBeenCalled();
-        });
-
-        it('should handle credential refresh errors', async () => {
-            mockCredentialManager.getAuthInfo.mockResolvedValueOnce(null);
-            mockCredentialManager.refreshAccessToken.mockRejectedValue(new Error('Refresh failed'));
-            mockCacheMap.getItem.mockReturnValue(null);
-
-            await expect(clientManager.jiraClient(mockCloudSite)).rejects.toMatch(cannotGetClientFor);
-        });
-
-        it('should use existing token if not expired', async () => {
-            const futureExpirationAuthInfo = {
-                ...mockOAuthInfo,
-                expirationDate: Date.now() + 3600000, // 1 hour from now
-            };
-            mockCredentialManager.getAuthInfo.mockResolvedValue(futureExpirationAuthInfo);
-            mockCacheMap.getItem.mockReturnValue(null);
-
-            const result = await clientManager.jiraClient(mockCloudSite);
-
-            expect(mockCredentialManager.refreshAccessToken).not.toHaveBeenCalled();
-            expect(result).toBeDefined();
-        });
-
-        it('should refresh token if expired', async () => {
-            const expiredAuthInfo = {
-                ...mockOAuthInfo,
-                expirationDate: Date.now() - 1000, // 1 second ago
-            };
-            mockCredentialManager.getAuthInfo
-                .mockResolvedValueOnce(expiredAuthInfo)
-                .mockResolvedValueOnce(mockOAuthInfo);
-            mockCacheMap.getItem.mockReturnValue(null);
-
-            const result = await clientManager.jiraClient(mockCloudSite);
-
-            expect(mockCredentialManager.refreshAccessToken).toHaveBeenCalledWith(mockCloudSite);
-            expect(result).toBeDefined();
         });
     });
 
