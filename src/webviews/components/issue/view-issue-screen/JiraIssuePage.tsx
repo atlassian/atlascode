@@ -647,13 +647,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     handleStatusChange={this.handleStatusChange}
                     handleStartWork={this.handleStartWorkOnIssue}
                 />
-                <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
-                    <Tooltip content="DO THIS FOR ME ROVODEV-CHAN">
-                        <LoadingButton className="ac-button" onClick={this.handleInvokeRovodev} isLoading={false}>
-                            Let's get this done!
-                        </LoadingButton>
-                    </Tooltip>
-                </Box>
+                {false && (
+                    <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
+                        <Tooltip content="Rovo Dev is an AI assistant that will take the issue details and generate code on it">
+                            <LoadingButton className="ac-button" onClick={this.handleInvokeRovodev} isLoading={false}>
+                                Start with Rovo Dev!
+                            </LoadingButton>
+                        </Tooltip>
+                    </Box>
+                )}
 
                 <IssueSidebarCollapsible label="Details" items={commonItems} defaultOpen />
                 <IssueSidebarCollapsible label="More fields" items={advancedItems} />

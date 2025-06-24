@@ -79,7 +79,7 @@
         "commands": [
             {
                 "command": "atlascode.rovodev.askRovoDev",
-                "title": "Ask rovodev"
+                "title": "Ask Rovo Dev"
             },
             {
                 "command": "atlascode.rovodev.newChatSession",
@@ -467,7 +467,8 @@
                 {
                     "id": "atlascode.views.rovoDev.webView",
                     "name": "Rovo Dev",
-                    "type": "webview"
+                    "type": "webview",
+                    "when": "config.atlascode.experimental.rovodev.enabled"
                 }
             ]
         },
@@ -723,6 +724,14 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "atlascode.rovodev.askRovoDev",
+                    "when": "config.atlascode.experimental.rovodev.enabled"
+                },
+                {
+                    "command": "atlascode.rovodev.newChatSession",
+                    "when": "config.atlascode.experimental.rovodev.enabled"
+                },
                 {
                     "command": "atlascode.extensionContext.showConfigPage",
                     "when": "false"
@@ -1272,6 +1281,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Asks whether to create pull requests in extension or browser",
+                    "scope": "window"
+                },
+                "atlascode.experimental.rovodev.enabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables the Rovo Dev integration. By enabling this, you agree to the Rovo Dev Terms of Service and Privacy Policy.",
                     "scope": "window"
                 },
                 "atlascode.helpExplorerEnabled": {
