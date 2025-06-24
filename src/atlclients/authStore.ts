@@ -213,7 +213,7 @@ export class CredentialManager implements Disposable {
         if (isOAuthInfo(credentials) && credentials.expirationDate) {
             const diff = credentials.expirationDate - Date.now();
             Logger.debug(`${Math.floor(diff / 1000)} seconds remaining for auth token.`);
-            if (diff < GRACE_PERIOD) {
+            if (diff > GRACE_PERIOD) {
                 return credentials; // no need to refresh, we have enough time left
             }
             Logger.debug(`Need new auth token.`);
