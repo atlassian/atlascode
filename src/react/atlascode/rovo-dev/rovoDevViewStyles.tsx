@@ -70,7 +70,7 @@ export const chatMessageStyles: React.CSSProperties = {
 
 export const toolReturnListItemStyles: React.CSSProperties = {
     width: '100%',
-    marginBottom: '4px',
+    margin: '4px 0',
     borderRadius: '8px',
     position: 'relative',
 };

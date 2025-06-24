@@ -24,9 +24,10 @@ import {
 } from './utils';
 
 Marked.setOptions({
-    sanitize: true,
+    sanitize: false,
     breaks: true,
     smartLists: true,
+    gfm: true,
 });
 
 export const ToolDrawer: React.FC<{
@@ -138,20 +139,50 @@ const ToolReturnParsedItem: React.FC<{
     );
 };
 
-export const ChatMessageItem: React.FC<{ msg: DefaultMessage; index?: number }> = ({ msg, index }) => {
+export const ChatMessageItem: React.FC<{
+    msg: DefaultMessage;
+    index?: number;
+    openFile: (filePath: string, lineRange?: any[]) => void;
+}> = ({ msg, index, openFile }) => {
     const messageTypeStyles = msg.author.toLowerCase() === 'user' ? userMessageStyles : agentMessageStyles;
 
-    const htmlContent = Marked.parse(msg.text);
+    const text = msg.text || '';
+
+    const parts = text.trim().split(/(<TOOL_RETURN>.*<\/TOOL_RETURN>)/g);
+    const content = parts.flatMap((part) => {
+        try {
+            if (part.match(/^<TOOL_RETURN>.*<\/TOOL_RETURN>$/)) {
+                const toolReturnContent = part
+                    .replace(/^<TOOL_RETURN>/, '')
+                    .replace(/<\/TOOL_RETURN>$/, '')
+                    .trim();
+
+                const toolReturnMessage: ToolReturnGenericMessage = JSON.parse(toolReturnContent);
+                console.log('Parsed Tool Return Message:', toolReturnMessage);
+                const parsedMessages = parseToolReturnMessage(toolReturnMessage);
+                return parsedMessages.map((message, idx) => (
+                    <ToolReturnParsedItem key={idx} msg={message} openFile={openFile} />
+                ));
+            } else {
+                const htmlContent = Marked.parse(part);
+
+                return (
+                    <div
+                        style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+                        key="parsed-content"
+                        dangerouslySetInnerHTML={{ __html: htmlContent }}
+                    />
+                );
+            }
+        } catch (error) {
+            console.error('Error parsing message content:', error);
+            return <div key="error-content">Error parsing content</div>;
+        }
+    });
 
     return (
         <div key={index} style={{ ...chatMessageStyles, ...messageTypeStyles }}>
-            <div style={messageContentStyles}>
-                <div
-                    style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-                    key="parsed-content"
-                    dangerouslySetInnerHTML={{ __html: htmlContent }}
-                />
-            </div>
+            <div style={messageContentStyles}>{content}</div>
         </div>
     );
 };
@@ -169,7 +200,7 @@ export const renderChatHistory = (
             ));
         case 'RovoDev':
         case 'User':
-            return <ChatMessageItem index={index} msg={msg} />;
+            return <ChatMessageItem index={index} msg={msg} openFile={openFile} />;
         default:
             return <div key={index}>Unknown message type</div>;
     }

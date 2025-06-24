@@ -109,7 +109,13 @@ test('Authenticating with Jira works, and assigned items are displayed', async (
             .getByRole('region', { name: 'Authentication authenticate' })
             .getByText('mockedteams.atlassian.net'),
     ).toBeVisible();
+
+    // I can view all issues assigned to me
     await expect(page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' })).toBeVisible();
+    await expect(page.getByRole('treeitem', { name: 'BTS-3 - Improve Dropdown Menu Responsiveness' })).toBeVisible();
+    await expect(page.getByRole('treeitem', { name: 'BTS-4 - Resolve API Timeout Issues' })).toBeVisible();
+    await expect(page.getByRole('treeitem', { name: 'BTS-5 - Fix Database Connection Errors' })).toBeVisible();
+    await expect(page.getByRole('treeitem', { name: 'BTS-6 - Fix Button Alignment Issue' })).toBeVisible();
 
     //await expect(page).toHaveScreenshot();
 });

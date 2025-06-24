@@ -37,7 +37,6 @@ const RovoDevView: React.FC = () => {
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnGenericMessage[]>([]);
 
     const chatEndRef = React.useRef<HTMLDivElement>(null);
-    const inputAreaRef = React.useRef<HTMLDivElement>(null);
 
     // Scroll to bottom when chat updates
     React.useEffect(() => {
@@ -119,7 +118,7 @@ const RovoDevView: React.FC = () => {
                         args: args, // Use args from pending tool call if available
                     };
                     setPendingToolCall(null); // Clear pending tool call
-                    handleAppendChatHistory(returnMessage);
+                    appendCurrentResponse(`\n\n<TOOL_RETURN>${JSON.stringify(returnMessage)}</TOOL_RETURN>\n\n`);
                     if (isCodeChangeTool(data.tool_name)) {
                         handleAppendModifiedFileToolReturns(returnMessage);
                     }
@@ -130,7 +129,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [appendCurrentResponse, handleAppendChatHistory, handleAppendModifiedFileToolReturns, pendingToolCall],
+        [appendCurrentResponse, handleAppendModifiedFileToolReturns, pendingToolCall],
     );
 
     const completeMessage = useCallback(
@@ -172,13 +171,11 @@ const RovoDevView: React.FC = () => {
                 }
 
                 case 'toolCall': {
-                    completeMessage();
                     handleResponse(event.dataObject);
                     break;
                 }
 
                 case 'toolReturn': {
-                    completeMessage();
                     handleResponse(event.dataObject);
                     break;
                 }
@@ -299,12 +296,13 @@ const RovoDevView: React.FC = () => {
                                 text: currentResponse,
                                 author: 'RovoDev',
                             }}
+                            openFile={openFile}
                         />
                     </div>
                 )}
                 <div ref={chatEndRef} />
             </div>
-            <div style={styles.rovoDevInputSectionStyles} ref={inputAreaRef}>
+            <div style={styles.rovoDevInputSectionStyles}>
                 <UpdatedFilesComponent
                     modifiedFiles={totalModifiedFiles}
                     onUndo={(paths: string[]) => {
