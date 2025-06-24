@@ -181,6 +181,7 @@ const RovoDevView: React.FC = () => {
                 }
 
                 case 'errorMessage': {
+                    completeMessage();
                     handleAppendChatHistory(event.message);
                     setCurrentResponse('');
                     setSendButtonDisabled(false);
