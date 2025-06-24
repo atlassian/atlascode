@@ -339,6 +339,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             const fileUri = Uri.file(resolvedPath);
 
             await window.showTextDocument(fileUri, {
+                preview: true,
                 selection: range || undefined,
             });
         } catch (error) {

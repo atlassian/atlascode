@@ -8,6 +8,7 @@ export const rovoDevContainerStyles: React.CSSProperties = {
     fontFamily: 'var(--vscode-font-family)',
     height: '100vh',
     margin: '0 -20px',
+    maxWidth: '800px',
 };
 
 export const rovoDevInputSectionStyles: React.CSSProperties = {
@@ -52,7 +53,6 @@ export const rovoDevTextareaContainerStyles: React.CSSProperties = {
 
 export const chatMessagesContainerStyles: React.CSSProperties = {
     width: '100%',
-    maxWidth: '800px',
     overflowY: 'auto',
     display: 'flex',
     flexDirection: 'column',
@@ -145,6 +145,7 @@ export const toolCallArgsStyles: React.CSSProperties = {
     color: 'var(--vscode-input-placeholderForeground)',
     maxLines: 1,
     overflow: 'ellipsis',
+    lineHeight: '1.5em',
 };
 
 export const toolCallArgsPreStyles: React.CSSProperties = {
@@ -179,4 +180,9 @@ export const undoAcceptButtonStyles: React.CSSProperties = {
     cursor: 'pointer',
     padding: '2px 6px',
     borderRadius: '2px',
+};
+
+export const inlineMofidyButtonStyles: React.CSSProperties = {
+    padding: '2px 4px !important',
+    backgroundColor: 'var(--vscode-list-hoverBackground)',
 };

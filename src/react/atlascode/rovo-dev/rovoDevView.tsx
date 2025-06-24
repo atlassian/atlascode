@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
 import { useMessagingApi } from '../messagingApi';
-import { ChatMessageItem, renderChatHistory, ToolCallItem, ToolDrawer, UpdatedFilesComponent } from './common';
+import { ChatMessageItem, renderChatHistory, ToolCallItem, UpdatedFilesComponent } from './common';
 import * as styles from './rovoDevViewStyles';
 import { ChatMessage, isCodeChangeTool, ToolCallMessage, ToolReturnGenericMessage } from './utils';
 
@@ -33,7 +33,7 @@ const RovoDevView: React.FC = () => {
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
     const [pendingToolCall, setPendingToolCall] = useState<ToolCallMessage | null>(null);
 
-    const [currentTools, setCurrentTools] = useState<ToolReturnGenericMessage[]>([]);
+    // const [currentTools, setCurrentTools] = useState<ToolReturnGenericMessage[]>([]);
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnGenericMessage[]>([]);
 
     const chatEndRef = React.useRef<HTMLDivElement>(null);
@@ -76,15 +76,6 @@ const RovoDevView: React.FC = () => {
         [setChatHistory],
     );
 
-    const handleAppendToolReturns = useCallback(
-        (toolReturn: ToolReturnGenericMessage) => {
-            setCurrentTools((prev) => {
-                return [...prev, toolReturn];
-            });
-        },
-        [setCurrentTools],
-    );
-
     const handleAppendModifiedFileToolReturns = useCallback(
         (toolReturn: ToolReturnGenericMessage) => {
             setTotalModifiedFiles((prev) => {
@@ -101,13 +92,6 @@ const RovoDevView: React.FC = () => {
                 case 'text':
                     if (!data.content) {
                         break;
-                    }
-                    if (currentTools && currentTools.length > 0) {
-                        handleAppendChatHistory({
-                            author: 'ReturnGroup',
-                            tool_returns: currentTools,
-                        });
-                        setCurrentTools([]); // Clear tools if new text response comes in
                     }
 
                     appendCurrentResponse(data.content);
@@ -135,7 +119,7 @@ const RovoDevView: React.FC = () => {
                         args: args, // Use args from pending tool call if available
                     };
                     setPendingToolCall(null); // Clear pending tool call
-                    handleAppendToolReturns(returnMessage);
+                    handleAppendChatHistory(returnMessage);
                     if (isCodeChangeTool(data.tool_name)) {
                         handleAppendModifiedFileToolReturns(returnMessage);
                     }
@@ -146,14 +130,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [
-            appendCurrentResponse,
-            currentTools,
-            handleAppendChatHistory,
-            handleAppendModifiedFileToolReturns,
-            handleAppendToolReturns,
-            pendingToolCall,
-        ],
+        [appendCurrentResponse, handleAppendChatHistory, handleAppendModifiedFileToolReturns, pendingToolCall],
     );
 
     const completeMessage = useCallback(
@@ -189,10 +166,7 @@ const RovoDevView: React.FC = () => {
                     setSendButtonDisabled(false);
                     setCurrentState(State.WaitingForPrompt);
 
-                    if (currentTools && currentTools.length > 0) {
-                        setCurrentTools([]);
-                        setPendingToolCall(null);
-                    }
+                    setPendingToolCall(null);
 
                     break;
                 }
@@ -215,17 +189,13 @@ const RovoDevView: React.FC = () => {
                     setSendButtonDisabled(false);
                     setCurrentState(State.WaitingForPrompt);
 
-                    if (currentTools && currentTools.length > 0) {
-                        setCurrentTools([]);
-                        setPendingToolCall(null);
-                    }
+                    setPendingToolCall(null);
 
                     break;
                 }
 
                 case 'newSession': {
                     setChatHistory([]);
-                    setCurrentTools([]);
                     setPendingToolCall(null);
                     break;
                 }
@@ -240,7 +210,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [handleResponse, completeMessage, handleAppendChatHistory, currentTools],
+        [handleResponse, completeMessage, handleAppendChatHistory],
     );
 
     const [postMessage] = useMessagingApi<any, any, any>(onMessageHandler);
@@ -315,9 +285,6 @@ const RovoDevView: React.FC = () => {
         <div className="rovoDevChat" style={styles.rovoDevContainerStyles}>
             <div style={styles.chatMessagesContainerStyles}>
                 {chatHistory.map((msg, index) => renderChatHistory(msg, index, openFile))}
-                {currentTools && currentTools.length > 0 && (
-                    <ToolDrawer content={currentTools} openFile={openFile} isStreaming={true} />
-                )}
                 {pendingToolCall && <ToolCallItem msg={pendingToolCall} />}
                 {currentResponse && (
                     <div
@@ -332,7 +299,6 @@ const RovoDevView: React.FC = () => {
                                 text: currentResponse,
                                 author: 'RovoDev',
                             }}
-                            index={chatHistory.length}
                         />
                     </div>
                 )}
@@ -340,12 +306,12 @@ const RovoDevView: React.FC = () => {
             </div>
             <div style={styles.rovoDevInputSectionStyles} ref={inputAreaRef}>
                 <UpdatedFilesComponent
-                    modidiedFiles={totalModifiedFiles}
-                    onUndo={() => {
-                        console.log('Undoing changes');
+                    modifiedFiles={totalModifiedFiles}
+                    onUndo={(paths: string[]) => {
+                        console.log('Undoing changes', paths);
                     }}
-                    onAccept={() => {
-                        console.log('Accepting changes');
+                    onAccept={(paths: string[]) => {
+                        console.log('Accepting changes', paths);
                     }}
                     openDiff={(filePath: string) => openFile(filePath)}
                 />

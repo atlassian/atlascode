@@ -1,9 +1,13 @@
+import Button from '@atlaskit/button';
+import CheckIcon from '@atlaskit/icon/glyph/check';
+import CrossIcon from '@atlaskit/icon/glyph/cross';
 import { Marked } from '@ts-stack/markdown';
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import {
     agentMessageStyles,
     chatMessageStyles,
+    inlineMofidyButtonStyles,
     messageContentStyles,
     toolCallArgsStyles,
     toolReturnListItemStyles,
@@ -22,6 +26,7 @@ import {
 Marked.setOptions({
     sanitize: true,
     breaks: true,
+    smartLists: true,
 });
 
 export const ToolDrawer: React.FC<{
@@ -157,8 +162,11 @@ export const renderChatHistory = (
     openFile: (filePath: string, lineRange?: any[]) => void,
 ) => {
     switch (msg.author) {
-        case 'ReturnGroup':
-            return <ToolDrawer key={index} content={msg.tool_returns} openFile={openFile} />;
+        case 'ToolReturn':
+            const parsedMessages = parseToolReturnMessage(msg);
+            return parsedMessages.map((message) => (
+                <ToolReturnParsedItem key={index} msg={message} openFile={openFile} />
+            ));
         case 'RovoDev':
         case 'User':
             return <ChatMessageItem index={index} msg={msg} />;
@@ -168,19 +176,33 @@ export const renderChatHistory = (
 };
 
 export const UpdatedFilesComponent: React.FC<{
-    modidiedFiles: ToolReturnGenericMessage[];
-    onUndo: () => void;
-    onAccept: () => void;
+    modifiedFiles: ToolReturnGenericMessage[];
+    onUndo: (filePath: string[]) => void;
+    onAccept: (filePath: string[]) => void;
     openDiff: (filePath: string) => void;
-}> = ({ modidiedFiles, onUndo, onAccept, openDiff }) => {
+}> = ({ modifiedFiles, onUndo, onAccept, openDiff }) => {
     const [isUndoHovered, setIsUndoHovered] = React.useState(false);
     const [isAcceptHovered, setIsAcceptHovered] = React.useState(false);
 
-    const parsedReturns = modidiedFiles.flatMap((msg) => parseToolReturnMessage(msg));
+    const parsedReturns = modifiedFiles.flatMap((msg) => parseToolReturnMessage(msg));
 
     const uniqueParsedReturns = Array.from(new Map(parsedReturns.map((item) => [item.filePath, item])).values()); // Ensure unique file paths
 
-    return modidiedFiles && modidiedFiles.length > 0 ? (
+    const handleAcceptAll = useCallback(() => {
+        if (uniqueParsedReturns && uniqueParsedReturns.length > 0) {
+            const filePaths = uniqueParsedReturns.map((msg) => msg.filePath).filter((path) => path !== undefined);
+            onAccept(filePaths);
+        }
+    }, [onAccept, uniqueParsedReturns]);
+
+    const handleUndoAll = useCallback(() => {
+        if (uniqueParsedReturns && uniqueParsedReturns.length > 0) {
+            const filePaths = uniqueParsedReturns.map((msg) => msg.filePath).filter((path) => path !== undefined);
+            onUndo(filePaths);
+        }
+    }, [onUndo, uniqueParsedReturns]);
+
+    return modifiedFiles && modifiedFiles.length > 0 ? (
         <div
             style={{
                 width: '100%',
@@ -215,7 +237,7 @@ export const UpdatedFilesComponent: React.FC<{
                             border: '1px solid var(--vscode-button-secondaryBorder)',
                             ...undoAcceptButtonStyles,
                         }}
-                        onClick={() => onUndo()}
+                        onClick={() => handleUndoAll()}
                         onMouseEnter={() => setIsUndoHovered(true)}
                         onMouseLeave={() => setIsUndoHovered(false)}
                     >
@@ -230,7 +252,7 @@ export const UpdatedFilesComponent: React.FC<{
                             border: '1px solid var(--vscode-button-border)',
                             ...undoAcceptButtonStyles,
                         }}
-                        onClick={() => onAccept()}
+                        onClick={() => handleAcceptAll()}
                         onMouseEnter={() => setIsAcceptHovered(true)}
                         onMouseLeave={() => setIsAcceptHovered(false)}
                     >
@@ -255,7 +277,15 @@ export const UpdatedFilesComponent: React.FC<{
                 {uniqueParsedReturns &&
                     uniqueParsedReturns.length > 0 &&
                     uniqueParsedReturns.map((msg, index) => {
-                        return <ModifiedFileItem key={index} msg={msg} openDiff={openDiff} />;
+                        return (
+                            <ModifiedFileItem
+                                key={index}
+                                msg={msg}
+                                openDiff={openDiff}
+                                onUndo={(path: string) => onUndo([path])}
+                                onAccept={(path: string) => onAccept([path])}
+                            />
+                        );
                     })}
             </div>
         </div>
@@ -264,11 +294,29 @@ export const UpdatedFilesComponent: React.FC<{
 
 export const ModifiedFileItem: React.FC<{
     msg: ToolReturnParseResult;
+    onUndo?: (filePath: string) => void;
+    onAccept?: (filePath: string) => void;
     openDiff: (filePath: string) => void;
-}> = ({ msg, openDiff }) => {
+}> = ({ msg, onUndo, onAccept, openDiff }) => {
     const [isHovered, setIsHovered] = React.useState(false);
+    const [isUndoHovered, setIsUndoHovered] = React.useState(false);
+    const [isAcceptHovered, setIsAcceptHovered] = React.useState(false);
 
-    if (!msg.filePath || !msg.title) {
+    const handleUndo = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (onUndo && msg.filePath) {
+            onUndo(msg.filePath);
+        }
+    };
+
+    const handleAccept = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (onAccept && msg.filePath) {
+            onAccept(msg.filePath);
+        }
+    };
+
+    if (!msg.filePath) {
         return null;
     }
 
@@ -291,8 +339,37 @@ export const ModifiedFileItem: React.FC<{
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <div>{msg.title}</div>
-            <div style={{ color: 'var(--vscode-descriptionForeground)', fontSize: '11px' }}>{msg.filePath}</div>
+            <div>{msg.filePath}</div>
+            <div
+                style={{ display: isHovered ? 'flex' : 'none', alignItems: 'center', flexDirection: 'row', gap: '4px' }}
+            >
+                <Button
+                    spacing="none"
+                    style={{
+                        ...inlineMofidyButtonStyles,
+                        color: isUndoHovered
+                            ? 'var(--vscode-textLink-foreground) !important'
+                            : 'var(--vscode-textForeground) !important',
+                    }}
+                    onMouseEnter={() => setIsUndoHovered(true)}
+                    onMouseLeave={() => setIsUndoHovered(false)}
+                    iconBefore={<CrossIcon size="small" label="Close" />}
+                    onClick={handleUndo}
+                />
+                <Button
+                    style={{
+                        ...inlineMofidyButtonStyles,
+                        color: isAcceptHovered
+                            ? 'var(--vscode-textLink-foreground) !important'
+                            : 'var(--vscode-textForeground) !important',
+                    }}
+                    onMouseEnter={() => setIsAcceptHovered(true)}
+                    onMouseLeave={() => setIsAcceptHovered(false)}
+                    spacing="none"
+                    iconBefore={<CheckIcon size="small" label="Accept" />}
+                    onClick={handleAccept}
+                />
+            </div>
         </div>
     );
 };
