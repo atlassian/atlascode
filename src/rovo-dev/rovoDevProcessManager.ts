@@ -3,6 +3,8 @@ import { Disposable, ExtensionContext, window, workspace } from 'vscode';
 
 import { rovodevInfo } from '../constants';
 
+export const isRovoDevEnabled = true;
+
 // In-memory process map (not persisted, but safe for per-window usage)
 const workspaceProcessMap: { [workspacePath: string]: ChildProcess } = {};
 
