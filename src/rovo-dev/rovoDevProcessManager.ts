@@ -1,26 +1,36 @@
 import { ChildProcess, spawn } from 'child_process';
-import { rovodevInfo } from 'src/constants';
-import { Logger } from 'src/logger';
-import { ExtensionContext, window, workspace } from 'vscode';
+import { Disposable, ExtensionContext, window, workspace } from 'vscode';
+
+import { rovodevInfo } from '../constants';
 
 // In-memory process map (not persisted, but safe for per-window usage)
 const workspaceProcessMap: { [workspacePath: string]: ChildProcess } = {};
 
+let disposables: Disposable[] = [];
+
 export function initializeRovoDevProcessManager(context: ExtensionContext) {
     // Listen for workspace folder changes
-    context.subscriptions.push(
-        workspace.onDidChangeWorkspaceFolders((event) => {
-            if (event.added.length > 0) {
-                showWorkspaceLoadedMessageAndStartProcess(context);
-            }
-            if (event.removed.length > 0) {
-                showWorkspaceClosedMessageAndStopProcess(event.removed);
-            }
-        }),
-    );
+    const listener = workspace.onDidChangeWorkspaceFolders((event) => {
+        if (event.added.length > 0) {
+            showWorkspaceLoadedMessageAndStartProcess(context);
+        }
+        if (event.removed.length > 0) {
+            showWorkspaceClosedMessageAndStopProcess(event.removed);
+        }
+    });
+
+    context.subscriptions.push(listener);
+    disposables.push(listener);
+
+    showWorkspaceLoadedMessageAndStartProcess(context);
 }
 
 export function deactivateRovoDevProcessManager() {
+    for (const obj of disposables) {
+        obj.dispose();
+    }
+    disposables = [];
+
     // On deactivate, stop all workspace processes
     if (workspace.workspaceFolders) {
         for (const folder of workspace.workspaceFolders) {
@@ -89,27 +99,22 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
     workspaceProcessMap[workspacePath] = proc;
 }
 
-export function showWorkspaceLoadedMessageAndStartProcess(context: ExtensionContext) {
+function showWorkspaceLoadedMessageAndStartProcess(context: ExtensionContext) {
     const folders = workspace.workspaceFolders;
-
-    if (!folders) {
+    if (!folders || folders.length === 0) {
         window.showInformationMessage('No workspace folders loaded.');
         return;
     }
 
     const globalPort = process.env[rovodevInfo.envVars.port];
     if (globalPort) {
-        Logger.info(`RovoDev CLI is already running on port ${globalPort}. No new process started.`);
-        window.showInformationMessage(
-            `Looks like we are running in a special fancy way, eh?\nExpecting RovoDev on port ${globalPort}.`,
-        );
-        return;
-    }
-
-    for (const folder of folders) {
-        const port = getOrAssignPortForWorkspace(context, folder.uri.fsPath);
-        window.showInformationMessage(`Workspace loaded: ${folder.name} (port ${port})`);
-        startWorkspaceProcess(context, folder.uri.fsPath, port);
+        window.showInformationMessage(`Expecting RovoDev on port ${globalPort}. No new process started.`);
+    } else {
+        for (const folder of folders) {
+            const port = getOrAssignPortForWorkspace(context, folder.uri.fsPath);
+            window.showInformationMessage(`Workspace loaded: ${folder.name} (port ${port})`);
+            startWorkspaceProcess(context, folder.uri.fsPath, port);
+        }
     }
 }
 

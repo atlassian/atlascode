@@ -22,11 +22,7 @@ import {
     BB_PIPELINES_FILENAME,
 } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
-import {
-    deactivateRovoDevProcessManager,
-    initializeRovoDevProcessManager,
-    showWorkspaceLoadedMessageAndStartProcess,
-} from './rovo-dev/rovoDevProcessManager';
+import { deactivateRovoDevProcessManager, initializeRovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { GitExtension } from './typings/git';
 import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
 import { NotificationManagerImpl } from './views/notifications/notificationManager';
@@ -104,7 +100,6 @@ export async function activate(context: ExtensionContext) {
 
     if (isRovoDevEnabled) {
         initializeRovoDevProcessManager(context);
-        showWorkspaceLoadedMessageAndStartProcess(context);
     }
 
     Logger.info(
