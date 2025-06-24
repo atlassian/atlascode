@@ -1,13 +1,13 @@
 import { ChildProcess, spawn } from 'child_process';
+import { isBasicAuthInfo, ProductJira } from 'src/atlclients/authInfo';
+import { Container } from 'src/container';
 import { Disposable, ExtensionContext, window, workspace } from 'vscode';
 
 import { rovodevInfo } from '../constants';
-
-export const isRovoDevEnabled = true;
-import { isBasicAuthInfo, ProductJira } from 'src/atlclients/authInfo';
-import { Container } from 'src/container';
 // In-memory process map (not persisted, but safe for per-window usage)
 const workspaceProcessMap: { [workspacePath: string]: ChildProcess } = {};
+
+export const isRovoDevEnabled = process.env.ROVODEV_ENABLED === 'true';
 
 let disposables: Disposable[] = [];
 

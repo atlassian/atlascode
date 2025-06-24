@@ -468,7 +468,7 @@
                     "id": "atlascode.views.rovoDev.webView",
                     "name": "Rovo Dev",
                     "type": "webview",
-                    "when": "config.atlascode.experimental.rovodev.enabled"
+                    "when": "atlascode:rovoDevEnabled"
                 }
             ]
         },
@@ -726,11 +726,11 @@
             "commandPalette": [
                 {
                     "command": "atlascode.rovodev.askRovoDev",
-                    "when": "config.atlascode.experimental.rovodev.enabled"
+                    "when": "atlascode:rovoDevEnabled"
                 },
                 {
                     "command": "atlascode.rovodev.newChatSession",
-                    "when": "config.atlascode.experimental.rovodev.enabled"
+                    "when": "atlascode:rovoDevEnabled"
                 },
                 {
                     "command": "atlascode.extensionContext.showConfigPage",
@@ -854,6 +854,10 @@
                 },
                 {
                     "command": "atlascode.showExploreSettings",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.rovodev.askRovoDev",
                     "when": "false"
                 }
             ]

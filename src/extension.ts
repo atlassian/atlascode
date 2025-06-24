@@ -102,6 +102,7 @@ export async function activate(context: ExtensionContext) {
     activateYamlFeatures(context);
 
     if (isRovoDevEnabled) {
+        setCommandContext(CommandContext.RovoDevEnabled, true);
         initializeRovoDevProcessManager(context);
     }
 
