@@ -22,7 +22,7 @@ test('I can transition a Jira', async ({ page }) => {
     await settingsFrame.getByLabel('Username').fill('mock@atlassian.code');
     await settingsFrame.getByLabel('Password (API token)').fill('12345');
     await settingsFrame.getByRole('button', { name: 'Save Site' }).click();
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(2000);
 
     const issueInTree = page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' });
     await expect(issueInTree).toBeVisible();
@@ -37,8 +37,11 @@ test('I can transition a Jira', async ({ page }) => {
     await expect(button).toBeVisible();
     await button.click();
     await page.waitForTimeout(250);
-    const doneOption = issueFrame.getByText('Done');
+    const inreview = issueFrame.getByText('In Review');
 
-    await expect(doneOption).toBeVisible();
-    await doneOption.click();
+    await expect(inreview).toBeVisible();
+    await page.waitForTimeout(1000);
+    await inreview.click();
+
+    await page.waitForTimeout(2000);
 });
