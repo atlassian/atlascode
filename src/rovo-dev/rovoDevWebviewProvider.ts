@@ -35,7 +35,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _rovoDevApiClient?: RovoDevApiClient;
     private _initialized = false;
+
     private _pendingPrompt: string | undefined;
+    private _pendingCancellation = false;
 
     private _disposables: Disposable[] = [];
 
@@ -140,10 +142,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         webview.onDidReceiveMessage(async (e) => {
             switch (e.type) {
                 case RovoDevViewResponseType.Prompt:
+                    this._pendingCancellation = false;
                     await this.executeChat(e.text);
                     break;
 
                 case RovoDevViewResponseType.CancelResponse:
+                    this._pendingCancellation = true;
                     await this.executeCancel();
                     break;
 
@@ -181,8 +185,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async processChatResponse(fetchOp: Promise<Response>) {
-        const webview = this._webView!;
-
         const response = await fetchOp;
         if (!response.body) {
             throw new Error('No response body');
@@ -214,10 +216,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         if (messagesSent) {
             // Send final complete message when stream ends
-            await webview.postMessage({
-                type: RovoDevProviderMessageType.CompleteMessage,
-            });
+            this.completeChatResponse();
         }
+    }
+
+    private completeChatResponse() {
+        const webview = this._webView!;
+        return webview.postMessage({
+            type: RovoDevProviderMessageType.CompleteMessage,
+        });
     }
 
     private processError(error: Error) {
@@ -289,7 +296,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (this._initialized) {
             await this.executeApiWithErrorHandling((client) => {
                 return this.processChatResponse(client.chat(message));
-            });
+            }, true);
         } else {
             this._pendingPrompt = message;
         }
@@ -356,12 +363,20 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    private async executeApiWithErrorHandling(func: (client: RovoDevApiClient) => Promise<void>): Promise<void> {
+    private async executeApiWithErrorHandling(
+        func: (client: RovoDevApiClient) => Promise<void>,
+        cancellationAware?: true,
+    ): Promise<void> {
         if (this.rovoDevApiClient) {
             try {
                 await func(this.rovoDevApiClient);
             } catch (error) {
-                await this.processError(error);
+                if (cancellationAware && this._pendingCancellation && error.cause?.code === 'UND_ERR_SOCKET') {
+                    this._pendingCancellation = false;
+                    this.completeChatResponse();
+                } else {
+                    await this.processError(error);
+                }
             }
         } else {
             await this.processError(new Error('RovoDev client not initialized'));
