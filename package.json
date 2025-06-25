@@ -403,6 +403,14 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.startWork",
+                "title": "Start Work on Issue"
+            },
+            {
+             "command": "atlascode.finishWork",
+             "title": "Finish Work on Issue"
+            },
+            {
                 "command": "atlascode.showOnboardingFlow",
                 "title": "Show Onboarding Flow",
                 "category": "Atlassian"
@@ -705,6 +713,14 @@
                     "command": "atlascode.bb.refreshPipelines",
                     "when": "false"
                 },
+                {
+                    "command": "atlascode.startWork",
+                    "when": "true"
+                },
+                {
+                    "command": "atlascode.finishWork",
+                    "when": "true"
+                 },
                 {
                     "command": "atlascode.bb.openInBitbucket",
                     "when": "false"

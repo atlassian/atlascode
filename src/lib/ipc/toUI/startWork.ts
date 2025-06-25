@@ -8,10 +8,12 @@ import { Branch } from '../../../typings/git';
 export enum StartWorkMessageType {
     Init = 'init',
     StartWorkResponse = 'startWorkResponse',
+    FinishWork = 'finishWork',
 }
 
 export type StartWorkMessage = ReducerAction<StartWorkMessageType.Init, StartWorkInitMessage>;
 export type StartWorkResponse = ReducerAction<StartWorkMessageType.StartWorkResponse, StartWorkResponseMessage>;
+export type FinishWorkMessage = ReducerAction<StartWorkMessageType.FinishWork, FinishWorkRequestMessage>;
 
 export interface StartWorkIssueMessage {
     issue: MinimalIssue<DetailedSiteInfo>;
@@ -28,6 +30,10 @@ export interface StartWorkResponseMessage {
     transistionStatus?: string;
     branch?: string;
     upstream?: string;
+}
+
+export interface FinishWorkRequestMessage {
+    clearIssue: boolean;
 }
 
 export interface BranchType {
@@ -50,13 +56,15 @@ export interface RepoData {
     isCloud: boolean;
 }
 
-export const emptyStartWorkIssueMessage = {
+export const emptyStartWorkIssueMessage: StartWorkIssueMessage = {
     issue: createEmptyMinimalIssue(emptySiteInfo),
 };
 
-export const emptyStartWorkInitMessage = {
+export const emptyStartWorkInitMessage: StartWorkInitMessage = {
     issue: createEmptyMinimalIssue(emptySiteInfo),
     repoData: [],
+    customTemplate: '',
+    customPrefixes: [],
 };
 
 export const emptyRepoData: RepoData = {
