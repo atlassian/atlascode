@@ -271,7 +271,7 @@ export class CredentialManager implements Disposable {
             try {
                 await Container.credentialManager.refreshAccessToken(site);
             } catch (e) {
-                Logger.debug(`error refreshing token ${e}`);
+                Logger.error(e, 'error refreshing token');
                 return Promise.reject(`${cannotGetClientFor}: ${site.product.name} ... ${e}`);
             }
         } else {

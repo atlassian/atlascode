@@ -5,7 +5,7 @@
 ## What's new in 3.8.4
 
 ### Bug Fix
-- Ensure that the OAuth credential are always update on first-fetch for notifications
+- Ensure that the OAuth credential are always up-to-date on first-fetch for notifications
 
 ## What's new in 3.8.3
 
