@@ -19,6 +19,7 @@ import {
     emptyAuthInfo,
     getSecretForAuthInfo,
     isOAuthInfo,
+    OAuthInfo,
     OAuthProvider,
     oauthProviderForSite,
     Product,
@@ -72,7 +73,7 @@ export class CredentialManager implements Disposable {
      */
     public async getAuthInfo(site: DetailedSiteInfo, allowCache = true): Promise<AuthInfo | undefined> {
         const authInfo = await this.getAuthInfoForProductAndCredentialId(site, allowCache);
-        return this.softRefreshAuthInfo(site, authInfo);
+        return this.softRefreshOAuth(site, authInfo);
     }
 
     public async getAllValidAuthInfo(product: Product): Promise<AuthInfo[]> {
@@ -91,6 +92,7 @@ export class CredentialManager implements Disposable {
      * Saves the auth info to both the in-memory store and the secretstorage.
      */
     public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
+        this.appendMetaData(info);
         Logger.debug(`Saving auth info for site: ${site.baseApiUrl} credentialID: ${site.credentialId}`);
         let productAuths = this._memStore.get(site.product.key);
 
@@ -122,6 +124,48 @@ export class CredentialManager implements Disposable {
             } catch (e) {
                 Logger.debug('error saving auth info to secretstorage: ', e);
             }
+        }
+    }
+
+    private appendMetaData(info: AuthInfo): void {
+        if (isOAuthInfo(info)) {
+            // set expiration date if not present
+            this.setExpirationDate(info);
+        }
+    }
+
+    private setExpirationDate(info: OAuthInfo): void {
+        // Skip if expiration date is already set
+        if (info.expirationDate) {
+            return;
+        }
+
+        // Try to extract expiration from JWT token
+        const expirationFromJwt = this.extractExpirationFromJwt(info.access);
+        if (expirationFromJwt) {
+            info.expirationDate = expirationFromJwt;
+            return;
+        }
+
+        // Fallback: set expiration to 1 hour from token creation/receipt
+        const baseTime = info.iat || info.recievedAt || Date.now();
+        info.expirationDate = baseTime + Time.HOURS;
+    }
+
+    private extractExpirationFromJwt(accessToken: string): number | null {
+        try {
+            const tokenParts = accessToken.split('.');
+            if (tokenParts.length !== 3) {
+                Logger.debug('Invalid JWT token format, expected 3 parts');
+                return null;
+            }
+
+            const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString('utf8'));
+
+            return payload.exp ? payload.exp * 1000 : null;
+        } catch (error) {
+            Logger.debug('Failed to parse JWT token for expiration', error);
+            return null;
         }
     }
 
@@ -205,12 +249,15 @@ export class CredentialManager implements Disposable {
         return foundInfo;
     }
 
-    private async softRefreshAuthInfo(site: DetailedSiteInfo, authInfo: AuthInfo | undefined) {
-        const GRACE_PERIOD = 10 * Time.MINUTES;
-
+    private async softRefreshOAuth(site: DetailedSiteInfo, authInfo: AuthInfo | undefined) {
         const credentials = authInfo;
 
-        if (isOAuthInfo(credentials) && credentials.expirationDate) {
+        if (!isOAuthInfo(credentials)) {
+            return authInfo; // not an OAuth info, no need to refresh
+        }
+        const GRACE_PERIOD = 10 * Time.MINUTES;
+
+        if (credentials.expirationDate) {
             const diff = credentials.expirationDate - Date.now();
             Logger.debug(`${Math.floor(diff / 1000)} seconds remaining for auth token.`);
             if (diff > GRACE_PERIOD) {
@@ -234,23 +281,6 @@ export class CredentialManager implements Disposable {
         }
 
         return this.getAuthInfoForProductAndCredentialId(site, false);
-    }
-
-    /**
-     * Deletes the secretstorage item.
-     *
-     * @remarks
-     * This only deletes the secretstorage item, leaving the in-memory store un-touched. It's
-     * meant to be used during migrations.
-     */
-    public async deleteSecretStorageItem(productKey: string) {
-        try {
-            // secretstorage can be accessed using the ExtensionContext provided by vscode to the activate function and the Container class has the
-            // "ExtensionContext" stored as it's private static member, hence using it to access vscode's secretstorage
-            await Container.context.secrets.delete(productKey);
-        } catch (e) {
-            Logger.info(`secretstorage error ${e}`);
-        }
     }
 
     private async addSiteInformationToSecretStorage(productKey: string, credentialId: string, info: AuthInfo) {
@@ -366,7 +396,7 @@ export class CredentialManager implements Disposable {
     /**
      * Calls the OAuth provider and updates the access token.
      */
-    public async refreshAccessToken(site: DetailedSiteInfo): Promise<Tokens | undefined> {
+    private async refreshAccessToken(site: DetailedSiteInfo): Promise<Tokens | undefined> {
         const credentials = await this.getAuthInfo(site);
         if (!isOAuthInfo(credentials)) {
             return undefined;

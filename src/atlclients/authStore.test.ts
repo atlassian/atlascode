@@ -4,17 +4,8 @@ import { Event, window } from 'vscode';
 import { loggedOutEvent } from '../analytics';
 import { CommandContext, setCommandContext } from '../commandContext';
 import { Container } from '../container';
-import { Logger } from '../logger';
 import { keychain } from '../util/keychain';
-import {
-    AuthChangeType,
-    AuthInfo,
-    AuthInfoState,
-    DetailedSiteInfo,
-    OAuthInfo,
-    ProductBitbucket,
-    ProductJira,
-} from './authInfo';
+import { AuthChangeType, AuthInfo, AuthInfoState, DetailedSiteInfo, ProductBitbucket, ProductJira } from './authInfo';
 import { CredentialManager } from './authStore';
 
 class CryptoHashMock {
@@ -116,16 +107,6 @@ describe('CredentialManager', () => {
 
     const mockAuthInfo: AuthInfo = {
         user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
-        state: AuthInfoState.Valid,
-    };
-
-    const mockOAuthAuthInfo: OAuthInfo = {
-        access: 'oauth-access-token',
-        refresh: 'refresh-token',
-        expirationDate: Date.now() + 3600000, // 1 hour in the future
-        recievedAt: Date.now(),
-        iat: Date.now(),
-        user: { id: 'oauth-user-id', displayName: 'OAuth User', email: 'oauth@example.com', avatarUrl: '' },
         state: AuthInfoState.Valid,
     };
 
@@ -244,71 +225,6 @@ describe('CredentialManager', () => {
         });
     });
 
-    describe('refreshAccessToken', () => {
-        it('should refresh OAuth tokens', async () => {
-            // Setup OAuth auth info
-            const memStore = (credentialManager as any)._memStore;
-            const jiraStore = memStore.get(ProductJira.key);
-            jiraStore.set(mockJiraSite.credentialId, mockOAuthAuthInfo);
-
-            // Mock the refresher
-            const newTokens = {
-                accessToken: 'new-access-token',
-                refreshToken: 'new-refresh-token',
-                expiration: Date.now() + 7200000,
-                receivedAt: Date.now(),
-                iat: Date.now(),
-            };
-
-            (credentialManager as any)._refresher.getNewTokens = jest.fn().mockResolvedValue({
-                tokens: newTokens,
-                shouldInvalidate: false,
-            });
-
-            // Mock saveAuthInfo
-            const saveAuthInfoSpy = jest.spyOn(credentialManager, 'saveAuthInfo').mockResolvedValue();
-
-            await credentialManager.refreshAccessToken(mockJiraSite);
-
-            expect(saveAuthInfoSpy).toHaveBeenCalled();
-            const savedAuthInfo = saveAuthInfoSpy.mock.calls[0][1] as OAuthInfo;
-            expect(savedAuthInfo.access).toEqual('new-access-token');
-            expect(savedAuthInfo.refresh).toEqual('new-refresh-token');
-        });
-
-        it('should invalidate auth info if refresh fails', async () => {
-            // Setup OAuth auth info
-            const memStore = (credentialManager as any)._memStore;
-            const jiraStore = memStore.get(ProductJira.key);
-            jiraStore.set(mockJiraSite.credentialId, mockOAuthAuthInfo);
-
-            // Mock the refresher to fail
-            (credentialManager as any)._refresher.getNewTokens = jest.fn().mockResolvedValue({
-                tokens: null,
-                shouldInvalidate: true,
-            });
-
-            // Mock saveAuthInfo
-            const saveAuthInfoSpy = jest.spyOn(credentialManager, 'saveAuthInfo').mockResolvedValue();
-
-            await credentialManager.refreshAccessToken(mockJiraSite);
-
-            expect(saveAuthInfoSpy).toHaveBeenCalled();
-            const savedAuthInfo = saveAuthInfoSpy.mock.calls[0][1];
-            expect(savedAuthInfo.state).toEqual(AuthInfoState.Invalid);
-        });
-
-        it('should return undefined for non-OAuth credentials', async () => {
-            // Setup non-OAuth auth info
-            const memStore = (credentialManager as any)._memStore;
-            const jiraStore = memStore.get(ProductJira.key);
-            jiraStore.set(mockJiraSite.credentialId, mockAuthInfo);
-
-            const result = await credentialManager.refreshAccessToken(mockJiraSite);
-            expect(result).toBeUndefined();
-        });
-    });
-
     describe('removeAuthInfo', () => {
         it('should remove auth info from memory and secret storage', async () => {
             // Setup memory store with auth info
@@ -368,21 +284,6 @@ describe('CredentialManager', () => {
 
             const result = await credentialManager.removeAuthInfo(mockJiraSite);
             expect(result).toBeFalsy();
-        });
-    });
-
-    describe('deleteSecretStorageItem', () => {
-        it('should delete item from secret storage', async () => {
-            await credentialManager.deleteSecretStorageItem(ProductJira.key);
-            expect(Container.context.secrets.delete).toHaveBeenCalledWith(ProductJira.key);
-        });
-
-        it('should handle errors gracefully', async () => {
-            // Mock error
-            (Container.context.secrets.delete as jest.Mock).mockRejectedValue(new Error('Test error'));
-
-            await credentialManager.deleteSecretStorageItem(ProductJira.key);
-            expect(Logger.info).toHaveBeenCalled();
         });
     });
 
