@@ -50,10 +50,17 @@ export interface ToolReturnGroupedMessage {
     tool_returns: ToolReturnGenericMessage[];
 }
 
+export interface CodeSnippetToChange {
+    startLine: number;
+    endLine: number;
+    code: string;
+}
+
 export interface TechnicalPlanFileToChange {
     filePath: string;
     descriptionOfChange: string;
-    clarifyingQuestionIfAny?: string | null;
+    clarifyingQuestionIfAny: string | null;
+    codeSnippetsToChange: CodeSnippetToChange[];
 }
 
 export interface TechnicalPlanLogicalChange {
