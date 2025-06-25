@@ -189,13 +189,13 @@ test('I can transition a Jira', async ({ page }) => {
     console.log('WireMock mapping created with ID:', id);
 
     await page.getByRole('tab', { name: 'BTS-1' }).getByLabel(/close/i).click();
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(2000);
 
     await issueInTree.click();
     await page.waitForTimeout(2000);
-    const issueFrame2 = page.frameLocator('iframe.webview').frameLocator('iframe[title="Jira Issue"]');
-    const button2 = issueFrame2.getByRole('button', { name: newStatus });
-    await expect(button2).toBeVisible();
+    const issueFramePost = page.frameLocator('iframe.webview').frameLocator('iframe[title="Jira Issue"]');
+    const buttonInReview = issueFramePost.getByRole('button', { name: newStatus });
+    await expect(buttonInReview).toBeVisible();
 
     await api.delete(`/__admin/mappings/${id}`);
 });
