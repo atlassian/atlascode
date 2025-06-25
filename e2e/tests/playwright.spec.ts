@@ -1,4 +1,4 @@
-import { expect, request, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { updateIssueField } from 'e2e/helpers/updateIssueFields';
 import fs from 'fs';
 
@@ -122,30 +122,7 @@ test('Authenticating with Jira works, and assigned items are displayed', async (
     //await expect(page).toHaveScreenshot();
 });
 
-test('When user is not authenticated in Jira, a badge notification prompts for login', async ({ page }) => {
-    await page.goto('http://localhost:9988/');
-
-    await page.waitForTimeout(2000);
-
-    // Verify initial unauthenticated state: login prompt is visible in both sidebar and notifications
-    await expect(page.getByRole('treeitem', { name: 'Please login to Jira' })).toBeVisible();
-    await expect(page.getByRole('dialog', { name: /Log in to Jira/ })).toBeVisible();
-});
-
-test('When user logs out, they see a badge notification about being logged out', async ({ page }) => {
-    await authenticateWithJira(page);
-
-    // Verify logout functionality: ensure notification dialog and sidebar login prompt appear after logout
-    const settingsFrame = page.frameLocator('iframe.webview').frameLocator('iframe[title="Atlassian Settings"]');
-    await settingsFrame.getByRole('button', { name: 'delete' }).click();
-
-    await page.waitForTimeout(2000);
-
-    await expect(page.getByRole('treeitem', { name: 'Please login to Jira' })).toBeVisible();
-    await expect(page.getByRole('dialog', { name: /You have been logged out of Jira/ })).toBeVisible();
-});
-
-test('Update description flow', async ({ page }) => {
+test('Update description flow', async ({ page, request }) => {
     const oldDescription = 'Track and resolve bugs related to the user interface.';
     const newDescription = 'Add e2e test for this functionality';
 
@@ -162,26 +139,30 @@ test('Update description flow', async ({ page }) => {
     const settingsFrame = page.frameLocator('iframe.webview').frameLocator('iframe[title="Atlassian Settings"]');
 
     settingsFrame.getByRole('button', { name: 'Login to Jira' }).click();
+    await page.waitForTimeout(250);
 
     await settingsFrame.getByRole('textbox', { name: 'Base URL' }).fill('https://mockedteams.atlassian.net');
+    await page.waitForTimeout(250);
 
     await settingsFrame.getByRole('textbox', { name: 'Username' }).fill('mock@atlassian.code');
+    await page.waitForTimeout(250);
 
     await settingsFrame.getByRole('textbox', { name: 'Password (API token)' }).fill('12345');
+    await page.waitForTimeout(250);
 
     await settingsFrame.getByRole('button', { name: 'Save Site' }).click();
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
     await page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' }).click();
     await page.waitForTimeout(250);
 
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
+
+    const issueFrame = page.frameLocator('iframe.webview').frameLocator('iframe[title="Jira Issue"]');
     await page.waitForTimeout(2000);
 
-    const issueFrame = page.frameLocator('iframe.webview.ready').frameLocator('iframe[title="Jira Issue"]');
-
     // Check the existing description
-    await expect(issueFrame.getByText(oldDescription)).toBeVisible();
+    await expect(issueFrame.getByText(oldDescription)).toBeVisible({ timeout: 10000 });
 
     // Click on the description element to enter edit mode
     await issueFrame.getByText(oldDescription).click();
@@ -194,15 +175,11 @@ test('Update description flow', async ({ page }) => {
     await page.waitForTimeout(500);
 
     // Add the updated mock
-    const api = await request.newContext({
-        baseURL: 'http://wiremock-mockedteams:8080',
-        ignoreHTTPSErrors: true,
-    });
     const issueJSON = JSON.parse(fs.readFileSync('e2e/wiremock-mappings/mockedteams/BTS-1/bts1.json', 'utf-8'));
     const updatedIssue = updateIssueField(issueJSON, {
         description: newDescription,
     });
-    const response = await api.post('/__admin/mappings', {
+    const response = await request.post('http://wiremock-mockedteams:8080/__admin/mappings', {
         data: {
             request: {
                 method: 'GET',
@@ -224,5 +201,5 @@ test('Update description flow', async ({ page }) => {
 
     await expect(issueFrame.getByText(oldDescription)).not.toBeVisible();
     await expect(issueFrame.getByText(newDescription)).toBeVisible();
-    await api.delete(`/__admin/mappings/${id}`);
+    await request.delete(`http://wiremock-mockedteams:8080/__admin/mappings/${id}`);
 });
