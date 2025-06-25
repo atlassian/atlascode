@@ -28,6 +28,15 @@ export class SearchJiraHelper {
     }
 
     /***
+     * Get the issues for a specific data provider in the SearchJiraHelper.
+     * @param dataProviderId - Id of the data provider (i.e. CustomJqlViewProvider.viewId())
+     * @returns List of fetched issues
+     */
+    static getIssues(dataProviderId: string): MinimalORIssueLink<DetailedSiteInfo>[] {
+        return this._searchableIssueMap[dataProviderId] || [];
+    }
+
+    /***
      * Append the issues for a specific data provider in the SearchJiraHelper.
      * This is where `Commands.JiraSearchIssues` will look for issues to display
      * @param flattenedIssueList - List of fetched issues
