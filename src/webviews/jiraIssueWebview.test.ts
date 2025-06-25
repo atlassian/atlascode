@@ -13,6 +13,10 @@ import { Resources } from '../resources';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
 import { JiraIssueWebview } from './jiraIssueWebview';
 
+jest.mock('lodash.debounce', () => ({
+    default: (fn: any) => fn,
+}));
+
 jest.mock('../container', () => ({
     Container: {
         clientManager: {

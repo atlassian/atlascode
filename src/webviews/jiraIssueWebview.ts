@@ -1,4 +1,5 @@
 import { EditIssueUI } from '@atlassianlabs/jira-metaui-client';
+import { JiraClient } from '@atlassianlabs/jira-pi-client';
 import {
     Comment,
     createEmptyMinimalIssue,
@@ -46,22 +47,15 @@ import { isOpenPullRequest } from '../ipc/prActions';
 import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
+import { SidebarIssue } from '../jira/types';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
+import { JIRA_SYNC_DELAYS } from '../util/time';
 import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
 import { getJiraIssueUri } from '../views/jira/treeViews/utils';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
-
-interface SidebarIssue extends MinimalIssue<DetailedSiteInfo> {
-    fields: {
-        assignee?: {
-            accountId: string | null;
-            _updateTimestamp?: number;
-        };
-    };
-}
 
 export class JiraIssueWebview
     extends AbstractIssueEditorWebview
@@ -71,13 +65,9 @@ export class JiraIssueWebview
     private _editUIData: EditIssueData;
     private _currentUser: User;
 
-    private readonly VERIFICATION_DELAY = 2000;
-    private readonly VERIFICATION_MAX_ATTEMPTS = 2;
-    private readonly REFRESH_DEBOUNCE_DELAY = 300;
-
     private debouncedRefreshExplorer = debounce(
         () => commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer),
-        this.REFRESH_DEBOUNCE_DELAY,
+        JIRA_SYNC_DELAYS.REFRESH_DEBOUNCE,
     );
 
     constructor(extensionPath: string) {
@@ -338,10 +328,10 @@ export class JiraIssueWebview
     private async verifyServerState(
         issue: MinimalIssue<DetailedSiteInfo>,
         newAssigneeId: string | null,
-        client: any,
+        client: JiraClient<DetailedSiteInfo>,
     ): Promise<void> {
-        for (let attempt = 1; attempt <= this.VERIFICATION_MAX_ATTEMPTS; attempt++) {
-            await new Promise((resolve) => setTimeout(resolve, this.VERIFICATION_DELAY));
+        for (let attempt = 1; attempt <= JIRA_SYNC_DELAYS.MAX_ATTEMPTS; attempt++) {
+            await new Promise((resolve) => setTimeout(resolve, JIRA_SYNC_DELAYS.VERIFICATION));
             try {
                 const serverIssue = await client.getIssue(issue.key, ['assignee'], '');
                 const serverAssigneeId = serverIssue?.fields?.assignee?.accountId;
@@ -357,12 +347,12 @@ export class JiraIssueWebview
                     'Sync verification warning',
                 );
 
-                if (attempt === this.VERIFICATION_MAX_ATTEMPTS) {
+                if (attempt === JIRA_SYNC_DELAYS.MAX_ATTEMPTS) {
                     this.revertSidebarAssigneeState(issue.key);
                 }
             } catch (error) {
                 Logger.error(error as Error, `Failed to verify assignee state on attempt ${attempt}`, issue.key);
-                if (attempt === this.VERIFICATION_MAX_ATTEMPTS) {
+                if (attempt === JIRA_SYNC_DELAYS.MAX_ATTEMPTS) {
                     this.revertSidebarAssigneeState(issue.key);
                 }
             }
@@ -411,7 +401,6 @@ export class JiraIssueWebview
                         }
 
                         await client.editIssue(this._issue!.key, newFieldValues);
-
                         if (
                             Object.keys(newFieldValues).some(
                                 (fieldKey) => this._editUIData.fieldValues[`${fieldKey}.rendered`] !== undefined,
