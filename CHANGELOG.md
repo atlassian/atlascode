@@ -8,6 +8,8 @@
 
 - Fixed a bug when creating jira issues which was throwing the error 'cannot read properties of undefined'
 - Fixed a bug when fetching Pull Request commits because the URL for it is undefined
+- Fixed the Pull Request 'File nesting' toggle
+- Removed duplicated and trailing dashes on proposed branch name in 'Start work' page
 
 ## What's new in 3.8.3
 
