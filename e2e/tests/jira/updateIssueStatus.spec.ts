@@ -1,4 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, request, test } from '@playwright/test';
+import { updateIssueField } from 'e2e/helpers/updateIssueStatus';
+import fs from 'fs';
 
 test('I can transition a Jira', async ({ page }) => {
     await page.goto('http://localhost:9988/');
@@ -36,12 +38,59 @@ test('I can transition a Jira', async ({ page }) => {
     const button = issueFrame.getByRole('button', { name: 'In Progress' });
     await expect(button).toBeVisible();
     await button.click();
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(2000);
     const inreview = issueFrame.getByText('In Review');
 
     await expect(inreview).toBeVisible();
     await page.waitForTimeout(1000);
     await inreview.click();
 
+    // Update the mock
+    const api = await request.newContext({
+        baseURL: 'http://wiremock-mockedteams:8080',
+        ignoreHTTPSErrors: true,
+    });
+    const issueJSON = JSON.parse(fs.readFileSync('e2e/wiremock-mappings/mockedteams/BTS-1/bts1.json', 'utf-8'));
+
+    const newStatus = 'In Review';
+    const updatedIssue = updateIssueField(issueJSON, newStatus);
+
+    console.log('Updating WireMock with new status:', newStatus);
+    const response = await api.post('/__admin/mappings', {
+        data: {
+            request: {
+                method: 'GET',
+                urlPath: '/rest/api/2/issue/BTS-1',
+            },
+            response: {
+                status: 200,
+                body: JSON.stringify(updatedIssue),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            },
+        },
+    });
+    const { id } = await response.json();
+    console.log('WireMock mapping created with ID:', id);
+
+    await page.getByRole('tab', { name: 'BTS-1' }).getByLabel(/close/i).click();
     await page.waitForTimeout(2000);
+    await issueInTree.click();
+    const frameHandle = await page.frameLocator('iframe.webview').locator('iframe[title="Jira Issue"]').elementHandle();
+
+    if (!frameHandle) {
+        throw new Error('iframe element not found');
+    }
+    const issueFramePost = await frameHandle.contentFrame();
+
+    if (!issueFramePost) {
+        throw new Error('iframe element not found');
+    }
+    await issueFramePost.waitForLoadState('domcontentloaded');
+    await expect(issueFramePost.locator('body')).toBeVisible({ timeout: 1500 });
+    const buttonInReview = issueFramePost.getByRole('button', { name: newStatus });
+    await expect(buttonInReview).toBeVisible();
+
+    await api.delete(`/__admin/mappings/${id}`);
 });
