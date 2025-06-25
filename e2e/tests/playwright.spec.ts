@@ -247,11 +247,12 @@ test('Add comment flow', async ({ page }) => {
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
     const issueFrame = page.frameLocator('iframe.webview.ready').frameLocator('iframe[title="Jira Issue"]');
-    await page.waitForTimeout(2000);
+
+    // Wait for the iframe to be ready and the comment textarea to be visible
+    await expect(issueFrame.getByPlaceholder('Add a comment...')).toBeVisible({ timeout: 10000 });
 
     // Find and click the "Add comment" button
     const commentTextarea = issueFrame.getByPlaceholder('Add a comment...');
-    await expect(commentTextarea).toBeVisible();
     await commentTextarea.click();
 
     const textarea = issueFrame.locator('textarea').first();
