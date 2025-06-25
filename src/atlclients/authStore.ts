@@ -397,7 +397,7 @@ export class CredentialManager implements Disposable {
      * Calls the OAuth provider and updates the access token.
      */
     private async refreshAccessToken(site: DetailedSiteInfo): Promise<Tokens | undefined> {
-        const credentials = await this.getAuthInfo(site);
+        const credentials = await this.getAuthInfoForProductAndCredentialId(site, false);
         if (!isOAuthInfo(credentials)) {
             return undefined;
         }

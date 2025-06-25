@@ -5,7 +5,16 @@ import { loggedOutEvent } from '../analytics';
 import { CommandContext, setCommandContext } from '../commandContext';
 import { Container } from '../container';
 import { keychain } from '../util/keychain';
-import { AuthChangeType, AuthInfo, AuthInfoState, DetailedSiteInfo, ProductBitbucket, ProductJira } from './authInfo';
+import { Time } from '../util/time';
+import {
+    AuthChangeType,
+    AuthInfo,
+    AuthInfoState,
+    DetailedSiteInfo,
+    OAuthInfo,
+    ProductBitbucket,
+    ProductJira,
+} from './authInfo';
 import { CredentialManager } from './authStore';
 
 class CryptoHashMock {
@@ -182,6 +191,150 @@ describe('CredentialManager', () => {
             expect(Container.clientManager.removeClient).toHaveBeenCalledWith(mockJiraSite);
             expect(Container.siteManager.removeSite).toHaveBeenCalledWith(mockJiraSite);
         });
+
+        it('should return non-OAuth auth info without token refresh', async () => {
+            const nonOAuthInfo = {
+                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
+            };
+
+            (Container.context.secrets.get as jest.Mock).mockResolvedValue(JSON.stringify(nonOAuthInfo));
+
+            const result = await credentialManager.getAuthInfo(mockJiraSite);
+
+            expect(result).toEqual(nonOAuthInfo);
+        });
+
+        it('should return OAuth info without refresh when token has plenty of time remaining', async () => {
+            const futureExpirationTime = Date.now() + 20 * Time.MINUTES; // Well beyond grace period
+            const oauthInfo: OAuthInfo = {
+                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
+                access: 'access-token',
+                refresh: 'refresh-token',
+                expirationDate: futureExpirationTime,
+                recievedAt: Date.now(),
+            };
+
+            (Container.context.secrets.get as jest.Mock).mockResolvedValue(JSON.stringify(oauthInfo));
+
+            const result = await credentialManager.getAuthInfo(mockJiraSite);
+
+            expect(result).toEqual(oauthInfo);
+        });
+
+        it('should handle OAuth info without expiration date by attempting refresh', async () => {
+            const oauthInfoNoExpiration: OAuthInfo = {
+                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
+                access: 'access-token',
+                refresh: 'refresh-token',
+                recievedAt: Date.now(),
+            };
+
+            // Mock initial fetch from secret storage
+            (Container.context.secrets.get as jest.Mock)
+                .mockResolvedValueOnce(JSON.stringify(oauthInfoNoExpiration))
+                .mockResolvedValueOnce(
+                    JSON.stringify({ ...oauthInfoNoExpiration, expirationDate: Date.now() + Time.HOURS }),
+                );
+
+            // Mock negotiator behavior - this process is not responsible
+            const mockNegotiatorGet = jest.fn().mockReturnValue(false);
+            const mockNegotiatorSet = jest.fn();
+            const mockNegotiatorRequest = jest.fn().mockResolvedValue(undefined);
+            (Container.context.globalState.get as jest.Mock).mockImplementation(mockNegotiatorGet);
+            (Container.context.globalState.update as jest.Mock).mockImplementation(mockNegotiatorSet);
+
+            // Mock the negotiator's request method
+            jest.spyOn(credentialManager as any, 'negotiator', 'get').mockReturnValue({
+                thisIsTheResponsibleProcess: () => false,
+                requestTokenRefreshForSite: mockNegotiatorRequest,
+            });
+
+            // Mock setTimeout to resolve immediately
+            const originalSetTimeout = global.setTimeout;
+            global.setTimeout = jest.fn().mockImplementation((callback) => callback()) as any;
+
+            const result = await credentialManager.getAuthInfo(mockJiraSite);
+
+            expect(mockNegotiatorRequest).toHaveBeenCalledWith(JSON.stringify(mockJiraSite));
+            expect(result).toEqual(
+                expect.objectContaining({
+                    ...oauthInfoNoExpiration,
+                    expirationDate: expect.any(Number),
+                }),
+            );
+
+            global.setTimeout = originalSetTimeout;
+        });
+
+        it('should handle OAuth tokens near expiration by requesting refresh from another process', async () => {
+            const nearExpirationTime = Date.now() + 5 * Time.MINUTES; // Within grace period
+            const oauthInfoNearExpiration: OAuthInfo = {
+                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
+                access: 'access-token',
+                refresh: 'refresh-token',
+                expirationDate: nearExpirationTime,
+                recievedAt: Date.now(),
+            };
+
+            const refreshedOAuthInfo = {
+                ...oauthInfoNearExpiration,
+                expirationDate: Date.now() + Time.HOURS,
+                access: 'new-access-token',
+            };
+
+            // Mock initial fetch and subsequent fetch after refresh
+            (Container.context.secrets.get as jest.Mock)
+                .mockResolvedValueOnce(JSON.stringify(oauthInfoNearExpiration))
+                .mockResolvedValueOnce(JSON.stringify(refreshedOAuthInfo));
+
+            // Mock negotiator to indicate this process is not responsible for refresh
+            jest.spyOn(credentialManager as any, 'negotiator', 'get').mockReturnValue({
+                thisIsTheResponsibleProcess: () => false,
+                requestTokenRefreshForSite: jest.fn().mockResolvedValue(undefined),
+            });
+
+            // Mock setTimeout to resolve immediately
+            const originalSetTimeout = global.setTimeout;
+            global.setTimeout = jest.fn().mockImplementation((callback) => callback()) as any;
+
+            const result = await credentialManager.getAuthInfo(mockJiraSite);
+
+            expect(result).toEqual(refreshedOAuthInfo);
+
+            global.setTimeout = originalSetTimeout;
+        });
+
+        it('should bypass cache when allowCache is false', async () => {
+            const oauthInfo: OAuthInfo = {
+                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
+                access: 'access-token',
+                refresh: 'refresh-token',
+                expirationDate: Date.now() + Time.HOURS,
+                recievedAt: Date.now(),
+            };
+
+            // Setup memory store with auth info
+            const memStore = (credentialManager as any)._memStore;
+            const jiraStore = memStore.get(ProductJira.key);
+            jiraStore.set(mockJiraSite.credentialId, oauthInfo);
+
+            // Mock secret storage to return different info
+            const updatedOAuthInfo = { ...oauthInfo, access: 'updated-access-token' };
+            (Container.context.secrets.get as jest.Mock).mockResolvedValue(JSON.stringify(updatedOAuthInfo));
+
+            const result = await credentialManager.getAuthInfo(mockJiraSite, false);
+
+            // Should fetch from secret storage, not memory cache
+            expect(Container.context.secrets.get).toHaveBeenCalledWith(
+                `${mockJiraSite.product.key}-${mockJiraSite.credentialId}`,
+            );
+            expect(result).toEqual(updatedOAuthInfo);
+        });
     });
 
     describe('saveAuthInfo', () => {
@@ -222,6 +375,179 @@ describe('CredentialManager', () => {
 
             expect(Container.context.secrets.store).not.toHaveBeenCalled();
             expect(mockFireEvent).not.toHaveBeenCalled();
+        });
+
+        it('should extract expiration date from JWT token when saving OAuth info', async () => {
+            // Create a valid JWT token with expiration
+            const expTimestamp = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now in seconds
+            const payload = { exp: expTimestamp, iat: Math.floor(Date.now() / 1000) };
+            const header = { alg: 'HS256', typ: 'JWT' };
+
+            const encodedHeader = Buffer.from(JSON.stringify(header)).toString('base64');
+            const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64');
+            const signature = 'signature';
+            const jwtToken = `${encodedHeader}.${encodedPayload}.${signature}`;
+
+            const oauthInfo: OAuthInfo = {
+                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
+                access: jwtToken,
+                refresh: 'refresh-token',
+                recievedAt: Date.now(),
+            };
+
+            await credentialManager.saveAuthInfo(mockJiraSite, oauthInfo);
+
+            // Verify that the saved info has the expiration date extracted from JWT
+            const savedInfoCall = (Container.context.secrets.store as jest.Mock).mock.calls[0];
+            const savedInfo = JSON.parse(savedInfoCall[1]);
+            expect(savedInfo.expirationDate).toBe(expTimestamp * 1000);
+        });
+
+        it('should handle JWT token without expiration claim', async () => {
+            const payload = { iat: Math.floor(Date.now() / 1000), sub: 'user-id' };
+            const header = { alg: 'HS256', typ: 'JWT' };
+
+            const encodedHeader = Buffer.from(JSON.stringify(header)).toString('base64');
+            const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64');
+            const signature = 'signature';
+            const jwtToken = `${encodedHeader}.${encodedPayload}.${signature}`;
+
+            const baseTime = Date.now();
+            const oauthInfo: OAuthInfo = {
+                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
+                access: jwtToken,
+                refresh: 'refresh-token',
+                recievedAt: baseTime,
+            };
+
+            await credentialManager.saveAuthInfo(mockJiraSite, oauthInfo);
+
+            // Should fall back to using recievedAt + 1 hour
+            const savedInfoCall = (Container.context.secrets.store as jest.Mock).mock.calls[0];
+            const savedInfo = JSON.parse(savedInfoCall[1]);
+            expect(savedInfo.expirationDate).toBe(baseTime + Time.HOURS);
+        });
+
+        it('should handle invalid JWT token format', async () => {
+            const baseTime = Date.now();
+            const oauthInfo: OAuthInfo = {
+                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
+                access: 'invalid-jwt-format', // Not a valid JWT
+                refresh: 'refresh-token',
+                recievedAt: baseTime,
+            };
+
+            await credentialManager.saveAuthInfo(mockJiraSite, oauthInfo);
+
+            // Should fall back to using recievedAt + 1 hour
+            const savedInfoCall = (Container.context.secrets.store as jest.Mock).mock.calls[0];
+            const savedInfo = JSON.parse(savedInfoCall[1]);
+            expect(savedInfo.expirationDate).toBe(baseTime + Time.HOURS);
+        });
+
+        it('should handle JWT with malformed payload', async () => {
+            const encodedHeader = Buffer.from('{"alg":"HS256"}').toString('base64');
+            const invalidJsonPayload = Buffer.from('invalid-json').toString('base64');
+            const signature = 'signature';
+            const jwtToken = `${encodedHeader}.${invalidJsonPayload}.${signature}`;
+
+            const baseTime = Date.now();
+            const oauthInfo: OAuthInfo = {
+                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
+                access: jwtToken,
+                refresh: 'refresh-token',
+                recievedAt: baseTime,
+            };
+
+            await credentialManager.saveAuthInfo(mockJiraSite, oauthInfo);
+
+            // Should fall back to using recievedAt + 1 hour
+            const savedInfoCall = (Container.context.secrets.store as jest.Mock).mock.calls[0];
+            const savedInfo = JSON.parse(savedInfoCall[1]);
+            expect(savedInfo.expirationDate).toBe(baseTime + Time.HOURS);
+        });
+
+        it('should prefer iat time over recievedAt for fallback expiration', async () => {
+            const iatTime = Date.now() - 30 * Time.MINUTES;
+            const receivedTime = Date.now();
+
+            const oauthInfo: OAuthInfo = {
+                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
+                access: 'invalid-jwt-token',
+                refresh: 'refresh-token',
+                iat: iatTime,
+                recievedAt: receivedTime,
+            };
+
+            await credentialManager.saveAuthInfo(mockJiraSite, oauthInfo);
+
+            const savedInfoCall = (Container.context.secrets.store as jest.Mock).mock.calls[0];
+            const savedInfo = JSON.parse(savedInfoCall[1]);
+            expect(savedInfo.expirationDate).toBe(iatTime + Time.HOURS);
+        });
+
+        it('should not overwrite existing expiration date', async () => {
+            const existingExpiration = Date.now() + 2 * Time.HOURS;
+            const oauthInfo: OAuthInfo = {
+                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
+                access: 'any-token',
+                refresh: 'refresh-token',
+                expirationDate: existingExpiration,
+                recievedAt: Date.now(),
+            };
+
+            await credentialManager.saveAuthInfo(mockJiraSite, oauthInfo);
+
+            const savedInfoCall = (Container.context.secrets.store as jest.Mock).mock.calls[0];
+            const savedInfo = JSON.parse(savedInfoCall[1]);
+            expect(savedInfo.expirationDate).toBe(existingExpiration);
+        });
+
+        it('should handle JWT with zero exp value', async () => {
+            const payload = { exp: 0, iat: Math.floor(Date.now() / 1000) };
+            const header = { alg: 'HS256', typ: 'JWT' };
+
+            const encodedHeader = Buffer.from(JSON.stringify(header)).toString('base64');
+            const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64');
+            const signature = 'signature';
+            const jwtToken = `${encodedHeader}.${encodedPayload}.${signature}`;
+
+            const baseTime = Date.now();
+            const oauthInfo: OAuthInfo = {
+                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
+                access: jwtToken,
+                refresh: 'refresh-token',
+                recievedAt: baseTime,
+            };
+
+            await credentialManager.saveAuthInfo(mockJiraSite, oauthInfo);
+
+            // Should fall back to using recievedAt + 1 hour when exp is 0
+            const savedInfoCall = (Container.context.secrets.store as jest.Mock).mock.calls[0];
+            const savedInfo = JSON.parse(savedInfoCall[1]);
+            expect(savedInfo.expirationDate).toBe(baseTime + Time.HOURS);
+        });
+
+        it('should not modify non-OAuth auth info', async () => {
+            const nonOAuthInfo = {
+                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
+            };
+
+            await credentialManager.saveAuthInfo(mockJiraSite, nonOAuthInfo);
+
+            // Verify that non-OAuth info is saved without modification
+            const savedInfoCall = (Container.context.secrets.store as jest.Mock).mock.calls[0];
+            const savedInfo = JSON.parse(savedInfoCall[1]);
+            expect(savedInfo).toEqual(nonOAuthInfo);
+            expect(savedInfo.expirationDate).toBeUndefined();
         });
     });
 
