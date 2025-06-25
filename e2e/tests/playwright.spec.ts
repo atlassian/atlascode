@@ -1,4 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, request, test } from '@playwright/test';
+import { updateIssueStatus } from 'e2e/helpers/updateIssueStatus';
+import fs from 'fs';
 
 test("Onboarding flow's navigation among pages works", async ({ page }) => {
     await page.goto('http://localhost:9988/');
@@ -157,5 +159,43 @@ test('I can transition a Jira', async ({ page }) => {
     await page.waitForTimeout(1000);
     await inreview.click();
 
+    // Update the mock
+    const api = await request.newContext({
+        baseURL: 'http://wiremock-mockedteams:8080',
+        ignoreHTTPSErrors: true,
+    });
+    const issueJSON = JSON.parse(fs.readFileSync('e2e/wiremock-mappings/mockedteams/BTS-1/bts1.json', 'utf-8'));
+
+    const newStatus = 'In Review';
+    const updatedIssue = updateIssueStatus(issueJSON, newStatus);
+
+    console.log('Updating WireMock with new status:', newStatus);
+    const response = await api.post('/__admin/mappings', {
+        data: {
+            request: {
+                method: 'GET',
+                urlPath: '/rest/api/2/issue/BTS-1',
+            },
+            response: {
+                status: 200,
+                body: JSON.stringify(updatedIssue),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            },
+        },
+    });
+    const { id } = await response.json();
+    console.log('WireMock mapping created with ID:', id);
+
+    await page.getByRole('tab', { name: 'BTS-1' }).getByLabel(/close/i).click();
+    await page.waitForTimeout(3000);
+
+    await issueInTree.click();
     await page.waitForTimeout(2000);
+    const issueFrame2 = page.frameLocator('iframe.webview').frameLocator('iframe[title="Jira Issue"]');
+    const button2 = issueFrame2.getByRole('button', { name: newStatus });
+    await expect(button2).toBeVisible();
+
+    await api.delete(`/__admin/mappings/${id}`);
 });
