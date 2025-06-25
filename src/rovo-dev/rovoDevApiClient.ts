@@ -44,8 +44,18 @@ export class RovoDevApiClient {
     }
 
     /** Invokes the POST /v2/cancel rest API */
-    public cancel(safeInvoke?: boolean): Promise<boolean> {
-        return this.invokeBooleanApi('/v2/cancel', 'POST', safeInvoke);
+    public async cancel(safeInvoke?: boolean): Promise<boolean> {
+        try {
+            const response = await this.fetchApi('/v2/cancel', 'POST');
+            const data = await response.json();
+            return data.cancelled;
+        } catch (error) {
+            if (safeInvoke) {
+                return false;
+            } else {
+                throw error;
+            }
+        }
     }
 
     /** Invokes the POST /v2/reset rest API */

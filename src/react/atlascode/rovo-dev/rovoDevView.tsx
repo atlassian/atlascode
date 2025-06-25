@@ -152,18 +152,16 @@ const RovoDevView: React.FC = () => {
     const onMessageHandler = useCallback(
         (event: RovoDevProviderMessage): void => {
             switch (event.type) {
-                case RovoDevProviderMessageType.Response: {
+                case RovoDevProviderMessageType.Response:
                     handleResponse(event.dataObject);
                     break;
-                }
 
-                case RovoDevProviderMessageType.UserChatMessage: {
+                case RovoDevProviderMessageType.UserChatMessage:
                     completeMessage();
                     handleAppendChatHistory(event.message);
                     break;
-                }
 
-                case RovoDevProviderMessageType.CompleteMessage: {
+                case RovoDevProviderMessageType.CompleteMessage:
                     completeMessage(true);
                     setSendButtonDisabled(false);
                     setCurrentState(State.WaitingForPrompt);
@@ -171,47 +169,45 @@ const RovoDevView: React.FC = () => {
                     setPendingToolCall(null);
 
                     break;
-                }
 
-                case RovoDevProviderMessageType.ToolCall: {
+                case RovoDevProviderMessageType.ToolCall:
                     handleResponse(event.dataObject);
                     break;
-                }
 
-                case RovoDevProviderMessageType.ToolReturn: {
+                case RovoDevProviderMessageType.ToolReturn:
                     handleResponse(event.dataObject);
                     break;
-                }
 
-                case RovoDevProviderMessageType.ErrorMessage: {
+                case RovoDevProviderMessageType.ErrorMessage:
                     completeMessage();
                     handleAppendChatHistory(event.message);
                     setCurrentResponse('');
                     setSendButtonDisabled(false);
                     setCurrentState(State.WaitingForPrompt);
-
                     setPendingToolCall(null);
-
                     break;
-                }
 
-                case RovoDevProviderMessageType.NewSession: {
+                case RovoDevProviderMessageType.NewSession:
                     setChatHistory([]);
                     setPendingToolCall(null);
                     break;
-                }
 
-                case RovoDevProviderMessageType.Initialized: {
+                case RovoDevProviderMessageType.Initialized:
                     setSendButtonDisabled(false);
                     break;
-                }
+
+                case RovoDevProviderMessageType.CancelFailed:
+                    if (currentState === State.CancellingResponse) {
+                        setCurrentState(State.GeneratingResponse);
+                    }
+                    break;
 
                 default:
                     console.warn('Unknown message type:', (event as any).type);
                     break;
             }
         },
-        [handleResponse, completeMessage, handleAppendChatHistory],
+        [handleResponse, completeMessage, handleAppendChatHistory, currentState, setCurrentState],
     );
 
     const [postMessage] = useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, any>(onMessageHandler);

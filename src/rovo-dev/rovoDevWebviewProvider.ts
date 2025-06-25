@@ -147,8 +147,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     break;
 
                 case RovoDevViewResponseType.CancelResponse:
+                    // we set _pendingCancellation to true first, and update it
+                    // later if the API fails, because we don't want to risk a race
+                    // condition where the chat socket closes before the result of the
+                    // cancel API has been evaluated
                     this._pendingCancellation = true;
-                    await this.executeCancel();
+                    if (!(await this.executeCancel())) {
+                        this._pendingCancellation = false;
+                    }
                     break;
 
                 case RovoDevViewResponseType.OpenFile:
@@ -312,10 +318,21 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private async executeCancel(): Promise<void> {
-        await this.executeApiWithErrorHandling(async (client) => {
-            await client.cancel();
+    private async executeCancel(): Promise<boolean> {
+        const webview = this._webView!;
+
+        const success = await this.executeApiWithErrorHandling(async (client) => {
+            return await client.cancel();
         });
+
+        if (!success) {
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.CancelFailed,
+            });
+            return false;
+        } else {
+            return true;
+        }
     }
 
     private async executeReplay(): Promise<void> {
@@ -363,13 +380,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    private async executeApiWithErrorHandling(
-        func: (client: RovoDevApiClient) => Promise<void>,
+    private async executeApiWithErrorHandling<T>(
+        func: (client: RovoDevApiClient) => Promise<T>,
         cancellationAware?: true,
-    ): Promise<void> {
+    ): Promise<T | void> {
         if (this.rovoDevApiClient) {
             try {
-                await func(this.rovoDevApiClient);
+                return await func(this.rovoDevApiClient);
             } catch (error) {
                 if (cancellationAware && this._pendingCancellation && error.cause?.code === 'UND_ERR_SOCKET') {
                     this._pendingCancellation = false;

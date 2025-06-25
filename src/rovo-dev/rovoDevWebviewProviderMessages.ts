@@ -12,6 +12,7 @@ export const enum RovoDevProviderMessageType {
     ErrorMessage = 'errorMessage',
     NewSession = 'newSession',
     Initialized = 'initialized',
+    CancelFailed = 'cancelFailed',
 }
 
 export interface RovoDevObjectResponse {
@@ -26,4 +27,5 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.ToolReturn, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ErrorMessage, { message: ErrorMessage }>
     | ReducerAction<RovoDevProviderMessageType.NewSession>
-    | ReducerAction<RovoDevProviderMessageType.Initialized>;
+    | ReducerAction<RovoDevProviderMessageType.Initialized>
+    | ReducerAction<RovoDevProviderMessageType.CancelFailed>;
