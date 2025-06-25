@@ -3,11 +3,14 @@ import SendIcon from '@atlaskit/icon/glyph/send';
 import PauseIcon from '@atlaskit/icon/glyph/vid-pause';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
+import * as React from 'react';
 
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
 import { useMessagingApi } from '../messagingApi';
 import { ChatMessageItem, renderChatHistory, ToolCallItem, UpdatedFilesComponent } from './common';
+import { RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import * as styles from './rovoDevViewStyles';
 import { ChatMessage, isCodeChangeTool, ToolCallMessage, ToolReturnGenericMessage } from './utils';
 
@@ -147,20 +150,20 @@ const RovoDevView: React.FC = () => {
     );
 
     const onMessageHandler = useCallback(
-        (event: any): void => {
+        (event: RovoDevProviderMessage): void => {
             switch (event.type) {
-                case 'response': {
+                case RovoDevProviderMessageType.Response: {
                     handleResponse(event.dataObject);
                     break;
                 }
 
-                case 'userChatMessage': {
+                case RovoDevProviderMessageType.UserChatMessage: {
                     completeMessage();
                     handleAppendChatHistory(event.message);
                     break;
                 }
 
-                case 'completeMessage': {
+                case RovoDevProviderMessageType.CompleteMessage: {
                     completeMessage(true);
                     setSendButtonDisabled(false);
                     setCurrentState(State.WaitingForPrompt);
@@ -170,17 +173,17 @@ const RovoDevView: React.FC = () => {
                     break;
                 }
 
-                case 'toolCall': {
+                case RovoDevProviderMessageType.ToolCall: {
                     handleResponse(event.dataObject);
                     break;
                 }
 
-                case 'toolReturn': {
+                case RovoDevProviderMessageType.ToolReturn: {
                     handleResponse(event.dataObject);
                     break;
                 }
 
-                case 'errorMessage': {
+                case RovoDevProviderMessageType.ErrorMessage: {
                     completeMessage();
                     handleAppendChatHistory(event.message);
                     setCurrentResponse('');
@@ -192,26 +195,26 @@ const RovoDevView: React.FC = () => {
                     break;
                 }
 
-                case 'newSession': {
+                case RovoDevProviderMessageType.NewSession: {
                     setChatHistory([]);
                     setPendingToolCall(null);
                     break;
                 }
 
-                case 'initialized': {
+                case RovoDevProviderMessageType.Initialized: {
                     setSendButtonDisabled(false);
                     break;
                 }
 
                 default:
-                    console.warn('Unknown message type:', event.type);
+                    console.warn('Unknown message type:', (event as any).type);
                     break;
             }
         },
         [handleResponse, completeMessage, handleAppendChatHistory],
     );
 
-    const [postMessage] = useMessagingApi<any, any, any>(onMessageHandler);
+    const [postMessage] = useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, any>(onMessageHandler);
 
     const sendPrompt = useCallback(
         (text: string): void => {
@@ -227,7 +230,7 @@ const RovoDevView: React.FC = () => {
 
             // Send the prompt to backend
             postMessage({
-                type: 'prompt',
+                type: RovoDevViewResponseType.Prompt,
                 text,
             });
 
@@ -246,7 +249,7 @@ const RovoDevView: React.FC = () => {
 
         // Send the signal to cancel the response
         postMessage({
-            type: 'cancelResponse',
+            type: RovoDevViewResponseType.CancelResponse,
         });
     }, [postMessage, currentState, setCurrentState]);
 
@@ -255,12 +258,12 @@ const RovoDevView: React.FC = () => {
             // Implement file opening logic here
             if (!range || range.length !== 2) {
                 postMessage({
-                    type: 'openFile',
+                    type: RovoDevViewResponseType.OpenFile,
                     filePath,
                 });
             } else {
                 postMessage({
-                    type: 'openFile',
+                    type: RovoDevViewResponseType.OpenFile,
                     filePath,
                     range,
                 });

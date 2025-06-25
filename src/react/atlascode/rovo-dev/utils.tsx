@@ -1,5 +1,6 @@
 export type ToolReturnMessage = ToolReturnFileMessage | ToolReturnBashMessage | ToolReturnTechnicalPlanMessage;
 export type ChatMessage = DefaultMessage | ToolCallMessage | ToolReturnGenericMessage | ToolReturnGroupedMessage;
+export type ErrorMessage = DefaultMessage;
 
 export interface DefaultMessage {
     text: string;

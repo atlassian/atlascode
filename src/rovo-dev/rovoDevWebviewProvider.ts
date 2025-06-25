@@ -5,6 +5,7 @@ import {
     ColorThemeKind,
     commands,
     Disposable,
+    Event,
     Memento,
     Position,
     Range,
@@ -18,13 +19,20 @@ import {
 } from 'vscode';
 
 import { rovodevInfo } from '../constants';
+import { RovoDevViewResponse, RovoDevViewResponseType } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient } from './rovoDevApiClient';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
+
+interface TypedWebview<MessageOut, MessageIn> extends Webview {
+    readonly onDidReceiveMessage: Event<MessageIn>;
+    postMessage(message: MessageOut): Thenable<boolean>;
+}
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
     private readonly viewType = 'atlascodeRovoDev';
-    private _webView?: Webview;
+    private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _rovoDevApiClient?: RovoDevApiClient;
     private _initialized = false;
     private _pendingPrompt: string | undefined;
@@ -88,8 +96,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         _context: WebviewViewResolveContext,
         _token: CancellationToken,
     ): Thenable<void> | void {
-        const webview = webviewView.webview;
         this._webView = webviewView.webview;
+        const webview = this._webView;
 
         webview.options = {
             enableCommandUris: true,
@@ -131,15 +139,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         webview.onDidReceiveMessage(async (e) => {
             switch (e.type) {
-                case 'prompt':
+                case RovoDevViewResponseType.Prompt:
                     await this.executeChat(e.text);
                     break;
 
-                case 'cancelResponse':
+                case RovoDevViewResponseType.CancelResponse:
                     await this.executeCancel();
                     break;
 
-                case 'openFile':
+                case RovoDevViewResponseType.OpenFile:
                     await this.executeOpenFile(e.filePath, e.range);
                     break;
             }
@@ -207,7 +215,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (messagesSent) {
             // Send final complete message when stream ends
             await webview.postMessage({
-                type: 'completeMessage',
+                type: RovoDevProviderMessageType.CompleteMessage,
             });
         }
     }
@@ -215,7 +223,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private processError(error: Error) {
         const webview = this._webView!;
         return webview.postMessage({
-            type: 'errorMessage',
+            type: RovoDevProviderMessageType.ErrorMessage,
             message: {
                 text: `Error: ${error.message}`,
                 author: 'RovoDev',
@@ -226,7 +234,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private sendUserPromptToView(message: string) {
         const webview = this._webView!;
         return webview.postMessage({
-            type: 'userChatMessage',
+            type: RovoDevProviderMessageType.UserChatMessage,
             message: {
                 text: message,
                 author: 'User',
@@ -240,20 +248,20 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         switch (response.event_kind) {
             case 'text':
                 return webview.postMessage({
-                    type: 'response',
+                    type: RovoDevProviderMessageType.Response,
                     dataObject: response,
                 });
 
             case 'tool-call':
                 return webview.postMessage({
-                    type: 'toolCall',
+                    type: RovoDevProviderMessageType.ToolCall,
                     dataObject: response,
                 });
 
             case 'tool-return':
             case 'retry-prompt':
                 return webview.postMessage({
-                    type: 'toolReturn',
+                    type: RovoDevProviderMessageType.ToolReturn,
                     dataObject: response,
                 });
 
@@ -292,7 +300,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await this.executeApiWithErrorHandling(async (client) => {
             await client.reset();
             await webview.postMessage({
-                type: 'newSession',
+                type: RovoDevProviderMessageType.NewSession,
             });
         });
     }
