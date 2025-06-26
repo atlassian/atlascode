@@ -152,6 +152,13 @@ const RovoDevView: React.FC = () => {
     const onMessageHandler = useCallback(
         (event: RovoDevProviderMessage): void => {
             switch (event.type) {
+                case RovoDevProviderMessageType.PromptSent:
+                    // Disable the send button, and enable the pause button
+                    setSendButtonDisabled(true);
+                    setCurrentState(State.GeneratingResponse);
+                    setCurrentResponse('...');
+                    break;
+
                 case RovoDevProviderMessageType.Response:
                     handleResponse(event.dataObject);
                     break;

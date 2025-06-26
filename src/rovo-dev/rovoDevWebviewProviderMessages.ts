@@ -4,6 +4,7 @@ import { ChatMessage, ErrorMessage } from '../react/atlascode/rovo-dev/utils';
 import { RovoDevResponse } from './responseParser';
 
 export const enum RovoDevProviderMessageType {
+    PromptSent = 'promptSent',
     Response = 'response',
     UserChatMessage = 'userChatMessage',
     CompleteMessage = 'completeMessage',
@@ -20,6 +21,7 @@ export interface RovoDevObjectResponse {
 }
 
 export type RovoDevProviderMessage =
+    | ReducerAction<RovoDevProviderMessageType.PromptSent>
     | ReducerAction<RovoDevProviderMessageType.Response, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.UserChatMessage, { message: ChatMessage }>
     | ReducerAction<RovoDevProviderMessageType.CompleteMessage>

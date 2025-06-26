@@ -245,14 +245,19 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private sendUserPromptToView(message: string) {
+    private async sendUserPromptToView(message: string) {
         const webview = this._webView!;
-        return webview.postMessage({
+
+        await webview.postMessage({
             type: RovoDevProviderMessageType.UserChatMessage,
             message: {
                 text: message,
                 author: 'User',
             },
+        });
+
+        return await webview.postMessage({
+            type: RovoDevProviderMessageType.PromptSent,
         });
     }
 
