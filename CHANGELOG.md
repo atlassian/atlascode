@@ -4,14 +4,18 @@
 
 ## What's new in 3.8.4
 
-### Bug Fix
-- Ensure that the OAuth credential are always up-to-date on first-fetch for notifications
+### Bug Fixes
+
+- Fixed a bug when creating jira issues which was throwing the error 'cannot read properties of undefined'
+- Fixed a bug when fetching Pull Request commits because the URL for it is undefined
+- Fixed the Pull Request 'File nesting' toggle
+- Removed duplicated and trailing dashes on proposed branch name in 'Start work' page
 
 ## What's new in 3.8.3
 
 ### Features
 
-- Implement native Vscode onboarding experiment
+- Implement native VS Code onboarding experiment
 - It is now possible to transition Jira work items to a different status from the sidebar, via `Transition Issue...` context menu option
 - Notifications for unseen & recent comments on Jira and Bitbucket are now supported 
 
@@ -87,7 +91,7 @@
 
 ### Improvements
 
-- The 'Release notes' button on the update notification now lands on the vscode markeplace page for Atlascode, Changelog tab.
+- The 'Release notes' button on the update notification now lands on the VS Code markeplace page for Atlascode, Changelog tab.
 
 ### Bug fixes
 
@@ -259,7 +263,7 @@
 
 ### Improvements
 
-- Lowered VSCode engine compatibility to v1.77.0
+- Lowered VS Code engine compatibility to v1.77.0
 
 ## What's new in 3.4.0
 
@@ -305,7 +309,7 @@
 ### Improvements
 
 - A number of small improvements on the package structure
-- Re-enabled authentication when VSCode is running remotely
+- Re-enabled authentication when VS Code is running remotely
 
 ## What's New in 3.0.10
 
