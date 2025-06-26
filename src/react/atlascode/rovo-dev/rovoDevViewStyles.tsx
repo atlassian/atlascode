@@ -2,25 +2,26 @@ export const rovoDevContainerStyles: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    height: '100vh',
     boxSizing: 'border-box',
     backgroundColor: 'var(--vscode-editor-background)',
+    fontSize: 'var(--vscode-font-size)',
+    fontFamily: 'var(--vscode-font-family)',
+    height: '100vh',
+    margin: '0 -20px',
+    maxWidth: '800px',
+};
+
+export const rovoDevInputSectionStyles: React.CSSProperties = {
+    width: '100%',
+    borderTop: '1px solid var(--vscode-panel-border)',
+    background: 'var(--vscode-sideBar-background)',
+    padding: '16px',
+    borderRadius: '12px 12px 0px 0px',
 };
 
 export const rovoDevPromptContainerStyles: React.CSSProperties = {
     display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     width: '100%',
-    height: '100px',
-    position: 'fixed',
-    bottom: 0,
-    left: 0,
-    padding: '10px 20px',
-    borderTop: '1px solid var(--vscode-panel-border)',
-    background: 'var(--vscode-editor-background)',
-    zIndex: 1000,
-    boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.05)',
 };
 
 export const rovoDevTextareaStyles: React.CSSProperties = {
@@ -28,7 +29,6 @@ export const rovoDevTextareaStyles: React.CSSProperties = {
     background: 'inherit',
     color: 'var(--vscode-input-foreground)',
     resize: 'none',
-    fontSize: '12px',
     outline: 'none',
     border: 'none',
     display: 'flex',
@@ -53,31 +53,38 @@ export const rovoDevTextareaContainerStyles: React.CSSProperties = {
 
 export const chatMessagesContainerStyles: React.CSSProperties = {
     width: '100%',
-    maxWidth: '800px',
-    flex: '1 1 auto',
     overflowY: 'auto',
-    padding: '4px',
-    marginBottom: '110px',
     display: 'flex',
     flexDirection: 'column',
+    flexGrow: '1',
+    padding: '10px 16px 0 16px',
 };
 
 export const chatMessageStyles: React.CSSProperties = {
+    maxWidth: '100%',
+    marginBottom: '8px',
+    padding: '8px 12px',
+    borderRadius: '8px',
+    position: 'relative',
+};
+
+export const toolReturnListItemStyles: React.CSSProperties = {
     width: '100%',
-    marginBottom: '16px',
-    padding: '4px',
+    margin: '4px 0',
     borderRadius: '8px',
     position: 'relative',
 };
 
 export const userMessageStyles: React.CSSProperties = {
-    backgroundColor: 'var(--vscode-editor-inactiveSelectionBackground)',
+    backgroundColor: 'var(--vscode-editor-selectionBackground)',
     alignSelf: 'flex-end',
+    borderBottomRightRadius: '0px',
 };
 
 export const agentMessageStyles: React.CSSProperties = {
-    backgroundColor: 'var(--vscode-editor-selectionBackground)',
+    backgroundColor: 'var(--vscode-sideBar-background)',
     alignSelf: 'flex-start',
+    borderBottomLeftRadius: '0px',
 };
 
 export const streamingMessageStyles: React.CSSProperties = {
@@ -104,7 +111,7 @@ export const messageTimestampStyles: React.CSSProperties = {
 };
 
 export const messageContentStyles: React.CSSProperties = {
-    whiteSpace: 'pre-wrap',
+    whiteSpace: 'normal',
     wordBreak: 'break-word',
     color: 'var(--vscode-editor-foreground)',
 };
@@ -125,17 +132,20 @@ export const toolCallHeaderStyles: React.CSSProperties = {
     color: 'var(--vscode-terminal-foreground)',
 };
 
-export const toolCallNameStyles: React.CSSProperties = {
-    color: 'var(--vscode-terminal-ansiGreen)',
-    fontSize: '14px',
-};
-
 export const toolCallArgsStyles: React.CSSProperties = {
-    padding: '8px',
+    display: 'flex',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 8px',
+    width: '100%',
     backgroundColor: 'inherit',
     borderRadius: '4px',
-    border: '1px solid var(--vscode-input-border)',
+    border: '1px solid var(--vscode-editorGroup-border)',
+    color: 'var(--vscode-input-placeholderForeground)',
+    maxLines: 1,
+    overflow: 'ellipsis',
+    lineHeight: '1.5em',
 };
 
 export const toolCallArgsPreStyles: React.CSSProperties = {
@@ -153,4 +163,26 @@ export const toolIconStyles: React.CSSProperties = {
     alignItems: 'center',
     justifyContent: 'flex-start',
     marginBottom: 'auto',
+};
+
+export const modifiedFileComponentStyles: React.CSSProperties = {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '6px',
+    borderRadius: '4px',
+    backgroundColor: 'var(--vscode-editorWidget-background)',
+};
+
+export const undoAcceptButtonStyles: React.CSSProperties = {
+    cursor: 'pointer',
+    padding: '2px 6px',
+    borderRadius: '2px',
+};
+
+export const inlineMofidyButtonStyles: React.CSSProperties = {
+    padding: '2px 4px !important',
+    backgroundColor: 'var(--vscode-list-hoverBackground)',
 };

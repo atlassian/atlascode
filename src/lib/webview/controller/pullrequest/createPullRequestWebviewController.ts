@@ -77,7 +77,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
 
     public update(factoryData?: WorkspaceRepo) {
         this.initData = factoryData || this.initData;
-        this.invalidate();
+        return this.invalidate();
     }
 
     public async onMessageReceived(msg: CreatePullRequestAction) {

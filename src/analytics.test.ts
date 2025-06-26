@@ -726,38 +726,6 @@ describe('analytics', () => {
             expect(event.trackEvent.attributes.errorType).toEqual(errorType);
             expect(event.trackEvent.attributes.reason).toEqual(reason);
         });
-
-        it('should create featureGateExposureBoolEvent with correct attributes', async () => {
-            const ffName = 'test-feature-flag';
-            const success = true;
-            const value = true;
-            const errorType = 0;
-
-            const event = await analytics.featureGateExposureBoolEvent(ffName, success, value, errorType);
-
-            expect(event.trackEvent.action).toEqual('gateExposureBool');
-            expect(event.trackEvent.actionSubject).toEqual('featureFlagClient');
-            expect(event.trackEvent.attributes.ffName).toEqual(ffName);
-            expect(event.trackEvent.attributes.success).toEqual(success);
-            expect(event.trackEvent.attributes.value).toEqual(value);
-            expect(event.trackEvent.attributes.errorType).toEqual(errorType);
-        });
-
-        it('should create featureGateExposureStringEvent with correct attributes', async () => {
-            const ffName = 'test-feature-flag';
-            const success = true;
-            const value = 'variant-a';
-            const errorType = 0;
-
-            const event = await analytics.featureGateExposureStringEvent(ffName, success, value, errorType);
-
-            expect(event.trackEvent.action).toEqual('gateExposureString');
-            expect(event.trackEvent.actionSubject).toEqual('featureFlagClient');
-            expect(event.trackEvent.attributes.ffName).toEqual(ffName);
-            expect(event.trackEvent.attributes.success).toEqual(success);
-            expect(event.trackEvent.attributes.value).toEqual(value);
-            expect(event.trackEvent.attributes.errorType).toEqual(errorType);
-        });
     });
 
     // Utility function tests

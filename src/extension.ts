@@ -1,7 +1,6 @@
-import { ChildProcess, spawn } from 'child_process';
 import { pid } from 'process';
 import * as semver from 'semver';
-import { commands, env, ExtensionContext, extensions, languages, Memento, window, workspace } from 'vscode';
+import { commands, env, ExtensionContext, extensions, languages, Memento, window } from 'vscode';
 
 import { installedEvent, launchedEvent, upgradedEvent } from './analytics';
 import { DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
@@ -11,7 +10,7 @@ import { activate as activateCodebucket } from './codebucket/command/registerCom
 import { CommandContext, setCommandContext } from './commandContext';
 import { registerCommands } from './commands';
 import { Configuration, configuration, IConfig } from './config/configuration';
-import { Commands, ExtensionId, GlobalStateVersionKey, rovodevInfo } from './constants';
+import { Commands, ExtensionId, GlobalStateVersionKey } from './constants';
 import { Container } from './container';
 import { registerAnalyticsClient, registerErrorReporting, unregisterErrorReporting } from './errorReporting';
 import { provideCodeLenses } from './jira/todoObserver';
@@ -22,115 +21,17 @@ import {
     addPipelinesSchemaToYamlConfig,
     BB_PIPELINES_FILENAME,
 } from './pipelines/yaml/pipelinesYamlHelper';
-import { registerResources, Resources } from './resources';
+import { registerResources } from './resources';
+import {
+    deactivateRovoDevProcessManager,
+    initializeRovoDevProcessManager,
+    isRovoDevEnabled,
+} from './rovo-dev/rovoDevProcessManager';
 import { GitExtension } from './typings/git';
 import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
 import { NotificationManagerImpl } from './views/notifications/notificationManager';
 
 const AnalyticDelay = 5000;
-
-// Helper to get a unique port for a workspace
-function getOrAssignPortForWorkspace(context: ExtensionContext, workspacePath: string): number {
-    const mapping = context.globalState.get<{ [key: string]: number }>(rovodevInfo.mappingKey) || {};
-    if (mapping[workspacePath]) {
-        return mapping[workspacePath];
-    }
-    // Find an unused port
-    const usedPorts = new Set(Object.values(mapping));
-    let port = rovodevInfo.portRange.start;
-    while (usedPorts.has(port) && port <= rovodevInfo.portRange.end) {
-        port++;
-    }
-    mapping[workspacePath] = port;
-    context.globalState.update(rovodevInfo.mappingKey, mapping);
-    return port;
-}
-
-// In-memory process map (not persisted, but safe for per-window usage)
-const workspaceProcessMap: { [workspacePath: string]: ChildProcess } = {};
-
-// Helper to stop a process by terminal name
-function stopWorkspaceProcess(workspacePath: string) {
-    const proc = workspaceProcessMap[workspacePath];
-    if (proc) {
-        proc.kill();
-        delete workspaceProcessMap[workspacePath];
-    }
-}
-
-// Helper to start the background process
-function startWorkspaceProcess(context: ExtensionContext, workspacePath: string, port: number) {
-    stopWorkspaceProcess(workspacePath);
-    const rovoDevPath = Resources.rovoDevPath;
-    const userEmail = workspace.getConfiguration('atlascode.rovodev').get<string>('email') || undefined;
-    const authToken = workspace.getConfiguration('atlascode.rovodev').get<string>('apiKey') || undefined;
-    if (!rovoDevPath || !userEmail || !authToken) {
-        window.showErrorMessage('Environment variables is not set for Rovo Dev. Cannot start the process.');
-        return;
-    }
-    const logFilePath = `${workspacePath}/tmp/log`;
-    const logStream = require('fs').createWriteStream(logFilePath, { flags: 'a' });
-
-    const proc = spawn(rovoDevPath, [`serve`, `${port}`], {
-        cwd: workspacePath,
-        stdio: 'pipe',
-        detached: true,
-        env: {
-            USER_EMAIL: userEmail,
-            USER_API_TOKEN: authToken,
-        },
-    });
-
-    proc.stdout?.pipe(logStream);
-    proc.stderr?.pipe(logStream);
-
-    proc.on('exit', (code, signal) => {
-        window.showErrorMessage(
-            `Process for workspace ${workspacePath} exited unexpectedly with code ${code} and signal ${signal}`,
-        );
-        delete workspaceProcessMap[workspacePath];
-        logStream.end(); // Close the log stream
-    });
-    workspaceProcessMap[workspacePath] = proc;
-}
-
-function showWorkspaceLoadedMessageAndStartProcess(context: ExtensionContext) {
-    const folders = workspace.workspaceFolders;
-
-    if (!folders) {
-        window.showInformationMessage('No workspace folders loaded.');
-        return;
-    }
-
-    const globalPort = process.env[rovodevInfo.envVars.port];
-    if (globalPort) {
-        Logger.info(`RovoDev CLI is already running on port ${globalPort}. No new process started.`);
-        window.showInformationMessage(
-            `Looks like we are running in a special fancy way, eh?\nExpecting RovoDev on port ${globalPort}.`,
-        );
-        return;
-    }
-
-    for (const folder of folders) {
-        const port = getOrAssignPortForWorkspace(context, folder.uri.fsPath);
-        window.showInformationMessage(`Workspace loaded: ${folder.name} (port ${port})`);
-        startWorkspaceProcess(context, folder.uri.fsPath, port);
-    }
-}
-
-function showWorkspaceClosedMessageAndStopProcess(
-    context: ExtensionContext,
-    removedFolders: readonly { uri: { fsPath: string }; name: string }[],
-) {
-    for (const folder of removedFolders) {
-        stopWorkspaceProcess(folder.uri.fsPath);
-        window.showInformationMessage(`Workspace closed: ${folder.name}`);
-    }
-}
-
-function showWorkspaceClosedMessage() {
-    window.showInformationMessage('Workspace closed or extension deactivated.');
-}
 
 export async function activate(context: ExtensionContext) {
     const start = process.hrtime();
@@ -200,19 +101,10 @@ export async function activate(context: ExtensionContext) {
     activateBitbucketFeatures();
     activateYamlFeatures(context);
 
-    showWorkspaceLoadedMessageAndStartProcess(context);
-
-    // Listen for workspace folder changes
-    context.subscriptions.push(
-        workspace.onDidChangeWorkspaceFolders((event) => {
-            if (event.added.length > 0) {
-                showWorkspaceLoadedMessageAndStartProcess(context);
-            }
-            if (event.removed.length > 0) {
-                showWorkspaceClosedMessageAndStopProcess(context, event.removed);
-            }
-        }),
-    );
+    if (isRovoDevEnabled) {
+        setCommandContext(CommandContext.RovoDevEnabled, true);
+        initializeRovoDevProcessManager(context);
+    }
 
     Logger.info(
         `Atlassian for VS Code (v${atlascodeVersion}) activated in ${
@@ -314,13 +206,10 @@ async function sendAnalytics(version: string, globalState: Memento) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-    // On deactivate, stop all workspace processes
-    if (workspace.workspaceFolders) {
-        for (const folder of workspace.workspaceFolders) {
-            stopWorkspaceProcess(folder.uri.fsPath);
-        }
+    if (isRovoDevEnabled) {
+        deactivateRovoDevProcessManager();
     }
-    showWorkspaceClosedMessage();
+
     unregisterErrorReporting();
     FeatureFlagClient.dispose();
     NotificationManagerImpl.getInstance().stopListening();

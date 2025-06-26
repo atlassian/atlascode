@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test("Onboarding flow's navigation among pages works", async ({ page }) => {
-    await page.goto('http://[::1]:9988/');
+    await page.goto('http://localhost:9988/');
 
     await page.getByRole('tab', { name: 'Atlassian' }).click();
     await page.waitForTimeout(250);
@@ -57,7 +57,7 @@ test("Onboarding flow's navigation among pages works", async ({ page }) => {
 });
 
 test('Authenticating with Jira works, and assigned items are displayed', async ({ page }) => {
-    await page.goto('http://[::1]:9988/');
+    await page.goto('http://localhost:9988/');
 
     await page.getByRole('tab', { name: 'Atlassian' }).click();
     await page.waitForTimeout(250);
@@ -109,7 +109,13 @@ test('Authenticating with Jira works, and assigned items are displayed', async (
             .getByRole('region', { name: 'Authentication authenticate' })
             .getByText('mockedteams.atlassian.net'),
     ).toBeVisible();
+
+    // I can view all issues assigned to me
     await expect(page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' })).toBeVisible();
+    await expect(page.getByRole('treeitem', { name: 'BTS-3 - Improve Dropdown Menu Responsiveness' })).toBeVisible();
+    await expect(page.getByRole('treeitem', { name: 'BTS-4 - Resolve API Timeout Issues' })).toBeVisible();
+    await expect(page.getByRole('treeitem', { name: 'BTS-5 - Fix Database Connection Errors' })).toBeVisible();
+    await expect(page.getByRole('treeitem', { name: 'BTS-6 - Fix Button Alignment Issue' })).toBeVisible();
 
     //await expect(page).toHaveScreenshot();
 });

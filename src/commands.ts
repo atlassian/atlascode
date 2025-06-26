@@ -49,7 +49,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 })
                 .then((text) => {
                     if (text?.trim()) {
-                        Container.rovodevWebviewProvder.invokePrompt(text);
+                        Container.rovodevWebviewProvder.invokeRovoDevAskCommand(text);
                     }
                 });
         }),

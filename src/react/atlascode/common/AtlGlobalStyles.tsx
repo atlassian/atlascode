@@ -18,6 +18,15 @@ const useStyles = makeStyles(
                     display: 'inline-block',
                     'overflow-x': 'auto',
                     'vertical-align': 'middle',
+                    color: 'var(--vscode-editor-foreground) !important',
+                },
+                'pre code': {
+                    background: 'var(--vscode-editor-background) !important', // Ensure code blocks have the correct background
+                    'border-radius': '4px',
+                    border: '1px solid var(--vscode-editorWidget-border)',
+                    width: '100%',
+                    'font-size': 'var(--vscode-editor-font-size) !important', // Ensure code blocks have the correct font size
+                    'font-family': 'var(--vscode-editor-font-family) !important', // Ensure code blocks have the correct font family
                 },
                 'img.emoji': {
                     'max-height': '1.5em',
@@ -259,147 +268,6 @@ const useStyles = makeStyles(
                 '.suggestion-item-list': { background: '#fff', border: '1px solid #999' },
                 '.suggestion-item': { padding: '5px' },
                 '.suggestion-item:before': { borderTop: '1px solid' },
-                'pre code.hljs': {
-                    display: 'block',
-                    'overflow-x': 'auto',
-                    padding: '1em',
-                    background: 'var(--vscode-editor-background)',
-                },
-                'code.hljs': {
-                    padding: '3px 5px',
-                },
-                /*
-                 * Visual Studio 2015 dark style
-                 * Author: Nicolas LLOBERA <nllobera@gmail.com>
-                 */
-                '.hljs': {
-                    color: 'var(--vscode-editor-foreground)',
-                },
-                '.hljs-keyword': {
-                    color: '#569CD6',
-                },
-                '.hljs-literal': {
-                    color: '#569CD6',
-                },
-                '.hljs-symbol': {
-                    color: '#569CD6',
-                },
-                '.hljs-name': {
-                    color: '#569CD6',
-                },
-                '.hljs-link': {
-                    color: '#569CD6',
-                    'text-decoration': 'underline',
-                },
-                '.hljs-built_in': {
-                    color: '#4EC9B0',
-                },
-                '.hljs-type': {
-                    color: '#4EC9B0',
-                },
-                '.hljs-number': {
-                    color: '#B8D7A3',
-                },
-                '.hljs-class': {
-                    color: '#B8D7A3',
-                },
-                '.hljs-string': {
-                    color: '#D69D85',
-                },
-                '.hljs-meta .hljs-string': {
-                    color: '#D69D85',
-                },
-                '.hljs-regexp': {
-                    color: '#9A5334',
-                },
-                '.hljs-template-tag': {
-                    color: '#9A5334',
-                },
-                '.hljs-subst': {
-                    color: '#DCDCDC',
-                },
-                '.hljs-function': {
-                    color: '#DCDCDC',
-                },
-                '.hljs-title': {
-                    color: '#DCDCDC',
-                },
-                '.hljs-params': {
-                    color: '#DCDCDC',
-                },
-                '.hljs-formula': {
-                    color: '#DCDCDC',
-                },
-                '.hljs-comment': {
-                    color: '#57A64A',
-                    'font-style': 'italic',
-                },
-                '.hljs-quote': {
-                    color: '#57A64A',
-                    'font-style': 'italic',
-                },
-                '.hljs-doctag': {
-                    color: '#608B4E',
-                },
-                '.hljs-meta': {
-                    color: '#9B9B9B',
-                },
-                '.hljs-meta .hljs-keyword': {
-                    color: '#9B9B9B',
-                },
-                '.hljs-tag': {
-                    color: '#9B9B9B',
-                },
-                '.hljs-variable': {
-                    color: '#BD63C5',
-                },
-                '.hljs-template-variable': {
-                    color: '#BD63C5',
-                },
-                '.hljs-attr': {
-                    color: '#9CDCFE',
-                },
-                '.hljs-attribute': {
-                    color: '#9CDCFE',
-                },
-                '.hljs-section': {
-                    color: 'gold',
-                },
-                '.hljs-emphasis': {
-                    'font-style': 'italic',
-                },
-                '.hljs-strong': {
-                    'font-weight': 'bold',
-                },
-
-                '.hljs-bullet': {
-                    color: '#D7BA7D',
-                },
-                '.hljs-selector-tag': {
-                    color: '#D7BA7D',
-                },
-                '.hljs-selector-id': {
-                    color: '#D7BA7D',
-                },
-                '.hljs-selector-class': {
-                    color: '#D7BA7D',
-                },
-                '.hljs-selector-attr': {
-                    color: '#D7BA7D',
-                },
-                '.hljs-selector-pseudo': {
-                    color: '#D7BA7D',
-                },
-                '.hljs-addition': {
-                    'background-color': '#144212',
-                    display: 'inline-block',
-                    width: '100%',
-                },
-                '.hljs-deletion': {
-                    'background-color': '#600',
-                    display: 'inline-block',
-                    width: '100%',
-                },
             },
         }) as const,
 );
