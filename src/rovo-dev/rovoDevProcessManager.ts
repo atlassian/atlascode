@@ -1,6 +1,7 @@
 import { ChildProcess, spawn } from 'child_process';
 import { isBasicAuthInfo, ProductJira } from 'src/atlclients/authInfo';
 import { Container } from 'src/container';
+import { Resources } from 'src/resources';
 import { Disposable, ExtensionContext, window, workspace } from 'vscode';
 
 import { rovodevInfo } from '../constants';
@@ -73,7 +74,9 @@ function stopWorkspaceProcess(workspacePath: string) {
 // Helper to start the background process
 function startWorkspaceProcess(context: ExtensionContext, workspacePath: string, port: number) {
     stopWorkspaceProcess(workspacePath);
-    const rovoDevPath = workspace.getConfiguration('atlascode.rovodev').get<string>('executablePath') || undefined;
+
+    const rovoDevPath =
+        workspace.getConfiguration('atlascode.rovodev').get<string>('executablePath') || Resources.rovoDevPath;
 
     if (!rovoDevPath) {
         window.showErrorMessage('Rovodev: Environment variables is not set, disabling the feature.');
