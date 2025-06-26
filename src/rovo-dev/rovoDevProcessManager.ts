@@ -84,30 +84,44 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
     }
 
     getCloudCredentials().then((creds) => {
+        const defaultUsername = 'cooluser@atlassian.com';
         if (!creds) {
-            window.showErrorMessage(
-                'Rovodev: No cloud credentials found. This feature needs an API key authentication',
-            );
-            return;
+            window.showInformationMessage('Rovodev: No cloud credentials found. Using default authentication.');
         }
 
-        const { username, key, host } = creds;
-        window.showInformationMessage(`Rovodev: using cloud credentials for ${username} on ${host}`);
+        const { username, key, host } = creds || {};
+        if (host) {
+            window.showInformationMessage(`Rovodev: using cloud credentials for ${username} on ${host}`);
+        }
+
+        const env: NodeJS.ProcessEnv = {
+            USER: process.env.USER,
+            USER_EMAIL: username || defaultUsername,
+            ...(key ? { USER_API_TOKEN: key } : {}),
+        };
+        let stderrData = '';
 
         const proc = spawn(rovoDevPath, [`serve`, `${port}`], {
             cwd: workspacePath,
-            stdio: 'ignore', // Don't clutter output
+            stdio: ['ignore', 'pipe', 'pipe'],
             detached: true,
-            env: {
-                USER_EMAIL: username,
-                USER_API_TOKEN: key,
-            },
+            env,
         });
+
+        if (proc.stderr) {
+            proc.stderr.on('data', (data) => {
+                stderrData += data.toString();
+            });
+        }
 
         proc.on('exit', (code, signal) => {
             window.showErrorMessage(
                 `Rovodev: Process for workspace ${workspacePath} exited unexpectedly with code ${code} and signal ${signal}`,
             );
+            if (code !== 0) {
+                window.showErrorMessage(`Rovodev: Process exited with code ${code}`);
+                console.error(`Rovodev: Process exited with code ${code} and signal ${signal}, stderr: ${stderrData}`);
+            }
             delete workspaceProcessMap[workspacePath];
         });
 
