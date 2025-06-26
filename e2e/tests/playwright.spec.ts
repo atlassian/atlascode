@@ -215,7 +215,7 @@ test('Update description flow', async ({ page, request }) => {
     await request.delete(`http://wiremock-mockedteams:8080/__admin/mappings/${id}`);
 });
 
-test('Add comment flow', async ({ page }) => {
+test('Add comment flow', async ({ page, request }) => {
     const commentText = 'This is a test comment added via e2e test';
 
     await page.goto('http://localhost:9988/');
@@ -246,7 +246,19 @@ test('Add comment flow', async ({ page }) => {
 
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
-    const issueFrame = page.frameLocator('iframe.webview.ready').frameLocator('iframe[title="Jira Issue"]');
+    const frameHandle = await page.frameLocator('iframe.webview').locator('iframe[title="Jira Issue"]').elementHandle();
+
+    if (!frameHandle) {
+        throw new Error('iframe element not found');
+    }
+    const issueFrame = await frameHandle.contentFrame();
+
+    if (!issueFrame) {
+        throw new Error('iframe element not found');
+    }
+    await issueFrame.waitForLoadState('domcontentloaded');
+
+    await expect(issueFrame.locator('body')).toBeVisible({ timeout: 15000 });
 
     // Wait for the iframe to be ready and the comment textarea to be visible
     await expect(issueFrame.getByPlaceholder('Add a comment...')).toBeVisible({ timeout: 10000 });
@@ -261,17 +273,12 @@ test('Add comment flow', async ({ page }) => {
     await page.waitForTimeout(1000);
 
     // Set up WireMock API for comment creation
-    const api = await request.newContext({
-        baseURL: 'http://wiremock-mockedteams:8080',
-        ignoreHTTPSErrors: true,
-    });
-
     const issueJSON = JSON.parse(fs.readFileSync('e2e/wiremock-mappings/mockedteams/BTS-1/bts1.json', 'utf-8'));
     const updatedIssue = updateIssueField(issueJSON, {
         comment: commentText,
     });
 
-    const response = await api.post('/__admin/mappings', {
+    const response = await request.post('http://wiremock-mockedteams:8080/__admin/mappings', {
         data: {
             request: {
                 method: 'GET',
@@ -298,5 +305,5 @@ test('Add comment flow', async ({ page }) => {
 
     await expect(issueFrame.locator('.jira-comment-author')).toBeVisible();
 
-    await api.delete(`/__admin/mappings/${id}`);
+    await request.delete(`http://wiremock-mockedteams:8080/__admin/mappings/${id}`);
 });
