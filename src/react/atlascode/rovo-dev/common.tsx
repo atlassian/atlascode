@@ -3,6 +3,7 @@ import CheckIcon from '@atlaskit/icon/glyph/check';
 import CrossIcon from '@atlaskit/icon/glyph/cross';
 import { Marked } from '@ts-stack/markdown';
 import React, { useCallback } from 'react';
+import { RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import {
     agentMessageStyles,
@@ -211,10 +212,18 @@ export const UpdatedFilesComponent: React.FC<{
     modifiedFiles: ToolReturnParseResult[];
     onUndo: (filePath: string[]) => void;
     onAccept: (filePath: string[]) => void;
+    onCreatePR: () => void;
     openDiff: OpenFileFunc;
-}> = ({ modifiedFiles, onUndo, onAccept, openDiff }) => {
+}> = ({ modifiedFiles, onUndo, onAccept, openDiff, onCreatePR }) => {
     const [isUndoHovered, setIsUndoHovered] = React.useState(false);
     const [isAcceptHovered, setIsAcceptHovered] = React.useState(false);
+    const [isPullRequestLoading, setIsPullRequestLoading] = React.useState(false);
+
+    window.addEventListener('message', (event) => {
+        if (event.data.type === RovoDevProviderMessageType.CreatePRComplete) {
+            setIsPullRequestLoading(false);
+        }
+    });
 
     const handleAcceptAll = useCallback(() => {
         const filePaths = modifiedFiles.map((msg) => msg.filePath).filter((path) => path !== undefined);
@@ -285,6 +294,25 @@ export const UpdatedFilesComponent: React.FC<{
                         onMouseLeave={() => setIsAcceptHovered(false)}
                     >
                         Keep
+                    </button>
+                    <button
+                        style={{
+                            color: 'var(--vscode-button-secondaryForeground)',
+                            backgroundColor: 'var(--vscode-button-background)',
+                            border: '1px solid var(--vscode-button-secondaryBorder)',
+                            ...undoAcceptButtonStyles,
+                        }}
+                        onClick={() => {
+                            setIsPullRequestLoading(true);
+                            onCreatePR();
+                        }}
+                        title="Create Pull Request"
+                    >
+                        {!isPullRequestLoading ? (
+                            <i className="codicon codicon-git-pull-request-create" />
+                        ) : (
+                            <i className="codicon codicon-loading codicon-modifier-spin" />
+                        )}
                     </button>
                 </div>
             </div>

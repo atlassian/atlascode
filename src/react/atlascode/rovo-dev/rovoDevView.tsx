@@ -347,6 +347,11 @@ const RovoDevView: React.FC = () => {
                     onUndo={undoFiles}
                     onAccept={acceptFiles}
                     openDiff={openFile}
+                    onCreatePR={() => {
+                        postMessage({
+                            type: RovoDevViewResponseType.CreatePR,
+                        });
+                    }}
                 />
                 <div style={styles.rovoDevPromptContainerStyles}>
                     <div

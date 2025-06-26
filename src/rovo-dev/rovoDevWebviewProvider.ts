@@ -23,6 +23,7 @@ import { RovoDevViewResponse, RovoDevViewResponseType } from '../react/atlascode
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient } from './rovoDevApiClient';
+import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
@@ -32,6 +33,7 @@ interface TypedWebview<MessageOut, MessageIn> extends Webview {
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
     private readonly viewType = 'atlascodeRovoDev';
+    private _prHandler = new RovoDevPullRequestHandler();
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _rovoDevApiClient?: RovoDevApiClient;
     private _initialized = false;
@@ -150,6 +152,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                 case RovoDevViewResponseType.AcceptFiles:
                     await this.executeAcceptFiles(e.filePaths);
+                    break;
+
+                case RovoDevViewResponseType.CreatePR:
+                    await this.createPR();
                     break;
             }
         });
@@ -410,6 +416,20 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
 
         await Promise.all(promises);
+    }
+
+    private async createPR() {
+        try {
+            await this._prHandler.createPR();
+        } catch (e) {
+            console.error('Error creating PR:', e);
+            await this.processError(e as Error);
+        } finally {
+            const webview = this._webView!;
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.CreatePRComplete,
+            });
+        }
     }
 
     private async executeApiWithErrorHandling<T>(

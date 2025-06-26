@@ -6,6 +6,7 @@ export const enum RovoDevViewResponseType {
     OpenFile = 'openFile',
     UndoFiles = 'undoFiles',
     AcceptFiles = 'acceptFiles',
+    CreatePR = 'createPR',
 }
 
 export type RovoDevViewResponse =
@@ -13,4 +14,5 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.CancelResponse>
     | ReducerAction<RovoDevViewResponseType.OpenFile, { filePath: string; tryShowDiff: boolean; range?: number[] }>
     | ReducerAction<RovoDevViewResponseType.UndoFiles, { filePaths: string[] }>
-    | ReducerAction<RovoDevViewResponseType.AcceptFiles, { filePaths: string[] }>;
+    | ReducerAction<RovoDevViewResponseType.AcceptFiles, { filePaths: string[] }>
+    | ReducerAction<RovoDevViewResponseType.CreatePR>;
