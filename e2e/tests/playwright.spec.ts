@@ -168,12 +168,9 @@ test('Update description flow', async ({ page, request }) => {
     if (!issueFrame) {
         throw new Error('iframe element not found');
     }
-    await issueFrame.waitForLoadState('domcontentloaded');
-
-    await expect(issueFrame.locator('body')).toBeVisible({ timeout: 15000 });
 
     // Check the existing description
-    await expect(issueFrame.getByText(oldDescription)).toBeVisible({ timeout: 50000 });
+    await expect(issueFrame.getByText(oldDescription)).toBeVisible();
 
     // Click on the description element to enter edit mode
     await issueFrame.getByText(oldDescription).click();
@@ -239,7 +236,7 @@ test('Add comment flow', async ({ page, request }) => {
     await settingsFrame.getByRole('textbox', { name: 'Password (API token)' }).fill('12345');
 
     await settingsFrame.getByRole('button', { name: 'Save Site' }).click();
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(2000);
 
     await page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' }).click();
     await page.waitForTimeout(1000);
@@ -256,12 +253,9 @@ test('Add comment flow', async ({ page, request }) => {
     if (!issueFrame) {
         throw new Error('iframe element not found');
     }
-    await issueFrame.waitForLoadState('domcontentloaded');
-
-    await expect(issueFrame.locator('body')).toBeVisible({ timeout: 15000 });
 
     // Wait for the iframe to be ready and the comment textarea to be visible
-    await expect(issueFrame.getByPlaceholder('Add a comment...')).toBeVisible({ timeout: 10000 });
+    await expect(issueFrame.getByPlaceholder('Add a comment...')).toBeVisible();
 
     // Find and click the "Add comment" button
     const commentTextarea = issueFrame.getByPlaceholder('Add a comment...');
@@ -299,7 +293,7 @@ test('Add comment flow', async ({ page, request }) => {
     await expect(addCommentButton).toBeVisible();
     await addCommentButton.click();
 
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(2000);
 
     await expect(issueFrame.getByText(commentText)).toBeVisible();
 
