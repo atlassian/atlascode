@@ -14,7 +14,6 @@ import {
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
-import debounce from 'lodash.debounce';
 import { commands, env } from 'vscode';
 
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
@@ -24,7 +23,6 @@ import { PullRequestData } from '../bitbucket/model';
 import { postComment } from '../commands/jira/postComment';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
 import { Commands } from '../constants';
-import { AssignedJiraItemsViewId } from '../constants';
 import { Container } from '../container';
 import {
     EditIssueAction,
@@ -47,11 +45,9 @@ import { isOpenPullRequest } from '../ipc/prActions';
 import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
-import { SidebarIssue } from '../jira/types';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
 import { JIRA_SYNC_DELAYS } from '../util/time';
-import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
 import { getJiraIssueUri } from '../views/jira/treeViews/utils';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
@@ -64,11 +60,6 @@ export class JiraIssueWebview
     private _issue: MinimalIssue<DetailedSiteInfo>;
     private _editUIData: EditIssueData;
     private _currentUser: User;
-
-    private debouncedRefreshExplorer = debounce(
-        () => commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer),
-        JIRA_SYNC_DELAYS.REFRESH_DEBOUNCE,
-    );
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -272,107 +263,26 @@ export class JiraIssueWebview
         return '';
     }
 
-    async syncSidebarAssigneeState(issue: MinimalIssue<DetailedSiteInfo>, newAssigneeId: string | null): Promise<void> {
-        try {
-            const { isAssignedToMe, client } = await this.initializeSync(issue, newAssigneeId);
-            this.updateSidebarIssues(issue, newAssigneeId, isAssignedToMe);
-            await this.verifyServerState(issue, newAssigneeId, client);
-            this.debouncedRefreshExplorer();
-        } catch (error) {
-            Logger.error(error as Error, 'Failed to sync assignee state', issue.key);
-            this.revertSidebarAssigneeState(issue.key);
-            throw error;
-        }
-    }
-
-    private async initializeSync(issue: MinimalIssue<DetailedSiteInfo>, newAssigneeId: string | null) {
-        const client = await Container.clientManager.jiraClient(issue.siteDetails);
-        const currentUser = await client.getCurrentUser();
-        return {
-            isAssignedToMe: newAssigneeId === currentUser.accountId,
-            client,
-        };
-    }
-
-    private updateSidebarIssues(
-        issue: MinimalIssue<DetailedSiteInfo>,
-        newAssigneeId: string | null,
-        isAssignedToMe: boolean,
-    ): void {
-        const issues = SearchJiraHelper.getIssues(AssignedJiraItemsViewId);
-        const existingIndex = issues.findIndex((i) => i.key === issue.key);
-        const updatedIssues = [...issues];
-
-        if (isAssignedToMe && existingIndex === -1) {
-            updatedIssues.push(this.createUpdatedIssue(issue, newAssigneeId));
-        } else if (!isAssignedToMe && existingIndex !== -1) {
-            updatedIssues.splice(existingIndex, 1);
-        }
-
-        SearchJiraHelper.setIssues(updatedIssues, AssignedJiraItemsViewId);
-    }
-
-    private createUpdatedIssue(issue: MinimalIssue<DetailedSiteInfo>, newAssigneeId: string | null): SidebarIssue {
-        return {
-            ...issue,
-            fields: {
-                ...((issue as any).fields ?? {}),
-                assignee: {
-                    accountId: newAssigneeId,
-                    _updateTimestamp: Date.now(),
-                },
-            },
-        };
-    }
-
-    private async verifyServerState(
-        issue: MinimalIssue<DetailedSiteInfo>,
-        newAssigneeId: string | null,
+    private async waitForAssigneeSync(
+        issueKey: string,
+        expectedId: string | null,
         client: JiraClient<DetailedSiteInfo>,
     ): Promise<void> {
-        for (let attempt = 1; attempt <= JIRA_SYNC_DELAYS.MAX_ATTEMPTS; attempt++) {
-            await new Promise((resolve) => setTimeout(resolve, JIRA_SYNC_DELAYS.VERIFICATION));
-            try {
-                const serverIssue = await client.getIssue(issue.key, ['assignee'], '');
-                const serverAssigneeId = serverIssue?.fields?.assignee?.accountId;
+        const sleep = () => new Promise<void>((r) => setTimeout(r, JIRA_SYNC_DELAYS.VERIFICATION));
 
-                if (serverAssigneeId === newAssigneeId) {
-                    return;
-                }
+        await sleep();
 
-                Logger.warn(
-                    new Error(
-                        `Assignee mismatch for ${issue.key}. Expected: ${newAssigneeId}, Got: ${serverAssigneeId} (attempt ${attempt})`,
-                    ),
-                    'Sync verification warning',
-                );
-
-                if (attempt === JIRA_SYNC_DELAYS.MAX_ATTEMPTS) {
-                    this.revertSidebarAssigneeState(issue.key);
-                }
-            } catch (error) {
-                Logger.error(error as Error, `Failed to verify assignee state on attempt ${attempt}`, issue.key);
-                if (attempt === JIRA_SYNC_DELAYS.MAX_ATTEMPTS) {
-                    this.revertSidebarAssigneeState(issue.key);
-                }
+        for (let i = 0; i < JIRA_SYNC_DELAYS.MAX_ATTEMPTS; i++) {
+            const issue = await client.getIssue(issueKey, ['assignee'], '');
+            if ((issue?.fields?.assignee?.accountId ?? null) === expectedId) {
+                break;
+            }
+            if (i < JIRA_SYNC_DELAYS.MAX_ATTEMPTS - 1) {
+                await sleep();
             }
         }
-    }
 
-    revertSidebarAssigneeState(issueKey: string): void {
-        try {
-            const issues = SearchJiraHelper.getIssues(AssignedJiraItemsViewId);
-            const filteredIssues = issues.filter((issue) => {
-                const isTargetIssue = issue.key === issueKey;
-                const hasUpdateTimestamp = (issue as any).fields?.assignee?._updateTimestamp !== null;
-                return !(isTargetIssue && hasUpdateTimestamp);
-            });
-
-            SearchJiraHelper.setIssues(filteredIssues, AssignedJiraItemsViewId);
-            this.debouncedRefreshExplorer();
-        } catch (error) {
-            Logger.error(error as Error, 'Failed to revert assignee state', issueKey);
-        }
+        await commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
     }
 
     protected async onMessageReceived(msg: Action): Promise<boolean> {
@@ -394,12 +304,6 @@ export class JiraIssueWebview
                     const newFieldValues: FieldValues = (msg as EditIssueAction).fields;
                     try {
                         const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
-
-                        if ('assignee' in newFieldValues) {
-                            const newAssigneeId = newFieldValues.assignee?.accountId ?? null;
-                            await this.syncSidebarAssigneeState(this._issue, newAssigneeId);
-                        }
-
                         await client.editIssue(this._issue!.key, newFieldValues);
                         if (
                             Object.keys(newFieldValues).some(
@@ -435,13 +339,14 @@ export class JiraIssueWebview
                             });
                         });
 
-                        commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
-                        commands.executeCommand(Commands.RefreshCustomJqlExplorer);
+                        if ('assignee' in newFieldValues) {
+                            const expectedId = newFieldValues.assignee?.accountId ?? null;
+                            await this.waitForAssigneeSync(this._issue.key, expectedId, client);
+                        }
+
+                        await commands.executeCommand(Commands.RefreshCustomJqlExplorer);
                     } catch (e) {
                         Logger.error(e, 'Error updating issue');
-                        if ('assignee' in newFieldValues) {
-                            this.revertSidebarAssigneeState(this._issue.key);
-                        }
                         this.postMessage({
                             type: 'error',
                             reason: this.formatErrorReason(e, 'Error updating issue'),
