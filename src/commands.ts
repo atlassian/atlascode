@@ -23,6 +23,7 @@ import { transitionIssue } from './jira/transitionIssue';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
 import { Logger } from './logger';
+import { toggleDiffNormalize } from './normalize';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
@@ -175,6 +176,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             diffArgs[0]();
             commands.executeCommand('vscode.diff', ...diffArgs.slice(1));
         }),
+        commands.registerCommand(Commands.BitbucketToggleDiffNormalize, toggleDiffNormalize),
         commands.registerCommand(Commands.RerunPipeline, (node: PipelineNode) => {
             rerunPipeline(node.pipeline);
         }),
