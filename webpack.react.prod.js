@@ -101,8 +101,8 @@ module.exports = {
         }),
     ],
     performance: {
-        maxEntrypointSize: 307200999,  // overridden to 300KiB, reccomended is 244KiB
-        maxAssetSize: 614400999,       // overridden to 600KiB, reccomended is 244KiB
+        maxEntrypointSize: 307200,  // overridden to 300KiB, reccomended is 244KiB
+        maxAssetSize: 614400,       // overridden to 600KiB, reccomended is 244KiB
     },
     watchOptions: {
         ignored: /node_modules/,
