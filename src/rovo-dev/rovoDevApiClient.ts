@@ -102,7 +102,7 @@ export class RovoDevApiClient {
      * @returns The file path for the cached version without Rovo Dev changes
      */
     public async getCacheFilePath(file_path: string): Promise<string> {
-        const qs = `file_path=${encodeURIComponent(file_path)};`;
+        const qs = `file_path=${encodeURIComponent(file_path)}`;
         const response = await this.fetchApi(`/v2/cache-file-path?${qs}`, 'GET');
         const data = await response.json();
         return data.cached_file_path;

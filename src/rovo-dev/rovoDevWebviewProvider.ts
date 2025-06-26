@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import path from 'path';
 import { setTimeout } from 'timers/promises';
 import {
@@ -158,7 +159,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     break;
 
                 case RovoDevViewResponseType.OpenFile:
-                    await this.executeOpenFile(e.filePath, e.range);
+                    await this.executeOpenFile(e.filePath, e.tryShowDiff, e.range);
                     break;
             }
         });
@@ -345,27 +346,43 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return (await this.rovoDevApiClient?.healthcheck(true)) || false;
     }
 
-    private async executeOpenFile(filePath: string, _range?: any[]): Promise<void> {
-        try {
+    private async executeOpenFile(filePath: string, tryShowDiff: boolean, _range?: number[]): Promise<void> {
+        let cachedFilePath: string | undefined = undefined;
+
+        if (tryShowDiff) {
+            try {
+                cachedFilePath = await this.rovoDevApiClient?.getCacheFilePath(filePath);
+            } catch {}
+        }
+
+        // Get workspace root and resolve the file path
+        let resolvedPath: string;
+
+        if (path.isAbsolute(filePath)) {
+            // If already absolute, use as-is
+            resolvedPath = filePath;
+        } else {
+            // If relative, resolve against workspace root
+            const workspaceRoot = workspace.workspaceFolders?.[0]?.uri.fsPath;
+            if (!workspaceRoot) {
+                throw new Error('No workspace folder found');
+            }
+            resolvedPath = path.join(workspaceRoot, filePath);
+        }
+
+        if (cachedFilePath && fs.existsSync(cachedFilePath)) {
+            commands.executeCommand(
+                'vscode.diff',
+                Uri.file(cachedFilePath),
+                Uri.file(resolvedPath),
+                `${filePath} (Rovo Dev)`,
+            );
+        } else {
             let range: Range | undefined;
             if (_range && Array.isArray(_range)) {
                 const startPosition = new Position(_range[0], 0);
                 const endPosition = new Position(_range[1], 0);
                 range = new Range(startPosition, endPosition);
-            }
-            // Get workspace root and resolve the file path
-            let resolvedPath: string;
-
-            if (path.isAbsolute(filePath)) {
-                // If already absolute, use as-is
-                resolvedPath = filePath;
-            } else {
-                // If relative, resolve against workspace root
-                const workspaceRoot = workspace.workspaceFolders?.[0]?.uri.fsPath;
-                if (!workspaceRoot) {
-                    throw new Error('No workspace folder found');
-                }
-                resolvedPath = path.join(workspaceRoot, filePath);
             }
 
             const fileUri = Uri.file(resolvedPath);
@@ -374,9 +391,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 preview: true,
                 selection: range || undefined,
             });
-        } catch (error) {
-            console.error('Error opening file:', error);
-            await this.processError(error);
         }
     }
 

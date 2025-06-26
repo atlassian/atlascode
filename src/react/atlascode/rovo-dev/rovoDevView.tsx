@@ -250,20 +250,13 @@ const RovoDevView: React.FC = () => {
     }, [postMessage, currentState, setCurrentState]);
 
     const openFile = useCallback(
-        (filePath: string, range?: any[]) => {
-            // Implement file opening logic here
-            if (!range || range.length !== 2) {
-                postMessage({
-                    type: RovoDevViewResponseType.OpenFile,
-                    filePath,
-                });
-            } else {
-                postMessage({
-                    type: RovoDevViewResponseType.OpenFile,
-                    filePath,
-                    range,
-                });
-            }
+        (filePath: string, tryShowDiff?: boolean, range?: number[]) => {
+            postMessage({
+                type: RovoDevViewResponseType.OpenFile,
+                filePath,
+                tryShowDiff: !!tryShowDiff,
+                range: range && range.length === 2 ? range : undefined,
+            });
         },
         [postMessage],
     );
@@ -311,7 +304,7 @@ const RovoDevView: React.FC = () => {
                     onAccept={(paths: string[]) => {
                         console.log('Accepting changes', paths);
                     }}
-                    openDiff={(filePath: string) => openFile(filePath)}
+                    openDiff={(filePath: string) => openFile(filePath, true)}
                 />
                 <div style={styles.rovoDevPromptContainerStyles}>
                     <div

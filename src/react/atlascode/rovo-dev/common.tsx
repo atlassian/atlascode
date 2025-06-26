@@ -30,9 +30,13 @@ Marked.setOptions({
     gfm: true,
 });
 
+interface OpenFileFunc {
+    (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
+}
+
 export const ToolDrawer: React.FC<{
     content: ToolReturnGenericMessage[];
-    openFile: (filePath: string, lineRange?: any[]) => void;
+    openFile: OpenFileFunc;
     isStreaming?: boolean;
 }> = ({ content, openFile, isStreaming = false }) => {
     const [isOpen, setIsOpen] = React.useState(false);
@@ -108,7 +112,7 @@ export const ToolCallItem: React.FC<{ msg: ToolCallMessage }> = ({ msg }) => {
 
 const ToolReturnParsedItem: React.FC<{
     msg: ToolReturnParseResult;
-    openFile: (filePath: string, lineRange?: any[]) => void;
+    openFile: OpenFileFunc;
 }> = ({ msg, openFile }) => {
     const [isHovered, setIsHovered] = React.useState(false);
 
@@ -142,7 +146,7 @@ const ToolReturnParsedItem: React.FC<{
 export const ChatMessageItem: React.FC<{
     msg: DefaultMessage;
     index?: number;
-    openFile: (filePath: string, lineRange?: any[]) => void;
+    openFile: OpenFileFunc;
 }> = ({ msg, index, openFile }) => {
     const messageTypeStyles = msg.author.toLowerCase() === 'user' ? userMessageStyles : agentMessageStyles;
 
@@ -187,11 +191,7 @@ export const ChatMessageItem: React.FC<{
     );
 };
 
-export const renderChatHistory = (
-    msg: ChatMessage,
-    index: number,
-    openFile: (filePath: string, lineRange?: any[]) => void,
-) => {
+export const renderChatHistory = (msg: ChatMessage, index: number, openFile: OpenFileFunc) => {
     switch (msg.author) {
         case 'ToolReturn':
             const parsedMessages = parseToolReturnMessage(msg);
@@ -210,7 +210,7 @@ export const UpdatedFilesComponent: React.FC<{
     modifiedFiles: ToolReturnGenericMessage[];
     onUndo: (filePath: string[]) => void;
     onAccept: (filePath: string[]) => void;
-    openDiff: (filePath: string) => void;
+    openDiff: OpenFileFunc;
 }> = ({ modifiedFiles, onUndo, onAccept, openDiff }) => {
     const [isUndoHovered, setIsUndoHovered] = React.useState(false);
     const [isAcceptHovered, setIsAcceptHovered] = React.useState(false);
@@ -327,7 +327,7 @@ export const ModifiedFileItem: React.FC<{
     msg: ToolReturnParseResult;
     onUndo?: (filePath: string) => void;
     onAccept?: (filePath: string) => void;
-    openDiff: (filePath: string) => void;
+    openDiff: OpenFileFunc;
 }> = ({ msg, onUndo, onAccept, openDiff }) => {
     const [isHovered, setIsHovered] = React.useState(false);
     const [isUndoHovered, setIsUndoHovered] = React.useState(false);

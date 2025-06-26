@@ -9,4 +9,4 @@ export const enum RovoDevViewResponseType {
 export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.Prompt, { text: string }>
     | ReducerAction<RovoDevViewResponseType.CancelResponse>
-    | ReducerAction<RovoDevViewResponseType.OpenFile, { filePath: string; range?: any[] }>;
+    | ReducerAction<RovoDevViewResponseType.OpenFile, { filePath: string; tryShowDiff: boolean; range?: number[] }>;
