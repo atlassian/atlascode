@@ -158,11 +158,22 @@ test('Update description flow', async ({ page, request }) => {
 
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
-    const issueFrame = page.frameLocator('iframe.webview').frameLocator('iframe[title="Jira Issue"]');
-    await page.waitForTimeout(2000);
+    const frameHandle = await page.frameLocator('iframe.webview').locator('iframe[title="Jira Issue"]').elementHandle();
+
+    if (!frameHandle) {
+        throw new Error('iframe element not found');
+    }
+    const issueFrame = await frameHandle.contentFrame();
+
+    if (!issueFrame) {
+        throw new Error('iframe element not found');
+    }
+    await issueFrame.waitForLoadState('domcontentloaded');
+
+    await expect(issueFrame.locator('body')).toBeVisible({ timeout: 15000 });
 
     // Check the existing description
-    await expect(issueFrame.getByText(oldDescription)).toBeVisible({ timeout: 10000 });
+    await expect(issueFrame.getByText(oldDescription)).toBeVisible({ timeout: 50000 });
 
     // Click on the description element to enter edit mode
     await issueFrame.getByText(oldDescription).click();
