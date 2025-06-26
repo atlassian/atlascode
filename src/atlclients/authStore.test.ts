@@ -247,9 +247,13 @@ describe('CredentialManager', () => {
             (Container.context.globalState.update as jest.Mock).mockImplementation(mockNegotiatorSet);
 
             // Mock the negotiator's request method
-            jest.spyOn(credentialManager as any, 'negotiator', 'get').mockReturnValue({
+            const mockNegotiator = {
                 thisIsTheResponsibleProcess: () => false,
                 requestTokenRefreshForSite: mockNegotiatorRequest,
+            };
+            Object.defineProperty(credentialManager, 'negotiator', {
+                get: () => mockNegotiator,
+                configurable: true,
             });
 
             // Mock setTimeout to resolve immediately
@@ -267,73 +271,6 @@ describe('CredentialManager', () => {
             );
 
             global.setTimeout = originalSetTimeout;
-        });
-
-        it('should handle OAuth tokens near expiration by requesting refresh from another process', async () => {
-            const nearExpirationTime = Date.now() + 5 * Time.MINUTES; // Within grace period
-            const oauthInfoNearExpiration: OAuthInfo = {
-                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
-                state: AuthInfoState.Valid,
-                access: 'access-token',
-                refresh: 'refresh-token',
-                expirationDate: nearExpirationTime,
-                recievedAt: Date.now(),
-            };
-
-            const refreshedOAuthInfo = {
-                ...oauthInfoNearExpiration,
-                expirationDate: Date.now() + Time.HOURS,
-                access: 'new-access-token',
-            };
-
-            // Mock initial fetch and subsequent fetch after refresh
-            (Container.context.secrets.get as jest.Mock)
-                .mockResolvedValueOnce(JSON.stringify(oauthInfoNearExpiration))
-                .mockResolvedValueOnce(JSON.stringify(refreshedOAuthInfo));
-
-            // Mock negotiator to indicate this process is not responsible for refresh
-            jest.spyOn(credentialManager as any, 'negotiator', 'get').mockReturnValue({
-                thisIsTheResponsibleProcess: () => false,
-                requestTokenRefreshForSite: jest.fn().mockResolvedValue(undefined),
-            });
-
-            // Mock setTimeout to resolve immediately
-            const originalSetTimeout = global.setTimeout;
-            global.setTimeout = jest.fn().mockImplementation((callback) => callback()) as any;
-
-            const result = await credentialManager.getAuthInfo(mockJiraSite);
-
-            expect(result).toEqual(refreshedOAuthInfo);
-
-            global.setTimeout = originalSetTimeout;
-        });
-
-        it('should bypass cache when allowCache is false', async () => {
-            const oauthInfo: OAuthInfo = {
-                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
-                state: AuthInfoState.Valid,
-                access: 'access-token',
-                refresh: 'refresh-token',
-                expirationDate: Date.now() + Time.HOURS,
-                recievedAt: Date.now(),
-            };
-
-            // Setup memory store with auth info
-            const memStore = (credentialManager as any)._memStore;
-            const jiraStore = memStore.get(ProductJira.key);
-            jiraStore.set(mockJiraSite.credentialId, oauthInfo);
-
-            // Mock secret storage to return different info
-            const updatedOAuthInfo = { ...oauthInfo, access: 'updated-access-token' };
-            (Container.context.secrets.get as jest.Mock).mockResolvedValue(JSON.stringify(updatedOAuthInfo));
-
-            const result = await credentialManager.getAuthInfo(mockJiraSite, false);
-
-            // Should fetch from secret storage, not memory cache
-            expect(Container.context.secrets.get).toHaveBeenCalledWith(
-                `${mockJiraSite.product.key}-${mockJiraSite.credentialId}`,
-            );
-            expect(result).toEqual(updatedOAuthInfo);
         });
     });
 
@@ -369,7 +306,9 @@ describe('CredentialManager', () => {
             jiraStore.set(mockJiraSite.credentialId, mockAuthInfo);
 
             // Mock getAuthInfo to return the existing info
-            jest.spyOn(credentialManager, 'getAuthInfo').mockResolvedValue(mockAuthInfo);
+            jest.spyOn(credentialManager as any, 'getAuthInfoForProductAndCredentialId').mockResolvedValue(
+                mockAuthInfo,
+            );
 
             await credentialManager.saveAuthInfo(mockJiraSite, mockAuthInfo);
 

@@ -100,7 +100,7 @@ export class CredentialManager implements Disposable {
             productAuths = new Map<string, AuthInfo>();
         }
 
-        const existingInfo = await this.getAuthInfo(site, false);
+        const existingInfo = await this.getAuthInfoForProductAndCredentialId(site, false);
 
         this._memStore.set(site.product.key, productAuths.set(site.credentialId, info));
 
