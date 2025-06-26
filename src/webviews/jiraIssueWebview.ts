@@ -140,7 +140,9 @@ export class JiraIssueWebview
 
             this._editUIData.recentPullRequests = [];
             this._editUIData.currentUser = emptyUser;
-
+            // Maybe do some caching here. I do not see a reason to update the issue anytime we need the UI of the issue
+            // everytime we load back onto the issue. This will make redundant calls if the issue does not change frequently.
+            // Could only see this being problem if the task is constantly changing users or specs but highly unlikely for avg team.
             const msg = this._editUIData;
 
             msg.type = 'update';
@@ -161,14 +163,17 @@ export class JiraIssueWebview
         }
     }
 
+    // Right now I see no implementation for a cache based update. For any epics, this would constantly fetches information even if there were no changes at all.
+    // Since this function only runs for epics no problem for smaller amounts of epics in Jira issues but for large amounts of epics, this puts a serious tax to
+    // fetching data and JQL querying.
     async updateEpicChildren() {
         if (this._issue.isEpic) {
             const site = this._issue.siteDetails;
             const client = await Container.clientManager.jiraClient(site);
             const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
-            const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
+            const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site); // Redandant call, line above already calls for epic info for the same issue, why not change the return type to include both?
             const res = await client.searchForIssuesUsingJqlGet(
-                `${epicInfo.epicLink.id} = "${this._issue.key}" order by lastViewed DESC`,
+                `${epicInfo.epicLink.id} = "${this._issue.key}" order by lastViewed DESC`, // JQL query
                 fields,
             );
             const searchResults = await readSearchResults(res, site, epicInfo);
@@ -185,16 +190,18 @@ export class JiraIssueWebview
         }
     }
 
+    // This is a serious performant demandant function (detailed in the recentPullRequests function). Espescially when in the context of how often the function is called.
     async updateRelatedPullRequests() {
         const relatedPrs = await this.recentPullRequests();
         if (relatedPrs.length > 0) {
             this.postMessage({ type: 'pullRequestUpdate', recentPullRequests: relatedPrs });
         }
     }
-
+    // **Overall calling the jiraClient is not bad in terms of preformace but if we stick to this API, might as well conslidate to reduce redandant calls (low hanging fruit since this functions uses a caching mechnism)
+    // Also this can involve updating the pi-client if we combine updateWatchers and updateVote
     async updateWatchers() {
         if (this._editUIData.fieldValues['watches'] && this._editUIData.fieldValues['watches'].watchCount > 0) {
-            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+            const client = await Container.clientManager.jiraClient(this._issue.siteDetails); // Maybe there is an area of improvement here with GraphQL. I see no reason as to why we have to call the jiraClient function everytime we want the watchers information
             const watches = await client.getWatchers(this._issue.key);
 
             this._editUIData.fieldValues['watches'] = watches;
@@ -207,7 +214,7 @@ export class JiraIssueWebview
 
     async updateVoters() {
         if (this._editUIData.fieldValues['votes'] && this._editUIData.fieldValues['votes'].votes > 0) {
-            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+            const client = await Container.clientManager.jiraClient(this._issue.siteDetails); // Same argument as for updateWatchers(), or maybe conslidate the functions since both functions call to the same client updateWatchersAndVotes.
             const votes = await client.getVotes(this._issue.key);
 
             this._editUIData.fieldValues['votes'] = votes;
@@ -974,6 +981,7 @@ export class JiraIssueWebview
         }
 
         const prs = await Container.bitbucketContext.recentPullrequestsForAllRepos();
+        // Is there a faster way we can query for related PRs for an issue? Pull
         const relatedPrs = await Promise.all(
             prs.map(async (pr) => {
                 const issueKeys = [...parseJiraIssueKeys(pr.data.title), ...parseJiraIssueKeys(pr.data.rawSummary)];
