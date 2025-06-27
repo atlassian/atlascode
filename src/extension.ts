@@ -22,11 +22,6 @@ import {
     BB_PIPELINES_FILENAME,
 } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
-import {
-    deactivateRovoDevProcessManager,
-    initializeRovoDevProcessManager,
-    isRovoDevEnabled,
-} from './rovo-dev/rovoDevProcessManager';
 import { GitExtension } from './typings/git';
 import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
 import { NotificationManagerImpl } from './views/notifications/notificationManager';
@@ -100,11 +95,6 @@ export async function activate(context: ExtensionContext) {
     // icon to appear in the activity bar
     activateBitbucketFeatures();
     activateYamlFeatures(context);
-
-    if (isRovoDevEnabled) {
-        setCommandContext(CommandContext.RovoDevEnabled, true);
-        initializeRovoDevProcessManager(context);
-    }
 
     Logger.info(
         `Atlassian for VS Code (v${atlascodeVersion}) activated in ${
@@ -206,10 +196,6 @@ async function sendAnalytics(version: string, globalState: Memento) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-    if (isRovoDevEnabled) {
-        deactivateRovoDevProcessManager();
-    }
-
     unregisterErrorReporting();
     FeatureFlagClient.dispose();
     NotificationManagerImpl.getInstance().stopListening();

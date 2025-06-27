@@ -82,21 +82,7 @@ export const enum Commands {
     DisableHelpExplorer = 'atlascode.disableHelpExplorer',
     CreateNewJql = 'atlascode.jira.createNewJql',
     ToDoIssue = 'atlascode.jira.todoIssue',
-    RovodevAsk = 'atlascode.rovodev.askRovoDev',
-    RovodevNewSession = 'atlascode.rovodev.newChatSession',
     InProgressIssue = 'atlascode.jira.inProgressIssue',
     DoneIssue = 'atlascode.jira.doneIssue',
     ShowOnboardingFlow = 'atlascode.showOnboardingFlow',
 }
-
-// Rovodev port mapping settings
-export const rovodevInfo = {
-    mappingKey: 'workspacePortMapping',
-    envVars: {
-        port: 'ROVODEV_PORT',
-    },
-    portRange: {
-        start: 40000,
-        end: 41000,
-    },
-};

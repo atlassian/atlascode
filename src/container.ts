@@ -29,8 +29,6 @@ import { CommonActionMessageHandler } from './lib/webview/controller/common/comm
 import { Logger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
 import { Pipeline } from './pipelines/model';
-import { isRovoDevEnabled } from './rovo-dev/rovoDevProcessManager';
-import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
 import { FeatureFlagClient, FeatureFlagClientInitError } from './util/featureFlags';
@@ -195,12 +193,6 @@ export class Container {
         SearchJiraHelper.initialize();
         context.subscriptions.push(new CustomJQLViewProvider());
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
-
-        if (isRovoDevEnabled) {
-            context.subscriptions.push(
-                (this._rovodevWebviewProvder = new RovoDevWebviewProvider(context.extensionPath, context.globalState)),
-            );
-        }
 
         this._onboardingProvider = new OnboardingProvider();
     }
@@ -403,10 +395,5 @@ export class Container {
     private static _onboardingProvider: OnboardingProvider;
     public static get onboardingProvider() {
         return this._onboardingProvider;
-    }
-
-    private static _rovodevWebviewProvder: RovoDevWebviewProvider;
-    public static get rovodevWebviewProvder() {
-        return this._rovodevWebviewProvder;
     }
 }

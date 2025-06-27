@@ -11,7 +11,6 @@ export enum CommandContext {
     JiraLoginTree = 'atlascode:jiraLoginTreeEnabled',
     IsJiraAuthenticated = 'atlascode:isJiraAuthenticated',
     IsBBAuthenticated = 'atlascode:isBBAuthenticated',
-    RovoDevEnabled = 'atlascode:rovoDevEnabled',
 }
 
 export function setCommandContext(key: CommandContext | string, value: any) {

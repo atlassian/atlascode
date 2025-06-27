@@ -22,7 +22,5 @@ e2e/.resources/
 e2e/.test-extensions/
 *.orig
 test-results/*
-resources/rovo-dev/*
-!resources/rovo-dev/script.sh
 
 !.vscode/launch.json.example

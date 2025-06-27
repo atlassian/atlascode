@@ -3,7 +3,6 @@ import path from 'path';
 import { ExtensionContext, Uri } from 'vscode';
 
 export class Resources {
-    static rovoDevPath: string = '';
     static pipelinesSchemaPath: string = '';
     static icons: Map<string, Uri | { light: Uri; dark: Uri }> = new Map();
     static charlesCert: string;
@@ -141,9 +140,5 @@ export function registerResources(vscodeContext: ExtensionContext) {
 
     Resources.pipelinesSchemaPath = path
         .join(vscodeContext.extensionPath, 'resources', 'schemas', 'pipelines-schema.json')
-        .toString();
-
-    Resources.rovoDevPath = path
-        .join(vscodeContext.extensionPath, 'resources', 'rovo-dev', 'atlassian_cli_rovodev')
         .toString();
 }

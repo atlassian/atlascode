@@ -5,14 +5,7 @@ import { Uri } from 'vscode';
 
 import { Resources } from '../../resources';
 
-export function getHtmlForView(
-    extensionPath: string,
-    baseUri: Uri,
-    cspSource: string,
-    viewId: string,
-    styles?: Uri,
-    syntaxStyles?: Uri,
-): string {
+export function getHtmlForView(extensionPath: string, baseUri: Uri, cspSource: string, viewId: string): string {
     const manifest = JSON.parse(readFileSync(pathJoin(extensionPath, 'build', 'asset-manifest.json')).toString());
     const mainScript = manifest[`mui.js`];
 
@@ -24,8 +17,6 @@ export function getHtmlForView(
             scriptUri: `build/${mainScript}`,
             baseUri: baseUri,
             cspSource: cspSource,
-            styleUri: styles || '',
-            syntaxStyles: syntaxStyles || '',
         });
     } else {
         return Mustache.render(Resources.htmlNotFound, { resource: 'reactWebviewHtml' });

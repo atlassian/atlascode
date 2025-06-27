@@ -104,10 +104,7 @@ module.exports = [
                 'process.env.ATLASCODE_FX3_TIMEOUT': JSON.stringify(process.env.ATLASCODE_FX3_TIMEOUT),
                 'process.env.ATLASCODE_FF_OVERRIDES': JSON.stringify(process.env.ATLASCODE_FF_OVERRIDES),
                 'process.env.ATLASCODE_EXP_OVERRIDES_BOOL': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_BOOL),
-                'process.env.ATLASCODE_EXP_OVERRIDES_STRING': JSON.stringify(
-                    process.env.ATLASCODE_EXP_OVERRIDES_STRING,
-                ),
-                'process.env.ROVODEV_ENABLED': JSON.stringify(process.env.ROVODEV_ENABLED),
+                'process.env.ATLASCODE_EXP_OVERRIDES_STRING': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_STRING),
             }),
         ],
         externals: ['vscode'],
