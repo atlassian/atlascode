@@ -190,10 +190,19 @@ test('I can transition a Jira', async ({ page }) => {
 
     await page.getByRole('tab', { name: 'BTS-1' }).getByLabel(/close/i).click();
     await page.waitForTimeout(2000);
-
     await issueInTree.click();
-    await page.waitForTimeout(2000);
-    const issueFramePost = page.frameLocator('iframe.webview').frameLocator('iframe[title="Jira Issue"]');
+    const frameHandle = await page.frameLocator('iframe.webview').locator('iframe[title="Jira Issue"]').elementHandle();
+
+    if (!frameHandle) {
+        throw new Error('iframe element not found');
+    }
+    const issueFramePost = await frameHandle.contentFrame();
+
+    if (!issueFramePost) {
+        throw new Error('iframe element not found');
+    }
+    await issueFramePost.waitForLoadState('domcontentloaded');
+    await expect(issueFramePost.locator('body')).toBeVisible({ timeout: 15000 });
     const buttonInReview = issueFramePost.getByRole('button', { name: newStatus });
     await expect(buttonInReview).toBeVisible();
 
