@@ -50,7 +50,13 @@ module.exports = {
             cacheGroups: {
                 styles: {
                     name: 'main',
-                    test: /\.css$/,
+                    test: /^\.\/src\/webviews\.css$/,
+                    chunks: 'all',
+                    enforce: true,
+                },
+                styles2: {
+                    name: 'mui',
+                    test: /^\.\/src\/react\.css$/,
                     chunks: 'all',
                     enforce: true,
                 },
