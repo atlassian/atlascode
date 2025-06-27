@@ -178,15 +178,15 @@ test('Test image check on attachments', async ({ page, context }) => {
     let issueFrameLocator;
     for (const iframe of webviewIframes) {
         const frame = await iframe.contentFrame();
-        if (frame && (await frame.$('iframe[title="BTS-1"]'))) {
+        if (frame && (await frame.$('iframe[title="Jira Issue"]'))) {
             issueFrameLocator = page
                 .frameLocator(`iframe.webview[name="${await iframe.getAttribute('name')}"]`)
-                .frameLocator('iframe[title="BTS-1"]');
+                .frameLocator('iframe[title="Jira Issue]');
             break;
         }
     }
     if (!issueFrameLocator) {
-        throw new Error('BTS-1 iframe not found');
+        throw new Error('Jira Issue iframe not found');
     }
 
     // Check attachment inside the correct frame
