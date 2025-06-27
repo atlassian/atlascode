@@ -152,7 +152,7 @@ test('I can transition a Jira', async ({ page }) => {
     const button = issueFrame.getByRole('button', { name: 'In Progress' });
     await expect(button).toBeVisible();
     await button.click();
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(2000);
     const inreview = issueFrame.getByText('In Review');
 
     await expect(inreview).toBeVisible();
@@ -202,7 +202,7 @@ test('I can transition a Jira', async ({ page }) => {
         throw new Error('iframe element not found');
     }
     await issueFramePost.waitForLoadState('domcontentloaded');
-    await expect(issueFramePost.locator('body')).toBeVisible({ timeout: 15000 });
+    await expect(issueFramePost.locator('body')).toBeVisible({ timeout: 1500 });
     const buttonInReview = issueFramePost.getByRole('button', { name: newStatus });
     await expect(buttonInReview).toBeVisible();
 
