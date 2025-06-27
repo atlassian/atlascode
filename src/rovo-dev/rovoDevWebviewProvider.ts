@@ -3,7 +3,6 @@ import path from 'path';
 import { setTimeout } from 'timers/promises';
 import {
     CancellationToken,
-    ColorThemeKind,
     commands,
     Disposable,
     Event,
@@ -108,27 +107,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             localResourceRoots: [
                 Uri.file(path.join(this._extensionPath, 'build')),
                 Uri.file(path.join(this._extensionPath, 'node_modules', '@vscode', 'codicons', 'dist')),
-                Uri.file(path.join(this._extensionPath, 'node_modules', '@speed-highlight', 'core', 'dist')),
             ],
         };
 
-        const isDarkTheme =
-            window.activeColorTheme.kind === ColorThemeKind.HighContrast ||
-            window.activeColorTheme.kind === ColorThemeKind.Dark;
-
         const codiconsUri = webview.asWebviewUri(
             Uri.joinPath(this._extensionUri, 'node_modules', '@vscode', 'codicons', 'dist', 'codicon.css'),
-        );
-        const syntaxStylesUri = webview.asWebviewUri(
-            Uri.joinPath(
-                this._extensionUri,
-                'node_modules',
-                '@speed-highlight',
-                'core',
-                'dist',
-                'themes',
-                isDarkTheme ? 'dark.css' : 'default.css',
-            ),
         );
 
         webview.html = getHtmlForView(
@@ -137,7 +120,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             webview.cspSource,
             this.viewType,
             codiconsUri,
-            syntaxStylesUri,
         );
 
         webview.onDidReceiveMessage(async (e) => {

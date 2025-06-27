@@ -1,3 +1,5 @@
+import './RovoDevCodeHighlighting.css';
+
 import LoadingButton from '@atlaskit/button/loading-button';
 import SendIcon from '@atlaskit/icon/glyph/send';
 import PauseIcon from '@atlaskit/icon/glyph/vid-pause';
