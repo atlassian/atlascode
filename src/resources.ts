@@ -143,7 +143,8 @@ export function registerResources(vscodeContext: ExtensionContext) {
         .join(vscodeContext.extensionPath, 'resources', 'schemas', 'pipelines-schema.json')
         .toString();
 
-    Resources.rovoDevPath = path
-        .join(vscodeContext.extensionPath, 'resources', 'rovo-dev', 'atlassian_cli_rovodev')
-        .toString();
+    // TODO: don't enable this while we're still using settings
+    // Resources.rovoDevPath = path
+    //     .join(vscodeContext.extensionPath, 'resources', 'rovo-dev', 'atlassian_cli_rovodev')
+    //     .toString();
 }

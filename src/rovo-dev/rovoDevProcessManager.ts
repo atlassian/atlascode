@@ -1,4 +1,5 @@
 import { ChildProcess, spawn } from 'child_process';
+import { access, constants } from 'fs';
 import { isBasicAuthInfo, ProductJira } from 'src/atlclients/authInfo';
 import { Container } from 'src/container';
 import { Resources } from 'src/resources';
@@ -79,53 +80,62 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
         workspace.getConfiguration('atlascode.rovodev').get<string>('executablePath') || Resources.rovoDevPath;
 
     if (!rovoDevPath) {
-        window.showErrorMessage('Rovodev: Environment variables is not set, disabling the feature.');
+        window.showWarningMessage('Rovodev: Executable path is not set, please configure it in settings.');
         return;
     }
 
-    getCloudCredentials().then((creds) => {
-        const defaultUsername = 'cooluser@atlassian.com';
-        if (!creds) {
-            window.showInformationMessage('Rovodev: No cloud credentials found. Using default authentication.');
+    access(rovoDevPath, constants.X_OK, (err) => {
+        if (err) {
+            window.showErrorMessage(`Rovodev: Executable not found at path: ${rovoDevPath}`);
+            return;
         }
+        getCloudCredentials().then((creds) => {
+            const defaultUsername = 'cooluser@atlassian.com';
+            const { username, key, host } = creds || {};
 
-        const { username, key, host } = creds || {};
-        if (host) {
-            window.showInformationMessage(`Rovodev: using cloud credentials for ${username} on ${host}`);
-        }
-
-        const env: NodeJS.ProcessEnv = {
-            USER: process.env.USER,
-            USER_EMAIL: username || defaultUsername,
-            ...(key ? { USER_API_TOKEN: key } : {}),
-        };
-        let stderrData = '';
-
-        const proc = spawn(rovoDevPath, [`serve`, `${port}`], {
-            cwd: workspacePath,
-            stdio: ['ignore', 'pipe', 'pipe'],
-            detached: true,
-            env,
-        });
-
-        if (proc.stderr) {
-            proc.stderr.on('data', (data) => {
-                stderrData += data.toString();
-            });
-        }
-
-        proc.on('exit', (code, signal) => {
-            window.showErrorMessage(
-                `Rovodev: Process for workspace ${workspacePath} exited unexpectedly with code ${code} and signal ${signal}`,
-            );
-            if (code !== 0) {
-                window.showErrorMessage(`Rovodev: Process exited with code ${code}`);
-                console.error(`Rovodev: Process exited with code ${code} and signal ${signal}, stderr: ${stderrData}`);
+            if (host) {
+                window.showInformationMessage(`Rovodev: using cloud credentials for ${username} on ${host}`);
+            } else {
+                window.showInformationMessage('Rovodev: No cloud credentials found. Using default authentication.');
             }
-            delete workspaceProcessMap[workspacePath];
-        });
 
-        workspaceProcessMap[workspacePath] = proc;
+            const env: NodeJS.ProcessEnv = {
+                USER: process.env.USER,
+                USER_EMAIL: username || defaultUsername,
+                ...(key ? { USER_API_TOKEN: key } : {}),
+            };
+            let stderrData = '';
+
+            const proc = spawn(rovoDevPath, [`serve`, `${port}`], {
+                cwd: workspacePath,
+                stdio: ['ignore', 'pipe', 'pipe'],
+                detached: true,
+                env,
+            }).on('exit', (code, signal) => {
+                if (code !== 0) {
+                    if (stderrData.includes('auth token')) {
+                        // internal credentials, no VPN connection
+                        window.showErrorMessage(`Rovodev: Is your VPN off? (internal credential error)`);
+                    } else {
+                        // default error message
+                        window.showErrorMessage(`Rovodev: Process exited with code ${code}, see the log for details.`);
+                    }
+
+                    console.error(
+                        `Rovodev: Process exited with code ${code} and signal ${signal}, stderr: ${stderrData}`,
+                    );
+                }
+                delete workspaceProcessMap[workspacePath];
+            });
+
+            if (proc.stderr) {
+                proc.stderr.on('data', (data) => {
+                    stderrData += data.toString();
+                });
+            }
+
+            workspaceProcessMap[workspacePath] = proc;
+        });
     });
 }
 
