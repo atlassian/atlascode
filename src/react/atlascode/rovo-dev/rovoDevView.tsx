@@ -12,7 +12,14 @@ import { useMessagingApi } from '../messagingApi';
 import { ChatMessageItem, renderChatHistory, ToolCallItem, UpdatedFilesComponent } from './common';
 import { RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import * as styles from './rovoDevViewStyles';
-import { ChatMessage, isCodeChangeTool, ToolCallMessage, ToolReturnGenericMessage } from './utils';
+import {
+    ChatMessage,
+    isCodeChangeTool,
+    parseToolReturnMessage,
+    ToolCallMessage,
+    ToolReturnGenericMessage,
+    ToolReturnParseResult,
+} from './utils';
 
 const enum State {
     WaitingForPrompt,
@@ -37,7 +44,7 @@ const RovoDevView: React.FC = () => {
     const [pendingToolCall, setPendingToolCall] = useState<ToolCallMessage | null>(null);
 
     // const [currentTools, setCurrentTools] = useState<ToolReturnGenericMessage[]>([]);
-    const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnGenericMessage[]>([]);
+    const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
 
     const chatEndRef = React.useRef<HTMLDivElement>(null);
 
@@ -80,9 +87,20 @@ const RovoDevView: React.FC = () => {
 
     const handleAppendModifiedFileToolReturns = useCallback(
         (toolReturn: ToolReturnGenericMessage) => {
-            setTotalModifiedFiles((prev) => {
-                return [...prev, toolReturn];
-            });
+            if (isCodeChangeTool(toolReturn.tool_name)) {
+                const msg = parseToolReturnMessage(toolReturn).filter((msg) => msg.filePath);
+                setTotalModifiedFiles((prev) => {
+                    // Ensure unique file paths
+                    return Array.from(new Map([...prev, ...msg].map((item) => [item.filePath, item])).values());
+                });
+            }
+        },
+        [setTotalModifiedFiles],
+    );
+
+    const removeModifiedFileToolReturns = useCallback(
+        (filePaths: string[]) => {
+            setTotalModifiedFiles((prev) => prev.filter((x) => !filePaths.includes(x.filePath!)));
         },
         [setTotalModifiedFiles],
     );
@@ -95,7 +113,6 @@ const RovoDevView: React.FC = () => {
                     if (!data.content) {
                         break;
                     }
-
                     appendCurrentResponse(data.content);
                     break;
 
@@ -122,9 +139,7 @@ const RovoDevView: React.FC = () => {
                     };
                     setPendingToolCall(null); // Clear pending tool call
                     appendCurrentResponse(`\n\n<TOOL_RETURN>${JSON.stringify(returnMessage)}</TOOL_RETURN>\n\n`);
-                    if (isCodeChangeTool(data.tool_name)) {
-                        handleAppendModifiedFileToolReturns(returnMessage);
-                    }
+                    handleAppendModifiedFileToolReturns(returnMessage);
                     break;
 
                 default:
@@ -268,6 +283,28 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
+    const undoFiles = useCallback(
+        (filePaths: string[]) => {
+            postMessage({
+                type: RovoDevViewResponseType.UndoFiles,
+                filePaths,
+            });
+            removeModifiedFileToolReturns(filePaths);
+        },
+        [postMessage, removeModifiedFileToolReturns],
+    );
+
+    const acceptFiles = useCallback(
+        (filePaths: string[]) => {
+            postMessage({
+                type: RovoDevViewResponseType.AcceptFiles,
+                filePaths,
+            });
+            removeModifiedFileToolReturns(filePaths);
+        },
+        [postMessage, removeModifiedFileToolReturns],
+    );
+
     const handleKeyDown = useCallback(
         (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
             if (event.key === 'Enter' && !event.shiftKey) {
@@ -305,13 +342,9 @@ const RovoDevView: React.FC = () => {
             <div style={styles.rovoDevInputSectionStyles}>
                 <UpdatedFilesComponent
                     modifiedFiles={totalModifiedFiles}
-                    onUndo={(paths: string[]) => {
-                        console.log('Undoing changes', paths);
-                    }}
-                    onAccept={(paths: string[]) => {
-                        console.log('Accepting changes', paths);
-                    }}
-                    openDiff={(filePath: string) => openFile(filePath, true)}
+                    onUndo={undoFiles}
+                    onAccept={acceptFiles}
+                    openDiff={openFile}
                 />
                 <div style={styles.rovoDevPromptContainerStyles}>
                     <div

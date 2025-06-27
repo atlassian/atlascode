@@ -34,6 +34,7 @@ interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
 }
 
+// TODO unused - should it be cleaned up?
 export const ToolDrawer: React.FC<{
     content: ToolReturnGenericMessage[];
     openFile: OpenFileFunc;
@@ -207,7 +208,7 @@ export const renderChatHistory = (msg: ChatMessage, index: number, openFile: Ope
 };
 
 export const UpdatedFilesComponent: React.FC<{
-    modifiedFiles: ToolReturnGenericMessage[];
+    modifiedFiles: ToolReturnParseResult[];
     onUndo: (filePath: string[]) => void;
     onAccept: (filePath: string[]) => void;
     openDiff: OpenFileFunc;
@@ -215,25 +216,21 @@ export const UpdatedFilesComponent: React.FC<{
     const [isUndoHovered, setIsUndoHovered] = React.useState(false);
     const [isAcceptHovered, setIsAcceptHovered] = React.useState(false);
 
-    const parsedReturns = modifiedFiles.flatMap((msg) => parseToolReturnMessage(msg));
-
-    const uniqueParsedReturns = Array.from(new Map(parsedReturns.map((item) => [item.filePath, item])).values()); // Ensure unique file paths
-
     const handleAcceptAll = useCallback(() => {
-        if (uniqueParsedReturns && uniqueParsedReturns.length > 0) {
-            const filePaths = uniqueParsedReturns.map((msg) => msg.filePath).filter((path) => path !== undefined);
-            onAccept(filePaths);
-        }
-    }, [onAccept, uniqueParsedReturns]);
+        const filePaths = modifiedFiles.map((msg) => msg.filePath).filter((path) => path !== undefined);
+        onAccept(filePaths);
+    }, [onAccept, modifiedFiles]);
 
     const handleUndoAll = useCallback(() => {
-        if (uniqueParsedReturns && uniqueParsedReturns.length > 0) {
-            const filePaths = uniqueParsedReturns.map((msg) => msg.filePath).filter((path) => path !== undefined);
-            onUndo(filePaths);
-        }
-    }, [onUndo, uniqueParsedReturns]);
+        const filePaths = modifiedFiles.map((msg) => msg.filePath).filter((path) => path !== undefined);
+        onUndo(filePaths);
+    }, [onUndo, modifiedFiles]);
 
-    return modifiedFiles && modifiedFiles.length > 0 ? (
+    if (!modifiedFiles || modifiedFiles.length === 0) {
+        return null;
+    }
+
+    return (
         <div
             style={{
                 width: '100%',
@@ -256,7 +253,7 @@ export const UpdatedFilesComponent: React.FC<{
             >
                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
                     <i className="codicon codicon-source-control" />
-                    <span style={{ fontWeight: 'bold' }}>{uniqueParsedReturns.length} Updated file(s)</span>
+                    <span style={{ fontWeight: 'bold' }}>{modifiedFiles.length} Updated file(s)</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}>
                     <button
@@ -299,57 +296,49 @@ export const UpdatedFilesComponent: React.FC<{
                     overflowY: 'auto',
                     maxHeight: '100px',
                     padding: '4px 8px',
-                    borderTop:
-                        uniqueParsedReturns && uniqueParsedReturns.length > 0
-                            ? '1px solid var(--vscode-panel-border)'
-                            : '0',
+                    borderTop: '1px solid var(--vscode-panel-border)',
                 }}
             >
-                {uniqueParsedReturns &&
-                    uniqueParsedReturns.length > 0 &&
-                    uniqueParsedReturns.map((msg, index) => {
-                        return (
-                            <ModifiedFileItem
-                                key={index}
-                                msg={msg}
-                                openDiff={openDiff}
-                                onUndo={(path: string) => onUndo([path])}
-                                onAccept={(path: string) => onAccept([path])}
-                            />
-                        );
-                    })}
+                {modifiedFiles.map((msg, index) => {
+                    return (
+                        <ModifiedFileItem
+                            key={index}
+                            msg={msg}
+                            onFileClick={(path: string) => openDiff(path, true)}
+                            onUndo={(path: string) => onUndo([path])}
+                            onAccept={(path: string) => onAccept([path])}
+                        />
+                    );
+                })}
             </div>
         </div>
-    ) : null;
+    );
 };
 
-export const ModifiedFileItem: React.FC<{
+const ModifiedFileItem: React.FC<{
     msg: ToolReturnParseResult;
-    onUndo?: (filePath: string) => void;
-    onAccept?: (filePath: string) => void;
-    openDiff: OpenFileFunc;
-}> = ({ msg, onUndo, onAccept, openDiff }) => {
+    onUndo: (filePath: string) => void;
+    onAccept: (filePath: string) => void;
+    onFileClick: (filePath: string) => void;
+}> = ({ msg, onUndo, onAccept, onFileClick }) => {
     const [isHovered, setIsHovered] = React.useState(false);
     const [isUndoHovered, setIsUndoHovered] = React.useState(false);
     const [isAcceptHovered, setIsAcceptHovered] = React.useState(false);
 
+    const filePath = msg.filePath;
+    if (!filePath) {
+        return null;
+    }
+
     const handleUndo = (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (onUndo && msg.filePath) {
-            onUndo(msg.filePath);
-        }
+        onUndo(filePath);
     };
 
     const handleAccept = (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (onAccept && msg.filePath) {
-            onAccept(msg.filePath);
-        }
+        onAccept(filePath);
     };
-
-    if (!msg.filePath) {
-        return null;
-    }
 
     return (
         <div
@@ -366,11 +355,11 @@ export const ModifiedFileItem: React.FC<{
                 overflow: 'hidden',
                 width: '100%',
             }}
-            onClick={() => msg.filePath && openDiff(msg.filePath)}
+            onClick={() => onFileClick(filePath)}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <div>{msg.filePath}</div>
+            <div>{filePath}</div>
             <div
                 style={{ display: isHovered ? 'flex' : 'none', alignItems: 'center', flexDirection: 'row', gap: '4px' }}
             >

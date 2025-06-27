@@ -161,6 +161,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 case RovoDevViewResponseType.OpenFile:
                     await this.executeOpenFile(e.filePath, e.tryShowDiff, e.range);
                     break;
+
+                case RovoDevViewResponseType.UndoFiles:
+                    await this.executeUndoFiles(e.filePaths);
+                    break;
+
+                case RovoDevViewResponseType.AcceptFiles:
+                    await this.executeAcceptFiles(e.filePaths);
+                    break;
             }
         });
 
@@ -351,6 +359,20 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return (await this.rovoDevApiClient?.healthcheck(true)) || false;
     }
 
+    private makeRelativePathAbsolute(filePath: string): string {
+        if (path.isAbsolute(filePath)) {
+            // If already absolute, use as-is
+            return filePath;
+        } else {
+            // If relative, resolve against workspace root
+            const workspaceRoot = workspace.workspaceFolders?.[0]?.uri.fsPath;
+            if (!workspaceRoot) {
+                throw new Error('No workspace folder found');
+            }
+            return path.join(workspaceRoot, filePath);
+        }
+    }
+
     private async executeOpenFile(filePath: string, tryShowDiff: boolean, _range?: number[]): Promise<void> {
         let cachedFilePath: string | undefined = undefined;
 
@@ -361,19 +383,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
 
         // Get workspace root and resolve the file path
-        let resolvedPath: string;
-
-        if (path.isAbsolute(filePath)) {
-            // If already absolute, use as-is
-            resolvedPath = filePath;
-        } else {
-            // If relative, resolve against workspace root
-            const workspaceRoot = workspace.workspaceFolders?.[0]?.uri.fsPath;
-            if (!workspaceRoot) {
-                throw new Error('No workspace folder found');
-            }
-            resolvedPath = path.join(workspaceRoot, filePath);
-        }
+        const resolvedPath = this.makeRelativePathAbsolute(filePath);
 
         if (cachedFilePath && fs.existsSync(cachedFilePath)) {
             commands.executeCommand(
@@ -397,6 +407,27 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 selection: range || undefined,
             });
         }
+    }
+
+    private async executeUndoFiles(filePaths: string[]) {
+        const promises = filePaths.map(async (filePath) => {
+            const resolvedPath = this.makeRelativePathAbsolute(filePath);
+            const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(filePath);
+            await this.getPromise((callback) => fs.rm(resolvedPath, callback));
+            await this.getPromise((callback) => fs.copyFile(cachedFilePath, resolvedPath, callback));
+            await this.getPromise((callback) => fs.rm(cachedFilePath, callback));
+        });
+
+        await Promise.all(promises);
+    }
+
+    private async executeAcceptFiles(filePaths: string[]) {
+        const promises = filePaths.map(async (filePath) => {
+            const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(filePath);
+            await this.getPromise((callback) => fs.rm(cachedFilePath, callback));
+        });
+
+        await Promise.all(promises);
     }
 
     private async executeApiWithErrorHandling<T>(
@@ -454,5 +485,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (this._webView) {
             this._webView = undefined;
         }
+    }
+
+    private getPromise(code: (callback: fs.NoParamCallback) => void): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            const callback: fs.NoParamCallback = (err) => (err ? reject(err) : resolve());
+            try {
+                code(callback);
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 }
