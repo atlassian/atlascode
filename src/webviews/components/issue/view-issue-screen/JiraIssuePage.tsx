@@ -1,3 +1,4 @@
+import { LoadingButton } from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
@@ -142,6 +143,42 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({
             action: 'openStartWorkPage',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
+        });
+    };
+
+    buildPrompt = (summary: string, description: string): string => {
+        // Make the issue summary and description into a prompt for RovoDev
+        return (
+            `
+            Let's work on this issue:
+
+            Summary:
+            ${summary}
+            ` +
+            (description
+                ? `
+            Description:
+            ${description}
+            `
+                : '') +
+            `
+            Please provide a detailed plan to resolve this issue, including any necessary steps, code snippets, or references to documentation.
+            Make sure to consider the context of the issue and provide a comprehensive solution.
+            Feel free to ask for any additional information if needed.
+        `
+        );
+    };
+
+    handleInvokeRovodev = () => {
+        const summary = this.state.fieldValues['summary'] || '';
+        const description = this.state.fieldValues['description'] || '';
+        const prompt = this.buildPrompt(summary, description);
+
+        this.postMessage({
+            action: 'invokeRovodev',
+            prompt: prompt,
+            issueKey: this.state.key,
+            siteDetails: this.state.siteDetails,
         });
     };
 
@@ -610,6 +647,16 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     handleStatusChange={this.handleStatusChange}
                     handleStartWork={this.handleStartWorkOnIssue}
                 />
+                {process.env.ROVODEV_ENABLED === 'true' && (
+                    <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
+                        <Tooltip content="Rovo Dev is an AI assistant that will take the issue details and generate code on it">
+                            <LoadingButton className="ac-button" onClick={this.handleInvokeRovodev} isLoading={false}>
+                                Start with Rovo Dev!
+                            </LoadingButton>
+                        </Tooltip>
+                    </Box>
+                )}
+
                 <IssueSidebarCollapsible label="Details" items={commonItems} defaultOpen />
                 <IssueSidebarCollapsible label="More fields" items={advancedItems} />
             </Box>
