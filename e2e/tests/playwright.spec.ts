@@ -181,7 +181,7 @@ test('Test image check on attachments', async ({ page, context }) => {
         if (frame && (await frame.$('iframe[title="Jira Issue"]'))) {
             issueFrameLocator = page
                 .frameLocator(`iframe.webview[name="${await iframe.getAttribute('name')}"]`)
-                .frameLocator('iframe[title="Jira Issue]');
+                .frameLocator('iframe[title="Jira Issue"]');
             break;
         }
     }
