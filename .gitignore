@@ -24,3 +24,4 @@ e2e/.test-extensions/
 test-results/*
 
 !.vscode/launch.json.example
+/.idea/
