@@ -9,8 +9,4 @@ export enum Time {
 }
 
 export const ConnectionTimeout = 30 * Time.SECONDS;
-
-export const JIRA_SYNC_DELAYS = {
-    VERIFICATION: 2 * Time.SECONDS,
-    MAX_ATTEMPTS: 4,
-} as const;
+export const RefreshDelay = 4 * Time.SECONDS;

@@ -1,5 +1,4 @@
 import { EditIssueUI } from '@atlassianlabs/jira-metaui-client';
-import { JiraClient } from '@atlassianlabs/jira-pi-client';
 import {
     Comment,
     createEmptyMinimalIssue,
@@ -47,7 +46,7 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
-import { JIRA_SYNC_DELAYS } from '../util/time';
+import { RefreshDelay } from '../util/time';
 import { getJiraIssueUri } from '../views/jira/treeViews/utils';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
@@ -263,28 +262,6 @@ export class JiraIssueWebview
         return '';
     }
 
-    private async waitForAssigneeSync(
-        issueKey: string,
-        expectedId: string | null,
-        client: JiraClient<DetailedSiteInfo>,
-    ): Promise<void> {
-        const sleep = () => new Promise<void>((r) => setTimeout(r, JIRA_SYNC_DELAYS.VERIFICATION));
-
-        await sleep();
-
-        for (let i = 0; i < JIRA_SYNC_DELAYS.MAX_ATTEMPTS; i++) {
-            const issue = await client.getIssue(issueKey, ['assignee'], '');
-            if ((issue?.fields?.assignee?.accountId ?? null) === expectedId) {
-                break;
-            }
-            if (i < JIRA_SYNC_DELAYS.MAX_ATTEMPTS - 1) {
-                await sleep();
-            }
-        }
-
-        await commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
-    }
-
     protected async onMessageReceived(msg: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(msg);
 
@@ -339,11 +316,8 @@ export class JiraIssueWebview
                             });
                         });
 
-                        if ('assignee' in newFieldValues) {
-                            const expectedId = newFieldValues.assignee?.accountId ?? null;
-                            await this.waitForAssigneeSync(this._issue.key, expectedId, client);
-                        }
-
+                        await new Promise((resolve) => setTimeout(resolve, RefreshDelay));
+                        await commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
                         await commands.executeCommand(Commands.RefreshCustomJqlExplorer);
                     } catch (e) {
                         Logger.error(e, 'Error updating issue');
