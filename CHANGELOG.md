@@ -2,6 +2,12 @@
 
 ---
 
+## What's new in 3.8.5
+
+### Bug Fixes
+
+- Fixed a regression in the branch prefix dropdrown
+
 ## What's new in 3.8.4
 
 ### Bug Fixes
