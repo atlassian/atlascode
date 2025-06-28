@@ -272,10 +272,7 @@ const StartWorkPage: React.FunctionComponent = () => {
     useEffect(() => {
         const newBranchType = repository.branchTypes?.[0] || emptyPrefix;
         setUpstream(repository.workspaceRepo.mainSiteRemote.remote.name);
-        // Only set branch type if it's still the empty prefix (initial state)
-        if (branchType.kind === '' && branchType.prefix === '') {
-            setBranchType(newBranchType);
-        }
+        setBranchType(newBranchType);
         setSourceBranch(
             repository.localBranches?.find(
                 (b) => repository.developmentBranch && b.name === repository.developmentBranch,
@@ -292,7 +289,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                 ),
         ]);
         buildBranchNameView();
-    }, [repository, state.issue, buildBranchNameView, branchType.kind, branchType.prefix]);
+    }, [repository, state.issue, buildBranchNameView]);
 
     useEffect(() => {
         setSubmitState('initial');
