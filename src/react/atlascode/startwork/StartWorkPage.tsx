@@ -145,7 +145,9 @@ const StartWorkPage: React.FunctionComponent = () => {
                 .trim()
                 .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
                 .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
-                .replace(/\W+/g, '-');
+                .replace(/\W+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
 
             const view = {
                 username: usernameBase.toLowerCase(),
