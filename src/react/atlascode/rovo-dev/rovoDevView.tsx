@@ -1,4 +1,4 @@
-import './RovoDevCodeHighlighting.css';
+import './RovoDevCode.css';
 
 import LoadingButton from '@atlaskit/button/loading-button';
 import SendIcon from '@atlaskit/icon/glyph/send';
@@ -107,6 +107,20 @@ const RovoDevView: React.FC = () => {
         [setTotalModifiedFiles],
     );
 
+    const completeMessage = useCallback(
+        (force?: boolean) => {
+            if (force || (currentResponse && currentResponse !== '...')) {
+                const message: ChatMessage = {
+                    text: currentResponse === '...' ? 'Error: Unable to retrieve the response' : currentResponse,
+                    author: 'RovoDev',
+                };
+                handleAppendChatHistory(message);
+            }
+            setCurrentResponse('');
+        },
+        [currentResponse, handleAppendChatHistory, setCurrentResponse],
+    );
+
     const handleResponse = useCallback(
         (data: RovoDevResponse) => {
             console.log('Received response data:', data);
@@ -140,7 +154,8 @@ const RovoDevView: React.FC = () => {
                         args: args, // Use args from pending tool call if available
                     };
                     setPendingToolCall(null); // Clear pending tool call
-                    appendCurrentResponse(`\n\n<TOOL_RETURN>${JSON.stringify(returnMessage)}</TOOL_RETURN>\n\n`);
+                    completeMessage(true);
+                    handleAppendChatHistory(returnMessage);
                     handleAppendModifiedFileToolReturns(returnMessage);
                     break;
 
@@ -149,21 +164,13 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [appendCurrentResponse, handleAppendModifiedFileToolReturns, pendingToolCall],
-    );
-
-    const completeMessage = useCallback(
-        (force?: boolean) => {
-            if (force || (currentResponse && currentResponse !== '...')) {
-                const message: ChatMessage = {
-                    text: currentResponse === '...' ? 'Error: Unable to retrieve the response' : currentResponse,
-                    author: 'RovoDev',
-                };
-                handleAppendChatHistory(message);
-            }
-            setCurrentResponse('');
-        },
-        [currentResponse, handleAppendChatHistory, setCurrentResponse],
+        [
+            appendCurrentResponse,
+            completeMessage,
+            handleAppendChatHistory,
+            handleAppendModifiedFileToolReturns,
+            pendingToolCall,
+        ],
     );
 
     const onMessageHandler = useCallback(

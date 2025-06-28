@@ -160,3 +160,54 @@
         color: #dcdcaa;
     }
 }
+
+.logical-change-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid var(--vscode-editorWidget-border);
+    border-radius: 4px;
+    width: 100%;
+}
+
+.logical-change-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.logical-change-header .title {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--vscode-editor-foreground);
+}
+
+.logical-change-header .button {
+    background: transparent;
+    border: none;
+    color: var(--vscode-editor-foreground);
+    cursor: pointer;
+    :hover {
+        color: var(--vscode-textLink-foreground);
+    }
+}
+.file-to-change-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.file-to-change {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.technical-plan-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}

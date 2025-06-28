@@ -18,6 +18,8 @@ import {
     ChatMessage,
     DefaultMessage,
     parseToolReturnMessage,
+    TechnicalPlan,
+    TechnicalPlanLogicalChange,
     ToolCallMessage,
     ToolReturnGenericMessage,
     ToolReturnParseResult,
@@ -196,9 +198,12 @@ export const renderChatHistory = (msg: ChatMessage, index: number, openFile: Ope
     switch (msg.author) {
         case 'ToolReturn':
             const parsedMessages = parseToolReturnMessage(msg);
-            return parsedMessages.map((message) => (
-                <ToolReturnParsedItem key={index} msg={message} openFile={openFile} />
-            ));
+            return parsedMessages.map((message) => {
+                if (message.technicalPlan) {
+                    return <TechnicalPlanComponent key={index} content={message.technicalPlan} openFile={openFile} />;
+                }
+                return <ToolReturnParsedItem key={index} msg={message} openFile={openFile} />;
+            });
         case 'RovoDev':
         case 'User':
             return <ChatMessageItem index={index} msg={msg} openFile={openFile} />;
@@ -390,6 +395,65 @@ const ModifiedFileItem: React.FC<{
                     onClick={handleAccept}
                 />
             </div>
+        </div>
+    );
+};
+
+type TechnicalPlanProps = {
+    content: TechnicalPlan;
+    openFile: OpenFileFunc;
+};
+
+const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content }) => {
+    return (
+        <div className="technical-plan-container">
+            {content.logicalChanges.map((change, index) => {
+                return <LogicalChange key={index} change={change} />;
+            })}
+        </div>
+    );
+};
+
+const LogicalChange: React.FC<{ change: TechnicalPlanLogicalChange }> = (props) => {
+    const { change } = props;
+    const [isOpen, setIsOpen] = React.useState(false);
+
+    const changeSummary = change.summary;
+
+    const renderDescription = (description: string) => {
+        return <span dangerouslySetInnerHTML={{ __html: Marked.parse(description) }} />;
+    };
+
+    return (
+        <div className="logical-change-container">
+            <div className="logical-change-header">
+                <div className="title">{changeSummary}</div>
+                <Button
+                    className="button"
+                    appearance="subtle"
+                    iconBefore={
+                        isOpen ? (
+                            <i className="codicon codicon-chevron-down" />
+                        ) : (
+                            <i className="codicon codicon-chevron-right" />
+                        )
+                    }
+                    onClick={() => setIsOpen(!isOpen)}
+                    spacing="none"
+                />
+            </div>
+            {isOpen && (
+                <div className="file-to-change-container">
+                    {change.filesToChange.map((file) => {
+                        return (
+                            <div className="file-to-change">
+                                {file.descriptionOfChange && renderDescription(file.descriptionOfChange)}
+                                File to modify: {file.filePath}
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 };
