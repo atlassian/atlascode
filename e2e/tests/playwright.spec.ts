@@ -119,3 +119,66 @@ test('Authenticating with Jira works, and assigned items are displayed', async (
 
     //await expect(page).toHaveScreenshot();
 });
+
+test('When I Logged out of Jira, I have a badge notification asking me to login', async ({ page }) => {
+    await page.goto('http://localhost:9988/');
+    await page.getByRole('tab', { name: 'Atlassian' }).click();
+    await page.waitForTimeout(250);
+
+    const notificationToast = page.locator('.notifications-toasts.visible');
+
+    await page.getByRole('tab', { name: 'Getting Started' }).getByLabel(/close/i).click();
+
+    // Verify that we are not logged in initially and can see the notification and sidebar item
+    await expect(page.getByRole('treeitem', { name: 'Please login to Jira' })).toBeVisible();
+    await expect(notificationToast.getByRole('button', { name: 'Log in to Jira' })).toBeVisible();
+
+    // Verify that we can login and that the notification and sidebar item are not visible after login
+    await page.getByRole('treeitem', { name: 'Please login to Jira' }).click();
+    await page.waitForTimeout(250);
+
+    await expect(page.getByRole('tab', { name: 'Atlassian Settings' })).toBeVisible();
+
+    await page.getByRole('tab', { name: 'Atlassian Settings' }).click();
+    await page.waitForTimeout(250);
+
+    const settingsFrame = page.frameLocator('iframe.webview').frameLocator('iframe[title="Atlassian Settings"]');
+
+    await expect(settingsFrame.getByRole('button', { name: 'Authentication authenticate' })).toBeVisible();
+    await expect(settingsFrame.getByRole('button', { name: 'Login to Jira' })).toBeVisible();
+
+    settingsFrame.getByRole('button', { name: 'Login to Jira' }).click();
+    await page.waitForTimeout(250);
+
+    await settingsFrame.getByRole('textbox', { name: 'Base URL' }).click();
+    await page.waitForTimeout(250);
+
+    await settingsFrame.getByRole('textbox', { name: 'Base URL' }).fill('https://mockedteams.atlassian.net');
+    await page.waitForTimeout(250);
+
+    await settingsFrame.getByRole('textbox', { name: 'Username' }).click();
+    await page.waitForTimeout(250);
+
+    await settingsFrame.getByRole('textbox', { name: 'Username' }).fill('mock@atlassian.code');
+    await page.waitForTimeout(250);
+
+    await settingsFrame.getByRole('textbox', { name: 'Password (API token)' }).click();
+    await page.waitForTimeout(250);
+
+    await settingsFrame.getByRole('textbox', { name: 'Password (API token)' }).fill('12345');
+    await page.waitForTimeout(250);
+
+    await settingsFrame.getByRole('button', { name: 'Save Site' }).click();
+    await page.waitForTimeout(250);
+
+    await expect(page.getByRole('treeitem', { name: 'Please login to Jira' })).not.toBeVisible();
+    await expect(notificationToast.getByRole('button', { name: 'Log in to Jira' })).not.toBeVisible();
+
+    // Verify that we can logout and that the notification and sidebar item are visible after logout
+    await settingsFrame.getByRole('button', { name: 'delete' }).click();
+
+    await page.waitForTimeout(2000);
+
+    await expect(page.getByRole('treeitem', { name: 'Please login to Jira' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: /You have been logged out of Jira/ })).toBeVisible();
+});
