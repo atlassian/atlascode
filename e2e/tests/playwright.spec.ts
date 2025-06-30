@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { authenticateWithJira } from 'e2e/helpers';
 
 test("Onboarding flow's navigation among pages works", async ({ page }) => {
     await page.goto('http://localhost:9988/');
@@ -118,4 +119,27 @@ test('Authenticating with Jira works, and assigned items are displayed', async (
     await expect(page.getByRole('treeitem', { name: 'BTS-6 - Fix Button Alignment Issue' })).toBeVisible();
 
     //await expect(page).toHaveScreenshot();
+});
+
+test('When user is not authenticated in Jira, a badge notification prompts for login', async ({ page }) => {
+    await page.goto('http://localhost:9988/');
+
+    await page.waitForTimeout(2000);
+
+    // Verify initial unauthenticated state: login prompt is visible in both sidebar and notifications
+    await expect(page.getByRole('treeitem', { name: 'Please login to Jira' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: /Log in to Jira/ })).toBeVisible();
+});
+
+test('When user logs out, they see a badge notification about being logged out', async ({ page }) => {
+    await authenticateWithJira(page);
+
+    // Verify logout functionality: ensure notification dialog and sidebar login prompt appear after logout
+    const settingsFrame = page.frameLocator('iframe.webview').frameLocator('iframe[title="Atlassian Settings"]');
+    await settingsFrame.getByRole('button', { name: 'delete' }).click();
+
+    await page.waitForTimeout(2000);
+
+    await expect(page.getByRole('treeitem', { name: 'Please login to Jira' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: /You have been logged out of Jira/ })).toBeVisible();
 });
