@@ -99,9 +99,14 @@ export class CustomJQLViewProvider extends Disposable implements TreeDataProvide
         this._disposable.dispose();
     }
 
-    private refresh() {
-        SearchJiraHelper.clearIssues(CustomJQLViewProviderId);
-        this._onDidChangeTreeData.fire();
+    private refresh(delay?: number): Promise<void> {
+        return new Promise<void>((resolve) =>
+            setTimeout(() => {
+                SearchJiraHelper.clearIssues(CustomJQLViewProviderId);
+                this._onDidChangeTreeData.fire();
+                resolve();
+            }, delay || 1),
+        );
     }
 
     public getTreeItem(element: TreeItem): TreeItem {
