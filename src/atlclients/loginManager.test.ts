@@ -5,6 +5,7 @@ import { Memento } from 'vscode';
 
 import * as analytics from '../analytics';
 import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
+import { Container } from '../container';
 import * as jira_client_providers from '../jira/jira-client/providers';
 import { SiteManager } from '../siteManager';
 import {
@@ -74,7 +75,7 @@ describe('LoginManager', () => {
     let oauthDancer: OAuthDancer;
 
     beforeEach(() => {
-        credentialManager = new CredentialManager(forceCastTo<AnalyticsClient>(undefined));
+        credentialManager = new CredentialManager(Container.context, forceCastTo<AnalyticsClient>(undefined));
         siteManager = new SiteManager(forceCastTo<Memento>(undefined));
         analyticsClient = new AnalyticsClient();
         oauthDancer = OAuthDancer.Instance;

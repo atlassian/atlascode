@@ -1,4 +1,5 @@
-import vscode, { ConfigurationChangeEvent, Disposable } from 'vscode';
+import { ConfigurationChangeEvent, Disposable } from 'vscode';
+import * as vscode from 'vscode';
 
 import { ProductBitbucket } from '../atlclients/authInfo';
 import { BitbucketContext } from '../bitbucket/bbContext';

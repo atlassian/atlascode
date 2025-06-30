@@ -3,7 +3,7 @@ FROM node:23-slim
 # Install dependencies and xvfb
 RUN apt-get update \
     && apt-get install -y wget gpg xauth curl git \ 
-    && npm install --global playwright \
+    && npm install --global playwright@1.53.0 \
     && npx playwright install --with-deps chromium
 
 # install code-server 
@@ -19,6 +19,9 @@ WORKDIR /atlascode
 
 # Where our vscode, chromedriver, images etc. will go
 ENV TEST_RESOURCES=/atlascode/e2e/.resources
+
+# Disables StatSig feature flag and experiments in code
+ENV ATLASCODE_NO_EXP=1
 
 RUN cat <<EOF > /usr/bin/entrypoint.sh && chmod +x /usr/bin/entrypoint.sh
 #!/usr/bin/env bash

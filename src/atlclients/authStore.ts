@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import PQueue from 'p-queue';
-import { Disposable, Event, EventEmitter, version, window } from 'vscode';
+import { cannotGetClientFor } from 'src/constants';
+import { Disposable, Event, EventEmitter, ExtensionContext, version, window } from 'vscode';
 
 import { loggedOutEvent } from '../analytics';
 import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
@@ -8,6 +9,7 @@ import { CommandContext, setCommandContext } from '../commandContext';
 import { Container } from '../container';
 import { Logger } from '../logger';
 import { keychain } from '../util/keychain';
+import { Time } from '../util/time';
 import {
     AuthChangeType,
     AuthInfo,
@@ -17,6 +19,7 @@ import {
     emptyAuthInfo,
     getSecretForAuthInfo,
     isOAuthInfo,
+    OAuthInfo,
     OAuthProvider,
     oauthProviderForSite,
     Product,
@@ -25,6 +28,7 @@ import {
     RemoveAuthInfoEvent,
     UpdateAuthInfoEvent,
 } from './authInfo';
+import { Negotiator } from './negotiate';
 import { OAuthRefesher } from './oauthRefresher';
 import { Tokens } from './tokens';
 const keychainServiceNameV3 = version.endsWith('-insider') ? 'atlascode-insiders-authinfoV3' : 'atlascode-authinfoV3';
@@ -34,14 +38,23 @@ enum Priority {
     Write,
 }
 
+function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export class CredentialManager implements Disposable {
     private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
     private _queue = new PQueue({ concurrency: 1 });
     private _refresher = new OAuthRefesher();
+    private negotiator: Negotiator;
 
-    constructor(private _analyticsClient: AnalyticsClient) {
+    constructor(
+        context: ExtensionContext,
+        private _analyticsClient: AnalyticsClient,
+    ) {
         this._memStore.set(ProductJira.key, new Map<string, AuthInfo>());
         this._memStore.set(ProductBitbucket.key, new Map<string, AuthInfo>());
+        this.negotiator = new Negotiator(context.globalState);
     }
 
     private _onDidAuthChange = new EventEmitter<AuthInfoEvent>();
@@ -59,7 +72,8 @@ export class CredentialManager implements Disposable {
      * it's available, otherwise will return the value in the secretstorage.
      */
     public async getAuthInfo(site: DetailedSiteInfo, allowCache = true): Promise<AuthInfo | undefined> {
-        return this.getAuthInfoForProductAndCredentialId(site, allowCache);
+        const authInfo = await this.getAuthInfoForProductAndCredentialId(site, allowCache);
+        return this.softRefreshOAuth(site, authInfo);
     }
 
     public async getAllValidAuthInfo(product: Product): Promise<AuthInfo[]> {
@@ -78,6 +92,7 @@ export class CredentialManager implements Disposable {
      * Saves the auth info to both the in-memory store and the secretstorage.
      */
     public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
+        this.appendMetaData(info);
         Logger.debug(`Saving auth info for site: ${site.baseApiUrl} credentialID: ${site.credentialId}`);
         let productAuths = this._memStore.get(site.product.key);
 
@@ -85,7 +100,7 @@ export class CredentialManager implements Disposable {
             productAuths = new Map<string, AuthInfo>();
         }
 
-        const existingInfo = await this.getAuthInfo(site, false);
+        const existingInfo = await this.getAuthInfoForProductAndCredentialId(site, false);
 
         this._memStore.set(site.product.key, productAuths.set(site.credentialId, info));
 
@@ -109,6 +124,48 @@ export class CredentialManager implements Disposable {
             } catch (e) {
                 Logger.debug('error saving auth info to secretstorage: ', e);
             }
+        }
+    }
+
+    private appendMetaData(info: AuthInfo): void {
+        if (isOAuthInfo(info)) {
+            // set expiration date if not present
+            this.setExpirationDate(info);
+        }
+    }
+
+    private setExpirationDate(info: OAuthInfo): void {
+        // Skip if expiration date is already set
+        if (info.expirationDate) {
+            return;
+        }
+
+        // Try to extract expiration from JWT token
+        const expirationFromJwt = this.extractExpirationFromJwt(info.access);
+        if (expirationFromJwt) {
+            info.expirationDate = expirationFromJwt;
+            return;
+        }
+
+        // Fallback: set expiration to 1 hour from token creation/receipt
+        const baseTime = info.iat || info.recievedAt || Date.now();
+        info.expirationDate = baseTime + Time.HOURS;
+    }
+
+    private extractExpirationFromJwt(accessToken: string): number | null {
+        try {
+            const tokenParts = accessToken.split('.');
+            if (tokenParts.length !== 3) {
+                Logger.debug('Invalid JWT token format, expected 3 parts');
+                return null;
+            }
+
+            const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString('utf8'));
+
+            return payload.exp ? payload.exp * 1000 : null;
+        } catch (error) {
+            Logger.debug('Failed to parse JWT token for expiration', error);
+            return null;
         }
     }
 
@@ -190,24 +247,40 @@ export class CredentialManager implements Disposable {
         }
 
         return foundInfo;
-        //return foundInfo ? foundInfo : Promise.reject(`no authentication info found for site ${site.hostname}`);
     }
 
-    /**
-     * Deletes the secretstorage item.
-     *
-     * @remarks
-     * This only deletes the secretstorage item, leaving the in-memory store un-touched. It's
-     * meant to be used during migrations.
-     */
-    public async deleteSecretStorageItem(productKey: string) {
-        try {
-            // secretstorage can be accessed using the ExtensionContext provided by vscode to the activate function and the Container class has the
-            // "ExtensionContext" stored as it's private static member, hence using it to access vscode's secretstorage
-            await Container.context.secrets.delete(productKey);
-        } catch (e) {
-            Logger.info(`secretstorage error ${e}`);
+    private async softRefreshOAuth(site: DetailedSiteInfo, authInfo: AuthInfo | undefined) {
+        const credentials = authInfo;
+
+        if (!isOAuthInfo(credentials)) {
+            return authInfo; // not an OAuth info, no need to refresh
         }
+        const GRACE_PERIOD = 10 * Time.MINUTES;
+
+        if (credentials.expirationDate) {
+            const diff = credentials.expirationDate - Date.now();
+            Logger.debug(`${Math.floor(diff / 1000)} seconds remaining for auth token.`);
+            if (diff > GRACE_PERIOD) {
+                return credentials; // no need to refresh, we have enough time left
+            }
+            Logger.debug(`Need new auth token.`);
+        }
+
+        if (this.negotiator.thisIsTheResponsibleProcess()) {
+            Logger.debug(`Refreshing credentials.`);
+            try {
+                await Container.credentialManager.refreshAccessToken(site);
+            } catch (e) {
+                Logger.error(e, 'error refreshing token');
+                return Promise.reject(`${cannotGetClientFor}: ${site.product.name} ... ${e}`);
+            }
+        } else {
+            Logger.debug(`This process isn't in charge of refreshing credentials.`);
+            await this.negotiator.requestTokenRefreshForSite(JSON.stringify(site));
+            await sleep(5000);
+        }
+
+        return this.getAuthInfoForProductAndCredentialId(site, false);
     }
 
     private async addSiteInformationToSecretStorage(productKey: string, credentialId: string, info: AuthInfo) {
@@ -323,8 +396,8 @@ export class CredentialManager implements Disposable {
     /**
      * Calls the OAuth provider and updates the access token.
      */
-    public async refreshAccessToken(site: DetailedSiteInfo): Promise<Tokens | undefined> {
-        const credentials = await this.getAuthInfo(site);
+    private async refreshAccessToken(site: DetailedSiteInfo): Promise<Tokens | undefined> {
+        const credentials = await this.getAuthInfoForProductAndCredentialId(site, false);
         if (!isOAuthInfo(credentials)) {
             return undefined;
         }

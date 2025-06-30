@@ -10,6 +10,9 @@ __tests__/
 e2e/
 .npm/
 
+# Don't package anything from here specifically:
+resources/rovo-dev/
+
 .env
 .env.example
 .nvmrc
