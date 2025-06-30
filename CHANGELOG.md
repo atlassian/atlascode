@@ -7,6 +7,7 @@
 ### Bug Fixes
 
 - Fixed a regression in the source branch dropdrown of the Start work page
+- Fixed sometimes the 'Assigned Jira work items' and 'Custom JQL filters' panels don't retrieve recently edited items
 
 ## What's new in 3.8.5
 
