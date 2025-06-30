@@ -123,10 +123,6 @@ test('Authenticating with Jira works, and assigned items are displayed', async (
 
 test('When user is not authenticated in Jira, a badge notification prompts for login', async ({ page }) => {
     await page.goto('http://localhost:9988/');
-    await page.getByRole('tab', { name: 'Atlassian' }).click();
-    await page.waitForTimeout(250);
-
-    await page.getByRole('tab', { name: 'Getting Started' }).getByLabel(/close/i).click();
 
     await page.waitForTimeout(2000);
 
