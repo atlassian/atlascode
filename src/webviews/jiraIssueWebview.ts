@@ -46,7 +46,7 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
-import { RefreshDelay } from '../util/time';
+import { OnJiraEditedRefreshDelay } from '../util/time';
 import { getJiraIssueUri } from '../views/jira/treeViews/utils';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
@@ -316,9 +316,11 @@ export class JiraIssueWebview
                             });
                         });
 
-                        await new Promise((resolve) => setTimeout(resolve, RefreshDelay));
-                        await commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
-                        await commands.executeCommand(Commands.RefreshCustomJqlExplorer);
+                        await commands.executeCommand(
+                            Commands.RefreshAssignedWorkItemsExplorer,
+                            OnJiraEditedRefreshDelay,
+                        );
+                        await commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
                     } catch (e) {
                         Logger.error(e, 'Error updating issue');
                         this.postMessage({

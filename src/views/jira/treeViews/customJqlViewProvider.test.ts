@@ -10,6 +10,10 @@ import { CustomJQLViewProvider } from './customJqlViewProvider';
 import { TreeViewIssue } from './utils';
 import * as utils from './utils';
 
+function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms || 1));
+}
+
 const mockJqlEntries = [
     {
         id: '1',
@@ -293,7 +297,7 @@ describe('CustomJqlViewProvider', () => {
 
         it.each([ProductJira, ProductBitbucket])(
             'onDidSitesAvailableChange callback refreshes only for Jira sites changes (%p)',
-            (product) => {
+            async (product) => {
                 let onDidSitesAvailableChangeCallback = undefined;
                 jest.spyOn(Container.siteManager, 'onDidSitesAvailableChange').mockImplementation(
                     (func: any, parent: any): any => {
@@ -307,6 +311,7 @@ describe('CustomJqlViewProvider', () => {
                 provider.onDidChangeTreeData(refreshCallback);
 
                 onDidSitesAvailableChangeCallback!({ product });
+                await sleep(100);
 
                 if (product.key === ProductJira.key) {
                     expect(refreshCallback).toHaveBeenCalledTimes(1);
@@ -405,24 +410,29 @@ describe('CustomJqlViewProvider', () => {
             ['jira.explorer', true],
             ['jira.explorer.enabled', true],
             ['jira.explorer.collapsed', false],
-        ])('onConfigurationChanged refreshes if one relevant config is changed (%p)', (configName, expectedRefresh) => {
-            jest.spyOn(configuration, 'changed').mockImplementation((e, name) => name === configName);
-            jest.spyOn(Container.jqlManager, 'enabledJQLEntries').mockReturnValue([]);
+        ])(
+            'onConfigurationChanged refreshes if one relevant config is changed (%p)',
+            async (configName, expectedRefresh) => {
+                jest.spyOn(configuration, 'changed').mockImplementation((e, name) => name === configName);
+                jest.spyOn(Container.jqlManager, 'enabledJQLEntries').mockReturnValue([]);
 
-            provider = new CustomJQLViewProvider();
+                provider = new CustomJQLViewProvider();
 
-            const refreshCallback = jest.fn();
-            provider.onDidChangeTreeData(refreshCallback);
+                const refreshCallback = jest.fn();
+                provider.onDidChangeTreeData(refreshCallback);
 
-            const callbackObj = Container.context.subscriptions[0] as any;
-            callbackObj.func.call(callbackObj.thisArg);
+                const callbackObj = Container.context.subscriptions[0] as any;
+                callbackObj.func.call(callbackObj.thisArg);
 
-            if (expectedRefresh) {
-                expect(refreshCallback).toHaveBeenCalledTimes(1);
-            } else {
-                expect(refreshCallback).not.toHaveBeenCalled();
-            }
-        });
+                await sleep(100);
+
+                if (expectedRefresh) {
+                    expect(refreshCallback).toHaveBeenCalledTimes(1);
+                } else {
+                    expect(refreshCallback).not.toHaveBeenCalled();
+                }
+            },
+        );
 
         it.each([
             [[], true, false],

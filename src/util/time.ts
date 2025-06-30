@@ -9,4 +9,4 @@ export enum Time {
 }
 
 export const ConnectionTimeout = 30 * Time.SECONDS;
-export const RefreshDelay = 4 * Time.SECONDS;
+export const OnJiraEditedRefreshDelay = 4 * Time.SECONDS;

@@ -100,8 +100,13 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
         this.refresh();
     }
 
-    private refresh(): void {
-        this._onDidChangeTreeData.fire();
+    private refresh(delay?: number): Promise<void> {
+        return new Promise<void>((resolve) =>
+            setTimeout(() => {
+                this._onDidChangeTreeData.fire();
+                resolve();
+            }, delay || 1),
+        );
     }
 
     public getTreeItem(element: TreeItem): TreeItem {
