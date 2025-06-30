@@ -11,7 +11,7 @@ import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 import { descriptionForState, generatePipelineTitle, shouldDisplay } from '../pipelines/Helpers';
 import { NotificationSurface } from './notificationManager';
 
-const NotificationBannerId = '';
+const NotificationBannerId = 'atlascode.bitbucket.pipelinesNotification';
 
 export class PipelinesMonitor implements BitbucketActivityMonitor {
     private _previousResults: Record<string, Pipeline[]> = {};
