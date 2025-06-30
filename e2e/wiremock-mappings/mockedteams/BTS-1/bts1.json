@@ -1,13 +1,10 @@
 {
   "request": {
     "method": "GET",
-    "urlPath": " /rest/api/2/issue/BTS-1",
+    "urlPath": "/rest/api/2/issue/BTS-1",
     "queryParameters": {
       "expand": {
-        "equalTo": "transitions%2CrenderedFields%2Ceditmeta%2Ctransitions.fields"
-      },
-      "fields": {
-        "equalTo": "*all"
+        "contains": "transitions"
       }
     }
   },

@@ -1,0 +1,23 @@
+{
+  "request": {
+    "method": "PUT",
+    "urlPath": "/rest/api/2/issue/BTS-1",
+    "headers": {
+      "Content-Type": {
+        "contains": "application/json"
+      }
+    },
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "$.fields.description",
+        "contains": "Add e2e test for this functionality"
+      }
+    ]
+  },
+  "response": {
+    "status": 204,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+} 
