@@ -119,3 +119,77 @@ test('Authenticating with Jira works, and assigned items are displayed', async (
 
     //await expect(page).toHaveScreenshot();
 });
+
+test('Test image check on attachments', async ({ page, context }) => {
+    await page.goto('http://localhost:9988/');
+
+    await page.getByRole('tab', { name: 'Atlassian' }).click();
+
+    await page.getByRole('tab', { name: 'Getting Started' }).getByLabel(/close/i).click();
+
+    await context.clearCookies();
+    await page.goto('http://localhost:9988/');
+    await page.evaluate(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+    });
+
+    await page.getByRole('treeitem', { name: 'Please login to Jira' }).click();
+
+    await page.getByRole('tab', { name: 'Atlassian Settings' }).click();
+    await page.waitForTimeout(2000);
+    let webviewIframes = await page.$$('iframe.webview');
+
+    let settingsFrameLocator;
+    for (const iframe of webviewIframes) {
+        const frame = await iframe.contentFrame();
+        if (frame && (await frame.$('iframe[title="Atlassian Settings"]'))) {
+            settingsFrameLocator = page
+                .frameLocator(`iframe.webview[name="${await iframe.getAttribute('name')}"]`)
+                .frameLocator('iframe[title="Atlassian Settings"]');
+            break;
+        }
+    }
+
+    if (!settingsFrameLocator) {
+        throw new Error('Atlassian Settings iframe not found');
+    }
+
+    // Now use settingsFrameLocator as before
+    await settingsFrameLocator.getByRole('button', { name: 'Login to Jira' }).click();
+    await page.waitForTimeout(250);
+
+    await settingsFrameLocator.getByRole('textbox', { name: 'Base URL' }).fill('https://mockedteams.atlassian.net');
+    await page.waitForTimeout(250);
+
+    await settingsFrameLocator.getByRole('textbox', { name: 'Username' }).fill('mock@atlassian.code');
+    await page.waitForTimeout(250);
+
+    await settingsFrameLocator.getByRole('textbox', { name: 'Password (API token)' }).fill('12345');
+    await page.waitForTimeout(250);
+
+    await settingsFrameLocator.getByRole('button', { name: 'Save Site' }).click();
+    await page.waitForTimeout(2000);
+
+    await page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' }).click();
+    await page.waitForTimeout(5000);
+
+    webviewIframes = await page.$$('iframe.webview');
+    let issueFrameLocator;
+    for (const iframe of webviewIframes) {
+        const frame = await iframe.contentFrame();
+        if (frame && (await frame.$('iframe[title="Jira Issue"]'))) {
+            issueFrameLocator = page
+                .frameLocator(`iframe.webview[name="${await iframe.getAttribute('name')}"]`)
+                .frameLocator('iframe[title="Jira Issue"]');
+            break;
+        }
+    }
+    if (!issueFrameLocator) {
+        throw new Error('Jira Issue iframe not found');
+    }
+
+    // Check attachment inside the correct frame
+    await expect(issueFrameLocator.getByText('image.png')).toBeVisible();
+    await page.waitForTimeout(2000);
+});
