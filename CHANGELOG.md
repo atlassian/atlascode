@@ -2,6 +2,12 @@
 
 ---
 
+## What's new in 3.8.7
+
+### Bug Fixes
+
+- Fixed a bug when slash is missing after custom branch prefix in branch naming
+
 ## What's new in 3.8.6
 
 ### Features
@@ -33,7 +39,7 @@
 ### Features
 
 - It is now possible to transition Jira work items to a different status from the sidebar, via `Transition Issue...` context menu option
-- Notifications for unseen & recent comments on Jira and Bitbucket are now supported 
+- Notifications for unseen & recent comments on Jira and Bitbucket are now supported
 
 ## What's new in 3.8.2
 
