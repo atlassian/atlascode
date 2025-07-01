@@ -10,6 +10,7 @@ import { Pipeline, PipelineTarget } from '../../pipelines/model';
 import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 import { descriptionForState, generatePipelineTitle, shouldDisplay } from '../pipelines/Helpers';
 import { NotificationSurface } from './notificationManager';
+import { NotificationSource } from './notificationSources';
 
 const NotificationBannerId = 'atlascode.bitbucket.pipelinesNotification';
 
@@ -46,11 +47,14 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
                 const buttonText = diffs.length === 1 ? 'View' : 'View Pipeline Explorer';
                 const neverShow = "Don't show again";
 
-                notificationChangeEvent(NotificationBannerId, undefined, NotificationSurface.Banner, 1).then(
-                    (event) => {
-                        Container.analyticsClient.sendTrackEvent(event);
-                    },
-                );
+                notificationChangeEvent(
+                    NotificationSource.BitbucketPipeline,
+                    undefined,
+                    NotificationSurface.Banner,
+                    1,
+                ).then((event) => {
+                    Container.analyticsClient.sendTrackEvent(event);
+                });
 
                 const selection = await window.showInformationMessage(
                     this.composeMessage(diffs),

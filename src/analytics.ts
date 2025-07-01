@@ -6,6 +6,7 @@ import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira, SiteInfo } fro
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
 import { NotificationSurface, NotificationType } from './views/notifications/notificationManager';
+import { NotificationSource } from './views/notifications/notificationSources';
 
 // IMPORTANT
 // Make sure there is a corresponding event with the correct attributes in the Data Portal for any event created here.
@@ -225,7 +226,7 @@ export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {
 }
 
 export async function notificationChangeEvent(
-    source: string | undefined,
+    source: NotificationSource,
     uri: Uri | undefined,
     notificationSurface: NotificationSurface,
     delta: number,

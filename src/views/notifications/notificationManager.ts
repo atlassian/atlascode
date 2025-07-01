@@ -72,6 +72,7 @@ const ENABLE_BANNER_FOR = [
     NotificationType.LoginNeeded,
     NotificationType.Other,
 ];
+
 export class NotificationManagerImpl extends Disposable {
     private notifications: Map<string, Map<string, AtlasCodeNotification>> = new Map();
     private static instance: NotificationManagerImpl;

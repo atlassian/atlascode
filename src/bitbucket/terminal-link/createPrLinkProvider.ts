@@ -1,3 +1,4 @@
+import { NotificationSource } from 'src/views/notifications/notificationSources';
 import {
     CancellationToken,
     commands,
@@ -101,9 +102,11 @@ export class BitbucketCloudPullRequestLinkProvider extends Disposable implements
         const yes = 'Yes';
         const neverShow = "Don't show again";
 
-        notificationChangeEvent(PanelId, Uri.parse(PanelId), NotificationSurface.Banner, 1).then((event) => {
-            this._analyticsClient.sendTrackEvent(event);
-        });
+        notificationChangeEvent(NotificationSource.BitbucketTerminalUri, undefined, NotificationSurface.Banner, 1).then(
+            (event) => {
+                this._analyticsClient.sendTrackEvent(event);
+            },
+        );
 
         window
             .showInformationMessage(
