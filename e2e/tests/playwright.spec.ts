@@ -33,12 +33,76 @@ test('Test image check on attachments', async ({ page, context }) => {
     // Upload fake image file to the attachment dropzone
     const fileInput = issueFrame.locator('input[type="file"]');
     await fileInput.setInputFiles({
-        name: 'new-image.png',
+        name: 'test-image.png',
         mimeType: 'image/png',
         buffer: Buffer.from('fake-image-content'),
     });
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(1000);
+
+    // Wait for the Save button to be visible and enabled
+    const saveButton = issueFrame.locator('button.ac-button').filter({ hasText: 'Save' });
+    await expect(saveButton).toBeVisible();
+    await expect(saveButton).toBeEnabled();
+
+    // Prepare the mock data with the new attachment before clicking Save
+    const issueJSON = JSON.parse(fs.readFileSync('e2e/wiremock-mappings/mockedteams/BTS-1/bts1.json', 'utf-8'));
+    const parsedBody = JSON.parse(issueJSON.response.body);
+
+    // Add the new attachment to both fields.attachment and renderedFields.attachment
+    const newAttachment = {
+        id: '10001',
+        filename: 'test-image.png',
+        author: {
+            self: 'https://mockedteams.atlassian.net/rest/api/2/user?accountId=712020:13354d79-beaa-49d6-a55f-b9510892e3f4',
+            accountId: '712020:13354d79-beaa-49d6-a55f-b9510892e3f4',
+            displayName: 'Mocked McMock',
+        },
+        created: '2025-05-10T00:15:00.000-0700',
+        size: 1024,
+        mimeType: 'image/png',
+        content: 'https://mockedteams.atlassian.net/secure/attachment/10001/test-image.png',
+    };
+
+    // Update both attachment arrays
+    parsedBody.fields.attachment.push(newAttachment);
+    parsedBody.renderedFields.attachment.push(newAttachment);
+
+    // Set up the mock mapping for the GET request (to fetch updated issue)
+    const { id } = await setupWireMockMapping(request, 'GET', parsedBody, '/rest/api/2/issue/BTS-1');
+
+    // Also mock the POST request for attachment upload
+    const attachmentUploadResponse = {
+        id: '10001',
+        filename: 'test-image.png',
+        size: 1024,
+        mimeType: 'image/png',
+        content: 'https://mockedteams.atlassian.net/secure/attachment/10001/test-image.png',
+    };
+    const uploadMockResponse = await request.post('http://wiremock-mockedteams:8080/__admin/mappings', {
+        data: {
+            request: {
+                method: 'POST',
+                urlPathPattern: '/rest/api/2/issue/BTS-1/attachments',
+            },
+            response: {
+                status: 200,
+                body: JSON.stringify([attachmentUploadResponse]),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            },
+        },
+    });
+    const uploadMockId = (await uploadMockResponse.json()).id;
 
     // Click the Save button to save the attachment
-    await issueFrame.locator('button.ac-button').filter({ hasText: 'Save' }).click();
+    await saveButton.click();
+    await page.waitForTimeout(2000);
+    // Verify the attachment was added
+    await expect(issueFrame.locator('text=test-image.png')).toBeVisible();
+
+    // Clean up both mappings at the end
+    await cleanupWireMockMapping(request, id);
+    await cleanupWireMockMapping(request, uploadMockId);
+    await page.waitForTimeout(2000);
 });
