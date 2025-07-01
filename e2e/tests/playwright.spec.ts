@@ -41,7 +41,4 @@ test('Test image check on attachments', async ({ page, context }) => {
 
     // Click the Save button to save the attachment
     await issueFrame.locator('button.ac-button').filter({ hasText: 'Save' }).click();
-    await page.waitForTimeout(2000);
-
-    await page.waitForTimeout(2000);
 });
