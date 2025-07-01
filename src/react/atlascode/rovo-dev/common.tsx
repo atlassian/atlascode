@@ -1,6 +1,9 @@
 import Button from '@atlaskit/button';
 import CheckIcon from '@atlaskit/icon/glyph/check';
+import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
+import ChevronRightIcon from '@atlaskit/icon/glyph/chevron-right';
 import CrossIcon from '@atlaskit/icon/glyph/cross';
+import QuestionCircleIcon from '@atlaskit/icon/glyph/question-circle';
 import { Marked } from '@ts-stack/markdown';
 import React, { useCallback } from 'react';
 
@@ -16,6 +19,7 @@ import {
 } from './rovoDevViewStyles';
 import {
     ChatMessage,
+    CodeSnippetToChange,
     DefaultMessage,
     parseToolReturnMessage,
     TechnicalPlan,
@@ -404,38 +408,94 @@ type TechnicalPlanProps = {
     openFile: OpenFileFunc;
 };
 
-const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content }) => {
+const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile }) => {
+    const clarifyingQuestions = content.logicalChanges.flatMap((change) => {
+        return change.filesToChange
+            .map((file) => {
+                if (file.clarifyingQuestionIfAny) {
+                    return file.clarifyingQuestionIfAny;
+                }
+                return null;
+            })
+            .filter((q) => q !== null);
+    });
+
     return (
-        <div className="technical-plan-container">
-            {content.logicalChanges.map((change, index) => {
-                return <LogicalChange key={index} change={change} />;
-            })}
+        <div>
+            <div style={{ ...chatMessageStyles, ...agentMessageStyles }}>
+                <div className="technical-plan-container">
+                    {content.logicalChanges.map((change, index) => {
+                        return (
+                            <div className="logical-change-wrapper" key={index}>
+                                <div className="logical-change-counter">
+                                    <p>{index + 1}</p>
+                                </div>
+                                <LogicalChange key={index} change={change} openFile={openFile} />
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+            {clarifyingQuestions &&
+                clarifyingQuestions.length > 0 &&
+                clarifyingQuestions.map((question, idx) => {
+                    return (
+                        <div
+                            key={idx}
+                            style={{
+                                ...chatMessageStyles,
+                                ...agentMessageStyles,
+                                display: 'flex',
+                                flexDirection: 'row',
+                                gap: '8px',
+                            }}
+                        >
+                            <QuestionCircleIcon
+                                primaryColor="var(--vscode-charts-purple)"
+                                size="small"
+                                label="Clarifying Question"
+                            />
+                            <div style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}>
+                                <div>{idx + 1}. </div>
+                                <span dangerouslySetInnerHTML={{ __html: Marked.parse(question) }} />
+                            </div>
+                        </div>
+                    );
+                })}
         </div>
     );
 };
 
-const LogicalChange: React.FC<{ change: TechnicalPlanLogicalChange }> = (props) => {
-    const { change } = props;
+const LogicalChange: React.FC<{
+    change: TechnicalPlanLogicalChange;
+    openFile: OpenFileFunc;
+}> = (props) => {
+    const { change, openFile } = props;
+
     const [isOpen, setIsOpen] = React.useState(false);
 
     const changeSummary = change.summary;
-
-    const renderDescription = (description: string) => {
-        return <span dangerouslySetInnerHTML={{ __html: Marked.parse(description) }} />;
-    };
 
     return (
         <div className="logical-change-container">
             <div className="logical-change-header">
                 <div className="title">{changeSummary}</div>
                 <Button
-                    className="button"
+                    className="chevron-button"
                     appearance="subtle"
                     iconBefore={
                         isOpen ? (
-                            <i className="codicon codicon-chevron-down" />
+                            <ChevronDownIcon
+                                primaryColor="var(--vscode-editor-foreground)"
+                                size="medium"
+                                label="Collapse"
+                            />
                         ) : (
-                            <i className="codicon codicon-chevron-right" />
+                            <ChevronRightIcon
+                                primaryColor="var(--vscode-editor-foreground)"
+                                size="medium"
+                                label="Expand"
+                            />
                         )
                     }
                     onClick={() => setIsOpen(!isOpen)}
@@ -443,17 +503,97 @@ const LogicalChange: React.FC<{ change: TechnicalPlanLogicalChange }> = (props) 
                 />
             </div>
             {isOpen && (
-                <div className="file-to-change-container">
+                <ol className="file-to-change-container">
                     {change.filesToChange.map((file) => {
                         return (
-                            <div className="file-to-change">
-                                {file.descriptionOfChange && renderDescription(file.descriptionOfChange)}
-                                File to modify: {file.filePath}
+                            <li>
+                                <FileToChangeComponent
+                                    filePath={file.filePath}
+                                    openFile={openFile}
+                                    descriptionOfChange={file.descriptionOfChange}
+                                    codeSnippetsToChange={file.codeSnippetsToChange}
+                                />
+                            </li>
+                        );
+                    })}
+                </ol>
+            )}
+        </div>
+    );
+};
+
+const FileToChangeComponent: React.FC<{
+    filePath: string;
+    openFile: OpenFileFunc;
+    descriptionOfChange?: string;
+    codeSnippetsToChange?: CodeSnippetToChange[];
+}> = ({ filePath, openFile, descriptionOfChange, codeSnippetsToChange }) => {
+    const [isCodeChangesOpen, setIsCodeChangesOpen] = React.useState(false);
+    const codeSnippetsPresent = codeSnippetsToChange && codeSnippetsToChange.length > 0;
+
+    const renderDescription = (description: string) => {
+        return <span dangerouslySetInnerHTML={{ __html: Marked.parse(description) }} />;
+    };
+    return (
+        <div className="file-to-change">
+            {descriptionOfChange && renderDescription(descriptionOfChange)}
+            <div className="file-to-change-info">
+                <div className="lozenge-container">
+                    <p>File to modify: </p>
+                    <FileLozenge filePath={filePath} openFile={openFile} />
+                </div>
+                {codeSnippetsPresent && (
+                    <Button
+                        className="chevron-button"
+                        appearance="subtle"
+                        iconBefore={
+                            isCodeChangesOpen ? (
+                                <ChevronDownIcon
+                                    primaryColor="var(--vscode-editor-foreground)"
+                                    size="medium"
+                                    label="Collapse"
+                                />
+                            ) : (
+                                <ChevronRightIcon
+                                    primaryColor="var(--vscode-editor-foreground)"
+                                    size="medium"
+                                    label="Expand"
+                                />
+                            )
+                        }
+                        onClick={() => setIsCodeChangesOpen(!isCodeChangesOpen)}
+                        spacing="none"
+                    />
+                )}
+            </div>
+            {isCodeChangesOpen && codeSnippetsPresent && (
+                <div className="code-changes-container">
+                    {codeSnippetsToChange.map((snippet, idx) => {
+                        return (
+                            <div key={idx} className="code-snippet">
+                                <div>
+                                    <span>
+                                        Change from line {snippet.startLine} to {snippet.endLine}:
+                                    </span>
+                                </div>
+                                <pre>
+                                    <code>{snippet.code}</code>
+                                </pre>
                             </div>
                         );
                     })}
                 </div>
             )}
+        </div>
+    );
+};
+
+const FileLozenge: React.FC<{ filePath: string; openFile: OpenFileFunc }> = ({ filePath, openFile }) => {
+    const fileTitle = filePath ? filePath.match(/([^/\\]+)$/)?.[0] : undefined;
+
+    return (
+        <div onClick={() => openFile(filePath)} className="file-lozenge">
+            <span className="file-path">{fileTitle || filePath}</span>
         </div>
     );
 };
