@@ -2,12 +2,6 @@
 
 ---
 
-## What's new in 3.8.7
-
-### Bug Fixes
-
-- Fixed a bug when slash is missing after custom branch prefix in branch naming
-
 ## What's new in 3.8.6
 
 ### Features
@@ -18,6 +12,7 @@
 
 - Fixed a regression in the source branch dropdrown of the Start work page
 - Fixed sometimes the 'Assigned Jira work items' and 'Custom JQL filters' panels don't retrieve recently edited items
+- Fixed a bug when slash is missing after custom branch prefix in branch naming
 
 ## What's new in 3.8.5
 
