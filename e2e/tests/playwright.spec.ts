@@ -71,27 +71,11 @@ test('Test image check on attachments', async ({ page, context }) => {
     const { id } = await setupWireMockMapping(request, 'GET', parsedBody, '/rest/api/2/issue/BTS-1');
 
     // Also mock the POST request for attachment upload
-    const attachmentUploadResponse = {
-        id: '10001',
-        filename: 'test-image.png',
-        size: 1024,
-        mimeType: 'image/png',
-        content: 'https://mockedteams.atlassian.net/secure/attachment/10001/test-image.png',
-    };
+    const attachmentUploadMapping = JSON.parse(
+        fs.readFileSync('e2e/wiremock-mappings/mockedteams/addAttachment.json', 'utf-8'),
+    );
     const uploadMockResponse = await request.post('http://wiremock-mockedteams:8080/__admin/mappings', {
-        data: {
-            request: {
-                method: 'POST',
-                urlPathPattern: '/rest/api/2/issue/BTS-1/attachments',
-            },
-            response: {
-                status: 200,
-                body: JSON.stringify([attachmentUploadResponse]),
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            },
-        },
+        data: attachmentUploadMapping,
     });
     const uploadMockId = (await uploadMockResponse.json()).id;
 
