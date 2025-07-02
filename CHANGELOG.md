@@ -2,11 +2,18 @@
 
 ---
 
+## What's new in 3.8.6
+
+### Bug Fixes
+
+- Fixed a regression in the source branch dropdrown of the Start work page
+- Fixed sometimes the 'Assigned Jira work items' and 'Custom JQL filters' panels don't retrieve recently edited items
+
 ## What's new in 3.8.5
 
 ### Bug Fixes
 
-- Fixed a regression in the branch prefix dropdrown
+- Fixed a regression in the branch prefix dropdrown of the Start work page
 
 ## What's new in 3.8.4
 
@@ -21,7 +28,6 @@
 
 ### Features
 
-- Implement native VS Code onboarding experiment
 - It is now possible to transition Jira work items to a different status from the sidebar, via `Transition Issue...` context menu option
 - Notifications for unseen & recent comments on Jira and Bitbucket are now supported 
 
@@ -29,7 +35,7 @@
 
 ### Improvement
 
-- Remove the word "Labs" from the title of the extension
+- Removed the word "Labs" from the title of the extension
 
 ## What's new in 3.8.1
 

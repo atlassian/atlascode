@@ -51,7 +51,6 @@ import { ErrorDisplay } from '../common/ErrorDisplay';
 import Lozenge from '../common/Lozenge';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { PrepareCommitTip } from '../common/PrepareCommitTip';
-import { buildBranchName } from './branchNameUtils';
 import { StartWorkControllerContext, useStartWorkController } from './startWorkController';
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -132,27 +131,56 @@ const StartWorkPage: React.FunctionComponent = () => {
         [setTransition],
     );
 
-    const buildBranchNameView = useCallback(() => {
-        const view = buildBranchName({
-            branchType,
-            issue: state.issue,
-            userEmail: repository.userEmail,
-        });
+    const buildBranchName = useCallback(
+        (repo: RepoData, branchType: BranchType) => {
+            const usernameBase = repo.userEmail
+                ? repo.userEmail
+                      .split('@')[0]
+                      .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
+                      .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
+                : 'username';
+            const prefixBase = branchType.prefix.replace(/ /g, '-');
+            const summaryBase = state.issue.summary
+                .substring(0, 50)
+                .trim()
+                .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
+                .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
+                .replace(/\W+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
 
-        try {
-            const generatedBranchTitle = Mustache.render(state.customTemplate, view);
-            setLocalBranch(generatedBranchTitle);
-        } catch {
-            setLocalBranch('Invalid template: please follow the format described above');
-        }
-    }, [branchType, state.issue, state.customTemplate, repository.userEmail]);
+            const view = {
+                username: usernameBase.toLowerCase(),
+                UserName: usernameBase,
+                USERNAME: usernameBase.toUpperCase(),
+                prefix: prefixBase.toLowerCase(),
+                Prefix: prefixBase,
+                PREFIX: prefixBase.toUpperCase(),
+                issuekey: state.issue.key.toLowerCase(),
+                IssueKey: state.issue.key,
+                issueKey: state.issue.key,
+                ISSUEKEY: state.issue.key.toUpperCase(),
+                summary: summaryBase.toLowerCase(),
+                Summary: summaryBase,
+                SUMMARY: summaryBase.toUpperCase(),
+            };
+
+            try {
+                const generatedBranchTitle = Mustache.render(state.customTemplate, view);
+                setLocalBranch(generatedBranchTitle);
+            } catch {
+                setLocalBranch('Invalid template: please follow the format described above');
+            }
+        },
+        [state.issue.key, state.issue.summary, state.customTemplate],
+    );
 
     const handleRepositoryChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
             setRepository(event.target.value);
-            buildBranchNameView();
+            buildBranchName(event.target.value, branchType);
         },
-        [setRepository, buildBranchNameView],
+        [setRepository, buildBranchName, branchType],
     );
 
     const handleSourceBranchChange = useCallback(
@@ -165,9 +193,9 @@ const StartWorkPage: React.FunctionComponent = () => {
     const handleBranchTypeChange = useCallback(
         (event: React.ChangeEvent, value: BranchType) => {
             setBranchType(value);
-            buildBranchNameView();
+            buildBranchName(repository, value);
         },
-        [setBranchType, buildBranchNameView],
+        [setBranchType, buildBranchName, repository],
     );
 
     const handleExistingBranchClick = useCallback(
@@ -258,12 +286,9 @@ const StartWorkPage: React.FunctionComponent = () => {
         console.log(`JS-1324 selected repo ${repository.workspaceRepo.rootUri}`);
         if (repository.workspaceRepo.rootUri === '' && state.repoData.length > 0) {
             setRepository(state.repoData?.[0]);
-            // Only build branch name if we have both branchType and issue
-            if (branchType && state.issue) {
-                buildBranchNameView();
-            }
+            buildBranchName(state.repoData?.[0], branchType);
         }
-    }, [repository, branchType, setRepository, state.repoData, state.issue, state.customTemplate, buildBranchNameView]);
+    }, [repository, branchType, setRepository, state.repoData, buildBranchName]);
 
     useEffect(() => {
         console.log(`JS-1324 repos: ${JSON.stringify(state.repoData.map((r) => r.workspaceRepo.rootUri))}`);
@@ -272,10 +297,7 @@ const StartWorkPage: React.FunctionComponent = () => {
     useEffect(() => {
         const newBranchType = repository.branchTypes?.[0] || emptyPrefix;
         setUpstream(repository.workspaceRepo.mainSiteRemote.remote.name);
-        // Only set branch type if it's still the empty prefix (initial state)
-        if (branchType.kind === '' && branchType.prefix === '') {
-            setBranchType(newBranchType);
-        }
+        setBranchType(newBranchType);
         setSourceBranch(
             repository.localBranches?.find(
                 (b) => repository.developmentBranch && b.name === repository.developmentBranch,
@@ -291,8 +313,8 @@ const StartWorkPage: React.FunctionComponent = () => {
                         !repository.localBranches.some((localBranch) => remoteBranch.name!.endsWith(localBranch.name!)),
                 ),
         ]);
-        buildBranchNameView();
-    }, [repository, state.issue, buildBranchNameView, branchType.kind, branchType.prefix]);
+        buildBranchName(repository, newBranchType);
+    }, [repository, state.issue, buildBranchName]);
 
     useEffect(() => {
         setSubmitState('initial');
