@@ -46,9 +46,6 @@ test('Test image check on attachments', async ({ page, context }) => {
 
     // Prepare the mock data with the new attachment before clicking Save
     const issueJSON = JSON.parse(fs.readFileSync('e2e/wiremock-mappings/mockedteams/BTS-1/bts1.json', 'utf-8'));
-    const parsedBody = JSON.parse(issueJSON.response.body);
-
-    // Add the new attachment to both fields.attachment and renderedFields.attachment
     const newAttachment = {
         id: '10001',
         filename: 'test-image.png',
@@ -63,29 +60,17 @@ test('Test image check on attachments', async ({ page, context }) => {
         content: 'https://mockedteams.atlassian.net/secure/attachment/10001/test-image.png',
     };
 
-    // Update both attachment arrays
-    parsedBody.fields.attachment.push(newAttachment);
-    parsedBody.renderedFields.attachment.push(newAttachment);
-
-    // Set up the mock mapping for the GET request (to fetch updated issue)
-    const { id } = await setupWireMockMapping(request, 'GET', parsedBody, '/rest/api/2/issue/BTS-1');
-
-    // Also mock the POST request for attachment upload
-    const attachmentUploadMapping = JSON.parse(
-        fs.readFileSync('e2e/wiremock-mappings/mockedteams/addAttachment.json', 'utf-8'),
-    );
-    const uploadMockResponse = await request.post('http://wiremock-mockedteams:8080/__admin/mappings', {
-        data: attachmentUploadMapping,
+    const updatedIssue = updateIssueField(issueJSON, {
+        attachment: newAttachment,
     });
-    const uploadMockId = (await uploadMockResponse.json()).id;
-
+    // Set up the mock mapping for the GET request (to fetch updated issue)
+    const { id } = await setupWireMockMapping(request, 'GET', updatedIssue, '/rest/api/2/issue/BTS-1');
     // Click the Save button to save the attachment
     await saveButton.click();
     await page.waitForTimeout(2000);
     // Verify the attachment was added
     await expect(issueFrame.locator('text=test-image.png')).toBeVisible();
 
-    // Clean up both mappings at the end
+    // Clean up the mapping at the end
     await cleanupWireMockMapping(request, id);
-    await cleanupWireMockMapping(request, uploadMockId);
 });

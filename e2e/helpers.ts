@@ -68,6 +68,10 @@ export function updateIssueField(issueJson: any, updates: Record<string, any>) {
             updated.renderedFields.comment.total = 1;
             updated.renderedFields.comment.maxResults = 1;
             updated.renderedFields.comment.startAt = 0;
+        } else if (key === 'attachment') {
+            // Add the new attachment to both fields.attachment and renderedFields.attachment arrays
+            updated.fields.attachment.push(value);
+            updated.renderedFields.attachment.push(value);
         }
     }
 
