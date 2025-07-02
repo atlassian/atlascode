@@ -112,7 +112,6 @@ export class JiraIssueWebview
     }
 
     private async forceUpdateIssue(refetchMinimalIssue: boolean = false) {
-        console.log('This is function called when we click a function');
         if (this.isRefeshing) {
             return;
         }
