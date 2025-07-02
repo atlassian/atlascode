@@ -104,5 +104,4 @@ test('Test image check on attachments', async ({ page, context }) => {
     // Clean up both mappings at the end
     await cleanupWireMockMapping(request, id);
     await cleanupWireMockMapping(request, uploadMockId);
-    await page.waitForTimeout(2000);
 });
