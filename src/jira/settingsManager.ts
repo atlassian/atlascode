@@ -69,6 +69,7 @@ export class JiraSettingsManager extends Disposable {
         return this._issueLinkTypesStore.get(site.id)!;
     }
 
+    // Call One from updateEpicChildren
     public async getMinimalIssueFieldIdsForSite(site: DetailedSiteInfo): Promise<string[]> {
         const fields = Array.from(minimalDefaultIssueFields);
         const epicInfo = await this.getEpicFieldsForSite(site);
@@ -90,13 +91,15 @@ export class JiraSettingsManager extends Disposable {
 
         return fields;
     }
-
+    // Call Two from getEpicFieldsForSite
     public async getEpicFieldsForSite(site: DetailedSiteInfo): Promise<EpicFieldInfo> {
+        // Epic call one two
         const allFields: Fields = await this.getAllFieldsForSite(site);
         return getEpicFieldInfo(allFields);
     }
 
     public async getAllFieldsForSite(site: DetailedSiteInfo): Promise<Fields> {
+        console.log(site.id);
         if (!this._fieldStore.has(site.id)) {
             const fields = await this.fetchAllFieldsForSite(site);
             this._fieldStore.set(site.id, fields);
@@ -106,6 +109,7 @@ export class JiraSettingsManager extends Disposable {
     }
 
     private async fetchAllFieldsForSite(site: DetailedSiteInfo): Promise<Fields> {
+        console.log(`Triggered again with site: ${site.id}`);
         const fields: Fields = {};
         const client = await Container.clientManager.jiraClient(site);
         const allFields = await client.getFields();

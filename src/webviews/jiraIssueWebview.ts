@@ -112,6 +112,7 @@ export class JiraIssueWebview
     }
 
     private async forceUpdateIssue(refetchMinimalIssue: boolean = false) {
+        console.log('This is function called when we click a function');
         if (this.isRefeshing) {
             return;
         }
@@ -152,8 +153,7 @@ export class JiraIssueWebview
             // call async-able update functions here
             this.updateEpicChildren();
             this.updateCurrentUser();
-            this.updateWatchers();
-            this.updateVoters();
+            this.updateVotersAndWatchers();
             this.updateRelatedPullRequests();
         } catch (e) {
             Logger.error(e, 'Error updating issue');
@@ -168,6 +168,7 @@ export class JiraIssueWebview
     // fetching data and JQL querying.
     async updateEpicChildren() {
         if (this._issue.isEpic) {
+            console.log('This issue is epic!!!');
             const site = this._issue.siteDetails;
             const client = await Container.clientManager.jiraClient(site);
             const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
@@ -222,6 +223,33 @@ export class JiraIssueWebview
                 type: 'fieldValueUpdate',
                 fieldValues: { votes: this._editUIData.fieldValues['votes'] },
             });
+        }
+    }
+
+    async updateVotersAndWatchers() {
+        if (
+            this._editUIData.fieldValues['watches'] &&
+            this._editUIData.fieldValues['watches'].watchCount > 0 &&
+            this._editUIData.fieldValues['votes'] &&
+            this._editUIData.fieldValues['votes'].votes > 0
+        ) {
+            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+            const watches = await client.getWatchers(this._issue.key);
+            const votes = await client.getVotes(this._issue.key);
+
+            this._editUIData.fieldValues['watches'] = watches;
+            this._editUIData.fieldValues['votes'] = votes;
+            this.postMessage({
+                type: 'fieldValueUpdate',
+                fieldValues: {
+                    watches: this._editUIData.fieldValues['watches'],
+                    votes: this._editUIData.fieldValues['votes'],
+                },
+            });
+        } else if (this._editUIData.fieldValues['watches'] && this._editUIData.fieldValues['watches'].watchCount > 0) {
+            this.updateWatchers();
+        } else if (this._editUIData.fieldValues['votes'] && this._editUIData.fieldValues['votes'].votes > 0) {
+            this.updateVoters();
         }
     }
 
