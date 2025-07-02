@@ -6,6 +6,7 @@ import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira, SiteInfo } fro
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
 import { NotificationSurface, NotificationType } from './views/notifications/notificationManager';
+import { NotificationSource } from './views/notifications/notificationSources';
 
 // IMPORTANT
 // Make sure there is a corresponding event with the correct attributes in the Data Portal for any event created here.
@@ -225,13 +226,15 @@ export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {
 }
 
 export async function notificationChangeEvent(
-    uri: Uri,
+    source: NotificationSource,
+    uri: Uri | undefined,
     notificationSurface: NotificationSurface,
     delta: number,
 ): Promise<TrackEvent> {
     return trackEvent('changed', 'notification', {
         attributes: {
-            uri: uri.toString(),
+            source,
+            uri: uri?.toString(),
             notificationSurface: notificationSurface,
             delta: delta,
         },
@@ -675,6 +678,25 @@ export async function openActiveIssueEvent(): Promise<UIEvent> {
             actionSubject: 'button',
             actionSubjectId: 'openActiveIssue',
             source: 'statusBar',
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function notificationBannerClickedEvent(source: string, buttonType: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'notificationBanner',
+            source,
+            attributes: {
+                buttonType,
+            },
         },
     };
 

@@ -4,6 +4,10 @@
 
 ## What's new in 3.8.6
 
+### Features
+
+- Added a `Don't show again` button in the pipeline notification to easily disable this type of notifications
+
 ### Bug Fixes
 
 - Fixed a regression in the source branch dropdrown of the Start work page

@@ -15,6 +15,7 @@ import {
     NotificationSurface,
     NotificationType,
 } from './notificationManager';
+import { determineNotificationSource } from './notificationSources';
 
 export class BannerDelegate implements NotificationDelegate {
     private static bannerDelegateSingleton: BannerDelegate | undefined = undefined;
@@ -140,7 +141,7 @@ export class BannerDelegate implements NotificationDelegate {
     }
 
     private analyticsBannerShown(uri: Uri, count: number) {
-        notificationChangeEvent(uri, NotificationSurface.Banner, count).then((e) => {
+        notificationChangeEvent(determineNotificationSource(uri), uri, NotificationSurface.Banner, count).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

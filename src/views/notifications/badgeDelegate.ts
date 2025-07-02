@@ -10,6 +10,7 @@ import {
     NotificationManagerImpl,
     NotificationSurface,
 } from './notificationManager';
+import { determineNotificationSource } from './notificationSources';
 
 export class BadgeDelegate implements FileDecorationProvider, NotificationDelegate {
     private static badgeDelegateSingleton: BadgeDelegate | undefined = undefined;
@@ -121,8 +122,10 @@ export class BadgeDelegate implements FileDecorationProvider, NotificationDelega
         if (badgeCountDelta === 0) {
             return;
         }
-        notificationChangeEvent(uri, NotificationSurface.Badge, badgeCountDelta).then((e) => {
-            this._analyticsClient.sendTrackEvent(e);
-        });
+        notificationChangeEvent(determineNotificationSource(uri), uri, NotificationSurface.Badge, badgeCountDelta).then(
+            (e) => {
+                this._analyticsClient.sendTrackEvent(e);
+            },
+        );
     }
 }

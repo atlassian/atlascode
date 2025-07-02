@@ -155,7 +155,7 @@ describe('BitbucketPullRequestLinkProvider', () => {
             Container.config.bitbucket.showTerminalLinkPanel = true;
             const provider = new BitbucketCloudPullRequestLinkProvider();
             const executeCommandSpy = jest.spyOn(commands, 'executeCommand');
-            const configSpy = jest.spyOn(configuration, 'update');
+            const configSpy = jest.spyOn(configuration, 'updateEffective');
 
             (window.showInformationMessage as jest.Mock).mockResolvedValue("Don't show again");
 
@@ -163,7 +163,7 @@ describe('BitbucketPullRequestLinkProvider', () => {
 
             expect(executeCommandSpy).not.toHaveBeenCalledWith('atlascode.bb.createPullRequest');
             expect(env.openExternal).toHaveBeenCalledWith(mockUri);
-            expect(configSpy).toHaveBeenCalledWith('bitbucket.showTerminalLinkPanel', false, 2);
+            expect(configSpy).toHaveBeenCalledWith('bitbucket.showTerminalLinkPanel', false, null, true);
         });
     });
 });

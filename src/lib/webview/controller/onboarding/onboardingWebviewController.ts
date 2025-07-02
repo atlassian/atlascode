@@ -1,5 +1,5 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
-import { ConfigurationTarget, WebviewPanel } from 'vscode';
+import { WebviewPanel } from 'vscode';
 
 import { configuration } from '../../../../../src/config/configuration';
 import { Container } from '../../../../../src/container';
@@ -52,7 +52,7 @@ export class OnboardingWebviewController implements WebviewController<Onboarding
 
     public async onShown(panel: WebviewPanel): Promise<void> {
         try {
-            await configuration.update('jira.enabled', undefined, ConfigurationTarget.Global);
+            await configuration.updateEffective('jira.enabled', undefined, null, true);
         } catch {}
 
         // focus the atlassian extension panels when the onboarding view shows...

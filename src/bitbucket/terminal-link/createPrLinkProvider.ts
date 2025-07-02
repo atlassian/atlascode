@@ -1,8 +1,8 @@
+import { NotificationSource } from 'src/views/notifications/notificationSources';
 import {
     CancellationToken,
     commands,
     ConfigurationChangeEvent,
-    ConfigurationTarget,
     Disposable,
     env,
     ProviderResult,
@@ -102,9 +102,11 @@ export class BitbucketCloudPullRequestLinkProvider extends Disposable implements
         const yes = 'Yes';
         const neverShow = "Don't show again";
 
-        notificationChangeEvent(Uri.parse(PanelId), NotificationSurface.Banner, 1).then((event) => {
-            this._analyticsClient.sendTrackEvent(event);
-        });
+        notificationChangeEvent(NotificationSource.BitbucketTerminalUri, undefined, NotificationSurface.Banner, 1).then(
+            (event) => {
+                this._analyticsClient.sendTrackEvent(event);
+            },
+        );
 
         window
             .showInformationMessage(
@@ -149,6 +151,7 @@ export class BitbucketCloudPullRequestLinkProvider extends Disposable implements
         return env.openExternal(Uri.parse(url));
     }
 
-    private disable = () =>
-        configuration.update('bitbucket.showTerminalLinkPanel', false, ConfigurationTarget.Workspace);
+    private disable() {
+        configuration.updateEffective('bitbucket.showTerminalLinkPanel', false, null, true);
+    }
 }
