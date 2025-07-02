@@ -1,14 +1,7 @@
 import { expect, test } from '@playwright/test';
-import {
-    authenticateWithJira,
-    cleanupWireMockMapping,
-    getIssueFrame,
-    setupWireMockMapping,
-    updateIssueField,
-} from 'e2e/helpers';
-import fs from 'fs';
+import { authenticateWithJira, getIssueFrame } from 'e2e/helpers';
 
-test('Add comment flow', async ({ page, request }) => {
+test('Add comment flow', async ({ page }) => {
     const commentText = 'This is a test comment added via e2e test';
 
     await authenticateWithJira(page);
@@ -30,18 +23,11 @@ test('Add comment flow', async ({ page, request }) => {
     await textarea.fill(commentText);
     await page.waitForTimeout(1000);
 
-    const issueJSON = JSON.parse(fs.readFileSync('e2e/wiremock-mappings/mockedteams/BTS-1/bts1.json', 'utf-8'));
-    const updatedIssue = updateIssueField(issueJSON, {
-        comment: commentText,
-    });
-    const { id } = await setupWireMockMapping(request, 'GET', updatedIssue, '/rest/api/2/issue/BTS-1');
-
     const addCommentButton = issueFrame.getByRole('button', { name: 'Save' });
     await expect(addCommentButton).toBeVisible();
     await addCommentButton.click();
+    await page.waitForTimeout(2000);
 
     await expect(issueFrame.getByText(commentText)).toBeVisible();
     await expect(issueFrame.locator('.jira-comment-author')).toBeVisible();
-
-    await cleanupWireMockMapping(request, id);
 });
