@@ -1,4 +1,5 @@
-import './RovoDevCode.css';
+import './RovoDev.css';
+import './RovoDevCodeHighlighting.css';
 
 import LoadingButton from '@atlaskit/button/loading-button';
 import SendIcon from '@atlaskit/icon/glyph/send';
@@ -50,7 +51,6 @@ const RovoDevView: React.FC = () => {
 
     const chatEndRef = React.useRef<HTMLDivElement>(null);
 
-    // Scroll to bottom when chat updates
     React.useEffect(() => {
         if (chatEndRef.current) {
             chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -241,7 +241,9 @@ const RovoDevView: React.FC = () => {
         [handleResponse, completeMessage, handleAppendChatHistory, currentState, setCurrentState],
     );
 
-    const [postMessage] = useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, any>(onMessageHandler);
+    const [postMessage, postMessagePromise] = useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, any>(
+        onMessageHandler,
+    );
 
     const sendPrompt = useCallback(
         (text: string): void => {
@@ -324,10 +326,31 @@ const RovoDevView: React.FC = () => {
         [sendPrompt, promptText],
     );
 
+    // Function to get the original text of a file for planning diff
+    const getOriginalText = useCallback(
+        async (filePath: string, range?: number[]) => {
+            const uniqueNonce = `${Math.random()}-${Date.now()}`; // Unique identifier for the request
+            const res = await postMessagePromise(
+                {
+                    type: RovoDevViewResponseType.GetOriginalText,
+                    filePath,
+                    range: range && range.length === 2 ? range : undefined,
+                    requestId: uniqueNonce, // Unique identifier for the request
+                },
+                RovoDevProviderMessageType.ReturnText,
+                1500,
+                uniqueNonce,
+            );
+
+            return (res.text as string) || '';
+        },
+        [postMessagePromise],
+    );
+
     return (
         <div className="rovoDevChat" style={styles.rovoDevContainerStyles}>
             <div style={styles.chatMessagesContainerStyles}>
-                {chatHistory.map((msg, index) => renderChatHistory(msg, index, openFile))}
+                {chatHistory.map((msg, index) => renderChatHistory(msg, index, openFile, getOriginalText))}
                 {pendingToolCall && <ToolCallItem msg={pendingToolCall} />}
                 {currentResponse && (
                     <div

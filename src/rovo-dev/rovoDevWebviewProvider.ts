@@ -151,6 +151,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 case RovoDevViewResponseType.AcceptFiles:
                     await this.executeAcceptFiles(e.filePaths);
                     break;
+                case RovoDevViewResponseType.GetOriginalText:
+                    const text = await this.executeGetText(e.filePath, e.range);
+                    await webviewView.webview.postMessage({
+                        type: RovoDevProviderMessageType.ReturnText,
+                        text: text || '',
+                        nonce: e.requestId, // Use the requestId as nonce
+                    });
+                    break;
             }
         });
 
@@ -430,6 +438,28 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         } else {
             await this.processError(new Error('RovoDev client not initialized'));
         }
+    }
+
+    private async executeGetText(filePath: string, range?: number[]): Promise<string | undefined> {
+        const resolvedPath = this.makeRelativePathAbsolute(filePath);
+        if (!fs.existsSync(resolvedPath)) {
+            await this.processError(new Error(`File not found: ${resolvedPath}`));
+            return undefined;
+        }
+
+        const document = await workspace.openTextDocument(Uri.file(resolvedPath));
+
+        if (!document) {
+            await this.processError(new Error(`Unable to open document: ${resolvedPath}`));
+            return undefined;
+        }
+
+        const lineRange =
+            range && Array.isArray(range) ? new Range(new Position(range[0], 0), new Position(range[1], 0)) : undefined;
+
+        const text = document.getText(document.validateRange(lineRange || new Range(0, 0, document.lineCount, 0)));
+
+        return text;
     }
 
     async invokeRovoDevAskCommand(prompt: string): Promise<void> {

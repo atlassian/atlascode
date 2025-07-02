@@ -4,7 +4,10 @@ import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import ChevronRightIcon from '@atlaskit/icon/glyph/chevron-right';
 import CrossIcon from '@atlaskit/icon/glyph/cross';
 import QuestionCircleIcon from '@atlaskit/icon/glyph/question-circle';
+import { highlightElement } from '@speed-highlight/core';
+import { detectLanguage } from '@speed-highlight/core/detect';
 import { Marked } from '@ts-stack/markdown';
+import { createPatch } from 'diff';
 import React, { useCallback } from 'react';
 
 import {
@@ -198,13 +201,25 @@ export const ChatMessageItem: React.FC<{
     );
 };
 
-export const renderChatHistory = (msg: ChatMessage, index: number, openFile: OpenFileFunc) => {
+export const renderChatHistory = (
+    msg: ChatMessage,
+    index: number,
+    openFile: OpenFileFunc,
+    getText: (fp: string, lr?: number[]) => Promise<string>,
+) => {
     switch (msg.author) {
         case 'ToolReturn':
             const parsedMessages = parseToolReturnMessage(msg);
             return parsedMessages.map((message) => {
                 if (message.technicalPlan) {
-                    return <TechnicalPlanComponent key={index} content={message.technicalPlan} openFile={openFile} />;
+                    return (
+                        <TechnicalPlanComponent
+                            key={index}
+                            content={message.technicalPlan}
+                            openFile={openFile}
+                            getText={getText}
+                        />
+                    );
                 }
                 return <ToolReturnParsedItem key={index} msg={message} openFile={openFile} />;
             });
@@ -406,9 +421,10 @@ const ModifiedFileItem: React.FC<{
 type TechnicalPlanProps = {
     content: TechnicalPlan;
     openFile: OpenFileFunc;
+    getText: (fp: string, lr?: number[]) => Promise<string>;
 };
 
-const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile }) => {
+const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile, getText }) => {
     const clarifyingQuestions = content.logicalChanges.flatMap((change) => {
         return change.filesToChange
             .map((file) => {
@@ -430,7 +446,7 @@ const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFil
                                 <div className="logical-change-counter">
                                     <p>{index + 1}</p>
                                 </div>
-                                <LogicalChange key={index} change={change} openFile={openFile} />
+                                <LogicalChange key={index} change={change} openFile={openFile} getText={getText} />
                             </div>
                         );
                     })}
@@ -469,8 +485,9 @@ const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFil
 const LogicalChange: React.FC<{
     change: TechnicalPlanLogicalChange;
     openFile: OpenFileFunc;
+    getText: (fp: string, lr?: number[]) => Promise<string>;
 }> = (props) => {
-    const { change, openFile } = props;
+    const { change, openFile, getText } = props;
 
     const [isOpen, setIsOpen] = React.useState(false);
 
@@ -510,6 +527,7 @@ const LogicalChange: React.FC<{
                                 <FileToChangeComponent
                                     filePath={file.filePath}
                                     openFile={openFile}
+                                    getText={getText}
                                     descriptionOfChange={file.descriptionOfChange}
                                     codeSnippetsToChange={file.codeSnippetsToChange}
                                 />
@@ -525,9 +543,10 @@ const LogicalChange: React.FC<{
 const FileToChangeComponent: React.FC<{
     filePath: string;
     openFile: OpenFileFunc;
+    getText: (fp: string, lr?: number[]) => Promise<string>;
     descriptionOfChange?: string;
     codeSnippetsToChange?: CodeSnippetToChange[];
-}> = ({ filePath, openFile, descriptionOfChange, codeSnippetsToChange }) => {
+}> = ({ filePath, openFile, getText, descriptionOfChange, codeSnippetsToChange }) => {
     const [isCodeChangesOpen, setIsCodeChangesOpen] = React.useState(false);
     const codeSnippetsPresent = codeSnippetsToChange && codeSnippetsToChange.length > 0;
 
@@ -576,15 +595,90 @@ const FileToChangeComponent: React.FC<{
                                         Change from line {snippet.startLine} to {snippet.endLine}:
                                     </span>
                                 </div>
-                                <pre>
-                                    <code>{snippet.code}</code>
-                                </pre>
+                                <DiffComponent
+                                    key={idx}
+                                    filePath={filePath}
+                                    code={snippet.code}
+                                    lineRange={[snippet.startLine, snippet.endLine + 1]}
+                                    getText={getText}
+                                />
                             </div>
                         );
                     })}
                 </div>
             )}
         </div>
+    );
+};
+
+const DiffComponent: React.FC<{
+    filePath: string;
+    code: string;
+    lineRange?: number[];
+    getText: (fp: string, lr?: number[]) => Promise<string>;
+}> = ({ filePath, code, lineRange, getText }) => {
+    const [diff, setDiff] = React.useState<string>('');
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState<string>('');
+    const [isDone, setIsDone] = React.useState(false);
+
+    React.useEffect(() => {
+        const codeBlocks = document.querySelectorAll('pre code');
+
+        codeBlocks.forEach((block) => {
+            highlightElement(block, detectLanguage(block.textContent || ''));
+        });
+    }, [diff, isDone]);
+
+    React.useEffect(() => {
+        if (isDone) {
+            return;
+        }
+        const loadDiff = async () => {
+            try {
+                setLoading(true);
+                setError('');
+                const oldCode = await getText(filePath, lineRange);
+                const diffResult = createPatch(filePath, oldCode, code, undefined, undefined, {
+                    ignoreWhitespace: true,
+                });
+
+                const lines = diffResult.split('\n');
+                // Skip the first 4 lines of the diff header
+                const diffContent = lines
+                    .slice(4)
+                    .filter((line) => !line.includes('No newline at end of file'))
+                    .join('\n');
+                setDiff(diffContent);
+            } catch (err) {
+                console.error('Error loading diff:', err);
+                setError('Error loading diff');
+            } finally {
+                setLoading(false);
+                setIsDone(true);
+            }
+        };
+
+        loadDiff();
+    }, [filePath, code, lineRange, getText, isDone]);
+
+    if (loading) {
+        return (
+            <div style={{ padding: '8px', color: 'var(--vscode-descriptionForeground)' }}>
+                <i className="codicon codicon-loading codicon-modifier-spin" />
+                <span style={{ marginLeft: '8px' }}>Loading diff...</span>
+            </div>
+        );
+    }
+
+    if (error) {
+        return <div style={{ padding: '8px', color: 'var(--vscode-errorForeground)' }}>{error}</div>;
+    }
+
+    return (
+        <pre>
+            <code>{diff}</code>
+        </pre>
     );
 };
 
