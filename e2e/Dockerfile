@@ -39,7 +39,7 @@ code-server --install-extension atlascode-*.vsix --force
 echo "starting code-server"
 code-server --auth none --bind-addr localhost:9988 &
 echo "Running tests"
-npx playwright test ./e2e/tests/playwright.spec.ts
+npx playwright test ./e2e/tests/**/*.spec.ts --workers=1
 
 EOF
 
