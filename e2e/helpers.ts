@@ -134,18 +134,42 @@ export const authenticateWithJira = async (
  * Helper function to get the Jira issue iframe
  */
 export const getIssueFrame = async (page: Page) => {
-    const frameHandle = await page.frameLocator('iframe.webview').locator('iframe[title="Jira Issue"]').elementHandle();
-
-    if (!frameHandle) {
-        throw new Error('iframe element not found');
+    // First, let's try to find the iframe by waiting for it to be visible
+    const webviewFrame = page.frameLocator('iframe.webview');
+    // Try multiple possible iframe titles/selectors
+    const possibleSelectors = [
+        'iframe[title="Jira Issue"]',
+        'iframe[title="BTS-1"]',
+        'iframe[title*="BTS-"]',
+        'iframe[src*="issue"]',
+        'iframe:last-child', // fallback to last iframe
+    ];
+    for (const selector of possibleSelectors) {
+        try {
+            const frameHandle = await webviewFrame.locator(selector).elementHandle({ timeout: 2000 });
+            if (frameHandle) {
+                const issueFrame = await frameHandle.contentFrame();
+                if (issueFrame) {
+                    return issueFrame;
+                }
+            }
+        } catch {
+            // Continue to next selector
+            continue;
+        }
     }
-    const issueFrame = await frameHandle.contentFrame();
-
-    if (!issueFrame) {
-        throw new Error('iframe element not found');
-    }
-
-    return issueFrame;
+    // If we get here, let's get some debugging info
+    const iframes = await webviewFrame.locator('iframe').all();
+    const iframeTitles = await Promise.all(
+        iframes.map(async (iframe) => {
+            try {
+                return await iframe.getAttribute('title');
+            } catch {
+                return 'unknown';
+            }
+        }),
+    );
+    throw new Error(`No suitable iframe found. Available iframe titles: ${iframeTitles.join(', ')}`);
 };
 
 /**
@@ -175,4 +199,54 @@ export const setupWireMockMapping = async (request: APIRequestContext, method: s
  */
 export const cleanupWireMockMapping = async (request: APIRequestContext, mappingId: string) => {
     await request.delete(`http://wiremock-mockedteams:8080/__admin/mappings/${mappingId}`);
+};
+
+/**
+ * Helper function to update search results when assignee changes
+ */
+export const updateSearch = async (request: APIRequestContext, includeBts1: boolean = false) => {
+    const searchResponse = {
+        expand: 'names,schema',
+        startAt: 0,
+        maxResults: 50,
+        total: includeBts1 ? 5 : 4,
+        issues: [
+            {
+                key: 'BTS-5',
+                fields: {
+                    summary: 'Fix Database Connection Errors',
+                },
+            },
+            {
+                key: 'BTS-4',
+                fields: {
+                    summary: 'Resolve API Timeout Issues',
+                },
+            },
+            ...(includeBts1
+                ? [
+                      {
+                          key: 'BTS-1',
+                          fields: {
+                              summary: 'User Interface Bugs',
+                          },
+                      },
+                  ]
+                : []),
+            {
+                key: 'BTS-3',
+                fields: {
+                    summary: 'Improve Dropdown Menu Responsiveness',
+                },
+            },
+            {
+                key: 'BTS-6',
+                fields: {
+                    summary: 'Fix Button Alignment Issue',
+                },
+            },
+        ],
+    };
+
+    return await setupWireMockMapping(request, 'GET', searchResponse, '/rest/api/2/search');
 };
