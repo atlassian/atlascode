@@ -241,7 +241,7 @@ const RovoDevView: React.FC = () => {
         [handleResponse, completeMessage, handleAppendChatHistory, currentState, setCurrentState],
     );
 
-    const [postMessage, postMessagePromise] = useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, any>(
+    const [postMessage, postMessageWithReturn] = useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, any>(
         onMessageHandler,
     );
 
@@ -330,7 +330,7 @@ const RovoDevView: React.FC = () => {
     const getOriginalText = useCallback(
         async (filePath: string, range?: number[]) => {
             const uniqueNonce = `${Math.random()}-${Date.now()}`; // Unique identifier for the request
-            const res = await postMessagePromise(
+            const res = await postMessageWithReturn(
                 {
                     type: RovoDevViewResponseType.GetOriginalText,
                     filePath,
@@ -344,7 +344,7 @@ const RovoDevView: React.FC = () => {
 
             return (res.text as string) || '';
         },
-        [postMessagePromise],
+        [postMessageWithReturn],
     );
 
     return (
