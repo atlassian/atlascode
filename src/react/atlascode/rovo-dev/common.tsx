@@ -308,7 +308,7 @@ export const UpdatedFilesComponent: React.FC<{
                         onMouseEnter={() => setIsAcceptHovered(true)}
                         onMouseLeave={() => setIsAcceptHovered(false)}
                     >
-                        Accept
+                        Keep
                     </button>
                 </div>
             </div>
@@ -410,7 +410,7 @@ const ModifiedFileItem: React.FC<{
                     onMouseEnter={() => setIsAcceptHovered(true)}
                     onMouseLeave={() => setIsAcceptHovered(false)}
                     spacing="none"
-                    iconBefore={<CheckIcon size="small" label="Accept" />}
+                    iconBefore={<CheckIcon size="small" label="Keep" />}
                     onClick={handleAccept}
                 />
             </div>
