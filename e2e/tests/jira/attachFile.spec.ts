@@ -8,7 +8,7 @@ import {
 } from 'e2e/helpers';
 import fs from 'fs';
 
-test('Test image check on attachments', async ({ page, context }) => {
+test('Test upload image to attachments', async ({ page, request }) => {
     await authenticateWithJira(page);
 
     await page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' }).click();
