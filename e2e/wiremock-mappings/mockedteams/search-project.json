@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/rest/api/2/project/search",
+    "queryParameters": {
+      "orderBy": {
+        "equalTo": "key"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": "{\"self\":\"https://mockedteams.atlassian.net/rest/api/2/project/search?orderBy=key\",\"maxResults\":50,\"startAt\":0,\"total\":1,\"isLast\":true,\"values\":[{\"self\":\"https://mockedteams.atlassian.net/rest/api/2/project/10000\",\"id\":\"10000\",\"key\":\"BTS\",\"name\":\"KANBAN\",\"projectTypeKey\":\"software\",\"simplified\":true,\"avatarUrls\":{\"48x48\":\"https://mockedteams.atlassian.net/rest/api/2/universal_avatar/view/type/project/avatar/10417\",\"24x24\":\"https://mockedteams.atlassian.net/rest/api/2/universal_avatar/view/type/project/avatar/10417?size=small\",\"16x16\":\"https://mockedteams.atlassian.net/rest/api/2/universal_avatar/view/type/project/avatar/10417?size=xsmall\",\"32x32\":\"https://mockedteams.atlassian.net/rest/api/2/universal_avatar/view/type/project/avatar/10417?size=medium\"}}]}",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
