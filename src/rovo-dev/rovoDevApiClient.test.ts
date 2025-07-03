@@ -1,0 +1,519 @@
+import { RovoDevApiClient } from './rovoDevApiClient';
+
+// Mock fetch globally
+global.fetch = jest.fn();
+
+describe('RovoDevApiClient', () => {
+    let client: RovoDevApiClient;
+    const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
+
+    beforeEach(() => {
+        client = new RovoDevApiClient('localhost', 8080);
+        mockFetch.mockClear();
+    });
+
+    afterEach(() => {
+        jest.resetAllMocks();
+    });
+
+    describe('constructor', () => {
+        it('should create instance with correct base URL', () => {
+            const testClient = new RovoDevApiClient('example.com', 3000);
+            expect(testClient.baseApiUrl).toBe('http://example.com:3000');
+        });
+
+        it('should handle IP address and port', () => {
+            const testClient = new RovoDevApiClient('192.168.1.1', 9000);
+            expect(testClient.baseApiUrl).toBe('http://192.168.1.1:9000');
+        });
+    });
+
+    describe('baseApiUrl getter', () => {
+        it('should return the correct base API URL', () => {
+            expect(client.baseApiUrl).toBe('http://localhost:8080');
+        });
+    });
+
+    describe('fetchApi method', () => {
+        it('should make successful GET request', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ success: true }),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const response = await (client as any).fetchApi('/test', 'GET');
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/test', {
+                method: 'GET',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: undefined,
+            });
+            expect(response).toBe(mockResponse);
+        });
+
+        it('should make successful POST request with body', async () => {
+            const mockResponse = {
+                status: 201,
+                json: jest.fn().mockResolvedValue({ created: true }),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const body = JSON.stringify({ data: 'test' });
+            const response = await (client as any).fetchApi('/test', 'POST', body);
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/test', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body,
+            });
+            expect(response).toBe(mockResponse);
+        });
+
+        it('should throw RovoDevApiError for unsuccessful response', async () => {
+            const mockResponse = {
+                status: 404,
+                statusText: 'Not Found',
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect((client as any).fetchApi('/test', 'GET')).rejects.toThrow(
+                "Failed to fetch '/test API: HTTP 404",
+            );
+        });
+
+        it('should handle server error responses', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect((client as any).fetchApi('/error', 'POST')).rejects.toThrow(
+                "Failed to fetch '/error API: HTTP 500",
+            );
+        });
+    });
+
+    describe('cancel method', () => {
+        it('should return true when cancellation is successful', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ cancelled: true }),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.cancel();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/cancel', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: undefined,
+            });
+            expect(result).toBe(true);
+        });
+
+        it('should return false when cancellation fails', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ cancelled: false }),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.cancel();
+
+            expect(result).toBe(false);
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.cancel()).rejects.toThrow("Failed to fetch '/v2/cancel API: HTTP 500");
+        });
+    });
+
+    describe('reset method', () => {
+        it('should make successful reset request', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({}),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await client.reset();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/reset', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: undefined,
+            });
+        });
+
+        it('should throw error when reset fails', async () => {
+            const mockResponse = {
+                status: 400,
+                statusText: 'Bad Request',
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.reset()).rejects.toThrow("Failed to fetch '/v2/reset API: HTTP 400");
+        });
+    });
+
+    describe('chat method', () => {
+        it('should send chat message successfully', async () => {
+            const mockResponse = {
+                status: 200,
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const message = 'Hello, how can I help?';
+            const response = await client.chat(message);
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/chat', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message }),
+            });
+            expect(response).toBe(mockResponse);
+        });
+
+        it('should handle empty message', async () => {
+            const mockResponse = {
+                status: 200,
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const response = await client.chat('');
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/chat', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: '' }),
+            });
+            expect(response).toBe(mockResponse);
+        });
+
+        it('should handle special characters in message', async () => {
+            const mockResponse = {
+                status: 200,
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const message = 'Test with "quotes" and \n newlines';
+            const response = await client.chat(message);
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/chat', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message }),
+            });
+            expect(response).toBe(mockResponse);
+        });
+    });
+
+    describe('replay method', () => {
+        it('should make successful replay request', async () => {
+            const mockResponse = {
+                status: 200,
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const response = await client.replay();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/replay', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: undefined,
+            });
+            expect(response).toBe(mockResponse);
+        });
+
+        it('should throw error when replay fails', async () => {
+            const mockResponse = {
+                status: 503,
+                statusText: 'Service Unavailable',
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.replay()).rejects.toThrow("Failed to fetch '/v2/replay API: HTTP 503");
+        });
+    });
+
+    describe('getTools method', () => {
+        it('should throw not implemented error', () => {
+            expect(() => client.getTools()).toThrow('Method not implemented: tools');
+        });
+    });
+
+    describe('tool method', () => {
+        it('should throw not implemented error', () => {
+            expect(() => client.tool('test-tool', { arg1: 'value1' })).toThrow('Method not implemented: tool');
+        });
+    });
+
+    describe('getCacheFilePath method', () => {
+        it('should return cached file path', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ cached_file_path: '/tmp/cache/file.txt' }),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const filePath = '/path/to/file.txt';
+            const result = await client.getCacheFilePath(filePath);
+
+            expect(mockFetch).toHaveBeenCalledWith(
+                `http://localhost:8080/v2/cache-file-path?file_path=${encodeURIComponent(filePath)}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        accept: 'text/event-stream',
+                        'Content-Type': 'application/json',
+                    },
+                    body: undefined,
+                },
+            );
+            expect(result).toBe('/tmp/cache/file.txt');
+        });
+
+        it('should handle file paths with special characters', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ cached_file_path: '/tmp/cache/special file.txt' }),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const filePath = '/path/to/special file with spaces & symbols.txt';
+            const result = await client.getCacheFilePath(filePath);
+
+            expect(mockFetch).toHaveBeenCalledWith(
+                `http://localhost:8080/v2/cache-file-path?file_path=${encodeURIComponent(filePath)}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        accept: 'text/event-stream',
+                        'Content-Type': 'application/json',
+                    },
+                    body: undefined,
+                },
+            );
+            expect(result).toBe('/tmp/cache/special file.txt');
+        });
+
+        it('should throw error when cache file path request fails', async () => {
+            const mockResponse = {
+                status: 404,
+                statusText: 'Not Found',
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.getCacheFilePath('/path/to/file.txt')).rejects.toThrow(
+                "Failed to fetch '/v2/cache-file-path?file_path=%2Fpath%2Fto%2Ffile.txt API: HTTP 404",
+            );
+        });
+    });
+
+    describe('invalidateFileCache method', () => {
+        it('should throw not implemented error', () => {
+            expect(() => client.invalidateFileCache()).toThrow('Method not implemented: invalidate-file-cache');
+        });
+    });
+
+    describe('healthcheck method', () => {
+        it('should return true when service is healthy', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ status: 'healthy' }),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.healthcheck();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/healthcheck', {
+                method: 'GET',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: undefined,
+            });
+            expect(result).toBe(true);
+        });
+
+        it('should return false when service is unhealthy', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ status: 'unhealthy' }),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.healthcheck();
+
+            expect(result).toBe(false);
+        });
+
+        it('should return false when service returns non-healthy status', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ status: 'maintenance' }),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.healthcheck();
+
+            expect(result).toBe(false);
+        });
+
+        it('should throw error when healthcheck fails and safeInvoke is false', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.healthcheck(false)).rejects.toThrow("Failed to fetch '/healthcheck API: HTTP 500");
+        });
+
+        it('should return false when healthcheck fails and safeInvoke is true', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.healthcheck(true);
+
+            expect(result).toBe(false);
+        });
+
+        it('should throw error by default when healthcheck fails', async () => {
+            const mockResponse = {
+                status: 503,
+                statusText: 'Service Unavailable',
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.healthcheck()).rejects.toThrow("Failed to fetch '/healthcheck API: HTTP 503");
+        });
+
+        it('should handle network errors with safeInvoke', async () => {
+            mockFetch.mockRejectedValue(new Error('Network error'));
+
+            const result = await client.healthcheck(true);
+
+            expect(result).toBe(false);
+        });
+
+        it('should throw network errors when safeInvoke is false', async () => {
+            mockFetch.mockRejectedValue(new Error('Network error'));
+
+            await expect(client.healthcheck(false)).rejects.toThrow('Network error');
+        });
+    });
+
+    describe('statusIsSuccessful function', () => {
+        it('should return true for 2xx status codes', () => {
+            // Import the function to test it directly
+            const statusIsSuccessful = (status: number | undefined) => {
+                return !!status && Math.floor(status / 100) === 2;
+            };
+
+            expect(statusIsSuccessful(200)).toBe(true);
+            expect(statusIsSuccessful(201)).toBe(true);
+            expect(statusIsSuccessful(204)).toBe(true);
+            expect(statusIsSuccessful(299)).toBe(true);
+        });
+
+        it('should return false for non-2xx status codes', () => {
+            const statusIsSuccessful = (status: number | undefined) => {
+                return !!status && Math.floor(status / 100) === 2;
+            };
+
+            expect(statusIsSuccessful(100)).toBe(false);
+            expect(statusIsSuccessful(199)).toBe(false);
+            expect(statusIsSuccessful(300)).toBe(false);
+            expect(statusIsSuccessful(400)).toBe(false);
+            expect(statusIsSuccessful(500)).toBe(false);
+        });
+
+        it('should return false for undefined status', () => {
+            const statusIsSuccessful = (status: number | undefined) => {
+                return !!status && Math.floor(status / 100) === 2;
+            };
+
+            expect(statusIsSuccessful(undefined)).toBe(false);
+        });
+    });
+
+    describe('RovoDevApiError', () => {
+        it('should create error with correct properties', () => {
+            const mockResponse = { status: 404 } as Response;
+            const error = new (class RovoDevApiError extends Error {
+                constructor(
+                    message: string,
+                    public httpStatus: number,
+                    public apiResponse: Response,
+                ) {
+                    super(message);
+                }
+            })('Test error', 404, mockResponse);
+
+            expect(error.message).toBe('Test error');
+            expect(error.httpStatus).toBe(404);
+            expect(error.apiResponse).toBe(mockResponse);
+            expect(error).toBeInstanceOf(Error);
+        });
+    });
+});

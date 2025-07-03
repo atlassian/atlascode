@@ -1275,4 +1275,747 @@ describe('CloudPullRequestApi', () => {
             expect(result.data.rawSummary).toBe('');
         });
     });
+
+    describe('getLatest', () => {
+        it('should fetch latest PRs for current user as reviewer', async () => {
+            const mockApiResponse = {
+                data: {
+                    values: [
+                        {
+                            id: '123',
+                            title: 'Latest PR',
+                            author: { account_id: 'author-id', display_name: 'Author' },
+                            participants: [],
+                            source: {
+                                repository: { full_name: 'owner/repo' },
+                                branch: { name: 'feature' },
+                                commit: { hash: 'abc123' },
+                            },
+                            destination: {
+                                repository: { full_name: 'owner/repo' },
+                                branch: { name: 'main' },
+                                commit: { hash: 'def456' },
+                            },
+                            state: 'OPEN',
+                            created_on: '2023-01-01T00:00:00Z',
+                            updated_on: '2023-01-01T12:00:00Z',
+                            links: { html: { href: 'https://pr.url' } },
+                        },
+                    ],
+                    next: undefined,
+                },
+            };
+
+            mockHttpClient.get.mockResolvedValue(mockApiResponse);
+
+            const result = await api.getLatest(mockWorkspaceRepo);
+
+            expect(mockHttpClient.get).toHaveBeenCalledWith('/repositories/test-owner/test-repo/pullrequests', {
+                pagelen: 2,
+                sort: '-created_on',
+                q: 'state="OPEN" and reviewers.account_id="test-user-id"',
+                fields: '+values.participants,+values.rendered.*',
+            });
+            expect(result.data).toHaveLength(1);
+            expect(result.data[0].data.title).toBe('Latest PR');
+        });
+
+        it('should handle empty response', async () => {
+            mockHttpClient.get.mockResolvedValue({ data: { values: [] } });
+
+            const result = await api.getLatest(mockWorkspaceRepo);
+
+            expect(result.data).toHaveLength(0);
+        });
+    });
+
+    describe('getRecentAllStatus', () => {
+        it('should fetch recent PRs with all statuses', async () => {
+            const mockApiResponse = {
+                data: {
+                    values: [
+                        {
+                            id: '123',
+                            title: 'Recent PR',
+                            author: { account_id: 'author-id', display_name: 'Author' },
+                            participants: [],
+                            source: {
+                                repository: { full_name: 'owner/repo' },
+                                branch: { name: 'feature' },
+                                commit: { hash: 'abc123' },
+                            },
+                            destination: {
+                                repository: { full_name: 'owner/repo' },
+                                branch: { name: 'main' },
+                                commit: { hash: 'def456' },
+                            },
+                            state: 'MERGED',
+                            created_on: '2023-01-01T00:00:00Z',
+                            updated_on: '2023-01-01T12:00:00Z',
+                            links: { html: { href: 'https://pr.url' } },
+                        },
+                    ],
+                    next: undefined,
+                },
+            };
+
+            mockHttpClient.get.mockResolvedValue(mockApiResponse);
+
+            const result = await api.getRecentAllStatus(mockWorkspaceRepo);
+
+            expect(mockHttpClient.get).toHaveBeenCalledWith('/repositories/test-owner/test-repo/pullrequests', {
+                pagelen: 25,
+                sort: '-created_on',
+                q: 'state="OPEN" OR state="MERGED" OR state="SUPERSEDED" OR state="DECLINED"',
+                fields: '+values.participants,+values.rendered.*',
+            });
+            expect(result.data).toHaveLength(1);
+            expect(result.data[0].data.state).toBe('MERGED');
+        });
+    });
+
+    describe('getById', () => {
+        it('should fetch a PR by numeric ID', async () => {
+            const mockApiResponse = {
+                data: {
+                    id: '123',
+                    title: 'PR by ID',
+                    author: { account_id: 'author-id', display_name: 'Author' },
+                    participants: [],
+                    source: {
+                        repository: { full_name: 'owner/repo' },
+                        branch: { name: 'feature' },
+                        commit: { hash: 'abc123' },
+                    },
+                    destination: {
+                        repository: { full_name: 'owner/repo' },
+                        branch: { name: 'main' },
+                        commit: { hash: 'def456' },
+                    },
+                    state: 'OPEN',
+                    created_on: '2023-01-01T00:00:00Z',
+                    updated_on: '2023-01-01T12:00:00Z',
+                    links: { html: { href: 'https://pr.url' } },
+                },
+            };
+
+            mockHttpClient.get.mockResolvedValue(mockApiResponse);
+
+            const result = await api.getById(mockSite, 123);
+
+            expect(mockHttpClient.get).toHaveBeenCalledWith('/repositories/test-owner/test-repo/pullrequests/123');
+            expect(result.data.id).toBe('123');
+            expect(result.data.title).toBe('PR by ID');
+            expect(result.workspaceRepo).toBeUndefined();
+        });
+    });
+
+    describe('getTasks', () => {
+        it('should fetch all tasks for a PR', async () => {
+            const mockApiResponse = {
+                data: {
+                    values: [
+                        {
+                            id: 'task-1',
+                            content: { raw: 'First task' },
+                            state: 'UNRESOLVED',
+                            created_on: '2023-01-01T00:00:00Z',
+                            updated_on: '2023-01-01T00:00:00Z',
+                            creator: { account_id: 'test-user-id', display_name: 'Test User' },
+                            comment: { id: 'comment-1' },
+                        },
+                        {
+                            id: 'task-2',
+                            content: { raw: 'Second task' },
+                            state: 'RESOLVED',
+                            created_on: '2023-01-01T01:00:00Z',
+                            updated_on: '2023-01-01T01:00:00Z',
+                            creator: { account_id: 'other-user-id', display_name: 'Other User' },
+                        },
+                    ],
+                    next: undefined,
+                },
+            };
+
+            mockHttpClient.get.mockResolvedValue(mockApiResponse);
+
+            const result = await api.getTasks(mockPullRequest);
+
+            expect(mockHttpClient.get).toHaveBeenCalledWith(
+                '/repositories/test-owner/test-repo/pullrequests/123/tasks',
+            );
+            expect(result).toHaveLength(2);
+            expect(result[0].id).toBe('task-1');
+            expect(result[0].content).toBe('First task');
+            expect(result[0].isComplete).toBe(false);
+            expect(result[0].editable).toBe(true); // belongs to current user
+            expect(result[0].commentId).toBe('comment-1');
+            expect(result[1].id).toBe('task-2');
+            expect(result[1].isComplete).toBe(true);
+            expect(result[1].editable).toBe(false); // belongs to other user
+        });
+
+        it('should handle paginated tasks', async () => {
+            const firstPageResponse = {
+                data: {
+                    values: [
+                        {
+                            id: 'task-1',
+                            content: { raw: 'First task' },
+                            state: 'UNRESOLVED',
+                            created_on: '2023-01-01T00:00:00Z',
+                            updated_on: '2023-01-01T00:00:00Z',
+                            creator: { account_id: 'test-user-id', display_name: 'Test User' },
+                        },
+                    ],
+                    next: 'https://api.bitbucket.org/next',
+                },
+            };
+            const secondPageResponse = {
+                data: {
+                    values: [
+                        {
+                            id: 'task-2',
+                            content: { raw: 'Second task' },
+                            state: 'RESOLVED',
+                            created_on: '2023-01-01T01:00:00Z',
+                            updated_on: '2023-01-01T01:00:00Z',
+                            creator: { account_id: 'other-user-id', display_name: 'Other User' },
+                        },
+                    ],
+                    next: undefined,
+                },
+            };
+
+            mockHttpClient.get.mockResolvedValueOnce(firstPageResponse).mockResolvedValueOnce(secondPageResponse);
+
+            const result = await api.getTasks(mockPullRequest);
+
+            expect(result).toHaveLength(2);
+            expect(mockHttpClient.get).toHaveBeenCalledTimes(2);
+        });
+
+        it('should return empty array when no tasks exist', async () => {
+            mockHttpClient.get.mockResolvedValue({ data: {} });
+
+            const result = await api.getTasks(mockPullRequest);
+
+            expect(result).toEqual([]);
+        });
+
+        it('should handle API errors gracefully', async () => {
+            mockHttpClient.get.mockRejectedValue(new Error('API Error'));
+
+            const result = await api.getTasks(mockPullRequest);
+
+            expect(result).toEqual([]);
+        });
+    });
+
+    describe('postTask', () => {
+        it('should create a new task', async () => {
+            const mockApiResponse = {
+                data: {
+                    id: 'new-task-id',
+                    content: { raw: 'New task content' },
+                    state: 'UNRESOLVED',
+                    created_on: '2023-01-01T00:00:00Z',
+                    updated_on: '2023-01-01T00:00:00Z',
+                    creator: { account_id: 'test-user-id', display_name: 'Test User' },
+                },
+            };
+
+            mockHttpClient.post.mockResolvedValue(mockApiResponse);
+
+            const result = await api.postTask(mockSite, '123', 'New task content');
+
+            expect(mockHttpClient.post).toHaveBeenCalledWith(
+                '/repositories/test-owner/test-repo/pullrequests/123/tasks/',
+                {
+                    completed: false,
+                    content: { raw: 'New task content' },
+                },
+            );
+            expect(result.id).toBe('new-task-id');
+            expect(result.content).toBe('New task content');
+            expect(result.isComplete).toBe(false);
+        });
+
+        it('should create a task with comment ID', async () => {
+            const mockApiResponse = {
+                data: {
+                    id: 'new-task-id',
+                    content: { raw: 'Task with comment' },
+                    state: 'UNRESOLVED',
+                    created_on: '2023-01-01T00:00:00Z',
+                    updated_on: '2023-01-01T00:00:00Z',
+                    creator: { account_id: 'test-user-id', display_name: 'Test User' },
+                    comment: { id: 'comment-123' },
+                },
+            };
+
+            mockHttpClient.post.mockResolvedValue(mockApiResponse);
+
+            const result = await api.postTask(mockSite, '123', 'Task with comment', 'comment-123');
+
+            expect(mockHttpClient.post).toHaveBeenCalledWith(
+                '/repositories/test-owner/test-repo/pullrequests/123/tasks/',
+                {
+                    comment: { id: 'comment-123' },
+                    completed: false,
+                    content: { raw: 'Task with comment' },
+                },
+            );
+            expect(result.commentId).toBe('comment-123');
+        });
+
+        it('should handle API errors', async () => {
+            mockHttpClient.post.mockRejectedValue(new Error('API Error'));
+
+            await expect(api.postTask(mockSite, '123', 'New task')).rejects.toThrow(
+                'Error creating new task using API: Error: API Error',
+            );
+            expect(Logger.error).toHaveBeenCalled();
+        });
+    });
+
+    describe('editTask', () => {
+        it('should update an existing task', async () => {
+            const mockTask = {
+                id: 'task-123',
+                content: 'Updated task content',
+                isComplete: true,
+                commentId: 'comment-456',
+                creator: mockUser,
+                created: '2023-01-01T00:00:00Z',
+                updated: '2023-01-01T00:00:00Z',
+                editable: true,
+                deletable: true,
+            };
+
+            const mockApiResponse = {
+                data: {
+                    id: 'task-123',
+                    content: { raw: 'Updated task content' },
+                    state: 'RESOLVED',
+                    created_on: '2023-01-01T00:00:00Z',
+                    updated_on: '2023-01-01T12:00:00Z',
+                    creator: { account_id: 'test-user-id', display_name: 'Test User' },
+                },
+            };
+
+            mockHttpClient.put.mockResolvedValue(mockApiResponse);
+
+            const result = await api.editTask(mockSite, '123', mockTask);
+
+            expect(mockHttpClient.put).toHaveBeenCalledWith(
+                '/repositories/test-owner/test-repo/pullrequests/123/tasks/task-123',
+                {
+                    comment: { comment: 'comment-456' },
+                    completed: true,
+                    content: { raw: 'Updated task content' },
+                    id: 'task-123',
+                    state: 'RESOLVED',
+                },
+            );
+            expect(result.id).toBe('task-123');
+            expect(result.content).toBe('Updated task content');
+            expect(result.isComplete).toBe(true);
+        });
+
+        it('should handle incomplete task', async () => {
+            const mockTask = {
+                id: 'task-123',
+                content: 'Incomplete task',
+                isComplete: false,
+                creator: mockUser,
+                created: '2023-01-01T00:00:00Z',
+                updated: '2023-01-01T00:00:00Z',
+                editable: true,
+                deletable: true,
+            };
+
+            const mockApiResponse = {
+                data: {
+                    id: 'task-123',
+                    content: { raw: 'Incomplete task' },
+                    state: 'UNRESOLVED',
+                    created_on: '2023-01-01T00:00:00Z',
+                    updated_on: '2023-01-01T12:00:00Z',
+                    creator: { account_id: 'test-user-id', display_name: 'Test User' },
+                },
+            };
+
+            mockHttpClient.put.mockResolvedValue(mockApiResponse);
+
+            const result = await api.editTask(mockSite, '123', mockTask);
+
+            expect(mockHttpClient.put).toHaveBeenCalledWith(
+                '/repositories/test-owner/test-repo/pullrequests/123/tasks/task-123',
+                {
+                    comment: { comment: undefined },
+                    completed: false,
+                    content: { raw: 'Incomplete task' },
+                    id: 'task-123',
+                    state: 'UNRESOLVED',
+                },
+            );
+            expect(result.isComplete).toBe(false);
+        });
+
+        it('should handle API errors', async () => {
+            const mockTask = {
+                id: 'task-123',
+                content: 'Task content',
+                isComplete: false,
+                creator: mockUser,
+                created: '2023-01-01T00:00:00Z',
+                updated: '2023-01-01T00:00:00Z',
+                editable: true,
+                deletable: true,
+            };
+
+            mockHttpClient.put.mockRejectedValue(new Error('API Error'));
+
+            await expect(api.editTask(mockSite, '123', mockTask)).rejects.toThrow(
+                'Error editing task using API: Error: API Error',
+            );
+            expect(Logger.error).toHaveBeenCalled();
+        });
+    });
+
+    describe('deleteTask', () => {
+        it('should delete a task', async () => {
+            const mockTask = {
+                id: 'task-123',
+                content: 'Task to delete',
+                isComplete: false,
+                creator: mockUser,
+                created: '2023-01-01T00:00:00Z',
+                updated: '2023-01-01T00:00:00Z',
+                editable: true,
+                deletable: true,
+            };
+
+            mockHttpClient.delete.mockResolvedValue({});
+
+            await api.deleteTask(mockSite, '123', mockTask);
+
+            expect(mockHttpClient.delete).toHaveBeenCalledWith(
+                '/repositories/test-owner/test-repo/pullrequests/123/tasks/task-123',
+                {},
+            );
+        });
+
+        it('should handle API errors', async () => {
+            const mockTask = {
+                id: 'task-123',
+                content: 'Task to delete',
+                isComplete: false,
+                creator: mockUser,
+                created: '2023-01-01T00:00:00Z',
+                updated: '2023-01-01T00:00:00Z',
+                editable: true,
+                deletable: true,
+            };
+
+            mockHttpClient.delete.mockRejectedValue(new Error('API Error'));
+
+            await expect(api.deleteTask(mockSite, '123', mockTask)).rejects.toThrow(
+                'Error deleting task using API: Error: API Error',
+            );
+            expect(Logger.error).toHaveBeenCalled();
+        });
+    });
+
+    describe('convertDataToTask', () => {
+        it('should convert API task data to Task model', () => {
+            const taskData = {
+                id: 'task-123',
+                content: { raw: 'Task content' },
+                state: 'UNRESOLVED',
+                created_on: '2023-01-01T00:00:00Z',
+                updated_on: '2023-01-01T12:00:00Z',
+                creator: { account_id: 'test-user-id', display_name: 'Test User' },
+                comment: { id: 'comment-456' },
+            };
+
+            const result = api.convertDataToTask(taskData, mockSite);
+
+            expect(result).toEqual({
+                id: 'task-123',
+                content: 'Task content',
+                isComplete: false,
+                created: '2023-01-01T00:00:00Z',
+                updated: '2023-01-01T12:00:00Z',
+                creator: {
+                    accountId: 'test-user-id',
+                    displayName: 'Test User',
+                    avatarUrl: '',
+                    emailAddress: undefined,
+                    userName: undefined,
+                    url: '',
+                    mention: '@[Test User](account_id:test-user-id)',
+                },
+                commentId: 'comment-456',
+                editable: true, // belongs to current user
+                deletable: true, // belongs to current user
+            });
+        });
+
+        it('should handle completed task', () => {
+            const taskData = {
+                id: 'task-123',
+                content: { raw: 'Completed task' },
+                state: 'RESOLVED',
+                created_on: '2023-01-01T00:00:00Z',
+                updated_on: '2023-01-01T12:00:00Z',
+                creator: { account_id: 'other-user-id', display_name: 'Other User' },
+            };
+
+            const result = api.convertDataToTask(taskData, mockSite);
+
+            expect(result.isComplete).toBe(true);
+            expect(result.editable).toBe(false); // belongs to other user
+            expect(result.deletable).toBe(false); // belongs to other user
+            expect(result.commentId).toBeUndefined();
+        });
+
+        it('should handle task without comment', () => {
+            const taskData = {
+                id: 'task-123',
+                content: { raw: 'Task without comment' },
+                state: 'UNRESOLVED',
+                created_on: '2023-01-01T00:00:00Z',
+                updated_on: '2023-01-01T12:00:00Z',
+                creator: { account_id: 'test-user-id', display_name: 'Test User' },
+            };
+
+            const result = api.convertDataToTask(taskData, mockSite);
+
+            expect(result.commentId).toBeUndefined();
+        });
+    });
+
+    describe('getComments', () => {
+        it('should fetch and convert PR comments', async () => {
+            const mockApiResponse = {
+                data: {
+                    values: [
+                        {
+                            id: 'comment-1',
+                            content: { html: '<p>First comment</p>', raw: 'First comment' },
+                            created_on: '2023-01-01T00:00:00Z',
+                            updated_on: '2023-01-01T00:00:00Z',
+                            user: { account_id: 'user-1', display_name: 'User 1' },
+                            deleted: false,
+                        },
+                        {
+                            id: 'comment-2',
+                            content: { html: '<p>Second comment</p>', raw: 'Second comment' },
+                            created_on: '2023-01-01T01:00:00Z',
+                            updated_on: '2023-01-01T01:00:00Z',
+                            user: { account_id: 'user-2', display_name: 'User 2' },
+                            parent: { id: 'comment-1' },
+                            deleted: false,
+                        },
+                    ],
+                    next: 'https://api.bitbucket.org/next',
+                },
+            };
+            const nextPageResponse = {
+                data: {
+                    values: [
+                        {
+                            id: 'comment-3',
+                            content: { html: '<p>Third comment</p>', raw: 'Third comment' },
+                            created_on: '2023-01-01T02:00:00Z',
+                            updated_on: '2023-01-01T02:00:00Z',
+                            user: { account_id: 'user-3', display_name: 'User 3' },
+                            deleted: false,
+                        },
+                    ],
+                    next: undefined,
+                },
+            };
+
+            mockHttpClient.get.mockResolvedValueOnce(mockApiResponse).mockResolvedValueOnce(nextPageResponse);
+
+            const result = await api.getComments(mockPullRequest);
+
+            expect(mockHttpClient.get).toHaveBeenCalledWith(
+                '/repositories/test-owner/test-repo/pullrequests/123/comments',
+                {
+                    pagelen: 100,
+                },
+            );
+            expect(result.data).toHaveLength(2); // Nested structure: parent comment with 1 child, and 1 separate comment
+            expect(result.data[0].id).toBe('comment-1');
+            expect(result.data[0].children).toHaveLength(1);
+            expect(result.data[0].children[0].id).toBe('comment-2');
+            expect(result.data[1].id).toBe('comment-3');
+        });
+
+        it('should fetch commit comments when commitHash is provided', async () => {
+            const mockApiResponse = {
+                data: {
+                    values: [
+                        {
+                            id: 'commit-comment-1',
+                            content: { html: '<p>Commit comment</p>', raw: 'Commit comment' },
+                            created_on: '2023-01-01T00:00:00Z',
+                            updated_on: '2023-01-01T00:00:00Z',
+                            user: { account_id: 'user-1', display_name: 'User 1' },
+                            deleted: false,
+                        },
+                    ],
+                    next: undefined,
+                },
+            };
+
+            mockHttpClient.get.mockResolvedValue(mockApiResponse);
+
+            const result = await api.getComments(mockPullRequest, 'commit-hash-123');
+
+            expect(mockHttpClient.get).toHaveBeenCalledWith(
+                '/repositories/test-owner/test-repo/commit/commit-hash-123/comments',
+                {
+                    pagelen: 100,
+                },
+            );
+            expect(result.data).toHaveLength(1);
+            expect(result.data[0].commitHash).toBe('commit-hash-123');
+        });
+
+        it('should handle deleted comments', async () => {
+            const mockApiResponse = {
+                data: {
+                    values: [
+                        {
+                            id: 'comment-1',
+                            content: { html: '', raw: '' },
+                            created_on: '2023-01-01T00:00:00Z',
+                            updated_on: '2023-01-01T00:00:00Z',
+                            user: { account_id: 'user-1', display_name: 'User 1' },
+                            deleted: true,
+                        },
+                    ],
+                    next: undefined,
+                },
+            };
+
+            mockHttpClient.get.mockResolvedValue(mockApiResponse);
+
+            const result = await api.getComments(mockPullRequest);
+
+            expect(result.data).toHaveLength(0); // Deleted comments without children are filtered out
+        });
+
+        it('should handle empty response', async () => {
+            mockHttpClient.get.mockResolvedValue({ data: {} });
+
+            const result = await api.getComments(mockPullRequest);
+
+            expect(result.data).toEqual([]);
+            expect(result.next).toBeUndefined();
+        });
+    });
+
+    describe('getBuildStatuses', () => {
+        it('should fetch and convert build statuses', async () => {
+            const mockApiResponse = {
+                data: {
+                    values: [
+                        {
+                            name: 'Build 1',
+                            state: 'SUCCESSFUL',
+                            url: 'https://build1.url',
+                            created_on: '2023-01-01T00:00:00Z',
+                            updated_on: '2023-01-01T01:00:00Z',
+                            key: 'build-1-key',
+                            type: 'build',
+                        },
+                        {
+                            name: 'Build 2',
+                            state: 'FAILED',
+                            url: 'https://build2.url',
+                            created_on: '2023-01-01T02:00:00Z',
+                            updated_on: '2023-01-01T03:00:00Z',
+                            key: 'build-2-key',
+                            type: 'build',
+                        },
+                        {
+                            name: 'Not Build',
+                            state: 'SUCCESSFUL',
+                            url: 'https://other.url',
+                            created_on: '2023-01-01T04:00:00Z',
+                            updated_on: '2023-01-01T05:00:00Z',
+                            key: 'other-key',
+                            type: 'other',
+                        },
+                    ],
+                },
+            };
+
+            mockHttpClient.get.mockResolvedValue(mockApiResponse);
+
+            const result = await api.getBuildStatuses(mockPullRequest);
+
+            expect(mockHttpClient.get).toHaveBeenCalledWith(
+                '/repositories/test-owner/test-repo/pullrequests/123/statuses',
+                {
+                    pagelen: 100,
+                },
+            );
+            expect(result).toHaveLength(2); // Only build type statuses
+            expect(result[0]).toEqual({
+                name: 'Build 1',
+                state: 'SUCCESSFUL',
+                url: 'https://build1.url',
+                ts: '2023-01-01T00:00:00Z',
+                last_updated: '2023-01-01T01:00:00Z',
+                key: 'build-1-key',
+            });
+            expect(result[1]).toEqual({
+                name: 'Build 2',
+                state: 'FAILED',
+                url: 'https://build2.url',
+                ts: '2023-01-01T02:00:00Z',
+                last_updated: '2023-01-01T03:00:00Z',
+                key: 'build-2-key',
+            });
+        });
+
+        it('should handle empty build statuses', async () => {
+            mockHttpClient.get.mockResolvedValue({ data: {} });
+
+            const result = await api.getBuildStatuses(mockPullRequest);
+
+            expect(result).toEqual([]);
+        });
+
+        it('should handle response with no build type statuses', async () => {
+            const mockApiResponse = {
+                data: {
+                    values: [
+                        {
+                            name: 'Not Build',
+                            state: 'SUCCESSFUL',
+                            url: 'https://other.url',
+                            created_on: '2023-01-01T04:00:00Z',
+                            updated_on: '2023-01-01T05:00:00Z',
+                            key: 'other-key',
+                            type: 'other',
+                        },
+                    ],
+                },
+            };
+
+            mockHttpClient.get.mockResolvedValue(mockApiResponse);
+
+            const result = await api.getBuildStatuses(mockPullRequest);
+
+            expect(result).toEqual([]);
+        });
+    });
 });
