@@ -12,6 +12,7 @@
 
 - Fixed a regression in the source branch dropdrown of the Start work page
 - Fixed sometimes the 'Assigned Jira work items' and 'Custom JQL filters' panels don't retrieve recently edited items
+- Fixed a bug when slash is missing after custom branch prefix in branch naming
 
 ## What's new in 3.8.5
 
@@ -33,7 +34,7 @@
 ### Features
 
 - It is now possible to transition Jira work items to a different status from the sidebar, via `Transition Issue...` context menu option
-- Notifications for unseen & recent comments on Jira and Bitbucket are now supported 
+- Notifications for unseen & recent comments on Jira and Bitbucket are now supported
 
 ## What's new in 3.8.2
 
