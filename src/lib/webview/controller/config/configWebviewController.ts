@@ -1,7 +1,8 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
 import { v4 } from 'uuid';
-import vscode, { env } from 'vscode';
+import { env } from 'vscode';
+import * as vscode from 'vscode';
 
 import { isBasicAuthInfo, isEmptySiteInfo, isPATAuthInfo } from '../../../../atlclients/authInfo';
 import { ExtensionId } from '../../../../constants';
