@@ -5,7 +5,7 @@
   },
   "response": {
     "status": 200,
-    "body": "[{\"id\":\"10001\",\"filename\":\"test-image.png\",\"size\":1024,\"mimeType\":\"image/png\",\"content\":\"https://mockedteams.atlassian.net/secure/attachment/10001/test-image.png\"}]",
+    "body": "[{\"id\":\"10001\",\"filename\":\"test.jpg\",\"size\":1024,\"mimeType\":\"image/jpeg\",\"content\":\"https://mockedteams.atlassian.net/secure/attachment/10001/test.jpg\"}]",
     "headers": {
       "Content-Type": "application/json"
     }

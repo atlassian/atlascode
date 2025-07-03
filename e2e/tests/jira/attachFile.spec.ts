@@ -30,13 +30,9 @@ test('Test upload image to attachments', async ({ page, request }) => {
     await issueFrame.locator('button[role="menuitem"]').filter({ hasText: 'Attachment' }).click();
     await page.waitForTimeout(1000);
 
-    // Upload fake image file to the attachment dropzone
+    // Upload image file to the attachment dropzone
     const fileInput = issueFrame.locator('input[type="file"]');
-    await fileInput.setInputFiles({
-        name: 'test-image.png',
-        mimeType: 'image/png',
-        buffer: Buffer.from('fake-image-content'),
-    });
+    await fileInput.setInputFiles('e2e/wiremock-mappings/mockedteams/test-files/test.jpg');
     await page.waitForTimeout(1000);
 
     // Wait for the Save button to be visible and enabled
@@ -48,7 +44,7 @@ test('Test upload image to attachments', async ({ page, request }) => {
     const issueJSON = JSON.parse(fs.readFileSync('e2e/wiremock-mappings/mockedteams/BTS-1/bts1.json', 'utf-8'));
     const newAttachment = {
         id: '10001',
-        filename: 'test-image.png',
+        filename: 'test.jpg',
         author: {
             self: 'https://mockedteams.atlassian.net/rest/api/2/user?accountId=712020:13354d79-beaa-49d6-a55f-b9510892e3f4',
             accountId: '712020:13354d79-beaa-49d6-a55f-b9510892e3f4',
@@ -56,8 +52,8 @@ test('Test upload image to attachments', async ({ page, request }) => {
         },
         created: '2025-05-10T00:15:00.000-0700',
         size: 1024,
-        mimeType: 'image/png',
-        content: 'https://mockedteams.atlassian.net/secure/attachment/10001/test-image.png',
+        mimeType: 'image/jpeg',
+        content: 'https://mockedteams.atlassian.net/secure/attachment/10001/test.jpg',
     };
 
     const updatedIssue = updateIssueField(issueJSON, {
@@ -69,7 +65,7 @@ test('Test upload image to attachments', async ({ page, request }) => {
     await saveButton.click();
     await page.waitForTimeout(2000);
     // Verify the attachment was added
-    await expect(issueFrame.locator('text=test-image.png')).toBeVisible();
+    await expect(issueFrame.locator('text=test.jpg')).toBeVisible();
 
     // Clean up the mapping at the end
     await cleanupWireMockMapping(request, id);
