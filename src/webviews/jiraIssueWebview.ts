@@ -149,11 +149,13 @@ export class JiraIssueWebview
             this.postMessage(msg);
 
             // call async-able update functions here
-            this.updateEpicChildren();
-            this.updateCurrentUser();
-            this.updateWatchers();
-            this.updateVoters();
-            this.updateRelatedPullRequests();
+            await Promise.allSettled([
+                this.updateEpicChildren(),
+                this.updateCurrentUser(),
+                this.updateWatchers(),
+                this.updateVoters(),
+                this.updateRelatedPullRequests(),
+            ]);
         } catch (e) {
             Logger.error(e, 'Error updating issue');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });

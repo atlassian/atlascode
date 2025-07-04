@@ -1,5 +1,6 @@
 import { EpicFieldInfo, getEpicFieldInfo, IssueLinkType } from '@atlassianlabs/jira-pi-common-models';
 import { Fields, readField } from '@atlassianlabs/jira-pi-meta-models';
+import { IssueCreateMetadata } from '@atlassianlabs/jira-pi-meta-models'; // also import emptyProjectIssueCreateMetadata
 import { Disposable } from 'vscode';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
@@ -42,9 +43,27 @@ const minimalDefaultIssueFields: string[] = [
 export class JiraSettingsManager extends Disposable {
     private _fieldStore: Map<string, Fields> = new Map<string, Fields>();
     private _issueLinkTypesStore: Map<string, IssueLinkType[]> = new Map<string, IssueLinkType[]>();
+    private _projectKeyCMetaStore: Map<string, IssueCreateMetadata> = new Map<string, IssueCreateMetadata>(); // cMeta for different projects
 
     constructor() {
         super(() => this.dispose());
+    }
+
+    public async getIssueCreateMetadata(projectKey: string, siteInfo: DetailedSiteInfo): Promise<IssueCreateMetadata> {
+        let cMeta: IssueCreateMetadata = { projects: [] };
+        if (
+            !this._projectKeyCMetaStore.has(projectKey) ||
+            this._projectKeyCMetaStore.get(projectKey)?.projects.length === 0
+        ) {
+            try {
+                const client = await Container.clientManager.jiraClient(siteInfo);
+                cMeta = await client.getCreateIssueMetadata(projectKey);
+                this._projectKeyCMetaStore.set(projectKey, cMeta);
+            } catch (error) {
+                Logger.error(error, 'cMeta Data not avaliable.');
+            }
+        }
+        return cMeta;
     }
 
     public async getIssueLinkTypes(site: DetailedSiteInfo): Promise<IssueLinkType[]> {
