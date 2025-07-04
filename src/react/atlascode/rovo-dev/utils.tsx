@@ -32,7 +32,7 @@ export interface ToolReturnBashMessage {
 export interface ToolReturnTechnicalPlanMessage {
     tool_name: 'create_technical_plan';
     author: 'ToolReturn';
-    content: TechnicalPlan;
+    content: string; // JSON string representing the technical plan
     tool_call_id: string;
     args?: string;
 }
@@ -145,7 +145,7 @@ export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolRe
         case 'create_technical_plan':
             resp.push({
                 content: 'A cool technical plan',
-                technicalPlan: msg.content,
+                technicalPlan: JSON.parse(msg.content) as TechnicalPlan | undefined,
             });
             break;
 
