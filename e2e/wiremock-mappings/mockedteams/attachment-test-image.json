@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/secure/attachment/10001/test.jpg"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName": "test.jpg",
+    "headers": {
+      "Content-Type": "image/jpeg"
+    }
+  }
+} 
