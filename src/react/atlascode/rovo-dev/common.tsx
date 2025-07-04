@@ -26,6 +26,7 @@ import {
     DefaultMessage,
     parseToolReturnMessage,
     TechnicalPlan,
+    TechnicalPlanFileToChange,
     TechnicalPlanLogicalChange,
     ToolCallMessage,
     ToolReturnGenericMessage,
@@ -493,6 +494,38 @@ const LogicalChange: React.FC<{
 
     const changeSummary = change.summary;
 
+    const renderFilesToChange = (files: TechnicalPlanFileToChange[]) => {
+        if (files.length === 0) {
+            return null;
+        }
+        if (files.length === 1) {
+            return (
+                <FileToChangeComponent
+                    filePath={files[0].filePath}
+                    openFile={openFile}
+                    getText={getText}
+                    descriptionOfChange={files[0].descriptionOfChange}
+                    codeSnippetsToChange={files[0].codeSnippetsToChange}
+                />
+            );
+        }
+
+        return files.map((file, index) => {
+            return (
+                <li>
+                    <FileToChangeComponent
+                        key={index}
+                        filePath={file.filePath}
+                        openFile={openFile}
+                        getText={getText}
+                        descriptionOfChange={file.descriptionOfChange}
+                        codeSnippetsToChange={file.codeSnippetsToChange}
+                    />
+                </li>
+            );
+        });
+    };
+
     return (
         <div className="logical-change-container">
             <div className="logical-change-header">
@@ -519,23 +552,7 @@ const LogicalChange: React.FC<{
                     spacing="none"
                 />
             </div>
-            {isOpen && (
-                <ol className="file-to-change-container">
-                    {change.filesToChange.map((file) => {
-                        return (
-                            <li>
-                                <FileToChangeComponent
-                                    filePath={file.filePath}
-                                    openFile={openFile}
-                                    getText={getText}
-                                    descriptionOfChange={file.descriptionOfChange}
-                                    codeSnippetsToChange={file.codeSnippetsToChange}
-                                />
-                            </li>
-                        );
-                    })}
-                </ol>
-            )}
+            {isOpen && <ol className="file-to-change-container">{renderFilesToChange(change.filesToChange)}</ol>}
         </div>
     );
 };
@@ -557,10 +574,6 @@ const FileToChangeComponent: React.FC<{
         <div className="file-to-change">
             {descriptionOfChange && renderDescription(descriptionOfChange)}
             <div className="file-to-change-info">
-                <div className="lozenge-container">
-                    <p>File to modify: </p>
-                    <FileLozenge filePath={filePath} openFile={openFile} />
-                </div>
                 {codeSnippetsPresent && (
                     <Button
                         className="chevron-button"
@@ -584,10 +597,17 @@ const FileToChangeComponent: React.FC<{
                         spacing="none"
                     />
                 )}
+                <div className="lozenge-container">
+                    <p>File to modify: </p>
+                    <FileLozenge filePath={filePath} openFile={openFile} />
+                </div>
             </div>
             {isCodeChangesOpen && codeSnippetsPresent && (
                 <div className="code-changes-container">
                     {codeSnippetsToChange.map((snippet, idx) => {
+                        if (!snippet.code) {
+                            return null;
+                        }
                         return (
                             <div key={idx} className="code-snippet">
                                 <div>
@@ -639,6 +659,12 @@ const DiffComponent: React.FC<{
                 setLoading(true);
                 setError('');
                 const oldCode = await getText(filePath, lineRange);
+                if (!oldCode) {
+                    setDiff(code); // If no old code is found, just show the new code
+                    setLoading(false);
+                    setIsDone(true);
+                    return;
+                }
                 const diffResult = createPatch(filePath, oldCode, code, undefined, undefined, {
                     ignoreWhitespace: true,
                 });

@@ -443,14 +443,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private async executeGetText(filePath: string, range?: number[]): Promise<string | undefined> {
         const resolvedPath = this.makeRelativePathAbsolute(filePath);
         if (!fs.existsSync(resolvedPath)) {
-            await this.processError(new Error(`File not found: ${resolvedPath}`));
+            console.warn(`File not found: ${resolvedPath}`);
             return undefined;
         }
 
         const document = await workspace.openTextDocument(Uri.file(resolvedPath));
 
         if (!document) {
-            await this.processError(new Error(`Unable to open document: ${resolvedPath}`));
+            console.warn(`Unable to open document for file: ${resolvedPath}`);
             return undefined;
         }
 
