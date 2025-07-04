@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame } from 'e2e/helpers';
 
-test.only('Test image display in ticket description', async ({ page }) => {
+test('Test image display in ticket description', async ({ page }) => {
     await authenticateWithJira(page);
 
     await page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' }).click();
