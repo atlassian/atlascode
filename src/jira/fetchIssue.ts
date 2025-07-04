@@ -1,4 +1,5 @@
 import { createIssueUI, EditIssueUI, editIssueUI } from '@atlassianlabs/jira-metaui-client';
+import { DEFAULT_API_VERSION } from '@atlassianlabs/jira-pi-client';
 import {
     isMinimalIssue,
     MinimalIssue,
@@ -51,6 +52,12 @@ export async function fetchMinimalIssue(
 
 export async function fetchEditIssueUI(issue: MinimalIssue<DetailedSiteInfo>): Promise<EditIssueUI<DetailedSiteInfo>> {
     const client = await Container.clientManager.jiraClient(issue.siteDetails);
+    // const cMeta = await Container.jiraSettingsManager.getIssueCreateMetadata(
+    //     issue.key.substring(0, issue.key.indexOf('-')), // Project Key
+    //     issue.siteDetails,
+    // );
 
-    return await editIssueUI(issue, client);
+    // Lets do the cMeta call here so we can cache it
+    // Still need to finish getting all the calls here lol
+    return await editIssueUI(issue, client, DEFAULT_API_VERSION);
 }
