@@ -10,6 +10,7 @@ services:
             --https-keystore /home/wiremock_ssl_certs/wiremock-mockedteams.p12
         volumes:
             - ./wiremock-mappings/mockedteams:/home/wiremock/mappings
+            - ./wiremock-mappings/mockedteams/__files:/home/wiremock/__files
             - ./sslcerts:/home/wiremock_ssl_certs
         networks:
             e2e:
