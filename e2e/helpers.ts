@@ -64,10 +64,12 @@ export function updateIssueField(issueJson: any, updates: Record<string, any>) {
                 },
             };
 
-            updated.renderedFields.comment.comments.push(comment);
-            updated.renderedFields.comment.total = 1;
-            updated.renderedFields.comment.maxResults = 1;
-            updated.renderedFields.comment.startAt = 0;
+            [updated.renderedFields, updated.fields].forEach((field) => {
+                field.comment.comments.push(comment);
+                field.comment.total = 1;
+                field.comment.maxResults = 1;
+                field.comment.startAt = 0;
+            });
         }
     }
 
