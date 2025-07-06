@@ -1317,6 +1317,7 @@
         "@atlassianlabs/guipi-core-controller": "^0.1.2",
         "@atlassianlabs/guipi-jira-components": "^0.1.2",
         "@atlassianlabs/jira-metaui-client": "^1.1.0",
+        "@atlassianlabs/jira-metaui-transformer": "^1.1.0",
         "@atlassianlabs/jira-pi-client": "^1.1.0",
         "@atlassianlabs/jira-pi-common-models": "^1.1.0",
         "@atlassianlabs/jira-pi-meta-models": "^1.1.0",
