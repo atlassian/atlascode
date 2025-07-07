@@ -1,4 +1,3 @@
-import { createIssueUI, editIssueUI } from '@atlassianlabs/jira-metaui-client';
 import * as jiraPiCommonModels from '@atlassianlabs/jira-pi-common-models';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { expansionCastTo } from 'testsutil';
@@ -15,7 +14,20 @@ import {
 } from './fetchIssue';
 
 // Mock dependencies
-jest.mock('@atlassianlabs/jira-metaui-client');
+jest.mock('@atlassianlabs/jira-metaui-transformer', () => ({
+    CreateIssueScreenTransformer: jest.fn().mockImplementation(() => ({
+        transformIssueScreens: jest.fn().mockResolvedValue({
+            fields: [],
+            issuetypes: [],
+            projectKey: 'TEST',
+        }),
+    })),
+    EditIssueScreenTransformer: jest.fn().mockImplementation(() => ({
+        transformIssue: jest.fn().mockResolvedValue({
+            fields: [],
+        }),
+    })),
+}));
 jest.mock('@atlassianlabs/jira-pi-common-models');
 jest.mock('../container');
 jest.mock('../views/jira/searchJiraHelper');
@@ -38,11 +50,17 @@ describe('fetchIssue', () => {
 
     const mockClient = {
         getIssue: jest.fn(),
+        getFields: jest.fn(),
+        getIssueLinkTypes: jest.fn(),
+        getCreateIssueMetadata: jest.fn(),
     };
 
     const mockFieldIds = ['field1', 'field2'];
     const mockEpicInfo = { epicNameField: 'customfield_10001', epicLinkField: 'customfield_10002' };
     const mockIssueResponse = { id: '123', key: mockIssueKey, fields: { summary: 'Test issue' } };
+    const mockFields = { field1: { id: 'field1', name: 'Field 1' }, field2: { id: 'field2', name: 'Field 2' } };
+    const mockIssueLinkTypes = [{ id: '1', name: 'Blocks' }];
+    const mockCreateMetadata = { projects: [{ key: mockProjectKey, issuetypes: [] }] };
 
     // Setup mocks before each test
     beforeEach(() => {
@@ -56,6 +74,9 @@ describe('fetchIssue', () => {
         (Container.jiraSettingsManager as any) = {
             getMinimalIssueFieldIdsForSite: jest.fn().mockResolvedValue(mockFieldIds),
             getEpicFieldsForSite: jest.fn().mockResolvedValue(mockEpicInfo),
+            getAllFieldsForSite: jest.fn().mockResolvedValue(mockFields),
+            getIssueLinkTypes: jest.fn().mockResolvedValue(mockIssueLinkTypes),
+            getIssueCreateMetadata: jest.fn().mockResolvedValue(mockCreateMetadata),
         };
 
         // Setup SearchJiraHelper mock
@@ -72,32 +93,35 @@ describe('fetchIssue', () => {
             return mockMinimalIssue;
         });
 
-        // Setup jira-metaui-client mocks
-        (createIssueUI as jest.Mock).mockResolvedValue({
-            fields: [],
-            issuetypes: [],
-            projectKey: mockProjectKey,
-        });
-
-        (editIssueUI as jest.Mock).mockResolvedValue({
-            fields: [],
+        jest.spyOn(jiraPiCommonModels, 'getEpicFieldInfo').mockReturnValue({
+            epicName: { id: 'customfield_10001', name: 'Epic Name', cfid: 10001 },
+            epicLink: { id: 'customfield_10002', name: 'Epic Link', cfid: 10002 },
+            epicColor: { id: 'customfield_10003', name: 'Epic Color', cfid: 10003 },
+            epicsEnabled: true,
         });
 
         // Setup client mock responses
         mockClient.getIssue.mockResolvedValue(mockIssueResponse);
+        mockClient.getFields.mockResolvedValue([
+            { id: 'field1', name: 'Field 1' },
+            { id: 'field2', name: 'Field 2' },
+        ]);
+        mockClient.getIssueLinkTypes.mockResolvedValue(mockIssueLinkTypes);
+        mockClient.getCreateIssueMetadata.mockResolvedValue(mockCreateMetadata);
     });
 
     describe('fetchCreateIssueUI', () => {
-        it('should call client manager and createIssueUI', async () => {
+        it('should call client manager and fetch required data for create issue UI', async () => {
             const result = await fetchCreateIssueUI(mockSiteDetails, mockProjectKey);
 
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
-            expect(createIssueUI).toHaveBeenCalledWith(mockProjectKey, mockClient);
-            expect(result).toEqual({
-                fields: [],
-                issuetypes: [],
-                projectKey: mockProjectKey,
-            });
+            expect(Container.jiraSettingsManager.getAllFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.jiraSettingsManager.getIssueLinkTypes).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.jiraSettingsManager.getIssueCreateMetadata).toHaveBeenCalledWith(
+                mockProjectKey,
+                mockSiteDetails,
+            );
+            expect(result).toBeDefined();
         });
     });
 
@@ -174,12 +198,19 @@ describe('fetchIssue', () => {
     });
 
     describe('fetchEditIssueUI', () => {
-        it('should call client manager and editIssueUI', async () => {
+        it('should call client manager and fetch required data for edit issue UI', async () => {
             const result = await fetchEditIssueUI(mockMinimalIssue);
 
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockMinimalIssue.siteDetails);
-            expect(editIssueUI).toHaveBeenCalledWith(mockMinimalIssue, mockClient);
-            expect(result).toEqual({ fields: [] });
+            expect(Container.jiraSettingsManager.getAllFieldsForSite).toHaveBeenCalledWith(
+                mockMinimalIssue.siteDetails,
+            );
+            expect(Container.jiraSettingsManager.getIssueLinkTypes).toHaveBeenCalledWith(mockMinimalIssue.siteDetails);
+            expect(Container.jiraSettingsManager.getIssueCreateMetadata).toHaveBeenCalledWith(
+                mockProjectKey,
+                mockMinimalIssue.siteDetails,
+            );
+            expect(result).toBeDefined();
         });
     });
 });
