@@ -161,6 +161,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         text: text || '',
                         nonce: e.requestId, // Use the requestId as nonce
                     });
+                    break;
 
                 case RovoDevViewResponseType.CreatePR:
                     await this.createPR();
