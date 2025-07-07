@@ -153,7 +153,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 case RovoDevViewResponseType.AcceptFiles:
                     await this.executeAcceptFiles(e.filePaths);
                     break;
-                
+
                 case RovoDevViewResponseType.GetOriginalText:
                     const text = await this.executeGetText(e.filePath, e.range);
                     await webviewView.webview.postMessage({
