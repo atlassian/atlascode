@@ -43,7 +43,7 @@ const minimalDefaultIssueFields: string[] = [
 export class JiraSettingsManager extends Disposable {
     private _fieldStore: Map<string, Fields> = new Map<string, Fields>();
     private _issueLinkTypesStore: Map<string, IssueLinkType[]> = new Map<string, IssueLinkType[]>();
-    private _projectKeyCMetaStore: Map<string, IssueCreateMetadata> = new Map<string, IssueCreateMetadata>(); // cMeta for different projects
+    private _projectKeyCMetaStore: Map<string, IssueCreateMetadata> = new Map<string, IssueCreateMetadata>(); // cMeta for different projects, (projectKey, siteInfi)
 
     constructor() {
         super(() => this.dispose());

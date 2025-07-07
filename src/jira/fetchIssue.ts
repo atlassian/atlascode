@@ -1,6 +1,6 @@
-import { createIssueUI, EditIssueUI } from '@atlassianlabs/jira-metaui-client'; // add back editIssueUI when we change jira-metaui-client
-// // Extra imports to test modifiedEditIssueUI
-import { EditIssueScreenTransformer } from '@atlassianlabs/jira-metaui-transformer';
+import { EditIssueUI } from '@atlassianlabs/jira-metaui-client'; // add back editIssueUI and createIssueUI when we change jira-metaui-client
+// // Extra imports to test modifiedEditIssueUI and modifiedCreateIssueUI
+import { CreateIssueScreenTransformer, EditIssueScreenTransformer } from '@atlassianlabs/jira-metaui-transformer';
 import { DEFAULT_API_VERSION } from '@atlassianlabs/jira-pi-client';
 import { JiraClient } from '@atlassianlabs/jira-pi-client';
 import {
@@ -12,11 +12,12 @@ import {
 import { IssueLinkType } from '@atlassianlabs/jira-pi-common-models';
 import { getEpicFieldInfo } from '@atlassianlabs/jira-pi-common-models';
 import { JiraSiteInfo } from '@atlassianlabs/jira-pi-common-models';
-import { CreateMetaTransformerResult } from '@atlassianlabs/jira-pi-meta-models';
+import { CreateMetaTransformerResult, emptyProjectIssueCreateMetadata } from '@atlassianlabs/jira-pi-meta-models';
 import { IssueCreateMetadata } from '@atlassianlabs/jira-pi-meta-models';
 import { Fields, readField } from '@atlassianlabs/jira-pi-meta-models';
 import { FieldTransformerResult } from '@atlassianlabs/jira-pi-meta-models';
 
+// End of extra imports
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
@@ -26,8 +27,12 @@ export async function fetchCreateIssueUI(
     projectKey: string,
 ): Promise<CreateMetaTransformerResult<DetailedSiteInfo>> {
     const client = await Container.clientManager.jiraClient(siteDetails);
-
-    return await createIssueUI(projectKey, client);
+    const [fields, issuelinkTypes, cMeta] = await Promise.all([
+        Container.jiraSettingsManager.getAllFieldsForSite(siteDetails),
+        Container.jiraSettingsManager.getIssueLinkTypes(siteDetails),
+        Container.jiraSettingsManager.getIssueCreateMetadata(projectKey, siteDetails),
+    ]);
+    return await modifiedCreateIssueUI(projectKey, client, DEFAULT_API_VERSION, fields, issuelinkTypes, cMeta);
 }
 
 export async function getCachedOrFetchMinimalIssue(
@@ -61,13 +66,14 @@ export async function fetchMinimalIssue(
 
 export async function fetchEditIssueUI(issue: MinimalIssue<DetailedSiteInfo>): Promise<EditIssueUI<DetailedSiteInfo>> {
     const client = await Container.clientManager.jiraClient(issue.siteDetails);
-    const cMeta = await Container.jiraSettingsManager.getIssueCreateMetadata(
-        issue.key.substring(0, issue.key.indexOf('-')), // Project Key
-        issue.siteDetails,
-    );
-    const fields = await Container.jiraSettingsManager.getAllFieldsForSite(issue.siteDetails);
-    const issuelinkTypes = await Container.jiraSettingsManager.getIssueLinkTypes(issue.siteDetails);
-
+    const [fields, issuelinkTypes, cMeta] = await Promise.all([
+        Container.jiraSettingsManager.getAllFieldsForSite(issue.siteDetails),
+        Container.jiraSettingsManager.getIssueLinkTypes(issue.siteDetails),
+        Container.jiraSettingsManager.getIssueCreateMetadata(
+            issue.key.substring(0, issue.key.indexOf('-')),
+            issue.siteDetails,
+        ),
+    ]);
     // Lets do the cMeta call here so we can cache it
     // Still need to finish getting all the calls here lol
     // return await editIssueUI(issue, client, DEFAULT_API_VERSION); // This is the regular version for the function call
@@ -78,9 +84,9 @@ async function modifiedEditIssueUI<S extends JiraSiteInfo>(
     issue: MinimalIssue<S>,
     client: JiraClient<S>,
     apiVersion: string = '2',
-    fields: Fields = {},
-    cachedIssueLinkTypes: IssueLinkType[] = [],
-    cachedCMeta: IssueCreateMetadata = { projects: [] },
+    fields?: Fields,
+    cachedIssueLinkTypes?: IssueLinkType[],
+    cachedCMeta?: IssueCreateMetadata,
 ): Promise<EditIssueUI<S>> {
     console.log('creating edit ui...');
     const projectKey = issue.key.substring(0, issue.key.indexOf('-'));
@@ -121,6 +127,46 @@ async function modifiedEditIssueUI<S extends JiraSiteInfo>(
     };
 }
 
+async function modifiedCreateIssueUI<S extends JiraSiteInfo>(
+    projectKey: string,
+    client: JiraClient<S>,
+    apiVersion: string = '2',
+    fields?: Fields,
+    cachedIssueLinkTypes?: IssueLinkType[],
+    cachedCMeta?: IssueCreateMetadata,
+): Promise<CreateMetaTransformerResult<S>> {
+    const [allFields, issuelinkTypes, cMeta] = await Promise.all([
+        getFieldsInfo(client, fields),
+        getIssueLinkTypesInfo(client, cachedIssueLinkTypes),
+        getCreateIssueMetadataInfo(client, projectKey, cachedCMeta),
+    ]); // Added some parallel HTTP requests for preformace....
+    const createIssueTransformer: CreateIssueScreenTransformer<S> = new CreateIssueScreenTransformer(
+        client.site,
+        apiVersion,
+        allFields,
+        issuelinkTypes,
+    );
+    if (!Array.isArray(cMeta.projects) || cMeta.projects.length < 1) {
+        cMeta.projects = [emptyProjectIssueCreateMetadata];
+        cMeta.projects[0].issuetypes[0].fields['project'] = {
+            id: 'project',
+            key: 'project',
+            name: 'Project',
+            schema: {
+                type: 'project',
+                system: 'project',
+                custom: undefined,
+                items: undefined,
+            },
+            required: true,
+            autoCompleteUrl: undefined,
+            allowedValues: [],
+        };
+    }
+
+    return await createIssueTransformer.transformIssueScreens(cMeta.projects[0]);
+}
+
 /*
     These three functions handle whether our application have sort of caching
     for the information needed for createIssueUI and editIssueUI.
@@ -131,7 +177,7 @@ async function modifiedEditIssueUI<S extends JiraSiteInfo>(
     these functions handle input with only the client and issue passed as arguments.
 */
 
-async function getFieldsInfo<S extends JiraSiteInfo>(client: JiraClient<S>, fields: Fields): Promise<Fields> {
+async function getFieldsInfo<S extends JiraSiteInfo>(client: JiraClient<S>, fields?: Fields): Promise<Fields> {
     if (!fields) {
         const allFields: Fields = {};
         const fetchedFields = await client.getFields();
@@ -149,9 +195,9 @@ async function getFieldsInfo<S extends JiraSiteInfo>(client: JiraClient<S>, fiel
 
 async function getIssueLinkTypesInfo<S extends JiraSiteInfo>(
     client: JiraClient<S>,
-    cachedIssueLinkTypes: IssueLinkType[],
+    cachedIssueLinkTypes?: IssueLinkType[],
 ): Promise<IssueLinkType[]> {
-    if (cachedIssueLinkTypes.length === 0) {
+    if (!cachedIssueLinkTypes) {
         return await client.getIssueLinkTypes();
     }
     return cachedIssueLinkTypes;
@@ -160,9 +206,9 @@ async function getIssueLinkTypesInfo<S extends JiraSiteInfo>(
 async function getCreateIssueMetadataInfo<S extends JiraSiteInfo>(
     client: JiraClient<S>,
     projectKey: string,
-    cachedCMeta: IssueCreateMetadata,
+    cachedCMeta?: IssueCreateMetadata,
 ): Promise<IssueCreateMetadata> {
-    if (cachedCMeta.projects.length === 0) {
+    if (!cachedCMeta) {
         return await client.getCreateIssueMetadata(projectKey);
     }
     return cachedCMeta;
