@@ -2,7 +2,6 @@ import Button from '@atlaskit/button';
 import LoadingButton from '@atlaskit/button/loading-button';
 import Form, { Field, FormFooter, FormHeader, RequiredAsterisk } from '@atlaskit/form';
 import Page from '@atlaskit/page';
-import SectionMessage from '@atlaskit/section-message';
 import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
 import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
@@ -32,14 +31,12 @@ import { Panel } from './Panel';
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;
 interface ViewState extends CommonEditorViewState, CreateIssueData {
-    isCreateBannerOpen: boolean;
     createdIssue: IssueKeyAndSite<DetailedSiteInfo>;
 }
 
 const emptyState: ViewState = {
     ...emptyCommonEditorState,
     ...emptyCreateIssueData,
-    isCreateBannerOpen: false,
     createdIssue: { key: '', siteDetails: emptySiteInfo },
 };
 
@@ -106,7 +103,6 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                             errorDetails: undefined,
                             isSomethingLoading: false,
                             loadingField: '',
-                            isCreateBannerOpen: true,
                             createdIssue: e.issueData,
                             fieldValues: {
                                 ...this.state.fieldValues,
@@ -175,7 +171,6 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         this.setState({
             isSomethingLoading: true,
             loadingField: 'submitButton',
-            isCreateBannerOpen: false,
         });
         this.postMessage({
             action: 'createIssue',
@@ -339,26 +334,6 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                         onPMFNever={() => this.onPMFNever()}
                                         onPMFSubmit={(data: LegacyPMFData) => this.onPMFSubmit(data)}
                                     />
-                                )}
-                                {this.state.isCreateBannerOpen && (
-                                    <div className="fade-in">
-                                        <SectionMessage appearance="success" title="Issue Created">
-                                            <p>
-                                                Issue{' '}
-                                                <Button
-                                                    className="ac-banner-link-button"
-                                                    appearance="link"
-                                                    spacing="none"
-                                                    onClick={() => {
-                                                        this.handleOpenIssue(this.state.createdIssue);
-                                                    }}
-                                                >
-                                                    {this.state.createdIssue.key}
-                                                </Button>{' '}
-                                                has been created.
-                                            </p>
-                                        </SectionMessage>
-                                    </div>
                                 )}
                                 {this.state.isErrorBannerOpen && (
                                     <ErrorBanner

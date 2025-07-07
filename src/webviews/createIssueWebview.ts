@@ -3,10 +3,11 @@ import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from
 import { decode } from 'base64-arraybuffer-es6';
 import { format } from 'date-fns';
 import FormData from 'form-data';
-import { commands, Position, Uri, ViewColumn } from 'vscode';
+import { commands, Position, Uri, ViewColumn, window } from 'vscode';
 
 import { issueCreatedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
+import { showIssue } from '../commands/jira/showIssue';
 import { configuration } from '../config/configuration';
 import { Commands } from '../constants';
 import { Container } from '../container';
@@ -465,6 +466,14 @@ export class CreateIssueWebview
                             });
 
                             this.fireCallback(resp.key, payload.summary);
+
+                            window
+                                .showInformationMessage(`Issue ${resp.key} has been created`, 'Open Issue')
+                                .then((selection) => {
+                                    if (selection === 'Open Issue') {
+                                        showIssue({ key: resp.key, siteDetails: msg.site });
+                                    }
+                                });
                         } catch (e) {
                             Logger.error(e, 'Error creating issue');
                             this.postMessage({
