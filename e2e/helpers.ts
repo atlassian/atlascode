@@ -68,6 +68,9 @@ export function updateIssueField(issueJson: any, updates: Record<string, any>) {
             updated.renderedFields.comment.total = 1;
             updated.renderedFields.comment.maxResults = 1;
             updated.renderedFields.comment.startAt = 0;
+        } else if (key === 'summary') {
+            updated.renderedFields.summary = value;
+            updated.fields.summary = value;
         }
     }
 
