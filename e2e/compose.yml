@@ -18,6 +18,24 @@ services:
         expose:
             - 443
 
+    wiremock-bitbucket:
+        image: wiremock/wiremock
+        command: >
+            --https-port 443
+            --verbose
+            --https-keystore /home/wiremock_ssl_certs/wiremock-bitbucket.p12
+        volumes:
+            - ./wiremock-mappings/bitbucket:/home/wiremock/mappings
+            - ./sslcerts:/home/wiremock_ssl_certs
+        networks:
+            e2e:
+                aliases:
+                    - bitbucket.mockeddomain.com
+                    - bitbucket.org
+                    - api.bitbucket.org
+        expose:
+            - 443
+
     atlascode-e2e:
         image: atlascode-e2e
         volumes:
@@ -26,6 +44,7 @@ services:
             - NODE_TLS_REJECT_UNAUTHORIZED=0
         depends_on:
             - wiremock-mockedteams
+            - wiremock-bitbucket
         networks:
             - e2e
         ports:
