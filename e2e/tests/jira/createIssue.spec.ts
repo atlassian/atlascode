@@ -23,9 +23,7 @@ test('Create an issue via side pannel flow', async ({ page }) => {
 
     await createIssueFrame.getByRole('button', { name: 'Create' }).click();
 
-    await createIssueFrame.getByText('Issue Created').scrollIntoViewIfNeeded();
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(2000);
 
-    await expect(createIssueFrame.getByText('Issue Created')).toBeVisible();
-    await expect(createIssueFrame.getByText(newIssueKey)).toBeVisible();
+    await expect(page.getByRole('dialog', { name: new RegExp(`Issue ${newIssueKey} has been created`) })).toBeVisible();
 });
