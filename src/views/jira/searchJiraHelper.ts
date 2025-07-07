@@ -64,6 +64,11 @@ export class SearchJiraHelper {
         return undefined;
     }
 
+    static getIssuesPerSite(siteId: string): MinimalORIssueLink<DetailedSiteInfo>[] | undefined {
+        const issues = Object.values(this._searchableIssueMap).flat();
+        return issues.filter((issue) => issue.siteDetails.id === siteId);
+    }
+
     // This method is called when the user clicks on the "Search Jira" button in the Jira Tree View
     private static createIssueQuickPick() {
         searchIssuesEvent(ProductJira).then((e) => {
