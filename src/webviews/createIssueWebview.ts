@@ -137,7 +137,7 @@ export class CreateIssueWebview
         const siteIssues = SearchJiraHelper.getIssuesPerSite(siteId);
         if (siteIssues && siteIssues.length > 0) {
             const issuesNumberPerProjectKey = siteIssues.reduce((prev: Record<string, number>, issue) => {
-                const projectKey = issue.key.split('-')[0];
+                const projectKey = issue.key?.split('-')[0];
                 if (!prev[projectKey]) {
                     prev[projectKey] = 1;
                     return prev;

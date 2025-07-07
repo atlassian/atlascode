@@ -11,8 +11,17 @@ jest.mock('../../commands');
 jest.mock('../../container');
 jest.mock('../../atlclients/authInfo');
 
-const issue1 = forceCastTo<MinimalORIssueLink<DetailedSiteInfo>>({ key: 'ISSUE-1', summary: 'Test Issue' });
-const issue2 = forceCastTo<MinimalORIssueLink<DetailedSiteInfo>>({ key: 'ISSUE-2', summary: 'Another Issue' });
+const issue1 = forceCastTo<MinimalORIssueLink<DetailedSiteInfo>>({
+    key: 'ISSUE-1',
+    summary: 'Test Issue',
+    siteDetails: { id: 'site1' },
+});
+
+const issue2 = forceCastTo<MinimalORIssueLink<DetailedSiteInfo>>({
+    key: 'ISSUE-2',
+    summary: 'Another Issue',
+    siteDetails: { id: 'site2' },
+});
 
 describe('SearchJiraHelper', () => {
     beforeEach(() => {
@@ -50,6 +59,15 @@ describe('SearchJiraHelper', () => {
         expect(SearchJiraHelper.findIssue(issue2.key)).toBeUndefined();
     });
 
+    it('clearIssues clears all the issues for provider1', () => {
+        SearchJiraHelper.setIssues([issue1], 'provider1');
+        SearchJiraHelper.setIssues([issue2], 'provider2');
+        SearchJiraHelper.clearIssues('provider1');
+
+        expect(SearchJiraHelper.findIssue(issue1.key)).toBeUndefined();
+        expect(SearchJiraHelper.findIssue(issue2.key)).toBe(issue2);
+    });
+
     it("setIssues replaces the provider's issues", () => {
         SearchJiraHelper.setIssues([issue1], 'provider1');
         SearchJiraHelper.setIssues([issue2], 'provider1');
@@ -79,5 +97,13 @@ describe('SearchJiraHelper', () => {
 
         expect(SearchJiraHelper.findIssue(issue1.key)).toBe(issue1);
         expect(SearchJiraHelper.findIssue(issue2.key)).toBe(issue2);
+    });
+
+    it('returns issues for provided siteId', () => {
+        SearchJiraHelper.setIssues([issue1], 'provider1');
+        SearchJiraHelper.setIssues([issue2], 'provider2');
+
+        expect(SearchJiraHelper.getIssuesPerSite('site1')).toStrictEqual([issue1]);
+        expect(SearchJiraHelper.getIssuesPerSite('site2')).toStrictEqual([issue2]);
     });
 });
