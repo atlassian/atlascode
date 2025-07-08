@@ -103,7 +103,7 @@ describe('SearchJiraHelper', () => {
         SearchJiraHelper.setIssues([issue1], 'provider1');
         SearchJiraHelper.setIssues([issue2], 'provider2');
 
-        expect(SearchJiraHelper.getIssuesPerSite('site1')).toStrictEqual([issue1]);
-        expect(SearchJiraHelper.getIssuesPerSite('site2')).toStrictEqual([issue2]);
+        expect(SearchJiraHelper.getAssignedIssuesPerSite('site1', 'provider1')).toStrictEqual([issue1]);
+        expect(SearchJiraHelper.getAssignedIssuesPerSite('site2', 'provider2')).toStrictEqual([issue2]);
     });
 });

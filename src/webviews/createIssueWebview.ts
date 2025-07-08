@@ -9,7 +9,7 @@ import { issueCreatedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { showIssue } from '../commands/jira/showIssue';
 import { configuration } from '../config/configuration';
-import { Commands } from '../constants';
+import { AssignedJiraItemsViewId, Commands } from '../constants';
 import { Container } from '../container';
 import {
     CreateIssueAction,
@@ -118,7 +118,7 @@ export class CreateIssueWebview
         const availableSites = Container.siteManager.getSitesAvailable(ProductJira);
         const { siteWithMaxIssues } = availableSites.reduce(
             (prev: { numIssues: number; siteWithMaxIssues: DetailedSiteInfo | null }, curr) => {
-                const siteIssues = SearchJiraHelper.getIssuesPerSite(curr.id);
+                const siteIssues = SearchJiraHelper.getAssignedIssuesPerSite(curr.id, AssignedJiraItemsViewId);
                 if (siteIssues && siteIssues.length > 0 && siteIssues.length > prev.numIssues) {
                     prev.numIssues = siteIssues.length;
                     prev.siteWithMaxIssues = curr;
@@ -134,7 +134,7 @@ export class CreateIssueWebview
     }
 
     private getProjectKeyWithMaxIssues(siteId: string): string | undefined {
-        const siteIssues = SearchJiraHelper.getIssuesPerSite(siteId);
+        const siteIssues = SearchJiraHelper.getAssignedIssuesPerSite(siteId, AssignedJiraItemsViewId);
         if (siteIssues && siteIssues.length > 0) {
             const issuesNumberPerProjectKey = siteIssues.reduce((prev: Record<string, number>, issue) => {
                 const projectKey = issue.key?.split('-')[0];
