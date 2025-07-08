@@ -593,7 +593,8 @@ const FileToChangeComponent: React.FC<{
     codeSnippetsToChange?: CodeSnippetToChange[];
 }> = ({ filePath, openFile, getText, descriptionOfChange, codeSnippetsToChange }) => {
     const [isCodeChangesOpen, setIsCodeChangesOpen] = React.useState(false);
-    const codeSnippetsPresent = codeSnippetsToChange && codeSnippetsToChange.length > 0;
+    const codeSnippetsPresent =
+        codeSnippetsToChange && codeSnippetsToChange.length > 0 && codeSnippetsToChange.some((snippet) => snippet.code);
 
     const renderDescription = (description: string) => {
         return <span dangerouslySetInnerHTML={{ __html: Marked.parse(description) }} />;
