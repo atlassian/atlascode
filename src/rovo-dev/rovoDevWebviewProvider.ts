@@ -23,6 +23,7 @@ import { RovoDevViewResponse, RovoDevViewResponseType } from '../react/atlascode
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient } from './rovoDevApiClient';
+import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
@@ -32,6 +33,7 @@ interface TypedWebview<MessageOut, MessageIn> extends Webview {
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
     private readonly viewType = 'atlascodeRovoDev';
+    private _prHandler = new RovoDevPullRequestHandler();
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _rovoDevApiClient?: RovoDevApiClient;
     private _initialized = false;
@@ -150,6 +152,19 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                 case RovoDevViewResponseType.AcceptFiles:
                     await this.executeAcceptFiles(e.filePaths);
+                    break;
+
+                case RovoDevViewResponseType.GetOriginalText:
+                    const text = await this.executeGetText(e.filePath, e.range);
+                    await webviewView.webview.postMessage({
+                        type: RovoDevProviderMessageType.ReturnText,
+                        text: text || '',
+                        nonce: e.requestId, // Use the requestId as nonce
+                    });
+                    break;
+
+                case RovoDevViewResponseType.CreatePR:
+                    await this.createPR();
                     break;
             }
         });
@@ -412,6 +427,20 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await Promise.all(promises);
     }
 
+    private async createPR() {
+        try {
+            await this._prHandler.createPR();
+        } catch (e) {
+            console.error('Error creating PR:', e);
+            await this.processError(e as Error);
+        } finally {
+            const webview = this._webView!;
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.CreatePRComplete,
+            });
+        }
+    }
+
     private async executeApiWithErrorHandling<T>(
         func: (client: RovoDevApiClient) => Promise<T>,
         cancellationAware?: true,
@@ -430,6 +459,28 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         } else {
             await this.processError(new Error('RovoDev client not initialized'));
         }
+    }
+
+    private async executeGetText(filePath: string, range?: number[]): Promise<string | undefined> {
+        const resolvedPath = this.makeRelativePathAbsolute(filePath);
+        if (!fs.existsSync(resolvedPath)) {
+            console.warn(`File not found: ${resolvedPath}`);
+            return undefined;
+        }
+
+        const document = await workspace.openTextDocument(Uri.file(resolvedPath));
+
+        if (!document) {
+            console.warn(`Unable to open document for file: ${resolvedPath}`);
+            return undefined;
+        }
+
+        const lineRange =
+            range && Array.isArray(range) ? new Range(new Position(range[0], 0), new Position(range[1], 0)) : undefined;
+
+        const text = document.getText(document.validateRange(lineRange || new Range(0, 0, document.lineCount, 0)));
+
+        return text;
     }
 
     async invokeRovoDevAskCommand(prompt: string): Promise<void> {

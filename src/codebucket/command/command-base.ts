@@ -18,8 +18,6 @@ export abstract class CommandBase {
             if (e instanceof Error) {
                 vscode.window.showInformationMessage(e.message);
             } else {
-                // tslint:disable-next-line:no-console
-                console.error(e);
                 vscode.window.showErrorMessage(`Encountered an unexpected error: ${e.message}`);
             }
         }

@@ -91,7 +91,8 @@ const StartWorkPage: React.FunctionComponent = () => {
     const classes = useStyles(vscStyles);
     const [state, controller] = useStartWorkController();
     const convertedCustomPrefixes = state.customPrefixes.map((prefix) => {
-        return { prefix: prefix, kind: prefix };
+        const normalizedCustomPrefix = prefix.endsWith('/') ? prefix : prefix + '/';
+        return { prefix: normalizedCustomPrefix, kind: prefix };
     });
 
     const [transitionIssueEnabled, setTransitionIssueEnabled] = useState(true);
