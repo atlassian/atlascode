@@ -297,7 +297,7 @@ const RovoDevView: React.FC = () => {
     const undoFiles = useCallback(
         (filePaths: string[]) => {
             postMessage({
-                type: RovoDevViewResponseType.UndoFiles,
+                type: RovoDevViewResponseType.UndoFileChanges,
                 filePaths,
             });
             removeModifiedFileToolReturns(filePaths);
@@ -305,10 +305,10 @@ const RovoDevView: React.FC = () => {
         [postMessage, removeModifiedFileToolReturns],
     );
 
-    const acceptFiles = useCallback(
+    const keepFiles = useCallback(
         (filePaths: string[]) => {
             postMessage({
-                type: RovoDevViewResponseType.AcceptFiles,
+                type: RovoDevViewResponseType.KeepFileChanges,
                 filePaths,
             });
             removeModifiedFileToolReturns(filePaths);
@@ -375,7 +375,7 @@ const RovoDevView: React.FC = () => {
                 <UpdatedFilesComponent
                     modifiedFiles={totalModifiedFiles}
                     onUndo={undoFiles}
-                    onAccept={acceptFiles}
+                    onKeep={keepFiles}
                     openDiff={openFile}
                     onCreatePR={() => {
                         postMessage({

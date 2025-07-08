@@ -12,6 +12,11 @@ class RovoDevApiError extends Error {
     }
 }
 
+export interface RovoDevHealthcheckResponse {
+    status: string;
+    version: string;
+}
+
 /** Implements the http client for the RovoDev CLI server */
 export class RovoDevApiClient {
     private readonly _baseApiUrl: string;
@@ -116,19 +121,22 @@ export class RovoDevApiClient {
     }
 
     /** Invokes the GET /healthcheck rest API
+     * @returns An object representing the API response
+     */
+    public async healtcheckInfo(): Promise<RovoDevHealthcheckResponse> {
+        const response = await this.fetchApi('/healthcheck', 'GET');
+        return await response.json();
+    }
+
+    /** Invokes the GET /healthcheck rest API
      * @returns A value indicating if the service is healthy.
      */
-    public async healthcheck(safeInvoke?: boolean): Promise<boolean> {
+    public async healthcheck(): Promise<boolean> {
         try {
-            const response = await this.fetchApi('/healthcheck', 'GET');
-            const data = await response.json();
+            const data = await this.healtcheckInfo();
             return data.status === 'healthy';
-        } catch (error) {
-            if (safeInvoke) {
-                return false;
-            } else {
-                throw error;
-            }
+        } catch {
+            return false;
         }
     }
 }

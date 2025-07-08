@@ -176,7 +176,7 @@ export const modifiedFileComponentStyles: React.CSSProperties = {
     backgroundColor: 'var(--vscode-editorWidget-background)',
 };
 
-export const undoAcceptButtonStyles: React.CSSProperties = {
+export const undoKeepButtonStyles: React.CSSProperties = {
     cursor: 'pointer',
     padding: '2px 6px',
     borderRadius: '2px',
