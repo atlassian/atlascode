@@ -365,6 +365,74 @@ describe('RovoDevApiClient', () => {
         });
     });
 
+    describe('healtcheckInfo method', () => {
+        it('should return healthcheck info when service responds successfully', async () => {
+            const mockHealthcheckResponse = {
+                status: 'healthy',
+                version: '1.0.0',
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockHealthcheckResponse),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.healtcheckInfo();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/healthcheck', {
+                method: 'GET',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: undefined,
+            });
+            expect(result).toEqual(mockHealthcheckResponse);
+            expect(mockResponse.json).toHaveBeenCalled();
+        });
+
+        it('should return unhealthy status info', async () => {
+            const mockHealthcheckResponse = {
+                status: 'unhealthy',
+                version: '1.0.0',
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockHealthcheckResponse),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.healtcheckInfo();
+
+            expect(result).toEqual(mockHealthcheckResponse);
+            expect(result.status).toBe('unhealthy');
+        });
+
+        it('should throw error when healthcheck endpoint fails', async () => {
+            const mockResponse = {
+                status: 503,
+                statusText: 'Service Unavailable',
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.healtcheckInfo()).rejects.toThrow("Failed to fetch '/healthcheck API: HTTP 503");
+        });
+
+        it('should throw error when healthcheck endpoint returns 404', async () => {
+            const mockResponse = {
+                status: 404,
+                statusText: 'Not Found',
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.healtcheckInfo()).rejects.toThrow("Failed to fetch '/healthcheck API: HTTP 404");
+        });
+    });
+
     describe('healthcheck method', () => {
         it('should return true when service is healthy', async () => {
             const mockResponse = {
@@ -426,57 +494,12 @@ describe('RovoDevApiClient', () => {
             expect(result).toBe(false);
         });
 
-        it('should throw error by default when healthcheck fails', async () => {
-            const mockResponse = {
-                status: 503,
-                statusText: 'Service Unavailable',
-            } as unknown as Response;
-
-            mockFetch.mockResolvedValue(mockResponse);
-
-            await expect(client.healthcheck()).rejects.toThrow("Failed to fetch '/healthcheck API: HTTP 503");
-        });
-
         it('should handle network errors and return false', async () => {
             mockFetch.mockRejectedValue(new Error('Network error'));
 
             const result = await client.healthcheck();
 
             expect(result).toBe(false);
-        });
-    });
-
-    describe('statusIsSuccessful function', () => {
-        it('should return true for 2xx status codes', () => {
-            // Import the function to test it directly
-            const statusIsSuccessful = (status: number | undefined) => {
-                return !!status && Math.floor(status / 100) === 2;
-            };
-
-            expect(statusIsSuccessful(200)).toBe(true);
-            expect(statusIsSuccessful(201)).toBe(true);
-            expect(statusIsSuccessful(204)).toBe(true);
-            expect(statusIsSuccessful(299)).toBe(true);
-        });
-
-        it('should return false for non-2xx status codes', () => {
-            const statusIsSuccessful = (status: number | undefined) => {
-                return !!status && Math.floor(status / 100) === 2;
-            };
-
-            expect(statusIsSuccessful(100)).toBe(false);
-            expect(statusIsSuccessful(199)).toBe(false);
-            expect(statusIsSuccessful(300)).toBe(false);
-            expect(statusIsSuccessful(400)).toBe(false);
-            expect(statusIsSuccessful(500)).toBe(false);
-        });
-
-        it('should return false for undefined status', () => {
-            const statusIsSuccessful = (status: number | undefined) => {
-                return !!status && Math.floor(status / 100) === 2;
-            };
-
-            expect(statusIsSuccessful(undefined)).toBe(false);
         });
     });
 
