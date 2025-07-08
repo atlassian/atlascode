@@ -56,8 +56,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
 
     const numVotes: string = fieldValues['votes'] && fieldValues['votes'].votes > 0 ? fieldValues['votes'].votes : '';
 
-    const allowVoting: boolean =
-        currentUser && (!fieldValues['reporter'] || fieldValues['reporter'].accountId !== currentUser.accountId);
+    const allowVoting: boolean = !!currentUser;
 
     const [worklogDialogOpen, setWorklogDialogOpen] = React.useState(false);
     const [votesDialogOpen, setVotesDialogOpen] = React.useState(false);
