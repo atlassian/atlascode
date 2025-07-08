@@ -1,1 +1,1 @@
-export { cleanupWireMockMapping, setupWireMockMapping } from './mappings';
+export { cleanupWireMockMapping, setupWireMockMapping } from './mappingHelpers';
