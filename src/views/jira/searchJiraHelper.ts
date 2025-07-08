@@ -64,9 +64,10 @@ export class SearchJiraHelper {
         return undefined;
     }
 
-    static getIssuesPerSite(siteId: string): MinimalORIssueLink<DetailedSiteInfo>[] | undefined {
-        const issues = Object.values(this._searchableIssueMap).flat();
-        return issues.filter((issue) => issue.siteDetails.id === siteId);
+    static getAssignedIssuesPerSite(siteId: string, dataProviderId: string): MinimalORIssueLink<DetailedSiteInfo>[] {
+        const assignedIssues = this._searchableIssueMap[dataProviderId] || [];
+        const assignedIssuesForSite = assignedIssues.filter((issue) => issue.siteDetails.id === siteId);
+        return assignedIssuesForSite;
     }
 
     // This method is called when the user clicks on the "Search Jira" button in the Jira Tree View

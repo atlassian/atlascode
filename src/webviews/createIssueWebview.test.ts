@@ -82,7 +82,7 @@ jest.mock('../commands/jira/showIssue', () => ({
 
 jest.mock('../views/jira/searchJiraHelper', () => ({
     SearchJiraHelper: {
-        getIssuesPerSite: jest.fn().mockReturnValue([]),
+        getAssignedIssuesPerSite: jest.fn().mockReturnValue([]),
     },
 }));
 
@@ -775,7 +775,7 @@ describe('CreateIssueWebview', () => {
                 siteId: '',
                 projectKey: '',
             };
-            jest.spyOn(SearchJiraHelper, 'getIssuesPerSite').mockReturnValue([]);
+            jest.spyOn(SearchJiraHelper, 'getAssignedIssuesPerSite').mockReturnValue([]);
         });
 
         it('should set site and project from last used values', async () => {
@@ -822,7 +822,7 @@ describe('CreateIssueWebview', () => {
 
             Container.siteManager.getSitesAvailable = jest.fn().mockReturnValueOnce([maxIssuesSite]);
 
-            jest.spyOn(SearchJiraHelper, 'getIssuesPerSite').mockReturnValue([
+            jest.spyOn(SearchJiraHelper, 'getAssignedIssuesPerSite').mockReturnValue([
                 { id: 'mock', key: 'TST-1' } as MinimalORIssueLink<DetailedSiteInfo>,
                 { id: 'mock', key: 'TST-2' } as MinimalORIssueLink<DetailedSiteInfo>,
                 { id: 'mock', key: 'TSR-1' } as MinimalORIssueLink<DetailedSiteInfo>,
