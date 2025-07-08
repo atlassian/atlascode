@@ -1,0 +1,136 @@
+.logical-change-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid var(--vscode-editorWidget-border);
+    border-radius: 8px;
+    width: 100%;
+    overflow: auto;
+    background-color: var(--vscode-editor-background);
+}
+
+.logical-change-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.logical-change-header .title {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--vscode-editor-foreground);
+}
+
+.logical-change-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.logical-change-counter {
+    display: flex;
+    width: 20px;
+    height: 20px;
+    padding: 4px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 40px;
+    border: 1px solid var(--vscode-editorWidget-border);
+}
+
+.logical-change-counter p {
+    margin: 0;
+    font-size: 9px;
+    color: var(--vscode-input-placeholderForeground);
+}
+
+.chevron-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    :hover {
+        color: var(--vscode-textLink-foreground);
+    }
+}
+
+.chevron-icon {
+    color: var(--vscode-editor-foreground) !important;
+}
+
+.file-to-change-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.file-to-change-info {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: start;
+    width: 100%;
+}
+
+.lozenge-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+.lozenge-container p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--vscode-input-placeholderForeground);
+}
+
+.technical-plan-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--vscode-editorWidget-border);
+    padding: 12px;
+    margin-bottom: 8px;
+    background-color: var(--vscode-sideBar-background);
+}
+
+.file-lozenge {
+    display: flex;
+    padding: 2px 4px;
+    align-items: center;
+    gap: 4px;
+    border-radius: 3px;
+    border: 1px solid var(--vscode-editorWidget-border);
+}
+
+.file-lozenge:hover {
+    background-color: var(--vscode-list-hoverBackground);
+    cursor: pointer;
+}
+
+.file-lozenge .file-path {
+    font-size: 14px;
+    color: var(--vscode-editor-foreground);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.code-changes-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    width: 100%;
+}
+
+.code-snippet {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}

@@ -1,7 +1,13 @@
 import Button from '@atlaskit/button';
 import CheckIcon from '@atlaskit/icon/glyph/check';
+import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
+import ChevronRightIcon from '@atlaskit/icon/glyph/chevron-right';
 import CrossIcon from '@atlaskit/icon/glyph/cross';
+import QuestionCircleIcon from '@atlaskit/icon/glyph/question-circle';
+import { highlightElement } from '@speed-highlight/core';
+import { detectLanguage } from '@speed-highlight/core/detect';
 import { Marked } from '@ts-stack/markdown';
+import { createPatch } from 'diff';
 import React, { useCallback } from 'react';
 import { RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
@@ -17,8 +23,12 @@ import {
 } from './rovoDevViewStyles';
 import {
     ChatMessage,
+    CodeSnippetToChange,
     DefaultMessage,
     parseToolReturnMessage,
+    TechnicalPlan,
+    TechnicalPlanFileToChange,
+    TechnicalPlanLogicalChange,
     ToolCallMessage,
     ToolReturnGenericMessage,
     ToolReturnParseResult,
@@ -193,13 +203,28 @@ export const ChatMessageItem: React.FC<{
     );
 };
 
-export const renderChatHistory = (msg: ChatMessage, index: number, openFile: OpenFileFunc) => {
+export const renderChatHistory = (
+    msg: ChatMessage,
+    index: number,
+    openFile: OpenFileFunc,
+    getText: (fp: string, lr?: number[]) => Promise<string>,
+) => {
     switch (msg.author) {
         case 'ToolReturn':
             const parsedMessages = parseToolReturnMessage(msg);
-            return parsedMessages.map((message) => (
-                <ToolReturnParsedItem key={index} msg={message} openFile={openFile} />
-            ));
+            return parsedMessages.map((message) => {
+                if (message.technicalPlan) {
+                    return (
+                        <TechnicalPlanComponent
+                            key={index}
+                            content={message.technicalPlan}
+                            openFile={openFile}
+                            getText={getText}
+                        />
+                    );
+                }
+                return <ToolReturnParsedItem key={index} msg={message} openFile={openFile} />;
+            });
         case 'RovoDev':
         case 'User':
             return <ChatMessageItem index={index} msg={msg} openFile={openFile} />;
@@ -418,6 +443,305 @@ const ModifiedFileItem: React.FC<{
                     onClick={handleAccept}
                 />
             </div>
+        </div>
+    );
+};
+
+type TechnicalPlanProps = {
+    content: TechnicalPlan;
+    openFile: OpenFileFunc;
+    getText: (fp: string, lr?: number[]) => Promise<string>;
+};
+
+const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile, getText }) => {
+    const clarifyingQuestions = content.logicalChanges.flatMap((change) => {
+        return change.filesToChange
+            .map((file) => {
+                if (file.clarifyingQuestionIfAny) {
+                    return file.clarifyingQuestionIfAny;
+                }
+                return null;
+            })
+            .filter((q) => q !== null);
+    });
+
+    return (
+        <div>
+            <div style={{ ...chatMessageStyles, ...agentMessageStyles }}>
+                <div className="technical-plan-container">
+                    {content.logicalChanges.map((change, index) => {
+                        return (
+                            <div className="logical-change-wrapper" key={index}>
+                                <div className="logical-change-counter">
+                                    <p>{index + 1}</p>
+                                </div>
+                                <LogicalChange key={index} change={change} openFile={openFile} getText={getText} />
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+            {clarifyingQuestions &&
+                clarifyingQuestions.length > 0 &&
+                clarifyingQuestions.map((question, idx) => {
+                    return (
+                        <div
+                            key={idx}
+                            style={{
+                                ...chatMessageStyles,
+                                ...agentMessageStyles,
+                                display: 'flex',
+                                flexDirection: 'row',
+                                gap: '8px',
+                            }}
+                        >
+                            <QuestionCircleIcon
+                                primaryColor="var(--vscode-charts-purple)"
+                                size="small"
+                                label="Clarifying Question"
+                            />
+                            <div style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}>
+                                <div>{idx + 1}. </div>
+                                <span dangerouslySetInnerHTML={{ __html: Marked.parse(question) }} />
+                            </div>
+                        </div>
+                    );
+                })}
+        </div>
+    );
+};
+
+const LogicalChange: React.FC<{
+    change: TechnicalPlanLogicalChange;
+    openFile: OpenFileFunc;
+    getText: (fp: string, lr?: number[]) => Promise<string>;
+}> = (props) => {
+    const { change, openFile, getText } = props;
+
+    const [isOpen, setIsOpen] = React.useState(false);
+
+    const changeSummary = change.summary;
+
+    const renderFilesToChange = (files: TechnicalPlanFileToChange[]) => {
+        if (files.length === 0) {
+            return null;
+        }
+        if (files.length === 1) {
+            return (
+                <FileToChangeComponent
+                    filePath={files[0].filePath}
+                    openFile={openFile}
+                    getText={getText}
+                    descriptionOfChange={files[0].descriptionOfChange}
+                    codeSnippetsToChange={files[0].codeSnippetsToChange}
+                />
+            );
+        }
+
+        return files.map((file, index) => {
+            return (
+                <li>
+                    <FileToChangeComponent
+                        key={index}
+                        filePath={file.filePath}
+                        openFile={openFile}
+                        getText={getText}
+                        descriptionOfChange={file.descriptionOfChange}
+                        codeSnippetsToChange={file.codeSnippetsToChange}
+                    />
+                </li>
+            );
+        });
+    };
+
+    return (
+        <div className="logical-change-container">
+            <div className="logical-change-header">
+                <div className="title">{changeSummary}</div>
+                <Button
+                    className="chevron-button"
+                    appearance="subtle"
+                    iconBefore={
+                        isOpen ? (
+                            <ChevronDownIcon
+                                primaryColor="var(--vscode-editor-foreground)"
+                                size="medium"
+                                label="Collapse"
+                            />
+                        ) : (
+                            <ChevronRightIcon
+                                primaryColor="var(--vscode-editor-foreground)"
+                                size="medium"
+                                label="Expand"
+                            />
+                        )
+                    }
+                    onClick={() => setIsOpen(!isOpen)}
+                    spacing="none"
+                />
+            </div>
+            {isOpen && <ol className="file-to-change-container">{renderFilesToChange(change.filesToChange)}</ol>}
+        </div>
+    );
+};
+
+const FileToChangeComponent: React.FC<{
+    filePath: string;
+    openFile: OpenFileFunc;
+    getText: (fp: string, lr?: number[]) => Promise<string>;
+    descriptionOfChange?: string;
+    codeSnippetsToChange?: CodeSnippetToChange[];
+}> = ({ filePath, openFile, getText, descriptionOfChange, codeSnippetsToChange }) => {
+    const [isCodeChangesOpen, setIsCodeChangesOpen] = React.useState(false);
+    const codeSnippetsPresent = codeSnippetsToChange && codeSnippetsToChange.length > 0;
+
+    const renderDescription = (description: string) => {
+        return <span dangerouslySetInnerHTML={{ __html: Marked.parse(description) }} />;
+    };
+    return (
+        <div className="file-to-change">
+            {descriptionOfChange && renderDescription(descriptionOfChange)}
+            <div className="file-to-change-info">
+                {codeSnippetsPresent && (
+                    <Button
+                        className="chevron-button"
+                        appearance="subtle"
+                        iconBefore={
+                            isCodeChangesOpen ? (
+                                <ChevronDownIcon
+                                    primaryColor="var(--vscode-editor-foreground)"
+                                    size="medium"
+                                    label="Collapse"
+                                />
+                            ) : (
+                                <ChevronRightIcon
+                                    primaryColor="var(--vscode-editor-foreground)"
+                                    size="medium"
+                                    label="Expand"
+                                />
+                            )
+                        }
+                        onClick={() => setIsCodeChangesOpen(!isCodeChangesOpen)}
+                        spacing="none"
+                    />
+                )}
+                <div className="lozenge-container">
+                    <p>File to modify: </p>
+                    <FileLozenge filePath={filePath} openFile={openFile} />
+                </div>
+            </div>
+            {isCodeChangesOpen && codeSnippetsPresent && (
+                <div className="code-changes-container">
+                    {codeSnippetsToChange.map((snippet, idx) => {
+                        if (!snippet.code) {
+                            return null;
+                        }
+                        return (
+                            <div key={idx} className="code-snippet">
+                                <div>
+                                    <span>
+                                        Change from line {snippet.startLine} to {snippet.endLine}:
+                                    </span>
+                                </div>
+                                <DiffComponent
+                                    key={idx}
+                                    filePath={filePath}
+                                    code={snippet.code}
+                                    lineRange={[snippet.startLine, snippet.endLine + 1]}
+                                    getText={getText}
+                                />
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const DiffComponent: React.FC<{
+    filePath: string;
+    code: string;
+    lineRange?: number[];
+    getText: (fp: string, lr?: number[]) => Promise<string>;
+}> = ({ filePath, code, lineRange, getText }) => {
+    const [diff, setDiff] = React.useState<string>('');
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState<string>('');
+    const [isDone, setIsDone] = React.useState(false);
+
+    React.useEffect(() => {
+        const codeBlocks = document.querySelectorAll('pre code');
+
+        codeBlocks.forEach((block) => {
+            highlightElement(block, detectLanguage(block.textContent || ''));
+        });
+    }, [diff, isDone]);
+
+    React.useEffect(() => {
+        if (isDone) {
+            return;
+        }
+        const loadDiff = async () => {
+            try {
+                setLoading(true);
+                setError('');
+                const oldCode = await getText(filePath, lineRange);
+                if (!oldCode) {
+                    setDiff(code); // If no old code is found, just show the new code
+                    setLoading(false);
+                    setIsDone(true);
+                    return;
+                }
+                const diffResult = createPatch(filePath, oldCode, code, undefined, undefined, {
+                    ignoreWhitespace: true,
+                });
+
+                const lines = diffResult.split('\n');
+                // Skip the first 4 lines of the diff header
+                const diffContent = lines
+                    .slice(4)
+                    .filter((line) => !line.includes('No newline at end of file'))
+                    .join('\n');
+                setDiff(diffContent);
+            } catch (err) {
+                console.error('Error loading diff:', err);
+                setError('Error loading diff');
+            } finally {
+                setLoading(false);
+                setIsDone(true);
+            }
+        };
+
+        loadDiff();
+    }, [filePath, code, lineRange, getText, isDone]);
+
+    if (loading) {
+        return (
+            <div style={{ padding: '8px', color: 'var(--vscode-descriptionForeground)' }}>
+                <i className="codicon codicon-loading codicon-modifier-spin" />
+                <span style={{ marginLeft: '8px' }}>Loading diff...</span>
+            </div>
+        );
+    }
+
+    if (error) {
+        return <div style={{ padding: '8px', color: 'var(--vscode-errorForeground)' }}>{error}</div>;
+    }
+
+    return (
+        <pre>
+            <code>{diff}</code>
+        </pre>
+    );
+};
+
+const FileLozenge: React.FC<{ filePath: string; openFile: OpenFileFunc }> = ({ filePath, openFile }) => {
+    const fileTitle = filePath ? filePath.match(/([^/\\]+)$/)?.[0] : undefined;
+
+    return (
+        <div onClick={() => openFile(filePath)} className="file-lozenge">
+            <span className="file-path">{fileTitle || filePath}</span>
         </div>
     );
 };
