@@ -946,9 +946,9 @@ div[role='dialog'],
 }
 
 .ac-button-secondary {
-    background: var(--vscode-editor-background) !important;
-    color: var(--vscode-editor-foreground) !important;
-    border-radius: 2px !important;
+    background: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    border-radius: 2px;
 }
 .ac-button-secondary:hover {
     background: var(--vscode-editor-background--lighten-075) !important;

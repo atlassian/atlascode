@@ -58,6 +58,18 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
 
     const allowVoting: boolean = !!currentUser;
 
+    // Helper function for active button styling
+    const getActiveButtonStyle = (isActive: boolean) => {
+        return isActive
+            ? {
+                  border: '1px solid #669df1',
+                  backgroundColor: '#669DF133',
+                  borderRadius: '3px',
+                  paddingBottom: '2px',
+              }
+            : {};
+    };
+
     const [worklogDialogOpen, setWorklogDialogOpen] = React.useState(false);
     const [votesDialogOpen, setVotesDialogOpen] = React.useState(false);
     const [watchesDialogOpen, setWatchesDialogOpen] = React.useState(false);
@@ -173,6 +185,9 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                                         )
                                     }
                                     isLoading={loadingField === 'watches'}
+                                    style={getActiveButtonStyle(
+                                        fieldValues['watches'] && fieldValues['watches'].watchCount > 0,
+                                    )}
                                 >
                                     {numWatches}
                                 </LoadingButton>
@@ -204,6 +219,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                                     onClick={() => setVotesDialogOpen(true)}
                                     iconBefore={<LikeIcon label="Votes" />}
                                     isLoading={loadingField === 'votes'}
+                                    style={getActiveButtonStyle(fieldValues['votes'] && fieldValues['votes'].votes > 0)}
                                 >
                                     {numVotes}
                                 </LoadingButton>
