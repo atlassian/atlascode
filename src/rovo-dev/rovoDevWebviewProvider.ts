@@ -356,6 +356,9 @@ ${message}`;
         const webview = this._webView!;
         await this.executeApiWithErrorHandling(async (client) => {
             await client.reset();
+
+            this._revertedChanges = [];
+
             await webview.postMessage({
                 type: RovoDevProviderMessageType.NewSession,
             });
