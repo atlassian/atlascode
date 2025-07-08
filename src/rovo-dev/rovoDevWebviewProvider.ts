@@ -308,6 +308,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private addUndoContextToPrompt(message: string): string {
         if (this._revertedChanges.length) {
             const files = this._revertedChanges.join('\n');
+            this._revertedChanges = [];
             return `<context>
     The following files have been reverted:
     ${files}
