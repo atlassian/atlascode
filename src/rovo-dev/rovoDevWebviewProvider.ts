@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import path from 'path';
+import { gte as semver_gte } from 'semver';
 import { setTimeout } from 'timers/promises';
 import {
     CancellationToken,
@@ -22,9 +23,11 @@ import { rovodevInfo } from '../constants';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
-import { RovoDevApiClient } from './rovoDevApiClient';
+import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
+
+const MIN_SUPPORTED_ROVODEV_VERSION = '0.8.2';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;
@@ -171,7 +174,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         this.waitFor(() => this.executeHealthcheck(), 10000, 500).then(async (result) => {
             if (result) {
-                await this.executeReplay();
+                const version = ((await this.executeHealthcheckInfo()) ?? {}).version;
+                if (version && semver_gte(version, MIN_SUPPORTED_ROVODEV_VERSION)) {
+                    await this.executeReplay();
+                } else {
+                    this.processError(
+                        new Error(
+                            `Rovo Dev version (${version}) is out of date. Please update Rovo Dev and try again.\nMin version compatible: ${MIN_SUPPORTED_ROVODEV_VERSION}`,
+                        ),
+                    );
+                }
             } else {
                 const errorMsg = this._rovoDevApiClient
                     ? `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within 10000ms`
@@ -353,7 +365,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async executeHealthcheck(): Promise<boolean> {
-        return (await this.rovoDevApiClient?.healthcheck(true)) || false;
+        return (await this.rovoDevApiClient?.healthcheck()) || false;
+    }
+
+    private async executeHealthcheckInfo(): Promise<RovoDevHealthcheckResponse | undefined> {
+        try {
+            return await this.rovoDevApiClient?.healtcheckInfo();
+        } catch {
+            return undefined;
+        }
     }
 
     private makeRelativePathAbsolute(filePath: string): string {

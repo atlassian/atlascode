@@ -413,7 +413,7 @@ describe('RovoDevApiClient', () => {
             expect(result).toBe(false);
         });
 
-        it('should throw error when healthcheck fails and safeInvoke is false', async () => {
+        it('should return false when healthcheck fails', async () => {
             const mockResponse = {
                 status: 500,
                 statusText: 'Internal Server Error',
@@ -421,18 +421,7 @@ describe('RovoDevApiClient', () => {
 
             mockFetch.mockResolvedValue(mockResponse);
 
-            await expect(client.healthcheck(false)).rejects.toThrow("Failed to fetch '/healthcheck API: HTTP 500");
-        });
-
-        it('should return false when healthcheck fails and safeInvoke is true', async () => {
-            const mockResponse = {
-                status: 500,
-                statusText: 'Internal Server Error',
-            } as unknown as Response;
-
-            mockFetch.mockResolvedValue(mockResponse);
-
-            const result = await client.healthcheck(true);
+            const result = await client.healthcheck();
 
             expect(result).toBe(false);
         });
@@ -448,18 +437,12 @@ describe('RovoDevApiClient', () => {
             await expect(client.healthcheck()).rejects.toThrow("Failed to fetch '/healthcheck API: HTTP 503");
         });
 
-        it('should handle network errors with safeInvoke', async () => {
+        it('should handle network errors and return false', async () => {
             mockFetch.mockRejectedValue(new Error('Network error'));
 
-            const result = await client.healthcheck(true);
+            const result = await client.healthcheck();
 
             expect(result).toBe(false);
-        });
-
-        it('should throw network errors when safeInvoke is false', async () => {
-            mockFetch.mockRejectedValue(new Error('Network error'));
-
-            await expect(client.healthcheck(false)).rejects.toThrow('Network error');
         });
     });
 
