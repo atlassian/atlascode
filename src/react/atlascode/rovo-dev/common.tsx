@@ -18,7 +18,7 @@ import {
     messageContentStyles,
     toolCallArgsStyles,
     toolReturnListItemStyles,
-    undoAcceptButtonStyles,
+    undoKeepButtonStyles,
     userMessageStyles,
 } from './rovoDevViewStyles';
 import {
@@ -236,12 +236,12 @@ export const renderChatHistory = (
 export const UpdatedFilesComponent: React.FC<{
     modifiedFiles: ToolReturnParseResult[];
     onUndo: (filePath: string[]) => void;
-    onAccept: (filePath: string[]) => void;
+    onKeep: (filePath: string[]) => void;
     onCreatePR: () => void;
     openDiff: OpenFileFunc;
-}> = ({ modifiedFiles, onUndo, onAccept, openDiff, onCreatePR }) => {
+}> = ({ modifiedFiles, onUndo, onKeep, openDiff, onCreatePR }) => {
     const [isUndoHovered, setIsUndoHovered] = React.useState(false);
-    const [isAcceptHovered, setIsAcceptHovered] = React.useState(false);
+    const [isKeepHovered, setIsKeepHovered] = React.useState(false);
     const [isPullRequestLoading, setIsPullRequestLoading] = React.useState(false);
 
     window.addEventListener('message', (event) => {
@@ -250,10 +250,10 @@ export const UpdatedFilesComponent: React.FC<{
         }
     });
 
-    const handleAcceptAll = useCallback(() => {
+    const handleKeepAll = useCallback(() => {
         const filePaths = modifiedFiles.map((msg) => msg.filePath).filter((path) => path !== undefined);
-        onAccept(filePaths);
-    }, [onAccept, modifiedFiles]);
+        onKeep(filePaths);
+    }, [onKeep, modifiedFiles]);
 
     const handleUndoAll = useCallback(() => {
         const filePaths = modifiedFiles.map((msg) => msg.filePath).filter((path) => path !== undefined);
@@ -297,7 +297,7 @@ export const UpdatedFilesComponent: React.FC<{
                                 ? 'var(--vscode-button-secondaryHoverBackground)'
                                 : 'var(--vscode-button-secondaryBackground)',
                             border: '1px solid var(--vscode-button-secondaryBorder)',
-                            ...undoAcceptButtonStyles,
+                            ...undoKeepButtonStyles,
                         }}
                         onClick={() => handleUndoAll()}
                         onMouseEnter={() => setIsUndoHovered(true)}
@@ -308,15 +308,15 @@ export const UpdatedFilesComponent: React.FC<{
                     <button
                         style={{
                             color: 'var(--vscode-button-foreground)',
-                            backgroundColor: isAcceptHovered
+                            backgroundColor: isKeepHovered
                                 ? 'var(--vscode-button-hoverBackground)'
                                 : 'var(--vscode-button-background)',
                             border: '1px solid var(--vscode-button-border)',
-                            ...undoAcceptButtonStyles,
+                            ...undoKeepButtonStyles,
                         }}
-                        onClick={() => handleAcceptAll()}
-                        onMouseEnter={() => setIsAcceptHovered(true)}
-                        onMouseLeave={() => setIsAcceptHovered(false)}
+                        onClick={() => handleKeepAll()}
+                        onMouseEnter={() => setIsKeepHovered(true)}
+                        onMouseLeave={() => setIsKeepHovered(false)}
                     >
                         Keep
                     </button>
@@ -325,7 +325,7 @@ export const UpdatedFilesComponent: React.FC<{
                             color: 'var(--vscode-button-secondaryForeground)',
                             backgroundColor: 'var(--vscode-button-background)',
                             border: '1px solid var(--vscode-button-secondaryBorder)',
-                            ...undoAcceptButtonStyles,
+                            ...undoKeepButtonStyles,
                         }}
                         onClick={() => {
                             setIsPullRequestLoading(true);
@@ -359,7 +359,7 @@ export const UpdatedFilesComponent: React.FC<{
                             msg={msg}
                             onFileClick={(path: string) => openDiff(path, true)}
                             onUndo={(path: string) => onUndo([path])}
-                            onAccept={(path: string) => onAccept([path])}
+                            onKeep={(path: string) => onKeep([path])}
                         />
                     );
                 })}
@@ -371,12 +371,12 @@ export const UpdatedFilesComponent: React.FC<{
 const ModifiedFileItem: React.FC<{
     msg: ToolReturnParseResult;
     onUndo: (filePath: string) => void;
-    onAccept: (filePath: string) => void;
+    onKeep: (filePath: string) => void;
     onFileClick: (filePath: string) => void;
-}> = ({ msg, onUndo, onAccept, onFileClick }) => {
+}> = ({ msg, onUndo, onKeep, onFileClick }) => {
     const [isHovered, setIsHovered] = React.useState(false);
     const [isUndoHovered, setIsUndoHovered] = React.useState(false);
-    const [isAcceptHovered, setIsAcceptHovered] = React.useState(false);
+    const [isKeepHovered, setIsKeepHovered] = React.useState(false);
 
     const filePath = msg.filePath;
     if (!filePath) {
@@ -388,9 +388,9 @@ const ModifiedFileItem: React.FC<{
         onUndo(filePath);
     };
 
-    const handleAccept = (e: React.MouseEvent) => {
+    const handleKeep = (e: React.MouseEvent) => {
         e.stopPropagation();
-        onAccept(filePath);
+        onKeep(filePath);
     };
 
     return (
@@ -432,15 +432,15 @@ const ModifiedFileItem: React.FC<{
                 <Button
                     style={{
                         ...inlineMofidyButtonStyles,
-                        color: isAcceptHovered
+                        color: isKeepHovered
                             ? 'var(--vscode-textLink-foreground) !important'
                             : 'var(--vscode-textForeground) !important',
                     }}
-                    onMouseEnter={() => setIsAcceptHovered(true)}
-                    onMouseLeave={() => setIsAcceptHovered(false)}
+                    onMouseEnter={() => setIsKeepHovered(true)}
+                    onMouseLeave={() => setIsKeepHovered(false)}
                     spacing="none"
                     iconBefore={<CheckIcon size="small" label="Keep" />}
-                    onClick={handleAccept}
+                    onClick={handleKeep}
                 />
             </div>
         </div>
