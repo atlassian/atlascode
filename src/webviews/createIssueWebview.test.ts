@@ -893,5 +893,4 @@ describe('CreateIssueWebview', () => {
             });
         });
     });
-
 });
