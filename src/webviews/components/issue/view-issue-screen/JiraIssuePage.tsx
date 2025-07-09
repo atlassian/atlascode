@@ -502,10 +502,19 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     <div className="ac-breadcrumbs">
                         {this.state.hierarchy && this.state.hierarchy.length > 0 && (
                             <>
-                                {/* Show loading indicator at the beginning if we're fetching more parents */}
                                 {this.state.hierarchyLoading && (
                                     <>
-                                        <span className="ac-breadcrumb-loading">...</span>
+                                        <span className="ac-breadcrumb-loading">
+                                            {[...Array(3)].map((_, idx) => (
+                                                <span
+                                                    key={idx}
+                                                    className="animate-pulse"
+                                                    style={{ animationDelay: `${idx * 0.2}s` }}
+                                                >
+                                                    .
+                                                </span>
+                                            ))}
+                                        </span>
                                         <span className="ac-breadcrumb-divider">/</span>
                                     </>
                                 )}
