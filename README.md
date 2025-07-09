@@ -4,19 +4,16 @@
 
 Stay in the flow by using Atlassian for VSCode to start work on a JIRA issue, raise and review PRs, and close out work! All directly from the IDE.
 
-
 [**Download now**](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode&ssr=false#overview)
-
 
 ## Usage
 
-
 ### Getting Started
 
--   Make sure you have VS Code version 1.77.0 or above
--   Download the extension from the marketplace
--   Authenticate with Jira and/or Bitbucket from the 'Atlassian: Open Settings' page available in the command palette
--   From the command palette, type 'Atlassian:' to see all of the extensions available commands
+- Make sure you have VS Code version 1.77.0 or above
+- Download the extension from the marketplace
+- Authenticate with Jira and/or Bitbucket from the 'Atlassian: Open Settings' page available in the command palette
+- From the command palette, type 'Atlassian:' to see all of the extensions available commands
 
 For more information, see [Getting started with VS Code](https://confluence.atlassian.com/display/BITBUCKET/Getting+started+with+VS+Code) and the related content.
 
@@ -46,7 +43,6 @@ Create that issue without breaking your stride:
 
 ...and lots more
 
-
 ## Feedback
 
 Please use the in-app feedback form to tell us what you think! It's available from the 'Atlassian: Open Settings' and 'Atlassian: Open Welcome' pages available in the command palette.
@@ -55,17 +51,15 @@ Please use the in-app feedback form to tell us what you think! It's available fr
 
 Running and debugging the extension:
 
--   Atlassian for VS Code is a node project, as such you'll need to run `npm install` before building.
--   To debug the extension from within VS Code you'll need a `launch.json`.
-    ** An example `launch.json` that will be suitable for most users is included as `.vscode/launch.json.example`.
-    ** To use the example file simply copy it to `launch.json`.
--   Once you have a `launch.json` file select "Debug and Run" from the Activity Bar and click "Start Debugging".
-    \*\* After the extension builds VS Code will launch a new instance of itself (the Extension Development Host) running the extension.
--   When you want to test your code changes
-    ** If the extension development host is still running restart by clicking ⟲ in the debug toolbar.
-    ** If you've already stopped the host just start debugging again.
-
-
+- Atlassian for VS Code is a node project, as such you'll need to run `npm install` before building.
+- To debug the extension from within VS Code you'll need a `launch.json`.
+  ** An example `launch.json` that will be suitable for most users is included as `.vscode/launch.json.example`.
+  ** To use the example file simply copy it to `launch.json`.
+- Once you have a `launch.json` file select "Debug and Run" from the Activity Bar and click "Start Debugging".
+  \*\* After the extension builds VS Code will launch a new instance of itself (the Extension Development Host) running the extension.
+- When you want to test your code changes
+  ** If the extension development host is still running restart by clicking ⟲ in the debug toolbar.
+  ** If you've already stopped the host just start debugging again.
 
 ## Documentation
 
@@ -85,17 +79,15 @@ VSCode provides some very helpful [documentation](https://code.visualstudio.com/
 
 To run `atlascode` in such a way, please follow the VSCode documentation:
 
--   Install [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) VSCode Extension
--   Run `npm install` like you normally would
--   In VSCode, choose `Dev Containers: Rebuild and Reopen in Container` from the command pallette
--   Wait for the VSCode to re-open in the container evnironment - you'll be able to see the difference in the header/search bar
--   Proceed to run or debug the extension as usual - it will now be running as it would in remote execution
+- Install [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) VSCode Extension
+- Run `npm install` like you normally would
+- In VSCode, choose `Dev Containers: Rebuild and Reopen in Container` from the command pallette
+- Wait for the VSCode to re-open in the container evnironment - you'll be able to see the difference in the header/search bar
+- Proceed to run or debug the extension as usual - it will now be running as it would in remote execution
 
 The configuration for the Dev Container is located in [./.devcontainer/devcontainer.json](https://github.com/atlassian/atlascode/blob/main/.devcontainer/devcontainer.json).
 
 Note: for advanced use-cases, it is possible to run scripts in dev containers via [@devcontainers/cli](https://github.com/devcontainers/cli) - try `npx devcontainer --help`
-
-
 
 ## Tests
 
@@ -105,11 +97,11 @@ npm run test
 
 ## Contributions
 
-Contributions to Atlassian for VS Code are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details. 
+Contributions to Atlassian for VS Code are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
-# Issues 
+# Issues
 
-We moved from Bitbucket to Github. 
+We moved from Bitbucket to Github.
 
 To open a new issues, please see [Github](https://github.com/atlassian/atlascode/issues)
 
@@ -122,6 +114,8 @@ You can find your instance's version in the footer of any Jira/Bitbucket page.
 
 See [LICENSE](LICENSE) file
 
-<br/> 
+<br/>
 
 [![With thanks from Atlassian](https://raw.githubusercontent.com/atlassian-internal/oss-assets/master/banner-with-thanks-light.png)](https://www.atlassian.com)
+
+## bruh
