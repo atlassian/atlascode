@@ -1,9 +1,13 @@
 import { emptyProject, Project } from '@atlassianlabs/jira-pi-common-models';
+import axios, { AxiosInstance } from 'axios';
+import { AxiosUserAgent } from 'src/constants';
+import { ConnectionTimeout } from 'src/util/time';
 import { Disposable } from 'vscode';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { Logger } from '../logger';
+import { getAgent } from './jira-client/providers';
 
 type OrderBy =
     | 'category'
@@ -18,9 +22,25 @@ type OrderBy =
     | 'owner'
     | '-owner'
     | '+owner';
+
+type ProjectWithPermission = {
+    id: number;
+    key: string;
+};
+
+type ProjectPermissions = 'CREATE_ISSUES';
+
 export class JiraProjectManager extends Disposable {
+    private axiosInstance: AxiosInstance;
     constructor() {
         super(() => this.dispose());
+        this.axiosInstance = axios.create({
+            timeout: ConnectionTimeout,
+            headers: {
+                'User-Agent': AxiosUserAgent,
+                'Accept-Encoding': 'gzip, deflate',
+            },
+        });
     }
 
     dispose() {}
@@ -65,5 +85,42 @@ export class JiraProjectManager extends Disposable {
         }
 
         return foundProjects;
+    }
+
+    private async getProjectsKeysWithProvidedPermission(
+        site: DetailedSiteInfo,
+        permission: ProjectPermissions,
+    ): Promise<Set<string>> {
+        const authInfos = (await Container.credentialManager.getAuthInfo(site)) as { access: string } | undefined;
+        const agent = getAgent(site);
+        if (authInfos && authInfos.access) {
+            const permissionsRes = await this.axiosInstance(`${site.baseApiUrl}/api/3/permissions/project`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    Authorization: `Bearer ${authInfos.access}`,
+                },
+                data: {
+                    permissions: [permission],
+                },
+                ...agent,
+            });
+
+            return new Set(permissionsRes.data.projects.map((p: ProjectWithPermission) => p.key));
+        }
+        return new Set();
+    }
+
+    public async filterProjectsByCreateIssuePermission(
+        site: DetailedSiteInfo,
+        projectsList: Project[],
+    ): Promise<Project[]> {
+        const projectsWithPermission = await this.getProjectsKeysWithProvidedPermission(site, 'CREATE_ISSUES');
+        const checkedProjects = projectsList.filter((project) => {
+            const hasCreateIssuePermission = projectsWithPermission.has(project.key);
+            return hasCreateIssuePermission;
+        });
+        return checkedProjects;
     }
 }
