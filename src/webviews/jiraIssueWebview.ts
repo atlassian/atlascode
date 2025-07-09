@@ -149,13 +149,15 @@ export class JiraIssueWebview
             this.postMessage(msg);
 
             // call async-able update functions here
-            await Promise.allSettled([
-                this.updateEpicChildren(),
-                this.updateCurrentUser(),
-                this.updateWatchers(),
-                this.updateVoters(),
-                this.updateRelatedPullRequests(),
-            ]);
+            setTimeout(async () => {
+                await Promise.allSettled([
+                    this.updateEpicChildren(),
+                    this.updateCurrentUser(),
+                    this.updateWatchers(),
+                    this.updateVoters(),
+                    this.updateRelatedPullRequests(),
+                ]);
+            }, 1500);
         } catch (e) {
             Logger.error(e, 'Error updating issue');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -167,9 +169,11 @@ export class JiraIssueWebview
     async updateEpicChildren() {
         if (this._issue.isEpic) {
             const site = this._issue.siteDetails;
-            const client = await Container.clientManager.jiraClient(site);
-            const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
-            const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
+            const [client, fields, epicInfo] = await Promise.all([
+                Container.clientManager.jiraClient(site),
+                Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site),
+                Container.jiraSettingsManager.getEpicFieldsForSite(site),
+            ]);
             const res = await client.searchForIssuesUsingJqlGet(
                 `${epicInfo.epicLink.id} = "${this._issue.key}" order by lastViewed DESC`,
                 fields,

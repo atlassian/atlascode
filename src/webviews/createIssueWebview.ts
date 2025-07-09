@@ -208,10 +208,12 @@ export class CreateIssueWebview
         this.isRefeshing = true;
         try {
             const availableSites = Container.siteManager.getSitesAvailable(ProductJira);
-            const availableProjects = await Container.jiraProjectManager.getProjects(this._siteDetails);
-
+            const [availableProjects, screenData] = await Promise.all([
+                Container.jiraProjectManager.getProjects(this._siteDetails),
+                fetchCreateIssueUI(this._siteDetails, this._currentProject.key),
+            ]);
             this._selectedIssueTypeId = '';
-            this._screenData = await fetchCreateIssueUI(this._siteDetails, this._currentProject.key);
+            this._screenData = screenData;
             this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
 
             if (fieldValues) {

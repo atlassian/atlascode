@@ -46,9 +46,11 @@ export async function fetchMinimalIssue(
     issue: string,
     siteDetails: DetailedSiteInfo,
 ): Promise<MinimalIssue<DetailedSiteInfo>> {
-    const fieldIds = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(siteDetails);
-    const client = await Container.clientManager.jiraClient(siteDetails);
-    const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(siteDetails);
+    const [fieldIds, client, epicInfo] = await Promise.all([
+        Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(siteDetails),
+        Container.clientManager.jiraClient(siteDetails),
+        Container.jiraSettingsManager.getEpicFieldsForSite(siteDetails),
+    ]);
 
     const res = await client.getIssue(issue, fieldIds);
     return minimalIssueFromJsonObject(res, siteDetails, epicInfo);
@@ -60,7 +62,7 @@ export async function fetchEditIssueUI(issue: MinimalIssue<DetailedSiteInfo>): P
         Container.jiraSettingsManager.getAllFieldsForSite(issue.siteDetails),
         Container.jiraSettingsManager.getIssueLinkTypes(issue.siteDetails),
         Container.jiraSettingsManager.getIssueCreateMetadata(
-            issue.key.substring(0, issue.key.indexOf('-')),
+            issue.key.substring(0, issue.key.indexOf('-')), // Project Key
             issue.siteDetails,
         ),
     ]);
