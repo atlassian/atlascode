@@ -20,6 +20,7 @@
 - Fixed sometimes the 'Assigned Jira work items' and 'Custom JQL filters' panels don't retrieve recently edited items
 - Fixed a bug when slash is missing after custom branch prefix in branch naming
 - Fixed bug when Jira issue view in active tab doesn't refresh itself after VS Code get focus
+- Fixed a bug when transitioning Jira issues from 'Start work', which doesn't refresh the issues panels
 
 ## What's new in 3.8.5
 
