@@ -39,12 +39,6 @@ const md = new MarkdownIt({
     breaks: true,
     linkify: true,
     typographer: true,
-    highlight: (str, lang) => {
-        if (lang && detectLanguage(str) === lang) {
-            return `<pre><code class="hljs ${lang}">${str}</code></pre>`;
-        }
-        return `<pre><code class="hljs">${str}</code></pre>`;
-    },
 });
 
 interface OpenFileFunc {
@@ -600,7 +594,9 @@ const FileToChangeComponent: React.FC<{
 }> = ({ filePath, openFile, getText, descriptionOfChange, codeSnippetsToChange }) => {
     const [isCodeChangesOpen, setIsCodeChangesOpen] = React.useState(false);
     const codeSnippetsPresent =
-        codeSnippetsToChange && codeSnippetsToChange.length > 0 && codeSnippetsToChange.some((snippet) => snippet.code);
+        codeSnippetsToChange &&
+        codeSnippetsToChange.length > 0 &&
+        codeSnippetsToChange.some((snippet) => snippet.code !== undefined && snippet.code.trim() !== '');
 
     const renderDescription = (description: string) => {
         return <span dangerouslySetInnerHTML={{ __html: md.render(description) }} />;
