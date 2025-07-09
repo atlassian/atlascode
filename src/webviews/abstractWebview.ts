@@ -10,6 +10,7 @@ import {
     WebviewPanel,
     WebviewPanelOnDidChangeViewStateEvent,
     window,
+    WindowState,
 } from 'vscode';
 
 import { pmfClosed, pmfSnoozed, pmfSubmitted, viewScreenEvent } from '../analytics';
@@ -119,6 +120,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 this._panel,
                 this._panel.onDidDispose(this.onPanelDisposed, this),
                 this._panel.onDidChangeViewState(this.onViewStateChanged, this),
+                window.onDidChangeWindowState(this.onWindowReceiveFocus, this),
                 this._panel.webview.onDidReceiveMessage(this.onMessageReceived, this),
                 this.ws,
             );
@@ -177,6 +179,12 @@ export abstract class AbstractReactWebview implements ReactWebview {
                     });
                 }
             });
+        }
+    }
+
+    private onWindowReceiveFocus(windowState: WindowState) {
+        if (windowState.focused && this.visible) {
+            this.invalidate();
         }
     }
 

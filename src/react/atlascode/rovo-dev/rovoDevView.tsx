@@ -2,8 +2,8 @@ import './RovoDev.css';
 import './RovoDevCodeHighlighting.css';
 
 import LoadingButton from '@atlaskit/button/loading-button';
+import CrossIcon from '@atlaskit/icon/glyph/cross';
 import SendIcon from '@atlaskit/icon/glyph/send';
-import PauseIcon from '@atlaskit/icon/glyph/vid-pause';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
@@ -297,7 +297,7 @@ const RovoDevView: React.FC = () => {
     const undoFiles = useCallback(
         (filePaths: string[]) => {
             postMessage({
-                type: RovoDevViewResponseType.UndoFiles,
+                type: RovoDevViewResponseType.UndoFileChanges,
                 filePaths,
             });
             removeModifiedFileToolReturns(filePaths);
@@ -305,10 +305,10 @@ const RovoDevView: React.FC = () => {
         [postMessage, removeModifiedFileToolReturns],
     );
 
-    const acceptFiles = useCallback(
+    const keepFiles = useCallback(
         (filePaths: string[]) => {
             postMessage({
-                type: RovoDevViewResponseType.AcceptFiles,
+                type: RovoDevViewResponseType.KeepFileChanges,
                 filePaths,
             });
             removeModifiedFileToolReturns(filePaths);
@@ -375,7 +375,7 @@ const RovoDevView: React.FC = () => {
                 <UpdatedFilesComponent
                     modifiedFiles={totalModifiedFiles}
                     onUndo={undoFiles}
-                    onAccept={acceptFiles}
+                    onKeep={keepFiles}
                     openDiff={openFile}
                     onCreatePR={() => {
                         postMessage({
@@ -425,7 +425,7 @@ const RovoDevView: React.FC = () => {
                                         backgroundColor: 'var(--vscode-input-background) !important',
                                     }}
                                     label="Stop button"
-                                    iconBefore={<PauseIcon size="small" label="Stop" />}
+                                    iconBefore={<CrossIcon size="small" label="Stop" />}
                                     isDisabled={currentState === State.CancellingResponse}
                                     onClick={() => cancelResponse()}
                                 />
