@@ -6,8 +6,8 @@ import CrossIcon from '@atlaskit/icon/glyph/cross';
 import QuestionCircleIcon from '@atlaskit/icon/glyph/question-circle';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
-import { Marked } from '@ts-stack/markdown';
 import { createPatch } from 'diff';
+import MarkdownIt from 'markdown-it';
 import React, { useCallback } from 'react';
 import { RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
@@ -34,11 +34,17 @@ import {
     ToolReturnParseResult,
 } from './utils';
 
-Marked.setOptions({
-    sanitize: false,
+const md = new MarkdownIt({
+    html: true,
     breaks: true,
-    smartLists: true,
-    gfm: true,
+    linkify: true,
+    typographer: true,
+    highlight: (str, lang) => {
+        if (lang && detectLanguage(str) === lang) {
+            return `<pre><code class="hljs ${lang}">${str}</code></pre>`;
+        }
+        return `<pre><code class="hljs">${str}</code></pre>`;
+    },
 });
 
 interface OpenFileFunc {
@@ -180,7 +186,7 @@ export const ChatMessageItem: React.FC<{
                     <ToolReturnParsedItem key={idx} msg={message} openFile={openFile} />
                 ));
             } else {
-                const htmlContent = Marked.parse(part);
+                const htmlContent = md.render(part);
 
                 return (
                     <div
@@ -502,7 +508,7 @@ const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFil
                             />
                             <div style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}>
                                 <div>{idx + 1}. </div>
-                                <span dangerouslySetInnerHTML={{ __html: Marked.parse(question) }} />
+                                <span dangerouslySetInnerHTML={{ __html: md.render(question) }} />
                             </div>
                         </div>
                     );
@@ -597,7 +603,7 @@ const FileToChangeComponent: React.FC<{
         codeSnippetsToChange && codeSnippetsToChange.length > 0 && codeSnippetsToChange.some((snippet) => snippet.code);
 
     const renderDescription = (description: string) => {
-        return <span dangerouslySetInnerHTML={{ __html: Marked.parse(description) }} />;
+        return <span dangerouslySetInnerHTML={{ __html: md.render(description) }} />;
     };
     return (
         <div className="file-to-change">
