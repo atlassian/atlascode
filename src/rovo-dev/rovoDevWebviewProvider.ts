@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import path from 'path';
+import { gte as semver_gte } from 'semver';
 import { setTimeout } from 'timers/promises';
 import {
     CancellationToken,
@@ -22,9 +23,11 @@ import { rovodevInfo } from '../constants';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
-import { RovoDevApiClient } from './rovoDevApiClient';
+import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
+
+const MIN_SUPPORTED_ROVODEV_VERSION = '0.8.2';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;
@@ -40,6 +43,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private _pendingPrompt: string | undefined;
     private _pendingCancellation = false;
+
+    // we keep the data in this collection so we can attach some metadata to the next
+    // prompt informing Rovo Dev that those files has been reverted
+    private _revertedChanges: string[] = [];
 
     private _disposables: Disposable[] = [];
 
@@ -146,12 +153,21 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     await this.executeOpenFile(e.filePath, e.tryShowDiff, e.range);
                     break;
 
-                case RovoDevViewResponseType.UndoFiles:
+                case RovoDevViewResponseType.UndoFileChanges:
                     await this.executeUndoFiles(e.filePaths);
                     break;
 
-                case RovoDevViewResponseType.AcceptFiles:
-                    await this.executeAcceptFiles(e.filePaths);
+                case RovoDevViewResponseType.KeepFileChanges:
+                    await this.executeKeepFiles(e.filePaths);
+                    break;
+
+                case RovoDevViewResponseType.GetOriginalText:
+                    const text = await this.executeGetText(e.filePath, e.range);
+                    await webviewView.webview.postMessage({
+                        type: RovoDevProviderMessageType.ReturnText,
+                        text: text || '',
+                        nonce: e.requestId, // Use the requestId as nonce
+                    });
                     break;
 
                 case RovoDevViewResponseType.CreatePR:
@@ -162,7 +178,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         this.waitFor(() => this.executeHealthcheck(), 10000, 500).then(async (result) => {
             if (result) {
-                await this.executeReplay();
+                const version = ((await this.executeHealthcheckInfo()) ?? {}).version;
+                if (version && semver_gte(version, MIN_SUPPORTED_ROVODEV_VERSION)) {
+                    await this.executeReplay();
+                } else {
+                    this.processError(
+                        new Error(
+                            `Rovo Dev version (${version}) is out of date. Please update Rovo Dev and try again.\nMin version compatible: ${MIN_SUPPORTED_ROVODEV_VERSION}`,
+                        ),
+                    );
+                }
             } else {
                 const errorMsg = this._rovoDevApiClient
                     ? `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within 10000ms`
@@ -292,6 +317,21 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
+    private addUndoContextToPrompt(message: string): string {
+        if (this._revertedChanges.length) {
+            const files = this._revertedChanges.join('\n');
+            this._revertedChanges = [];
+            return `<context>
+    The following files have been reverted:
+    ${files}
+</context>
+            
+${message}`;
+        } else {
+            return message;
+        }
+    }
+
     private async executeChat(message: string, suppressEcho?: boolean) {
         if (!message) {
             return;
@@ -301,12 +341,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             await this.sendUserPromptToView(message);
         }
 
+        const payloadToSend = this.addUndoContextToPrompt(message);
+
         if (this._initialized) {
             await this.executeApiWithErrorHandling((client) => {
-                return this.processChatResponse(client.chat(message));
+                return this.processChatResponse(client.chat(payloadToSend));
             }, true);
         } else {
-            this._pendingPrompt = message;
+            this._pendingPrompt = payloadToSend;
         }
     }
 
@@ -314,6 +356,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const webview = this._webView!;
         await this.executeApiWithErrorHandling(async (client) => {
             await client.reset();
+
+            this._revertedChanges = [];
+
             await webview.postMessage({
                 type: RovoDevProviderMessageType.NewSession,
             });
@@ -344,7 +389,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async executeHealthcheck(): Promise<boolean> {
-        return (await this.rovoDevApiClient?.healthcheck(true)) || false;
+        return (await this.rovoDevApiClient?.healthcheck()) || false;
+    }
+
+    private async executeHealthcheckInfo(): Promise<RovoDevHealthcheckResponse | undefined> {
+        try {
+            return await this.rovoDevApiClient?.healtcheckInfo();
+        } catch {
+            return undefined;
+        }
     }
 
     private makeRelativePathAbsolute(filePath: string): string {
@@ -407,9 +460,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
 
         await Promise.all(promises);
+
+        this._revertedChanges.push(...filePaths);
     }
 
-    private async executeAcceptFiles(filePaths: string[]) {
+    private async executeKeepFiles(filePaths: string[]) {
         const promises = filePaths.map(async (filePath) => {
             const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(filePath);
             await this.getPromise((callback) => fs.rm(cachedFilePath, callback));
@@ -450,6 +505,28 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         } else {
             await this.processError(new Error('RovoDev client not initialized'));
         }
+    }
+
+    private async executeGetText(filePath: string, range?: number[]): Promise<string | undefined> {
+        const resolvedPath = this.makeRelativePathAbsolute(filePath);
+        if (!fs.existsSync(resolvedPath)) {
+            console.warn(`File not found: ${resolvedPath}`);
+            return undefined;
+        }
+
+        const document = await workspace.openTextDocument(Uri.file(resolvedPath));
+
+        if (!document) {
+            console.warn(`Unable to open document for file: ${resolvedPath}`);
+            return undefined;
+        }
+
+        const lineRange =
+            range && Array.isArray(range) ? new Range(new Position(range[0], 0), new Position(range[1], 0)) : undefined;
+
+        const text = document.getText(document.validateRange(lineRange || new Range(0, 0, document.lineCount, 0)));
+
+        return text;
     }
 
     async invokeRovoDevAskCommand(prompt: string): Promise<void> {

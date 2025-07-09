@@ -82,5 +82,8 @@ openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.crt
 # Generates a certificate for mockedteams.atlassian.net
 generate_service_cert "wiremock-mockedteams" "mockedteams.atlassian.net"
 
+# # Generates a certificate for bitbucket.mockeddomain.com
+generate_service_cert "wiremock-bitbucket" "bitbucket.mockeddomain.com"
+
 rm rootCA.key
 rm rootCA.srl

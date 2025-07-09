@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/site/oauth2/access_token"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+        "access_token": "mocked_token",
+        "token_type": "bearer",
+        "expires_in": 3600
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
