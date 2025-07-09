@@ -665,18 +665,21 @@ pre {
 
 .ac-breadcrumb-loading {
     color: var(--vscode-breadcrumb-foreground);
-    font-style: italic;
-    opacity: 0.7;
 }
 
-/* [class^=styled__StyledTitle-] p {
-  margin: 0px;
-  color: var(--vscode-editor-foreground);
+.ac-breadcrumb-loading .animate-pulse {
+    animation: blink 1.4s infinite both;
+    opacity: 0.2;
 }
 
-[class^=styled__StyledTitle-] {
-  margin: 0px;
-} */
+@keyframes blink {
+    0%, 80%, 100% {
+        opacity: 0.2;
+    }
+    40% {
+        opacity: 1;
+    }
+}
 
 /*-------------------- END - page header --------------------*/
 
