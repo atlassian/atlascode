@@ -2,6 +2,7 @@ import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel } from '../../../../bitbucket/model';
+import { Commands } from '../../../../constants';
 import { Container } from '../../../../container';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
@@ -207,6 +208,19 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                         imgData: '',
                         nonce: msg.nonce,
                     } as any);
+                }
+                break;
+            }
+            case StartWorkActionType.RefreshTreeViews: {
+                try {
+                    // Add delay to allow Jira's indexes to update before refreshing
+                    await new Promise((resolve) => setTimeout(resolve, 4000));
+                    const vscode = await import('vscode');
+                    vscode.commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
+                    vscode.commands.executeCommand(Commands.RefreshCustomJqlExplorer);
+                    this.logger.debug('Tree views refreshed after start work');
+                } catch (e) {
+                    this.logger.error(e, 'Error refreshing tree views');
                 }
                 break;
             }

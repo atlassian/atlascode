@@ -261,6 +261,10 @@ const StartWorkPage: React.FunctionComponent = () => {
                 upstream,
                 pushBranchEnabled,
             );
+            // Send message to refresh tree views after successful start work
+            controller.postMessage({
+                type: StartWorkActionType.RefreshTreeViews,
+            });
             setSubmitState('submit-success');
             setSubmitResponse(response);
             setSuccessSnackbarOpen(true);
@@ -453,6 +457,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                 <Grid item>
                                                     <Typography variant="h4">
                                                         <Box fontWeight="fontWeightBold">Transition issue</Box>
+                                                        {console.log('Start work page 456')}
                                                     </Typography>
                                                 </Grid>
                                             </Grid>
