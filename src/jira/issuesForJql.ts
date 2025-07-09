@@ -7,8 +7,16 @@ export const MAX_RESULTS = 100;
 
 export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise<MinimalIssue<DetailedSiteInfo>[]> {
     const client = await Container.clientManager.jiraClient(site);
-    const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
-    const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
+    // const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
+    const [fields, epicFieldInfo] = await Promise.all([
+        Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site),
+        Container.jiraSettingsManager.getEpicFieldsForSite(site),
+        Container.jiraSettingsManager.getIssueLinkTypes(site),
+        Container.jiraProjectManager.getProjects(site).then((projects) => {
+            Promise.all(projects.map((p) => Container.jiraSettingsManager.getIssueCreateMetadata(p.key, site)));
+        }),
+    ]);
+    // const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
 
     let index = 0;
     let total = 0;
