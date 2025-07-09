@@ -265,6 +265,11 @@ export class CreateIssueWebview
         try {
             const availableSites = Container.siteManager.getSitesAvailable(ProductJira);
             const availableProjects = await Container.jiraProjectManager.getProjects(this._siteDetails);
+            const projectsWithCreateIssuesPermission =
+                await Container.jiraProjectManager.filterProjectsByCreateIssuePermission(
+                    this._siteDetails,
+                    availableProjects,
+                );
 
             this._selectedIssueTypeId = '';
             this._screenData = await fetchCreateIssueUI(this._siteDetails, this._currentProject.key);
@@ -282,10 +287,10 @@ export class CreateIssueWebview
                 };
             }
 
-            this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['site'] = availableSites;
-
-            this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues['project'] = this._currentProject;
-            this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['project'] = availableProjects;
+            const issueTypeUI: IssueTypeUI<DetailedSiteInfo> = this._screenData.issueTypeUIs[this._selectedIssueTypeId];
+            issueTypeUI.selectFieldOptions['site'] = availableSites;
+            issueTypeUI.fieldValues['project'] = this._currentProject;
+            issueTypeUI.selectFieldOptions['project'] = projectsWithCreateIssuesPermission;
 
             /*
             partial issue is used for prepopulating summary and description.
