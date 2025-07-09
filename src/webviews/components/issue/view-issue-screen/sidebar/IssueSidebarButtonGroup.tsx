@@ -63,7 +63,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
         return isActive
             ? {
                   border: '1px solid #669df1',
-                  backgroundColor: '#669DF133',
+                  backgroundColor: '#669df133',
                   borderRadius: '3px',
                   paddingBottom: '2px',
               }
