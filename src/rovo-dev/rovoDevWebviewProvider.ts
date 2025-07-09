@@ -57,8 +57,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private get rovoDevApiClient() {
         if (!this._rovoDevApiClient) {
             const rovoDevPort = this.getWorkspacePort();
+            const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
             if (rovoDevPort) {
-                this._rovoDevApiClient = new RovoDevApiClient('localhost', rovoDevPort);
+                this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
             }
         }
 
