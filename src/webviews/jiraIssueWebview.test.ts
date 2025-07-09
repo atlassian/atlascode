@@ -1224,6 +1224,67 @@ describe('JiraIssueWebview', () => {
             });
         });
     });
+
+    describe('fetchIssueHierarchy', () => {
+        let postMessageSpy: jest.SpyInstance;
+
+        beforeEach(() => {
+            jiraIssueWebview['_issue'] = mockIssue;
+            postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+        });
+
+        test('should return hierarchy with only current issue when no parent exists', async () => {
+            mockJiraClient.getIssue.mockResolvedValue({
+                fields: {
+                    parent: null,
+                    issuetype: { name: 'Story' },
+                },
+            });
+
+            const result = await jiraIssueWebview['fetchIssueHierarchy'](mockIssue, mockSiteDetails, mockJiraClient);
+
+            expect(result).toEqual([mockIssue]);
+            expect(mockJiraClient.getIssue).toHaveBeenCalledWith(mockIssue.key, ['parent', 'issuetype']);
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: 'hierarchyUpdate',
+                hierarchy: [mockIssue],
+            });
+        });
+
+        test('should handle parent with no additional parent', async () => {
+            const parent = expansionCastTo<MinimalIssue<DetailedSiteInfo>>({
+                key: 'TEST-122',
+                id: 'issue-122',
+                summary: 'Parent Issue',
+                siteDetails: mockSiteDetails,
+                isEpic: false,
+            });
+
+            mockJiraClient.getIssue
+                .mockResolvedValueOnce({
+                    fields: {
+                        parent: { key: 'TEST-122' },
+                        issuetype: { name: 'Story' },
+                    },
+                })
+                .mockResolvedValueOnce({
+                    fields: {
+                        parent: null,
+                        issuetype: { name: 'Story' },
+                    },
+                });
+
+            (fetchIssue.fetchMinimalIssue as jest.Mock).mockResolvedValueOnce(parent);
+
+            const result = await jiraIssueWebview['fetchIssueHierarchy'](mockIssue, mockSiteDetails, mockJiraClient);
+
+            expect(result).toEqual([parent, mockIssue]);
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: 'hierarchyUpdate',
+                hierarchy: [parent, mockIssue],
+            });
+        });
+    });
 });
 
 // Additional tests for JiraIssueWebview methods
