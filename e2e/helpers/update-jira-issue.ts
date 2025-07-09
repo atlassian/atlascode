@@ -33,6 +33,16 @@ const updateSummary: FieldUpdater = (issue, value: string) => {
     return issue;
 };
 
+/**
+ * Collection of field updaters for Jira issue fields.
+ * Each updater is a function that takes an issue object and a value, then updates the issue accordingly.
+ *
+ * To add a new field updater:
+ * 1. Create a new function-updater
+ * 2. Implement the FieldUpdater type (see types.ts)
+ * 3. Add it to fieldUpdaters object with the field name as the key
+ * 4. Use updateIssueField to update the issue in the test
+ */
 const fieldUpdaters: Record<string, FieldUpdater> = {
     attachment: updateAttachment,
     comment: updateComment,
