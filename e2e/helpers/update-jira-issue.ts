@@ -11,10 +11,12 @@ const updateAttachment: FieldUpdater = (issue, value) => {
 const updateComment: FieldUpdater = (issue, value: string) => {
     const comment = { ...defaultComment, body: value };
 
-    issue.renderedFields.comment.comments.push(comment);
-    issue.renderedFields.comment.total = 1;
-    issue.renderedFields.comment.maxResults = 1;
-    issue.renderedFields.comment.startAt = 0;
+    [issue.renderedFields, issue.fields].forEach((field) => {
+        field.comment.comments.push(comment);
+        field.comment.total = 1;
+        field.comment.maxResults = 1;
+        field.comment.startAt = 0;
+    });
 
     return issue;
 };
