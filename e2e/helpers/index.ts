@@ -1,9 +1,4 @@
 export { updateIssueField } from './update-jira-issue';
-export { cleanupWireMockMapping, setupWireMockMapping } from './wiremock';
-export {
-    authenticateWithJira,
-    authenticateWithBitbucketDC,
-    authenticateWithBitbucketCloud,
-    openAtlassianSettings,
-} from './auth';
-export { getIssueFrame } from './frame';
+export { authenticateWithBitbucketDC, authenticateWithBitbucketCloud } from './bitbucket-auth';
+export { authenticateWithJira } from './jira-auth';
+export { getIssueFrame, openAtlassianSettings, cleanupWireMockMapping, setupWireMockMapping } from './common';

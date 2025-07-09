@@ -1,1 +1,0 @@
-export { getIssueFrame } from './frameHelpers';
