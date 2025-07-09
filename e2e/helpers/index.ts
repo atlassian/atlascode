@@ -1,4 +1,4 @@
-export { updateIssueField } from './field-updaters';
+export { updateIssueField } from './update-jira-issue';
 export { cleanupWireMockMapping, setupWireMockMapping } from './wiremock';
 export {
     authenticateWithJira,

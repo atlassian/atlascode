@@ -1,0 +1,56 @@
+import { defaultComment } from '../fixtures/comments';
+import type { FieldUpdater } from './types';
+
+const updateAttachment: FieldUpdater = (issue, value) => {
+    issue.fields.attachment.push(value);
+    issue.renderedFields.attachment.push(value);
+
+    return issue;
+};
+
+const updateComment: FieldUpdater = (issue, value: string) => {
+    const comment = { ...defaultComment, body: value };
+
+    issue.renderedFields.comment.comments.push(comment);
+    issue.renderedFields.comment.total = 1;
+    issue.renderedFields.comment.maxResults = 1;
+    issue.renderedFields.comment.startAt = 0;
+
+    return issue;
+};
+
+const updateDescription: FieldUpdater = (issue, value: string) => {
+    issue.renderedFields.description = `<p>${value}</p>`;
+    issue.fields.description = value;
+
+    return issue;
+};
+
+const updateSummary: FieldUpdater = (issue, value: string) => {
+    issue.renderedFields.summary = value;
+    issue.fields.summary = value;
+
+    return issue;
+};
+
+const fieldUpdaters: Record<string, FieldUpdater> = {
+    attachment: updateAttachment,
+    comment: updateComment,
+    description: updateDescription,
+    summary: updateSummary,
+};
+
+export function updateIssueField(issueJson: any, updates: Record<string, any>) {
+    const parsedBody = JSON.parse(issueJson.response.body);
+    const updated = structuredClone(parsedBody);
+
+    for (const [key, value] of Object.entries(updates)) {
+        if (!(key in fieldUpdaters)) {
+            throw new Error(`Field "${key}" is not yet added to fieldUpdaters`);
+        }
+
+        fieldUpdaters[key](updated, value);
+    }
+
+    return updated;
+}
