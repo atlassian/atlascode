@@ -64,7 +64,7 @@
         "test:unit": "jest -c jest.unit.config.ts",
         "test:react": "jest -c jest.react.config.ts",
         "test:e2e:sslcerts": "cd e2e/sslcerts && ./generate-certs.sh",
-        "test:e2e:docker": "cd e2e && docker compose run atlascode-e2e; status=$?; docker compose down; exit $status",
+        "test:e2e:docker": "cd e2e && docker compose run --rm atlascode-e2e; status=$?; docker compose down; exit $status",
         "test:e2e:docker:build": "docker build --tag atlascode-e2e - <e2e/Dockerfile",
         "devcompile": "npm run clean && npm run devcompile:react && npm run devcompile:extension",
         "devcompile:react": "webpack --mode development --config webpack.react.dev.js --fail-on-warnings",
