@@ -145,13 +145,11 @@ export class JiraIssueWebview
             this._editUIData.recentPullRequests = [];
             this._editUIData.currentUser = emptyUser;
 
-            // Initialize hierarchy with current issue and its immediate parent if available
             const initialHierarchy: MinimalIssue<DetailedSiteInfo>[] = [this._issue];
 
             let immediateParent: MinimalIssue<DetailedSiteInfo> | undefined;
             let hasMoreParents = false;
 
-            // If we have parent information in the field values, fetch and add it
             if (this._editUIData.fieldValues['parent']) {
                 try {
                     immediateParent = await fetchMinimalIssue(
@@ -160,12 +158,10 @@ export class JiraIssueWebview
                     );
                     initialHierarchy.unshift(immediateParent);
 
-                    // Check if the immediate parent has a parent
                     const fields = ['parent', 'issuetype'];
                     const parentDetails = await client.getIssue(immediateParent.key, fields);
                     if (parentDetails?.fields?.parent) {
                         const parentType = parentDetails.fields.issuetype?.name;
-                        // Only show loading if the parent is not a top-level issue type
                         if (!TOP_LEVEL_ISSUE_TYPES.includes(parentType)) {
                             hasMoreParents = true;
                         }
@@ -177,7 +173,6 @@ export class JiraIssueWebview
 
             this._editUIData.hierarchy = initialHierarchy;
 
-            // Send initial update with current issue and immediate parent
             const msg = {
                 ...this._editUIData,
                 type: 'update',
@@ -186,7 +181,6 @@ export class JiraIssueWebview
 
             this.postMessage(msg);
 
-            // If there are more parents to fetch, send loading state
             if (hasMoreParents) {
                 this.postMessage({
                     type: 'hierarchyLoading',
@@ -194,14 +188,10 @@ export class JiraIssueWebview
                 });
             }
 
-            // Start loading rest of the hierarchy in the background, passing the immediate parent to avoid refetching
             this.fetchIssueHierarchy(this._issue, this._issue.siteDetails, client, immediateParent)
                 .then((hierarchy) => {
-                    // Sort hierarchy by key to ensure consistent order
                     hierarchy.sort((a, b) => a.key.localeCompare(b.key));
                     this._editUIData.hierarchy = hierarchy;
-
-                    // Send update with complete hierarchy
                     this.postMessage({
                         type: 'hierarchyUpdate',
                         hierarchy: hierarchy,
@@ -1064,19 +1054,16 @@ export class JiraIssueWebview
         immediateParent?: MinimalIssue<DetailedSiteInfo>,
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         try {
-            // Array to store all issues in hierarchy
             const hierarchyIssues: MinimalIssue<DetailedSiteInfo>[] = [currentIssue];
             const processedKeys = new Set<string>([currentIssue.key]);
 
-            // If we have the immediate parent cached, add it and mark as processed
             if (immediateParent) {
                 hierarchyIssues.unshift(immediateParent);
                 processedKeys.add(immediateParent.key);
             }
-            // Function to fetch a single parent and update UI
+
             const fetchAndUpdateParent = async (issue: MinimalIssue<DetailedSiteInfo>): Promise<void> => {
                 try {
-                    // Get issue details with minimal fields
                     const fields = ['parent', 'issuetype'];
                     const issueDetails = await client.getIssue(issue.key, fields);
                     if (!issueDetails || !issueDetails.fields) {
@@ -1084,7 +1071,6 @@ export class JiraIssueWebview
                         return;
                     }
 
-                    // Check if this issue has a parent
                     if (issueDetails.fields.parent) {
                         const parentKey = issueDetails.fields.parent.key;
 
@@ -1093,20 +1079,13 @@ export class JiraIssueWebview
                         }
                         processedKeys.add(parentKey);
 
-                        // Fetch the parent issue
                         const parentIssue = await fetchMinimalIssue(parentKey, siteDetails);
                         if (parentIssue) {
-                            // Add parent to hierarchy at the beginning
                             hierarchyIssues.unshift(parentIssue);
-
-                            // Get parent's details to check its type and parent
                             const parentDetails = await client.getIssue(parentKey, fields);
                             if (parentDetails?.fields) {
                                 const parentType = parentDetails.fields.issuetype?.name;
-
-                                // Check if this parent is a top-level issue type
                                 if (TOP_LEVEL_ISSUE_TYPES.includes(parentType)) {
-                                    // Send final update with complete hierarchy
                                     this.postMessage({
                                         type: 'hierarchyUpdate',
                                         hierarchy: [...hierarchyIssues],
@@ -1114,11 +1093,9 @@ export class JiraIssueWebview
                                     return;
                                 }
 
-                                // If parent has its own parent, continue traversing
                                 if (parentDetails.fields.parent) {
                                     await fetchAndUpdateParent(parentIssue);
                                 } else {
-                                    // Send final update with complete hierarchy
                                     this.postMessage({
                                         type: 'hierarchyUpdate',
                                         hierarchy: [...hierarchyIssues],
@@ -1129,7 +1106,6 @@ export class JiraIssueWebview
                             Logger.error(new Error(`Failed to fetch parent issue ${parentKey}`));
                         }
                     } else {
-                        // No more parents, send final update
                         this.postMessage({
                             type: 'hierarchyUpdate',
                             hierarchy: [...hierarchyIssues],
@@ -1137,7 +1113,6 @@ export class JiraIssueWebview
                     }
                 } catch (e) {
                     Logger.error(e, `Error fetching parent for ${issue.key}`);
-                    // Send current hierarchy state even if there was an error
                     this.postMessage({
                         type: 'hierarchyUpdate',
                         hierarchy: [...hierarchyIssues],
