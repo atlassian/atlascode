@@ -27,6 +27,7 @@ jest.mock('../container', () => ({
             getFirstProject: jest.fn(),
             getProjectForKey: jest.fn(),
             getProjects: jest.fn(),
+            filterProjectsByPermission: jest.fn(),
         },
         pmfStats: {
             touchActivity: jest.fn(),
@@ -151,6 +152,7 @@ describe('CreateIssueWebview', () => {
         Container.jiraProjectManager.getFirstProject = jest.fn().mockResolvedValue(mockProject);
         Container.jiraProjectManager.getProjectForKey = jest.fn().mockResolvedValue(mockProject);
         Container.jiraProjectManager.getProjects = jest.fn().mockResolvedValue([mockProject]);
+        Container.jiraProjectManager.filterProjectsByPermission = jest.fn().mockResolvedValue([mockProject]);
 
         Container.clientManager.jiraClient = jest.fn().mockResolvedValue(mockClient);
 
@@ -271,6 +273,38 @@ describe('CreateIssueWebview', () => {
 
             expect(Logger.error).toHaveBeenCalled();
             expect(webviewPostMessageMock).toHaveBeenCalledWith(expect.objectContaining({ type: 'error' }));
+        });
+
+        it('should handle empty site details when Refeshing', async () => {
+            Object.defineProperty(webview, '_siteDetails', {
+                value: emptySiteInfo,
+                writable: true,
+            });
+            Object.defineProperty(webview, 'isRefeshing', {
+                value: true,
+                writable: true,
+            });
+
+            const result = await webview.forceUpdateFields();
+            expect(result).toBeUndefined();
+        });
+
+        it('should use provided field values', async () => {
+            const fieldValues = {
+                summary: 'Test summary',
+                description: 'Test description',
+            };
+
+            await webview.forceUpdateFields(fieldValues);
+            expect(webviewPostMessageMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'update',
+                    fieldValues: expect.objectContaining({
+                        summary: 'Test summary',
+                        description: 'Test description',
+                    }),
+                }),
+            );
         });
     });
 

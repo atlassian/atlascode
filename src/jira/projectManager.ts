@@ -70,10 +70,10 @@ export class JiraProjectManager extends Disposable {
         return foundProjects;
     }
 
-    private async checkProjectPermission(
+    public async checkProjectPermission(
         site: DetailedSiteInfo,
-        permission: ProjectPermissions,
         projectKey: string,
+        permission: ProjectPermissions,
     ): Promise<Boolean> {
         const client = await Container.clientManager.jiraClient(site);
         const url = site.baseApiUrl + '/api/2/mypermissions';
@@ -107,11 +107,7 @@ export class JiraProjectManager extends Disposable {
             const projectsSlice = projectsList.slice(cursor, cursor + size);
             await Promise.all(
                 projectsSlice.map(async (project) => {
-                    const hasCreateIssuePermission = await this.checkProjectPermission(
-                        site,
-                        'CREATE_ISSUES',
-                        project.key,
-                    );
+                    const hasCreateIssuePermission = await this.checkProjectPermission(site, project.key, permission);
                     if (hasCreateIssuePermission) {
                         projectsWithPermission.push(project);
                     }
