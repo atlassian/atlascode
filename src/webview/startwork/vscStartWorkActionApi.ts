@@ -4,7 +4,6 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { emptyRepo, Repo, WorkspaceRepo } from '../../bitbucket/model';
 import { StartWorkBranchTemplate } from '../../config/model';
-import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
 import { StartWorkActionApi } from '../../lib/webview/controller/startwork/startWorkActionApi';
@@ -51,13 +50,6 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         if (transition !== undefined && issue.status.id !== transition.to.id) {
             await client.transitionIssue(issue.key, transition.id);
         }
-        // Add delay to allow Jira's indexes to update before refreshing
-        await new Promise((resolve) => setTimeout(resolve, 4000));
-        // Refresh the tree views to show updated status
-        const vscode = await import('vscode');
-        vscode.commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
-        vscode.commands.executeCommand(Commands.RefreshCustomJqlExplorer);
-        console.log('[VSCStartWorkActionApi] Refresh commands executed');
     }
 
     async createOrCheckoutBranch(
