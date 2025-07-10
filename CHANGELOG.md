@@ -7,6 +7,7 @@
 ### Features
 
 - Added a `Don't show again` button in the pipeline notification to easily disable this type of notifications
+- Update logic of selecting the default project and site to the most relevant one for the user on the Creating a JIRA issue page
 
 ### Bug Fixes
 
