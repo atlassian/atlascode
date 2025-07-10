@@ -31,11 +31,33 @@ describe('JiraProjectManager', () => {
         simplified: false,
     });
 
+    const mockPermissionSuccess = {
+        permissions: {
+            CREATE_ISSUES: {
+                havePermission: true,
+            },
+        },
+    };
+
+    const mockPermissionFailure = {
+        permissions: {
+            CREATE_ISSUES: {
+                havePermission: false,
+            },
+        },
+    };
+
     const mockProjects: Project[] = [mockProject1, mockProject2];
+
+    const mockTransportFactory = {
+        get: jest.fn(),
+    };
 
     const mockJiraClient = {
         getProject: jest.fn(),
         getProjects: jest.fn(),
+        authorizationProvider: jest.fn(),
+        transportFactory: jest.fn().mockReturnValue(mockTransportFactory),
     };
 
     let projectManager: JiraProjectManager;
@@ -48,7 +70,6 @@ describe('JiraProjectManager', () => {
         (Container.clientManager as any) = {
             jiraClient: jest.fn().mockResolvedValue(mockJiraClient),
         };
-
         projectManager = new JiraProjectManager();
     });
 
@@ -150,6 +171,50 @@ describe('JiraProjectManager', () => {
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
             expect(result).toEqual([]);
             expect(Logger.debug).toHaveBeenCalledWith(`Failed to fetch projects ${testError}`);
+        });
+    });
+
+    describe('filterProjectsByPermission', () => {
+        it('should return projects with required permissions', async () => {
+            mockTransportFactory.get
+                .mockResolvedValue({
+                    data: mockPermissionFailure,
+                })
+                .mockResolvedValueOnce({
+                    data: mockPermissionSuccess,
+                });
+            const result = await projectManager.filterProjectsByPermission(
+                mockSiteDetails,
+                mockProjects,
+                'CREATE_ISSUES',
+            );
+
+            expect(result).toEqual([mockProject1]);
+        });
+
+        it('should return empty array when no projects have required permissions', async () => {
+            mockTransportFactory.get.mockResolvedValue({
+                data: mockPermissionFailure,
+            });
+            const result = await projectManager.filterProjectsByPermission(
+                mockSiteDetails,
+                mockProjects,
+                'CREATE_ISSUES',
+            );
+
+            expect(result).toEqual([]);
+        });
+    });
+    describe('checkProjectPermission', () => {
+        it('should return false if unknown response', async () => {
+            mockTransportFactory.get.mockResolvedValue({});
+            const result = await projectManager.checkProjectPermission(
+                mockSiteDetails,
+                mockProject1.key,
+                'CREATE_ISSUES',
+            );
+
+            expect(result).toBe(false);
         });
     });
 });
