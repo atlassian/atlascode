@@ -1,4 +1,5 @@
 import { EditIssueUI } from '@atlassianlabs/jira-metaui-client';
+import { JiraClient } from '@atlassianlabs/jira-pi-client';
 import {
     Comment,
     createEmptyMinimalIssue,
@@ -44,6 +45,7 @@ import { isOpenPullRequest } from '../ipc/prActions';
 import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
+import { TOP_LEVEL_ISSUE_TYPES } from '../lib/jira/constants';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
 import { OnJiraEditedRefreshDelay } from '../util/time';
@@ -121,6 +123,7 @@ export class JiraIssueWebview
             if (refetchMinimalIssue) {
                 this._issue = await fetchMinimalIssue(this._issue.key, this._issue.siteDetails);
             }
+            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
             const editUI: EditIssueUI<DetailedSiteInfo> = await fetchEditIssueUI(this._issue);
 
             if (this._panel) {
@@ -142,11 +145,61 @@ export class JiraIssueWebview
             this._editUIData.recentPullRequests = [];
             this._editUIData.currentUser = emptyUser;
 
-            const msg = this._editUIData;
+            const initialHierarchy: MinimalIssue<DetailedSiteInfo>[] = [this._issue];
 
-            msg.type = 'update';
+            let immediateParent: MinimalIssue<DetailedSiteInfo> | undefined;
+            let hasMoreParents = false;
+
+            if (this._editUIData.fieldValues['parent']) {
+                try {
+                    immediateParent = await fetchMinimalIssue(
+                        this._editUIData.fieldValues['parent'].key,
+                        this._issue.siteDetails,
+                    );
+                    initialHierarchy.unshift(immediateParent);
+
+                    const fields = ['parent', 'issuetype'];
+                    const parentDetails = await client.getIssue(immediateParent.key, fields);
+                    if (parentDetails?.fields?.parent) {
+                        const parentType = parentDetails.fields.issuetype?.name;
+                        if (!TOP_LEVEL_ISSUE_TYPES.includes(parentType)) {
+                            hasMoreParents = true;
+                        }
+                    }
+                } catch (e) {
+                    Logger.error(e, `Error fetching immediate parent for ${this._issue.key}`);
+                }
+            }
+
+            this._editUIData.hierarchy = initialHierarchy;
+
+            const msg = {
+                ...this._editUIData,
+                type: 'update',
+                hierarchy: initialHierarchy,
+            };
 
             this.postMessage(msg);
+
+            if (hasMoreParents) {
+                this.postMessage({
+                    type: 'hierarchyLoading',
+                    hierarchy: initialHierarchy,
+                });
+            }
+
+            this.fetchIssueHierarchy(this._issue, this._issue.siteDetails, client, immediateParent)
+                .then((hierarchy) => {
+                    hierarchy.sort((a, b) => a.key.localeCompare(b.key));
+                    this._editUIData.hierarchy = hierarchy;
+                    this.postMessage({
+                        type: 'hierarchyUpdate',
+                        hierarchy: hierarchy,
+                    });
+                })
+                .catch((e) => {
+                    Logger.error(e, 'Error loading issue hierarchy');
+                });
 
             // call async-able update functions here
             this.updateEpicChildren();
@@ -992,5 +1045,87 @@ export class JiraIssueWebview
         );
 
         return relatedPrs.filter((pr) => pr !== undefined).map((p) => p!.data);
+    }
+
+    private async fetchIssueHierarchy(
+        currentIssue: MinimalIssue<DetailedSiteInfo>,
+        siteDetails: DetailedSiteInfo,
+        client: JiraClient<DetailedSiteInfo>,
+        immediateParent?: MinimalIssue<DetailedSiteInfo>,
+    ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+        try {
+            const hierarchyIssues: MinimalIssue<DetailedSiteInfo>[] = [currentIssue];
+            const processedKeys = new Set<string>([currentIssue.key]);
+
+            if (immediateParent) {
+                hierarchyIssues.unshift(immediateParent);
+                processedKeys.add(immediateParent.key);
+            }
+
+            const fetchAndUpdateParent = async (issue: MinimalIssue<DetailedSiteInfo>): Promise<void> => {
+                try {
+                    const fields = ['parent', 'issuetype'];
+                    const issueDetails = await client.getIssue(issue.key, fields);
+                    if (!issueDetails || !issueDetails.fields) {
+                        Logger.error(new Error(`Invalid response for ${issue.key}`));
+                        return;
+                    }
+
+                    if (issueDetails.fields.parent) {
+                        const parentKey = issueDetails.fields.parent.key;
+
+                        if (processedKeys.has(parentKey)) {
+                            return;
+                        }
+                        processedKeys.add(parentKey);
+
+                        const parentIssue = await fetchMinimalIssue(parentKey, siteDetails);
+                        if (parentIssue) {
+                            hierarchyIssues.unshift(parentIssue);
+                            const parentDetails = await client.getIssue(parentKey, fields);
+                            if (parentDetails?.fields) {
+                                const parentType = parentDetails.fields.issuetype?.name;
+                                if (TOP_LEVEL_ISSUE_TYPES.includes(parentType)) {
+                                    this.postMessage({
+                                        type: 'hierarchyUpdate',
+                                        hierarchy: [...hierarchyIssues],
+                                    });
+                                    return;
+                                }
+
+                                if (parentDetails.fields.parent) {
+                                    await fetchAndUpdateParent(parentIssue);
+                                } else {
+                                    this.postMessage({
+                                        type: 'hierarchyUpdate',
+                                        hierarchy: [...hierarchyIssues],
+                                    });
+                                }
+                            }
+                        } else {
+                            Logger.error(new Error(`Failed to fetch parent issue ${parentKey}`));
+                        }
+                    } else {
+                        this.postMessage({
+                            type: 'hierarchyUpdate',
+                            hierarchy: [...hierarchyIssues],
+                        });
+                    }
+                } catch (e) {
+                    Logger.error(e, `Error fetching parent for ${issue.key}`);
+                    this.postMessage({
+                        type: 'hierarchyUpdate',
+                        hierarchy: [...hierarchyIssues],
+                    });
+                }
+            };
+
+            const startIssue = immediateParent || currentIssue;
+            await fetchAndUpdateParent(startIssue);
+            return hierarchyIssues;
+        } catch (e) {
+            Logger.error(e, `Error fetching hierarchy for ${currentIssue.id}`);
+            return currentIssue ? [currentIssue] : [];
+        }
     }
 }
