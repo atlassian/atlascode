@@ -232,6 +232,12 @@ describe('JiraIssueWebview', () => {
             const updateVotersSpy = jest.spyOn(jiraIssueWebview, 'updateVoters').mockResolvedValue();
             const updatePRsSpy = jest.spyOn(jiraIssueWebview, 'updateRelatedPullRequests').mockResolvedValue();
 
+            // Mock setTimeout to execute immediately for testing
+            jest.spyOn(global, 'setTimeout').mockImplementation((callback: any) => {
+                callback();
+                return 0 as any;
+            });
+
             await jiraIssueWebview['forceUpdateIssue']();
 
             expect(fetchIssue.fetchEditIssueUI).toHaveBeenCalledWith(mockIssue);

@@ -17,6 +17,11 @@ jest.mock('../container', () => ({
         jiraSettingsManager: {
             getMinimalIssueFieldIdsForSite: jest.fn(),
             getEpicFieldsForSite: jest.fn(),
+            getIssueLinkTypes: jest.fn(),
+            getIssueCreateMetadata: jest.fn(),
+        },
+        jiraProjectManager: {
+            getProjects: jest.fn(),
         },
         config: {
             jira: {
@@ -62,6 +67,9 @@ describe('issuesForJQL', () => {
         (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
         (Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite as jest.Mock).mockResolvedValue(mockFields);
         (Container.jiraSettingsManager.getEpicFieldsForSite as jest.Mock).mockResolvedValue(mockEpicFieldInfo);
+        (Container.jiraSettingsManager.getIssueLinkTypes as jest.Mock).mockResolvedValue([]);
+        (Container.jiraSettingsManager.getIssueCreateMetadata as jest.Mock).mockResolvedValue({});
+        (Container.jiraProjectManager.getProjects as jest.Mock).mockResolvedValue([]);
         (readSearchResults as jest.Mock).mockResolvedValue(mockSearchResult);
     });
 
@@ -73,6 +81,8 @@ describe('issuesForJQL', () => {
         expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSite);
         expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockSite);
         expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSite);
+        expect(Container.jiraSettingsManager.getIssueLinkTypes).toHaveBeenCalledWith(mockSite);
+        expect(Container.jiraProjectManager.getProjects).toHaveBeenCalledWith(mockSite);
         expect(mockClient.searchForIssuesUsingJqlGet).toHaveBeenCalledWith(mockJql, mockFields, MAX_RESULTS, 0);
         expect(readSearchResults).toHaveBeenCalledWith({}, mockSite, mockEpicFieldInfo);
 
