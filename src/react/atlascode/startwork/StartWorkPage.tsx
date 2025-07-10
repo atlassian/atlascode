@@ -457,7 +457,6 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                 <Grid item>
                                                     <Typography variant="h4">
                                                         <Box fontWeight="fontWeightBold">Transition issue</Box>
-                                                        {console.log('Start work page 456')}
                                                     </Typography>
                                                 </Grid>
                                             </Grid>

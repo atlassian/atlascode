@@ -1,4 +1,5 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import * as vscode from 'vscode';
 
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel } from '../../../../bitbucket/model';
@@ -8,7 +9,6 @@ import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { StartWorkAction, StartWorkActionType } from '../../../ipc/fromUI/startWork';
 import { WebViewID } from '../../../ipc/models/common';
-import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
 import {
     BranchType,
     emptyStartWorkIssueMessage,
@@ -212,16 +212,12 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 break;
             }
             case StartWorkActionType.RefreshTreeViews: {
-                try {
-                    // Add delay to allow Jira's indexes to update before refreshing
-                    await new Promise((resolve) => setTimeout(resolve, 4000));
-                    const vscode = await import('vscode');
-                    vscode.commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
-                    vscode.commands.executeCommand(Commands.RefreshCustomJqlExplorer);
-                    this.logger.debug('Tree views refreshed after start work');
-                } catch (e) {
-                    this.logger.error(e, 'Error refreshing tree views');
-                }
+                // Pass delay to allow Jira's indexes to update before refreshing
+                await vscode.commands.executeCommand(
+                    Commands.RefreshAssignedWorkItemsExplorer,
+                    OnJiraEditedRefreshDelay,
+                );
+                await vscode.commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
                 break;
             }
             case CommonActionType.Refresh: {
