@@ -265,11 +265,11 @@ export class CreateIssueWebview
         try {
             const availableSites = Container.siteManager.getSitesAvailable(ProductJira);
             const availableProjects = await Container.jiraProjectManager.getProjects(this._siteDetails);
-            const projectsWithCreateIssuesPermission =
-                await Container.jiraProjectManager.filterProjectsByCreateIssuePermission(
-                    this._siteDetails,
-                    availableProjects,
-                );
+            const projectsWithCreateIssuesPermission = await Container.jiraProjectManager.filterProjectsByPermission(
+                this._siteDetails,
+                availableProjects,
+                'CREATE_ISSUES',
+            );
 
             this._selectedIssueTypeId = '';
             this._screenData = await fetchCreateIssueUI(this._siteDetails, this._currentProject.key);
