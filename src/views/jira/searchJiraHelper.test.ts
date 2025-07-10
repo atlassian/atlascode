@@ -1,5 +1,6 @@
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { AssignedJiraItemsViewId } from 'src/constants';
 import { forceCastTo } from 'testsutil';
 import * as vscode from 'vscode';
 
@@ -100,10 +101,9 @@ describe('SearchJiraHelper', () => {
     });
 
     it('returns issues for provided siteId', () => {
-        SearchJiraHelper.setIssues([issue1], 'provider1');
-        SearchJiraHelper.setIssues([issue2], 'provider2');
+        SearchJiraHelper.setIssues([issue1, issue2], AssignedJiraItemsViewId);
 
-        expect(SearchJiraHelper.getAssignedIssuesPerSite('site1', 'provider1')).toStrictEqual([issue1]);
-        expect(SearchJiraHelper.getAssignedIssuesPerSite('site2', 'provider2')).toStrictEqual([issue2]);
+        expect(SearchJiraHelper.getAssignedIssuesPerSite('site1')).toStrictEqual([issue1]);
+        expect(SearchJiraHelper.getAssignedIssuesPerSite('site2')).toStrictEqual([issue2]);
     });
 });
