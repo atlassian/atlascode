@@ -1,13 +1,9 @@
 import { emptyProject, Project } from '@atlassianlabs/jira-pi-common-models';
-import axios, { AxiosInstance } from 'axios';
-import { AxiosUserAgent } from 'src/constants';
-import { ConnectionTimeout } from 'src/util/time';
 import { Disposable } from 'vscode';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { Logger } from '../logger';
-import { getAgent } from './jira-client/providers';
 
 type OrderBy =
     | 'category'
@@ -23,24 +19,11 @@ type OrderBy =
     | '-owner'
     | '+owner';
 
-type ProjectWithPermission = {
-    id: number;
-    key: string;
-};
-
-type ProjectPermissions = 'CREATE_ISSUES';
+export type ProjectPermissions = 'CREATE_ISSUES';
 
 export class JiraProjectManager extends Disposable {
-    private axiosInstance: AxiosInstance;
     constructor() {
         super(() => this.dispose());
-        this.axiosInstance = axios.create({
-            timeout: ConnectionTimeout,
-            headers: {
-                'User-Agent': AxiosUserAgent,
-                'Accept-Encoding': 'gzip, deflate',
-            },
-        });
     }
 
     dispose() {}
@@ -87,40 +70,56 @@ export class JiraProjectManager extends Disposable {
         return foundProjects;
     }
 
-    private async getProjectsKeysWithProvidedPermission(
+    private async checkProjectPermission(
         site: DetailedSiteInfo,
         permission: ProjectPermissions,
-    ): Promise<Set<string>> {
-        const authInfos = (await Container.credentialManager.getAuthInfo(site)) as { access: string } | undefined;
-        const agent = getAgent(site);
-        if (authInfos && authInfos.access) {
-            const permissionsRes = await this.axiosInstance(`${site.baseApiUrl}/api/3/permissions/project`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    Authorization: `Bearer ${authInfos.access}`,
-                },
-                data: {
-                    permissions: [permission],
-                },
-                ...agent,
-            });
+        projectKey: string,
+    ): Promise<Boolean> {
+        const client = await Container.clientManager.jiraClient(site);
+        const url = site.baseApiUrl + '/api/2/mypermissions';
+        const auth = await client.authorizationProvider('GET', url);
+        const response = await client.transportFactory().get(url, {
+            headers: {
+                Authorization: auth,
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+            },
+            method: 'GET',
+            params: {
+                projectKey: projectKey,
+                permissions: permission,
+            },
+        });
 
-            return new Set(permissionsRes.data.projects.map((p: ProjectWithPermission) => p.key));
-        }
-        return new Set();
+        return response.data?.permissions[permission]?.havePermission ?? false;
     }
 
-    public async filterProjectsByCreateIssuePermission(
+    public async filterProjectsByPermission(
         site: DetailedSiteInfo,
         projectsList: Project[],
+        permission: ProjectPermissions,
     ): Promise<Project[]> {
-        const projectsWithPermission = await this.getProjectsKeysWithProvidedPermission(site, 'CREATE_ISSUES');
-        const checkedProjects = projectsList.filter((project) => {
-            const hasCreateIssuePermission = projectsWithPermission.has(project.key);
-            return hasCreateIssuePermission;
-        });
-        return checkedProjects;
+        const size = 50;
+        let cursor = 0;
+        const projectsWithPermission: Project[] = [];
+
+        while (cursor < projectsList.length) {
+            const projectsSlice = projectsList.slice(cursor, cursor + size);
+            await Promise.all(
+                projectsSlice.map(async (project) => {
+                    const hasCreateIssuePermission = await this.checkProjectPermission(
+                        site,
+                        'CREATE_ISSUES',
+                        project.key,
+                    );
+                    if (hasCreateIssuePermission) {
+                        projectsWithPermission.push(project);
+                    }
+                }),
+            );
+            cursor += size;
+        }
+
+        return projectsWithPermission;
     }
 }

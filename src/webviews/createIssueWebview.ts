@@ -209,11 +209,11 @@ export class CreateIssueWebview
         try {
             const availableSites = Container.siteManager.getSitesAvailable(ProductJira);
             const availableProjects = await Container.jiraProjectManager.getProjects(this._siteDetails);
-            const projectsWithCreateIssuesPermission =
-                await Container.jiraProjectManager.filterProjectsByCreateIssuePermission(
-                    this._siteDetails,
-                    availableProjects,
-                );
+            const projectsWithCreateIssuesPermission = await Container.jiraProjectManager.filterProjectsByPermission(
+                this._siteDetails,
+                availableProjects,
+                'CREATE_ISSUES',
+            );
 
             this._selectedIssueTypeId = '';
             this._screenData = await fetchCreateIssueUI(this._siteDetails, this._currentProject.key);
@@ -237,9 +237,9 @@ export class CreateIssueWebview
             issueTypeUI.selectFieldOptions['project'] = projectsWithCreateIssuesPermission;
 
             /*
-            partial issue is used for prepopulating summary and description. 
+            partial issue is used for prepopulating summary and description.
             fieldValues get sent when you change the project in the project dropdown so we can preserve any previously set values.
-            e.g. you type some stuff, then you change the project... 
+            e.g. you type some stuff, then you change the project...
             at this point the new project may or may not have the same (or some of the same) fields.
             we fill them in with the previous user values.
             */
