@@ -1143,15 +1143,11 @@ export class JiraIssueWebview
                 }
             };
 
-            // Start traversing up the hierarchy from the immediate parent (if it exists) or current issue
             const startIssue = immediateParent || currentIssue;
             await fetchAndUpdateParent(startIssue);
-
-            // Return the hierarchy issues array
             return hierarchyIssues;
         } catch (e) {
             Logger.error(e, `Error fetching hierarchy for ${currentIssue.id}`);
-            // Return at least the current issue if we can't get the full hierarchy
             return currentIssue ? [currentIssue] : [];
         }
     }
