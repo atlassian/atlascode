@@ -11,10 +11,6 @@ export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise
     const [fields, epicFieldInfo] = await Promise.all([
         Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site),
         Container.jiraSettingsManager.getEpicFieldsForSite(site),
-        Container.jiraSettingsManager.getIssueLinkTypes(site),
-        Container.jiraProjectManager.getProjects(site).then((projects) => {
-            Promise.all(projects.map((p) => Container.jiraSettingsManager.getIssueCreateMetadata(p.key, site)));
-        }),
     ]);
     // const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
 
@@ -30,5 +26,16 @@ export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise
         issues = issues.concat(searchResults.issues);
         total = searchResults.total;
     } while (Container.config.jira.explorer.fetchAllQueryResults && index < total);
+    if (issues.length > 0) {
+        Container.jiraSettingsManager.getIssueLinkTypes(site);
+        const currCache: string[] = [];
+        for (let i = 0; i < issues.length; i++) {
+            const projectKey = issues[i].key.substring(0, issues[0].key.indexOf('-'));
+            if (!currCache.includes(projectKey)) {
+                Container.jiraSettingsManager.getIssueCreateMetadata(projectKey, site);
+                currCache.push(projectKey);
+            }
+        }
+    }
     return issues;
 }
