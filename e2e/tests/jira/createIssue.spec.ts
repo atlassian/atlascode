@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { authenticateWithJira } from 'e2e/helpers';
 
-test('Create an issue via side pannel flow', async ({ page }) => {
+test('Create an issue via side panel flow', async ({ page }) => {
     const newIssueSummary = 'Test Issue Created via E2E Test';
     const newIssueKey = 'BTS-7';
 
