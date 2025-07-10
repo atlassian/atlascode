@@ -5,10 +5,12 @@ import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel } from '../../../../bitbucket/model';
 import { Commands } from '../../../../constants';
 import { Container } from '../../../../container';
+import { OnJiraEditedRefreshDelay } from '../../../../util/time';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { StartWorkAction, StartWorkActionType } from '../../../ipc/fromUI/startWork';
 import { WebViewID } from '../../../ipc/models/common';
+import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
 import {
     BranchType,
     emptyStartWorkIssueMessage,
