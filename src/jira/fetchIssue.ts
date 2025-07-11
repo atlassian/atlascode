@@ -29,13 +29,13 @@ export async function fetchCreateIssueUI(
             projectKey,
             client,
             DEFAULT_API_VERSION,
-            performanceEnabled,
             fields,
             issuelinkTypes,
             cMeta,
+            performanceEnabled,
         );
     }
-    return await createIssueUI(projectKey, client, DEFAULT_API_VERSION, performanceEnabled); // add performanceEnabled as 4th parameter
+    return await createIssueUI(projectKey, client);
 }
 
 export async function getCachedOrFetchMinimalIssue(
@@ -89,7 +89,7 @@ export async function fetchEditIssueUI(issue: MinimalIssue<DetailedSiteInfo>): P
                 issue.siteDetails,
             ),
         ]);
-        return await editIssueUI(issue, client, DEFAULT_API_VERSION, performanceEnabled, fields, issuelinkTypes, cMeta);
+        return await editIssueUI(issue, client, DEFAULT_API_VERSION, fields, issuelinkTypes, cMeta, performanceEnabled);
     }
-    return await editIssueUI(issue, client, DEFAULT_API_VERSION, performanceEnabled); // add performanceEnabled as 4th parameter
+    return await editIssueUI(issue, client);
 }

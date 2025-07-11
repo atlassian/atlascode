@@ -32,7 +32,7 @@ export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise
             Container.jiraSettingsManager.getIssueLinkTypes(site);
             const currCache: string[] = [];
             for (let i = 0; i < issues.length; i++) {
-                const projectKey = issues[i].key.substring(0, issues[0].key.indexOf('-'));
+                const projectKey = issues[i].key.substring(0, issues[i].key.indexOf('-'));
                 if (!currCache.includes(projectKey)) {
                     Container.jiraSettingsManager.getIssueCreateMetadata(projectKey, site);
                     currCache.push(projectKey);
