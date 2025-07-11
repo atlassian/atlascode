@@ -1,6 +1,6 @@
-import { createIssueUI, editIssueUI } from '@atlassianlabs/jira-metaui-client';
 import * as jiraPiCommonModels from '@atlassianlabs/jira-pi-common-models';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
 import { expansionCastTo } from 'testsutil';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
@@ -15,10 +15,31 @@ import {
 } from './fetchIssue';
 
 // Mock dependencies
-jest.mock('@atlassianlabs/jira-metaui-client');
+jest.mock('@atlassianlabs/jira-metaui-transformer', () => ({
+    CreateIssueScreenTransformer: jest.fn().mockImplementation(() => ({
+        transformIssueScreens: jest.fn().mockResolvedValue({
+            fields: [],
+            issuetypes: [],
+            projectKey: 'TEST',
+        }),
+    })),
+    EditIssueScreenTransformer: jest.fn().mockImplementation(() => ({
+        transformIssue: jest.fn().mockResolvedValue({
+            fields: [],
+        }),
+    })),
+}));
 jest.mock('@atlassianlabs/jira-pi-common-models');
 jest.mock('../container');
 jest.mock('../views/jira/searchJiraHelper');
+jest.mock('src/util/featureFlags', () => ({
+    FeatureFlagClient: {
+        checkExperimentValue: jest.fn(),
+    },
+    Experiments: {
+        AtlascodePerformanceExperiment: 'atlascode-performance-experiment',
+    },
+}));
 
 describe('fetchIssue', () => {
     // Mock data
@@ -38,15 +59,24 @@ describe('fetchIssue', () => {
 
     const mockClient = {
         getIssue: jest.fn(),
+        getFields: jest.fn(),
+        getIssueLinkTypes: jest.fn(),
+        getCreateIssueMetadata: jest.fn(),
     };
 
     const mockFieldIds = ['field1', 'field2'];
     const mockEpicInfo = { epicNameField: 'customfield_10001', epicLinkField: 'customfield_10002' };
     const mockIssueResponse = { id: '123', key: mockIssueKey, fields: { summary: 'Test issue' } };
+    const mockFields = { field1: { id: 'field1', name: 'Field 1' }, field2: { id: 'field2', name: 'Field 2' } };
+    const mockIssueLinkTypes = [{ id: '1', name: 'Blocks' }];
+    const mockCreateMetadata = { projects: [{ key: mockProjectKey, issuetypes: [] }] };
 
     // Setup mocks before each test
     beforeEach(() => {
         jest.clearAllMocks();
+
+        // Mock FeatureFlagClient to return false by default (performance disabled)
+        (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(false);
 
         // Setup Container mock
         (Container.clientManager as any) = {
@@ -56,6 +86,9 @@ describe('fetchIssue', () => {
         (Container.jiraSettingsManager as any) = {
             getMinimalIssueFieldIdsForSite: jest.fn().mockResolvedValue(mockFieldIds),
             getEpicFieldsForSite: jest.fn().mockResolvedValue(mockEpicInfo),
+            getAllFieldsForSite: jest.fn().mockResolvedValue(mockFields),
+            getIssueLinkTypes: jest.fn().mockResolvedValue(mockIssueLinkTypes),
+            getIssueCreateMetadata: jest.fn().mockResolvedValue(mockCreateMetadata),
         };
 
         // Setup SearchJiraHelper mock
@@ -72,32 +105,56 @@ describe('fetchIssue', () => {
             return mockMinimalIssue;
         });
 
-        // Setup jira-metaui-client mocks
-        (createIssueUI as jest.Mock).mockResolvedValue({
-            fields: [],
-            issuetypes: [],
-            projectKey: mockProjectKey,
-        });
-
-        (editIssueUI as jest.Mock).mockResolvedValue({
-            fields: [],
+        jest.spyOn(jiraPiCommonModels, 'getEpicFieldInfo').mockReturnValue({
+            epicName: { id: 'customfield_10001', name: 'Epic Name', cfid: 10001 },
+            epicLink: { id: 'customfield_10002', name: 'Epic Link', cfid: 10002 },
+            epicColor: { id: 'customfield_10003', name: 'Epic Color', cfid: 10003 },
+            epicsEnabled: true,
         });
 
         // Setup client mock responses
         mockClient.getIssue.mockResolvedValue(mockIssueResponse);
+        mockClient.getFields.mockResolvedValue([
+            { id: 'field1', name: 'Field 1' },
+            { id: 'field2', name: 'Field 2' },
+        ]);
+        mockClient.getIssueLinkTypes.mockResolvedValue(mockIssueLinkTypes);
+        mockClient.getCreateIssueMetadata.mockResolvedValue(mockCreateMetadata);
     });
 
     describe('fetchCreateIssueUI', () => {
-        it('should call client manager and createIssueUI', async () => {
+        it('should call client manager and fetch required data for create issue UI when performance is enabled', async () => {
+            // Enable performance mode
+            (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
+
             const result = await fetchCreateIssueUI(mockSiteDetails, mockProjectKey);
 
+            expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
+                Experiments.AtlascodePerformanceExperiment,
+            );
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
-            expect(createIssueUI).toHaveBeenCalledWith(mockProjectKey, mockClient);
-            expect(result).toEqual({
-                fields: [],
-                issuetypes: [],
-                projectKey: mockProjectKey,
-            });
+            expect(Container.jiraSettingsManager.getAllFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.jiraSettingsManager.getIssueLinkTypes).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.jiraSettingsManager.getIssueCreateMetadata).toHaveBeenCalledWith(
+                mockProjectKey,
+                mockSiteDetails,
+            );
+            expect(result).toBeDefined();
+        });
+
+        it('should call client manager without parallel fetching when performance is disabled', async () => {
+            // Performance mode is disabled by default in beforeEach
+            const result = await fetchCreateIssueUI(mockSiteDetails, mockProjectKey);
+
+            expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
+                Experiments.AtlascodePerformanceExperiment,
+            );
+            expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
+            // When performance is disabled, these should not be called in parallel
+            expect(Container.jiraSettingsManager.getAllFieldsForSite).not.toHaveBeenCalled();
+            expect(Container.jiraSettingsManager.getIssueLinkTypes).not.toHaveBeenCalled();
+            expect(Container.jiraSettingsManager.getIssueCreateMetadata).not.toHaveBeenCalled();
+            expect(result).toBeDefined();
         });
     });
 
@@ -118,9 +175,34 @@ describe('fetchIssue', () => {
     });
 
     describe('fetchMinimalIssue', () => {
-        it('should fetch issue data and transform to minimal issue', async () => {
+        it('should fetch issue data with parallel calls when performance is enabled', async () => {
+            // Enable performance mode
+            (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
+
             const result = await fetchMinimalIssue(mockIssueKey, mockSiteDetails);
 
+            expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
+                Experiments.AtlascodePerformanceExperiment,
+            );
+            expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
+            expect(mockClient.getIssue).toHaveBeenCalledWith(mockIssueKey, mockFieldIds);
+            expect(jiraPiCommonModels.minimalIssueFromJsonObject).toHaveBeenCalledWith(
+                mockIssueResponse,
+                mockSiteDetails,
+                mockEpicInfo,
+            );
+            expect(result).toBe(mockMinimalIssue);
+        });
+
+        it('should fetch issue data sequentially when performance is disabled', async () => {
+            // Performance mode is disabled by default in beforeEach
+            const result = await fetchMinimalIssue(mockIssueKey, mockSiteDetails);
+
+            expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
+                Experiments.AtlascodePerformanceExperiment,
+            );
             expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
@@ -174,12 +256,40 @@ describe('fetchIssue', () => {
     });
 
     describe('fetchEditIssueUI', () => {
-        it('should call client manager and editIssueUI', async () => {
+        it('should call client manager and fetch required data for edit issue UI when performance is enabled', async () => {
+            // Enable performance mode
+            (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
+
             const result = await fetchEditIssueUI(mockMinimalIssue);
 
+            expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
+                Experiments.AtlascodePerformanceExperiment,
+            );
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockMinimalIssue.siteDetails);
-            expect(editIssueUI).toHaveBeenCalledWith(mockMinimalIssue, mockClient);
-            expect(result).toEqual({ fields: [] });
+            expect(Container.jiraSettingsManager.getAllFieldsForSite).toHaveBeenCalledWith(
+                mockMinimalIssue.siteDetails,
+            );
+            expect(Container.jiraSettingsManager.getIssueLinkTypes).toHaveBeenCalledWith(mockMinimalIssue.siteDetails);
+            expect(Container.jiraSettingsManager.getIssueCreateMetadata).toHaveBeenCalledWith(
+                mockProjectKey,
+                mockMinimalIssue.siteDetails,
+            );
+            expect(result).toBeDefined();
+        });
+
+        it('should call client manager without parallel fetching when performance is disabled', async () => {
+            // Performance mode is disabled by default in beforeEach
+            const result = await fetchEditIssueUI(mockMinimalIssue);
+
+            expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
+                Experiments.AtlascodePerformanceExperiment,
+            );
+            expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockMinimalIssue.siteDetails);
+            // When performance is disabled, these should not be called in parallel
+            expect(Container.jiraSettingsManager.getAllFieldsForSite).not.toHaveBeenCalled();
+            expect(Container.jiraSettingsManager.getIssueLinkTypes).not.toHaveBeenCalled();
+            expect(Container.jiraSettingsManager.getIssueCreateMetadata).not.toHaveBeenCalled();
+            expect(result).toBeDefined();
         });
     });
 });

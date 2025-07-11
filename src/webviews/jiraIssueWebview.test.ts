@@ -1,4 +1,5 @@
 import { createEmptyMinimalIssue, emptyUser, MinimalIssue, User } from '@atlassianlabs/jira-pi-common-models';
+import { FeatureFlagClient } from 'src/util/featureFlags';
 import { expansionCastTo } from 'testsutil/miscFunctions';
 import { commands, env, WebviewPanel } from 'vscode';
 
@@ -79,6 +80,14 @@ jest.mock('../resources', () => ({
         JIRAICON: 'jira-icon',
     },
 }));
+jest.mock('src/util/featureFlags', () => ({
+    FeatureFlagClient: {
+        checkExperimentValue: jest.fn(),
+    },
+    Experiments: {
+        AtlascodePerformanceExperiment: 'atlascode-performance-experiment',
+    },
+}));
 
 describe('JiraIssueWebview', () => {
     let jiraIssueWebview: JiraIssueWebview;
@@ -129,6 +138,9 @@ describe('JiraIssueWebview', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        // Mock FeatureFlagClient to return false by default (performance disabled)
+        (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(false);
 
         mockJiraClient = {
             editIssue: jest.fn(),
@@ -231,6 +243,12 @@ describe('JiraIssueWebview', () => {
             const updateWatchersSpy = jest.spyOn(jiraIssueWebview, 'updateWatchers').mockResolvedValue();
             const updateVotersSpy = jest.spyOn(jiraIssueWebview, 'updateVoters').mockResolvedValue();
             const updatePRsSpy = jest.spyOn(jiraIssueWebview, 'updateRelatedPullRequests').mockResolvedValue();
+
+            // Mock setTimeout to execute immediately for testing
+            jest.spyOn(global, 'setTimeout').mockImplementation((callback: any) => {
+                callback();
+                return 0 as any;
+            });
 
             await jiraIssueWebview['forceUpdateIssue']();
 
