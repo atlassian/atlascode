@@ -25,11 +25,17 @@ export async function fetchCreateIssueUI(
             Container.jiraSettingsManager.getIssueLinkTypes(siteDetails),
             Container.jiraSettingsManager.getIssueCreateMetadata(projectKey, siteDetails),
         ]);
-        return await createIssueUI(projectKey, client, DEFAULT_API_VERSION, fields, issuelinkTypes, cMeta);
+        return await createIssueUI(
+            projectKey,
+            client,
+            DEFAULT_API_VERSION,
+            performanceEnabled,
+            fields,
+            issuelinkTypes,
+            cMeta,
+        );
     }
-    return await createIssueUI(projectKey, client);
-    // This method still has perf improvements from the package I updated.
-    // Might need to bring over functions for experiment or update the other package to accept paramter of performanceEnabled
+    return await createIssueUI(projectKey, client, DEFAULT_API_VERSION, performanceEnabled); // add performanceEnabled as 4th parameter
 }
 
 export async function getCachedOrFetchMinimalIssue(
@@ -83,9 +89,7 @@ export async function fetchEditIssueUI(issue: MinimalIssue<DetailedSiteInfo>): P
                 issue.siteDetails,
             ),
         ]);
-        return await editIssueUI(issue, client, DEFAULT_API_VERSION, fields, issuelinkTypes, cMeta);
+        return await editIssueUI(issue, client, DEFAULT_API_VERSION, performanceEnabled, fields, issuelinkTypes, cMeta);
     }
-    return await editIssueUI(issue, client); // This is the regular version for the function call
-    // This method still has perf improvements from the package I updated.
-    // Might need to bring over functions for experiment or update the other package to accept paramter of performanceEnabled
+    return await editIssueUI(issue, client, DEFAULT_API_VERSION, performanceEnabled); // add performanceEnabled as 4th parameter
 }
