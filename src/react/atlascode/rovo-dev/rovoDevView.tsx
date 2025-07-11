@@ -12,7 +12,7 @@ import * as React from 'react';
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
 import { useMessagingApi } from '../messagingApi';
-import { ChatMessageItem, renderChatHistory, ToolCallItem, UpdatedFilesComponent } from './common';
+import { renderChatHistory, ToolCallItem, UpdatedFilesComponent } from './common';
 import { RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import * as styles from './rovoDevViewStyles';
 import {
@@ -42,7 +42,6 @@ const RovoDevView: React.FC = () => {
     const [promptContainerFocused, setPromptContainerFocused] = useState(false);
 
     const [promptText, setPromptText] = useState('');
-    const [currentResponse, setCurrentResponse] = useState('');
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
     const [pendingToolCall, setPendingToolCall] = useState<ToolCallMessage | null>(null);
 
@@ -52,40 +51,55 @@ const RovoDevView: React.FC = () => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
-        if (chatEndRef.current) {
-            chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
         const codeBlocks = document.querySelectorAll('pre code');
-
         codeBlocks.forEach((block) => {
             highlightElement(block, detectLanguage(block.textContent || ''));
         });
-    }, [chatHistory, currentResponse]);
+    }, [chatHistory, pendingToolCall]);
 
     const appendCurrentResponse = useCallback(
-        (text) => {
+        (text: string) => {
             if (text) {
-                setCurrentResponse((currentText) => {
-                    if (!currentText || !currentText.trim() || currentText === '...') {
-                        return text;
+                setChatHistory((prev) => {
+                    let message = prev.pop();
+
+                    if (!message || message.author !== 'RovoDev') {
+                        if (message) {
+                            prev.push(message);
+                        }
+
+                        message = {
+                            text,
+                            author: 'RovoDev',
+                        };
+                    } else if (message.text === '...') {
+                        message.text = text;
                     } else {
-                        return currentText + text;
+                        message.text += text;
                     }
+
+                    return [...prev, message];
                 });
             }
         },
-        [setCurrentResponse],
+        [setChatHistory],
     );
 
     const handleAppendChatHistory = useCallback(
         (msg: ChatMessage) => {
             setChatHistory((prev) => {
+                const last = prev[prev.length - 1];
+                if (last?.author === 'RovoDev' && last.text === '...') {
+                    prev.pop();
+                }
                 return [...prev, msg];
             });
         },
         [setChatHistory],
     );
+
+    const clearChatHistory = useCallback(() => setChatHistory([]), [setChatHistory]);
 
     const handleAppendModifiedFileToolReturns = useCallback(
         (toolReturn: ToolReturnGenericMessage) => {
@@ -107,23 +121,8 @@ const RovoDevView: React.FC = () => {
         [setTotalModifiedFiles],
     );
 
-    const completeMessage = useCallback(
-        (force?: boolean) => {
-            if (force || (currentResponse && currentResponse !== '...')) {
-                const message: ChatMessage = {
-                    text: currentResponse === '...' ? 'Error: Unable to retrieve the response' : currentResponse,
-                    author: 'RovoDev',
-                };
-                handleAppendChatHistory(message);
-            }
-            setCurrentResponse('');
-        },
-        [currentResponse, handleAppendChatHistory, setCurrentResponse],
-    );
-
     const handleResponse = useCallback(
         (data: RovoDevResponse) => {
-            console.log('Received response data:', data);
             switch (data.event_kind) {
                 case 'text':
                     if (!data.content) {
@@ -154,7 +153,6 @@ const RovoDevView: React.FC = () => {
                         args: args, // Use args from pending tool call if available
                     };
                     setPendingToolCall(null); // Clear pending tool call
-                    completeMessage(true);
                     handleAppendChatHistory(returnMessage);
                     handleAppendModifiedFileToolReturns(returnMessage);
                     break;
@@ -164,13 +162,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [
-            appendCurrentResponse,
-            completeMessage,
-            handleAppendChatHistory,
-            handleAppendModifiedFileToolReturns,
-            pendingToolCall,
-        ],
+        [appendCurrentResponse, handleAppendChatHistory, handleAppendModifiedFileToolReturns, pendingToolCall],
     );
 
     const onMessageHandler = useCallback(
@@ -180,7 +172,7 @@ const RovoDevView: React.FC = () => {
                     // Disable the send button, and enable the pause button
                     setSendButtonDisabled(true);
                     setCurrentState(State.GeneratingResponse);
-                    setCurrentResponse('...');
+                    appendCurrentResponse('...');
                     break;
 
                 case RovoDevProviderMessageType.Response:
@@ -188,17 +180,13 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.UserChatMessage:
-                    completeMessage();
                     handleAppendChatHistory(event.message);
                     break;
 
                 case RovoDevProviderMessageType.CompleteMessage:
-                    completeMessage(true);
                     setSendButtonDisabled(false);
                     setCurrentState(State.WaitingForPrompt);
-
                     setPendingToolCall(null);
-
                     break;
 
                 case RovoDevProviderMessageType.ToolCall:
@@ -210,16 +198,14 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ErrorMessage:
-                    completeMessage();
                     handleAppendChatHistory(event.message);
-                    setCurrentResponse('');
                     setSendButtonDisabled(false);
                     setCurrentState(State.WaitingForPrompt);
                     setPendingToolCall(null);
                     break;
 
                 case RovoDevProviderMessageType.NewSession:
-                    setChatHistory([]);
+                    clearChatHistory();
                     setPendingToolCall(null);
                     break;
 
@@ -234,11 +220,21 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 default:
-                    console.warn('Unknown message type:', (event as any).type);
+                    handleAppendChatHistory({
+                        author: 'RovoDev',
+                        text: `Unknown message type: ${event.type}`,
+                    });
                     break;
             }
         },
-        [handleResponse, completeMessage, handleAppendChatHistory, currentState, setCurrentState],
+        [
+            handleResponse,
+            handleAppendChatHistory,
+            currentState,
+            setCurrentState,
+            appendCurrentResponse,
+            clearChatHistory,
+        ],
     );
 
     const [postMessage, postMessageWithReturn] = useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, any>(
@@ -250,8 +246,6 @@ const RovoDevView: React.FC = () => {
             if (sendButtonDisabled || text.trim() === '' || currentState !== State.WaitingForPrompt) {
                 return;
             }
-
-            setCurrentResponse('...');
 
             // Disable the send button, and enable the pause button
             setSendButtonDisabled(true);
@@ -266,7 +260,7 @@ const RovoDevView: React.FC = () => {
             // Clear the input field
             setPromptText('');
         },
-        [postMessage, setCurrentResponse, sendButtonDisabled, setSendButtonDisabled, currentState, setCurrentState],
+        [postMessage, sendButtonDisabled, setSendButtonDisabled, currentState, setCurrentState],
     );
 
     const cancelResponse = useCallback((): void => {
@@ -352,23 +346,6 @@ const RovoDevView: React.FC = () => {
             <div style={styles.chatMessagesContainerStyles}>
                 {chatHistory.map((msg, index) => renderChatHistory(msg, index, openFile, getOriginalText))}
                 {pendingToolCall && <ToolCallItem msg={pendingToolCall} />}
-                {currentResponse && (
-                    <div
-                        style={{
-                            ...styles.agentMessageStyles,
-                            ...styles.streamingMessageStyles,
-                            borderRadius: '8px',
-                        }}
-                    >
-                        <ChatMessageItem
-                            msg={{
-                                text: currentResponse,
-                                author: 'RovoDev',
-                            }}
-                            openFile={openFile}
-                        />
-                    </div>
-                )}
                 <div ref={chatEndRef} />
             </div>
             <div style={styles.rovoDevInputSectionStyles}>

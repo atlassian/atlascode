@@ -155,7 +155,7 @@ const ToolReturnParsedItem: React.FC<{
     );
 };
 
-export const ChatMessageItem: React.FC<{
+const ChatMessageItem: React.FC<{
     msg: DefaultMessage;
     index?: number;
     openFile: OpenFileFunc;
