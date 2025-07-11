@@ -1,5 +1,6 @@
 import { IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
 import { CreateMetaTransformerResult, FieldUI, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { FeatureFlagClient } from 'src/util/featureFlags';
 import { expansionCastTo } from 'testsutil';
 import { Position, Uri, window } from 'vscode';
 
@@ -79,6 +80,15 @@ jest.mock('../commands/jira/showIssue', () => ({
     showIssue: jest.fn(),
 }));
 
+jest.mock('src/util/featureFlags', () => ({
+    FeatureFlagClient: {
+        checkExperimentValue: jest.fn(),
+    },
+    Experiments: {
+        AtlascodePerformanceExperiment: 'atlascode-performance-experiment',
+    },
+}));
+
 const mockWindow = window as jest.Mocked<typeof window>;
 
 describe('CreateIssueWebview', () => {
@@ -136,6 +146,9 @@ describe('CreateIssueWebview', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        // Mock FeatureFlagClient to return false by default (performance disabled)
+        (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(false);
 
         // Setup mocks
         Container.siteManager.getSiteForId = jest.fn().mockReturnValue(mockSiteDetails);

@@ -1,5 +1,6 @@
 import * as jiraPiCommonModels from '@atlassianlabs/jira-pi-common-models';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
 import { expansionCastTo } from 'testsutil';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
@@ -31,6 +32,14 @@ jest.mock('@atlassianlabs/jira-metaui-transformer', () => ({
 jest.mock('@atlassianlabs/jira-pi-common-models');
 jest.mock('../container');
 jest.mock('../views/jira/searchJiraHelper');
+jest.mock('src/util/featureFlags', () => ({
+    FeatureFlagClient: {
+        checkExperimentValue: jest.fn(),
+    },
+    Experiments: {
+        AtlascodePerformanceExperiment: 'atlascode-performance-experiment',
+    },
+}));
 
 describe('fetchIssue', () => {
     // Mock data
@@ -65,6 +74,9 @@ describe('fetchIssue', () => {
     // Setup mocks before each test
     beforeEach(() => {
         jest.clearAllMocks();
+
+        // Mock FeatureFlagClient to return false by default (performance disabled)
+        (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(false);
 
         // Setup Container mock
         (Container.clientManager as any) = {
@@ -111,9 +123,15 @@ describe('fetchIssue', () => {
     });
 
     describe('fetchCreateIssueUI', () => {
-        it('should call client manager and fetch required data for create issue UI', async () => {
+        it('should call client manager and fetch required data for create issue UI when performance is enabled', async () => {
+            // Enable performance mode
+            (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
+
             const result = await fetchCreateIssueUI(mockSiteDetails, mockProjectKey);
 
+            expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
+                Experiments.AtlascodePerformanceExperiment,
+            );
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.jiraSettingsManager.getAllFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.jiraSettingsManager.getIssueLinkTypes).toHaveBeenCalledWith(mockSiteDetails);
@@ -121,6 +139,21 @@ describe('fetchIssue', () => {
                 mockProjectKey,
                 mockSiteDetails,
             );
+            expect(result).toBeDefined();
+        });
+
+        it('should call client manager without parallel fetching when performance is disabled', async () => {
+            // Performance mode is disabled by default in beforeEach
+            const result = await fetchCreateIssueUI(mockSiteDetails, mockProjectKey);
+
+            expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
+                Experiments.AtlascodePerformanceExperiment,
+            );
+            expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
+            // When performance is disabled, these should not be called in parallel
+            expect(Container.jiraSettingsManager.getAllFieldsForSite).not.toHaveBeenCalled();
+            expect(Container.jiraSettingsManager.getIssueLinkTypes).not.toHaveBeenCalled();
+            expect(Container.jiraSettingsManager.getIssueCreateMetadata).not.toHaveBeenCalled();
             expect(result).toBeDefined();
         });
     });
@@ -142,9 +175,34 @@ describe('fetchIssue', () => {
     });
 
     describe('fetchMinimalIssue', () => {
-        it('should fetch issue data and transform to minimal issue', async () => {
+        it('should fetch issue data with parallel calls when performance is enabled', async () => {
+            // Enable performance mode
+            (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
+
             const result = await fetchMinimalIssue(mockIssueKey, mockSiteDetails);
 
+            expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
+                Experiments.AtlascodePerformanceExperiment,
+            );
+            expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
+            expect(mockClient.getIssue).toHaveBeenCalledWith(mockIssueKey, mockFieldIds);
+            expect(jiraPiCommonModels.minimalIssueFromJsonObject).toHaveBeenCalledWith(
+                mockIssueResponse,
+                mockSiteDetails,
+                mockEpicInfo,
+            );
+            expect(result).toBe(mockMinimalIssue);
+        });
+
+        it('should fetch issue data sequentially when performance is disabled', async () => {
+            // Performance mode is disabled by default in beforeEach
+            const result = await fetchMinimalIssue(mockIssueKey, mockSiteDetails);
+
+            expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
+                Experiments.AtlascodePerformanceExperiment,
+            );
             expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
@@ -198,9 +256,15 @@ describe('fetchIssue', () => {
     });
 
     describe('fetchEditIssueUI', () => {
-        it('should call client manager and fetch required data for edit issue UI', async () => {
+        it('should call client manager and fetch required data for edit issue UI when performance is enabled', async () => {
+            // Enable performance mode
+            (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
+
             const result = await fetchEditIssueUI(mockMinimalIssue);
 
+            expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
+                Experiments.AtlascodePerformanceExperiment,
+            );
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockMinimalIssue.siteDetails);
             expect(Container.jiraSettingsManager.getAllFieldsForSite).toHaveBeenCalledWith(
                 mockMinimalIssue.siteDetails,
@@ -210,6 +274,21 @@ describe('fetchIssue', () => {
                 mockProjectKey,
                 mockMinimalIssue.siteDetails,
             );
+            expect(result).toBeDefined();
+        });
+
+        it('should call client manager without parallel fetching when performance is disabled', async () => {
+            // Performance mode is disabled by default in beforeEach
+            const result = await fetchEditIssueUI(mockMinimalIssue);
+
+            expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
+                Experiments.AtlascodePerformanceExperiment,
+            );
+            expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockMinimalIssue.siteDetails);
+            // When performance is disabled, these should not be called in parallel
+            expect(Container.jiraSettingsManager.getAllFieldsForSite).not.toHaveBeenCalled();
+            expect(Container.jiraSettingsManager.getIssueLinkTypes).not.toHaveBeenCalled();
+            expect(Container.jiraSettingsManager.getIssueCreateMetadata).not.toHaveBeenCalled();
             expect(result).toBeDefined();
         });
     });
