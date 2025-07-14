@@ -8,6 +8,7 @@
 
 - Update logic of selecting the default project and site to the most relevant one for the user on the Creating a JIRA issue page
 - Added filtering for options and error message in projects field on Create Jira issue page.
+- Implemented full parent hierarchy display for Jira issues
 
 ### Bug Fixes
 
@@ -25,7 +26,6 @@
 ### Features
 
 - Added a `Don't show again` button in the pipeline notification to easily disable this type of notifications
-- Implemented full parent hierarchy display for Jira issues
 
 ### Bug Fixes
 
