@@ -17,6 +17,11 @@ export interface RovoDevHealthcheckResponse {
     version: string;
 }
 
+export interface RovoDevCancelResponse {
+    message: string;
+    cancelled: boolean;
+}
+
 /** Implements the http client for the RovoDev CLI server */
 export class RovoDevApiClient {
     private readonly _baseApiUrl: string;
@@ -57,12 +62,11 @@ export class RovoDevApiClient {
     }
 
     /** Invokes the POST /v2/cancel rest API
-     * @returns A value indicating if the cancellation request was processed correctly.
+     * @returns An object representing the API response
      */
-    public async cancel(): Promise<boolean> {
+    public async cancel(): Promise<RovoDevCancelResponse> {
         const response = await this.fetchApi('/v2/cancel', 'POST');
-        const data = await response.json();
-        return data.cancelled;
+        return await response.json();
     }
 
     /** Invokes the POST /v2/reset rest API */
@@ -129,7 +133,7 @@ export class RovoDevApiClient {
     }
 
     /** Invokes the GET /healthcheck rest API
-     * @returns A value indicating if the service is healthy.
+     * @returns A value indicating if the service is healthy
      */
     public async healthcheck(): Promise<boolean> {
         try {

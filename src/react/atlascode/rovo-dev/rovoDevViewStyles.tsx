@@ -87,6 +87,14 @@ export const agentMessageStyles: React.CSSProperties = {
     borderBottomLeftRadius: '0px',
 };
 
+export const errorMessageStyles: React.CSSProperties = {
+    backgroundColor: 'var(--vscode-sideBar-background)',
+    alignSelf: 'flex-start',
+    width: '100%',
+    border: 'red solid 1px',
+    borderBottomLeftRadius: '8px',
+};
+
 export const messageHeaderStyles: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'space-between',

@@ -8,6 +8,7 @@ export const enum RovoDevViewResponseType {
     KeepFileChanges = 'keepFileChanges',
     GetOriginalText = 'getOriginalText',
     CreatePR = 'createPR',
+    RetryPromptAfterError = 'retryPromptAfterError',
 }
 
 export type RovoDevViewResponse =
@@ -17,4 +18,5 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.UndoFileChanges, { filePaths: string[] }>
     | ReducerAction<RovoDevViewResponseType.KeepFileChanges, { filePaths: string[] }>
     | ReducerAction<RovoDevViewResponseType.GetOriginalText, { filePath: string; range?: number[]; requestId: string }>
+    | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>
     | ReducerAction<RovoDevViewResponseType.CreatePR>;
