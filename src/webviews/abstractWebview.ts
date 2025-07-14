@@ -183,7 +183,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
     }
 
     private onWindowReceiveFocus(windowState: WindowState) {
-        if (windowState.focused && this.visible) {
+        if (windowState.focused && this.visible && !this.isRefeshing) {
             this.invalidate();
         }
     }
