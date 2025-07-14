@@ -195,7 +195,7 @@ const ErrorMessageItem: React.FC<{
     return (
         <div key={index} style={{ ...chatMessageStyles, ...errorMessageStyles }}>
             <div style={messageContentStyles}>{content}</div>
-            {msg.retriable && (
+            {msg.isRetriable && (
                 <RetryPromptButton
                     enabled={isRetryAfterErrorButtonEnabled(msg.uid)}
                     retryAfterError={retryAfterError}

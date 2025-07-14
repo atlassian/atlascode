@@ -91,7 +91,7 @@ const RovoDevView: React.FC = () => {
     const handleAppendChatHistory = useCallback(
         (msg: ChatMessage) => {
             setChatHistory((prev) => {
-                if (msg.source === 'RovoDevError' && msg.retriable) {
+                if (msg.source === 'RovoDevError' && msg.isRetriable) {
                     setRetryAfterErrorEnabled(msg.uid);
                 } else {
                     setRetryAfterErrorEnabled('');
@@ -116,7 +116,7 @@ const RovoDevView: React.FC = () => {
                 const msg: ErrorMessage = {
                     source: 'RovoDevError',
                     text: 'Error: something went wrong while processing the prompt',
-                    retriable: true,
+                    isRetriable: true,
                     uid: v4(),
                 };
                 setRetryAfterErrorEnabled(msg.uid);
@@ -253,7 +253,7 @@ const RovoDevView: React.FC = () => {
                     handleAppendChatHistory({
                         source: 'RovoDevError',
                         text: `Unknown message type: ${event.type}`,
-                        retriable: false,
+                        isRetriable: false,
                         uid: v4(),
                     });
                     break;

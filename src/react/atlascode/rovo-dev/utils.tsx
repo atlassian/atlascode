@@ -14,7 +14,7 @@ export interface DefaultMessage {
 export interface ErrorMessage {
     text: string;
     source: 'RovoDevError';
-    retriable: boolean;
+    isRetriable: boolean;
     uid: string;
 }
 
