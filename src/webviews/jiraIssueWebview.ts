@@ -143,7 +143,7 @@ export class JiraIssueWebview
             //     currentBranches.find(b => b.toLowerCase().indexOf(issue.key.toLowerCase()) !== -1) !== undefined;
 
             this._editUIData.recentPullRequests = [];
-            this._editUIData.currentUser = emptyUser;
+            // this._editUIData.currentUser = emptyUser;
 
             const msg = this._editUIData;
 
