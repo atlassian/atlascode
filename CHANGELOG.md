@@ -2,12 +2,17 @@
 
 ---
 
+## What's new in 3.8.7
+
+### Features
+
+- Implemented full parent hierarchy display for Jira issues
+
 ## What's new in 3.8.6
 
 ### Features
 
 - Added a `Don't show again` button in the pipeline notification to easily disable this type of notifications
-- Implemented full parent hierarchy display for Jira issues
 
 ### Bug Fixes
 
