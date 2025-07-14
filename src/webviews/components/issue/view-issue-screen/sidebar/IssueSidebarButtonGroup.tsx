@@ -62,8 +62,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
     const getActiveButtonStyle = (isActive: boolean) => {
         return isActive
             ? {
-                  border: '1px solid #669df1',
-                  backgroundColor: '#669df133',
+                  border: '1px solid var(--vscode-focusBorder)',
                   borderRadius: '3px',
                   paddingBottom: '2px',
               }
