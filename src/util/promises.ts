@@ -79,3 +79,7 @@ export async function Promise_allSucceeded<T>(promises: Promise<T>[]): Promise<T
 
     return result;
 }
+
+export function sleepPromise(delay: number): Promise<void> {
+    return new Promise<void>((resolve) => setTimeout(resolve, delay));
+}
