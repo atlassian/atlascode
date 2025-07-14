@@ -79,7 +79,7 @@ jest.mock('form-data', () => ({
 jest.mock('../commands/jira/showIssue', () => ({
     showIssue: jest.fn(),
 }));
-
+// Added feature flag mock as with jiraIssueWebview.test.ts
 jest.mock('src/util/featureFlags', () => ({
     FeatureFlagClient: {
         checkExperimentValue: jest.fn(),

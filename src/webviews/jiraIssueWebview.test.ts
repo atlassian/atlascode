@@ -80,6 +80,7 @@ jest.mock('../resources', () => ({
         JIRAICON: 'jira-icon',
     },
 }));
+// Added mock feature flag inspired by other feature files
 jest.mock('src/util/featureFlags', () => ({
     FeatureFlagClient: {
         checkExperimentValue: jest.fn(),
@@ -139,7 +140,7 @@ describe('JiraIssueWebview', () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        // Mock FeatureFlagClient to return false by default (performance disabled)
+        // Defaulted value for AtlascodePerformanceExperiment should be false
         (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(false);
 
         mockJiraClient = {
@@ -243,12 +244,6 @@ describe('JiraIssueWebview', () => {
             const updateWatchersSpy = jest.spyOn(jiraIssueWebview, 'updateWatchers').mockResolvedValue();
             const updateVotersSpy = jest.spyOn(jiraIssueWebview, 'updateVoters').mockResolvedValue();
             const updatePRsSpy = jest.spyOn(jiraIssueWebview, 'updateRelatedPullRequests').mockResolvedValue();
-
-            // Mock setTimeout to execute immediately for testing
-            jest.spyOn(global, 'setTimeout').mockImplementation((callback: any) => {
-                callback();
-                return 0 as any;
-            });
 
             await jiraIssueWebview['forceUpdateIssue']();
 
