@@ -1,0 +1,22 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/2.0/user"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+                "username": "mockuser",
+                "display_name": "Mock User",
+                "uuid": "{mock-uuid}",
+                "links": {
+                    "avatar": {
+                        "href": "https://example.com/avatar.png"
+                    }
+                }
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

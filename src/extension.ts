@@ -1,5 +1,5 @@
 import { pid } from 'process';
-import * as semver from 'semver';
+import { gt as semver_gt } from 'semver';
 import { commands, env, ExtensionContext, extensions, languages, Memento, window } from 'vscode';
 
 import { installedEvent, launchedEvent, upgradedEvent } from './analytics';
@@ -160,7 +160,7 @@ async function activateYamlFeatures(context: ExtensionContext) {
 
 async function showWelcomePage(version: string, previousVersion: string | undefined) {
     if (
-        (previousVersion === undefined || semver.gt(version, previousVersion)) &&
+        (previousVersion === undefined || semver_gt(version, previousVersion)) &&
         Container.config.showWelcomeOnInstall &&
         window.state.focused
     ) {
@@ -185,7 +185,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
         return;
     }
 
-    if (semver.gt(version, previousVersion)) {
+    if (semver_gt(version, previousVersion)) {
         Logger.info(`Atlassian for VS Code upgraded from v${previousVersion} to v${version}`);
         upgradedEvent(version, previousVersion).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);

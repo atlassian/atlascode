@@ -1,7 +1,7 @@
 import { IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
 import { CreateMetaTransformerResult, FieldUI, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { expansionCastTo } from 'testsutil';
-import { Position, Uri } from 'vscode';
+import { Position, Uri, window } from 'vscode';
 
 import { DetailedSiteInfo, emptySiteInfo, ProductJira } from '../atlclients/authInfo';
 import { configuration } from '../config/configuration';
@@ -20,6 +20,7 @@ jest.mock('../container', () => ({
             getSiteForId: jest.fn(),
             getFirstSite: jest.fn(),
             getSitesAvailable: jest.fn(),
+            getFirstAAID: jest.fn(),
         },
         jiraProjectManager: {
             getFirstProject: jest.fn(),
@@ -44,6 +45,7 @@ jest.mock('../container', () => ({
         createIssueProblemsWebview: {
             createOrShow: jest.fn(),
         },
+        machineId: 'test-machine-id',
     },
 }));
 
@@ -72,6 +74,12 @@ jest.mock('../logger', () => ({
 jest.mock('form-data', () => ({
     default: jest.fn(() => ({ append: jest.fn() })),
 }));
+
+jest.mock('../commands/jira/showIssue', () => ({
+    showIssue: jest.fn(),
+}));
+
+const mockWindow = window as jest.Mocked<typeof window>;
 
 describe('CreateIssueWebview', () => {
     // Mock data
@@ -703,6 +711,55 @@ describe('CreateIssueWebview', () => {
             // Verify
             expect(result).toHaveLength(0);
             expect(result).toEqual([]);
+        });
+    });
+
+    describe('onMessageReceived', () => {
+        const mockShowIssue = require('../commands/jira/showIssue').showIssue;
+
+        const mockMessage = {
+            action: 'createIssue',
+            issueData: {
+                summary: 'Summary',
+                issuetype: mockIssueType,
+                project: mockProject,
+            },
+            site: mockSiteDetails,
+            nonce: 'test-nonce',
+        };
+
+        beforeEach(() => {
+            mockClient.createIssue.mockResolvedValue({ key: 'TEST-123' });
+            mockWindow.showInformationMessage = jest.fn().mockResolvedValue(undefined);
+
+            Object.defineProperty(webview, '_siteDetails', {
+                value: mockSiteDetails,
+                writable: true,
+            });
+            Object.defineProperty(webview, '_currentProject', {
+                value: mockProject,
+                writable: true,
+            });
+        });
+
+        it('should show VS Code notification on successful issue creation', async () => {
+            await (webview as any).onMessageReceived(mockMessage);
+
+            expect(mockWindow.showInformationMessage).toHaveBeenCalledWith(
+                'Issue TEST-123 has been created',
+                'Open Issue',
+            );
+        });
+
+        it('should call showIssue when user clicks Open Issue button', async () => {
+            mockWindow.showInformationMessage = jest.fn().mockResolvedValue('Open Issue');
+            await (webview as any).onMessageReceived(mockMessage);
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(mockShowIssue).toHaveBeenCalledWith({
+                key: 'TEST-123',
+                siteDetails: mockSiteDetails,
+            });
         });
     });
 });
