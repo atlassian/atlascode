@@ -11,6 +11,8 @@ import {
     Typography,
 } from '@material-ui/core';
 import React, { memo, useCallback, useState } from 'react';
+import { AuthFormType } from 'src/react/atlascode/constants';
+import { isCustomUrl } from 'src/react/atlascode/util/authFormUtils';
 
 import {
     AuthInfo,
@@ -42,6 +44,7 @@ export type AuthDialogProps = {
 export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
     ({ open, doClose, onExited, save, product, authEntry }) => {
         const [authFormState, updateState] = useState(emptyAuthFormState);
+        const [authTypeTabIndex, setAuthTypeTabIndex] = useState(0);
 
         const defaultSiteWithAuth = authEntry ? authEntry : emptySiteWithAuthInfo;
 
@@ -56,19 +59,26 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
             defaultSiteWithAuth.site.customSSLCertPaths !== undefined &&
             defaultSiteWithAuth.site.customSSLCertPaths !== '';
 
-        const { register, watches, handleSubmit, errors, isValid } = useFormValidation<FormFields>({
+        const initialFormValues = {
             baseUrl: defaultSiteWithAuth.site.baseLinkUrl,
             contextPathEnabled: defaultContextPathEnabled,
             customSSLEnabled: defaultSSLEnabled,
             customSSLType: defaultSSLType,
-        });
+            username: (defaultSiteWithAuth.auth as BasicAuthInfo).username || '',
+            password: (defaultSiteWithAuth.auth as BasicAuthInfo).password || '',
+            personalAccessToken: (defaultSiteWithAuth.auth as PATAuthInfo).token || '',
+        };
+
+        const { register, watches, handleSubmit, errors, isValid, authFormType } = useFormValidation<FormFields>(
+            authTypeTabIndex,
+            product,
+            initialFormValues,
+        );
 
         const helperText =
             product.key === ProductJira.key
                 ? 'You can enter a cloud or server url like https://jiracloud.atlassian.net or https://jira.mydomain.com'
                 : 'You can enter a cloud or server url like https://bitbucket.org or https://bitbucket.mydomain.com';
-
-        const authFormType = selectAuthFormType(product, watches, errors);
 
         const handleSave = useCallback(
             (data: any) => {
@@ -192,6 +202,8 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                 updateState={updateState}
                                 preventClickDefault={preventClickDefault}
                                 defaultSSLType={defaultSSLType}
+                                authTypeTabIndex={authTypeTabIndex}
+                                setAuthTypeTabIndex={setAuthTypeTabIndex}
                             />
                         )}
                     </Grid>
@@ -214,39 +226,6 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
         );
     },
 );
-
-enum AuthFormType {
-    JiraCloud = 'jiraCloud',
-    CustomSite = 'customSite',
-    None = 'none',
-}
-
-function selectAuthFormType(product: Product, watches: any, errors: any): AuthFormType {
-    if (!watches.baseUrl || errors.baseUrl) {
-        return AuthFormType.None;
-    }
-
-    if (product.key === ProductJira.key && !isCustomUrl(watches.baseUrl)) {
-        return AuthFormType.JiraCloud;
-    }
-
-    if (watches.baseUrl && !errors.baseUrl && isCustomUrl(watches.baseUrl)) {
-        return AuthFormType.CustomSite;
-    }
-
-    return AuthFormType.None;
-}
-
-const cloudHostnames = ['atlassian.net', 'jira.com', 'jira-dev.com', 'bitbucket.org', 'bb-inf.net'];
-
-function isCustomUrl(url: string): boolean {
-    try {
-        const urlObj = new URL(url);
-        return cloudHostnames.every((host) => !urlObj.hostname.endsWith(host));
-    } catch {
-        return false;
-    }
-}
 
 const normalizeContextPath = (cPath: string): string | undefined => {
     if (!cPath || cPath.trim() === '' || cPath.trim() === '/') {
