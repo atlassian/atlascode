@@ -31,9 +31,12 @@ test('Rename Jira issue', async ({ page, request }) => {
     await expect(input).toBeVisible();
     await expect(saveButton).toBeVisible();
     await expect(cancelButton).toBeVisible();
+    await expect(input).toHaveValue(oldTitle);
+    await page.waitForTimeout(500);
 
     await input.clear();
     await input.fill(newTitle);
+    await expect(input).toHaveValue(newTitle);
     await page.waitForTimeout(500);
 
     // Add the updated mock
