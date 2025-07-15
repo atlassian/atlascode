@@ -150,9 +150,9 @@ export class JiraIssueWebview
             this.isRefeshing = false;
         }
     }
-
+    // Progress on getting this function to work lol
     async updateEpicChildren() {
-        if (this._issue.isEpic) {
+        if (this._issue.issuetype.name === 'Epic') {
             const site = this._issue.siteDetails;
             const client = await Container.clientManager.jiraClient(site);
             const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
