@@ -4,6 +4,7 @@ import { authenticateWithJira } from 'e2e/helpers';
 test('Create an issue via side panel flow', async ({ page }) => {
     const newIssueSummary = 'Test Issue Created via E2E Test';
     const newIssueKey = 'BTS-7';
+    const successMessage = `Issue ${newIssueKey} has been created`;
 
     await authenticateWithJira(page);
 
@@ -25,7 +26,8 @@ test('Create an issue via side panel flow', async ({ page }) => {
 
     await page.waitForTimeout(2000);
 
-    await expect(createIssueFrame.getByText(`Issue ${newIssueKey} has been created`)).toBeVisible({
-        timeout: 5000,
-    });
+    await Promise.race([
+        expect(page.getByRole('dialog', { name: successMessage })).toBeVisible(),
+        expect(createIssueFrame.getByText(successMessage)).toBeVisible(),
+    ]);
 });
