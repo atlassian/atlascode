@@ -21,6 +21,6 @@ export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise
         index += searchResults.issues.length;
         issues = issues.concat(searchResults.issues);
         total = searchResults.total;
-    } while (index < total); // Deleted Container.config.jira.explorer.fetchAllQueryResults because it is never called or set anywhere in the code
+    } while (index < total);
     return issues;
 }
