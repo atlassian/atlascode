@@ -1,0 +1,28 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/rest/api/2/jql/autocompletedata/suggestions",
+        "queryParameters": {
+            "fieldName": {
+                "equalTo": "Labels"
+            },
+            "fieldValue": {
+                "matches": ".*"
+            }
+        }
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "results": [
+                {
+                    "value": "testing",
+                    "displayName": "testing"
+                }
+            ]
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}
