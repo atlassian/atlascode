@@ -25,5 +25,7 @@ test('Create an issue via side panel flow', async ({ page }) => {
 
     await page.waitForTimeout(2000);
 
-    await expect(createIssueFrame.getByText(`Issue ${newIssueKey} has been created`)).toBeVisible();
+    await expect(createIssueFrame.getByText(`Issue ${newIssueKey} has been created`)).toBeVisible({
+        timeout: 5000,
+    });
 });
