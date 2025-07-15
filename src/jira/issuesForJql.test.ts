@@ -18,13 +18,6 @@ jest.mock('../container', () => ({
             getMinimalIssueFieldIdsForSite: jest.fn(),
             getEpicFieldsForSite: jest.fn(),
         },
-        config: {
-            jira: {
-                explorer: {
-                    fetchAllQueryResults: false, // Set default to false for tests
-                },
-            },
-        },
     },
 }));
 
@@ -80,26 +73,36 @@ describe('issuesForJQL', () => {
         expect(result).toEqual(mockIssues);
     });
 
-    it('should only fetch one page of results when fetchAllQueryResults is false', async () => {
-        // Set up mock with more results than a single page
-        const totalResults = MAX_RESULTS + 50;
-        (readSearchResults as jest.Mock).mockResolvedValue({
-            issues: mockIssues,
+    it('should fetch all pages when there are more results than a single page', async () => {
+        // Set up mock with exactly 2 issues total
+        const page1Issues = [mockIssues[0]]; // 1 issue
+        const page2Issues = [mockIssues[1]]; // 1 issue
+        const totalResults = 2;
+
+        // First call returns page 1 (1 issue)
+        (readSearchResults as jest.Mock).mockResolvedValueOnce({
+            issues: page1Issues,
+            total: totalResults,
+        });
+
+        // Second call returns page 2 (1 issue, completing the total)
+        (readSearchResults as jest.Mock).mockResolvedValueOnce({
+            issues: page2Issues,
             total: totalResults,
         });
 
         // Execute the function
         const result = await issuesForJQL(mockJql, mockSite);
 
-        // Verify search was only called once
-        expect(mockClient.searchForIssuesUsingJqlGet).toHaveBeenCalledTimes(1);
-        expect(result).toEqual(mockIssues);
+        // Verify search was called twice to fetch all results
+        expect(mockClient.searchForIssuesUsingJqlGet).toHaveBeenCalledTimes(2);
+        expect(mockClient.searchForIssuesUsingJqlGet).toHaveBeenCalledWith(mockJql, mockFields, MAX_RESULTS, 0);
+        expect(mockClient.searchForIssuesUsingJqlGet).toHaveBeenCalledWith(mockJql, mockFields, MAX_RESULTS, 1);
+        expect(result).toEqual([...page1Issues, ...page2Issues]);
     });
 
-    it('should fetch all pages when fetchAllQueryResults is true', async () => {
+    it('should fetch all pages when there are multiple pages of results', async () => {
         // Setup multi-page results scenario
-        Container.config.jira.explorer.fetchAllQueryResults = true;
-
         const page1Issues = [
             forceCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'TEST-1' }),
             forceCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'TEST-2' }),
@@ -137,7 +140,6 @@ describe('issuesForJQL', () => {
 
     it('should handle server instances with lower page size limits', async () => {
         // Setup scenario where server returns fewer results than requested
-        Container.config.jira.explorer.fetchAllQueryResults = true;
 
         const totalResults = 25;
         const serverPageSize = 10; // Server returns 10 results at a time instead of MAX_RESULTS
