@@ -137,6 +137,7 @@ export class JiraIssueWebview
 
             this.postMessage(msg);
 
+            // call async-able update functions here
             this.updateEpicChildren();
             this.updateCurrentUser();
             this.updateWatchers();
