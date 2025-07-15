@@ -171,6 +171,112 @@ export async function featureFlagClientInitializedEvent(
     });
 }
 
+// Rovo Dev events
+
+export async function rovoDevPromptSentEvent(sessionId: string, promptId: string) {
+    return trackEvent('rovoDevPromptSent', 'atlascode', {
+        attributes: { sessionId, promptId },
+    });
+}
+
+export async function rovoDevNewSessionActionEvent(sessionId: string, isManuallyCreated: boolean) {
+    return trackEvent('rovoDevNewSessionAction', 'atlascode', {
+        attributes: { sessionId, isManuallyCreated },
+    });
+}
+
+// TODO call this
+export async function rovoDevTechnicalPlanningShownEvent(
+    sessionId: string,
+    stepsCount: number,
+    filesCount: number,
+    questionsCount: number,
+) {
+    return trackEvent('rovoDevTechnicalPlanningShown', 'atlascode', {
+        attributes: { sessionId, stepsCount, filesCount, questionsCount },
+    });
+}
+
+// TODO call this
+export async function rovoDevFilesSummaryShownEvent(
+    sessionId: string,
+    isNew: false,
+    prevFilesCount: number,
+    newFilesCount: number,
+): Promise<TrackEvent>;
+export async function rovoDevFilesSummaryShownEvent(
+    sessionId: string,
+    isNew: true,
+    prevFilesCount: 0,
+    newFilesCount: number,
+): Promise<TrackEvent>;
+export async function rovoDevFilesSummaryShownEvent(
+    sessionId: string,
+    isNew: boolean,
+    prevFilesCount: number,
+    newFilesCount: number,
+) {
+    return trackEvent('rovoDevFilesSummaryShown', 'atlascode', {
+        attributes: { sessionId, isNew, prevFilesCount, newFilesCount },
+    });
+}
+
+export async function rovoDevFileChangedActionEvent(sessionId: string, action: 'undo' | 'keep', filesCount: number) {
+    return trackEvent('rovoDevFileChangedAction', 'atlascode', {
+        attributes: { sessionId, action, filesCount },
+    });
+}
+
+export async function rovoDevStopActionEvent(sessionId: string, failed: boolean) {
+    return trackEvent('rovoDevStopAction', 'atlascode', {
+        attributes: { sessionId, failed },
+    });
+}
+
+// TODO call this
+export async function rovoDevGitPushActionEvent(sessionId: string, prCreated: boolean) {
+    return trackEvent('rovoDevGitPushAction', 'atlascode', {
+        attributes: { sessionId, prCreated },
+    });
+}
+
+// TODO call this
+export async function rovoDevDetailsExpandedEvent(sessionId: string) {
+    return trackEvent('rovoDevDetailsExpanded', 'atlascode', {
+        attributes: { sessionId },
+    });
+}
+
+export async function rovoDevTimeToRespondStartEvent(sessionId: string, promptId: string, ttrStart: number) {
+    return trackEvent('rovoDevTimeToRespondStart', 'atlascode', {
+        attributes: { sessionId, promptId, ttrStart },
+    });
+}
+
+// TODO call this
+export async function rovoDevTimeToTechPlanReturnedEvent(
+    sessionId: string,
+    promptId: string,
+    ttrStart: number,
+    ttrTechPlan: number,
+) {
+    return trackEvent('rovoDevTimeToTechPlanReturned', 'atlascode', {
+        attributes: { sessionId, promptId, ttrStart, ttrTechPlan },
+    });
+}
+
+export async function rovoDevTimeToRespondEndEvent(
+    sessionId: string,
+    promptId: string,
+    ttrStart: number,
+    ttrTechPlan: number,
+    ttrEnd: number,
+) {
+    return trackEvent('rovoDevTimeToRespondEnd', 'atlascode', {
+        attributes: { sessionId, promptId, ttrStart, ttrTechPlan, ttrEnd },
+    });
+}
+
 // Jira issue events
 
 export async function issueCreatedEvent(site: DetailedSiteInfo, issueKey: string): Promise<TrackEvent> {
