@@ -2,7 +2,7 @@ import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { Box, Grid, IconButton, Radio, RadioGroup, Switch, Tab, Tabs, TextField } from '@material-ui/core';
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
-import React, { useState } from 'react';
+import React from 'react';
 import { BasicAuthInfo } from 'src/atlclients/authInfo';
 import { SiteWithAuthInfo } from 'src/lib/ipc/toUI/config';
 
@@ -20,6 +20,8 @@ export type CustomSiteAuthFormProps = {
     updateState: any;
     preventClickDefault: any;
     defaultSSLType: string;
+    authTypeTabIndex: number;
+    setAuthTypeTabIndex: (index: number) => void;
 };
 
 export const CustomSiteAuthForm = ({
@@ -34,9 +36,9 @@ export const CustomSiteAuthForm = ({
     updateState,
     preventClickDefault,
     defaultSSLType,
+    authTypeTabIndex,
+    setAuthTypeTabIndex,
 }: CustomSiteAuthFormProps) => {
-    const [authTypeTabIndex, setAuthTypeTabIndex] = useState(0);
-
     return (
         <React.Fragment>
             <Grid item>
