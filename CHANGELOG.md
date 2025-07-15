@@ -2,6 +2,12 @@
 
 ---
 
+## What's new in 3.8.7
+
+### Features
+
+- Implemented full parent hierarchy display for Jira issues
+
 ## What's new in 3.8.6
 
 ### Features
