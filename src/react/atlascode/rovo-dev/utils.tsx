@@ -125,10 +125,6 @@ const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
  * The function handles different tool names and formats the output accordingly.
  *
  * @param rawMsg - The ToolReturnMessage to parse.
-<<<<<<< HEAD
-=======
- * @returns An array of objects containing content, diff, title, technicalPlan, and filePath.
->>>>>>> 648c3ed5 (AXON-529: polish tool call)
  */
 export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolReturnParseResult[] {
     const resp: ToolReturnParseResult[] = [];
