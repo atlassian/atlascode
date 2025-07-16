@@ -2,6 +2,12 @@
 
 ---
 
+## What's new in 3.8.7
+
+### Bug Fixes
+
+- Added sorting for status transitions based on their workflow order
+
 ## What's new in 3.8.6
 
 ### Features
