@@ -17,11 +17,10 @@ import {
     errorMessageStyles,
     inlineMofidyButtonStyles,
     messageContentStyles,
-    toolCallArgsStyles,
-    toolReturnListItemStyles,
     undoKeepButtonStyles,
     userMessageStyles,
 } from '../rovoDevViewStyles';
+import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import {
     ChatMessage,
     CodeSnippetToChange,
@@ -31,7 +30,6 @@ import {
     TechnicalPlan,
     TechnicalPlanFileToChange,
     TechnicalPlanLogicalChange,
-    ToolCallMessage,
     ToolReturnGenericMessage,
     ToolReturnParseResult,
 } from '../utils';
@@ -43,7 +41,7 @@ const md = new MarkdownIt({
     typographer: true,
 });
 
-interface OpenFileFunc {
+export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
 }
 
@@ -103,56 +101,6 @@ export const ToolDrawer: React.FC<{
                         return <ToolReturnParsedItem key={index} msg={parsedMsg} openFile={openFile} />;
                     })}
             </div>
-        </div>
-    );
-};
-
-export const ToolCallItem: React.FC<{ msg: ToolCallMessage }> = ({ msg }) => {
-    if (!msg.tool_name || !msg.args) {
-        return <div key="invalid-tool-call">Error: Invalid tool call message</div>;
-    }
-
-    return (
-        <div key="tool-call" style={chatMessageStyles}>
-            <div style={toolCallArgsStyles}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <i className="codicon codicon-loading codicon-modifier-spin" />
-                    {msg.tool_name}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const ToolReturnParsedItem: React.FC<{
-    msg: ToolReturnParseResult;
-    openFile: OpenFileFunc;
-}> = ({ msg, openFile }) => {
-    const [isHovered, setIsHovered] = React.useState(false);
-
-    return (
-        <div
-            style={toolReturnListItemStyles}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
-            <a
-                onClick={() => msg.filePath && openFile(msg.filePath)}
-                style={
-                    msg.filePath && isHovered
-                        ? {
-                              ...toolCallArgsStyles,
-                              cursor: 'pointer',
-                              backgroundColor: 'var(--vscode-list-hoverBackground)',
-                          }
-                        : toolCallArgsStyles
-                }
-            >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {msg.title && <div style={{ fontWeight: 'bold' }}>{msg.title}</div>}
-                </div>
-                <div style={{ fontSize: '9px', textAlign: 'right' }}>{msg.content}</div>
-            </a>
         </div>
     );
 };

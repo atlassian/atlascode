@@ -89,7 +89,22 @@ export interface ToolReturnParseResult {
     filePath?: string;
     title?: string;
     technicalPlan?: TechnicalPlan;
+    type?: 'modify' | 'create' | 'delete' | 'open';
 }
+
+interface ToolReturnInfo {
+    title: string;
+    type: 'modify' | 'create' | 'delete' | 'open';
+}
+
+const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
+    expanded_code_chunks: { title: 'Expanded code', type: 'open' },
+    replaced_code: { title: 'Replaced code', type: 'modify' },
+    opened: { title: 'Opened file', type: 'open' },
+    created: { title: 'Created file', type: 'create' },
+    deleted: { title: 'Deleted file', type: 'delete' },
+    updated: { title: 'Updated file', type: 'modify' },
+};
 
 /**
  * Parses the content of a ToolReturnMessage and extracts relevant information.
@@ -122,11 +137,17 @@ export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolRe
                     if (filePath.endsWith(':') || filePath.endsWith('.')) {
                         filePath = filePath.slice(0, -1);
                     }
+
+                    const toolReturnType = matches[1].trim();
                     const title = filePath ? filePath.match(/([^/\\]+)$/)?.[0] : undefined;
+
+                    const content = modifyFileTitleMap[toolReturnType.replace(/ /g, '_')];
+
                     resp.push({
-                        content: matches[1].trim().toUpperCase(),
+                        content: content ? content.title : matches[1].trim().toUpperCase(),
                         filePath: filePath,
                         title: title,
+                        type: content ? content.type : undefined,
                     });
                 }
             }

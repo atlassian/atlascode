@@ -249,7 +249,8 @@ const RovoDevView: React.FC = () => {
                         setCurrentState(State.GeneratingResponse);
                     }
                     break;
-
+                case RovoDevProviderMessageType.ReturnText:
+                    break; // This is handled in getOriginalText function
                 default:
                     handleAppendChatHistory({
                         source: 'RovoDevError',
