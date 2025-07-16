@@ -30,6 +30,10 @@
 
 ## What's new in 3.8.4
 
+### Features
+
+- Added {{{username}}} keyword for Jira's custom branch template
+
 ### Bug Fixes
 
 - Fixed a bug when creating jira issues which was throwing the error 'cannot read properties of undefined'
