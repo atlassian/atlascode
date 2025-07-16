@@ -11,6 +11,7 @@ export enum StartWorkActionType {
     StartRequest = 'startRequest',
     OpenSettings = 'openSettings',
     GetImage = 'getImage',
+    RefreshTreeViews = 'refreshTreeViews',
 }
 
 export type StartWorkAction =
@@ -18,6 +19,7 @@ export type StartWorkAction =
     | ReducerAction<StartWorkActionType.StartRequest, StartRequestAction>
     | ReducerAction<StartWorkActionType.OpenSettings, OpenSettingsAction>
     | ReducerAction<StartWorkActionType.GetImage, GetImageAction>
+    | ReducerAction<StartWorkActionType.RefreshTreeViews, {}>
     | CommonAction;
 
 export interface StartRequestAction {
