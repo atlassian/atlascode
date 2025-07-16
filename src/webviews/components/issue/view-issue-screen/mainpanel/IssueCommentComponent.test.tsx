@@ -96,6 +96,8 @@ const mockOnCreate = jest.fn();
 const mockFetchUsers = jest.fn();
 const mockFetchImage = jest.fn();
 const mockOnDelete = jest.fn();
+const mockOnCommentTextChange = jest.fn();
+const mockOnEditingCommentChange = jest.fn();
 
 describe('IssueCommentComponent', () => {
     beforeAll(() => {
@@ -114,6 +116,10 @@ describe('IssueCommentComponent', () => {
                 fetchUsers={mockFetchUsers}
                 fetchImage={mockFetchImage}
                 onDelete={mockOnDelete}
+                commentText=""
+                onCommentTextChange={mockOnCommentTextChange}
+                isEditingComment={false}
+                onEditingCommentChange={mockOnEditingCommentChange}
             />,
         );
 
@@ -132,6 +138,10 @@ describe('IssueCommentComponent', () => {
                 fetchUsers={mockFetchUsers}
                 fetchImage={mockFetchImage}
                 onDelete={mockOnDelete}
+                commentText=""
+                onCommentTextChange={mockOnCommentTextChange}
+                isEditingComment={false}
+                onEditingCommentChange={mockOnEditingCommentChange}
             />,
         );
 
@@ -152,6 +162,10 @@ describe('IssueCommentComponent', () => {
                 fetchImage={mockFetchImage}
                 onDelete={mockOnDelete}
                 isRteEnabled={true}
+                commentText=""
+                onCommentTextChange={mockOnCommentTextChange}
+                isEditingComment={false}
+                onEditingCommentChange={mockOnEditingCommentChange}
             />,
         );
 
@@ -176,6 +190,10 @@ describe('IssueCommentComponent', () => {
                 fetchUsers={mockFetchUsers}
                 fetchImage={mockFetchImage}
                 onDelete={mockOnDelete}
+                commentText=""
+                onCommentTextChange={mockOnCommentTextChange}
+                isEditingComment={false}
+                onEditingCommentChange={mockOnEditingCommentChange}
             />,
         );
 
@@ -197,6 +215,10 @@ describe('IssueCommentComponent', () => {
                 fetchImage={mockFetchImage}
                 onDelete={mockOnDelete}
                 isRteEnabled={true}
+                commentText=""
+                onCommentTextChange={mockOnCommentTextChange}
+                isEditingComment={false}
+                onEditingCommentChange={mockOnEditingCommentChange}
             />,
         );
 
