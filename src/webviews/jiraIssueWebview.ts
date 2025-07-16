@@ -128,7 +128,10 @@ export class JiraIssueWebview
             }
 
             this._editUIData = editUI as EditIssueData;
-
+            if (this._issue.issuetype.name === 'Epic') {
+                this._issue.isEpic = true;
+                this._editUIData.isEpic = true;
+            }
             this._editUIData.recentPullRequests = [];
 
             const msg = this._editUIData;
@@ -158,7 +161,7 @@ export class JiraIssueWebview
             const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
             const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
             const res = await client.searchForIssuesUsingJqlGet(
-                `${epicInfo.epicLink.id} = "${this._issue.key}" order by lastViewed DESC`,
+                `parent = "${this._issue.key}" order by lastViewed DESC`,
                 fields,
             );
             const searchResults = await readSearchResults(res, site, epicInfo);
