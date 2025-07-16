@@ -8,6 +8,7 @@
 
 - Fixed a bug when transitioning Jira issues from 'Start work', which doesn't refresh the issues panels
 - Added sorting for status transitions based on their workflow order
+- Fixed a bug when Save site button is enabled without valid credentials
 
 ## What's new in 3.8.6
 
