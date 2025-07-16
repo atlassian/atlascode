@@ -25,6 +25,7 @@ type Props = {
     onDeleteAttachment: (attachment: any) => void;
     loadingField?: string;
     isEpic: boolean;
+    epicChildren?: any[];
     handleInlineEdit: (field: FieldUI, edit: any) => void;
     subtaskTypes: IssueType[];
     linkTypes: IssueLinkTypeSelectOption[];
@@ -44,6 +45,7 @@ const IssueMainPanel: React.FC<Props> = ({
     onDeleteAttachment,
     loadingField,
     isEpic,
+    epicChildren,
     handleInlineEdit,
     subtaskTypes,
     linkTypes,
@@ -204,6 +206,19 @@ const IssueMainPanel: React.FC<Props> = ({
                         enableSubtasks={{ enable: enableSubtasks, setEnableSubtasks }}
                         handleOpenIssue={handleOpenIssue}
                         issues={subtasks}
+                    />
+                </div>
+            )}
+            {isEpic && epicChildren && epicChildren.length > 0 && (
+                <div>
+                    <ChildIssuesComponent
+                        subtaskTypes={subtaskTypes}
+                        label="Epic Child issues"
+                        loading={loadingField === 'subtasks'}
+                        onSave={(e: any) => handleInlineEdit(fields['subtasks'], e)}
+                        enableSubtasks={{ enable: enableSubtasks, setEnableSubtasks }}
+                        handleOpenIssue={handleOpenIssue}
+                        issues={epicChildren}
                     />
                 </div>
             )}
