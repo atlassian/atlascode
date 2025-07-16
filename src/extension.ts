@@ -2,7 +2,6 @@ import { pid } from 'process';
 import { gt as semver_gt } from 'semver';
 import { commands, env, ExtensionContext, extensions, languages, Memento, window } from 'vscode';
 
-import { installedEvent, launchedEvent, upgradedEvent } from './analytics';
 import { DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
 import { startListening } from './atlclients/negotiate';
 import { BitbucketContext } from './bitbucket/bbContext';
@@ -29,6 +28,7 @@ import {
 } from './rovo-dev/rovoDevProcessManager';
 import { GitExtension } from './typings/git';
 import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
+import { sleepPromise } from './util/promises';
 import { NotificationManagerImpl } from './views/notifications/notificationManager';
 
 const AnalyticDelay = 5000;
@@ -39,7 +39,7 @@ export async function activate(context: ExtensionContext) {
     registerErrorReporting();
 
     const atlascode = extensions.getExtension(ExtensionId)!;
-    const atlascodeVersion = atlascode.packageJSON.version;
+    const atlascodeVersion = atlascode.packageJSON.version as string;
     const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
 
     registerResources(context);
@@ -68,7 +68,9 @@ export async function activate(context: ExtensionContext) {
 
         NotificationManagerImpl.getInstance().listen();
     } catch (e) {
+        window.showErrorMessage(`Error initializing Atlascode: ${e.message ?? e}`);
         Logger.error(e, 'Error initializing atlascode!');
+        return;
     }
 
     startListening((site: DetailedSiteInfo) => {
@@ -87,10 +89,7 @@ export async function activate(context: ExtensionContext) {
         showWelcomePage(atlascodeVersion, previousVersion);
     }
 
-    const delay = Math.floor(Math.random() * Math.floor(AnalyticDelay));
-    setTimeout(() => {
-        sendAnalytics(atlascodeVersion, context.globalState);
-    }, delay);
+    sendAnalytics(atlascodeVersion, context.globalState);
 
     const duration = process.hrtime(start);
     context.subscriptions.push(languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
@@ -158,12 +157,8 @@ async function activateYamlFeatures(context: ExtensionContext) {
     await activateYamlExtension();
 }
 
-async function showWelcomePage(version: string, previousVersion: string | undefined) {
-    if (
-        (previousVersion === undefined || semver_gt(version, previousVersion)) &&
-        Container.config.showWelcomeOnInstall &&
-        window.state.focused
-    ) {
+async function showWelcomePage(version: string, previousVersion: string) {
+    if (semver_gt(version, previousVersion) && Container.config.showWelcomeOnInstall && window.state.focused) {
         window
             .showInformationMessage(`Jira and Bitbucket (Official) has been updated to v${version}`, 'Release notes')
             .then((userChoice) => {
@@ -175,33 +170,33 @@ async function showWelcomePage(version: string, previousVersion: string | undefi
 }
 
 async function sendAnalytics(version: string, globalState: Memento) {
+    // Introduce a random delay before checking for upgrade or installation in
+    // the hopes that this will reduce the likelihood of multiple windows
+    // performing the check simultaneously.
+    const delay = Math.floor(Math.random() * Math.floor(AnalyticDelay));
+    await sleepPromise(delay);
+
     const previousVersion = globalState.get<string>(GlobalStateVersionKey);
     globalState.update(GlobalStateVersionKey, version);
 
     if (previousVersion === undefined) {
-        installedEvent(version).then((e) => {
-            Container.analyticsClient.sendTrackEvent(e);
-        });
+        Container.analyticsApi.fireInstalledEvent(version);
         return;
     }
 
     if (semver_gt(version, previousVersion)) {
         Logger.info(`Atlassian for VS Code upgraded from v${previousVersion} to v${version}`);
-        upgradedEvent(version, previousVersion).then((e) => {
-            Container.analyticsClient.sendTrackEvent(e);
-        });
+        Container.analyticsApi.fireUpgradedEvent(version, previousVersion);
     }
 
-    launchedEvent(
+    Container.analyticsApi.fireLaunchedEvent(
         env.remoteName ? env.remoteName : 'local',
         env.uriScheme,
         Container.siteManager.numberOfAuthedSites(ProductJira, true),
         Container.siteManager.numberOfAuthedSites(ProductJira, false),
         Container.siteManager.numberOfAuthedSites(ProductBitbucket, true),
         Container.siteManager.numberOfAuthedSites(ProductBitbucket, false),
-    ).then((e) => {
-        Container.analyticsClient.sendTrackEvent(e);
-    });
+    );
 }
 
 // this method is called when your extension is deactivated
