@@ -35,6 +35,13 @@ const updateSummary: FieldUpdater = (issue, value: string) => {
     return issue;
 };
 
+const updateLabels: FieldUpdater = (issue, value: string[]) => {
+    issue.fields.labels = value;
+    issue.renderedFields.labels = value;
+
+    return issue;
+};
+
 /**
  * Collection of field updaters for Jira issue fields.
  * Each updater is a function that takes an issue object and a value, then updates the issue accordingly.
@@ -50,6 +57,7 @@ const fieldUpdaters: Record<string, FieldUpdater> = {
     comment: updateComment,
     description: updateDescription,
     summary: updateSummary,
+    labels: updateLabels,
 };
 
 export function updateIssueField(issueJson: any, updates: Record<string, any>) {
