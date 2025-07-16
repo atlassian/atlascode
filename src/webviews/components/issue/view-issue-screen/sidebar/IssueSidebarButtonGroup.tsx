@@ -1,8 +1,7 @@
 import { LoadingButton } from '@atlaskit/button';
 import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
+import LikeIcon from '@atlaskit/icon/glyph/like';
 import RefreshIcon from '@atlaskit/icon/glyph/refresh';
-import StarIcon from '@atlaskit/icon/glyph/star';
-import StarFilledIcon from '@atlaskit/icon/glyph/star-filled';
 import WatchIcon from '@atlaskit/icon/glyph/watch';
 import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
 import AssetsSchemaIcon from '@atlaskit/icon-lab/core/assets-schema';
@@ -57,8 +56,18 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
 
     const numVotes: string = fieldValues['votes'] && fieldValues['votes'].votes > 0 ? fieldValues['votes'].votes : '';
 
-    const allowVoting: boolean =
-        fieldValues['reporter'] && currentUser && fieldValues['reporter'].accountId !== currentUser.accountId;
+    const allowVoting: boolean = !!currentUser;
+
+    // Helper function for active button styling
+    const getActiveButtonStyle = (isActive: boolean) => {
+        return isActive
+            ? {
+                  border: '1px solid var(--vscode-focusBorder)',
+                  borderRadius: '3px',
+                  paddingBottom: '2px',
+              }
+            : {};
+    };
 
     const [worklogDialogOpen, setWorklogDialogOpen] = React.useState(false);
     const [votesDialogOpen, setVotesDialogOpen] = React.useState(false);
@@ -129,7 +138,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                             }
                             isOpen={worklogDialogOpen}
                             onClose={() => setWorklogDialogOpen(false)}
-                            placement="left-start"
+                            placement="bottom-end"
                         >
                             <Tooltip content="Log work">
                                 <LoadingButton
@@ -158,7 +167,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                             }
                             isOpen={watchesDialogOpen}
                             onClose={() => setWatchesDialogOpen(false)}
-                            placement="left-start"
+                            placement="bottom-end"
                         >
                             <Tooltip content="Watch options">
                                 <LoadingButton
@@ -175,6 +184,9 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                                         )
                                     }
                                     isLoading={loadingField === 'watches'}
+                                    style={getActiveButtonStyle(
+                                        fieldValues['watches'] && fieldValues['watches'].watchCount > 0,
+                                    )}
                                 >
                                     {numWatches}
                                 </LoadingButton>
@@ -197,21 +209,16 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                             }
                             isOpen={votesDialogOpen}
                             onClose={() => setVotesDialogOpen(false)}
-                            placement="left-start"
+                            placement="bottom-end"
                         >
                             <Tooltip content="Vote options">
                                 <LoadingButton
                                     spacing="none"
                                     className="ac-button-secondary"
                                     onClick={() => setVotesDialogOpen(true)}
-                                    iconBefore={
-                                        fieldValues['votes'].hasVoted ? (
-                                            <StarFilledIcon label="Votes" />
-                                        ) : (
-                                            <StarIcon label="Votes" />
-                                        )
-                                    }
+                                    iconBefore={<LikeIcon label="Votes" />}
                                     isLoading={loadingField === 'votes'}
+                                    style={getActiveButtonStyle(fieldValues['votes'] && fieldValues['votes'].votes > 0)}
                                 >
                                     {numVotes}
                                 </LoadingButton>

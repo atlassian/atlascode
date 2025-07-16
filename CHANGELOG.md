@@ -8,6 +8,8 @@
 
 - Fixed a bug when transitioning Jira issues from 'Start work', which doesn't refresh the issues panels
 - Added sorting for status transitions based on their workflow order
+- Fixed a bug where the 'Vote for this issue' option was not accessible to the reporter
+- Fixed a bug with the vote calculation where the username who voted for the issue only updated to the correct value after refreshing the page
 
 ## What's new in 3.8.6
 
