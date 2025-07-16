@@ -94,6 +94,7 @@ export const rovodevInfo = {
     mappingKey: 'workspacePortMapping',
     envVars: {
         port: 'ROVODEV_PORT',
+        host: 'ROVODEV_HOST',
     },
     portRange: {
         start: 40000,

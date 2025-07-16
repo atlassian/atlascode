@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { authenticateWithJira, cleanupWireMockMapping, getIssueFrame, updateSearch } from 'e2e/helpers';
+import { createSearchResponse } from 'e2e/fixtures/search';
+import { authenticateWithJira, cleanupWireMockMapping, getIssueFrame, setupWireMockMapping } from 'e2e/helpers';
 
 test('Assigning Jira issue to myself works', async ({ page, request }) => {
     // Authenticate and open BTS-1 issue
@@ -28,7 +29,12 @@ test('Assigning Jira issue to myself works', async ({ page, request }) => {
 
     await assigneeInput.fill('Another');
     await page.waitForTimeout(1000);
-    const { id: searchMappingId } = await updateSearch(request, false);
+    const { id: searchMappingId } = await setupWireMockMapping(
+        request,
+        'GET',
+        createSearchResponse(false),
+        '/rest/api/2/search',
+    );
     const menu = issueFrame.locator('.ac-select__menu');
     await expect(menu).toBeVisible();
 
@@ -45,7 +51,12 @@ test('Assigning Jira issue to myself works', async ({ page, request }) => {
     await assigneeInput.click();
     await assigneeInput.fill('Mocked');
     await page.waitForTimeout(1000);
-    const { id: searchWithBts1MappingId } = await updateSearch(request, true);
+    const { id: searchWithBts1MappingId } = await setupWireMockMapping(
+        request,
+        'GET',
+        createSearchResponse(true),
+        '/rest/api/2/search',
+    );
     await expect(menu).toBeVisible();
 
     const initialUserOption = menu.locator('.ac-flex', { hasText: 'Mocked McMock' });

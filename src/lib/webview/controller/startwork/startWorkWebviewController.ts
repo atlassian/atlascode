@@ -1,8 +1,11 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import * as vscode from 'vscode';
 
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel } from '../../../../bitbucket/model';
+import { Commands } from '../../../../constants';
 import { Container } from '../../../../container';
+import { OnJiraEditedRefreshDelay } from '../../../../util/time';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { StartWorkAction, StartWorkActionType } from '../../../ipc/fromUI/startWork';
@@ -208,6 +211,15 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                         nonce: msg.nonce,
                     } as any);
                 }
+                break;
+            }
+            case StartWorkActionType.RefreshTreeViews: {
+                // Pass delay to allow Jira's indexes to update before refreshing
+                await vscode.commands.executeCommand(
+                    Commands.RefreshAssignedWorkItemsExplorer,
+                    OnJiraEditedRefreshDelay,
+                );
+                await vscode.commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
                 break;
             }
             case CommonActionType.Refresh: {

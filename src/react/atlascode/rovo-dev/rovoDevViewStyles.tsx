@@ -87,8 +87,12 @@ export const agentMessageStyles: React.CSSProperties = {
     borderBottomLeftRadius: '0px',
 };
 
-export const streamingMessageStyles: React.CSSProperties = {
-    border: '1px dashed var(--vscode-activityBarBadge-background)',
+export const errorMessageStyles: React.CSSProperties = {
+    backgroundColor: 'var(--vscode-sideBar-background)',
+    alignSelf: 'flex-start',
+    width: '100%',
+    border: 'red solid 1px',
+    borderBottomLeftRadius: '8px',
 };
 
 export const messageHeaderStyles: React.CSSProperties = {
