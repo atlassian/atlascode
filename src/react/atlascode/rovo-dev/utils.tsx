@@ -84,8 +84,8 @@ export interface ToolReturnParseResult {
  * Parses the content of a ToolReturnMessage and extracts relevant information.
  * The function handles different tool names and formats the output accordingly.
  *
- * @param msg - The ToolReturnMessage to parse.
- * @returns An array of objects containing content, diff, and filePath.
+ * @param rawMsg - The ToolReturnMessage to parse.
+ * @returns An array of objects containing content, diff, title, technicalPlan, and filePath.
  */
 export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolReturnParseResult[] {
     const resp: ToolReturnParseResult[] = [];
@@ -102,7 +102,7 @@ export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolRe
 
             for (const line of contentArray) {
                 const matches = line.match(
-                    /^Successfully\s+(expanded code chunks|replaced code|opened|created|deleted)(?:\s+in)?\s+(.+)?$/,
+                    /^Successfully\s+(expanded code chunks|replaced code|opened|created|deleted|updated)(?:\s+in)?\s+(.+)?$/,
                 );
 
                 if (matches && matches.length >= 3) {

@@ -12,9 +12,10 @@ import * as React from 'react';
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
 import { useMessagingApi } from '../messagingApi';
-import { ChatMessageItem, renderChatHistory, ToolCallItem, UpdatedFilesComponent } from './common';
+import { ChatMessageItem, renderChatHistory, UpdatedFilesComponent } from './common/common';
 import { RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import * as styles from './rovoDevViewStyles';
+import { ToolCallItem } from './tools/ToolCallItem';
 import {
     ChatMessage,
     isCodeChangeTool,
@@ -153,7 +154,7 @@ const RovoDevView: React.FC = () => {
                         tool_call_id: data.tool_call_id, // Optional ID for tracking
                         args: args, // Use args from pending tool call if available
                     };
-                    setPendingToolCall(null); // Clear pending tool call
+                    // setPendingToolCall(null); // Clear pending tool call
                     completeMessage(true);
                     handleAppendChatHistory(returnMessage);
                     handleAppendModifiedFileToolReturns(returnMessage);
@@ -197,7 +198,7 @@ const RovoDevView: React.FC = () => {
                     setSendButtonDisabled(false);
                     setCurrentState(State.WaitingForPrompt);
 
-                    setPendingToolCall(null);
+                    // setPendingToolCall(null);
 
                     break;
 

@@ -20,7 +20,7 @@ import {
     toolReturnListItemStyles,
     undoKeepButtonStyles,
     userMessageStyles,
-} from './rovoDevViewStyles';
+} from '../rovoDevViewStyles';
 import {
     ChatMessage,
     CodeSnippetToChange,
@@ -32,7 +32,7 @@ import {
     ToolCallMessage,
     ToolReturnGenericMessage,
     ToolReturnParseResult,
-} from './utils';
+} from '../utils';
 
 const md = new MarkdownIt({
     html: true,
@@ -739,11 +739,11 @@ const DiffComponent: React.FC<{
     );
 };
 
-const FileLozenge: React.FC<{ filePath: string; openFile: OpenFileFunc }> = ({ filePath, openFile }) => {
+const FileLozenge: React.FC<{ filePath: string; openFile?: OpenFileFunc }> = ({ filePath, openFile }) => {
     const fileTitle = filePath ? filePath.match(/([^/\\]+)$/)?.[0] : undefined;
 
     return (
-        <div onClick={() => openFile(filePath)} className="file-lozenge">
+        <div onClick={() => openFile && openFile(filePath)} className="file-lozenge">
             <span className="file-path">{fileTitle || filePath}</span>
         </div>
     );
