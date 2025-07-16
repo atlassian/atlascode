@@ -3,6 +3,11 @@ import { createSearchResponse } from 'e2e/fixtures/search';
 import { authenticateWithJira, cleanupWireMockMapping, getIssueFrame, setupWireMockMapping } from 'e2e/helpers';
 
 test('Assigning Jira issue to myself works', async ({ page, request }) => {
+    // This test is large and may run longer on slower machines,
+    // so we extend the timeout to 50 seconds (default is 30s).
+    // See: https://playwright.dev/docs/test-timeouts#set-timeout-for-a-single-test
+    test.setTimeout(50_000);
+
     // Authenticate and open BTS-1 issue
     await authenticateWithJira(page);
     await page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' }).click();
