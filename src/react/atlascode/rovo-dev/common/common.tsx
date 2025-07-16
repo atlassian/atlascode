@@ -30,7 +30,6 @@ import {
     TechnicalPlan,
     TechnicalPlanFileToChange,
     TechnicalPlanLogicalChange,
-    ToolReturnGenericMessage,
     ToolReturnParseResult,
 } from '../utils';
 
@@ -44,66 +43,6 @@ const md = new MarkdownIt({
 export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
 }
-
-// TODO unused - should it be cleaned up?
-export const ToolDrawer: React.FC<{
-    content: ToolReturnGenericMessage[];
-    openFile: OpenFileFunc;
-    isStreaming?: boolean;
-}> = ({ content, openFile, isStreaming = false }) => {
-    const [isOpen, setIsOpen] = React.useState(false);
-
-    const parsedMessages = content.flatMap((message) => parseToolReturnMessage(message));
-    return (
-        <div
-            style={{
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                marginBottom: '8px',
-            }}
-            onClick={() => setIsOpen(!isOpen)}
-        >
-            <div
-                style={{
-                    width: '100%',
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    padding: '8px',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                }}
-            >
-                <div style={{ display: 'flex', flexDirection: 'row', gap: '4px', alignItems: 'center' }}>
-                    {isStreaming ? (
-                        <i className="codicon codicon-loading codicon-modifier-spin" />
-                    ) : (
-                        <i className="codicon codicon-tools"></i>
-                    )}
-                    <div style={{ fontWeight: 'bold' }}>Tool Calls</div>
-                    {!isOpen && <div style={{ fontSize: '9px' }}>{`+${parsedMessages.length}`}</div>}
-                </div>
-                {isOpen ? <i className="codicon codicon-chevron-down" /> : <i className="codicon codicon-chevron-up" />}
-            </div>
-            <div
-                style={{
-                    width: '100%',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    overflowY: 'auto',
-                    gap: '4px',
-                }}
-            >
-                {isOpen &&
-                    parsedMessages.map((parsedMsg, index) => {
-                        return <ToolReturnParsedItem key={index} msg={parsedMsg} openFile={openFile} />;
-                    })}
-            </div>
-        </div>
-    );
-};
 
 const ChatMessageItem: React.FC<{
     msg: DefaultMessage;
