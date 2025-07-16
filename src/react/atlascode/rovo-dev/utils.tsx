@@ -1,22 +1,33 @@
 export type ToolReturnMessage = ToolReturnFileMessage | ToolReturnBashMessage | ToolReturnTechnicalPlanMessage;
-export type ChatMessage = DefaultMessage | ToolCallMessage | ToolReturnGenericMessage | ToolReturnGroupedMessage;
-export type ErrorMessage = DefaultMessage;
+export type ChatMessage =
+    | DefaultMessage
+    | ErrorMessage
+    | ToolCallMessage
+    | ToolReturnGenericMessage
+    | ToolReturnGroupedMessage;
 
 export interface DefaultMessage {
     text: string;
-    author: 'User' | 'RovoDev';
+    source: 'User' | 'RovoDev';
+}
+
+export interface ErrorMessage {
+    text: string;
+    source: 'RovoDevError';
+    isRetriable: boolean;
+    uid: string;
 }
 
 export interface ToolCallMessage {
     tool_name: string;
-    author: 'ToolCall';
+    source: 'ToolCall';
     args: string;
     tool_call_id: string; // Optional ID for tracking tool calls
 }
 
 export interface ToolReturnFileMessage {
     tool_name: 'expand_code_chunks' | 'find_and_replace_code' | 'open_files' | 'create_file' | 'delete_file';
-    author: 'ToolReturn';
+    source: 'ToolReturn';
     content: string;
     tool_call_id: string;
     args?: string;
@@ -24,14 +35,14 @@ export interface ToolReturnFileMessage {
 
 export interface ToolReturnBashMessage {
     tool_name: 'bash';
-    author: 'ToolReturn';
+    source: 'ToolReturn';
     tool_call_id: string;
     args?: string;
 }
 
 export interface ToolReturnTechnicalPlanMessage {
     tool_name: 'create_technical_plan';
-    author: 'ToolReturn';
+    source: 'ToolReturn';
     content: string; // JSON string representing the technical plan
     tool_call_id: string;
     args?: string;
@@ -39,14 +50,14 @@ export interface ToolReturnTechnicalPlanMessage {
 
 export interface ToolReturnGenericMessage {
     tool_name: string;
-    author: 'ToolReturn' | 'ModifiedFile';
+    source: 'ToolReturn' | 'ModifiedFile';
     content?: any;
     tool_call_id: string;
     args?: string;
 }
 
 export interface ToolReturnGroupedMessage {
-    author: 'ReturnGroup';
+    source: 'ReturnGroup';
     tool_returns: ToolReturnGenericMessage[];
 }
 

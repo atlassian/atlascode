@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import path from 'path';
 import { gte as semver_gte } from 'semver';
 import { setTimeout } from 'timers/promises';
+import { v4 } from 'uuid';
 import {
     CancellationToken,
     commands,
@@ -41,6 +42,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _rovoDevApiClient?: RovoDevApiClient;
     private _initialized = false;
 
+    private _previousPrompt: string | undefined;
     private _pendingPrompt: string | undefined;
     private _pendingCancellation = false;
 
@@ -57,8 +59,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private get rovoDevApiClient() {
         if (!this._rovoDevApiClient) {
             const rovoDevPort = this.getWorkspacePort();
+            const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
             if (rovoDevPort) {
-                this._rovoDevApiClient = new RovoDevApiClient('localhost', rovoDevPort);
+                this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
             }
         }
 
@@ -173,6 +176,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 case RovoDevViewResponseType.CreatePR:
                     await this.createPR();
                     break;
+
+                case RovoDevViewResponseType.RetryPromptAfterError:
+                    this._pendingCancellation = false;
+                    await this.executeRetryPromptAfterError();
+                    break;
             }
         });
 
@@ -186,6 +194,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         new Error(
                             `Rovo Dev version (${version}) is out of date. Please update Rovo Dev and try again.\nMin version compatible: ${MIN_SUPPORTED_ROVODEV_VERSION}`,
                         ),
+                        false,
                     );
                 }
             } else {
@@ -193,7 +202,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     ? `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within 10000ms`
                     : `Unable to initialize RovoDev's client within 10000ms`;
 
-                this.processError(new Error(errorMsg));
+                this.processError(new Error(errorMsg), false);
             }
 
             // sets this flag regardless are we are not going to retry the replay anymore
@@ -220,16 +229,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-
         const parser = new RovoDevResponseParser();
-
-        let messagesSent = 0;
 
         while (true) {
             const { done, value } = await reader.read();
             if (done) {
                 for (const msg of parser.flush()) {
-                    ++messagesSent;
                     await this.processRovoDevResponse(msg);
                 }
                 break;
@@ -237,15 +242,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             const data = decoder.decode(value, { stream: true });
             for (const msg of parser.parse(data)) {
-                ++messagesSent;
                 await this.processRovoDevResponse(msg);
             }
         }
 
-        if (messagesSent) {
-            // Send final complete message when stream ends
-            this.completeChatResponse();
-        }
+        // Send final complete message when stream ends
+        await this.completeChatResponse();
     }
 
     private completeChatResponse() {
@@ -255,13 +257,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private processError(error: Error) {
+    private processError(error: Error, isRetriable: boolean) {
         const webview = this._webView!;
         return webview.postMessage({
             type: RovoDevProviderMessageType.ErrorMessage,
             message: {
                 text: `Error: ${error.message}`,
-                author: 'RovoDev',
+                source: 'RovoDevError',
+                isRetriable,
+                uid: v4(),
             },
         });
     }
@@ -273,7 +277,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             type: RovoDevProviderMessageType.UserChatMessage,
             message: {
                 text: message,
-                author: 'User',
+                source: 'User',
             },
         });
 
@@ -308,6 +312,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             case 'user-prompt':
                 // receiving a user-prompt pre-initialized means we are in the 'replay' response
                 if (!this._initialized) {
+                    this._previousPrompt = response.content;
                     return this.sendUserPromptToView(response.content);
                 }
                 return Promise.resolve(false);
@@ -332,6 +337,12 @@ ${message}`;
         }
     }
 
+    private addRetryAfterErrorContextToPrompt(message: string): string {
+        return `<context>The previous response interrupted prematurely because of an error. Continue processing the previous prompt from the point where it was interrupted.
+    <previous_prompt>${message}</previous_prompt>
+</context>`;
+    }
+
     private async executeChat(message: string, suppressEcho?: boolean) {
         if (!message) {
             return;
@@ -341,6 +352,7 @@ ${message}`;
             await this.sendUserPromptToView(message);
         }
 
+        this._previousPrompt = message;
         const payloadToSend = this.addUndoContextToPrompt(message);
 
         if (this._initialized) {
@@ -350,6 +362,24 @@ ${message}`;
         } else {
             this._pendingPrompt = payloadToSend;
         }
+    }
+
+    private async executeRetryPromptAfterError() {
+        const webview = this._webView!;
+
+        if (!this._initialized || !this._previousPrompt) {
+            return;
+        }
+
+        const payloadToSend = this.addRetryAfterErrorContextToPrompt(this._previousPrompt);
+
+        await webview.postMessage({
+            type: RovoDevProviderMessageType.PromptSent,
+        });
+
+        await this.executeApiWithErrorHandling((client) => {
+            return this.processChatResponse(client.chat(payloadToSend));
+        }, true);
     }
 
     async executeReset(): Promise<void> {
@@ -368,17 +398,17 @@ ${message}`;
     private async executeCancel(): Promise<boolean> {
         const webview = this._webView!;
 
-        const success = await this.executeApiWithErrorHandling(async (client) => {
+        const cancelResponse = await this.executeApiWithErrorHandling(async (client) => {
             return await client.cancel();
         });
 
-        if (!success) {
+        if (cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress')) {
+            return true;
+        } else {
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CancelFailed,
             });
             return false;
-        } else {
-            return true;
         }
     }
 
@@ -477,8 +507,7 @@ ${message}`;
         try {
             await this._prHandler.createPR();
         } catch (e) {
-            console.error('Error creating PR:', e);
-            await this.processError(e as Error);
+            await this.processError(e, false);
         } finally {
             const webview = this._webView!;
             await webview.postMessage({
@@ -499,11 +528,11 @@ ${message}`;
                     this._pendingCancellation = false;
                     this.completeChatResponse();
                 } else {
-                    await this.processError(error);
+                    await this.processError(error, true);
                 }
             }
         } else {
-            await this.processError(new Error('RovoDev client not initialized'));
+            await this.processError(new Error('RovoDev client not initialized'), false);
         }
     }
 

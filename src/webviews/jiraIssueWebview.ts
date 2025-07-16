@@ -127,20 +127,9 @@ export class JiraIssueWebview
                 this._panel.title = `${this._issue.key}`;
             }
 
-            // const currentBranches = Container.bitbucketContext ?
-            //     Container.bitbucketContext.getAllRepositores()
-            //         .filter(repo => repo.state.HEAD && repo.state.HEAD.name)
-            //         .map(repo => repo.state.HEAD!.name!)
-            //     : [];
-
             this._editUIData = editUI as EditIssueData;
 
-            // msg.workInProgress = this._issue.assignee.accountId === this._currentUserId &&
-            //     issue.transitions.find(t => t.isInitial && t.to.id === issue.status.id) === undefined &&
-            //     currentBranches.find(b => b.toLowerCase().indexOf(issue.key.toLowerCase()) !== -1) !== undefined;
-
             this._editUIData.recentPullRequests = [];
-            this._editUIData.currentUser = emptyUser;
 
             const msg = this._editUIData;
 

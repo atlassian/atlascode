@@ -14,6 +14,7 @@ import { RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderM
 import {
     agentMessageStyles,
     chatMessageStyles,
+    errorMessageStyles,
     inlineMofidyButtonStyles,
     messageContentStyles,
     toolCallArgsStyles,
@@ -25,6 +26,7 @@ import {
     ChatMessage,
     CodeSnippetToChange,
     DefaultMessage,
+    ErrorMessage,
     parseToolReturnMessage,
     TechnicalPlan,
     TechnicalPlanFileToChange,
@@ -155,46 +157,19 @@ const ToolReturnParsedItem: React.FC<{
     );
 };
 
-export const ChatMessageItem: React.FC<{
+const ChatMessageItem: React.FC<{
     msg: DefaultMessage;
-    index?: number;
-    openFile: OpenFileFunc;
-}> = ({ msg, index, openFile }) => {
-    const messageTypeStyles = msg.author.toLowerCase() === 'user' ? userMessageStyles : agentMessageStyles;
+    index: number;
+}> = ({ msg, index }) => {
+    const messageTypeStyles = msg.source === 'User' ? userMessageStyles : agentMessageStyles;
 
-    const text = msg.text || '';
-
-    const parts = text.trim().split(/(<TOOL_RETURN>.*<\/TOOL_RETURN>)/g);
-    const content = parts.flatMap((part) => {
-        try {
-            if (part.match(/^<TOOL_RETURN>.*<\/TOOL_RETURN>$/)) {
-                const toolReturnContent = part
-                    .replace(/^<TOOL_RETURN>/, '')
-                    .replace(/<\/TOOL_RETURN>$/, '')
-                    .trim();
-
-                const toolReturnMessage: ToolReturnGenericMessage = JSON.parse(toolReturnContent);
-                console.log('Parsed Tool Return Message:', toolReturnMessage);
-                const parsedMessages = parseToolReturnMessage(toolReturnMessage);
-                return parsedMessages.map((message, idx) => (
-                    <ToolReturnParsedItem key={idx} msg={message} openFile={openFile} />
-                ));
-            } else {
-                const htmlContent = md.render(part);
-
-                return (
-                    <div
-                        style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-                        key="parsed-content"
-                        dangerouslySetInnerHTML={{ __html: htmlContent }}
-                    />
-                );
-            }
-        } catch (error) {
-            console.error('Error parsing message content:', error);
-            return <div key="error-content">Error parsing content</div>;
-        }
-    });
+    const content = (
+        <div
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+            key="parsed-content"
+            dangerouslySetInnerHTML={{ __html: md.render(msg.text || '') }}
+        />
+    );
 
     return (
         <div key={index} style={{ ...chatMessageStyles, ...messageTypeStyles }}>
@@ -203,13 +178,55 @@ export const ChatMessageItem: React.FC<{
     );
 };
 
+const ErrorMessageItem: React.FC<{
+    msg: ErrorMessage;
+    index: number;
+    isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
+    retryAfterError: () => void;
+}> = ({ msg, index, isRetryAfterErrorButtonEnabled, retryAfterError }) => {
+    const content = (
+        <div
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+            key="parsed-content"
+            dangerouslySetInnerHTML={{ __html: md.render(msg.text || '') }}
+        />
+    );
+
+    return (
+        <div key={index} style={{ ...chatMessageStyles, ...errorMessageStyles }}>
+            <div style={messageContentStyles}>{content}</div>
+            {msg.isRetriable && (
+                <RetryPromptButton
+                    enabled={isRetryAfterErrorButtonEnabled(msg.uid)}
+                    retryAfterError={retryAfterError}
+                />
+            )}
+        </div>
+    );
+};
+
+const RetryPromptButton: React.FC<{
+    enabled: boolean;
+    retryAfterError: () => void;
+}> = ({ enabled, retryAfterError }) => {
+    return (
+        <div style={{ marginTop: '12px' }}>
+            <button disabled={!enabled} onClick={retryAfterError}>
+                Try again
+            </button>
+        </div>
+    );
+};
+
 export const renderChatHistory = (
     msg: ChatMessage,
     index: number,
     openFile: OpenFileFunc,
+    isRetryAfterErrorButtonEnabled: (uid: string) => boolean,
+    retryAfterError: () => void,
     getText: (fp: string, lr?: number[]) => Promise<string>,
 ) => {
-    switch (msg.author) {
+    switch (msg.source) {
         case 'ToolReturn':
             const parsedMessages = parseToolReturnMessage(msg);
             return parsedMessages.map((message) => {
@@ -225,9 +242,18 @@ export const renderChatHistory = (
                 }
                 return <ToolReturnParsedItem key={index} msg={message} openFile={openFile} />;
             });
+        case 'RovoDevError':
+            return (
+                <ErrorMessageItem
+                    index={index}
+                    msg={msg}
+                    isRetryAfterErrorButtonEnabled={isRetryAfterErrorButtonEnabled}
+                    retryAfterError={retryAfterError}
+                />
+            );
         case 'RovoDev':
         case 'User':
-            return <ChatMessageItem index={index} msg={msg} openFile={openFile} />;
+            return <ChatMessageItem index={index} msg={msg} />;
         default:
             return <div key={index}>Unknown message type</div>;
     }
