@@ -140,15 +140,15 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 0;
+    padding: 4px 8px 4px 0;
     gap: 4px;
     background-color: inherit;
     color: var(--vscode-editor-foreground);
     width: fit-content;
     border-radius: 4px;
-    margin-bottom: 8px
+    margin-bottom: 8px;
 }
-.tool-return-item:hover {
+#tool-return-file-path:hover {
     background-color: var(--vscode-list-hoverBackground);
     cursor: pointer;
 }
@@ -160,6 +160,15 @@
     white-space: nowrap;
 }
 
+.tool-return-bash-command {
+    pre {
+        margin: 0;
+        background: none;
+        code {
+            padding: 0 4px;
+        }
+    }
+}
 
 .chat-message {
     margin-bottom: 8px;

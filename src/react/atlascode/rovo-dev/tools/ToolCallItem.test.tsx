@@ -17,7 +17,7 @@ describe('ToolCallItem', () => {
         const msg: ToolCallMessage = {
             tool_name: 'expand_code_chunks',
             args: '',
-            author: 'ToolCall',
+            source: 'ToolCall',
             tool_call_id: '12345',
         };
 
@@ -30,7 +30,7 @@ describe('ToolCallItem', () => {
         const msg: ToolCallMessage = {
             tool_name: 'find_and_replace_code',
             args: '',
-            author: 'ToolCall',
+            source: 'ToolCall',
             tool_call_id: '12345',
         };
 
@@ -43,7 +43,7 @@ describe('ToolCallItem', () => {
         const msg: ToolCallMessage = {
             tool_name: 'open_files',
             args: '',
-            author: 'ToolCall',
+            source: 'ToolCall',
             tool_call_id: '12345',
         };
 
@@ -56,7 +56,7 @@ describe('ToolCallItem', () => {
         const msg: ToolCallMessage = {
             tool_name: 'create_file',
             args: '',
-            author: 'ToolCall',
+            source: 'ToolCall',
             tool_call_id: '12345',
         };
 
@@ -69,7 +69,7 @@ describe('ToolCallItem', () => {
         const msg: ToolCallMessage = {
             tool_name: 'delete_file',
             args: '',
-            author: 'ToolCall',
+            source: 'ToolCall',
             tool_call_id: '12345',
         };
 
@@ -82,7 +82,7 @@ describe('ToolCallItem', () => {
         const msg: ToolCallMessage = {
             tool_name: 'bash',
             args: '',
-            author: 'ToolCall',
+            source: 'ToolCall',
             tool_call_id: '12345',
         };
 
@@ -95,7 +95,7 @@ describe('ToolCallItem', () => {
         const msg: ToolCallMessage = {
             tool_name: 'create_technical_plan',
             args: '',
-            author: 'ToolCall',
+            source: 'ToolCall',
             tool_call_id: '12345',
         };
 
@@ -108,7 +108,7 @@ describe('ToolCallItem', () => {
         const msg: ToolCallMessage = {
             tool_name: 'grep_file_content',
             args: '',
-            author: 'ToolCall',
+            source: 'ToolCall',
             tool_call_id: '12345',
         };
 
@@ -121,7 +121,7 @@ describe('ToolCallItem', () => {
         const msg: ToolCallMessage = {
             tool_name: 'grep_file_path',
             args: '',
-            author: 'ToolCall',
+            source: 'ToolCall',
             tool_call_id: '12345',
         };
 
@@ -134,7 +134,7 @@ describe('ToolCallItem', () => {
         const msg: ToolCallMessage = {
             tool_name: 'unknown_tool',
             args: '',
-            author: 'ToolCall',
+            source: 'ToolCall',
             tool_call_id: '12345',
         };
 
@@ -147,7 +147,7 @@ describe('ToolCallItem', () => {
         const msg: ToolCallMessage = {
             tool_name: 'bash',
             args: '',
-            author: 'ToolCall',
+            source: 'ToolCall',
             tool_call_id: '12345',
         };
 

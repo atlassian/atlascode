@@ -1,4 +1,9 @@
-export type ToolReturnMessage = ToolReturnFileMessage | ToolReturnBashMessage | ToolReturnTechnicalPlanMessage;
+export type ToolReturnMessage =
+    | ToolReturnFileMessage
+    | ToolReturnBashMessage
+    | ToolReturnTechnicalPlanMessage
+    | ToolReturnGrepFileContentMessage
+    | ToolReturnGenericMessage;
 export type ChatMessage =
     | DefaultMessage
     | ErrorMessage
@@ -38,6 +43,15 @@ export interface ToolReturnBashMessage {
     source: 'ToolReturn';
     tool_call_id: string;
     args?: string;
+}
+
+export interface ToolReturnGrepFileContentMessage {
+    tool_name: 'grep_file_content';
+    source: 'ToolReturn';
+    content: string; // The content of the file or grep result
+    tool_call_id: string;
+    parsedContent?: string; // Optional parsed content if applicable
+    args?: string; // Optional arguments used in the grep command
 }
 
 export interface ToolReturnTechnicalPlanMessage {
@@ -89,12 +103,12 @@ export interface ToolReturnParseResult {
     filePath?: string;
     title?: string;
     technicalPlan?: TechnicalPlan;
-    type?: 'modify' | 'create' | 'delete' | 'open';
+    type?: 'modify' | 'create' | 'delete' | 'open' | 'bash';
 }
 
 interface ToolReturnInfo {
     title: string;
-    type: 'modify' | 'create' | 'delete' | 'open';
+    type: 'modify' | 'create' | 'delete' | 'open' | 'bash';
 }
 
 const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
@@ -111,7 +125,6 @@ const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
  * The function handles different tool names and formats the output accordingly.
  *
  * @param rawMsg - The ToolReturnMessage to parse.
- * @returns An array of objects containing content, diff, title, technicalPlan, and filePath.
  */
 export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolReturnParseResult[] {
     const resp: ToolReturnParseResult[] = [];
@@ -170,7 +183,24 @@ export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolRe
             }
             resp.push({
                 title: command,
-                content: 'EXECUTED',
+                content: 'Executed command',
+                type: 'bash',
+            });
+            break;
+
+        case 'grep_file_content':
+            const grepArgs = msg.args && JSON.parse(msg.args);
+
+            let pattern = '';
+            if (!grepArgs || !grepArgs.pattern) {
+                console.warn('Grep pattern not found in args:', msg.args);
+            } else {
+                pattern = grepArgs.pattern;
+            }
+            resp.push({
+                content: `Searched file content${pattern ? ` for pattern:` : ''}`,
+                title: `"${pattern}"`,
+                type: 'open',
             });
             break;
 
@@ -184,7 +214,7 @@ export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolRe
         default:
             // For other tool names, we just return the raw content
             resp.push({
-                content: rawMsg.content,
+                content: rawMsg.tool_name,
             });
             break;
     }
