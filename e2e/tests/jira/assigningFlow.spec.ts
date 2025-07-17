@@ -80,6 +80,7 @@ test('Assigning Jira issue to myself works', async ({ page, request }) => {
     await expect(treeItem).toBeVisible();
 
     await treeItem.click();
+    await page.waitForTimeout(2000);
     const newFrame = await getIssueFrame(page);
     await expect(newFrame.locator('#assignee', { hasText: 'Mocked McMock' })).toBeVisible();
 

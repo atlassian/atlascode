@@ -4,6 +4,19 @@ import { expect } from '@playwright/test';
 import { openAtlassianSettings } from './common';
 
 /**
+ * Helper function to close all notification toasts
+ */
+const closeAllNotifications = async (page: Page) => {
+    const clearNotificationButton = page.getByRole('button', { name: /Clear Notification/i });
+
+    while ((await clearNotificationButton.count()) > 0) {
+        const closeButton = clearNotificationButton.first();
+        await closeButton.click().catch(() => {}); // Ignore errors if toast is already closed
+        await page.waitForTimeout(100);
+    }
+};
+
+/**
  * Helper function to authenticate with Jira using the provided credentials
  */
 export const authenticateWithJira = async (
@@ -37,6 +50,8 @@ export const authenticateWithJira = async (
 
     await settingsFrame.getByRole('textbox', { name: 'Password (API token)' }).fill(password);
     await page.waitForTimeout(250);
+
+    await closeAllNotifications(page);
 
     await settingsFrame.getByRole('button', { name: 'Save Site' }).click();
     await page.waitForTimeout(3000);
