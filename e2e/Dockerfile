@@ -23,6 +23,12 @@ ENV TEST_RESOURCES=/atlascode/e2e/.resources
 # Disables StatSig feature flag and experiments in code
 ENV ATLASCODE_NO_EXP=1
 
+RUN mkdir /root/mock-repository && cd /root/mock-repository \
+    && git init \
+    && git remote add origin git@bitbucket.org/test-repository.git \
+    && touch test.json \
+    && cd ../..
+
 RUN cat <<EOF > /usr/bin/entrypoint.sh && chmod +x /usr/bin/entrypoint.sh
 #!/usr/bin/env bash
 set -ex
