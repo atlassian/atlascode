@@ -1,0 +1,17 @@
+import { expect, test } from '@playwright/test';
+import { authenticateWithBitbucketCloud, connectRepository } from 'e2e/helpers';
+
+test('Test workbench open repository with helper function', async ({ page, context }) => {
+    page.on('console', (msg) => {
+        console.log(msg);
+    });
+    await authenticateWithBitbucketCloud(page, context);
+    await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
+
+    await connectRepository(page);
+
+    const createPullRequestButton = page.getByRole('treeitem', { name: 'Create pull request' });
+    await createPullRequestButton.waitFor({ state: 'visible' });
+
+    await expect(page.getByRole('treeitem', { name: 'mock-repository' }).first()).toBeVisible();
+});
