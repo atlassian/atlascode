@@ -241,6 +241,76 @@ export async function notificationChangeEvent(
     });
 }
 
+// Jira issue performance events
+export async function issuesForJqlPerformanceEvent(
+    site: DetailedSiteInfo,
+    duration: number,
+    performanceEnabled: boolean,
+    issueCount?: number,
+): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'executed', 'issuesForJqlQuery', {
+        attributes: {
+            duration: duration,
+            performanceEnabled: performanceEnabled,
+            operationType: performanceEnabled ? 'optimized' : 'original',
+            issueCount: issueCount,
+            performanceMetric: true,
+        },
+    });
+}
+
+export async function editIssueUIRenderPerformanceEvent(
+    site: DetailedSiteInfo,
+    issueKey: string,
+    duration: number,
+    performanceEnabled: boolean,
+): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'loaded', 'editIssueUI', {
+        actionSubjectId: issueKey,
+        attributes: {
+            duration: duration,
+            performanceEnabled: performanceEnabled,
+            operationType: performanceEnabled ? 'optimized' : 'original',
+            performanceMetric: true,
+        },
+    });
+}
+
+export async function editIssueFieldsUpdatePerformanceEvent(
+    site: DetailedSiteInfo,
+    issueKey: string,
+    duration: number,
+    performanceEnabled: boolean,
+    fieldCount?: number,
+): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'updated', 'editIssueFields', {
+        actionSubjectId: issueKey,
+        attributes: {
+            duration: duration,
+            performanceEnabled: performanceEnabled,
+            operationType: performanceEnabled ? 'optimized' : 'original',
+            performanceMetric: true,
+            fieldCount: fieldCount,
+        },
+    });
+}
+
+export async function createIssueForceUpdateFieldsPerformanceEvent(
+    site: DetailedSiteInfo,
+    projectKey: string,
+    duration: number,
+    performanceEnabled: boolean,
+): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'loaded', 'createIssueForceUpdateFields', {
+        attributes: {
+            duration: duration,
+            projectKey: projectKey,
+            performanceEnabled: performanceEnabled,
+            operationType: performanceEnabled ? 'optimized' : 'original',
+            performanceMetric: true,
+        },
+    });
+}
 // PR events
 
 export async function createPrTerminalLinkDetectedEvent(isNotifEnabled: boolean): Promise<TrackEvent> {
