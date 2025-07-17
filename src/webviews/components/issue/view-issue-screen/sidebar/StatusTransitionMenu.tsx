@@ -89,6 +89,7 @@ export const StatusTransitionMenu: React.FC<Props> = (props) => {
                 )}
             >
                 <Box
+                    data-testid="issue.status-transition-menu-dropdown"
                     style={{
                         display: 'flex',
                         flexDirection: 'column',
