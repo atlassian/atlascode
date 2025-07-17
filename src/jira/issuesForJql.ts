@@ -1,4 +1,6 @@
 import { MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
+import { issuesForJqlPerformanceEvent } from 'src/analytics';
+import { Logger } from 'src/logger';
 import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
@@ -9,6 +11,7 @@ export const MAX_RESULTS = 100;
 export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise<MinimalIssue<DetailedSiteInfo>[]> {
     const client = await Container.clientManager.jiraClient(site);
     const performanceEnabled = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment);
+    const startTime = process.hrtime();
     if (performanceEnabled) {
         const [fields, epicFieldInfo] = await Promise.all([
             Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site),
@@ -39,6 +42,15 @@ export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise
                 }
             }
         }
+        const endTime = process.hrtime(startTime);
+        const endTimeMs = endTime[0] * 1000 + Math.floor(endTime[1] / 1000000);
+        issuesForJqlPerformanceEvent(site, endTimeMs, performanceEnabled, issues.length)
+            .then((event) => {
+                Container.analyticsClient.sendTrackEvent(event);
+            })
+            .catch((error) => {
+                Logger.debug('Failed to send performance analytics for JQL', error);
+            });
         return issues;
     }
 
@@ -57,5 +69,14 @@ export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise
         issues = issues.concat(searchResults.issues);
         total = searchResults.total;
     } while (Container.config.jira.explorer.fetchAllQueryResults && index < total);
+    const endTime = process.hrtime(startTime);
+    const endTimeMs = endTime[0] * 1000 + Math.floor(endTime[1] / 1000000);
+    issuesForJqlPerformanceEvent(site, endTimeMs, performanceEnabled, issues.length)
+        .then((event) => {
+            Container.analyticsClient.sendTrackEvent(event);
+        })
+        .catch((error) => {
+            Logger.debug('Failed to send performance analytics for JQL', error);
+        });
     return issues;
 }

@@ -247,6 +247,7 @@ export async function issuesForJqlPerformanceEvent(
     duration: number,
     performanceEnabled: boolean,
     issueCount?: number,
+    failed?: boolean, // true = failed API calls, false otherwise
 ): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'executed', 'issuesForJqlQuery', {
         attributes: {
@@ -254,6 +255,7 @@ export async function issuesForJqlPerformanceEvent(
             performanceEnabled: performanceEnabled,
             operationType: performanceEnabled ? 'optimized' : 'original',
             issueCount: issueCount,
+            failedOperation: failed,
             performanceMetric: true,
         },
     });
@@ -264,6 +266,7 @@ export async function editIssueUIRenderPerformanceEvent(
     issueKey: string,
     duration: number,
     performanceEnabled: boolean,
+    failed?: boolean,
 ): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'loaded', 'editIssueUI', {
         actionSubjectId: issueKey,
@@ -271,6 +274,7 @@ export async function editIssueUIRenderPerformanceEvent(
             duration: duration,
             performanceEnabled: performanceEnabled,
             operationType: performanceEnabled ? 'optimized' : 'original',
+            failedOperation: failed,
             performanceMetric: true,
         },
     });
@@ -282,6 +286,7 @@ export async function editIssueFieldsUpdatePerformanceEvent(
     duration: number,
     performanceEnabled: boolean,
     fieldCount?: number,
+    failed?: boolean,
 ): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'updated', 'editIssueFields', {
         actionSubjectId: issueKey,
@@ -291,6 +296,7 @@ export async function editIssueFieldsUpdatePerformanceEvent(
             operationType: performanceEnabled ? 'optimized' : 'original',
             performanceMetric: true,
             fieldCount: fieldCount,
+            failedOperation: failed,
         },
     });
 }
@@ -300,6 +306,7 @@ export async function createIssueForceUpdateFieldsPerformanceEvent(
     projectKey: string,
     duration: number,
     performanceEnabled: boolean,
+    failed?: boolean,
 ): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'loaded', 'createIssueForceUpdateFields', {
         attributes: {
@@ -308,6 +315,7 @@ export async function createIssueForceUpdateFieldsPerformanceEvent(
             performanceEnabled: performanceEnabled,
             operationType: performanceEnabled ? 'optimized' : 'original',
             performanceMetric: true,
+            failedOperation: failed,
         },
     });
 }
