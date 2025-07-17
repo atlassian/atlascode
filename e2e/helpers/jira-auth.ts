@@ -1,20 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
-import { openAtlassianSettings } from './common';
-
-/**
- * Helper function to close all notification toasts
- */
-const closeAllNotifications = async (page: Page) => {
-    const clearNotificationButton = page.getByRole('button', { name: /Clear Notification/i });
-
-    while ((await clearNotificationButton.count()) > 0) {
-        const closeButton = clearNotificationButton.first();
-        await closeButton.click().catch(() => {}); // Ignore errors if toast is already closed
-        await page.waitForTimeout(100);
-    }
-};
+import { closeAllNotifications, openAtlassianSettings } from './common';
 
 /**
  * Helper function to authenticate with Jira using the provided credentials

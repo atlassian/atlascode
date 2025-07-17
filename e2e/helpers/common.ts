@@ -87,3 +87,16 @@ export const getIssueFrame = async (page: Page) => {
     );
     throw new Error(`No suitable iframe found. Available iframe titles: ${iframeTitles.join(', ')}`);
 };
+
+/**
+ * Helper function to close all notification toasts
+ */
+export const closeAllNotifications = async (page: Page) => {
+    const clearNotificationButton = page.getByRole('button', { name: /Clear Notification/i });
+
+    while ((await clearNotificationButton.count()) > 0) {
+        const closeButton = clearNotificationButton.first();
+        await closeButton.click().catch(() => {}); // Ignore errors if toast is already closed
+        await page.waitForTimeout(100);
+    }
+};
