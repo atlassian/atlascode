@@ -26,6 +26,7 @@ type Props = {
     loadingField?: string;
     isEpic: boolean;
     epicChildren?: any[];
+    epicChildrenTypes?: IssueType[];
     handleInlineEdit: (field: FieldUI, edit: any) => void;
     subtaskTypes: IssueType[];
     linkTypes: IssueLinkTypeSelectOption[];
@@ -46,6 +47,7 @@ const IssueMainPanel: React.FC<Props> = ({
     loadingField,
     isEpic,
     epicChildren,
+    epicChildrenTypes,
     handleInlineEdit,
     subtaskTypes,
     linkTypes,
@@ -212,7 +214,7 @@ const IssueMainPanel: React.FC<Props> = ({
             {isEpic && epicChildren && epicChildren.length > 0 && (
                 <div>
                     <ChildIssuesComponent
-                        subtaskTypes={subtaskTypes}
+                        subtaskTypes={!epicChildrenTypes ? [] : epicChildrenTypes} // This are not "subtasks" for epics but full issues
                         label="Epic Child issues"
                         loading={loadingField === 'subtasks'}
                         onSave={(e: any) => handleInlineEdit(fields['subtasks'], e)}
