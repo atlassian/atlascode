@@ -543,6 +543,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     linkTypes={this.state.selectFieldOptions['issuelinks']}
                     isEpic={this.state.isEpic}
                     epicChildren={this.state.epicChildren}
+                    epicChildrenTypes={this.state.selectFieldOptions['issuetype']}
                     handleInlineEdit={this.handleInlineEdit}
                     handleOpenIssue={this.handleOpenIssue}
                     onFetchIssues={async (input: string) =>
