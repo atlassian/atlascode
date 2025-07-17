@@ -216,7 +216,7 @@ const IssueMainPanel: React.FC<Props> = ({
                         label="Epic Child issues"
                         loading={loadingField === 'subtasks'}
                         onSave={(e: any) => handleInlineEdit(fields['subtasks'], e)}
-                        enableSubtasks={{ enable: enableSubtasks, setEnableSubtasks }}
+                        enableSubtasks={{ enable: enableSubtasks, setEnableSubtasks }} // Change this for epics
                         handleOpenIssue={handleOpenIssue}
                         issues={epicChildren}
                     />
