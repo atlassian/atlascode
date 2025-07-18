@@ -33,12 +33,14 @@ const enum State {
     WaitingForPrompt,
     GeneratingResponse,
     CancellingResponse,
+    ExecutingPlan,
 }
 
 const TextAreaMessages: Record<State, string> = {
     [State.WaitingForPrompt]: 'Type in a question',
     [State.GeneratingResponse]: 'Generating response...',
     [State.CancellingResponse]: 'Cancelling the response...',
+    [State.ExecutingPlan]: 'Executing the code plan...',
 };
 
 const RovoDevView: React.FC = () => {
@@ -185,6 +187,11 @@ const RovoDevView: React.FC = () => {
                         tool_call_id: data.tool_call_id, // Optional ID for tracking
                         args: args, // Use args from pending tool call if available
                     };
+
+                    if (data.tool_name === 'create_technical_plan') {
+                        setIsTechnicalPlanCreated(true);
+                    }
+
                     setPendingToolCall(null); // Clear pending tool call
                     handleAppendChatHistory(returnMessage);
                     handleAppendModifiedFileToolReturns(returnMessage);
@@ -305,6 +312,14 @@ const RovoDevView: React.FC = () => {
         [sendButtonDisabled, currentState, isTechnicalPlanCreated, postMessage],
     );
 
+    const executeCodePlan = useCallback(() => {
+        if (currentState !== State.WaitingForPrompt) {
+            return;
+        }
+        setCurrentState(State.ExecutingPlan);
+        sendPrompt(CODE_PLAN_EXECUTE_PROMPT);
+    }, [currentState, sendPrompt]);
+
     const retryPromptAfterError = useCallback((): void => {
         // Disable the send button, and enable the pause button
         setSendButtonDisabled(true);
@@ -393,15 +408,6 @@ const RovoDevView: React.FC = () => {
         [postMessageWithReturn],
     );
 
-    const executeCodePlan = useCallback(() => {
-        sendPrompt(CODE_PLAN_EXECUTE_PROMPT);
-        setIsTechnicalPlanCreated(false);
-    }, [sendPrompt]);
-
-    const handleCodePlanButton = useCallback((val: boolean) => {
-        setIsTechnicalPlanCreated(val);
-    }, []);
-
     const isRetryAfterErrorButtonEnabled = useCallback(
         (uid: string) => retryAfterErrorEnabled === uid,
         [retryAfterErrorEnabled],
@@ -418,11 +424,12 @@ const RovoDevView: React.FC = () => {
                         isRetryAfterErrorButtonEnabled,
                         retryPromptAfterError,
                         getOriginalText,
-                        handleCodePlanButton,
                     ),
                 )}
                 {pendingToolCall && <ToolCallItem msg={pendingToolCall} />}
-                {isTechnicalPlanCreated && <CodePlanButton execute={executeCodePlan} />}
+                {isTechnicalPlanCreated && (
+                    <CodePlanButton execute={executeCodePlan} disabled={currentState !== State.WaitingForPrompt} />
+                )}
                 <div ref={chatEndRef} />
             </div>
             <div style={styles.rovoDevInputSectionStyles}>

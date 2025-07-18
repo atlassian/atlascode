@@ -33,4 +33,14 @@ describe('CodePlanButton', () => {
         expect(buttonContainer).toBeTruthy();
         expect(button).toBeTruthy();
     });
+
+    it('is disabled when the disabled prop is true', () => {
+        const mockExecute = jest.fn();
+        const { getByText } = render(<CodePlanButton execute={mockExecute} disabled={true} />);
+
+        const button = getByText('Code plan');
+
+        fireEvent.click(button);
+        expect(mockExecute).toHaveBeenCalledTimes(0);
+    });
 });

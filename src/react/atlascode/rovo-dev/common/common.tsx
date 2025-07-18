@@ -8,7 +8,7 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { createPatch } from 'diff';
 import MarkdownIt from 'markdown-it';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import {
@@ -112,7 +112,6 @@ export const renderChatHistory = (
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean,
     retryAfterError: () => void,
     getText: (fp: string, lr?: number[]) => Promise<string>,
-    setIsTechnicalPlanCreated: (value: boolean) => void,
 ) => {
     switch (msg.source) {
         case 'ToolReturn':
@@ -125,7 +124,6 @@ export const renderChatHistory = (
                             content={message.technicalPlan}
                             openFile={openFile}
                             getText={getText}
-                            onMount={() => setIsTechnicalPlanCreated(true)}
                         />
                     );
                 }
@@ -370,13 +368,6 @@ type TechnicalPlanProps = {
 };
 
 const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile, getText, onMount }) => {
-    useEffect(() => {
-        if (content.logicalChanges.length > 0 && onMount) {
-            // If there are logical changes, we can assume the technical plan is created
-            onMount();
-        }
-    }, [content.logicalChanges, onMount]);
-
     const clarifyingQuestions = content.logicalChanges.flatMap((change) => {
         return change.filesToChange
             .map((file) => {
