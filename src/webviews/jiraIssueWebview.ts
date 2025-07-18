@@ -17,6 +17,7 @@ import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
 import { commands, env } from 'vscode';
 
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
+import { editIssueUIRenderPerformanceEvent } from '../analytics'; // editIssueFieldsUpdatePerformanceEvent still needs to be imported
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
 import { PullRequestData } from '../bitbucket/model';
@@ -122,6 +123,8 @@ export class JiraIssueWebview
             if (refetchMinimalIssue) {
                 this._issue = await fetchMinimalIssue(this._issue.key, this._issue.siteDetails);
             }
+            // First Request begins here for issue rendering
+            const startRenderUITime = process.hrtime();
             const editUI: EditIssueUI<DetailedSiteInfo> = await fetchEditIssueUI(this._issue);
             const performanceEnabled = FeatureFlagClient.checkExperimentValue(
                 Experiments.AtlascodePerformanceExperiment,
@@ -139,6 +142,20 @@ export class JiraIssueWebview
             msg.type = 'update';
 
             this.postMessage(msg);
+            const endRenderUITime = process.hrtime(startRenderUITime);
+            const endRenderUITimeMs = endRenderUITime[0] * 1000 + Math.floor(endRenderUITime[1] / 1000000);
+            editIssueUIRenderPerformanceEvent(
+                this._issue.siteDetails,
+                this._issue.key,
+                endRenderUITimeMs,
+                performanceEnabled,
+            )
+                .then((event) => {
+                    Container.analyticsClient.sendTrackEvent(event);
+                })
+                .catch((error) => {
+                    Logger.debug('Failed to send performance analytics for Render EditUI', error);
+                });
 
             // call async-able update functions here
             if (performanceEnabled) {
