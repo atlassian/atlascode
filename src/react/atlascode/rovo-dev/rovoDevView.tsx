@@ -134,14 +134,37 @@ const RovoDevView: React.FC = () => {
     const handleAppendModifiedFileToolReturns = useCallback(
         (toolReturn: ToolReturnGenericMessage) => {
             if (isCodeChangeTool(toolReturn.tool_name)) {
-                const msg = parseToolReturnMessage(toolReturn).filter((msg) => msg.filePath);
-                setTotalModifiedFiles((prev) => {
-                    // Ensure unique file paths
-                    return Array.from(new Map([...prev, ...msg].map((item) => [item.filePath, item])).values());
+                const msg = parseToolReturnMessage(toolReturn).filter((msg) => msg.filePath !== undefined);
+
+                const filesMap = new Map([...totalModifiedFiles].map((item) => [item.filePath!, item]));
+
+                // Logic for handling deletions and modifications
+                msg.forEach((file) => {
+                    if (!file.filePath) {
+                        return;
+                    }
+                    if (file.type === 'delete') {
+                        if (filesMap.has(file.filePath)) {
+                            const existingFile = filesMap.get(file.filePath);
+                            if (existingFile?.type === 'modify') {
+                                filesMap.set(file.filePath, file); // If file was only modified but not created by RovoDev, still show deletion
+                            } else {
+                                filesMap.delete(file.filePath); // If file was created by RovoDev, remove it from the map
+                            }
+                        } else {
+                            filesMap.set(file.filePath, file);
+                        }
+                    } else {
+                        if (!filesMap.has(file.filePath) || filesMap.get(file.filePath)?.type === 'delete') {
+                            filesMap.set(file.filePath, file); // Only add on first modification so we can track if file was created by RovoDev or just modified
+                        }
+                    }
                 });
+
+                setTotalModifiedFiles(Array.from(filesMap.values()));
             }
         },
-        [setTotalModifiedFiles],
+        [totalModifiedFiles],
     );
 
     const removeModifiedFileToolReturns = useCallback(

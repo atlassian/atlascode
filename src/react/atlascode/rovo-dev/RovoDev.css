@@ -148,6 +148,7 @@
     border-radius: 4px;
     margin-bottom: 8px;
 }
+
 #tool-return-file-path:hover {
     background-color: var(--vscode-list-hoverBackground);
     cursor: pointer;
@@ -175,4 +176,9 @@
     padding: 8px 12px;
     border-radius: 8px;
     position: relative;
+}
+
+#deleted-file {
+    color: var(--vscode-list-errorForeground);
+    text-decoration: line-through;
 }
