@@ -1,4 +1,4 @@
-import { Locator, Page } from 'playwright/test';
+import { expect, Locator, Page } from 'playwright/test';
 
 export class AtlascodeDrawer {
     readonly page: Page;
@@ -22,8 +22,13 @@ export class AtlascodeDrawer {
 
     async getJiraIssueStatus(name: string) {
         const item = this.jiraItemsTree.getByRole('treeitem', { name });
+        await item.hover();
         const status = item.getByRole('toolbar');
-        const statusText = status.getByRole('button');
-        return statusText.innerText();
+        return status.getByRole('button').innerText();
+    }
+
+    async expectStatusForJiraIssue(name: string, expectedStatus: string) {
+        const currentStatus = await this.getJiraIssueStatus(name);
+        expect(currentStatus).toMatch(new RegExp(expectedStatus, 'i'));
     }
 }
