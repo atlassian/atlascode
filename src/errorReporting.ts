@@ -3,7 +3,9 @@ import { Disposable } from 'vscode';
 import { errorEvent } from './analytics';
 import { AnalyticsClient } from './analytics-node-client/src/client.min';
 import { TrackEvent } from './analytics-node-client/src/types';
+import { ErrorProductArea } from './analyticsTypes';
 import { Logger } from './logger';
+import { safeExecute } from './util/safeExecute';
 
 const AtlascodeStackTraceHint = '/.vscode/extensions/atlassian.atlascode-';
 
@@ -15,43 +17,36 @@ let _logger_onError_eventRegistration: Disposable | undefined = undefined;
 let analyticsClient: AnalyticsClient | undefined;
 let eventQueue: Promise<TrackEvent>[] = [];
 
-function safeExecute(body: () => void, finallyBody?: () => void): void {
-    try {
-        body();
-    } catch {
-    } finally {
-        try {
-            if (finallyBody) {
-                finallyBody();
-            }
-        } catch {}
-    }
-}
-
 // we need a dedicated listener to be able to remove it during the unregister
 function uncaughtExceptionHandler(error: Error | string): void {
-    errorHandlerWithFilter(error, 'NodeJS.uncaughtException');
+    errorHandlerWithFilter(undefined, error, 'NodeJS.uncaughtException');
 }
 
 // we need a dedicated listener to be able to remove it during the unregister
 function uncaughtExceptionMonitorHandler(error: Error | string): void {
-    errorHandlerWithFilter(error, 'NodeJS.uncaughtExceptionMonitor');
+    errorHandlerWithFilter(undefined, error, 'NodeJS.uncaughtExceptionMonitor');
 }
 
 // we need a dedicated listener to be able to remove it during the unregister
 function unhandledRejectionHandler(error: Error | string): void {
-    errorHandlerWithFilter(error, 'NodeJS.unhandledRejection');
+    errorHandlerWithFilter(undefined, error, 'NodeJS.unhandledRejection');
 }
 
-function errorHandlerWithFilter(error: Error | string, capturedBy: string): void {
+function errorHandlerWithFilter(productArea: ErrorProductArea, error: Error | string, capturedBy: string): void {
     safeExecute(() => {
         if (error instanceof Error && error.stack && error.stack.includes(AtlascodeStackTraceHint)) {
-            errorHandler(error, undefined, undefined, capturedBy);
+            errorHandler(productArea, error, undefined, undefined, capturedBy);
         }
     });
 }
 
-function errorHandler(error: Error | string, errorMessage?: string, params?: string[], capturedBy?: string): void {
+function errorHandler(
+    productArea: ErrorProductArea,
+    error: Error | string,
+    errorMessage?: string,
+    params?: string[],
+    capturedBy?: string,
+): void {
     safeExecute(() => {
         const formattedParams =
             !params || params.length === 0 ? undefined : params.length === 1 ? params[0] : JSON.stringify(params);
@@ -61,10 +56,10 @@ function errorHandler(error: Error | string, errorMessage?: string, params?: str
         let event: Promise<TrackEvent>;
         if (typeof error === 'string') {
             errorMessage = errorMessage ? `${errorMessage}: ${error}` : error;
-            event = errorEvent(errorMessage, undefined, capturedBy, formattedParams);
+            event = errorEvent(productArea, errorMessage, undefined, capturedBy, formattedParams);
         } else {
             errorMessage = errorMessage || error.message;
-            event = errorEvent(errorMessage, error, capturedBy, formattedParams);
+            event = errorEvent(productArea, errorMessage, error, capturedBy, formattedParams);
         }
 
         if (analyticsClient) {
@@ -87,7 +82,7 @@ export function registerErrorReporting(): void {
         process.addListener('unhandledRejection', unhandledRejectionHandler);
 
         _logger_onError_eventRegistration = Logger.onError(
-            (data) => errorHandler(data.error, data.errorMessage, data.params, data.capturedBy),
+            (data) => errorHandler(data.productArea, data.error, data.errorMessage, data.params, data.capturedBy),
             undefined,
         );
     });

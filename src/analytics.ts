@@ -1,7 +1,7 @@
 import { Uri } from 'vscode';
 
 import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/types';
-import { CreatePrTerminalSelection, UIErrorInfo } from './analyticsTypes';
+import { CreatePrTerminalSelection, ErrorProductArea, UIErrorInfo } from './analyticsTypes';
 import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira, SiteInfo } from './atlclients/authInfo';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
@@ -124,6 +124,7 @@ function sanitizeStackTrace(stack?: string): string | undefined {
 }
 
 export async function errorEvent(
+    productArea: ErrorProductArea,
     errorMessage: string,
     error?: Error,
     capturedBy?: string,
@@ -185,7 +186,6 @@ export async function rovoDevNewSessionActionEvent(sessionId: string, isManually
     });
 }
 
-// TODO call this
 export async function rovoDevTechnicalPlanningShownEvent(
     sessionId: string,
     stepsCount: number,

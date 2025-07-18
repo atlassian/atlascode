@@ -25,13 +25,13 @@ import {
     rovoDevNewSessionActionEvent,
     rovoDevPromptSentEvent,
     rovoDevStopActionEvent,
-    rovoDevTimeToRespondEndEvent,
-    rovoDevTimeToRespondStartEvent,
 } from '../../src/analytics';
 import { Container } from '../../src/container';
+import { Logger } from '../../src/logger';
 import { rovodevInfo } from '../constants';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
+import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
@@ -48,6 +48,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private readonly viewType = 'atlascodeRovoDev';
 
     private _prHandler = new RovoDevPullRequestHandler();
+    private _perfLogger = new PerformanceLogger();
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _rovoDevApiClient?: RovoDevApiClient;
     private _disposables: Disposable[] = [];
@@ -237,38 +238,38 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             throw new Error('No response body');
         }
 
-        performance.mark('processChatResponse_begin');
-        let ttrStart: number | undefined;
+        this._perfLogger.promptStarted(this._currentPromptId);
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         const parser = new RovoDevResponseParser();
 
+        let isFirstResponse = true;
+
         while (true) {
             const { done, value } = await reader.read();
 
-            if (!ttrStart) {
-                ttrStart = Math.trunc(performance.measure('processChatResponse_begin').duration);
-                rovoDevTimeToRespondStartEvent(this._chatSessionId, this._currentPromptId, ttrStart).then((evt) =>
-                    Container.analyticsClient.sendTrackEvent(evt),
-                );
+            if (firePerfTelemetry && isFirstResponse) {
+                // first response of the stream -> fire performance telemetry event
+                this._perfLogger.promptFirstMessageReceived(this._currentPromptId);
+                isFirstResponse = false;
             }
 
             if (done) {
-                const ttrEnd = Math.trunc(performance.measure('processChatResponse_begin').duration);
-                rovoDevTimeToRespondEndEvent(this._chatSessionId, this._currentPromptId, ttrStart, -1, ttrEnd).then(
-                    (evt) => Container.analyticsClient.sendTrackEvent(evt),
-                );
+                // last response of the stream -> fire performance telemetry event
+                if (firePerfTelemetry) {
+                    this._perfLogger.promptLastMessageReceived(this._currentPromptId);
+                }
 
                 for (const msg of parser.flush()) {
-                    await this.processRovoDevResponse(msg);
+                    await this.processRovoDevResponse(msg, firePerfTelemetry);
                 }
                 break;
             }
 
             const data = decoder.decode(value, { stream: true });
             for (const msg of parser.parse(data)) {
-                await this.processRovoDevResponse(msg);
+                await this.processRovoDevResponse(msg, firePerfTelemetry);
             }
         }
 
@@ -284,6 +285,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private processError(error: Error, isRetriable: boolean) {
+        Logger.error('RovoDev', error);
+
         const webview = this._webView!;
         return webview.postMessage({
             type: RovoDevProviderMessageType.ErrorMessage,
@@ -312,7 +315,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private processRovoDevResponse(response: RovoDevResponse): Thenable<boolean> {
+    private processRovoDevResponse(response: RovoDevResponse, firePerfTelemetry: boolean): Thenable<boolean> {
         const webview = this._webView!;
 
         switch (response.event_kind) {
@@ -330,6 +333,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             case 'tool-return':
             case 'retry-prompt':
+                // we received a technical plan -> fire performance telemetry event
+                if (firePerfTelemetry && response.tool_name === 'create_technical_plan') {
+                    this._perfLogger.promptTechnicalPlanReceived(this._currentPromptId);
+                }
+
                 return webview.postMessage({
                     type: RovoDevProviderMessageType.ToolReturn,
                     dataObject: response,

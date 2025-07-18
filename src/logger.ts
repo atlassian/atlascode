@@ -1,17 +1,21 @@
 import { ConfigurationChangeEvent, Event, ExtensionContext, OutputChannel, window } from 'vscode';
 import { EventEmitter } from 'vscode';
 
+import { ErrorProductArea } from './analyticsTypes';
 import { configuration, OutputLevel } from './config/configuration';
 import { extensionOutputChannelName } from './constants';
 import { Container } from './container';
 
-const ConsolePrefix = `[${extensionOutputChannelName}]`;
+function getConsolePrefix(productArea?: string) {
+    return productArea ? `[${extensionOutputChannelName} ${productArea}]` : `[${extensionOutputChannelName}]`;
+}
 
 export type ErrorEvent = {
     error: Error;
     errorMessage?: string;
     capturedBy?: string;
     params?: string[];
+    productArea?: ErrorProductArea;
 };
 
 /** This function must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
@@ -102,7 +106,7 @@ export class Logger {
         }
 
         if (Container.isDebugging) {
-            console.log(this.timestamp, ConsolePrefix, message, ...params);
+            console.log(this.timestamp, getConsolePrefix(), message, ...params);
         }
 
         if (this.output !== undefined) {
@@ -110,25 +114,51 @@ export class Logger {
         }
     }
 
-    public static error(ex: Error, errorMessage?: string, ...params: string[]): void {
+    public static error(productArea: ErrorProductArea, ex: Error, errorMessage?: string, ...params: string[]): void;
+    public static error(ex: Error, errorMessage?: string, ...params: string[]): void;
+    public static error(...params: any[]): void {
         const callerName = retrieveCallerName();
-        this.Instance.errorInternal(ex, callerName, errorMessage, ...params);
+
+        // the following code is ugly, but it's the only way to handle a JS/TS method overload where a new parameter
+        // has been added at the beginning of the arg list.
+        // next improvement will be refactoring every Logger.error in the codebase
+        const productArea: ErrorProductArea = params[0] instanceof Error ? undefined : params.shift();
+        const ex: Error = params.shift();
+        const errorMessage: string | undefined = params.shift();
+
+        this.Instance.errorInternal(productArea, ex, callerName, errorMessage, ...params);
     }
 
-    public error(ex: Error, errorMessage?: string, ...params: string[]): void {
+    public error(productArea: ErrorProductArea, ex: Error, errorMessage?: string, ...params: string[]): void;
+    public error(ex: Error, errorMessage?: string, ...params: string[]): void;
+    public error(...params: any[]): void {
         const callerName = retrieveCallerName();
-        this.errorInternal(ex, callerName, errorMessage, ...params);
+
+        // the following code is ugly, but it's the only way to handle a JS/TS method overload where a new parameter
+        // has been added at the beginning of the arg list.
+        // next improvement will be refactoring every Logger.error in the codebase
+        const productArea: ErrorProductArea = params[0] instanceof Error ? undefined : params.shift();
+        const ex: Error = params.shift();
+        const errorMessage: string | undefined = params.shift();
+
+        this.errorInternal(productArea, ex, callerName, errorMessage, ...params);
     }
 
-    private errorInternal(ex: Error, capturedBy?: string, errorMessage?: string, ...params: string[]): void {
-        Logger._onError.fire({ error: ex, errorMessage, capturedBy, params });
+    private errorInternal(
+        productArea: ErrorProductArea,
+        ex: Error,
+        capturedBy?: string,
+        errorMessage?: string,
+        ...params: string[]
+    ): void {
+        Logger._onError.fire({ error: ex, errorMessage, capturedBy, params, productArea });
 
         if (this.level === OutputLevel.Silent) {
             return;
         }
 
         if (Container.isDebugging) {
-            console.error(this.timestamp, ConsolePrefix, errorMessage, ...params, ex);
+            console.error(this.timestamp, getConsolePrefix(productArea), errorMessage, ...params, ex);
         }
 
         if (this.output !== undefined) {
@@ -146,7 +176,7 @@ export class Logger {
         }
 
         if (Container.isDebugging) {
-            console.warn(this.timestamp, ConsolePrefix, message, ...params);
+            console.warn(this.timestamp, getConsolePrefix(), message, ...params);
         }
 
         if (this.output !== undefined) {
