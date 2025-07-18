@@ -253,7 +253,6 @@ export async function rovoDevTimeToRespondStartEvent(sessionId: string, promptId
     });
 }
 
-// TODO call this
 export async function rovoDevTimeToTechPlanReturnedEvent(
     sessionId: string,
     promptId: string,

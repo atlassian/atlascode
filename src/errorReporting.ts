@@ -5,7 +5,6 @@ import { AnalyticsClient } from './analytics-node-client/src/client.min';
 import { TrackEvent } from './analytics-node-client/src/types';
 import { ErrorProductArea } from './analyticsTypes';
 import { Logger } from './logger';
-import { safeExecute } from './util/safeExecute';
 
 const AtlascodeStackTraceHint = '/.vscode/extensions/atlassian.atlascode-';
 
@@ -16,6 +15,19 @@ let _logger_onError_eventRegistration: Disposable | undefined = undefined;
 
 let analyticsClient: AnalyticsClient | undefined;
 let eventQueue: Promise<TrackEvent>[] = [];
+
+function safeExecute(body: () => void, finallyBody?: () => void): void {
+    try {
+        body();
+    } catch {
+    } finally {
+        try {
+            if (finallyBody) {
+                finallyBody();
+            }
+        } catch {}
+    }
+}
 
 // we need a dedicated listener to be able to remove it during the unregister
 function uncaughtExceptionHandler(error: Error | string): void {

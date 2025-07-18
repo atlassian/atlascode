@@ -149,6 +149,19 @@ describe('errorReporting', () => {
                 expect(analytics.errorEvent).toHaveBeenCalledWith(undefined, error.message, error, 'foo', undefined);
             });
 
+            it('with productArea', () => {
+                const error = createError('Error1');
+                errorlistener!({ error, productArea: 'RovoDev' });
+
+                expect(analytics.errorEvent).toHaveBeenCalledWith(
+                    'RovoDev',
+                    error.message,
+                    error,
+                    undefined,
+                    undefined,
+                );
+            });
+
             it('with a custom message', () => {
                 const error = createError('Error1');
                 errorlistener!({ error, errorMessage: "what's this" });
@@ -167,6 +180,13 @@ describe('errorReporting', () => {
                 errorlistener!({ error, errorMessage: "what's this", capturedBy: 'fii' });
 
                 expect(analytics.errorEvent).toHaveBeenCalledWith(undefined, "what's this", error, 'fii', undefined);
+            });
+
+            it('with productArea, custom message, and capturedBy', () => {
+                const error = createError('Error1');
+                errorlistener!({ error, errorMessage: "what's this", capturedBy: 'fii', productArea: 'RovoDev' });
+
+                expect(analytics.errorEvent).toHaveBeenCalledWith('RovoDev', "what's this", error, 'fii', undefined);
             });
 
             it('with a single param', () => {

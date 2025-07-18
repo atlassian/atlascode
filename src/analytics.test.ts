@@ -793,6 +793,215 @@ describe('analytics', () => {
         });
     });
 
+    // Rovo Dev event tests
+    describe('Rovo Dev events', () => {
+        const mockSessionId = 'test-session-id';
+        const mockPromptId = 'test-prompt-id';
+
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        it('should create rovoDevPromptSentEvent with session and prompt IDs', async () => {
+            const event = await analytics.rovoDevPromptSentEvent(mockSessionId, mockPromptId);
+
+            expect(event.trackEvent.action).toEqual('rovoDevPromptSent');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
+        });
+
+        it('should create rovoDevNewSessionActionEvent with session information', async () => {
+            const isManuallyCreated = true;
+            const event = await analytics.rovoDevNewSessionActionEvent(mockSessionId, isManuallyCreated);
+
+            expect(event.trackEvent.action).toEqual('rovoDevNewSessionAction');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.isManuallyCreated).toEqual(isManuallyCreated);
+        });
+
+        it('should create rovoDevTechnicalPlanningShownEvent with planning details', async () => {
+            const stepsCount = 5;
+            const filesCount = 3;
+            const questionsCount = 2;
+            const event = await analytics.rovoDevTechnicalPlanningShownEvent(
+                mockSessionId,
+                stepsCount,
+                filesCount,
+                questionsCount,
+            );
+
+            expect(event.trackEvent.action).toEqual('rovoDevTechnicalPlanningShown');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.stepsCount).toEqual(stepsCount);
+            expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
+            expect(event.trackEvent.attributes.questionsCount).toEqual(questionsCount);
+        });
+
+        it('should create rovoDevFilesSummaryShownEvent for new files summary', async () => {
+            const isNew = true;
+            const prevFilesCount = 0;
+            const newFilesCount = 4;
+            const event = await analytics.rovoDevFilesSummaryShownEvent(
+                mockSessionId,
+                isNew,
+                prevFilesCount,
+                newFilesCount,
+            );
+
+            expect(event.trackEvent.action).toEqual('rovoDevFilesSummaryShown');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.isNew).toEqual(isNew);
+            expect(event.trackEvent.attributes.prevFilesCount).toEqual(prevFilesCount);
+            expect(event.trackEvent.attributes.newFilesCount).toEqual(newFilesCount);
+        });
+
+        it('should create rovoDevFilesSummaryShownEvent for updated files summary', async () => {
+            const isNew = false;
+            const prevFilesCount = 2;
+            const newFilesCount = 5;
+            const event = await analytics.rovoDevFilesSummaryShownEvent(
+                mockSessionId,
+                isNew,
+                prevFilesCount,
+                newFilesCount,
+            );
+
+            expect(event.trackEvent.action).toEqual('rovoDevFilesSummaryShown');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.isNew).toEqual(isNew);
+            expect(event.trackEvent.attributes.prevFilesCount).toEqual(prevFilesCount);
+            expect(event.trackEvent.attributes.newFilesCount).toEqual(newFilesCount);
+        });
+
+        it('should create rovoDevFileChangedActionEvent for undo action', async () => {
+            const action = 'undo';
+            const filesCount = 3;
+            const event = await analytics.rovoDevFileChangedActionEvent(mockSessionId, action, filesCount);
+
+            expect(event.trackEvent.action).toEqual('rovoDevFileChangedAction');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.action).toEqual(action);
+            expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
+        });
+
+        it('should create rovoDevFileChangedActionEvent for keep action', async () => {
+            const action = 'keep';
+            const filesCount = 2;
+            const event = await analytics.rovoDevFileChangedActionEvent(mockSessionId, action, filesCount);
+
+            expect(event.trackEvent.action).toEqual('rovoDevFileChangedAction');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.action).toEqual(action);
+            expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
+        });
+
+        it('should create rovoDevStopActionEvent when successful', async () => {
+            const failed = false;
+            const event = await analytics.rovoDevStopActionEvent(mockSessionId, failed);
+
+            expect(event.trackEvent.action).toEqual('rovoDevStopAction');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.failed).toEqual(failed);
+        });
+
+        it('should create rovoDevStopActionEvent when failed', async () => {
+            const failed = true;
+            const event = await analytics.rovoDevStopActionEvent(mockSessionId, failed);
+
+            expect(event.trackEvent.action).toEqual('rovoDevStopAction');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.failed).toEqual(failed);
+        });
+
+        it('should create rovoDevGitPushActionEvent when PR is created', async () => {
+            const prCreated = true;
+            const event = await analytics.rovoDevGitPushActionEvent(mockSessionId, prCreated);
+
+            expect(event.trackEvent.action).toEqual('rovoDevGitPushAction');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.prCreated).toEqual(prCreated);
+        });
+
+        it('should create rovoDevGitPushActionEvent when PR is not created', async () => {
+            const prCreated = false;
+            const event = await analytics.rovoDevGitPushActionEvent(mockSessionId, prCreated);
+
+            expect(event.trackEvent.action).toEqual('rovoDevGitPushAction');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.prCreated).toEqual(prCreated);
+        });
+
+        it('should create rovoDevDetailsExpandedEvent', async () => {
+            const event = await analytics.rovoDevDetailsExpandedEvent(mockSessionId);
+
+            expect(event.trackEvent.action).toEqual('rovoDevDetailsExpanded');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+        });
+
+        it('should create rovoDevTimeToRespondStartEvent with timing information', async () => {
+            const ttrStart = 150.5;
+            const event = await analytics.rovoDevTimeToRespondStartEvent(mockSessionId, mockPromptId, ttrStart);
+
+            expect(event.trackEvent.action).toEqual('rovoDevTimeToRespondStart');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
+            expect(event.trackEvent.attributes.ttrStart).toEqual(ttrStart);
+        });
+
+        it('should create rovoDevTimeToTechPlanReturnedEvent with timing information', async () => {
+            const ttrStart = 150.5;
+            const ttrTechPlan = 300.2;
+            const event = await analytics.rovoDevTimeToTechPlanReturnedEvent(
+                mockSessionId,
+                mockPromptId,
+                ttrStart,
+                ttrTechPlan,
+            );
+
+            expect(event.trackEvent.action).toEqual('rovoDevTimeToTechPlanReturned');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
+            expect(event.trackEvent.attributes.ttrStart).toEqual(ttrStart);
+            expect(event.trackEvent.attributes.ttrTechPlan).toEqual(ttrTechPlan);
+        });
+
+        it('should create rovoDevTimeToRespondEndEvent with all timing information', async () => {
+            const ttrStart = 150.5;
+            const ttrTechPlan = 300.2;
+            const ttrEnd = 500.8;
+            const event = await analytics.rovoDevTimeToRespondEndEvent(
+                mockSessionId,
+                mockPromptId,
+                ttrStart,
+                ttrTechPlan,
+                ttrEnd,
+            );
+
+            expect(event.trackEvent.action).toEqual('rovoDevTimeToRespondEnd');
+            expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
+            expect(event.trackEvent.attributes.ttrStart).toEqual(ttrStart);
+            expect(event.trackEvent.attributes.ttrTechPlan).toEqual(ttrTechPlan);
+            expect(event.trackEvent.attributes.ttrEnd).toEqual(ttrEnd);
+        });
+    });
+
     // Platform detection tests
     describe('AnalyticsPlatform', () => {
         beforeEach(() => {
