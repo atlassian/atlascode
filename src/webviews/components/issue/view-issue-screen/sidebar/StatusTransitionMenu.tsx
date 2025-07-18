@@ -8,6 +8,23 @@ import React from 'react';
 
 import { colorToLozengeAppearanceMap } from '../../../colors';
 
+const statusCategoryOrder: Record<string, number> = {
+    new: 1,
+    indeterminate: 2,
+    done: 3,
+};
+
+// Sort transitions by status category (new → indeterminate → done)
+const sortTransitionsByStatusCategory = (transitions: Transition[]): Transition[] =>
+    [...transitions].sort((a, b) => {
+        const aOrder = statusCategoryOrder[a.to.statusCategory.key] ?? transitions.length;
+        const bOrder = statusCategoryOrder[b.to.statusCategory.key] ?? transitions.length;
+        if (aOrder !== bOrder) {
+            return aOrder - bOrder;
+        }
+        return parseInt(a.to.id) - parseInt(b.to.id);
+    });
+
 const StatusOption = (data: Transition) => (
     <Box>
         <Lozenge appearance={colorToLozengeAppearanceMap[data.to.statusCategory.colorName]}>{data.to.name}</Lozenge>
@@ -33,7 +50,9 @@ export const StatusTransitionMenu: React.FC<Props> = (props) => {
     const [isOpen, setIsOpen] = React.useState(false);
 
     const { border, background } = getDynamicStyles(props.currentStatus.statusCategory.colorName);
+    const transitionsSortedByCategory = sortTransitionsByStatusCategory(props.transitions);
     const shouldShowTransitionName = props.transitions.some((t) => t.name !== t.to.name);
+
     return (
         <Box
             style={{
@@ -79,7 +98,7 @@ export const StatusTransitionMenu: React.FC<Props> = (props) => {
                         border: '1px solid var(--vscode-list-focusOutline)',
                     }}
                 >
-                    {props.transitions.map((t) => (
+                    {transitionsSortedByCategory.map((t) => (
                         <DropdownItem
                             key={t.id}
                             css={{

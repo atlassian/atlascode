@@ -68,13 +68,6 @@ export const chatMessageStyles: React.CSSProperties = {
     position: 'relative',
 };
 
-export const toolReturnListItemStyles: React.CSSProperties = {
-    width: '100%',
-    margin: '4px 0',
-    borderRadius: '8px',
-    position: 'relative',
-};
-
 export const userMessageStyles: React.CSSProperties = {
     backgroundColor: 'var(--vscode-editor-selectionBackground)',
     alignSelf: 'flex-end',
@@ -95,89 +88,10 @@ export const errorMessageStyles: React.CSSProperties = {
     borderBottomLeftRadius: '8px',
 };
 
-export const messageHeaderStyles: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '8px',
-};
-
-export const messageAuthorStyles: React.CSSProperties = {
-    fontWeight: 'bold',
-    color: 'var(--vscode-editor-foreground)',
-    opacity: 0.8,
-};
-
-export const messageTimestampStyles: React.CSSProperties = {
-    fontSize: '12px',
-    color: 'var(--vscode-editor-foreground)',
-    opacity: 0.6,
-};
-
 export const messageContentStyles: React.CSSProperties = {
     whiteSpace: 'normal',
     wordBreak: 'break-word',
     color: 'var(--vscode-editor-foreground)',
-};
-
-export const toolCallBubbleStyles: React.CSSProperties = {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: '4px',
-};
-
-export const toolCallHeaderStyles: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    marginBottom: '8px',
-    fontWeight: 'bold',
-    color: 'var(--vscode-terminal-foreground)',
-};
-
-export const toolCallArgsStyles: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0 8px',
-    width: '100%',
-    backgroundColor: 'inherit',
-    borderRadius: '4px',
-    border: '1px solid var(--vscode-editorGroup-border)',
-    color: 'var(--vscode-input-placeholderForeground)',
-    maxLines: 1,
-    overflow: 'ellipsis',
-    lineHeight: '1.5em',
-};
-
-export const toolCallArgsPreStyles: React.CSSProperties = {
-    margin: 0,
-    fontSize: '12px',
-    background: 'inherit',
-    color: 'var(--vscode-descriptionForeground)',
-    whiteSpace: 'pre-wrap',
-    wordBreak: 'break-all',
-};
-
-export const toolIconStyles: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    marginBottom: 'auto',
-};
-
-export const modifiedFileComponentStyles: React.CSSProperties = {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '6px',
-    borderRadius: '4px',
-    backgroundColor: 'var(--vscode-editorWidget-background)',
 };
 
 export const undoKeepButtonStyles: React.CSSProperties = {

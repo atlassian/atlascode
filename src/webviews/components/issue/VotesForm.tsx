@@ -1,7 +1,6 @@
 import Avatar from '@atlaskit/avatar';
 import AvatarGroup from '@atlaskit/avatar-group';
-import StarIcon from '@atlaskit/icon/glyph/star';
-import StarFilledIcon from '@atlaskit/icon/glyph/star-filled';
+import LikeIcon from '@atlaskit/icon/glyph/like';
 import { User, Votes } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
 
@@ -31,7 +30,7 @@ export default class VotesForm extends React.Component<MyProps, MyState> {
     }
 
     toggleVote = () => {
-        if (!this.props.votes.hasVoted) {
+        if (!this.props.votes || !this.props.votes.hasVoted) {
             this.handleAddVote(this.props.currentUser);
         } else {
             this.props.onRemoveVote(this.props.currentUser);
@@ -63,14 +62,14 @@ export default class VotesForm extends React.Component<MyProps, MyState> {
     };
 
     getStartStop = (): JSX.Element => {
-        if (this.props.votes.hasVoted) {
+        if (this.props.votes && this.props.votes.hasVoted) {
             return (
                 <div
                     className="ac-icon-with-text ac-inline-watcher-hover"
                     style={{ cursor: 'pointer' }}
                     onClick={this.toggleVote}
                 >
-                    <StarFilledIcon label="starfilledicon" size="medium" />
+                    <LikeIcon label="starfilledicon" size="medium" />
                     <span style={{ marginLeft: '8px' }}>Remove vote</span>
                 </div>
             );
@@ -82,21 +81,21 @@ export default class VotesForm extends React.Component<MyProps, MyState> {
                 style={{ cursor: 'pointer' }}
                 onClick={this.toggleVote}
             >
-                <StarIcon label="staricon" size="medium" />
+                <LikeIcon label="staricon" size="medium" />
                 <span style={{ marginLeft: '8px' }}>Vote for this issue</span>
             </div>
         );
     };
 
     getVoters = (): JSX.Element => {
-        if (this.props.votes.votes < 1) {
+        if (!this.props.votes || this.props.votes.votes < 1) {
             return this.getEmptyVoters();
         }
 
-        const voterList = this.props.votes.voters.map((voter) => {
+        const voterList = this.props.votes.voters.map((voter, index) => {
             const avatar = voter.avatarUrls && voter.avatarUrls['48x48'] ? voter.avatarUrls['48x48'] : '';
             return (
-                <div className="ac-inline-watcher ac-inline-watcher-hover">
+                <div key={voter.accountId || index} className="ac-inline-watcher ac-inline-watcher-hover">
                     <Avatar size="small" src={avatar} />
                     <div className="ac-inline-watcher-name">{voter.displayName}</div>
                 </div>
