@@ -1,7 +1,7 @@
 import type { BrowserContext, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
-import { openAtlassianSettings } from './common';
+import { closeAllNotifications, openAtlassianSettings } from './common';
 
 /**
  * Helper function to authenticate with Bitbucket DC using the provided credentials
@@ -37,6 +37,8 @@ export const authenticateWithBitbucketDC = async (
 
     await settingsFrame.getByRole('textbox', { name: 'Password' }).fill(password);
     await page.waitForTimeout(250);
+
+    await closeAllNotifications(page);
 
     await settingsFrame.getByRole('button', { name: 'Save Site' }).click();
     await page.waitForTimeout(1000);

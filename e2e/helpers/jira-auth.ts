@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
-import { openAtlassianSettings } from './common';
+import { closeAllNotifications, openAtlassianSettings } from './common';
 
 /**
  * Helper function to authenticate with Jira using the provided credentials
@@ -37,6 +37,8 @@ export const authenticateWithJira = async (
 
     await settingsFrame.getByRole('textbox', { name: 'Password (API token)' }).fill(password);
     await page.waitForTimeout(250);
+
+    await closeAllNotifications(page);
 
     await settingsFrame.getByRole('button', { name: 'Save Site' }).click();
     await page.waitForTimeout(3000);

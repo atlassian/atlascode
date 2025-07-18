@@ -842,7 +842,6 @@ section button span {
     padding-bottom: 4px;
     display: flex;
     align-items: center;
-    padding-left: 9px;
     padding-right: 9px;
 }
 
@@ -850,6 +849,7 @@ section button span {
     font-size: 0.8em;
     text-transform: uppercase;
     opacity: 0.7;
+    font-weight: bold;
 }
 
 .ac-inline-watcher-name {
@@ -946,9 +946,9 @@ div[role='dialog'],
 }
 
 .ac-button-secondary {
-    background: var(--vscode-editor-background) !important;
-    color: var(--vscode-editor-foreground) !important;
-    border-radius: 2px !important;
+    background: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    border-radius: 2px;
 }
 .ac-button-secondary:hover {
     background: var(--vscode-editor-background--lighten-075) !important;

@@ -672,7 +672,8 @@ export class JiraIssueWebview
                                 this._editUIData.fieldValues['votes'].voters = [];
                             }
 
-                            this._editUIData.fieldValues['votes'].voters.push(msg.voter);
+                            const voterToAdd = this._currentUser.displayName ? this._currentUser : msg.voter;
+                            this._editUIData.fieldValues['votes'].voters.push(voterToAdd);
                             this._editUIData.fieldValues['votes'].votes =
                                 this._editUIData.fieldValues['votes'].voters.length;
                             this._editUIData.fieldValues['votes'].hasVoted = true;
@@ -713,8 +714,9 @@ export class JiraIssueWebview
                             ) {
                                 this._editUIData.fieldValues['votes'].voters = [];
                             }
+                            const voterAccountId = this._currentUser.accountId || msg.voter.accountId;
                             const foundIndex: number = this._editUIData.fieldValues['votes'].voters.findIndex(
-                                (user: User) => user.accountId === msg.voter.accountId,
+                                (user: User) => user.accountId === voterAccountId,
                             );
                             if (foundIndex > -1) {
                                 this._editUIData.fieldValues['votes'].voters.splice(foundIndex, 1);

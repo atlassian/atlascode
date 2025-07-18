@@ -3,7 +3,7 @@ import { commands, QuickPickItem, window } from 'vscode';
 
 import { searchIssuesEvent } from '../../analytics';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
-import { Commands } from '../../constants';
+import { AssignedJiraItemsViewId, Commands } from '../../constants';
 import { Container } from '../../container';
 
 interface QuickPickIssue extends QuickPickItem {
@@ -62,6 +62,12 @@ export class SearchJiraHelper {
         }
 
         return undefined;
+    }
+
+    static getAssignedIssuesPerSite(siteId: string): MinimalORIssueLink<DetailedSiteInfo>[] {
+        const assignedIssues = this._searchableIssueMap[AssignedJiraItemsViewId] || [];
+        const assignedIssuesForSite = assignedIssues.filter((issue) => issue.siteDetails.id === siteId);
+        return assignedIssuesForSite;
     }
 
     // This method is called when the user clicks on the "Search Jira" button in the Jira Tree View

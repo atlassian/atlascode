@@ -13,9 +13,10 @@ import { v4 } from 'uuid';
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
 import { useMessagingApi } from '../messagingApi';
-import { renderChatHistory, ToolCallItem, UpdatedFilesComponent } from './common';
+import { renderChatHistory, UpdatedFilesComponent } from './common/common';
 import { RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import * as styles from './rovoDevViewStyles';
+import { ToolCallItem } from './tools/ToolCallItem';
 import {
     ChatMessage,
     ErrorMessage,
@@ -248,7 +249,8 @@ const RovoDevView: React.FC = () => {
                         setCurrentState(State.GeneratingResponse);
                     }
                     break;
-
+                case RovoDevProviderMessageType.ReturnText:
+                    break; // This is handled in getOriginalText function
                 default:
                     handleAppendChatHistory({
                         source: 'RovoDevError',

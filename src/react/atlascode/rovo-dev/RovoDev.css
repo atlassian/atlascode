@@ -134,3 +134,45 @@
     flex-direction: column;
     gap: 4px;
 }
+
+.tool-call-item,
+.tool-return-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 8px 4px 0;
+    gap: 4px;
+    background-color: inherit;
+    color: var(--vscode-editor-foreground);
+    width: fit-content;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+#tool-return-file-path:hover {
+    background-color: var(--vscode-list-hoverBackground);
+    cursor: pointer;
+}
+
+.tool-return-path {
+    color: var(--vscode-input-placeholderForeground);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tool-return-bash-command {
+    pre {
+        margin: 0;
+        background: none;
+        code {
+            padding: 0 4px;
+        }
+    }
+}
+
+.chat-message {
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    position: relative;
+}
