@@ -164,7 +164,6 @@ export class JiraIssueWebview
             this.isRefeshing = false;
         }
     }
-    // Progress on getting this function to work lol
     async updateEpicChildren() {
         if (this._issue.isEpic) {
             const site = this._issue.siteDetails;
