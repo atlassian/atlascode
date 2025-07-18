@@ -16,9 +16,11 @@ import { useMessagingApi } from '../messagingApi';
 import { renderChatHistory, UpdatedFilesComponent } from './common/common';
 import { RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import * as styles from './rovoDevViewStyles';
+import { CodePlanButton } from './technical-plan/CodePlanButton';
 import { ToolCallItem } from './tools/ToolCallItem';
 import {
     ChatMessage,
+    CODE_PLAN_EXECUTE_PROMPT,
     ErrorMessage,
     isCodeChangeTool,
     parseToolReturnMessage,
@@ -49,6 +51,7 @@ const RovoDevView: React.FC = () => {
     const [pendingToolCall, setPendingToolCall] = useState<ToolCallMessage | null>(null);
     const [retryAfterErrorEnabled, setRetryAfterErrorEnabled] = useState('');
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
+    const [isTechnicalPlanCreated, setIsTechnicalPlanCreated] = useState(false);
 
     const chatEndRef = React.useRef<HTMLDivElement>(null);
 
@@ -282,6 +285,10 @@ const RovoDevView: React.FC = () => {
                 return;
             }
 
+            if (isTechnicalPlanCreated) {
+                setIsTechnicalPlanCreated(false);
+            }
+
             // Disable the send button, and enable the pause button
             setSendButtonDisabled(true);
             setCurrentState(State.GeneratingResponse);
@@ -295,7 +302,7 @@ const RovoDevView: React.FC = () => {
             // Clear the input field
             setPromptText('');
         },
-        [postMessage, sendButtonDisabled, setSendButtonDisabled, currentState, setCurrentState],
+        [sendButtonDisabled, currentState, isTechnicalPlanCreated, postMessage],
     );
 
     const retryPromptAfterError = useCallback((): void => {
@@ -357,12 +364,12 @@ const RovoDevView: React.FC = () => {
 
     const handleKeyDown = useCallback(
         (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
+            if (event.key === 'Enter' && !event.shiftKey && currentState === State.WaitingForPrompt) {
                 event.preventDefault();
                 sendPrompt(promptText);
             }
         },
-        [sendPrompt, promptText],
+        [currentState, sendPrompt, promptText],
     );
 
     // Function to get the original text of a file for planning diff
@@ -386,6 +393,15 @@ const RovoDevView: React.FC = () => {
         [postMessageWithReturn],
     );
 
+    const executeCodePlan = useCallback(() => {
+        sendPrompt(CODE_PLAN_EXECUTE_PROMPT);
+        setIsTechnicalPlanCreated(false);
+    }, [sendPrompt]);
+
+    const handleCodePlanButton = useCallback((val: boolean) => {
+        setIsTechnicalPlanCreated(val);
+    }, []);
+
     const isRetryAfterErrorButtonEnabled = useCallback(
         (uid: string) => retryAfterErrorEnabled === uid,
         [retryAfterErrorEnabled],
@@ -402,9 +418,11 @@ const RovoDevView: React.FC = () => {
                         isRetryAfterErrorButtonEnabled,
                         retryPromptAfterError,
                         getOriginalText,
+                        handleCodePlanButton,
                     ),
                 )}
                 {pendingToolCall && <ToolCallItem msg={pendingToolCall} />}
+                {isTechnicalPlanCreated && <CodePlanButton execute={executeCodePlan} />}
                 <div ref={chatEndRef} />
             </div>
             <div style={styles.rovoDevInputSectionStyles}>

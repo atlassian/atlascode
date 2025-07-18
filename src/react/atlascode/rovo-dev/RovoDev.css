@@ -176,3 +176,32 @@
     border-radius: 8px;
     position: relative;
 }
+
+.code-plan-button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+.code-plan-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--vscode-editorWidget-border);
+    max-width: 400px;
+    background-color: inherit;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.code-plan-button:hover {
+    background-color: var(--vscode-list-hoverBackground);
+    cursor: pointer;
+    span {
+        color: var(--vscode-textLink-foreground);
+    }
+}
+
+.code-plan-button span {
+    font-size: 14px;
+    color: var(--vscode-editor-foreground);
+}
