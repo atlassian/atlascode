@@ -282,7 +282,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
     private getFieldError(fieldKey: string): string | undefined {
         if (fieldKey === 'project' && this.state?.selectFieldOptions?.project?.length === 0) {
-            return "You don't have write access to any projects among the selected Jira site";
+            return "You don't have write access to any projects on the selected Jira site";
         }
         return;
     }
