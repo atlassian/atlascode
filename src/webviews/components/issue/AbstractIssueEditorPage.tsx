@@ -201,6 +201,11 @@ export abstract class AbstractIssueEditorPage<
     }
 
     protected isClearableSelect = (field: SelectFieldUI): boolean => {
+        // AXON-298 Never allow clearing priority field
+        if (field.key === 'priority') {
+            return false;
+        }
+
         if (!field.required) {
             return true;
         }

@@ -107,9 +107,10 @@ describe('RovoDevApiClient', () => {
 
     describe('cancel method', () => {
         it('should return true when cancellation is successful', async () => {
+            const mockResponseObject = { message: 'message', cancelled: true };
             const mockResponse = {
                 status: 200,
-                json: jest.fn().mockResolvedValue({ cancelled: true }),
+                json: jest.fn().mockResolvedValue(mockResponseObject),
             } as unknown as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
@@ -124,20 +125,22 @@ describe('RovoDevApiClient', () => {
                 },
                 body: undefined,
             });
-            expect(result).toBe(true);
+
+            expect(result).toEqual(mockResponseObject);
         });
 
         it('should return false when cancellation fails', async () => {
+            const mockResponseObject = { message: 'failure message', cancelled: false };
             const mockResponse = {
                 status: 200,
-                json: jest.fn().mockResolvedValue({ cancelled: false }),
+                json: jest.fn().mockResolvedValue(mockResponseObject),
             } as unknown as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
 
             const result = await client.cancel();
 
-            expect(result).toBe(false);
+            expect(result).toEqual(mockResponseObject);
         });
 
         it('should throw error when API call fails', async () => {

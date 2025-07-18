@@ -14,25 +14,24 @@ import { RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderM
 import {
     agentMessageStyles,
     chatMessageStyles,
+    errorMessageStyles,
     inlineMofidyButtonStyles,
     messageContentStyles,
-    toolCallArgsStyles,
-    toolReturnListItemStyles,
     undoKeepButtonStyles,
     userMessageStyles,
-} from './rovoDevViewStyles';
+} from '../rovoDevViewStyles';
+import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import {
     ChatMessage,
     CodeSnippetToChange,
     DefaultMessage,
+    ErrorMessage,
     parseToolReturnMessage,
     TechnicalPlan,
     TechnicalPlanFileToChange,
     TechnicalPlanLogicalChange,
-    ToolCallMessage,
-    ToolReturnGenericMessage,
     ToolReturnParseResult,
-} from './utils';
+} from '../utils';
 
 const md = new MarkdownIt({
     html: true,
@@ -41,160 +40,23 @@ const md = new MarkdownIt({
     typographer: true,
 });
 
-interface OpenFileFunc {
+export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
 }
 
-// TODO unused - should it be cleaned up?
-export const ToolDrawer: React.FC<{
-    content: ToolReturnGenericMessage[];
-    openFile: OpenFileFunc;
-    isStreaming?: boolean;
-}> = ({ content, openFile, isStreaming = false }) => {
-    const [isOpen, setIsOpen] = React.useState(false);
-
-    const parsedMessages = content.flatMap((message) => parseToolReturnMessage(message));
-    return (
-        <div
-            style={{
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                marginBottom: '8px',
-            }}
-            onClick={() => setIsOpen(!isOpen)}
-        >
-            <div
-                style={{
-                    width: '100%',
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    padding: '8px',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                }}
-            >
-                <div style={{ display: 'flex', flexDirection: 'row', gap: '4px', alignItems: 'center' }}>
-                    {isStreaming ? (
-                        <i className="codicon codicon-loading codicon-modifier-spin" />
-                    ) : (
-                        <i className="codicon codicon-tools"></i>
-                    )}
-                    <div style={{ fontWeight: 'bold' }}>Tool Calls</div>
-                    {!isOpen && <div style={{ fontSize: '9px' }}>{`+${parsedMessages.length}`}</div>}
-                </div>
-                {isOpen ? <i className="codicon codicon-chevron-down" /> : <i className="codicon codicon-chevron-up" />}
-            </div>
-            <div
-                style={{
-                    width: '100%',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    overflowY: 'auto',
-                    gap: '4px',
-                }}
-            >
-                {isOpen &&
-                    parsedMessages.map((parsedMsg, index) => {
-                        return <ToolReturnParsedItem key={index} msg={parsedMsg} openFile={openFile} />;
-                    })}
-            </div>
-        </div>
-    );
-};
-
-export const ToolCallItem: React.FC<{ msg: ToolCallMessage }> = ({ msg }) => {
-    if (!msg.tool_name || !msg.args) {
-        return <div key="invalid-tool-call">Error: Invalid tool call message</div>;
-    }
-
-    return (
-        <div key="tool-call" style={chatMessageStyles}>
-            <div style={toolCallArgsStyles}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <i className="codicon codicon-loading codicon-modifier-spin" />
-                    {msg.tool_name}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const ToolReturnParsedItem: React.FC<{
-    msg: ToolReturnParseResult;
-    openFile: OpenFileFunc;
-}> = ({ msg, openFile }) => {
-    const [isHovered, setIsHovered] = React.useState(false);
-
-    return (
-        <div
-            style={toolReturnListItemStyles}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
-            <a
-                onClick={() => msg.filePath && openFile(msg.filePath)}
-                style={
-                    msg.filePath && isHovered
-                        ? {
-                              ...toolCallArgsStyles,
-                              cursor: 'pointer',
-                              backgroundColor: 'var(--vscode-list-hoverBackground)',
-                          }
-                        : toolCallArgsStyles
-                }
-            >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {msg.title && <div style={{ fontWeight: 'bold' }}>{msg.title}</div>}
-                </div>
-                <div style={{ fontSize: '9px', textAlign: 'right' }}>{msg.content}</div>
-            </a>
-        </div>
-    );
-};
-
 const ChatMessageItem: React.FC<{
     msg: DefaultMessage;
-    index?: number;
-    openFile: OpenFileFunc;
-}> = ({ msg, index, openFile }) => {
-    const messageTypeStyles = msg.author.toLowerCase() === 'user' ? userMessageStyles : agentMessageStyles;
+    index: number;
+}> = ({ msg, index }) => {
+    const messageTypeStyles = msg.source === 'User' ? userMessageStyles : agentMessageStyles;
 
-    const text = msg.text || '';
-
-    const parts = text.trim().split(/(<TOOL_RETURN>.*<\/TOOL_RETURN>)/g);
-    const content = parts.flatMap((part) => {
-        try {
-            if (part.match(/^<TOOL_RETURN>.*<\/TOOL_RETURN>$/)) {
-                const toolReturnContent = part
-                    .replace(/^<TOOL_RETURN>/, '')
-                    .replace(/<\/TOOL_RETURN>$/, '')
-                    .trim();
-
-                const toolReturnMessage: ToolReturnGenericMessage = JSON.parse(toolReturnContent);
-                console.log('Parsed Tool Return Message:', toolReturnMessage);
-                const parsedMessages = parseToolReturnMessage(toolReturnMessage);
-                return parsedMessages.map((message, idx) => (
-                    <ToolReturnParsedItem key={idx} msg={message} openFile={openFile} />
-                ));
-            } else {
-                const htmlContent = md.render(part);
-
-                return (
-                    <div
-                        style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-                        key="parsed-content"
-                        dangerouslySetInnerHTML={{ __html: htmlContent }}
-                    />
-                );
-            }
-        } catch (error) {
-            console.error('Error parsing message content:', error);
-            return <div key="error-content">Error parsing content</div>;
-        }
-    });
+    const content = (
+        <div
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+            key="parsed-content"
+            dangerouslySetInnerHTML={{ __html: md.render(msg.text || '') }}
+        />
+    );
 
     return (
         <div key={index} style={{ ...chatMessageStyles, ...messageTypeStyles }}>
@@ -203,13 +65,55 @@ const ChatMessageItem: React.FC<{
     );
 };
 
+const ErrorMessageItem: React.FC<{
+    msg: ErrorMessage;
+    index: number;
+    isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
+    retryAfterError: () => void;
+}> = ({ msg, index, isRetryAfterErrorButtonEnabled, retryAfterError }) => {
+    const content = (
+        <div
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+            key="parsed-content"
+            dangerouslySetInnerHTML={{ __html: md.render(msg.text || '') }}
+        />
+    );
+
+    return (
+        <div key={index} style={{ ...chatMessageStyles, ...errorMessageStyles }}>
+            <div style={messageContentStyles}>{content}</div>
+            {msg.isRetriable && (
+                <RetryPromptButton
+                    enabled={isRetryAfterErrorButtonEnabled(msg.uid)}
+                    retryAfterError={retryAfterError}
+                />
+            )}
+        </div>
+    );
+};
+
+const RetryPromptButton: React.FC<{
+    enabled: boolean;
+    retryAfterError: () => void;
+}> = ({ enabled, retryAfterError }) => {
+    return (
+        <div style={{ marginTop: '12px' }}>
+            <button disabled={!enabled} onClick={retryAfterError}>
+                Try again
+            </button>
+        </div>
+    );
+};
+
 export const renderChatHistory = (
     msg: ChatMessage,
     index: number,
     openFile: OpenFileFunc,
+    isRetryAfterErrorButtonEnabled: (uid: string) => boolean,
+    retryAfterError: () => void,
     getText: (fp: string, lr?: number[]) => Promise<string>,
 ) => {
-    switch (msg.author) {
+    switch (msg.source) {
         case 'ToolReturn':
             const parsedMessages = parseToolReturnMessage(msg);
             return parsedMessages.map((message) => {
@@ -225,9 +129,18 @@ export const renderChatHistory = (
                 }
                 return <ToolReturnParsedItem key={index} msg={message} openFile={openFile} />;
             });
+        case 'RovoDevError':
+            return (
+                <ErrorMessageItem
+                    index={index}
+                    msg={msg}
+                    isRetryAfterErrorButtonEnabled={isRetryAfterErrorButtonEnabled}
+                    retryAfterError={retryAfterError}
+                />
+            );
         case 'RovoDev':
         case 'User':
-            return <ChatMessageItem index={index} msg={msg} openFile={openFile} />;
+            return <ChatMessageItem index={index} msg={msg} />;
         default:
             return <div key={index}>Unknown message type</div>;
     }
@@ -739,11 +652,11 @@ const DiffComponent: React.FC<{
     );
 };
 
-const FileLozenge: React.FC<{ filePath: string; openFile: OpenFileFunc }> = ({ filePath, openFile }) => {
+const FileLozenge: React.FC<{ filePath: string; openFile?: OpenFileFunc }> = ({ filePath, openFile }) => {
     const fileTitle = filePath ? filePath.match(/([^/\\]+)$/)?.[0] : undefined;
 
     return (
-        <div onClick={() => openFile(filePath)} className="file-lozenge">
+        <div onClick={() => openFile && openFile(filePath)} className="file-lozenge">
             <span className="file-path">{fileTitle || filePath}</span>
         </div>
     );
