@@ -1,4 +1,4 @@
-import { emptyIssueType, IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
+import { emptyIssueType, emptyProject, IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
 import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import { format } from 'date-fns';
@@ -62,11 +62,13 @@ export class CreateIssueWebview
     private _screenData: CreateMetaTransformerResult<DetailedSiteInfo>;
     private _selectedIssueTypeId: string | undefined;
     private _siteDetails: DetailedSiteInfo;
+    private _projectsWithCreateIssuesPermission: { [siteId: string]: Project[] };
 
     constructor(extensionPath: string) {
         super(extensionPath);
         this._screenData = emptyCreateMetaResult;
         this._siteDetails = emptySiteInfo;
+        this._projectsWithCreateIssuesPermission = {};
     }
 
     public get title(): string {
@@ -208,6 +210,23 @@ export class CreateIssueWebview
         });
     }
 
+    private async getProjectsWithPermission(siteDetails: DetailedSiteInfo) {
+        const siteId = siteDetails.id;
+        if (this._projectsWithCreateIssuesPermission[siteId]) {
+            return this._projectsWithCreateIssuesPermission[siteId];
+        }
+
+        const availableProjects = await Container.jiraProjectManager.getProjects(siteDetails);
+        const projectsWithPermission = await Container.jiraProjectManager.filterProjectsByPermission(
+            siteDetails,
+            availableProjects,
+            'CREATE_ISSUES',
+        );
+
+        this._projectsWithCreateIssuesPermission = { [siteId]: projectsWithPermission };
+        return projectsWithPermission;
+    }
+
     public async invalidate() {
         await this.updateFields();
         Container.pmfStats.touchActivity();
@@ -264,12 +283,19 @@ export class CreateIssueWebview
         this.isRefeshing = true;
         try {
             const availableSites = Container.siteManager.getSitesAvailable(ProductJira);
-            const availableProjects = await Container.jiraProjectManager.getProjects(this._siteDetails);
-            const projectsWithCreateIssuesPermission = await Container.jiraProjectManager.filterProjectsByPermission(
-                this._siteDetails,
-                availableProjects,
-                'CREATE_ISSUES',
+            const projectsWithCreateIssuesPermission = await this.getProjectsWithPermission(this._siteDetails);
+
+            const isHasPermissionForCurrentProject = projectsWithCreateIssuesPermission.find(
+                (project) => project.id === this._currentProject?.id,
             );
+
+            // if the current project does not have create issues permission, we will select the first project with permission
+            if (!isHasPermissionForCurrentProject) {
+                this._currentProject =
+                    projectsWithCreateIssuesPermission.length > 0
+                        ? projectsWithCreateIssuesPermission[0]
+                        : emptyProject;
+            }
 
             this._selectedIssueTypeId = '';
             this._screenData = await fetchCreateIssueUI(this._siteDetails, this._currentProject.key);
