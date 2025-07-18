@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { test } from '@playwright/test';
 import {
     authenticateWithJira,
     cleanupWireMockMapping,
@@ -7,45 +7,43 @@ import {
     updateIssueField,
 } from 'e2e/helpers';
 import { AtlascodeDrawer } from 'e2e/page-objects/AtlascodeDrawer';
+import { JiraIssuePage } from 'e2e/page-objects/JiraIssuePage';
 import fs from 'fs';
 
-test('I can transition a Jira', async ({ page, request }) => {
-    const atlascodeDrawer = new AtlascodeDrawer(page);
+test.only('I can transition a Jira', async ({ page, request }) => {
+    const issueName = 'BTS-1 - User Interface Bugs';
+    const currentStatus = 'In Progress';
+    const nextStatus = 'In Review';
 
-    // Authenticate
     await authenticateWithJira(page);
 
-    // check current status
-    // const currentStatus = await atlascodeDrawer.getJiraIssueStatus('BTS-1 - User Interface Bugs');
+    const atlascodeDrawer = new AtlascodeDrawer(page);
+    atlascodeDrawer.expectStatusForJiraIssue(issueName, currentStatus);
+    await atlascodeDrawer.openJiraIssue(issueName);
 
-    // Open BTS-1 issue
-    await atlascodeDrawer.openJiraIssue('BTS-1 - User Interface Bugs');
-
-    // Close the Atlassian Settings
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
-    // move to page object (JiraIssueFrame ???)
     const issueFrame = await getIssueFrame(page);
-    const statusTransitionMenu = issueFrame.getByTestId('issue.status-transition-menu');
-    await expect(statusTransitionMenu).toHaveText('In Progress');
+    const jiraIssuePage = new JiraIssuePage(issueFrame);
+    await jiraIssuePage.expectStatus(currentStatus);
 
-    // Add the updated mock
+    // Update mock for GET issue request -------------------------
     const issueJSON = JSON.parse(fs.readFileSync('e2e/wiremock-mappings/mockedteams/BTS-1/bts1.json', 'utf-8'));
     const updatedIssue = updateIssueField(issueJSON, {
-        status: 'In Review',
+        status: nextStatus,
     });
     const { id } = await setupWireMockMapping(request, 'GET', updatedIssue, '/rest/api/2/issue/BTS-1');
+    // ------------------------------------------------------------
 
-    // change status
-    await statusTransitionMenu.getByRole('button', { name: 'In Progress' }).click();
+    // TODO; update mock for search request
 
-    const menuDropdown = issueFrame.getByTestId('issue.status-transition-menu-dropdown');
-    const inReview = menuDropdown.getByText('In Review');
-    await expect(inReview).toBeVisible();
-    await inReview.click();
-    await page.waitForTimeout(2000);
+    await jiraIssuePage.updateStatus(nextStatus);
 
-    await expect(statusTransitionMenu).toHaveText('In Review');
+    await page.waitForTimeout(1000);
+    await jiraIssuePage.expectStatus(nextStatus);
+
+    // TODO: check status in the drawer
+    atlascodeDrawer.expectStatusForJiraIssue(issueName, nextStatus);
 
     await cleanupWireMockMapping(request, id);
 });

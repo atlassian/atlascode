@@ -18,8 +18,6 @@ export class JiraIssuePage {
 
     async updateStatus(nextStatus: string) {
         await this.statusTransitionMenu.click();
-        // await this.statusTransitionMenu.getByRole('button', { name: 'In Progress' }).click();
-
         const nextOption = this.statusMenuDropdown.getByText(new RegExp(nextStatus, 'i'));
         await expect(nextOption).toBeVisible();
         await nextOption.click();
