@@ -1,4 +1,4 @@
-import { IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
+import { IssueType, MinimalORIssueLink, Project } from '@atlassianlabs/jira-pi-common-models';
 import { CreateMetaTransformerResult, FieldUI, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { expansionCastTo } from 'testsutil';
 import { Position, Uri, window } from 'vscode';
@@ -9,6 +9,7 @@ import { Container } from '../container';
 import * as fetchIssue from '../jira/fetchIssue';
 import { WebViewID } from '../lib/ipc/models/common';
 import { Logger } from '../logger';
+import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
 import { CreateIssueWebview, PartialIssue } from './createIssueWebview';
 
 jest.mock('../container', () => ({
@@ -79,8 +80,13 @@ jest.mock('../commands/jira/showIssue', () => ({
     showIssue: jest.fn(),
 }));
 
-const mockWindow = window as jest.Mocked<typeof window>;
+jest.mock('../views/jira/searchJiraHelper', () => ({
+    SearchJiraHelper: {
+        getAssignedIssuesPerSite: jest.fn().mockReturnValue([]),
+    },
+}));
 
+const mockWindow = window as jest.Mocked<typeof window>;
 describe('CreateIssueWebview', () => {
     // Mock data
     const extensionPath = '/path/to/extension';
@@ -759,6 +765,131 @@ describe('CreateIssueWebview', () => {
             expect(mockShowIssue).toHaveBeenCalledWith({
                 key: 'TEST-123',
                 siteDetails: mockSiteDetails,
+            });
+        });
+    });
+
+    describe('Should correctly set site and project (updateSiteAndProject)', () => {
+        beforeEach(() => {
+            Container.config.jira.lastCreateSiteAndProject = {
+                siteId: '',
+                projectKey: '',
+            };
+            jest.spyOn(SearchJiraHelper, 'getAssignedIssuesPerSite').mockReturnValue([]);
+        });
+
+        it('should set site and project from last used values', async () => {
+            const lastUsedSiteId = 'last-used-site';
+            const lastUsedProjectKey = 'last-used-project';
+
+            Container.config.jira.lastCreateSiteAndProject = {
+                siteId: lastUsedSiteId,
+                projectKey: lastUsedProjectKey,
+            };
+
+            Container.siteManager.getSiteForId = jest.fn().mockReturnValue({
+                ...mockSiteDetails,
+                id: lastUsedSiteId,
+            });
+            Container.jiraProjectManager.getProjectForKey = jest.fn().mockReturnValue({
+                ...mockProject,
+                key: lastUsedProjectKey,
+            });
+
+            await webview.initialize();
+            expect(configuration.setLastCreateSiteAndProject).toHaveBeenCalledWith({
+                siteId: lastUsedSiteId,
+                projectKey: lastUsedProjectKey,
+            });
+        });
+
+        it('should set site and project with maximum issues', async () => {
+            Container.siteManager.getSiteForId = jest.fn().mockReturnValueOnce(undefined);
+
+            const maxIssuesSite = {
+                ...mockSiteDetails,
+                id: 'max-issues-site',
+            };
+            const maxIssuesProject = {
+                ...mockProject,
+                key: 'max-issues-project',
+            };
+
+            Container.jiraProjectManager.getProjectForKey = jest
+                .fn()
+                .mockReturnValueOnce(undefined)
+                .mockReturnValueOnce(maxIssuesProject);
+
+            Container.siteManager.getSitesAvailable = jest.fn().mockReturnValueOnce([maxIssuesSite]);
+
+            jest.spyOn(SearchJiraHelper, 'getAssignedIssuesPerSite').mockReturnValue([
+                { id: 'mock', key: 'TST-1' } as MinimalORIssueLink<DetailedSiteInfo>,
+                { id: 'mock', key: 'TST-2' } as MinimalORIssueLink<DetailedSiteInfo>,
+                { id: 'mock', key: 'TSR-1' } as MinimalORIssueLink<DetailedSiteInfo>,
+            ]);
+
+            await webview.initialize();
+            expect(configuration.setLastCreateSiteAndProject).toHaveBeenCalledWith({
+                siteId: maxIssuesSite.id,
+                projectKey: maxIssuesProject.key,
+            });
+        });
+
+        it('should set site and project from first available site and project', async () => {
+            Container.siteManager.getSiteForId = jest.fn().mockReturnValueOnce(undefined);
+            Container.jiraProjectManager.getProjectForKey = jest.fn().mockReturnValueOnce(undefined);
+
+            Container.siteManager.getFirstSite = jest.fn().mockReturnValue({ ...mockSiteDetails, id: 'first-site' });
+            Container.jiraProjectManager.getFirstProject = jest
+                .fn()
+                .mockResolvedValue({ ...mockProject, key: 'first-project' });
+
+            await webview.initialize();
+            expect(configuration.setLastCreateSiteAndProject).toHaveBeenCalledWith({
+                siteId: 'first-site',
+                projectKey: 'first-project',
+            });
+        });
+
+        it('should use provided project if available', async () => {
+            const inputProject: Project = {
+                ...mockProject,
+                key: 'input-project',
+            };
+
+            await webview.initialize();
+            expect(configuration.setLastCreateSiteAndProject).toHaveBeenCalled();
+
+            const action = {
+                action: 'getScreensForProject',
+                project: inputProject,
+            };
+            await webview['onMessageReceived'](action);
+
+            expect(configuration.setLastCreateSiteAndProject).toHaveBeenLastCalledWith({
+                projectKey: inputProject.key,
+                siteId: 'site-1',
+            });
+        });
+
+        it('should use provided site if available', async () => {
+            const inputSite: DetailedSiteInfo = {
+                ...mockSiteDetails,
+                id: 'input-site',
+            };
+
+            await webview.initialize();
+            expect(configuration.setLastCreateSiteAndProject).toHaveBeenCalled();
+
+            const action = {
+                action: 'getScreensForSite',
+                site: { id: inputSite.id },
+            };
+            await webview['onMessageReceived'](action);
+
+            expect(configuration.setLastCreateSiteAndProject).toHaveBeenLastCalledWith({
+                siteId: inputSite.id,
+                projectKey: 'TEST',
             });
         });
     });

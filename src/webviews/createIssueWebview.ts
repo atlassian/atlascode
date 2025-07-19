@@ -23,6 +23,7 @@ import { Action } from '../ipc/messaging';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { WebViewID } from '../lib/ipc/models/common';
 import { Logger } from '../logger';
+import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
 
@@ -113,6 +114,48 @@ export class CreateIssueWebview
         this.invalidate();
     }
 
+    private getSiteWithMaxIssues(): DetailedSiteInfo | undefined {
+        const availableSites = Container.siteManager.getSitesAvailable(ProductJira);
+        const { siteWithMaxIssues } = availableSites.reduce(
+            (prev: { numIssues: number; siteWithMaxIssues: DetailedSiteInfo | null }, curr) => {
+                const siteIssues = SearchJiraHelper.getAssignedIssuesPerSite(curr.id);
+                if (siteIssues && siteIssues.length > 0 && siteIssues.length > prev.numIssues) {
+                    prev.numIssues = siteIssues.length;
+                    prev.siteWithMaxIssues = curr;
+                }
+                return prev;
+            },
+            { numIssues: 0, siteWithMaxIssues: null },
+        );
+        if (siteWithMaxIssues) {
+            return siteWithMaxIssues;
+        }
+        return undefined;
+    }
+
+    private getProjectKeyWithMaxIssues(siteId: string): string | undefined {
+        const siteIssues = SearchJiraHelper.getAssignedIssuesPerSite(siteId);
+        if (siteIssues && siteIssues.length > 0) {
+            const issuesNumberPerProjectKey = siteIssues.reduce((prev: Record<string, number>, issue) => {
+                const projectKey = issue.key?.split('-')[0];
+                if (!prev[projectKey]) {
+                    prev[projectKey] = 1;
+                    return prev;
+                }
+                prev[projectKey]++;
+                return prev;
+            }, {});
+            const projectKeyWithMaxIssues = Object.keys(issuesNumberPerProjectKey).reduce(
+                (prev: string, curr: string) =>
+                    issuesNumberPerProjectKey[curr] > issuesNumberPerProjectKey[prev] ? curr : prev,
+            );
+            if (projectKeyWithMaxIssues) {
+                return projectKeyWithMaxIssues;
+            }
+        }
+        return undefined;
+    }
+
     private async updateSiteAndProject(inputSite?: DetailedSiteInfo, inputProject?: Project) {
         if (inputSite) {
             this._siteDetails = inputSite;
@@ -125,7 +168,12 @@ export class CreateIssueWebview
             if (configSite) {
                 this._siteDetails = configSite;
             } else {
-                this._siteDetails = Container.siteManager.getFirstSite(ProductJira.key);
+                const siteWithMaxIssues = this.getSiteWithMaxIssues();
+                if (siteWithMaxIssues) {
+                    this._siteDetails = siteWithMaxIssues;
+                } else {
+                    this._siteDetails = Container.siteManager.getFirstSite(ProductJira.key);
+                }
             }
         }
 
@@ -142,7 +190,15 @@ export class CreateIssueWebview
             if (configProject) {
                 this._currentProject = configProject;
             } else {
-                this._currentProject = await Container.jiraProjectManager.getFirstProject(this._siteDetails);
+                const projectKeyWithMaxIssues = this.getProjectKeyWithMaxIssues(this._siteDetails.id);
+                if (projectKeyWithMaxIssues) {
+                    this._currentProject = await Container.jiraProjectManager.getProjectForKey(
+                        this._siteDetails,
+                        projectKeyWithMaxIssues,
+                    );
+                } else {
+                    this._currentProject = await Container.jiraProjectManager.getFirstProject(this._siteDetails);
+                }
             }
         }
 
@@ -232,9 +288,9 @@ export class CreateIssueWebview
             this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['project'] = availableProjects;
 
             /*
-            partial issue is used for prepopulating summary and description. 
+            partial issue is used for prepopulating summary and description.
             fieldValues get sent when you change the project in the project dropdown so we can preserve any previously set values.
-            e.g. you type some stuff, then you change the project... 
+            e.g. you type some stuff, then you change the project...
             at this point the new project may or may not have the same (or some of the same) fields.
             we fill them in with the previous user values.
             */

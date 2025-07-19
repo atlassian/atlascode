@@ -225,3 +225,6 @@ export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolRe
 export const isCodeChangeTool = (toolName: string): boolean => {
     return ['find_and_replace_code', 'create_file', 'delete_file'].includes(toolName);
 };
+
+export const CODE_PLAN_EXECUTE_PROMPT = 'Execute the code plan that you have created';
+

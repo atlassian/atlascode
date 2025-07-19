@@ -16,9 +16,11 @@ import { useMessagingApi } from '../messagingApi';
 import { renderChatHistory, UpdatedFilesComponent } from './common/common';
 import { RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import * as styles from './rovoDevViewStyles';
+import { CodePlanButton } from './technical-plan/CodePlanButton';
 import { ToolCallItem } from './tools/ToolCallItem';
 import {
     ChatMessage,
+    CODE_PLAN_EXECUTE_PROMPT,
     ErrorMessage,
     isCodeChangeTool,
     parseToolReturnMessage,
@@ -31,12 +33,14 @@ const enum State {
     WaitingForPrompt,
     GeneratingResponse,
     CancellingResponse,
+    ExecutingPlan,
 }
 
 const TextAreaMessages: Record<State, string> = {
     [State.WaitingForPrompt]: 'Type in a question',
     [State.GeneratingResponse]: 'Generating response...',
     [State.CancellingResponse]: 'Cancelling the response...',
+    [State.ExecutingPlan]: 'Executing the code plan...',
 };
 
 const RovoDevView: React.FC = () => {
@@ -49,6 +53,7 @@ const RovoDevView: React.FC = () => {
     const [pendingToolCall, setPendingToolCall] = useState<ToolCallMessage | null>(null);
     const [retryAfterErrorEnabled, setRetryAfterErrorEnabled] = useState('');
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
+    const [isTechnicalPlanCreated, setIsTechnicalPlanCreated] = useState(false);
 
     const chatEndRef = React.useRef<HTMLDivElement>(null);
 
@@ -205,6 +210,11 @@ const RovoDevView: React.FC = () => {
                         tool_call_id: data.tool_call_id, // Optional ID for tracking
                         args: args, // Use args from pending tool call if available
                     };
+
+                    if (data.tool_name === 'create_technical_plan') {
+                        setIsTechnicalPlanCreated(true);
+                    }
+
                     setPendingToolCall(null); // Clear pending tool call
                     handleAppendChatHistory(returnMessage);
                     handleAppendModifiedFileToolReturns(returnMessage);
@@ -305,6 +315,10 @@ const RovoDevView: React.FC = () => {
                 return;
             }
 
+            if (isTechnicalPlanCreated) {
+                setIsTechnicalPlanCreated(false);
+            }
+
             // Disable the send button, and enable the pause button
             setSendButtonDisabled(true);
             setCurrentState(State.GeneratingResponse);
@@ -318,8 +332,16 @@ const RovoDevView: React.FC = () => {
             // Clear the input field
             setPromptText('');
         },
-        [postMessage, sendButtonDisabled, setSendButtonDisabled, currentState, setCurrentState],
+        [sendButtonDisabled, currentState, isTechnicalPlanCreated, postMessage],
     );
+
+    const executeCodePlan = useCallback(() => {
+        if (currentState !== State.WaitingForPrompt) {
+            return;
+        }
+        setCurrentState(State.ExecutingPlan);
+        sendPrompt(CODE_PLAN_EXECUTE_PROMPT);
+    }, [currentState, sendPrompt]);
 
     const retryPromptAfterError = useCallback((): void => {
         // Disable the send button, and enable the pause button
@@ -380,12 +402,12 @@ const RovoDevView: React.FC = () => {
 
     const handleKeyDown = useCallback(
         (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
+            if (event.key === 'Enter' && !event.shiftKey && currentState === State.WaitingForPrompt) {
                 event.preventDefault();
                 sendPrompt(promptText);
             }
         },
-        [sendPrompt, promptText],
+        [currentState, sendPrompt, promptText],
     );
 
     // Function to get the original text of a file for planning diff
@@ -428,6 +450,9 @@ const RovoDevView: React.FC = () => {
                     ),
                 )}
                 {pendingToolCall && <ToolCallItem msg={pendingToolCall} />}
+                {isTechnicalPlanCreated && (
+                    <CodePlanButton execute={executeCodePlan} disabled={currentState !== State.WaitingForPrompt} />
+                )}
                 <div ref={chatEndRef} />
             </div>
             <div style={styles.rovoDevInputSectionStyles}>
