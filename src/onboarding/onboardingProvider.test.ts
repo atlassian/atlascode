@@ -97,6 +97,14 @@ jest.mock('./onboardingQuickInputManager', () => {
     };
 });
 
+jest.mock('../../src/logger', () => ({
+    Logger: {
+        debug: jest.fn(),
+        info: jest.fn(),
+        error: jest.fn(),
+    },
+}));
+
 describe('OnboardingProvider', () => {
     let provider: OnboardingProvider;
 

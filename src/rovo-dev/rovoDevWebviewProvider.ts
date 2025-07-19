@@ -20,9 +20,18 @@ import {
     workspace,
 } from 'vscode';
 
+import {
+    rovoDevFileChangedActionEvent,
+    rovoDevNewSessionActionEvent,
+    rovoDevPromptSentEvent,
+    rovoDevStopActionEvent,
+} from '../../src/analytics';
+import { Container } from '../../src/container';
+import { Logger } from '../../src/logger';
 import { rovodevInfo } from '../constants';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
+import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
@@ -37,10 +46,17 @@ interface TypedWebview<MessageOut, MessageIn> extends Webview {
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
     private readonly viewType = 'atlascodeRovoDev';
+
     private _prHandler = new RovoDevPullRequestHandler();
+    private _perfLogger = new PerformanceLogger();
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _rovoDevApiClient?: RovoDevApiClient;
+    private _disposables: Disposable[] = [];
+    private _extensionUri: Uri;
     private _initialized = false;
+
+    private _chatSessionId: string = '';
+    private _currentPromptId: string = '';
 
     private _previousPrompt: string | undefined;
     private _pendingPrompt: string | undefined;
@@ -49,12 +65,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
     private _revertedChanges: string[] = [];
-
-    private _disposables: Disposable[] = [];
-
-    private _globalState: Memento;
-    private _extensionPath: string;
-    private _extensionUri: Uri;
 
     private get rovoDevApiClient() {
         if (!this._rovoDevApiClient) {
@@ -68,14 +78,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return this._rovoDevApiClient;
     }
 
-    constructor(extensionPath: string, globalState: Memento) {
+    constructor(
+        private _extensionPath: string,
+        private _globalState: Memento,
+    ) {
         super(() => {
             this._dispose();
         });
 
-        this._extensionPath = extensionPath;
         this._extensionUri = Uri.file(this._extensionPath);
-        this._globalState = globalState;
 
         // Register the webview view provider
         this._disposables.push(
@@ -221,28 +232,44 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private async processChatResponse(fetchOp: Promise<Response>) {
+    private async processChatResponse(fetchOp: Promise<Response> | Response, firePerfTelemetry: boolean) {
         const response = await fetchOp;
         if (!response.body) {
             throw new Error('No response body');
         }
 
+        this._perfLogger.promptStarted(this._currentPromptId);
+
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         const parser = new RovoDevResponseParser();
 
+        let isFirstResponse = true;
+
         while (true) {
             const { done, value } = await reader.read();
+
+            if (firePerfTelemetry && isFirstResponse) {
+                // first response of the stream -> fire performance telemetry event
+                this._perfLogger.promptFirstMessageReceived(this._currentPromptId);
+                isFirstResponse = false;
+            }
+
             if (done) {
+                // last response of the stream -> fire performance telemetry event
+                if (firePerfTelemetry) {
+                    this._perfLogger.promptLastMessageReceived(this._currentPromptId);
+                }
+
                 for (const msg of parser.flush()) {
-                    await this.processRovoDevResponse(msg);
+                    await this.processRovoDevResponse(msg, firePerfTelemetry);
                 }
                 break;
             }
 
             const data = decoder.decode(value, { stream: true });
             for (const msg of parser.parse(data)) {
-                await this.processRovoDevResponse(msg);
+                await this.processRovoDevResponse(msg, firePerfTelemetry);
             }
         }
 
@@ -258,6 +285,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private processError(error: Error, isRetriable: boolean) {
+        Logger.error('RovoDev', error);
+
         const webview = this._webView!;
         return webview.postMessage({
             type: RovoDevProviderMessageType.ErrorMessage,
@@ -286,7 +315,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private processRovoDevResponse(response: RovoDevResponse): Thenable<boolean> {
+    private processRovoDevResponse(response: RovoDevResponse, firePerfTelemetry: boolean): Thenable<boolean> {
         const webview = this._webView!;
 
         switch (response.event_kind) {
@@ -304,6 +333,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             case 'tool-return':
             case 'retry-prompt':
+                // we received a technical plan -> fire performance telemetry event
+                if (firePerfTelemetry && response.tool_name === 'create_technical_plan') {
+                    this._perfLogger.promptTechnicalPlanReceived(this._currentPromptId);
+                }
+
                 return webview.postMessage({
                     type: RovoDevProviderMessageType.ToolReturn,
                     dataObject: response,
@@ -353,12 +387,32 @@ ${message}`;
         }
 
         this._previousPrompt = message;
+        this._currentPromptId = v4();
         const payloadToSend = this.addUndoContextToPrompt(message);
 
+        const fetchOp = async (client: RovoDevApiClient) => {
+            // request the chat API and retrieve the initial response object
+            const response = await client.chat(payloadToSend);
+
+            // send telemetry if the chat didn't fail
+            // NOTE: if chatSessionId empty, it means this is the first prompt of a new rovo dev instance
+            if (!this._chatSessionId) {
+                this._chatSessionId = v4();
+                await rovoDevNewSessionActionEvent(this._chatSessionId, false).then((evt) =>
+                    Container.analyticsClient.sendTrackEvent(evt),
+                );
+            }
+
+            await rovoDevPromptSentEvent(this._chatSessionId, this._currentPromptId).then((evt) =>
+                Container.analyticsClient.sendTrackEvent(evt),
+            );
+
+            // process the chat response
+            return this.processChatResponse(response, true);
+        };
+
         if (this._initialized) {
-            await this.executeApiWithErrorHandling((client) => {
-                return this.processChatResponse(client.chat(payloadToSend));
-            }, true);
+            await this.executeApiWithErrorHandling(fetchOp, true);
         } else {
             this._pendingPrompt = payloadToSend;
         }
@@ -378,13 +432,14 @@ ${message}`;
         });
 
         await this.executeApiWithErrorHandling((client) => {
-            return this.processChatResponse(client.chat(payloadToSend));
+            return this.processChatResponse(client.chat(payloadToSend), true);
         }, true);
     }
 
     async executeReset(): Promise<void> {
         const webview = this._webView!;
-        await this.executeApiWithErrorHandling(async (client) => {
+
+        const success = await this.executeApiWithErrorHandling(async (client) => {
             await client.reset();
 
             this._revertedChanges = [];
@@ -392,7 +447,16 @@ ${message}`;
             await webview.postMessage({
                 type: RovoDevProviderMessageType.NewSession,
             });
+
+            return true;
         });
+
+        if (success) {
+            this._chatSessionId = v4();
+            await rovoDevNewSessionActionEvent(this._chatSessionId, true).then((evt) =>
+                Container.analyticsClient.sendTrackEvent(evt),
+            );
+        }
     }
 
     private async executeCancel(): Promise<boolean> {
@@ -402,7 +466,13 @@ ${message}`;
             return await client.cancel();
         });
 
-        if (cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress')) {
+        const success =
+            !!cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress');
+        await rovoDevStopActionEvent(this._chatSessionId, success).then((evt) =>
+            Container.analyticsClient.sendTrackEvent(evt),
+        );
+
+        if (success) {
             return true;
         } else {
             await webview.postMessage({
@@ -414,7 +484,7 @@ ${message}`;
 
     private async executeReplay(): Promise<void> {
         await this.executeApiWithErrorHandling(async (client) => {
-            return this.processChatResponse(client.replay());
+            return this.processChatResponse(client.replay(), false);
         });
     }
 
@@ -492,6 +562,10 @@ ${message}`;
         await Promise.all(promises);
 
         this._revertedChanges.push(...filePaths);
+
+        await rovoDevFileChangedActionEvent(this._chatSessionId, 'undo', filePaths.length).then((evt) =>
+            Container.analyticsClient.sendTrackEvent(evt),
+        );
     }
 
     private async executeKeepFiles(filePaths: string[]) {
@@ -501,6 +575,10 @@ ${message}`;
         });
 
         await Promise.all(promises);
+
+        await rovoDevFileChangedActionEvent(this._chatSessionId, 'keep', filePaths.length).then((evt) =>
+            Container.analyticsClient.sendTrackEvent(evt),
+        );
     }
 
     private async createPR() {
