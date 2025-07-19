@@ -1296,7 +1296,7 @@
         "@atlaskit/dropdown-menu": "^12.26.5",
         "@atlaskit/feature-gate-js-client": "^5.3.1",
         "@atlaskit/form": "^11.2.0",
-        "@atlaskit/icon": "^21.12.8",
+        "@atlaskit/icon": "^23.11.0",
         "@atlaskit/icon-lab": "^2.8.0",
         "@atlaskit/inline-dialog": "^13.1.8",
         "@atlaskit/lozenge": "^11.14.0",
