@@ -1,13 +1,15 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-    timeout: 50000,
-    viewport: {
-        width: 1600,
-        height: 800,
+    use: {
+        viewport: {
+            width: 1600,
+            height: 800,
+        },
     },
-
-    // Docs: https://playwright.dev/docs/videos
-    // To see all of the videos, change this to 'on'
-    video: 'retain-on-failure',
+    use: {
+        // Docs: https://playwright.dev/docs/videos
+        // To see all of the videos, change this to 'on'
+        video: 'retain-on-failure',
+    },
 });
