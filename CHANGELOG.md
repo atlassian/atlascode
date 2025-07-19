@@ -4,6 +4,9 @@
 
 ## What's new in 3.8.7
 
+### Features
+- Update logic of selecting the default project and site to the most relevant one for the user on the Creating a JIRA issue page
+
 ### Bug Fixes
 
 - Fixed a bug when transitioning Jira issues from 'Start work', which doesn't refresh the issues panels
