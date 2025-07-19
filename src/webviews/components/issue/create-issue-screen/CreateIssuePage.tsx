@@ -1,6 +1,7 @@
 import Button from '@atlaskit/button';
 import LoadingButton from '@atlaskit/button/loading-button';
 import Form, { Field, FormFooter, FormHeader, RequiredAsterisk } from '@atlaskit/form';
+import { ErrorMessage } from '@atlaskit/form';
 import Page from '@atlaskit/page';
 import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
@@ -279,8 +280,26 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         );
     };
 
-    getCommonFieldMarkup(): any {
-        return this.commonFields.map((field) => this.getInputMarkup(field));
+    private getFieldError(fieldKey: string): string | undefined {
+        if (fieldKey === 'project' && this.state?.selectFieldOptions?.project?.length === 0) {
+            return "You don't have write access to any projects on the selected Jira site";
+        }
+        return;
+    }
+
+    getCommonFieldMarkup(): React.ReactElement[] {
+        return this.commonFields.map((field, index) => {
+            const errorMessage = this.getFieldError(field.key);
+            if (errorMessage) {
+                return (
+                    <div key={index}>
+                        {this.getInputMarkup(field)}
+                        <ErrorMessage>{errorMessage}</ErrorMessage>
+                    </div>
+                );
+            }
+            return <div key={index}>{this.getInputMarkup(field)}</div>;
+        });
     }
 
     getAdvancedFieldMarkup(): any {

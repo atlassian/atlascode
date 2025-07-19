@@ -18,6 +18,9 @@ type OrderBy =
     | 'owner'
     | '-owner'
     | '+owner';
+
+export type ProjectPermissions = 'CREATE_ISSUES';
+
 export class JiraProjectManager extends Disposable {
     constructor() {
         super(() => this.dispose());
@@ -65,5 +68,54 @@ export class JiraProjectManager extends Disposable {
         }
 
         return foundProjects;
+    }
+
+    public async checkProjectPermission(
+        site: DetailedSiteInfo,
+        projectKey: string,
+        permission: ProjectPermissions,
+    ): Promise<Boolean> {
+        const client = await Container.clientManager.jiraClient(site);
+        const url = site.baseApiUrl + '/api/2/mypermissions';
+        const auth = await client.authorizationProvider('GET', url);
+        const response = await client.transportFactory().get(url, {
+            headers: {
+                Authorization: auth,
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+            },
+            method: 'GET',
+            params: {
+                projectKey: projectKey,
+                permissions: permission,
+            },
+        });
+
+        return response.data?.permissions[permission]?.havePermission ?? false;
+    }
+
+    public async filterProjectsByPermission(
+        site: DetailedSiteInfo,
+        projectsList: Project[],
+        permission: ProjectPermissions,
+    ): Promise<Project[]> {
+        const size = 50;
+        let cursor = 0;
+        const projectsWithPermission: Project[] = [];
+
+        while (cursor < projectsList.length) {
+            const projectsSlice = projectsList.slice(cursor, cursor + size);
+            await Promise.all(
+                projectsSlice.map(async (project) => {
+                    const hasCreateIssuePermission = await this.checkProjectPermission(site, project.key, permission);
+                    if (hasCreateIssuePermission) {
+                        projectsWithPermission.push(project);
+                    }
+                }),
+            );
+            cursor += size;
+        }
+
+        return projectsWithPermission;
     }
 }
