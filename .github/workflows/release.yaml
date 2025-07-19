@@ -58,7 +58,7 @@ jobs:
         run: npm run lint
 
       - name: Run unit tests
-        run: npm run test
+        run: npm run test:nocoverage
 
       - name: Generate SSL certs for E2E test
         run: npm run test:e2e:sslcerts
