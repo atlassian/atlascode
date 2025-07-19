@@ -44,7 +44,7 @@ export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
 }
 
-const ChatMessageItem: React.FC<{
+export const ChatMessageItem: React.FC<{
     msg: DefaultMessage;
     index: number;
 }> = ({ msg, index }) => {
@@ -65,7 +65,7 @@ const ChatMessageItem: React.FC<{
     );
 };
 
-const ErrorMessageItem: React.FC<{
+export const ErrorMessageItem: React.FC<{
     msg: ErrorMessage;
     index: number;
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
@@ -369,7 +369,7 @@ type TechnicalPlanProps = {
     onMount?: () => void;
 };
 
-const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile, getText, onMount }) => {
+export const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile, getText }) => {
     const clarifyingQuestions = content.logicalChanges.flatMap((change) => {
         return change.filesToChange
             .map((file) => {
