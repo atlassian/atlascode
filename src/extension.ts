@@ -44,7 +44,7 @@ export async function activate(context: ExtensionContext) {
     Logger.configure(context);
 
     // this disables the main Atlassian activity bar when we are in BBY
-    setCommandContext(CommandContext.AtlassianActivityBarEnabled, !process.env.ROVODEV_BBY);
+    setCommandContext(CommandContext.BbyEnvironmentActive, !!process.env.ROVODEV_BBY);
     // this disables the Rovo Dev activity bar unless it's explicitely enabled
     setCommandContext(CommandContext.RovoDevEnabled, !!process.env.ROVODEV_ENABLED);
 
@@ -111,6 +111,10 @@ export async function activate(context: ExtensionContext) {
 
     if (!!process.env.ROVODEV_ENABLED) {
         initializeRovoDevProcessManager(context);
+
+        if (process.env.ROVODEV_BBY) {
+            commands.executeCommand('workbench.view.extension.atlascode-rovo-dev');
+        }
     }
 
     const duration = process.hrtime(start);
