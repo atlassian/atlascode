@@ -6,10 +6,9 @@ import { Resources } from 'src/resources';
 import { Disposable, ExtensionContext, window, workspace } from 'vscode';
 
 import { rovodevInfo } from '../constants';
+
 // In-memory process map (not persisted, but safe for per-window usage)
 const workspaceProcessMap: { [workspacePath: string]: ChildProcess } = {};
-
-export const isRovoDevEnabled = process.env.ROVODEV_ENABLED === 'true';
 
 let disposables: Disposable[] = [];
 
@@ -80,13 +79,13 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
         workspace.getConfiguration('atlascode.rovodev').get<string>('executablePath') || Resources.rovoDevPath;
 
     if (!rovoDevPath) {
-        window.showWarningMessage('Rovodev: Executable path is not set, please configure it in settings.');
+        window.showWarningMessage('Rovo Dev: Executable path is not set, please configure it in settings.');
         return;
     }
 
     access(rovoDevPath, constants.X_OK, (err) => {
         if (err) {
-            window.showErrorMessage(`Rovodev: Executable not found at path: ${rovoDevPath}`);
+            window.showErrorMessage(`Rovo Dev: Executable not found at path: ${rovoDevPath}`);
             return;
         }
         getCloudCredentials().then((creds) => {
@@ -94,9 +93,9 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
             const { username, key, host } = creds || {};
 
             if (host) {
-                window.showInformationMessage(`Rovodev: using cloud credentials for ${username} on ${host}`);
+                window.showInformationMessage(`Rovo Dev: using cloud credentials for ${username} on ${host}`);
             } else {
-                window.showInformationMessage('Rovodev: No cloud credentials found. Using default authentication.');
+                window.showInformationMessage('Rovo Dev: No cloud credentials found. Using default authentication.');
             }
 
             const env: NodeJS.ProcessEnv = {
@@ -115,14 +114,14 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
                 if (code !== 0) {
                     if (stderrData.includes('auth token')) {
                         // internal credentials, no VPN connection
-                        window.showErrorMessage(`Rovodev: Is your VPN off? (internal credential error)`);
+                        window.showErrorMessage(`Rovo Dev: Is your VPN off? (internal credential error)`);
                     } else {
                         // default error message
-                        window.showErrorMessage(`Rovodev: Process exited with code ${code}, see the log for details.`);
+                        window.showErrorMessage(`Rovo Dev: Process exited with code ${code}, see the log for details.`);
                     }
 
                     console.error(
-                        `Rovodev: Process exited with code ${code} and signal ${signal}, stderr: ${stderrData}`,
+                        `Rovo Dev: Process exited with code ${code} and signal ${signal}, stderr: ${stderrData}`,
                     );
                 }
                 delete workspaceProcessMap[workspacePath];
@@ -142,19 +141,23 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
 function showWorkspaceLoadedMessageAndStartProcess(context: ExtensionContext) {
     const folders = workspace.workspaceFolders;
     if (!folders || folders.length === 0) {
-        window.showInformationMessage('Rovodev: No workspace folders loaded.');
+        window.showInformationMessage('Rovo Dev: No workspace folders loaded.');
         return;
     }
 
     const globalPort = process.env[rovodevInfo.envVars.port];
     if (globalPort) {
-        window.showInformationMessage(`Rovodev: Expecting RovoDev on port ${globalPort}. No new process started.`);
+        if (!process.env.ROVODEV_BBY) {
+            window.showInformationMessage(
+                `Rovo Dev: Expecting Rovo Dev on port ${globalPort}. No new process started.`,
+            );
+        }
         return;
     }
 
     for (const folder of folders) {
         const port = getOrAssignPortForWorkspace(context, folder.uri.fsPath);
-        window.showInformationMessage(`Rovodev: Workspace loaded: ${folder.name} (port ${port})`);
+        window.showInformationMessage(`Rovo Dev: Workspace loaded: ${folder.name} (port ${port})`);
         startWorkspaceProcess(context, folder.uri.fsPath, port);
     }
 }
@@ -164,16 +167,16 @@ function showWorkspaceClosedMessageAndStopProcess(
 ) {
     for (const folder of removedFolders) {
         stopWorkspaceProcess(folder.uri.fsPath);
-        window.showInformationMessage(`Rovodev: Workspace closed: ${folder.name}`);
+        window.showInformationMessage(`Rovo Dev: Workspace closed: ${folder.name}`);
     }
 }
 
 function showWorkspaceClosedMessage() {
-    window.showInformationMessage('Rovodev: Workspace closed or extension deactivated.');
+    window.showInformationMessage('Rovo Dev: Workspace closed or extension deactivated.');
 }
 
 /**
- * Placeholder implementation for Rovodev CLI credential storage
+ * Placeholder implementation for Rovo Dev CLI credential storage
  */
 async function getCloudCredentials(): Promise<{ username: string; key: string; host: string } | undefined> {
     const sites = Container.siteManager.getSitesAvailable(ProductJira);

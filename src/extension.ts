@@ -8,8 +8,8 @@ import { startListening } from './atlclients/negotiate';
 import { BitbucketContext } from './bitbucket/bbContext';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
 import { CommandContext, setCommandContext } from './commandContext';
-import { registerCommands } from './commands';
-import { Configuration, configuration, IConfig } from './config/configuration';
+import { registerCommands, registerRovoDevCommands } from './commands';
+import { Configuration } from './config/configuration';
 import { Commands, ExtensionId, GlobalStateVersionKey } from './constants';
 import { Container } from './container';
 import { registerAnalyticsClient, registerErrorReporting, unregisterErrorReporting } from './errorReporting';
@@ -22,11 +22,7 @@ import {
     BB_PIPELINES_FILENAME,
 } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
-import {
-    deactivateRovoDevProcessManager,
-    initializeRovoDevProcessManager,
-    isRovoDevEnabled,
-} from './rovo-dev/rovoDevProcessManager';
+import { deactivateRovoDevProcessManager, initializeRovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { GitExtension } from './typings/git';
 import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
 import { NotificationManagerImpl } from './views/notifications/notificationManager';
@@ -47,26 +43,35 @@ export async function activate(context: ExtensionContext) {
     Configuration.configure(context);
     Logger.configure(context);
 
+    // this disables the main Atlassian activity bar when we are in BBY
+    setCommandContext(CommandContext.BbyEnvironmentActive, !!process.env.ROVODEV_BBY);
+    // this disables the Rovo Dev activity bar unless it's explicitely enabled
+    setCommandContext(CommandContext.RovoDevEnabled, !!process.env.ROVODEV_ENABLED);
+
     // Mark ourselves as the PID in charge of refreshing credentials and start listening for pings.
     context.globalState.update('rulingPid', pid);
 
     try {
-        await Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
+        await Container.initialize(context, atlascodeVersion);
 
         activateErrorReporting();
-        registerCommands(context);
-        activateCodebucket(context);
+        registerRovoDevCommands(context);
 
-        setCommandContext(
-            CommandContext.IsJiraAuthenticated,
-            Container.siteManager.productHasAtLeastOneSite(ProductJira),
-        );
-        setCommandContext(
-            CommandContext.IsBBAuthenticated,
-            Container.siteManager.productHasAtLeastOneSite(ProductBitbucket),
-        );
+        if (!process.env.ROVODEV_BBY) {
+            registerCommands(context);
+            activateCodebucket(context);
 
-        NotificationManagerImpl.getInstance().listen();
+            setCommandContext(
+                CommandContext.IsJiraAuthenticated,
+                Container.siteManager.productHasAtLeastOneSite(ProductJira),
+            );
+            setCommandContext(
+                CommandContext.IsBBAuthenticated,
+                Container.siteManager.productHasAtLeastOneSite(ProductBitbucket),
+            );
+
+            NotificationManagerImpl.getInstance().listen();
+        }
     } catch (e) {
         Logger.error(e, 'Error initializing atlascode!');
     }
@@ -75,16 +80,18 @@ export async function activate(context: ExtensionContext) {
         Container.clientManager.requestSite(site);
     });
 
-    // new user for auth exp
-    if (previousVersion === undefined) {
-        const expVal = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeOnboardingExperiment);
-        if (expVal) {
-            commands.executeCommand(Commands.ShowOnboardingFlow);
+    if (!process.env.ROVODEV_BBY) {
+        // new user for auth exp
+        if (previousVersion === undefined) {
+            const expVal = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeOnboardingExperiment);
+            if (expVal) {
+                commands.executeCommand(Commands.ShowOnboardingFlow);
+            } else {
+                commands.executeCommand(Commands.ShowOnboardingPage);
+            }
         } else {
-            commands.executeCommand(Commands.ShowOnboardingPage);
+            showWelcomePage(atlascodeVersion, previousVersion);
         }
-    } else {
-        showWelcomePage(atlascodeVersion, previousVersion);
     }
 
     const delay = Math.floor(Math.random() * Math.floor(AnalyticDelay));
@@ -92,19 +99,25 @@ export async function activate(context: ExtensionContext) {
         sendAnalytics(atlascodeVersion, context.globalState);
     }, delay);
 
-    const duration = process.hrtime(start);
-    context.subscriptions.push(languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
+    if (!process.env.ROVODEV_BBY) {
+        context.subscriptions.push(languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
 
-    // Following are async functions called without await so that they are run
-    // in the background and do not slow down the time taken for the extension
-    // icon to appear in the activity bar
-    activateBitbucketFeatures();
-    activateYamlFeatures(context);
-
-    if (isRovoDevEnabled) {
-        setCommandContext(CommandContext.RovoDevEnabled, true);
-        initializeRovoDevProcessManager(context);
+        // Following are async functions called without await so that they are run
+        // in the background and do not slow down the time taken for the extension
+        // icon to appear in the activity bar
+        activateBitbucketFeatures();
+        activateYamlFeatures(context);
     }
+
+    if (!!process.env.ROVODEV_ENABLED) {
+        initializeRovoDevProcessManager(context);
+
+        if (process.env.ROVODEV_BBY) {
+            commands.executeCommand('workbench.view.extension.atlascode-rovo-dev');
+        }
+    }
+
+    const duration = process.hrtime(start);
 
     Logger.info(
         `Atlassian for VS Code (v${atlascodeVersion}) activated in ${
@@ -206,7 +219,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-    if (isRovoDevEnabled) {
+    if (!!process.env.ROVODEV_ENABLED) {
         deactivateRovoDevProcessManager();
     }
 

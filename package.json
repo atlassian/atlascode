@@ -431,7 +431,7 @@
                 {
                     "id": "atlascode-rovo-dev",
                     "title": "Rovo Dev",
-                    "icon": "$(rocket)"
+                    "icon": "resources/rovodev-icon.svg"
                 }
             ]
         },
@@ -440,27 +440,27 @@
                 {
                     "id": "atlascode.views.jira.assignedWorkItemsTreeView",
                     "name": "Assigned Jira Work Items",
-                    "when": "atlascode:assignedIssueExplorerEnabled && config.atlascode.jira.enabled"
+                    "when": "!atlascode:bbyEnvironmentActive && atlascode:assignedIssueExplorerEnabled && config.atlascode.jira.enabled"
                 },
                 {
                     "id": "atlascode.views.jira.customJqlTreeView",
                     "name": "Custom Jql Filters",
-                    "when": "atlascode:assignedIssueExplorerEnabled && config.atlascode.jira.enabled && atlascode:customJQLExplorerEnabled && atlascode:isJiraAuthenticated"
+                    "when": "!atlascode:bbyEnvironmentActive && atlascode:assignedIssueExplorerEnabled && config.atlascode.jira.enabled && atlascode:customJQLExplorerEnabled && atlascode:isJiraAuthenticated"
                 },
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
-                    "when": "atlascode:bitbucketExplorerEnabled && config.atlascode.bitbucket.enabled"
+                    "when": "!atlascode:bbyEnvironmentActive && atlascode:bitbucketExplorerEnabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "id": "atlascode.views.bb.pipelinesTreeView",
                     "name": "Bitbucket pipelines",
-                    "when": "atlascode:pipelineExplorerEnabled && config.atlascode.bitbucket.enabled"
+                    "when": "!atlascode:bbyEnvironmentActive && atlascode:pipelineExplorerEnabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "id": "atlascode.views.helpTreeView",
                     "name": "Help and Feedback",
-                    "when": "config.atlascode.helpExplorerEnabled"
+                    "when": "!atlascode:bbyEnvironmentActive && config.atlascode.helpExplorerEnabled"
                 }
             ],
             "atlascode-rovo-dev": [
