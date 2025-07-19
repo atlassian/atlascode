@@ -433,7 +433,7 @@ const RovoDevView: React.FC = () => {
                         }
                     >
                         <textarea
-                            style={styles.rovoDevTextareaStyles}
+                            style={{ ...{ 'field-sizing': 'content' }, ...styles.rovoDevTextareaStyles }}
                             placeholder={TextAreaMessages[currentState]}
                             onChange={(element) => setPromptText(element.target.value)}
                             onKeyDown={handleKeyDown}
