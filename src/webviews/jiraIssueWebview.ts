@@ -13,9 +13,11 @@ import {
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
+import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
 import { commands, env } from 'vscode';
 
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
+import { editIssueUIRenderPerformanceEvent } from '../analytics'; // editIssueFieldsUpdatePerformanceEvent still needs to be imported
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
 import { PullRequestData } from '../bitbucket/model';
@@ -121,8 +123,12 @@ export class JiraIssueWebview
             if (refetchMinimalIssue) {
                 this._issue = await fetchMinimalIssue(this._issue.key, this._issue.siteDetails);
             }
+            // First Request begins here for issue rendering
+            const startRenderUITime = process.hrtime();
             const editUI: EditIssueUI<DetailedSiteInfo> = await fetchEditIssueUI(this._issue);
-
+            const performanceEnabled = FeatureFlagClient.checkExperimentValue(
+                Experiments.AtlascodePerformanceExperiment,
+            );
             if (this._panel) {
                 this._panel.title = `${this._issue.key}`;
             }
@@ -136,13 +142,37 @@ export class JiraIssueWebview
             msg.type = 'update';
 
             this.postMessage(msg);
+            const endRenderUITime = process.hrtime(startRenderUITime);
+            const endRenderUITimeMs = endRenderUITime[0] * 1000 + Math.floor(endRenderUITime[1] / 1000000);
+            editIssueUIRenderPerformanceEvent(
+                this._issue.siteDetails,
+                this._issue.key,
+                endRenderUITimeMs,
+                performanceEnabled,
+            )
+                .then((event) => {
+                    Container.analyticsClient.sendTrackEvent(event);
+                })
+                .catch((error) => {
+                    Logger.debug('Failed to send performance analytics for Render EditUI', error);
+                });
 
             // call async-able update functions here
-            this.updateEpicChildren();
-            this.updateCurrentUser();
-            this.updateWatchers();
-            this.updateVoters();
-            this.updateRelatedPullRequests();
+            if (performanceEnabled) {
+                await Promise.allSettled([
+                    this.updateEpicChildren(),
+                    this.updateCurrentUser(),
+                    this.updateWatchers(),
+                    this.updateVoters(),
+                    this.updateRelatedPullRequests(),
+                ]);
+            } else {
+                this.updateEpicChildren();
+                this.updateCurrentUser();
+                this.updateWatchers();
+                this.updateVoters();
+                this.updateRelatedPullRequests();
+            }
         } catch (e) {
             Logger.error(e, 'Error updating issue');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -154,15 +184,32 @@ export class JiraIssueWebview
     async updateEpicChildren() {
         if (this._issue.isEpic) {
             const site = this._issue.siteDetails;
-            const client = await Container.clientManager.jiraClient(site);
-            const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
-            const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
-            const res = await client.searchForIssuesUsingJqlGet(
-                `${epicInfo.epicLink.id} = "${this._issue.key}" order by lastViewed DESC`,
-                fields,
+            const performanceEnabled = FeatureFlagClient.checkExperimentValue(
+                Experiments.AtlascodePerformanceExperiment,
             );
-            const searchResults = await readSearchResults(res, site, epicInfo);
-            this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
+            if (performanceEnabled) {
+                const [client, fields, epicInfo] = await Promise.all([
+                    Container.clientManager.jiraClient(site),
+                    Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site),
+                    Container.jiraSettingsManager.getEpicFieldsForSite(site),
+                ]);
+                const res = await client.searchForIssuesUsingJqlGet(
+                    `${epicInfo.epicLink.id} = "${this._issue.key}" order by lastViewed DESC`,
+                    fields,
+                );
+                const searchResults = await readSearchResults(res, site, epicInfo);
+                this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
+            } else {
+                const client = await Container.clientManager.jiraClient(site);
+                const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
+                const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
+                const res = await client.searchForIssuesUsingJqlGet(
+                    `${epicInfo.epicLink.id} = "${this._issue.key}" order by lastViewed DESC`,
+                    fields,
+                );
+                const searchResults = await readSearchResults(res, site, epicInfo);
+                this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
+            }
         }
     }
 
