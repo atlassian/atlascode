@@ -81,11 +81,14 @@ export const agentMessageStyles: React.CSSProperties = {
 };
 
 export const errorMessageStyles: React.CSSProperties = {
-    backgroundColor: 'var(--vscode-sideBar-background)',
     alignSelf: 'flex-start',
     width: '100%',
-    border: 'red solid 1px',
+    border: '1px solid var(--vscode-editorWidget-border)',
     borderBottomLeftRadius: '8px',
+    padding: '8px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
 };
 
 export const messageContentStyles: React.CSSProperties = {
@@ -100,7 +103,14 @@ export const undoKeepButtonStyles: React.CSSProperties = {
     borderRadius: '2px',
 };
 
-export const inlineMofidyButtonStyles: React.CSSProperties = {
+export const inlineModifyButtonStyles: React.CSSProperties = {
     padding: '2px 4px !important',
     backgroundColor: 'var(--vscode-list-hoverBackground)',
+};
+
+export const inChatButtonStyles: React.CSSProperties = {
+    padding: '6px 11px',
+    background: 'var(--vscode-button-background)',
+    color: 'var(--vscode-button-foreground)',
+    border: '1px solid var(--vscode-button-border)',
 };
