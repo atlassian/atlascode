@@ -291,6 +291,8 @@ const ModifiedFileItem: React.FC<{
     const [isUndoHovered, setIsUndoHovered] = React.useState(false);
     const [isKeepHovered, setIsKeepHovered] = React.useState(false);
 
+    const isDeletion = msg.type === 'delete';
+
     const filePath = msg.filePath;
     if (!filePath) {
         return null;
@@ -325,7 +327,7 @@ const ModifiedFileItem: React.FC<{
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <div>{filePath}</div>
+            <div id={isDeletion ? 'deleted-file' : undefined}>{filePath}</div>
             <div
                 style={{ display: isHovered ? 'flex' : 'none', alignItems: 'center', flexDirection: 'row', gap: '4px' }}
             >
