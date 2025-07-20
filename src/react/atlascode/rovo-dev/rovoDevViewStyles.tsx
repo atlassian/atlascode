@@ -1,3 +1,5 @@
+import React from 'react';
+
 export const rovoDevContainerStyles: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
@@ -41,7 +43,53 @@ export const rovoDevButtonStyles: React.CSSProperties = {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
+    flexWrap: 'wrap',
 };
+
+export const rovoDevPromptButtonStyles: React.CSSProperties = {
+    color: 'var(--vscode-input-foreground) !important',
+    border: '1px solid var(--vscode-button-border)',
+    backgroundColor: 'var(--vscode-input-background)',
+    marginLeft: '4px',
+    marginTop: '1px',
+    marginBottom: '1px',
+};
+
+export const rovoDevPromptButtonDisabledStyles: React.CSSProperties = {
+    color: 'var(--vscode-disabledForeground) !important',
+};
+
+export const rovoDevPromptButtonToggledStyles: React.CSSProperties = {
+    ...rovoDevPromptButtonStyles,
+    color: 'var(--vscode-inputOption-activeBorder) !important',
+    border: '0',
+    margin: '0 var(--space-padding-interactive-large, 8px)',
+    padding: '0',
+};
+
+export const rovoDevDeepPlanToggled: React.CSSProperties = {
+    color: 'var(--vscode-inputOption-activeBorder) !important',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: '20px',
+    border: '1px solid var(--vscode-inputOption-activeBorder)',
+    marginTop: '0',
+    marginBottom: '0',
+    overflowX: 'hidden',
+};
+
+export function rovoDevDeepPlanStylesSelector(isClicked: boolean, isDisabled: boolean): React.CSSProperties {
+    if (isClicked && isDisabled) {
+        return { ...rovoDevPromptButtonToggledStyles, ...rovoDevPromptButtonDisabledStyles };
+    } else if (isDisabled) {
+        return { ...rovoDevPromptButtonStyles, ...rovoDevPromptButtonDisabledStyles };
+    } else if (isClicked) {
+        return rovoDevPromptButtonToggledStyles;
+    } else {
+        return rovoDevPromptButtonStyles;
+    }
+}
 
 export const rovoDevTextareaContainerStyles: React.CSSProperties = {
     width: '100%',
