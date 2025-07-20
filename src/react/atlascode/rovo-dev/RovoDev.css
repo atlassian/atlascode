@@ -1,3 +1,7 @@
+body {
+    padding: 0 !important;
+}
+
 .logical-change-container {
     display: flex;
     flex-direction: column;
