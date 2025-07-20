@@ -54,7 +54,7 @@ const AiGenerativeTextSummaryIcon: React.FC<{
 const CloseIconDeepPlan: React.FC<{}> = () => {
     return (
         <span style={{ zoom: '0.625' }}>
-            <CloseIcon label="" css />
+            <CloseIcon label="" />
         </span>
     );
 };
