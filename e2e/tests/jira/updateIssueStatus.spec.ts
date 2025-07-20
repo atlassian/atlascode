@@ -35,10 +35,10 @@ test('I can transition a Jira', async ({ page, request }) => {
     const { id: issueMappingId } = await setupWireMockMapping(request, 'GET', updatedIssue, '/rest/api/2/issue/BTS-1');
 
     await jiraIssuePage.updateStatus(nextStatus);
-    await page.waitForTimeout(10_000);
+    await page.waitForTimeout(1000);
 
-    // TODO: await jiraIssuePage.expectStatus(nextStatus);
-    atlascodeDrawer.expectStatusForJiraIssue(issueName, nextStatus);
+    await jiraIssuePage.expectStatus(nextStatus);
+    // TODO: atlascodeDrawer.expectStatusForJiraIssue(issueName, nextStatus);
 
     await cleanupWireMockMapping(request, issueMappingId);
 });
