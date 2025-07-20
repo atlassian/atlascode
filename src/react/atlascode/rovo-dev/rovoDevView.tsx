@@ -43,6 +43,36 @@ const TextAreaMessages: Record<State, string> = {
     [State.ExecutingPlan]: 'Executing the code plan...',
 };
 
+// this function scrolls the element to the end, but it prevents scrolling too frequently to avoid the UI to get overloaded.
+// the delay is implemented globally, not per element. which is fine for now, because we only scroll 1 element.
+const scrollToEnd = (() => {
+    const SCROLL_DELAY = 250;
+    let lastScroll: number = 0;
+    let scrollTimeout: NodeJS.Timeout | number = 0;
+
+    function doScrollNow(element: HTMLDivElement) {
+        element.scroll({ top: element.scrollHeight, behavior: 'smooth' });
+        return performance.now();
+    }
+
+    return (element: HTMLDivElement) => {
+        if (scrollTimeout) {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = 0;
+        }
+
+        const delay = lastScroll - performance.now() + SCROLL_DELAY;
+
+        if (delay < 0) {
+            lastScroll = doScrollNow(element);
+            // schedule one extra scroll to adjust for react rendering asynchronousness
+            scrollTimeout = setTimeout(() => (lastScroll = doScrollNow(element)), SCROLL_DELAY);
+        } else {
+            scrollTimeout = setTimeout(() => (lastScroll = doScrollNow(element)), delay);
+        }
+    };
+})();
+
 const RovoDevView: React.FC = () => {
     const [sendButtonDisabled, setSendButtonDisabled] = useState(false);
     const [currentState, setCurrentState] = useState(State.WaitingForPrompt);
@@ -58,7 +88,10 @@ const RovoDevView: React.FC = () => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (chatEndRef.current) {
+            scrollToEnd(chatEndRef.current);
+        }
+
         const codeBlocks = document.querySelectorAll('pre code');
         codeBlocks.forEach((block) => {
             highlightElement(block, detectLanguage(block.textContent || ''));
@@ -415,7 +448,7 @@ const RovoDevView: React.FC = () => {
 
     return (
         <div className="rovoDevChat" style={styles.rovoDevContainerStyles}>
-            <div style={styles.chatMessagesContainerStyles}>
+            <div ref={chatEndRef} style={styles.chatMessagesContainerStyles}>
                 {chatHistory.map((msg, index) =>
                     renderChatHistory(
                         msg,
@@ -430,7 +463,6 @@ const RovoDevView: React.FC = () => {
                 {isTechnicalPlanCreated && (
                     <CodePlanButton execute={executeCodePlan} disabled={currentState !== State.WaitingForPrompt} />
                 )}
-                <div ref={chatEndRef} />
             </div>
             <div style={styles.rovoDevInputSectionStyles}>
                 <UpdatedFilesComponent
