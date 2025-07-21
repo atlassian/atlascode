@@ -4,37 +4,31 @@ import { AtlascodeDrawer } from 'e2e/page-objects/AtlascodeDrawer';
 import { JiraIssuePage } from 'e2e/page-objects/JiraIssuePage';
 
 test('I can transition a Jira', async ({ page, request }) => {
-    const ISSUE = {
-        name: 'BTS-1 - User Interface Bugs',
-        status: {
-            current: 'To Do',
-            next: 'In Progress',
-        },
-    };
-
-    // setup mocks for current status
-    const resetTodoIssue = await setupIssueMock(request, { status: ISSUE.status.current });
+    const issueName = 'BTS-1 - User Interface Bugs';
+    const currentStatus = 'To Do';
+    const nextStatus = 'In Progress';
 
     await authenticateWithJira(page);
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
     const atlascodeDrawer = new AtlascodeDrawer(page);
-    await atlascodeDrawer.expectStatusForJiraIssue(ISSUE.name, ISSUE.status.current);
-    await atlascodeDrawer.openJiraIssue(ISSUE.name);
+    await atlascodeDrawer.expectStatusForJiraIssue(issueName, currentStatus);
+    await atlascodeDrawer.openJiraIssue(issueName);
 
     const issueFrame = await getIssueFrame(page);
     const jiraIssuePage = new JiraIssuePage(issueFrame);
-    await jiraIssuePage.expectStatus(ISSUE.status.current);
+    await jiraIssuePage.expectStatus(currentStatus);
 
     // setup mocks for next status
-    const resetNextIssue = await setupIssueMock(request, { status: ISSUE.status.next });
-    const resetNextSearch = await setupSearchMock(request, ISSUE.status.next);
+    const cleanupIssueMock = await setupIssueMock(request, { status: nextStatus });
+    const cleanupSearchMock = await setupSearchMock(request, nextStatus);
 
-    await jiraIssuePage.updateStatus(ISSUE.status.next);
+    await jiraIssuePage.updateStatus(nextStatus);
     await page.waitForTimeout(1000);
 
-    await jiraIssuePage.expectStatus(ISSUE.status.next);
-    await atlascodeDrawer.expectStatusForJiraIssue(ISSUE.name, ISSUE.status.next);
+    await jiraIssuePage.expectStatus(nextStatus);
+    await atlascodeDrawer.expectStatusForJiraIssue(issueName, nextStatus);
 
-    await Promise.all([resetTodoIssue, resetNextIssue, resetNextSearch].map(async (reset) => await reset()));
+    await cleanupIssueMock();
+    await cleanupSearchMock();
 });
