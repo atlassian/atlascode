@@ -7,7 +7,7 @@ export const rovoDevContainerStyles: React.CSSProperties = {
     fontSize: 'var(--vscode-font-size)',
     fontFamily: 'var(--vscode-font-family)',
     height: '100vh',
-    margin: '0 -20px',
+    margin: 'auto',
     maxWidth: '800px',
 };
 

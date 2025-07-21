@@ -61,6 +61,7 @@
         "extension:package": "npm run extension:clean && vsce package --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",
         "extension:install": "npm run extension:package && code --install-extension ./atlascode-*.vsix --force",
         "test": "rm -rf coverage && npm run test:unit && npm run test:react && istanbul-merge --out coverage/coverage-final.json coverage/react/coverage-final.json coverage/unit/coverage-final.json && echo '\n\nTotal test coverage:' && nyc report --reporter clover --reporter lcov --reporter html --reporter text-summary -t coverage/ --report-dir coverage/",
+        "test:nocoverage": "npm run test:unit -- --collectCoverage false && npm run test:react -- --collectCoverage false",
         "test:unit": "jest -c jest.unit.config.ts",
         "test:react": "jest -c jest.react.config.ts",
         "test:e2e:sslcerts": "cd e2e/sslcerts && ./generate-certs.sh",
