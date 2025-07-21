@@ -57,26 +57,21 @@ export const rovoDevPromptButtonStyles: React.CSSProperties = {
 
 export const rovoDevPromptButtonDisabledStyles: React.CSSProperties = {
     color: 'var(--vscode-disabledForeground) !important',
+    backgroundColor: 'unset',
 };
 
 export const rovoDevPromptButtonToggledStyles: React.CSSProperties = {
     ...rovoDevPromptButtonStyles,
-    color: 'var(--vscode-inputOption-activeBorder) !important',
-    border: '0',
-    margin: '0 var(--space-padding-interactive-large, 8px)',
-    padding: '0',
-};
-
-export const rovoDevDeepPlanToggled: React.CSSProperties = {
-    color: 'var(--vscode-inputOption-activeBorder) !important',
+    margin: '0 4px',
+    padding: '0 4px',
+    gap: '2px',
+    color: 'var(--vscode-inputOption-activeForeground) !important',
+    backgroundColor: 'var(--vscode-inputOption-activeBackground)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: '20px',
+    borderRadius: '4px',
     border: '1px solid var(--vscode-inputOption-activeBorder)',
-    marginTop: '0',
-    marginBottom: '0',
-    overflowX: 'hidden',
 };
 
 export function rovoDevDeepPlanStylesSelector(isClicked: boolean, isDisabled: boolean): React.CSSProperties {
