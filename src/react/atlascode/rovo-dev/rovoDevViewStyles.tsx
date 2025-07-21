@@ -49,13 +49,20 @@ export const rovoDevTextareaContainerStyles: React.CSSProperties = {
     padding: '8px',
 };
 
-export const chatMessagesContainerStyles: React.CSSProperties = {
+export const outerChatContainerStyles: React.CSSProperties = {
     width: '100%',
     overflowY: 'auto',
     display: 'flex',
     flexDirection: 'column',
     flexGrow: '1',
+    gap: '12px',
     padding: '10px 16px 0 16px',
+};
+
+export const chatMessagesContainerStyles: React.CSSProperties = {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
 };
 
 export const chatMessageStyles: React.CSSProperties = {

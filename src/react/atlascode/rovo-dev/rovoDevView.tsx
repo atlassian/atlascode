@@ -14,6 +14,7 @@ import { RovoDevResponse } from '../../../rovo-dev/responseParser';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
 import { useMessagingApi } from '../messagingApi';
 import { renderChatHistory, UpdatedFilesComponent } from './common/common';
+import { RovoDevLanding } from './rovoDevLanding';
 import { RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import * as styles from './rovoDevViewStyles';
 import { CodePlanButton } from './technical-plan/CodePlanButton';
@@ -447,22 +448,25 @@ const RovoDevView: React.FC = () => {
     );
 
     return (
-        <div className="rovoDevChat" style={styles.rovoDevContainerStyles}>
-            <div ref={chatEndRef} style={styles.chatMessagesContainerStyles}>
-                {chatHistory.map((msg, index) =>
-                    renderChatHistory(
-                        msg,
-                        index,
-                        openFile,
-                        isRetryAfterErrorButtonEnabled,
-                        retryPromptAfterError,
-                        getOriginalText,
-                    ),
-                )}
-                {pendingToolCall && <ToolCallItem msg={pendingToolCall} />}
-                {isTechnicalPlanCreated && (
-                    <CodePlanButton execute={executeCodePlan} disabled={currentState !== State.WaitingForPrompt} />
-                )}
+        <div style={styles.rovoDevContainerStyles}>
+            <div ref={chatEndRef} style={styles.outerChatContainerStyles}>
+                <RovoDevLanding />
+                <div style={styles.chatMessagesContainerStyles}>
+                    {chatHistory.map((msg, index) =>
+                        renderChatHistory(
+                            msg,
+                            index,
+                            openFile,
+                            isRetryAfterErrorButtonEnabled,
+                            retryPromptAfterError,
+                            getOriginalText,
+                        ),
+                    )}
+                    {pendingToolCall && <ToolCallItem msg={pendingToolCall} />}
+                    {isTechnicalPlanCreated && (
+                        <CodePlanButton execute={executeCodePlan} disabled={currentState !== State.WaitingForPrompt} />
+                    )}
+                </div>
             </div>
             <div style={styles.rovoDevInputSectionStyles}>
                 <UpdatedFilesComponent
