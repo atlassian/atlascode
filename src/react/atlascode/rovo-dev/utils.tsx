@@ -234,3 +234,5 @@ export const toolNameIconMap: Record<string, string> = {
     delete_file: 'codicon codicon-trash',
     open_files: 'codicon codicon-go-to-file',
 };
+
+export const CODE_PLAN_EXECUTE_PROMPT = 'Execute the code plan that you have created';
