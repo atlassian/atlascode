@@ -274,7 +274,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private async sendUserPromptToView(message: string) {
+    private async sendUserPromptToView(message: string, enable_deep_plan?: boolean) {
         const webview = this._webView!;
 
         await webview.postMessage({
@@ -287,6 +287,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         return await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
+            enable_deep_plan: !!enable_deep_plan,
         });
     }
 
@@ -355,7 +356,7 @@ ${message}`;
         }
 
         if (!suppressEcho) {
-            await this.sendUserPromptToView(message);
+            await this.sendUserPromptToView(message, enable_deep_plan);
         }
 
         this._previousPrompt = {
@@ -389,6 +390,7 @@ ${message}`;
 
         await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
+            enable_deep_plan: !!previousPrompt.enable_deep_plan,
         });
 
         await this.executeApiWithErrorHandling((client) => {

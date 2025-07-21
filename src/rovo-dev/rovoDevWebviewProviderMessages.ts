@@ -23,7 +23,7 @@ export interface RovoDevObjectResponse {
 }
 
 export type RovoDevProviderMessage =
-    | ReducerAction<RovoDevProviderMessageType.PromptSent>
+    | ReducerAction<RovoDevProviderMessageType.PromptSent, { enable_deep_plan: boolean }>
     | ReducerAction<RovoDevProviderMessageType.Response, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.UserChatMessage, { message: ChatMessage }>
     | ReducerAction<RovoDevProviderMessageType.CompleteMessage>

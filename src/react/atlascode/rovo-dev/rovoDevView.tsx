@@ -244,6 +244,7 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.PromptSent:
                     // Disable the send button, and enable the pause button
                     setSendButtonDisabled(true);
+                    setIsDeepPlanToggled(event.enable_deep_plan);
                     setCurrentState(State.GeneratingResponse);
                     appendCurrentResponse('...');
                     break;
