@@ -1,44 +1,43 @@
 import { test } from '@playwright/test';
-import {
-    authenticateWithJira,
-    cleanupWireMockMapping,
-    getIssueFrame,
-    setupWireMockMapping,
-    updateIssueField,
-} from 'e2e/helpers';
+import { authenticateWithJira, getIssueFrame, setupIssueMock, setupSearchMock } from 'e2e/helpers';
 import { AtlascodeDrawer } from 'e2e/page-objects/AtlascodeDrawer';
 import { JiraIssuePage } from 'e2e/page-objects/JiraIssuePage';
-import fs from 'fs';
 
 test('I can transition a Jira', async ({ page, request }) => {
-    const issueName = 'BTS-1 - User Interface Bugs';
-    const currentStatus = 'In Progress';
-    const nextStatus = 'In Review';
+    const ISSUE = {
+        name: 'BTS-1 - User Interface Bugs',
+        status: {
+            current: 'To Do',
+            next: 'In Progress',
+        },
+    };
+
+    // setup mocks for current status
+    const resetTodoIssue = await setupIssueMock(request, { status: ISSUE.status.current });
+    const resetTodoSearch = await setupSearchMock(request, ISSUE.status.current);
 
     await authenticateWithJira(page);
+    await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
     const atlascodeDrawer = new AtlascodeDrawer(page);
-    atlascodeDrawer.expectStatusForJiraIssue(issueName, currentStatus);
-    await atlascodeDrawer.openJiraIssue(issueName);
-
-    await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
+    await atlascodeDrawer.expectStatusForJiraIssue(ISSUE.name, ISSUE.status.current);
+    await atlascodeDrawer.openJiraIssue(ISSUE.name);
 
     const issueFrame = await getIssueFrame(page);
     const jiraIssuePage = new JiraIssuePage(issueFrame);
-    await jiraIssuePage.expectStatus(currentStatus);
+    await jiraIssuePage.expectStatus(ISSUE.status.current);
 
-    // Update mock for GET issue request
-    const issueJSON = JSON.parse(fs.readFileSync('e2e/wiremock-mappings/mockedteams/BTS-1/bts1.json', 'utf-8'));
-    const updatedIssue = updateIssueField(issueJSON, {
-        status: nextStatus,
-    });
-    const { id: issueMappingId } = await setupWireMockMapping(request, 'GET', updatedIssue, '/rest/api/2/issue/BTS-1');
+    // setup mocks for next status
+    const resetNextIssue = await setupIssueMock(request, { status: ISSUE.status.next });
+    const resetNextSearch = await setupSearchMock(request, ISSUE.status.next);
 
-    await jiraIssuePage.updateStatus(nextStatus);
+    await jiraIssuePage.updateStatus(ISSUE.status.next);
     await page.waitForTimeout(1000);
 
-    await jiraIssuePage.expectStatus(nextStatus);
-    // TODO: atlascodeDrawer.expectStatusForJiraIssue(issueName, nextStatus);
+    await jiraIssuePage.expectStatus(ISSUE.status.next);
+    await atlascodeDrawer.expectStatusForJiraIssue(ISSUE.name, ISSUE.status.next);
 
-    await cleanupWireMockMapping(request, issueMappingId);
+    await Promise.all(
+        [resetTodoIssue, resetTodoSearch, resetNextIssue, resetNextSearch].map(async (reset) => await reset()),
+    );
 });
