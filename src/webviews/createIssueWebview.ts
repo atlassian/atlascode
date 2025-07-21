@@ -7,6 +7,7 @@ import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
 import { commands, Position, Uri, ViewColumn, window } from 'vscode';
 
 import { issueCreatedEvent } from '../analytics';
+import { createIssueForceUpdateFieldsPerformanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { showIssue } from '../commands/jira/showIssue';
 import { configuration } from '../config/configuration';
@@ -268,6 +269,7 @@ export class CreateIssueWebview
             const performanceEnabled = FeatureFlagClient.checkExperimentValue(
                 Experiments.AtlascodePerformanceExperiment,
             );
+            const startCreateIssueUIRenderTime = process.hrtime();
             if (performanceEnabled) {
                 const [availableProjects, screenData] = await Promise.all([
                     Container.jiraProjectManager.getProjects(this._siteDetails),
@@ -325,59 +327,70 @@ export class CreateIssueWebview
                     : {};
 
                 this.postMessage(createData);
-            }
-            const availableProjects = await Container.jiraProjectManager.getProjects(this._siteDetails);
-            this._selectedIssueTypeId = '';
-            this._screenData = await fetchCreateIssueUI(this._siteDetails, this._currentProject.key);
-            this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
+            } else {
+                const availableProjects = await Container.jiraProjectManager.getProjects(this._siteDetails);
+                this._selectedIssueTypeId = '';
+                this._screenData = await fetchCreateIssueUI(this._siteDetails, this._currentProject.key);
+                this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
 
-            if (fieldValues) {
-                const overrides = this.getValuesForExisitngKeys(
-                    this._screenData.issueTypeUIs[this._selectedIssueTypeId],
-                    fieldValues,
-                    ['site', 'project', 'issuetype'],
-                );
-                this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues = {
-                    ...this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues,
-                    ...overrides,
-                };
-            }
+                if (fieldValues) {
+                    const overrides = this.getValuesForExisitngKeys(
+                        this._screenData.issueTypeUIs[this._selectedIssueTypeId],
+                        fieldValues,
+                        ['site', 'project', 'issuetype'],
+                    );
+                    this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues = {
+                        ...this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues,
+                        ...overrides,
+                    };
+                }
 
-            this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['site'] = availableSites;
+                this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['site'] = availableSites;
 
-            this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues['project'] = this._currentProject;
-            this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['project'] = availableProjects;
+                this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues['project'] = this._currentProject;
+                this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['project'] =
+                    availableProjects;
 
-            /*
+                /*
             partial issue is used for prepopulating summary and description.
             fieldValues get sent when you change the project in the project dropdown so we can preserve any previously set values.
             e.g. you type some stuff, then you change the project...
             at this point the new project may or may not have the same (or some of the same) fields.
             we fill them in with the previous user values.
             */
-            if (this._partialIssue && !fieldValues) {
-                const currentVals = this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues;
-                const partialvals = {
-                    summary: this._partialIssue.summary,
-                    description: this._partialIssue.description,
-                };
+                if (this._partialIssue && !fieldValues) {
+                    const currentVals = this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues;
+                    const partialvals = {
+                        summary: this._partialIssue.summary,
+                        description: this._partialIssue.description,
+                    };
 
-                this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues = {
-                    ...currentVals,
-                    ...partialvals,
-                };
+                    this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues = {
+                        ...currentVals,
+                        ...partialvals,
+                    };
+                }
+
+                const createData: CreateIssueData = this._screenData.issueTypeUIs[
+                    this._selectedIssueTypeId
+                ] as CreateIssueData;
+
+                createData.type = 'update';
+                createData.transformerProblems = Container.config.jira.showCreateIssueProblems
+                    ? this._screenData.problems
+                    : {};
+
+                this.postMessage(createData);
             }
-
-            const createData: CreateIssueData = this._screenData.issueTypeUIs[
-                this._selectedIssueTypeId
-            ] as CreateIssueData;
-
-            createData.type = 'update';
-            createData.transformerProblems = Container.config.jira.showCreateIssueProblems
-                ? this._screenData.problems
-                : {};
-
-            this.postMessage(createData);
+            const endCreateIssueUIRenderTime = process.hrtime(startCreateIssueUIRenderTime);
+            const endCreateIssueUIRenderTimeMs =
+                endCreateIssueUIRenderTime[0] * 1000 + Math.floor(endCreateIssueUIRenderTime[1] / 1000000);
+            createIssueForceUpdateFieldsPerformanceEvent(
+                this._siteDetails,
+                this._currentProject.id,
+                endCreateIssueUIRenderTimeMs,
+                performanceEnabled,
+            );
         } catch (e) {
             Logger.error(e, 'error updating issue fields');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });

@@ -96,6 +96,14 @@ jest.mock('../views/jira/searchJiraHelper', () => ({
     },
 }));
 
+jest.mock('../analytics', () => ({
+    authenticatedEvent: jest.fn(),
+    editedEvent: jest.fn(),
+    loggedOutEvent: jest.fn(),
+    issueCreatedEvent: jest.fn().mockResolvedValue({}),
+    createIssueForceUpdateFieldsPerformanceEvent: jest.fn(),
+}));
+
 const mockWindow = window as jest.Mocked<typeof window>;
 describe('CreateIssueWebview', () => {
     // Mock data
