@@ -306,6 +306,7 @@ export async function createIssueForceUpdateFieldsPerformanceEvent(
     projectKey: string,
     duration: number,
     performanceEnabled: boolean,
+    projectsCount?: number,
     failed?: boolean,
 ): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'loaded', 'createIssueForceUpdateFields', {
@@ -315,6 +316,7 @@ export async function createIssueForceUpdateFieldsPerformanceEvent(
             performanceEnabled: performanceEnabled,
             operationType: performanceEnabled ? 'optimized' : 'original',
             performanceMetric: true,
+            projectsCount: projectsCount,
             failedOperation: failed,
         },
     });

@@ -289,13 +289,14 @@ export class CreateIssueWebview
                 Experiments.AtlascodePerformanceExperiment,
             );
             const startCreateIssueUIRenderTime = process.hrtime();
+            let numOfProjectsForSite: number = 0;
 
             if (performanceEnabled) {
                 const [projectsWithCreateIssuesPermission, screenData] = await Promise.all([
                     this.getProjectsWithPermission(this._siteDetails),
                     fetchCreateIssueUI(this._siteDetails, this._currentProject.key),
                 ]);
-
+                numOfProjectsForSite = projectsWithCreateIssuesPermission.length;
                 const isHasPermissionForCurrentProject = projectsWithCreateIssuesPermission.find(
                     (project) => project.id === this._currentProject?.id,
                 );
@@ -360,7 +361,7 @@ export class CreateIssueWebview
                 this.postMessage(createData);
             } else {
                 const projectsWithCreateIssuesPermission = await this.getProjectsWithPermission(this._siteDetails);
-
+                numOfProjectsForSite = projectsWithCreateIssuesPermission.length;
                 const isHasPermissionForCurrentProject = projectsWithCreateIssuesPermission.find(
                     (project) => project.id === this._currentProject?.id,
                 );
@@ -432,6 +433,7 @@ export class CreateIssueWebview
                 this._currentProject.id,
                 endCreateIssueUIRenderTimeMs,
                 performanceEnabled,
+                numOfProjectsForSite,
             );
         } catch (e) {
             Logger.error(e, 'error updating issue fields');
