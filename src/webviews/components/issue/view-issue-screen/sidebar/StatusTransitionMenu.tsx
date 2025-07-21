@@ -50,8 +50,36 @@ export const StatusTransitionMenu: React.FC<Props> = (props) => {
     const [isOpen, setIsOpen] = React.useState(false);
 
     const { border, background } = getDynamicStyles(props.currentStatus.statusCategory.colorName);
+    const hasTransitions = props?.transitions?.length > 0;
     const transitionsSortedByCategory = sortTransitionsByStatusCategory(props.transitions);
     const shouldShowTransitionName = props.transitions.some((t) => t.name !== t.to.name);
+
+    const dropdownContent = hasTransitions ? (
+        <Box
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                backgroundColor: 'var(--vscode-settings-textInputBackground)',
+                paddingTop: '4px',
+                paddingBottom: '4px',
+                border: '1px solid var(--vscode-list-focusOutline)',
+            }}
+        >
+            {transitionsSortedByCategory.map((t) => (
+                <DropdownItem
+                    key={t.id}
+                    css={{
+                        ':hover': {
+                            background: 'var(--vscode-editor-selectionHighlightBackground) !important',
+                        },
+                    }}
+                    onClick={() => props.onStatusChange(t)}
+                >
+                    {shouldShowTransitionName ? StatusOptionWithTransitionName(t) : StatusOption(t)}
+                </DropdownItem>
+            ))}
+        </Box>
+    ) : null;
 
     return (
         <Box
@@ -71,47 +99,28 @@ export const StatusTransitionMenu: React.FC<Props> = (props) => {
                 trigger={({ triggerRef, ...properties }) => (
                     <LoadingButton
                         isLoading={props.isStatusButtonLoading}
+                        isDisabled={!hasTransitions}
                         onMouseOver={() => setIsHovered(true)}
                         onMouseLeave={() => setIsHovered(false)}
                         style={{
                             alignContent: 'center',
-                            border: isOpen || isHovered ? '1px solid var(--vscode-list-focusOutline)' : border,
+                            border:
+                                (isOpen || isHovered) && hasTransitions
+                                    ? '1px solid var(--vscode-list-focusOutline)'
+                                    : border,
                             backgroundColor: background,
 
                             color: 'var(--vscode-editor-foreground)',
                         }}
                         {...properties}
                         ref={triggerRef}
-                        iconAfter={<ChevronDownIcon label="Status" />}
+                        iconAfter={hasTransitions ? <ChevronDownIcon label="Status" /> : undefined}
                     >
                         {props.currentStatus.name}
                     </LoadingButton>
                 )}
             >
-                <Box
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        backgroundColor: 'var(--vscode-settings-textInputBackground)',
-                        paddingTop: '4px',
-                        paddingBottom: '4px',
-                        border: '1px solid var(--vscode-list-focusOutline)',
-                    }}
-                >
-                    {transitionsSortedByCategory.map((t) => (
-                        <DropdownItem
-                            key={t.id}
-                            css={{
-                                ':hover': {
-                                    background: 'var(--vscode-editor-selectionHighlightBackground) !important',
-                                },
-                            }}
-                            onClick={() => props.onStatusChange(t)}
-                        >
-                            {shouldShowTransitionName ? StatusOptionWithTransitionName(t) : StatusOption(t)}
-                        </DropdownItem>
-                    ))}
-                </Box>
+                {dropdownContent}
             </DropdownMenu>
         </Box>
     );
