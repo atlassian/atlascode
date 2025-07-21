@@ -99,7 +99,7 @@ const ErrorMessageItem: React.FC<{
                 >
                     <div style={messageContentStyles}>Rovo Dev encountered an error</div>
                     <div style={messageContentStyles}>{content}</div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '8px' }}>
                         {msg.isRetriable && isRetryAfterErrorButtonEnabled(msg.uid) && (
                             <RetryPromptButton retryAfterError={retryAfterError} />
                         )}
@@ -114,11 +114,9 @@ const RetryPromptButton: React.FC<{
     retryAfterError: () => void;
 }> = ({ retryAfterError }) => {
     return (
-        <div style={{ marginTop: '12px' }}>
-            <button style={inChatButtonStyles} onClick={retryAfterError}>
-                Try again
-            </button>
-        </div>
+        <button style={inChatButtonStyles} onClick={retryAfterError}>
+            Try again
+        </button>
     );
 };
 
