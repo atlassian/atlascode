@@ -227,4 +227,3 @@ export const isCodeChangeTool = (toolName: string): boolean => {
 };
 
 export const CODE_PLAN_EXECUTE_PROMPT = 'Execute the code plan that you have created';
-
