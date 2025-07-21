@@ -1,4 +1,4 @@
-import { emptyIssueType, IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
+import { emptyIssueType, emptyProject, IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
 import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import { format } from 'date-fns';
@@ -64,11 +64,13 @@ export class CreateIssueWebview
     private _screenData: CreateMetaTransformerResult<DetailedSiteInfo>;
     private _selectedIssueTypeId: string | undefined;
     private _siteDetails: DetailedSiteInfo;
+    private _projectsWithCreateIssuesPermission: { [siteId: string]: Project[] };
 
     constructor(extensionPath: string) {
         super(extensionPath);
         this._screenData = emptyCreateMetaResult;
         this._siteDetails = emptySiteInfo;
+        this._projectsWithCreateIssuesPermission = {};
     }
 
     public get title(): string {
@@ -210,6 +212,23 @@ export class CreateIssueWebview
         });
     }
 
+    private async getProjectsWithPermission(siteDetails: DetailedSiteInfo) {
+        const siteId = siteDetails.id;
+        if (this._projectsWithCreateIssuesPermission[siteId]) {
+            return this._projectsWithCreateIssuesPermission[siteId];
+        }
+
+        const availableProjects = await Container.jiraProjectManager.getProjects(siteDetails);
+        const projectsWithPermission = await Container.jiraProjectManager.filterProjectsByPermission(
+            siteDetails,
+            availableProjects,
+            'CREATE_ISSUES',
+        );
+
+        this._projectsWithCreateIssuesPermission = { [siteId]: projectsWithPermission };
+        return projectsWithPermission;
+    }
+
     public async invalidate() {
         await this.updateFields();
         Container.pmfStats.touchActivity();
@@ -270,11 +289,24 @@ export class CreateIssueWebview
                 Experiments.AtlascodePerformanceExperiment,
             );
             const startCreateIssueUIRenderTime = process.hrtime();
+
             if (performanceEnabled) {
-                const [availableProjects, screenData] = await Promise.all([
-                    Container.jiraProjectManager.getProjects(this._siteDetails),
+                const [projectsWithCreateIssuesPermission, screenData] = await Promise.all([
+                    this.getProjectsWithPermission(this._siteDetails),
                     fetchCreateIssueUI(this._siteDetails, this._currentProject.key),
                 ]);
+
+                const isHasPermissionForCurrentProject = projectsWithCreateIssuesPermission.find(
+                    (project) => project.id === this._currentProject?.id,
+                );
+
+                // if the current project does not have create issues permission, we will select the first project with permission
+                if (!isHasPermissionForCurrentProject) {
+                    this._currentProject =
+                        projectsWithCreateIssuesPermission.length > 0
+                            ? projectsWithCreateIssuesPermission[0]
+                            : emptyProject;
+                }
                 this._selectedIssueTypeId = '';
                 this._screenData = screenData;
                 this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
@@ -290,20 +322,19 @@ export class CreateIssueWebview
                         ...overrides,
                     };
                 }
-
-                this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['site'] = availableSites;
-
-                this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues['project'] = this._currentProject;
-                this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['project'] =
-                    availableProjects;
+                const issueTypeUI: IssueTypeUI<DetailedSiteInfo> =
+                    this._screenData.issueTypeUIs[this._selectedIssueTypeId];
+                issueTypeUI.selectFieldOptions['site'] = availableSites;
+                issueTypeUI.fieldValues['project'] = this._currentProject;
+                issueTypeUI.selectFieldOptions['project'] = projectsWithCreateIssuesPermission;
 
                 /*
-                partial issue is used for prepopulating summary and description. 
-                fieldValues get sent when you change the project in the project dropdown so we can preserve any previously set values.
-                e.g. you type some stuff, then you change the project... 
-                at this point the new project may or may not have the same (or some of the same) fields.
-                we fill them in with the previous user values.
-                */
+            partial issue is used for prepopulating summary and description.
+            fieldValues get sent when you change the project in the project dropdown so we can preserve any previously set values.
+            e.g. you type some stuff, then you change the project...
+            at this point the new project may or may not have the same (or some of the same) fields.
+            we fill them in with the previous user values.
+            */
                 if (this._partialIssue && !fieldValues) {
                     const currentVals = this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues;
                     const partialvals = {
@@ -328,7 +359,19 @@ export class CreateIssueWebview
 
                 this.postMessage(createData);
             } else {
-                const availableProjects = await Container.jiraProjectManager.getProjects(this._siteDetails);
+                const projectsWithCreateIssuesPermission = await this.getProjectsWithPermission(this._siteDetails);
+
+                const isHasPermissionForCurrentProject = projectsWithCreateIssuesPermission.find(
+                    (project) => project.id === this._currentProject?.id,
+                );
+
+                // if the current project does not have create issues permission, we will select the first project with permission
+                if (!isHasPermissionForCurrentProject) {
+                    this._currentProject =
+                        projectsWithCreateIssuesPermission.length > 0
+                            ? projectsWithCreateIssuesPermission[0]
+                            : emptyProject;
+                }
                 this._selectedIssueTypeId = '';
                 this._screenData = await fetchCreateIssueUI(this._siteDetails, this._currentProject.key);
                 this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
@@ -344,12 +387,11 @@ export class CreateIssueWebview
                         ...overrides,
                     };
                 }
-
-                this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['site'] = availableSites;
-
-                this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues['project'] = this._currentProject;
-                this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['project'] =
-                    availableProjects;
+                const issueTypeUI: IssueTypeUI<DetailedSiteInfo> =
+                    this._screenData.issueTypeUIs[this._selectedIssueTypeId];
+                issueTypeUI.selectFieldOptions['site'] = availableSites;
+                issueTypeUI.fieldValues['project'] = this._currentProject;
+                issueTypeUI.selectFieldOptions['project'] = projectsWithCreateIssuesPermission;
 
                 /*
             partial issue is used for prepopulating summary and description.

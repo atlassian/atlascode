@@ -31,8 +31,6 @@ export const rovoDevTextareaStyles: React.CSSProperties = {
     resize: 'none',
     outline: 'none',
     border: 'none',
-    display: 'flex',
-    flexDirection: 'column',
 };
 
 export const rovoDevButtonStyles: React.CSSProperties = {

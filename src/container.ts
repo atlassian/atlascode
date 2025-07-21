@@ -29,7 +29,6 @@ import { CommonActionMessageHandler } from './lib/webview/controller/common/comm
 import { Logger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
 import { Pipeline } from './pipelines/model';
-import { isRovoDevEnabled } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
@@ -73,7 +72,7 @@ export class Container {
     private static _bitbucketHelper: CheckoutHelper;
     private static _assignedWorkItemsView: AssignedWorkItemsViewProvider;
 
-    static async initialize(context: ExtensionContext, config: IConfig, version: string) {
+    static async initialize(context: ExtensionContext, version: string) {
         const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
 
         this._analyticsClient = analyticsClient({
@@ -196,7 +195,7 @@ export class Container {
         context.subscriptions.push(new CustomJQLViewProvider());
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
 
-        if (isRovoDevEnabled) {
+        if (!!process.env.ROVODEV_ENABLED) {
             context.subscriptions.push(
                 (this._rovodevWebviewProvder = new RovoDevWebviewProvider(context.extensionPath, context.globalState)),
             );

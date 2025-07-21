@@ -364,9 +364,10 @@ type TechnicalPlanProps = {
     content: TechnicalPlan;
     openFile: OpenFileFunc;
     getText: (fp: string, lr?: number[]) => Promise<string>;
+    onMount?: () => void;
 };
 
-const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile, getText }) => {
+const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile, getText, onMount }) => {
     const clarifyingQuestions = content.logicalChanges.flatMap((change) => {
         return change.filesToChange
             .map((file) => {
