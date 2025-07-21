@@ -60,3 +60,18 @@ export const clearField = (fields: Fields, errors: any, name: string) => {
         delete (errors.current as any)[name];
     }
 };
+
+export const clearFieldsAndWatches = (
+    updateWatches: (updates: Record<string, string>) => void,
+    watchUpdates: Record<string, string>,
+    fieldIds: string[],
+) => {
+    updateWatches(watchUpdates);
+
+    fieldIds.forEach((fieldId) => {
+        const field = document.getElementById(fieldId) as HTMLInputElement;
+        if (field) {
+            field.value = '';
+        }
+    });
+};

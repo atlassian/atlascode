@@ -5,6 +5,8 @@ import VisibilityOff from '@material-ui/icons/VisibilityOff';
 import React from 'react';
 import { BasicAuthInfo } from 'src/atlclients/authInfo';
 import { SiteWithAuthInfo } from 'src/lib/ipc/toUI/config';
+import { FIELD_NAMES } from 'src/react/atlascode/constants';
+import { clearFieldsAndWatches } from 'src/react/atlascode/util/authFormUtils';
 
 import { TabPanel } from './TabPanel';
 
@@ -18,6 +20,7 @@ export type CustomSiteAuthFormProps = {
     registerRequiredString: any;
     authFormState: any;
     updateState: any;
+    updateWatches: (updates: Record<string, string>) => void;
     preventClickDefault: any;
     defaultSSLType: string;
     authTypeTabIndex: number;
@@ -34,6 +37,7 @@ export const CustomSiteAuthForm = ({
     registerRequiredString,
     authFormState,
     updateState,
+    updateWatches,
     preventClickDefault,
     defaultSSLType,
     authTypeTabIndex,
@@ -51,6 +55,13 @@ export const CustomSiteAuthForm = ({
                             color="primary"
                             id="contextPathEnabled"
                             inputRef={register}
+                            onChange={(e) => {
+                                if (!e.target.checked) {
+                                    clearFieldsAndWatches(updateWatches, { contextPath: '' }, [
+                                        FIELD_NAMES.CONTEXT_PATH,
+                                    ]);
+                                }
+                            }}
                         />
                     }
                     spacing={1}
@@ -168,6 +179,15 @@ export const CustomSiteAuthForm = ({
                             id="customSSLEnabled"
                             value="customSSLEnabled"
                             inputRef={register}
+                            onChange={(e) => {
+                                if (!e.target.checked) {
+                                    clearFieldsAndWatches(
+                                        updateWatches,
+                                        { sslCertPaths: '', pfxPath: '', pfxPassphrase: '' },
+                                        [FIELD_NAMES.SSL_CERT_PATHS, FIELD_NAMES.PFX_PATH, FIELD_NAMES.PFX_PASSPHRASE],
+                                    );
+                                }
+                            }}
                         />
                     }
                     spacing={1}
@@ -182,7 +202,21 @@ export const CustomSiteAuthForm = ({
                         <RadioGroup id="customSSLType" name="customSSLType" defaultValue={defaultSSLType}>
                             <ToggleWithLabel
                                 control={
-                                    <Radio inputRef={register} size="small" color="primary" value="customServerSSL" />
+                                    <Radio
+                                        inputRef={register}
+                                        size="small"
+                                        color="primary"
+                                        value="customServerSSL"
+                                        onChange={(e) => {
+                                            if (e.target.value === 'customServerSSL') {
+                                                clearFieldsAndWatches(
+                                                    updateWatches,
+                                                    { pfxPath: '', pfxPassphrase: '' },
+                                                    [FIELD_NAMES.PFX_PATH, FIELD_NAMES.PFX_PASSPHRASE],
+                                                );
+                                            }
+                                        }}
+                                    />
                                 }
                                 spacing={1}
                                 label="Use custom CA certificate(s) (e.g. a self-signed cert)"
@@ -190,7 +224,19 @@ export const CustomSiteAuthForm = ({
                             />
                             <ToggleWithLabel
                                 control={
-                                    <Radio inputRef={register} value="customClientSSL" color="primary" size="small" />
+                                    <Radio
+                                        inputRef={register}
+                                        value="customClientSSL"
+                                        color="primary"
+                                        size="small"
+                                        onChange={(e) => {
+                                            if (e.target.value === 'customClientSSL') {
+                                                clearFieldsAndWatches(updateWatches, { sslCertPaths: '' }, [
+                                                    FIELD_NAMES.SSL_CERT_PATHS,
+                                                ]);
+                                            }
+                                        }}
+                                    />
                                 }
                                 spacing={1}
                                 label="Use custom client-side certificates (CA certificates bundled in PKCS#12 (pfx)"

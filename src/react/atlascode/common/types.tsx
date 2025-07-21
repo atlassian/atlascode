@@ -34,4 +34,5 @@ export type FormValidation<FieldTypes> = {
     isValid: boolean;
     authFormType: string;
     handleSubmit: (callback: OnSubmit<Partial<FieldTypes>>) => (e?: React.BaseSyntheticEvent) => Promise<void>;
+    updateWatches: (updates: Partial<FieldTypes>) => void;
 };

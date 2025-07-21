@@ -182,7 +182,12 @@ export function useFormValidation<FieldTypes>(
     };
 
     const noErrors = getRelevantErrors() < 1;
-    const isValid = noErrors && validateFields();
+    const fieldsValid = validateFields();
+    const isValid = noErrors && fieldsValid;
+
+    const updateWatches = (updates: Partial<FieldTypes>) => {
+        watches.current = { ...watches.current, ...updates };
+    };
 
     const authFormType = selectAuthFormType(product, watches.current, errors.current);
 
@@ -193,5 +198,6 @@ export function useFormValidation<FieldTypes>(
         handleSubmit,
         isValid,
         authFormType,
+        updateWatches,
     };
 }

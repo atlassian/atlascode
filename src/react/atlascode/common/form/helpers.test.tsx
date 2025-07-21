@@ -151,6 +151,102 @@ describe('Form Helpers', () => {
                 const { getRelevantFieldNames } = getHelpers(customWatches, 0);
                 expect(getRelevantFieldNames()).toEqual([FIELD_NAMES.USERNAME, FIELD_NAMES.PASSWORD]);
             });
+
+            it('should include context path when contextPathEnabled is true', () => {
+                const customWatches = { current: { baseUrl: 'https://jira.mycompany.com', contextPathEnabled: true } };
+                const { getRelevantFieldNames } = getHelpers(customWatches, 0);
+                expect(getRelevantFieldNames()).toEqual([
+                    FIELD_NAMES.USERNAME,
+                    FIELD_NAMES.PASSWORD,
+                    FIELD_NAMES.CONTEXT_PATH,
+                ]);
+            });
+
+            it('should not include context path when contextPathEnabled is false', () => {
+                const customWatches = { current: { baseUrl: 'https://jira.mycompany.com', contextPathEnabled: false } };
+                const { getRelevantFieldNames } = getHelpers(customWatches, 0);
+                expect(getRelevantFieldNames()).toEqual([FIELD_NAMES.USERNAME, FIELD_NAMES.PASSWORD]);
+            });
+
+            it('should include SSL cert paths when customSSLEnabled is true and customSSLType is customServerSSL', () => {
+                const customWatches = {
+                    current: {
+                        baseUrl: 'https://jira.mycompany.com',
+                        customSSLEnabled: true,
+                        customSSLType: 'customServerSSL',
+                    },
+                };
+                const { getRelevantFieldNames } = getHelpers(customWatches, 0);
+                expect(getRelevantFieldNames()).toEqual([
+                    FIELD_NAMES.USERNAME,
+                    FIELD_NAMES.PASSWORD,
+                    FIELD_NAMES.SSL_CERT_PATHS,
+                ]);
+            });
+
+            it('should include PFX path when customSSLEnabled is true and customSSLType is customClientSSL', () => {
+                const customWatches = {
+                    current: {
+                        baseUrl: 'https://jira.mycompany.com',
+                        customSSLEnabled: true,
+                        customSSLType: 'customClientSSL',
+                    },
+                };
+                const { getRelevantFieldNames } = getHelpers(customWatches, 0);
+                expect(getRelevantFieldNames()).toEqual([
+                    FIELD_NAMES.USERNAME,
+                    FIELD_NAMES.PASSWORD,
+                    FIELD_NAMES.PFX_PATH,
+                ]);
+            });
+
+            it('should not include SSL fields when customSSLEnabled is false', () => {
+                const customWatches = {
+                    current: {
+                        baseUrl: 'https://jira.mycompany.com',
+                        customSSLEnabled: false,
+                        customSSLType: 'customServerSSL',
+                    },
+                };
+                const { getRelevantFieldNames } = getHelpers(customWatches, 0);
+                expect(getRelevantFieldNames()).toEqual([FIELD_NAMES.USERNAME, FIELD_NAMES.PASSWORD]);
+            });
+
+            it('should include multiple conditional fields when enabled', () => {
+                const customWatches = {
+                    current: {
+                        baseUrl: 'https://jira.mycompany.com',
+                        contextPathEnabled: true,
+                        customSSLEnabled: true,
+                        customSSLType: 'customServerSSL',
+                    },
+                };
+                const { getRelevantFieldNames } = getHelpers(customWatches, 0);
+                expect(getRelevantFieldNames()).toEqual([
+                    FIELD_NAMES.USERNAME,
+                    FIELD_NAMES.PASSWORD,
+                    FIELD_NAMES.CONTEXT_PATH,
+                    FIELD_NAMES.SSL_CERT_PATHS,
+                ]);
+            });
+
+            it('should include context path and PFX path when both are enabled', () => {
+                const customWatches = {
+                    current: {
+                        baseUrl: 'https://jira.mycompany.com',
+                        contextPathEnabled: true,
+                        customSSLEnabled: true,
+                        customSSLType: 'customClientSSL',
+                    },
+                };
+                const { getRelevantFieldNames } = getHelpers(customWatches, 0);
+                expect(getRelevantFieldNames()).toEqual([
+                    FIELD_NAMES.USERNAME,
+                    FIELD_NAMES.PASSWORD,
+                    FIELD_NAMES.CONTEXT_PATH,
+                    FIELD_NAMES.PFX_PATH,
+                ]);
+            });
         });
 
         describe('validRequiredFields', () => {

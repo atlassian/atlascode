@@ -62,18 +62,19 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
         const initialFormValues = {
             baseUrl: defaultSiteWithAuth.site.baseLinkUrl,
             contextPathEnabled: defaultContextPathEnabled,
+            contextPath: defaultSiteWithAuth.site.contextPath || '',
             customSSLEnabled: defaultSSLEnabled,
             customSSLType: defaultSSLType,
+            sslCertPaths: defaultSiteWithAuth.site.customSSLCertPaths || '',
+            pfxPath: defaultSiteWithAuth.site.pfxPath || '',
+            pfxPassphrase: defaultSiteWithAuth.site.pfxPassphrase || '',
             username: (defaultSiteWithAuth.auth as BasicAuthInfo).username || '',
             password: (defaultSiteWithAuth.auth as BasicAuthInfo).password || '',
             personalAccessToken: (defaultSiteWithAuth.auth as PATAuthInfo).token || '',
         };
 
-        const { register, watches, handleSubmit, errors, isValid, authFormType } = useFormValidation<FormFields>(
-            authTypeTabIndex,
-            product,
-            initialFormValues,
-        );
+        const { register, watches, handleSubmit, errors, isValid, authFormType, updateWatches } =
+            useFormValidation<FormFields>(authTypeTabIndex, product, initialFormValues);
 
         const helperText =
             product.key === ProductJira.key
@@ -143,6 +144,24 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
             [doClose, product, save, authFormType],
         );
 
+        const handleCancel = useCallback(() => {
+            updateWatches({
+                contextPath: '',
+                sslCertPaths: '',
+                pfxPath: '',
+                pfxPassphrase: '',
+                contextPathEnabled: false,
+                customSSLEnabled: false,
+                customSSLType: 'customServerSSL',
+                username: '',
+                password: '',
+                personalAccessToken: '',
+                baseUrl: '',
+            });
+
+            doClose();
+        }, [doClose, updateWatches]);
+
         const preventClickDefault = useCallback(
             (event: React.MouseEvent<HTMLButtonElement>) => event.preventDefault(),
             [],
@@ -200,6 +219,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                 registerRequiredString={registerRequiredString}
                                 authFormState={authFormState}
                                 updateState={updateState}
+                                updateWatches={updateWatches}
                                 preventClickDefault={preventClickDefault}
                                 defaultSSLType={defaultSSLType}
                                 authTypeTabIndex={authTypeTabIndex}
@@ -217,7 +237,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                     >
                         Save Site
                     </Button>
-                    <Button onClick={doClose} color="primary">
+                    <Button onClick={handleCancel} color="primary">
                         Cancel
                     </Button>
                 </DialogActions>

@@ -58,12 +58,30 @@ export const getFieldsValidationHelpers = (
 
     const getRelevantFieldNames = (): string[] => {
         const currentAuthFormType = selectAuthFormType(product, watches.current, errors.current);
+        let relevantFields: string[] = [];
 
         if (currentAuthFormType === AuthFormType.JiraCloud) {
-            return [FIELD_NAMES.USERNAME, FIELD_NAMES.PASSWORD];
+            relevantFields = [FIELD_NAMES.USERNAME, FIELD_NAMES.PASSWORD];
+        } else {
+            relevantFields = authTypeTabIndex === 1 ? [FIELD_NAMES.PAT] : [FIELD_NAMES.USERNAME, FIELD_NAMES.PASSWORD];
         }
 
-        return authTypeTabIndex === 1 ? [FIELD_NAMES.PAT] : [FIELD_NAMES.USERNAME, FIELD_NAMES.PASSWORD];
+        // Add context path if enabled
+        if (watches.current.contextPathEnabled) {
+            relevantFields.push(FIELD_NAMES.CONTEXT_PATH);
+        }
+
+        // Add SSL fields if enabled
+        if (watches.current.customSSLEnabled) {
+            if (watches.current.customSSLType === 'customServerSSL') {
+                relevantFields.push(FIELD_NAMES.SSL_CERT_PATHS);
+            }
+            if (watches.current.customSSLType === 'customClientSSL') {
+                relevantFields.push(FIELD_NAMES.PFX_PATH);
+            }
+        }
+
+        return relevantFields;
     };
 
     // Filter errors based on current tab to avoid cross-tab validation issues
