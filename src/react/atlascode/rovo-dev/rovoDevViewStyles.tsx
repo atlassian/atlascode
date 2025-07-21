@@ -107,8 +107,9 @@ export const inlineModifyButtonStyles: React.CSSProperties = {
 };
 
 export const inChatButtonStyles: React.CSSProperties = {
-    padding: '6px 11px',
+    padding: '6px 12px',
     background: 'var(--vscode-button-background)',
     color: 'var(--vscode-button-foreground)',
     border: '1px solid var(--vscode-button-border)',
+    borderRadius: '4px',
 };
