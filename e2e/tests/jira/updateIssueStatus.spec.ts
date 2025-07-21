@@ -24,7 +24,7 @@ test('I can transition a Jira', async ({ page, request }) => {
     const cleanupSearchMock = await setupSearchMock(request, nextStatus);
 
     await jiraIssuePage.updateStatus(nextStatus);
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2_000);
 
     await jiraIssuePage.expectStatus(nextStatus);
     await atlascodeDrawer.expectStatusForJiraIssue(issueName, nextStatus);
