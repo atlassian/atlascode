@@ -1,3 +1,7 @@
+body {
+    padding: 0 !important;
+}
+
 .logical-change-container {
     display: flex;
     flex-direction: column;
@@ -148,6 +152,7 @@
     border-radius: 4px;
     margin-bottom: 8px;
 }
+
 #tool-return-file-path:hover {
     background-color: var(--vscode-list-hoverBackground);
     cursor: pointer;
@@ -177,11 +182,18 @@
     position: relative;
 }
 
+
+#deleted-file {
+    color: var(--vscode-list-errorForeground);
+    text-decoration: line-through;
+}
+
 .code-plan-button-container {
     display: flex;
     justify-content: flex-end;
     margin-bottom: 8px;
 }
+  
 .code-plan-button {
     display: flex;
     align-items: center;

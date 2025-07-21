@@ -226,13 +226,4 @@ export const isCodeChangeTool = (toolName: string): boolean => {
     return ['find_and_replace_code', 'create_file', 'delete_file'].includes(toolName);
 };
 
-export const toolNameIconMap: Record<string, string> = {
-    expand_code_chunks: 'codicon codicon-search',
-    find_and_replace_code: 'codicon codicon-code',
-    create_file: 'codicon codicon-new-file',
-    bash: 'codicon codicon-terminal',
-    delete_file: 'codicon codicon-trash',
-    open_files: 'codicon codicon-go-to-file',
-};
-
 export const CODE_PLAN_EXECUTE_PROMPT = 'Execute the code plan that you have created';

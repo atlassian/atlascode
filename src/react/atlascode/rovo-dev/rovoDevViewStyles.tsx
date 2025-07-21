@@ -9,7 +9,7 @@ export const rovoDevContainerStyles: React.CSSProperties = {
     fontSize: 'var(--vscode-font-size)',
     fontFamily: 'var(--vscode-font-family)',
     height: '100vh',
-    margin: '0 -20px',
+    margin: 'auto',
     maxWidth: '800px',
 };
 
@@ -33,8 +33,6 @@ export const rovoDevTextareaStyles: React.CSSProperties = {
     resize: 'none',
     outline: 'none',
     border: 'none',
-    display: 'flex',
-    flexDirection: 'column',
 };
 
 export const rovoDevButtonStyles: React.CSSProperties = {
@@ -94,13 +92,20 @@ export const rovoDevTextareaContainerStyles: React.CSSProperties = {
     padding: '8px',
 };
 
-export const chatMessagesContainerStyles: React.CSSProperties = {
+export const outerChatContainerStyles: React.CSSProperties = {
     width: '100%',
     overflowY: 'auto',
     display: 'flex',
     flexDirection: 'column',
     flexGrow: '1',
+    gap: '12px',
     padding: '10px 16px 0 16px',
+};
+
+export const chatMessagesContainerStyles: React.CSSProperties = {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
 };
 
 export const chatMessageStyles: React.CSSProperties = {
@@ -124,11 +129,14 @@ export const agentMessageStyles: React.CSSProperties = {
 };
 
 export const errorMessageStyles: React.CSSProperties = {
-    backgroundColor: 'var(--vscode-sideBar-background)',
     alignSelf: 'flex-start',
     width: '100%',
-    border: 'red solid 1px',
+    border: '1px solid var(--vscode-editorWidget-border)',
     borderBottomLeftRadius: '8px',
+    padding: '8px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
 };
 
 export const messageContentStyles: React.CSSProperties = {
@@ -143,7 +151,15 @@ export const undoKeepButtonStyles: React.CSSProperties = {
     borderRadius: '2px',
 };
 
-export const inlineMofidyButtonStyles: React.CSSProperties = {
+export const inlineModifyButtonStyles: React.CSSProperties = {
     padding: '2px 4px !important',
     backgroundColor: 'var(--vscode-list-hoverBackground)',
+};
+
+export const inChatButtonStyles: React.CSSProperties = {
+    padding: '6px 12px',
+    background: 'var(--vscode-button-background)',
+    color: 'var(--vscode-button-foreground)',
+    border: '1px solid var(--vscode-button-border)',
+    borderRadius: '4px',
 };

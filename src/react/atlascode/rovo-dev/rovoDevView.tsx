@@ -15,6 +15,7 @@ import { RovoDevResponse } from '../../../rovo-dev/responseParser';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
 import { useMessagingApi } from '../messagingApi';
 import { renderChatHistory, UpdatedFilesComponent } from './common/common';
+import { RovoDevLanding } from './rovoDevLanding';
 import { RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import * as styles from './rovoDevViewStyles';
 import { CodePlanButton } from './technical-plan/CodePlanButton';
@@ -68,6 +69,36 @@ const TextAreaMessages: Record<State, string> = {
     [State.ExecutingPlan]: 'Executing the code plan...',
 };
 
+// this function scrolls the element to the end, but it prevents scrolling too frequently to avoid the UI to get overloaded.
+// the delay is implemented globally, not per element. which is fine for now, because we only scroll 1 element.
+const scrollToEnd = (() => {
+    const SCROLL_DELAY = 250;
+    let lastScroll: number = 0;
+    let scrollTimeout: NodeJS.Timeout | number = 0;
+
+    function doScrollNow(element: HTMLDivElement) {
+        element.scroll({ top: element.scrollHeight, behavior: 'smooth' });
+        return performance.now();
+    }
+
+    return (element: HTMLDivElement) => {
+        if (scrollTimeout) {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = 0;
+        }
+
+        const delay = lastScroll - performance.now() + SCROLL_DELAY;
+
+        if (delay < 0) {
+            lastScroll = doScrollNow(element);
+            // schedule one extra scroll to adjust for react rendering asynchronousness
+            scrollTimeout = setTimeout(() => (lastScroll = doScrollNow(element)), SCROLL_DELAY);
+        } else {
+            scrollTimeout = setTimeout(() => (lastScroll = doScrollNow(element)), delay);
+        }
+    };
+})();
+
 const RovoDevView: React.FC = () => {
     const [sendButtonDisabled, setSendButtonDisabled] = useState(false);
     const [currentState, setCurrentState] = useState(State.WaitingForPrompt);
@@ -84,7 +115,10 @@ const RovoDevView: React.FC = () => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (chatEndRef.current) {
+            scrollToEnd(chatEndRef.current);
+        }
+
         const codeBlocks = document.querySelectorAll('pre code');
         codeBlocks.forEach((block) => {
             highlightElement(block, detectLanguage(block.textContent || ''));
@@ -165,14 +199,37 @@ const RovoDevView: React.FC = () => {
     const handleAppendModifiedFileToolReturns = useCallback(
         (toolReturn: ToolReturnGenericMessage) => {
             if (isCodeChangeTool(toolReturn.tool_name)) {
-                const msg = parseToolReturnMessage(toolReturn).filter((msg) => msg.filePath);
-                setTotalModifiedFiles((prev) => {
-                    // Ensure unique file paths
-                    return Array.from(new Map([...prev, ...msg].map((item) => [item.filePath, item])).values());
+                const msg = parseToolReturnMessage(toolReturn).filter((msg) => msg.filePath !== undefined);
+
+                const filesMap = new Map([...totalModifiedFiles].map((item) => [item.filePath!, item]));
+
+                // Logic for handling deletions and modifications
+                msg.forEach((file) => {
+                    if (!file.filePath) {
+                        return;
+                    }
+                    if (file.type === 'delete') {
+                        if (filesMap.has(file.filePath)) {
+                            const existingFile = filesMap.get(file.filePath);
+                            if (existingFile?.type === 'modify') {
+                                filesMap.set(file.filePath, file); // If file was only modified but not created by RovoDev, still show deletion
+                            } else {
+                                filesMap.delete(file.filePath); // If file was created by RovoDev, remove it from the map
+                            }
+                        } else {
+                            filesMap.set(file.filePath, file);
+                        }
+                    } else {
+                        if (!filesMap.has(file.filePath) || filesMap.get(file.filePath)?.type === 'delete') {
+                            filesMap.set(file.filePath, file); // Only add on first modification so we can track if file was created by RovoDev or just modified
+                        }
+                    }
                 });
+
+                setTotalModifiedFiles(Array.from(filesMap.values()));
             }
         },
-        [setTotalModifiedFiles],
+        [totalModifiedFiles],
     );
 
     const removeModifiedFileToolReturns = useCallback(
@@ -446,23 +503,25 @@ const RovoDevView: React.FC = () => {
     );
 
     return (
-        <div className="rovoDevChat" style={styles.rovoDevContainerStyles}>
-            <div style={styles.chatMessagesContainerStyles}>
-                {chatHistory.map((msg, index) =>
-                    renderChatHistory(
-                        msg,
-                        index,
-                        openFile,
-                        isRetryAfterErrorButtonEnabled,
-                        retryPromptAfterError,
-                        getOriginalText,
-                    ),
-                )}
-                {pendingToolCall && <ToolCallItem msg={pendingToolCall} />}
-                {isDeepPlanCreated && (
-                    <CodePlanButton execute={executeCodePlan} disabled={currentState !== State.WaitingForPrompt} />
-                )}
-                <div ref={chatEndRef} />
+        <div style={styles.rovoDevContainerStyles}>
+            <div ref={chatEndRef} style={styles.outerChatContainerStyles}>
+                <RovoDevLanding />
+                <div style={styles.chatMessagesContainerStyles}>
+                    {chatHistory.map((msg, index) =>
+                        renderChatHistory(
+                            msg,
+                            index,
+                            openFile,
+                            isRetryAfterErrorButtonEnabled,
+                            retryPromptAfterError,
+                            getOriginalText,
+                        ),
+                    )}
+                    {pendingToolCall && <ToolCallItem msg={pendingToolCall} />}
+                    {isDeepPlanCreated && (
+                        <CodePlanButton execute={executeCodePlan} disabled={currentState !== State.WaitingForPrompt} />
+                    )}
+                </div>
             </div>
             <div style={styles.rovoDevInputSectionStyles}>
                 <UpdatedFilesComponent
@@ -490,7 +549,7 @@ const RovoDevView: React.FC = () => {
                         }
                     >
                         <textarea
-                            style={styles.rovoDevTextareaStyles}
+                            style={{ ...{ 'field-sizing': 'content' }, ...styles.rovoDevTextareaStyles }}
                             placeholder={TextAreaMessages[currentState]}
                             onChange={(element) => setPromptText(element.target.value)}
                             onKeyDown={handleKeyDown}
