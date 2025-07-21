@@ -431,7 +431,7 @@
                 },
                 {
                     "id": "atlascode-rovo-dev",
-                    "title": "Rovo Dev",
+                    "title": "Rovo Dev Beta",
                     "icon": "resources/rovodev-icon.svg"
                 }
             ]
@@ -467,7 +467,7 @@
             "atlascode-rovo-dev": [
                 {
                     "id": "atlascode.views.rovoDev.webView",
-                    "name": "Rovo Dev",
+                    "name": "Rovo Dev Beta",
                     "type": "webview",
                     "when": "atlascode:rovoDevEnabled"
                 }
