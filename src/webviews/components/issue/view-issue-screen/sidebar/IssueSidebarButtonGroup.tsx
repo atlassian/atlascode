@@ -89,6 +89,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                 <Tooltip content="Create a branch and transition this issue">
                     <LoadingButton
                         className="ac-button"
+                        data-testId="issue.start-work-button"
                         onClick={handleStartWork}
                         iconBefore={<AssetsSchemaIcon label="Start work" />}
                         isLoading={false}
