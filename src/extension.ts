@@ -31,7 +31,12 @@ import { GitExtension } from './typings/git';
 import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
 import { NotificationManagerImpl } from './views/notifications/notificationManager';
 
+import { window as vscodeWindow, StatusBarAlignment } from 'vscode';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+
 const AnalyticDelay = 5000;
+let activeIssue: MinimalIssue<any> | undefined;
+let statusBarItem = vscodeWindow.createStatusBarItem(StatusBarAlignment.Left);
 
 export async function activate(context: ExtensionContext) {
     const start = process.hrtime();
@@ -43,11 +48,9 @@ export async function activate(context: ExtensionContext) {
     const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
 
     registerResources(context);
-
     Configuration.configure(context);
     Logger.configure(context);
 
-    // Mark ourselves as the PID in charge of refreshing credentials and start listening for pings.
     context.globalState.update('rulingPid', pid);
 
     try {
@@ -75,7 +78,6 @@ export async function activate(context: ExtensionContext) {
         Container.clientManager.requestSite(site);
     });
 
-    // new user for auth exp
     if (previousVersion === undefined) {
         const expVal = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeOnboardingExperiment);
         if (expVal) {
@@ -95,9 +97,6 @@ export async function activate(context: ExtensionContext) {
     const duration = process.hrtime(start);
     context.subscriptions.push(languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
 
-    // Following are async functions called without await so that they are run
-    // in the background and do not slow down the time taken for the extension
-    // icon to appear in the activity bar
     activateBitbucketFeatures();
     activateYamlFeatures(context);
 
@@ -111,6 +110,41 @@ export async function activate(context: ExtensionContext) {
             duration[0] * 1000 + Math.floor(duration[1] / 1000000)
         } ms`,
     );
+
+    // Register custom start/finish work commands
+    context.subscriptions.push(
+        commands.registerCommand('atlascode.startWork', (issue: MinimalIssue<any>) => {
+            activeIssue = issue;
+            updateStatusBar();
+        })
+    );
+
+    context.subscriptions.push(
+        commands.registerCommand('atlascode.finishWork', () => {
+            activeIssue = undefined;
+            updateStatusBar();
+        })
+    );
+
+    // Restore last issue on startup (if persisted, optional)
+    if (activeIssue) {
+        updateStatusBar();
+    }
+
+    statusBarItem.show();
+    context.subscriptions.push(statusBarItem);
+}
+
+function updateStatusBar() {
+    if (activeIssue) {
+        statusBarItem.text = `Working on: ${activeIssue.key}`;
+        statusBarItem.command = 'atlascode.finishWork';
+        statusBarItem.tooltip = 'Click to finish work on this issue';
+    } else {
+        statusBarItem.text = 'Start Work';
+        statusBarItem.command = undefined;
+        statusBarItem.tooltip = 'No active issue';
+    }
 }
 
 function activateErrorReporting(): void {
@@ -204,7 +238,6 @@ async function sendAnalytics(version: string, globalState: Memento) {
     });
 }
 
-// this method is called when your extension is deactivated
 export function deactivate() {
     if (isRovoDevEnabled) {
         deactivateRovoDevProcessManager();
@@ -213,4 +246,5 @@ export function deactivate() {
     unregisterErrorReporting();
     FeatureFlagClient.dispose();
     NotificationManagerImpl.getInstance().stopListening();
+    statusBarItem.dispose();
 }
