@@ -14,7 +14,6 @@ test('I can transition a Jira', async ({ page, request }) => {
 
     // setup mocks for current status
     const resetTodoIssue = await setupIssueMock(request, { status: ISSUE.status.current });
-    const resetTodoSearch = await setupSearchMock(request, ISSUE.status.current);
 
     await authenticateWithJira(page);
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
@@ -37,7 +36,5 @@ test('I can transition a Jira', async ({ page, request }) => {
     await jiraIssuePage.expectStatus(ISSUE.status.next);
     await atlascodeDrawer.expectStatusForJiraIssue(ISSUE.name, ISSUE.status.next);
 
-    await Promise.all(
-        [resetTodoIssue, resetTodoSearch, resetNextIssue, resetNextSearch].map(async (reset) => await reset()),
-    );
+    await Promise.all([resetTodoIssue, resetNextIssue, resetNextSearch].map(async (reset) => await reset()));
 });
