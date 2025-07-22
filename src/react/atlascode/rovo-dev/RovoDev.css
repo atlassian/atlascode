@@ -139,18 +139,27 @@ body {
     gap: 4px;
 }
 
-.tool-call-item,
-.tool-return-item {
+.tool-call-item-base,
+.tool-return-item-base {
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 4px 8px 4px 0;
     gap: 4px;
+}
+
+.tool-call-item,
+.tool-return-item {
+    padding: 4px 8px 4px 0;
     background-color: inherit;
     color: var(--vscode-editor-foreground);
     width: fit-content;
     border-radius: 4px;
     margin-bottom: 8px;
+}
+
+.tool-return-item code {
+    white-space: pre-wrap;
+    word-break: break-all;
 }
 
 #tool-return-file-path:hover {
@@ -162,7 +171,7 @@ body {
     color: var(--vscode-input-placeholderForeground);
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    word-break: break-all;
 }
 
 .tool-return-bash-command {

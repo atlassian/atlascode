@@ -2,13 +2,14 @@ import { render } from '@testing-library/react';
 import React from 'react';
 
 import { ToolCallMessage } from '../utils';
-import { ToolCallItem } from './ToolCallItem';
+import { parseToolCallMessage, ToolCallItem } from './ToolCallItem';
 
 describe('ToolCallItem', () => {
     it('renders error message for invalid tool call message', () => {
         const invalidMsg = {} as ToolCallMessage;
+        const toolMessage = parseToolCallMessage(invalidMsg);
 
-        const { getByText } = render(<ToolCallItem msg={invalidMsg} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
         expect(getByText('Error: Invalid tool call message')).toBeTruthy();
     });
@@ -20,8 +21,9 @@ describe('ToolCallItem', () => {
             source: 'ToolCall',
             tool_call_id: '12345',
         };
+        const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem msg={msg} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
         expect(getByText('Expanding code')).toBeTruthy();
     });
@@ -33,8 +35,9 @@ describe('ToolCallItem', () => {
             source: 'ToolCall',
             tool_call_id: '12345',
         };
+        const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem msg={msg} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
         expect(getByText('Finding and replacing code')).toBeTruthy();
     });
@@ -46,8 +49,9 @@ describe('ToolCallItem', () => {
             source: 'ToolCall',
             tool_call_id: '12345',
         };
+        const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem msg={msg} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
         expect(getByText('Opening files')).toBeTruthy();
     });
@@ -59,8 +63,9 @@ describe('ToolCallItem', () => {
             source: 'ToolCall',
             tool_call_id: '12345',
         };
+        const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem msg={msg} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
         expect(getByText('Creating file')).toBeTruthy();
     });
@@ -72,8 +77,9 @@ describe('ToolCallItem', () => {
             source: 'ToolCall',
             tool_call_id: '12345',
         };
+        const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem msg={msg} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
         expect(getByText('Deleting file')).toBeTruthy();
     });
@@ -85,8 +91,9 @@ describe('ToolCallItem', () => {
             source: 'ToolCall',
             tool_call_id: '12345',
         };
+        const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem msg={msg} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
         expect(getByText('Executing bash command')).toBeTruthy();
     });
@@ -98,8 +105,9 @@ describe('ToolCallItem', () => {
             source: 'ToolCall',
             tool_call_id: '12345',
         };
+        const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem msg={msg} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
         expect(getByText('Creating technical plan')).toBeTruthy();
     });
@@ -111,8 +119,9 @@ describe('ToolCallItem', () => {
             source: 'ToolCall',
             tool_call_id: '12345',
         };
+        const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem msg={msg} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
         expect(getByText('Grep file content with pattern')).toBeTruthy();
     });
@@ -124,8 +133,9 @@ describe('ToolCallItem', () => {
             source: 'ToolCall',
             tool_call_id: '12345',
         };
+        const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem msg={msg} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
         expect(getByText('Grep file path')).toBeTruthy();
     });
@@ -137,8 +147,9 @@ describe('ToolCallItem', () => {
             source: 'ToolCall',
             tool_call_id: '12345',
         };
+        const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem msg={msg} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
         expect(getByText('unknown_tool')).toBeTruthy();
     });
@@ -150,8 +161,9 @@ describe('ToolCallItem', () => {
             source: 'ToolCall',
             tool_call_id: '12345',
         };
+        const toolMessage = parseToolCallMessage(msg);
 
-        render(<ToolCallItem msg={msg} />);
+        render(<ToolCallItem toolMessage={toolMessage} />);
 
         const loadingIcon = document.querySelector('.codicon.codicon-loading.codicon-modifier-spin');
         expect(loadingIcon).toBeTruthy();
