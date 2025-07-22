@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { ErrorMessageItem, OpenFileFunc, TechnicalPlanComponent } from '../common/common';
+import { RovoDevLanding } from '../rovoDevLanding';
 import { State } from '../rovoDevView';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import {
@@ -124,6 +125,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
+            <RovoDevLanding />
             {messageBlocks &&
                 messageBlocks.map((block, idx) => {
                     if (block.technicalPlan) {

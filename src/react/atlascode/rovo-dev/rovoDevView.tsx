@@ -54,7 +54,7 @@ const CloseIconDeepPlan: React.FC<{}> = () => {
     );
 };
 
-const enum State {
+export const enum State {
     WaitingForPrompt,
     GeneratingResponse,
     CancellingResponse,
