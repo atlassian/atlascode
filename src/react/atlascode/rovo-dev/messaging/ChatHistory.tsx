@@ -52,6 +52,18 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
             scrollToEnd(chatEndRef.current);
         }
 
+        if (state === State.WaitingForPrompt) {
+            if (curThinkingMessages.length > 0) {
+                setMessageBlocks((prev) => [...prev, { messages: curThinkingMessages }]);
+                setCurThinkingMessages([]);
+            }
+            if (currentMessage) {
+                setMessageBlocks((prev) => [...prev, { messages: currentMessage }]);
+            }
+            setCurrentMessage(null);
+            return;
+        }
+
         const handleMessages = () => {
             if (messages.length === 0) {
                 return;
@@ -121,7 +133,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
             }
         };
         handleMessages();
-    }, [curThinkingMessages, currentMessage, messages]);
+    }, [curThinkingMessages, currentMessage, messages, state]);
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
