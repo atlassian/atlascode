@@ -38,11 +38,8 @@ export const authenticateWithBitbucketDC = async (
     await settingsFrame.getByRole('textbox', { name: 'Password' }).fill(password);
     await page.waitForTimeout(250);
 
-<<<<<<< HEAD
     await closeAllNotifications(page);
 
-=======
->>>>>>> 74c7a729 (fixed conflicts)
     await settingsFrame.getByRole('button', { name: 'Save Site' }).click();
     await page.waitForTimeout(1000);
 

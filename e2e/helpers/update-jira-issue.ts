@@ -57,10 +57,7 @@ const fieldUpdaters: Record<string, FieldUpdater> = {
     comment: updateComment,
     description: updateDescription,
     summary: updateSummary,
-<<<<<<< HEAD
     labels: updateLabels,
-=======
->>>>>>> 74c7a729 (fixed conflicts)
 };
 
 export function updateIssueField(issueJson: any, updates: Record<string, any>) {
