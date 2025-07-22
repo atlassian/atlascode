@@ -1,7 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { authenticateWithBitbucketCloud, connectRepository } from 'e2e/helpers';
 
-test('Test workbench open repository with helper function', async ({ page, context }) => {
+test('Adding Bitbucket repository works', async ({ page, context }) => {
+    page.on('console', (msg) => {
+        console.log(msg);
+    });
     await authenticateWithBitbucketCloud(page, context);
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
