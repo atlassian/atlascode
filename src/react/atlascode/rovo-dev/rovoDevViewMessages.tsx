@@ -11,8 +11,13 @@ export const enum RovoDevViewResponseType {
     RetryPromptAfterError = 'retryPromptAfterError',
 }
 
+export interface PromptMessage {
+    text: string;
+    enable_deep_plan?: boolean;
+}
+
 export type RovoDevViewResponse =
-    | ReducerAction<RovoDevViewResponseType.Prompt, { text: string }>
+    | ReducerAction<RovoDevViewResponseType.Prompt, PromptMessage>
     | ReducerAction<RovoDevViewResponseType.CancelResponse>
     | ReducerAction<RovoDevViewResponseType.OpenFile, { filePath: string; tryShowDiff: boolean; range?: number[] }>
     | ReducerAction<RovoDevViewResponseType.UndoFileChanges, { filePaths: string[] }>

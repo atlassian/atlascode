@@ -2,8 +2,9 @@ import './RovoDev.css';
 import './RovoDevCodeHighlighting.css';
 
 import LoadingButton from '@atlaskit/button/loading-button';
-import CrossIcon from '@atlaskit/icon/glyph/cross';
-import SendIcon from '@atlaskit/icon/glyph/send';
+import SendIcon from '@atlaskit/icon/core/arrow-up';
+import CloseIcon from '@atlaskit/icon/core/close';
+import StopIcon from '@atlaskit/icon/core/video-stop';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
@@ -29,7 +30,31 @@ import {
     ToolReturnParseResult,
 } from './utils';
 
-export const enum State {
+// TODO - replace with @atlaskit/icon implementation
+const AiGenerativeTextSummaryIcon = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 16 16"
+        fill="none"
+        role="presentation"
+        style={{ width: '16px', height: '16px', overflow: 'hidden', verticalAlign: 'bottom' }}
+    >
+        <path
+            d="M0 0H14V1.5H0V0ZM0 4.1663H14V5.6663H0V4.1663ZM10.7958 8.49428C10.9038 8.19825 11.1853 8.00129 11.5004 8.00129C11.8155 8.00129 12.0975 8.19825 12.2055 8.49428L12.8206 10.1807L14.507 10.7958C14.803 10.9038 15 11.1853 15 11.5004C15 11.8155 14.803 12.0975 14.507 12.2055L12.8206 12.8206L12.2055 14.507C12.0975 14.803 11.816 15 11.5009 15C11.1858 15 10.9038 14.803 10.7958 14.507L10.1807 12.8206L8.49428 12.2055C8.19825 12.0975 8.00129 11.816 8.00129 11.5009C8.00129 11.1858 8.19825 10.9038 8.49428 10.7958L10.1807 10.1807L10.7958 8.49428ZM0 8.3326H7V9.8326H0V8.3326ZM0 12.4989H5V13.9989H0V12.4989Z"
+            fill="currentColor"
+        />
+    </svg>
+);
+
+const CloseIconDeepPlan: React.FC<{}> = () => {
+    return (
+        <span style={{ zoom: '0.5' }}>
+            <CloseIcon label="" />
+        </span>
+    );
+};
+
+const enum State {
     WaitingForPrompt,
     GeneratingResponse,
     CancellingResponse,
@@ -53,7 +78,8 @@ const RovoDevView: React.FC = () => {
     const [pendingToolCall, setPendingToolCall] = useState<ToolCallMessage | null>(null);
     const [retryAfterErrorEnabled, setRetryAfterErrorEnabled] = useState('');
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
-    const [isTechnicalPlanCreated, setIsTechnicalPlanCreated] = useState(false);
+    const [isDeepPlanCreated, setIsDeepPlanCreated] = useState(false);
+    const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
 
     const chatEndRef = React.useRef<HTMLDivElement>(null);
 
@@ -215,7 +241,7 @@ const RovoDevView: React.FC = () => {
                     };
 
                     if (data.tool_name === 'create_technical_plan') {
-                        setIsTechnicalPlanCreated(true);
+                        setIsDeepPlanCreated(true);
                     }
 
                     setPendingToolCall(null); // Clear pending tool call
@@ -231,12 +257,20 @@ const RovoDevView: React.FC = () => {
         [appendCurrentResponse, handleAppendChatHistory, handleAppendModifiedFileToolReturns, pendingToolCall],
     );
 
+    const setWaitingForPrompt = useCallback(() => {
+        setSendButtonDisabled(false);
+        setCurrentState(State.WaitingForPrompt);
+        setPendingToolCall(null);
+        setIsDeepPlanToggled(false);
+    }, [setSendButtonDisabled, setCurrentState, setPendingToolCall, setIsDeepPlanToggled]);
+
     const onMessageHandler = useCallback(
         (event: RovoDevProviderMessage): void => {
             switch (event.type) {
                 case RovoDevProviderMessageType.PromptSent:
                     // Disable the send button, and enable the pause button
                     setSendButtonDisabled(true);
+                    setIsDeepPlanToggled(event.enable_deep_plan);
                     setCurrentState(State.GeneratingResponse);
                     appendCurrentResponse('...');
                     break;
@@ -250,9 +284,7 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.CompleteMessage:
-                    setSendButtonDisabled(false);
-                    setCurrentState(State.WaitingForPrompt);
-                    setPendingToolCall(null);
+                    setWaitingForPrompt();
                     validateResponseFinalized();
                     break;
 
@@ -266,9 +298,7 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.ErrorMessage:
                     handleAppendChatHistory(event.message);
-                    setSendButtonDisabled(false);
-                    setCurrentState(State.WaitingForPrompt);
-                    setPendingToolCall(null);
+                    setWaitingForPrompt();
                     break;
 
                 case RovoDevProviderMessageType.NewSession:
@@ -305,6 +335,7 @@ const RovoDevView: React.FC = () => {
             appendCurrentResponse,
             clearChatHistory,
             validateResponseFinalized,
+            setWaitingForPrompt,
         ],
     );
 
@@ -318,8 +349,8 @@ const RovoDevView: React.FC = () => {
                 return;
             }
 
-            if (isTechnicalPlanCreated) {
-                setIsTechnicalPlanCreated(false);
+            if (isDeepPlanCreated) {
+                setIsDeepPlanCreated(false);
             }
 
             // Disable the send button, and enable the pause button
@@ -330,12 +361,13 @@ const RovoDevView: React.FC = () => {
             postMessage({
                 type: RovoDevViewResponseType.Prompt,
                 text,
+                enable_deep_plan: isDeepPlanToggled,
             });
 
             // Clear the input field
             setPromptText('');
         },
-        [sendButtonDisabled, currentState, isTechnicalPlanCreated, postMessage],
+        [sendButtonDisabled, currentState, isDeepPlanCreated, isDeepPlanToggled, postMessage],
     );
 
     const executeCodePlan = useCallback(() => {
@@ -450,7 +482,7 @@ const RovoDevView: React.FC = () => {
                     getOriginalText,
                 }}
                 pendingToolCall={pendingToolCall}
-                deepPlanCreated={isTechnicalPlanCreated}
+                deepPlanCreated={isDeepPlanCreated}
                 executeCodePlan={executeCodePlan}
                 state={currentState}
             />
@@ -487,28 +519,42 @@ const RovoDevView: React.FC = () => {
                             value={promptText}
                         />
                         <div style={styles.rovoDevButtonStyles}>
+                            <LoadingButton
+                                style={{
+                                    ...styles.rovoDevDeepPlanStylesSelector(
+                                        isDeepPlanToggled,
+                                        currentState !== State.WaitingForPrompt,
+                                    ),
+                                }}
+                                spacing="compact"
+                                label="Enable deep plan"
+                                iconBefore={<AiGenerativeTextSummaryIcon />}
+                                iconAfter={isDeepPlanToggled ? <CloseIconDeepPlan /> : undefined}
+                                isDisabled={currentState !== State.WaitingForPrompt}
+                                onClick={() => setIsDeepPlanToggled(!isDeepPlanToggled)}
+                            >
+                                {isDeepPlanToggled ? 'Deep plan enabled' : ''}
+                            </LoadingButton>
                             {currentState === State.WaitingForPrompt && (
                                 <LoadingButton
                                     style={{
-                                        color: 'var(--vscode-input-foreground) !important',
-                                        border: '1px solid var(--vscode-button-border) !important',
-                                        backgroundColor: 'var(--vscode-input-background) !important',
+                                        ...styles.rovoDevPromptButtonStyles,
+                                        color: 'var(--vscode-button-foreground) !important',
+                                        backgroundColor: 'var(--vscode-button-background)',
                                     }}
-                                    label="Send button"
-                                    iconBefore={<SendIcon size="small" label="Send" />}
+                                    spacing="compact"
+                                    label="Send prompt"
+                                    iconBefore={<SendIcon label="Send prompt" />}
                                     isDisabled={sendButtonDisabled}
                                     onClick={() => sendPrompt(promptText)}
                                 />
                             )}
                             {currentState !== State.WaitingForPrompt && (
                                 <LoadingButton
-                                    style={{
-                                        color: 'var(--vscode-input-foreground) !important',
-                                        border: '1px solid var(--vscode-button-border) !important',
-                                        backgroundColor: 'var(--vscode-input-background) !important',
-                                    }}
-                                    label="Stop button"
-                                    iconBefore={<CrossIcon size="small" label="Stop" />}
+                                    style={styles.rovoDevPromptButtonStyles}
+                                    spacing="compact"
+                                    label="Stop"
+                                    iconBefore={<StopIcon label="Stop" />}
                                     isDisabled={currentState === State.CancellingResponse}
                                     onClick={() => cancelResponse()}
                                 />

@@ -5,6 +5,7 @@
 ## What's new in 3.8.7
 
 ### Features
+
 - Update logic of selecting the default project and site to the most relevant one for the user on the Creating a JIRA issue page
 - Added filtering for options and error message in projects field on Create Jira issue page.
 
@@ -14,6 +15,7 @@
 - Added sorting for status transitions based on their workflow order
 - Fixed a bug where the 'Vote for this issue' option was not accessible to the reporter
 - Fixed a bug with the vote calculation where the username who voted for the issue only updated to the correct value after refreshing the page
+- Fixed a bug when Save site button is enabled without valid credentials
 
 ## What's new in 3.8.6
 

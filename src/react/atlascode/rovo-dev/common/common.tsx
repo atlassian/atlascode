@@ -1,4 +1,5 @@
 import Button from '@atlaskit/button';
+import StatusErrorIcon from '@atlaskit/icon/core/error';
 import CheckIcon from '@atlaskit/icon/glyph/check';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import ChevronRightIcon from '@atlaskit/icon/glyph/chevron-right';
@@ -16,7 +17,8 @@ import {
     agentMessageStyles,
     chatMessageStyles,
     errorMessageStyles,
-    inlineMofidyButtonStyles,
+    inChatButtonStyles,
+    inlineModifyButtonStyles,
     messageContentStyles,
     undoKeepButtonStyles,
 } from '../rovoDevViewStyles';
@@ -59,27 +61,40 @@ export const ErrorMessageItem: React.FC<{
 
     return (
         <div key={index} style={{ ...chatMessageStyles, ...errorMessageStyles }}>
-            <div style={messageContentStyles}>{content}</div>
-            {msg.isRetriable && (
-                <RetryPromptButton
-                    enabled={isRetryAfterErrorButtonEnabled(msg.uid)}
-                    retryAfterError={retryAfterError}
-                />
-            )}
+            <div style={{ display: 'flex', flexDirection: 'row' }}>
+                <div style={{ padding: '4px', color: 'var(--vscode-editorError-foreground)' }}>
+                    <StatusErrorIcon label="Rovo Dev encountered an error" />
+                </div>
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                        paddingTop: '2px',
+                        paddingLeft: '2px',
+                        width: '100%',
+                    }}
+                >
+                    <div style={messageContentStyles}>Rovo Dev encountered an error</div>
+                    <div style={messageContentStyles}>{content}</div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '8px' }}>
+                        {msg.isRetriable && isRetryAfterErrorButtonEnabled(msg.uid) && (
+                            <RetryPromptButton retryAfterError={retryAfterError} />
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
 
 const RetryPromptButton: React.FC<{
-    enabled: boolean;
     retryAfterError: () => void;
-}> = ({ enabled, retryAfterError }) => {
+}> = ({ retryAfterError }) => {
     return (
-        <div style={{ marginTop: '12px' }}>
-            <button disabled={!enabled} onClick={retryAfterError}>
-                Try again
-            </button>
-        </div>
+        <button style={inChatButtonStyles} onClick={retryAfterError}>
+            Try again
+        </button>
     );
 };
 
@@ -312,7 +327,7 @@ const ModifiedFileItem: React.FC<{
                 <Button
                     spacing="none"
                     style={{
-                        ...inlineMofidyButtonStyles,
+                        ...inlineModifyButtonStyles,
                         color: isUndoHovered
                             ? 'var(--vscode-textLink-foreground) !important'
                             : 'var(--vscode-textForeground) !important',
@@ -324,7 +339,7 @@ const ModifiedFileItem: React.FC<{
                 />
                 <Button
                     style={{
-                        ...inlineMofidyButtonStyles,
+                        ...inlineModifyButtonStyles,
                         color: isKeepHovered
                             ? 'var(--vscode-textLink-foreground) !important'
                             : 'var(--vscode-textForeground) !important',

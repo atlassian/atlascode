@@ -30,9 +30,9 @@ export class RovoDevApiClient {
         return this._baseApiUrl;
     }
 
-    /** Constructs a new instance for the Rovo Dev API client
-     * @param hostnameOrIp The hostname or IP address for the Rovo Dev service
-     * @param post The http port for the Rovo Dev service
+    /** Constructs a new instance for the Rovo Dev API client.
+     * @param {string} hostnameOrIp The hostname or IP address for the Rovo Dev service.
+     * @param {number} port The http port for the Rovo Dev service.
      */
     constructor(hostnameOrIp: string, port: number) {
         this._baseApiUrl = `http://${hostnameOrIp}:${port}`;
@@ -61,54 +61,60 @@ export class RovoDevApiClient {
         }
     }
 
-    /** Invokes the POST /v2/cancel rest API
-     * @returns An object representing the API response
+    /** Invokes the POST `/v2/cancel` API.
+     * @returns {Promise<RovoDevCancelResponse>} An object representing the API response.
      */
     public async cancel(): Promise<RovoDevCancelResponse> {
         const response = await this.fetchApi('/v2/cancel', 'POST');
         return await response.json();
     }
 
-    /** Invokes the POST /v2/reset rest API */
+    /** Invokes the POST `/v2/reset` API. */
     public async reset(): Promise<void> {
         await this.fetchApi('/v2/reset', 'POST');
     }
 
-    /** Invokes the POST /v2/chat rest API
-     * @param message The message (prompt) to send to Rovo Dev
+    /** Invokes the POST `/v2/chat` API.
+     * @param {string} message The message (prompt) to send to Rovo Dev.
+     * @param {boolean} [enable_deep_plan=false] [optional] A value indicating if the deep planner tool should be enabled when processing this prompt. Default value is `false`.
+     * @returns {Promise<Response>} An object representing the API response.
      */
-    public chat(message: string): Promise<Response> {
+    public chat(message: string, enable_deep_plan: boolean = false): Promise<Response> {
         const body = JSON.stringify({
             message: message,
+            enable_deep_plan,
         });
 
         return this.fetchApi('/v2/chat', 'POST', body);
     }
 
-    /** Invokes the POST /v2/replay rest API */
+    /** Invokes the POST `/v2/replay` API
+     *
+     * @returns {Promise<Response>} An object representing the API response.
+     */
     public replay(): Promise<Response> {
         return this.fetchApi('/v2/replay', 'POST');
     }
 
-    /** Invokes the GET /v2/tools rest API
-     * @not_implemented !!!
+    /** Invokes the GET `/v2/tools` API
+     * @not_implemented
      */
     public getTools() {
         throw new Error('Method not implemented: tools');
     }
 
-    /** Invokes the POST /v2/tool rest API
-     * @param tool_name The name of the tool we want to invoke
-     * @param args The arguments for the tool
-     * @not_implemented !!!
+    /** Invokes the POST `/v2/tool` API
+     * @param {string} tool_name The name of the tool we want to invoke.
+     * @param {Record<string, string>} args The arguments for the tool.
+     * @not_implemented
      */
     public tool(tool_name: string, args: Record<string, string>) {
         throw new Error('Method not implemented: tool');
     }
 
-    /** Invokes the GET /v2/cache-file-path
-     * @param file_path
-     * @returns The file path for the cached version without Rovo Dev changes
+    /** Invokes the GET `/v2/cache-file-path` API.
+     * @param {string} file_path
+     * @returns {Promise<string>} The file path for the cached version without Rovo Dev changes.
      */
     public async getCacheFilePath(file_path: string): Promise<string> {
         const qs = `file_path=${encodeURIComponent(file_path)}`;
@@ -117,23 +123,23 @@ export class RovoDevApiClient {
         return data.cached_file_path;
     }
 
-    /** Invokes the POST /v2/invalidate-file-cache
-     * @not_implemented !!!
+    /** Invokes the POST `/v2/invalidate-file-cache` API.
+     * @not_implemented
      */
     public invalidateFileCache() {
         throw new Error('Method not implemented: invalidate-file-cache');
     }
 
-    /** Invokes the GET /healthcheck rest API
-     * @returns An object representing the API response
+    /** Invokes the GET `/healthcheck` API.
+     * @returns {Promise<RovoDevHealthcheckResponse>} An object representing the API response.
      */
     public async healtcheckInfo(): Promise<RovoDevHealthcheckResponse> {
         const response = await this.fetchApi('/healthcheck', 'GET');
         return await response.json();
     }
 
-    /** Invokes the GET /healthcheck rest API
-     * @returns A value indicating if the service is healthy
+    /** Invokes the GET `/healthcheck` API.
+     * @returns {Promise<boolean>} A value indicating if the service is healthy.
      */
     public async healthcheck(): Promise<boolean> {
         try {

@@ -21,7 +21,11 @@ import {
 } from 'vscode';
 
 import { rovodevInfo } from '../constants';
-import { RovoDevViewResponse, RovoDevViewResponseType } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
+import {
+    PromptMessage,
+    RovoDevViewResponse,
+    RovoDevViewResponseType,
+} from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
@@ -42,8 +46,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _rovoDevApiClient?: RovoDevApiClient;
     private _initialized = false;
 
-    private _previousPrompt: string | undefined;
-    private _pendingPrompt: string | undefined;
+    private _previousPrompt: PromptMessage | undefined;
+    private _pendingPrompt: PromptMessage | undefined;
     private _pendingCancellation = false;
 
     // we keep the data in this collection so we can attach some metadata to the next
@@ -138,7 +142,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             switch (e.type) {
                 case RovoDevViewResponseType.Prompt:
                     this._pendingCancellation = false;
-                    await this.executeChat(e.text);
+                    await this.executeChat(e.text, e.enable_deep_plan);
                     break;
 
                 case RovoDevViewResponseType.CancelResponse:
@@ -215,7 +219,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             // re-send the buffered prompt
             if (this._pendingPrompt) {
-                this.executeChat(this._pendingPrompt, true);
+                this.executeChat(this._pendingPrompt.text, this._pendingPrompt.enable_deep_plan, true);
                 this._pendingPrompt = undefined;
             }
         });
@@ -270,7 +274,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private async sendUserPromptToView(message: string) {
+    private async sendUserPromptToView(message: string, enable_deep_plan?: boolean) {
         const webview = this._webView!;
 
         await webview.postMessage({
@@ -283,6 +287,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         return await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
+            enable_deep_plan: !!enable_deep_plan,
         });
     }
 
@@ -312,7 +317,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             case 'user-prompt':
                 // receiving a user-prompt pre-initialized means we are in the 'replay' response
                 if (!this._initialized) {
-                    this._previousPrompt = response.content;
+                    this._previousPrompt = {
+                        text: response.content,
+                    };
                     return this.sendUserPromptToView(response.content);
                 }
                 return Promise.resolve(false);
@@ -343,24 +350,31 @@ ${message}`;
 </context>`;
     }
 
-    private async executeChat(message: string, suppressEcho?: boolean) {
+    private async executeChat(message: string, enable_deep_plan?: boolean, suppressEcho?: boolean) {
         if (!message) {
             return;
         }
 
         if (!suppressEcho) {
-            await this.sendUserPromptToView(message);
+            await this.sendUserPromptToView(message, enable_deep_plan);
         }
 
-        this._previousPrompt = message;
+        this._previousPrompt = {
+            text: message,
+            enable_deep_plan,
+        };
+
         const payloadToSend = this.addUndoContextToPrompt(message);
 
         if (this._initialized) {
             await this.executeApiWithErrorHandling((client) => {
-                return this.processChatResponse(client.chat(payloadToSend));
+                return this.processChatResponse(client.chat(payloadToSend, enable_deep_plan));
             }, true);
         } else {
-            this._pendingPrompt = payloadToSend;
+            this._pendingPrompt = {
+                text: payloadToSend,
+                enable_deep_plan,
+            };
         }
     }
 
@@ -371,14 +385,16 @@ ${message}`;
             return;
         }
 
-        const payloadToSend = this.addRetryAfterErrorContextToPrompt(this._previousPrompt);
+        const previousPrompt = this._previousPrompt;
+        const payloadToSend = this.addRetryAfterErrorContextToPrompt(previousPrompt.text);
 
         await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
+            enable_deep_plan: !!previousPrompt.enable_deep_plan,
         });
 
         await this.executeApiWithErrorHandling((client) => {
-            return this.processChatResponse(client.chat(payloadToSend));
+            return this.processChatResponse(client.chat(payloadToSend, previousPrompt.enable_deep_plan));
         }, true);
     }
 
