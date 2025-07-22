@@ -128,7 +128,10 @@ export class JiraIssueWebview
             }
 
             this._editUIData = editUI as EditIssueData;
-
+            if (this._issue.issuetype.name === 'Epic') {
+                this._issue.isEpic = true;
+                this._editUIData.isEpic = true;
+            }
             this._editUIData.recentPullRequests = [];
 
             const msg = this._editUIData;
@@ -150,17 +153,20 @@ export class JiraIssueWebview
             this.isRefeshing = false;
         }
     }
-
     async updateEpicChildren() {
         if (this._issue.isEpic) {
             const site = this._issue.siteDetails;
             const client = await Container.clientManager.jiraClient(site);
             const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
             const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
-            const res = await client.searchForIssuesUsingJqlGet(
-                `${epicInfo.epicLink.id} = "${this._issue.key}" order by lastViewed DESC`,
-                fields,
-            );
+
+            let jqlQuery: string = '';
+            if (site.isCloud) {
+                jqlQuery = `parent = "${this._issue.key}" order by lastViewed DESC`;
+            } else {
+                jqlQuery = `"Epic Link" = ${this._issue.key} order by lastViewed DESC`;
+            }
+            const res = await client.searchForIssuesUsingJqlGet(jqlQuery, fields);
             const searchResults = await readSearchResults(res, site, epicInfo);
             this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
         }
