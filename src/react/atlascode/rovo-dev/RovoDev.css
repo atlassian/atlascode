@@ -144,12 +144,13 @@ body {
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 4px 8px 4px 0;
+    padding: 4px 6px;
     gap: 4px;
     background-color: inherit;
     color: var(--vscode-editor-foreground);
     width: fit-content;
     border-radius: 4px;
+    border: 1px solid var(--vscode-editorWidget-border);
     margin-bottom: 8px;
 }
 
@@ -176,8 +177,8 @@ body {
 }
 
 .chat-message {
+    max-width: 100%;
     margin-bottom: 8px;
-    padding: 8px 12px;
     border-radius: 8px;
     position: relative;
 }
@@ -246,8 +247,44 @@ body {
     justify-content: space-between;
     width: 100%;
     cursor: pointer;
+}
+
+.message-drawer-title {
+    display: flex;
+    align-items: center;
+    gap: 2px;
     span {
         font-size: 13px;
         color: var(--vscode-editor-foreground);
     }
+}
+.message-drawer-lozenge {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    background-color: var(--vscode-editorWidget-border);
+    font-size: 9px;
+}
+
+.agent-message {
+    align-self: flex-start;
+}
+
+.user-message {
+    background-color: var(--vscode-editor-selectionBackground);
+    align-self: flex-end;
+    border-bottom-right-radius: 0px;
+    padding: 8px 12px;
+    max-width: 100%;
+    width: fit-content;
+}
+
+.message-content {
+    white-space: normal;
+    word-break: break-word;
+    color: var(--vscode-editor-foreground);
+    font-size: 13px;
 }

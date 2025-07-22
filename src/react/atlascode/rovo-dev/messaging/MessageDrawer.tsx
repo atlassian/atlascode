@@ -29,10 +29,17 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
     return (
         <div className="message-drawer">
             <div className="message-drawer-header" onClick={() => setIsOpen(!isOpen)}>
-                <div>
+                <div className="message-drawer-title">
                     <span>Thinking</span>
+                    <div className="message-drawer-lozenge">{messages.length}</div>
                 </div>
-                <div>{isOpen ? <ChevronDown label="" size="medium" /> : <ChevronRight label="" size="medium" />}</div>
+                <div>
+                    {isOpen ? (
+                        <ChevronDown label="chevron-down" size="medium" />
+                    ) : (
+                        <ChevronRight label="chevron-right" size="medium" />
+                    )}
+                </div>
             </div>
             <div hidden={!isOpen} className="message-drawer-content">
                 {messages.map((msg, index) =>

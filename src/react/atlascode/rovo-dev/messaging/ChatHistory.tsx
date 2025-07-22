@@ -1,14 +1,18 @@
 import React from 'react';
 
-import { ChatMessageItem, ErrorMessageItem, OpenFileFunc, TechnicalPlanComponent } from '../common/common';
+import { ErrorMessageItem, OpenFileFunc, TechnicalPlanComponent } from '../common/common';
+import { State } from '../rovoDevView';
+import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import {
     ChatMessage,
     DefaultMessage,
     ErrorMessage,
     parseToolReturnMessage,
+    scrollToEnd,
     TechnicalPlan,
     ToolCallMessage,
 } from '../utils';
+import { ChatMessageItem } from './ChatMessageItem';
 import { MessageDrawer } from './MessageDrawer';
 
 interface MessageBlockDetails {
@@ -24,9 +28,19 @@ interface ChatHistoryProps {
         getOriginalText: (fp: string, lr?: number[]) => Promise<string>;
     };
     pendingToolCall: ToolCallMessage | null;
+    deepPlanCreated: boolean;
+    executeCodePlan: () => void;
+    state: State;
 }
 
-export const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, renderProps, pendingToolCall }) => {
+export const ChatHistory: React.FC<ChatHistoryProps> = ({
+    messages,
+    renderProps,
+    pendingToolCall,
+    deepPlanCreated,
+    executeCodePlan,
+    state,
+}) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const [currentMessage, setCurrentMessage] = React.useState<DefaultMessage | null>(null);
     const [curThinkingMessages, setCurThinkingMessages] = React.useState<ChatMessage[]>([]);
@@ -34,7 +48,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, renderProps,
 
     React.useEffect(() => {
         if (chatEndRef.current) {
-            chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+            scrollToEnd(chatEndRef.current);
         }
 
         const handleMessages = () => {
@@ -43,60 +57,65 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, renderProps,
             }
 
             const newMessage = messages.pop();
+
             if (newMessage && newMessage !== currentMessage) {
-                if (newMessage.source === 'User') {
-                    if (curThinkingMessages.length > 0) {
-                        setMessageBlocks((prev) => [...prev, { messages: curThinkingMessages }]);
-                        setCurThinkingMessages([]);
-                    }
-
-                    if (currentMessage && currentMessage.source === 'RovoDev') {
-                        setMessageBlocks((prev) => [...prev, { messages: currentMessage }]);
-                    }
-                    setCurrentMessage(null);
-                    setMessageBlocks((prev) => [...prev, { messages: newMessage }]);
-                    return;
-                }
-
-                if (newMessage.source === 'RovoDev') {
-                    setCurrentMessage((prev) => {
-                        if (prev && prev.text === '...') {
-                            return newMessage;
+                switch (newMessage.source) {
+                    case 'User':
+                        if (curThinkingMessages.length > 0) {
+                            setMessageBlocks((prev) => [...prev, { messages: curThinkingMessages }]);
+                            setCurThinkingMessages([]);
                         }
-                        newMessage.text = prev ? prev.text + newMessage.text : newMessage.text;
-                        return newMessage;
-                    });
-                    return;
-                }
 
-                if (newMessage.source === 'ToolReturn') {
-                    if (currentMessage) {
-                        setCurThinkingMessages((prev) => [...prev, currentMessage]);
+                        if (currentMessage && currentMessage.source === 'RovoDev') {
+                            setMessageBlocks((prev) => [...prev, { messages: currentMessage }]);
+                        }
                         setCurrentMessage(null);
-                    }
+                        setMessageBlocks((prev) => [...prev, { messages: newMessage }]);
+                        return;
 
-                    if (newMessage.tool_name === 'create_technical_plan') {
-                        const parsedMessage = parseToolReturnMessage(newMessage);
-
-                        parsedMessage.map((msg, index) => {
-                            if (!msg.technicalPlan) {
-                                console.error('Technical plan message is missing technicalPlan property');
-                                return;
+                    case 'RovoDev':
+                        setCurrentMessage((prev) => {
+                            if (prev && prev.text === '...') {
+                                return newMessage;
                             }
-
-                            setMessageBlocks((prev) => [...prev, { messages: null, technicalPlan: msg.technicalPlan }]);
+                            newMessage.text = prev ? prev.text + newMessage.text : newMessage.text;
+                            return newMessage;
                         });
-                    } else {
-                        setCurThinkingMessages((prev) => [...prev, newMessage]);
-                    }
-                    return;
-                }
+                        return;
 
-                if (newMessage.source === 'RovoDevError') {
-                    setMessageBlocks((prev) => [...prev, { messages: newMessage }]);
+                    case 'RovoDevError':
+                        setMessageBlocks((prev) => [...prev, { messages: newMessage }]);
 
-                    setCurrentMessage(null);
-                    return;
+                        setCurrentMessage(null);
+                        return;
+                    case 'ToolReturn':
+                        if (currentMessage) {
+                            setCurThinkingMessages((prev) => [...prev, currentMessage]);
+                            setCurrentMessage(null);
+                        }
+
+                        if (newMessage.tool_name === 'create_technical_plan') {
+                            const parsedMessage = parseToolReturnMessage(newMessage);
+
+                            parsedMessage.map((msg, index) => {
+                                if (!msg.technicalPlan) {
+                                    console.error('Technical plan message is missing technicalPlan property');
+                                    return;
+                                }
+
+                                setMessageBlocks((prev) => [
+                                    ...prev,
+                                    { messages: null, technicalPlan: msg.technicalPlan },
+                                ]);
+                            });
+                        } else {
+                            setCurThinkingMessages((prev) => [...prev, newMessage]);
+                        }
+                        return;
+
+                    default:
+                        console.warn(`Unknown message source: ${newMessage.source}`);
+                        return;
                 }
             }
         };
@@ -104,58 +123,52 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, renderProps,
     }, [curThinkingMessages, currentMessage, messages]);
 
     return (
-        <div className="chat-message-container">
-            <div id="chat-history">
-                {messageBlocks &&
-                    messageBlocks.map((block, idx) => {
-                        if (block.technicalPlan) {
+        <div ref={chatEndRef} className="chat-message-container">
+            {messageBlocks &&
+                messageBlocks.map((block, idx) => {
+                    if (block.technicalPlan) {
+                        return (
+                            <div>
+                                <TechnicalPlanComponent
+                                    content={block.technicalPlan}
+                                    openFile={renderProps.openFile}
+                                    getText={renderProps.getOriginalText}
+                                />
+                            </div>
+                        );
+                    }
+
+                    if (block.messages) {
+                        if (Array.isArray(block.messages)) {
+                            return <MessageDrawer messages={block.messages} opened={false} renderProps={renderProps} />;
+                        } else if (block.messages.source === 'User' || block.messages.source === 'RovoDev') {
+                            return <ChatMessageItem msg={block.messages} index={idx} />;
+                        } else if (block.messages.source === 'RovoDevError') {
                             return (
-                                <div>
-                                    <TechnicalPlanComponent
-                                        content={block.technicalPlan}
-                                        openFile={renderProps.openFile}
-                                        getText={renderProps.getOriginalText}
-                                    />
-                                </div>
+                                <ErrorMessageItem
+                                    msg={block.messages}
+                                    index={idx}
+                                    isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
+                                    retryAfterError={renderProps.retryPromptAfterError}
+                                />
                             );
                         }
+                    }
 
-                        if (block.messages) {
-                            if (Array.isArray(block.messages)) {
-                                return (
-                                    <MessageDrawer messages={block.messages} opened={false} renderProps={renderProps} />
-                                );
-                            } else if (block.messages.source === 'User' || block.messages.source === 'RovoDev') {
-                                return <ChatMessageItem msg={block.messages} index={idx} />;
-                            } else if (block.messages.source === 'RovoDevError') {
-                                return (
-                                    <ErrorMessageItem
-                                        msg={block.messages}
-                                        index={idx}
-                                        isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
-                                        retryAfterError={renderProps.retryPromptAfterError}
-                                    />
-                                );
-                            }
-                        }
-
-                        return null;
-                    })}
-            </div>
-            <div id="thinking-messages">
-                {curThinkingMessages.length > 0 && (
-                    <MessageDrawer
-                        messages={curThinkingMessages}
-                        opened={true}
-                        renderProps={renderProps}
-                        pendingToolCall={pendingToolCall || undefined}
-                    />
-                )}
-            </div>
-            <div id="current-message">
-                {currentMessage && <ChatMessageItem msg={currentMessage} index={messages.length - 1} />}
-            </div>
-            <div ref={chatEndRef} />
+                    return null;
+                })}
+            {curThinkingMessages.length > 0 && (
+                <MessageDrawer
+                    messages={curThinkingMessages}
+                    opened={true}
+                    renderProps={renderProps}
+                    pendingToolCall={pendingToolCall || undefined}
+                />
+            )}
+            {currentMessage && <ChatMessageItem msg={currentMessage} index={messages.length - 1} />}
+            {deepPlanCreated && (
+                <CodePlanButton execute={executeCodePlan} disabled={state !== State.WaitingForPrompt} />
+            )}
         </div>
     );
 };
