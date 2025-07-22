@@ -1,14 +1,11 @@
 import type { Page } from '@playwright/test';
 
-const closeTrustDialogue = async (page: Page) => {
-    const agreeTrustButton = page.getByRole('button', { name: 'Yes' });
-    await agreeTrustButton.click().catch(() => {});
-};
-
 const goToExtensionTab = async (page: Page) => {
     // sometimes page is redirected to Explorer tab and this is workaround so we sure extension tab will be opened
     await page.getByRole('tab', { name: 'Explorer' }).click();
+    await page.waitForTimeout(250);
     await page.getByRole('tab', { name: 'Atlassian' }).click();
+    await page.waitForTimeout(250);
 };
 
 const addRepo = async (page: Page) => {
@@ -37,9 +34,6 @@ export const connectRepository = async (page: Page) => {
     await addRepo(page);
     await page.waitForTimeout(1000);
 
-    await closeTrustDialogue(page);
-    await page.waitForTimeout(250);
-
     await goToExtensionTab(page);
     await page.waitForTimeout(1000);
 
@@ -47,9 +41,5 @@ export const connectRepository = async (page: Page) => {
     if (addRepoButtonCount !== 0) {
         await addRepo(page);
         await page.waitForTimeout(1000);
-        await closeTrustDialogue(page);
-        await page.waitForTimeout(250);
     }
-
-    await goToExtensionTab(page);
 };
