@@ -144,13 +144,12 @@ body {
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 4px 6px;
     gap: 4px;
 }
 
 .tool-call-item,
 .tool-return-item {
-    padding: 4px 8px 4px 0;
+    padding: 4px 6px;
     background-color: inherit;
     color: var(--vscode-editor-foreground);
     width: fit-content;

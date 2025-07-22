@@ -18,8 +18,7 @@ import { UpdatedFilesComponent } from './common/common';
 import { ChatHistory } from './messaging/ChatHistory';
 import { RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import * as styles from './rovoDevViewStyles';
-import { CodePlanButton } from './technical-plan/CodePlanButton';
-import { parseToolCallMessage, ToolCallItem } from './tools/ToolCallItem';
+import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
     ChatMessage,
     CODE_PLAN_EXECUTE_PROMPT,
