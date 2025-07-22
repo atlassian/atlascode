@@ -1,17 +1,24 @@
-import { render } from '@testing-library/react';
+import { Matcher, render, SelectorMatcherOptions } from '@testing-library/react';
 import React from 'react';
 
 import { ToolCallMessage } from '../utils';
 import { parseToolCallMessage, ToolCallItem } from './ToolCallItem';
 
+function validateMessage(
+    expected: string,
+    actual: string,
+    getByText: (id: Matcher, options?: SelectorMatcherOptions | undefined) => HTMLElement,
+): void {
+    expect(actual).toBe(expected);
+    expect(getByText(expected)).toBeTruthy();
+}
+
 describe('ToolCallItem', () => {
-    it('renders error message for invalid tool call message', () => {
+    it('invalid tool call message is empty', () => {
         const invalidMsg = {} as ToolCallMessage;
         const toolMessage = parseToolCallMessage(invalidMsg);
 
-        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
-
-        expect(getByText('Error: Invalid tool call message')).toBeTruthy();
+        expect(toolMessage).toBe('');
     });
 
     it('renders the correct message for expand_code_chunks tool', () => {
@@ -25,7 +32,7 @@ describe('ToolCallItem', () => {
 
         const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
-        expect(getByText('Expanding code')).toBeTruthy();
+        validateMessage('Expanding code', toolMessage, getByText);
     });
 
     it('renders the correct message for find_and_replace_code tool', () => {
@@ -39,7 +46,7 @@ describe('ToolCallItem', () => {
 
         const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
-        expect(getByText('Finding and replacing code')).toBeTruthy();
+        validateMessage('Finding and replacing code', toolMessage, getByText);
     });
 
     it('renders the correct message for open_files tool', () => {
@@ -53,7 +60,7 @@ describe('ToolCallItem', () => {
 
         const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
-        expect(getByText('Opening files')).toBeTruthy();
+        validateMessage('Opening files', toolMessage, getByText);
     });
 
     it('renders the correct message for create_file tool', () => {
@@ -67,7 +74,7 @@ describe('ToolCallItem', () => {
 
         const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
-        expect(getByText('Creating file')).toBeTruthy();
+        validateMessage('Creating file', toolMessage, getByText);
     });
 
     it('renders the correct message for delete_file tool', () => {
@@ -81,7 +88,7 @@ describe('ToolCallItem', () => {
 
         const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
-        expect(getByText('Deleting file')).toBeTruthy();
+        validateMessage('Deleting file', toolMessage, getByText);
     });
 
     it('renders the correct message for bash tool', () => {
@@ -95,7 +102,7 @@ describe('ToolCallItem', () => {
 
         const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
-        expect(getByText('Executing bash command')).toBeTruthy();
+        validateMessage('Executing bash command', toolMessage, getByText);
     });
 
     it('renders the correct message for create_technical_plan tool', () => {
@@ -109,7 +116,7 @@ describe('ToolCallItem', () => {
 
         const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
-        expect(getByText('Creating technical plan')).toBeTruthy();
+        validateMessage('Creating technical plan', toolMessage, getByText);
     });
 
     it('renders the correct message for grep_file_content tool', () => {
@@ -123,7 +130,7 @@ describe('ToolCallItem', () => {
 
         const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
-        expect(getByText('Grep file content with pattern')).toBeTruthy();
+        validateMessage('Grep file content with pattern', toolMessage, getByText);
     });
 
     it('renders the correct message for grep_file_path tool', () => {
@@ -137,7 +144,7 @@ describe('ToolCallItem', () => {
 
         const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
-        expect(getByText('Grep file path')).toBeTruthy();
+        validateMessage('Grep file path', toolMessage, getByText);
     });
 
     it('renders the tool name for unknown tools', () => {
@@ -151,7 +158,7 @@ describe('ToolCallItem', () => {
 
         const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
 
-        expect(getByText('unknown_tool')).toBeTruthy();
+        validateMessage('unknown_tool', toolMessage, getByText);
     });
 
     it('renders with the loading icon', () => {
