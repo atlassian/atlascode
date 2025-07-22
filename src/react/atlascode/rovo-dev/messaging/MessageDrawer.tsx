@@ -4,7 +4,7 @@ import React from 'react';
 
 import { OpenFileFunc, renderChatHistory } from '../common/common';
 import { ToolCallItem } from '../tools/ToolCallItem';
-import { ChatMessage, ToolCallMessage } from '../utils';
+import { ChatMessage } from '../utils';
 
 interface MessageDrawerProps {
     messages: ChatMessage[];
@@ -15,7 +15,7 @@ interface MessageDrawerProps {
         getOriginalText: (fp: string, lr?: number[]) => Promise<string>;
     };
     opened?: boolean;
-    pendingToolCall?: ToolCallMessage;
+    pendingToolCall?: string;
 }
 
 export const MessageDrawer: React.FC<MessageDrawerProps> = ({
@@ -53,7 +53,7 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
                     ),
                 )}
             </div>
-            {pendingToolCall && <ToolCallItem msg={pendingToolCall} />}
+            {pendingToolCall && <ToolCallItem toolMessage={pendingToolCall} />}
         </div>
     );
 };

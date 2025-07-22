@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 
-import { ChatMessage, ToolCallMessage } from '../utils';
+import { ChatMessage } from '../utils';
 import { MessageDrawer } from './MessageDrawer';
 
 // Mock the dependencies
@@ -26,7 +26,7 @@ jest.mock('../common/common', () => ({
 }));
 
 jest.mock('../tools/ToolCallItem', () => ({
-    ToolCallItem: ({ msg }: { msg: ToolCallMessage }) => <div data-testid="tool-call-item">{msg.args}</div>,
+    ToolCallItem: ({ toolMessage }: { toolMessage: string }) => <div data-testid="tool-call-item">{toolMessage}</div>,
 }));
 
 describe('MessageDrawer', () => {
@@ -90,12 +90,7 @@ describe('MessageDrawer', () => {
     });
 
     it('renders pending tool call when provided', () => {
-        const pendingToolCall: ToolCallMessage = {
-            tool_name: 'example_tool',
-            source: 'ToolCall',
-            args: 'Pending tool call',
-            tool_call_id: '12345', // Optional ID for tracking tool calls
-        };
+        const pendingToolCall = 'Pending tool call';
 
         render(
             <MessageDrawer messages={mockMessages} renderProps={mockRenderProps} pendingToolCall={pendingToolCall} />,

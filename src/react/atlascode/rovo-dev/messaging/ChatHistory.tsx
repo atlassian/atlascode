@@ -11,7 +11,6 @@ import {
     parseToolReturnMessage,
     scrollToEnd,
     TechnicalPlan,
-    ToolCallMessage,
 } from '../utils';
 import { ChatMessageItem } from './ChatMessageItem';
 import { MessageDrawer } from './MessageDrawer';
@@ -28,7 +27,7 @@ interface ChatHistoryProps {
         retryPromptAfterError: () => void;
         getOriginalText: (fp: string, lr?: number[]) => Promise<string>;
     };
-    pendingToolCall: ToolCallMessage | null;
+    pendingToolCall: string;
     deepPlanCreated: boolean;
     executeCodePlan: () => void;
     state: State;

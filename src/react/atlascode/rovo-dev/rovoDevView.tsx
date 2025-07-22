@@ -18,6 +18,8 @@ import { UpdatedFilesComponent } from './common/common';
 import { ChatHistory } from './messaging/ChatHistory';
 import { RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import * as styles from './rovoDevViewStyles';
+import { CodePlanButton } from './technical-plan/CodePlanButton';
+import { parseToolCallMessage, ToolCallItem } from './tools/ToolCallItem';
 import {
     ChatMessage,
     CODE_PLAN_EXECUTE_PROMPT,
@@ -75,7 +77,7 @@ const RovoDevView: React.FC = () => {
 
     const [promptText, setPromptText] = useState('');
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
-    const [pendingToolCall, setPendingToolCall] = useState<ToolCallMessage | null>(null);
+    const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
     const [retryAfterErrorEnabled, setRetryAfterErrorEnabled] = useState('');
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
     const [isDeepPlanCreated, setIsDeepPlanCreated] = useState(false);
@@ -92,7 +94,7 @@ const RovoDevView: React.FC = () => {
         codeBlocks.forEach((block) => {
             highlightElement(block, detectLanguage(block.textContent || ''));
         });
-    }, [chatHistory, pendingToolCall]);
+    }, [chatHistory, pendingToolCallMessage]);
 
     const appendCurrentResponse = useCallback(
         (text: string) => {
@@ -225,26 +227,24 @@ const RovoDevView: React.FC = () => {
                         args: data.args,
                         tool_call_id: data.tool_call_id, // Optional ID for tracking
                     };
-                    setPendingToolCall(callMessage);
+                    const toolCallMessage = parseToolCallMessage(callMessage);
+                    setPendingToolCallMessage(toolCallMessage);
                     break;
 
                 case 'tool-return':
-                    const args =
-                        data.tool_call_id === pendingToolCall?.tool_call_id ? pendingToolCall?.args : undefined;
-
                     const returnMessage: ToolReturnGenericMessage = {
                         source: 'ToolReturn',
                         tool_name: data.tool_name,
                         content: data.content || '',
                         tool_call_id: data.tool_call_id, // Optional ID for tracking
-                        args: args, // Use args from pending tool call if available
+                        args: data.toolCallMessage.args,
                     };
 
                     if (data.tool_name === 'create_technical_plan') {
                         setIsDeepPlanCreated(true);
                     }
 
-                    setPendingToolCall(null); // Clear pending tool call
+                    setPendingToolCallMessage(''); // Clear pending tool call
                     handleAppendChatHistory(returnMessage);
                     handleAppendModifiedFileToolReturns(returnMessage);
                     break;
@@ -254,15 +254,20 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [appendCurrentResponse, handleAppendChatHistory, handleAppendModifiedFileToolReturns, pendingToolCall],
+        [
+            appendCurrentResponse,
+            handleAppendChatHistory,
+            handleAppendModifiedFileToolReturns,
+            setPendingToolCallMessage,
+        ],
     );
 
     const setWaitingForPrompt = useCallback(() => {
         setSendButtonDisabled(false);
         setCurrentState(State.WaitingForPrompt);
-        setPendingToolCall(null);
+        setPendingToolCallMessage('');
         setIsDeepPlanToggled(false);
-    }, [setSendButtonDisabled, setCurrentState, setPendingToolCall, setIsDeepPlanToggled]);
+    }, [setSendButtonDisabled, setCurrentState, setPendingToolCallMessage, setIsDeepPlanToggled]);
 
     const onMessageHandler = useCallback(
         (event: RovoDevProviderMessage): void => {
@@ -303,7 +308,7 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.NewSession:
                     clearChatHistory();
-                    setPendingToolCall(null);
+                    setPendingToolCallMessage('');
                     break;
 
                 case RovoDevProviderMessageType.Initialized:
@@ -481,7 +486,7 @@ const RovoDevView: React.FC = () => {
                     retryPromptAfterError,
                     getOriginalText,
                 }}
-                pendingToolCall={pendingToolCall}
+                pendingToolCall={pendingToolCallMessage}
                 deepPlanCreated={isDeepPlanCreated}
                 executeCodePlan={executeCodePlan}
                 state={currentState}
