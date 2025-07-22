@@ -313,6 +313,15 @@ export abstract class AbstractIssueEditorPage<
 
     protected loadSelectOptionsForField = (field: SelectFieldUI, input: string): Promise<any[]> => {
         this.setState({ isSomethingLoading: true, loadingField: field.key });
+
+        if (field.valueType === ValueType.User) {
+            const apiVersion = (this.state as any).apiVersion || '2';
+            const userSearchUrl = this.state.siteDetails.isCloud
+                ? `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?query=`
+                : `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?username=`;
+            return this.loadSelectOptions(input, userSearchUrl);
+        }
+
         return this.loadSelectOptions(input, this.fixAutocompleteUrl(field.autoCompleteUrl));
     };
 
