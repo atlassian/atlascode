@@ -1,4 +1,4 @@
-import { emptyIssueType, IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
+import { emptyIssueType, emptyProject, IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
 import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import { format } from 'date-fns';
@@ -23,6 +23,7 @@ import { Action } from '../ipc/messaging';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { WebViewID } from '../lib/ipc/models/common';
 import { Logger } from '../logger';
+import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
 
@@ -61,11 +62,13 @@ export class CreateIssueWebview
     private _screenData: CreateMetaTransformerResult<DetailedSiteInfo>;
     private _selectedIssueTypeId: string | undefined;
     private _siteDetails: DetailedSiteInfo;
+    private _projectsWithCreateIssuesPermission: { [siteId: string]: Project[] };
 
     constructor(extensionPath: string) {
         super(extensionPath);
         this._screenData = emptyCreateMetaResult;
         this._siteDetails = emptySiteInfo;
+        this._projectsWithCreateIssuesPermission = {};
     }
 
     public get title(): string {
@@ -113,6 +116,48 @@ export class CreateIssueWebview
         this.invalidate();
     }
 
+    private getSiteWithMaxIssues(): DetailedSiteInfo | undefined {
+        const availableSites = Container.siteManager.getSitesAvailable(ProductJira);
+        const { siteWithMaxIssues } = availableSites.reduce(
+            (prev: { numIssues: number; siteWithMaxIssues: DetailedSiteInfo | null }, curr) => {
+                const siteIssues = SearchJiraHelper.getAssignedIssuesPerSite(curr.id);
+                if (siteIssues && siteIssues.length > 0 && siteIssues.length > prev.numIssues) {
+                    prev.numIssues = siteIssues.length;
+                    prev.siteWithMaxIssues = curr;
+                }
+                return prev;
+            },
+            { numIssues: 0, siteWithMaxIssues: null },
+        );
+        if (siteWithMaxIssues) {
+            return siteWithMaxIssues;
+        }
+        return undefined;
+    }
+
+    private getProjectKeyWithMaxIssues(siteId: string): string | undefined {
+        const siteIssues = SearchJiraHelper.getAssignedIssuesPerSite(siteId);
+        if (siteIssues && siteIssues.length > 0) {
+            const issuesNumberPerProjectKey = siteIssues.reduce((prev: Record<string, number>, issue) => {
+                const projectKey = issue.key?.split('-')[0];
+                if (!prev[projectKey]) {
+                    prev[projectKey] = 1;
+                    return prev;
+                }
+                prev[projectKey]++;
+                return prev;
+            }, {});
+            const projectKeyWithMaxIssues = Object.keys(issuesNumberPerProjectKey).reduce(
+                (prev: string, curr: string) =>
+                    issuesNumberPerProjectKey[curr] > issuesNumberPerProjectKey[prev] ? curr : prev,
+            );
+            if (projectKeyWithMaxIssues) {
+                return projectKeyWithMaxIssues;
+            }
+        }
+        return undefined;
+    }
+
     private async updateSiteAndProject(inputSite?: DetailedSiteInfo, inputProject?: Project) {
         if (inputSite) {
             this._siteDetails = inputSite;
@@ -125,7 +170,12 @@ export class CreateIssueWebview
             if (configSite) {
                 this._siteDetails = configSite;
             } else {
-                this._siteDetails = Container.siteManager.getFirstSite(ProductJira.key);
+                const siteWithMaxIssues = this.getSiteWithMaxIssues();
+                if (siteWithMaxIssues) {
+                    this._siteDetails = siteWithMaxIssues;
+                } else {
+                    this._siteDetails = Container.siteManager.getFirstSite(ProductJira.key);
+                }
             }
         }
 
@@ -142,7 +192,15 @@ export class CreateIssueWebview
             if (configProject) {
                 this._currentProject = configProject;
             } else {
-                this._currentProject = await Container.jiraProjectManager.getFirstProject(this._siteDetails);
+                const projectKeyWithMaxIssues = this.getProjectKeyWithMaxIssues(this._siteDetails.id);
+                if (projectKeyWithMaxIssues) {
+                    this._currentProject = await Container.jiraProjectManager.getProjectForKey(
+                        this._siteDetails,
+                        projectKeyWithMaxIssues,
+                    );
+                } else {
+                    this._currentProject = await Container.jiraProjectManager.getFirstProject(this._siteDetails);
+                }
             }
         }
 
@@ -150,6 +208,23 @@ export class CreateIssueWebview
             siteId: this._siteDetails.id,
             projectKey: this._currentProject!.key,
         });
+    }
+
+    private async getProjectsWithPermission(siteDetails: DetailedSiteInfo) {
+        const siteId = siteDetails.id;
+        if (this._projectsWithCreateIssuesPermission[siteId]) {
+            return this._projectsWithCreateIssuesPermission[siteId];
+        }
+
+        const availableProjects = await Container.jiraProjectManager.getProjects(siteDetails);
+        const projectsWithPermission = await Container.jiraProjectManager.filterProjectsByPermission(
+            siteDetails,
+            availableProjects,
+            'CREATE_ISSUES',
+        );
+
+        this._projectsWithCreateIssuesPermission = { [siteId]: projectsWithPermission };
+        return projectsWithPermission;
     }
 
     public async invalidate() {
@@ -208,7 +283,19 @@ export class CreateIssueWebview
         this.isRefeshing = true;
         try {
             const availableSites = Container.siteManager.getSitesAvailable(ProductJira);
-            const availableProjects = await Container.jiraProjectManager.getProjects(this._siteDetails);
+            const projectsWithCreateIssuesPermission = await this.getProjectsWithPermission(this._siteDetails);
+
+            const isHasPermissionForCurrentProject = projectsWithCreateIssuesPermission.find(
+                (project) => project.id === this._currentProject?.id,
+            );
+
+            // if the current project does not have create issues permission, we will select the first project with permission
+            if (!isHasPermissionForCurrentProject) {
+                this._currentProject =
+                    projectsWithCreateIssuesPermission.length > 0
+                        ? projectsWithCreateIssuesPermission[0]
+                        : emptyProject;
+            }
 
             this._selectedIssueTypeId = '';
             this._screenData = await fetchCreateIssueUI(this._siteDetails, this._currentProject.key);
@@ -226,15 +313,15 @@ export class CreateIssueWebview
                 };
             }
 
-            this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['site'] = availableSites;
-
-            this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues['project'] = this._currentProject;
-            this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['project'] = availableProjects;
+            const issueTypeUI: IssueTypeUI<DetailedSiteInfo> = this._screenData.issueTypeUIs[this._selectedIssueTypeId];
+            issueTypeUI.selectFieldOptions['site'] = availableSites;
+            issueTypeUI.fieldValues['project'] = this._currentProject;
+            issueTypeUI.selectFieldOptions['project'] = projectsWithCreateIssuesPermission;
 
             /*
-            partial issue is used for prepopulating summary and description. 
+            partial issue is used for prepopulating summary and description.
             fieldValues get sent when you change the project in the project dropdown so we can preserve any previously set values.
-            e.g. you type some stuff, then you change the project... 
+            e.g. you type some stuff, then you change the project...
             at this point the new project may or may not have the same (or some of the same) fields.
             we fill them in with the previous user values.
             */

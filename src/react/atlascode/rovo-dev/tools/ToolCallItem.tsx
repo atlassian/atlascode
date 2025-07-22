@@ -2,23 +2,21 @@ import React from 'react';
 
 import { ToolCallMessage } from '../utils';
 
-export const ToolCallItem: React.FC<{ msg: ToolCallMessage }> = ({ msg }) => {
-    if (!msg.tool_name) {
-        return <div key="invalid-tool-call">Error: Invalid tool call message</div>;
-    }
-
-    const toolMessage = parseToolCallMessage(msg.tool_name);
-
+export const ToolCallItem: React.FC<{ toolMessage: string }> = ({ toolMessage }) => {
     return (
-        <div className="tool-call-item">
+        <div className="tool-call-item-base tool-call-item">
             <i className="codicon codicon-loading codicon-modifier-spin" />
             {toolMessage}
         </div>
     );
 };
 
-function parseToolCallMessage(msg: string): string {
-    switch (msg) {
+export function parseToolCallMessage(msg: ToolCallMessage): string {
+    switch (msg.tool_name) {
+        case '':
+        case null:
+        case undefined:
+            return '';
         case 'expand_code_chunks':
             return 'Expanding code';
         case 'find_and_replace_code':
@@ -38,6 +36,6 @@ function parseToolCallMessage(msg: string): string {
         case 'grep_file_path':
             return 'Grep file path';
         default:
-            return msg;
+            return msg.tool_name;
     }
 }

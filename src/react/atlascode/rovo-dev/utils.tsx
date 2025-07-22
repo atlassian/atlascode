@@ -164,44 +164,29 @@ export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolRe
                     });
                 }
             }
-
-            if (resp.length === 0) {
-                // If no matches found, return the raw content
-                resp.push({
-                    content: msg.content,
-                });
-            }
             break;
 
         case 'bash':
             const args = msg.args && JSON.parse(msg.args);
-            let command = '';
-            if (!args || !args.command) {
-                console.warn('Bash command not found in args:', msg.args);
-            } else {
-                command = args.command;
+            if (args?.command) {
+                resp.push({
+                    title: args.command,
+                    content: 'Executed command',
+                    type: 'bash',
+                });
             }
-            resp.push({
-                title: command,
-                content: 'Executed command',
-                type: 'bash',
-            });
             break;
 
         case 'grep_file_content':
             const grepArgs = msg.args && JSON.parse(msg.args);
-
-            let pattern = '';
-            if (!grepArgs || !grepArgs.pattern) {
-                console.warn('Grep pattern not found in args:', msg.args);
-            } else {
-                pattern = grepArgs.pattern;
+            if (grepArgs?.pattern) {
+                const pattern = grepArgs.pattern;
+                resp.push({
+                    content: `Searched file content${pattern ? ` for pattern:` : ''}`,
+                    title: `"${pattern}"`,
+                    type: 'open',
+                });
             }
-            resp.push({
-                content: `Searched file content${pattern ? ` for pattern:` : ''}`,
-                title: `"${pattern}"`,
-                type: 'open',
-            });
             break;
 
         case 'create_technical_plan':
@@ -226,11 +211,4 @@ export const isCodeChangeTool = (toolName: string): boolean => {
     return ['find_and_replace_code', 'create_file', 'delete_file'].includes(toolName);
 };
 
-export const toolNameIconMap: Record<string, string> = {
-    expand_code_chunks: 'codicon codicon-search',
-    find_and_replace_code: 'codicon codicon-code',
-    create_file: 'codicon codicon-new-file',
-    bash: 'codicon codicon-terminal',
-    delete_file: 'codicon codicon-trash',
-    open_files: 'codicon codicon-go-to-file',
-};
+export const CODE_PLAN_EXECUTE_PROMPT = 'Execute the code plan that you have created';
