@@ -21,6 +21,9 @@ jest.mock('../container', () => ({
             getIssueLinkTypes: jest.fn(),
             getIssueCreateMetadata: jest.fn(),
         },
+        analyticsClient: {
+            sendTrackEvent: jest.fn(),
+        },
         config: {
             jira: {
                 explorer: {
@@ -38,6 +41,10 @@ jest.mock('src/util/featureFlags', () => ({
     Experiments: {
         AtlascodePerformanceExperiment: 'atlascode-performance-experiment',
     },
+}));
+
+jest.mock('src/analytics', () => ({
+    jiraIssuePerformanceEvent: jest.fn().mockResolvedValue({}),
 }));
 
 describe('issuesForJQL', () => {

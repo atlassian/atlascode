@@ -241,86 +241,16 @@ export async function notificationChangeEvent(
     });
 }
 
-// Jira issue performance events
-export async function issuesForJqlPerformanceEvent(
-    site: DetailedSiteInfo,
-    duration: number,
-    performanceEnabled: boolean,
-    issueCount?: number,
-    failed?: boolean, // true = failed API calls, false otherwise
-): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'executed', 'issuesForJqlQuery', {
+// Jira issue performance event
+
+export async function jiraIssuePerformanceEvent(site: DetailedSiteInfo, type: string, latency: number) {
+    return instanceTrackEvent(site, 'loaded', type, {
         attributes: {
-            duration: duration,
-            performanceEnabled: performanceEnabled,
-            operationType: performanceEnabled ? 'optimized' : 'original',
-            issueCount: issueCount,
-            failedOperation: failed,
-            performanceMetric: true,
+            latency: latency,
         },
     });
 }
 
-export async function editIssueUIRenderPerformanceEvent(
-    site: DetailedSiteInfo,
-    issueKey: string,
-    duration: number,
-    performanceEnabled: boolean,
-    failed?: boolean,
-): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'loaded', 'editIssueUI', {
-        actionSubjectId: issueKey,
-        attributes: {
-            duration: duration,
-            performanceEnabled: performanceEnabled,
-            operationType: performanceEnabled ? 'optimized' : 'original',
-            failedOperation: failed,
-            performanceMetric: true,
-        },
-    });
-}
-
-export async function editIssueFieldsUpdatePerformanceEvent(
-    site: DetailedSiteInfo,
-    issueKey: string,
-    duration: number,
-    performanceEnabled: boolean,
-    fieldCount?: number,
-    failed?: boolean,
-): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'updated', 'editIssueFields', {
-        actionSubjectId: issueKey,
-        attributes: {
-            duration: duration,
-            performanceEnabled: performanceEnabled,
-            operationType: performanceEnabled ? 'optimized' : 'original',
-            performanceMetric: true,
-            fieldCount: fieldCount,
-            failedOperation: failed,
-        },
-    });
-}
-
-export async function createIssueForceUpdateFieldsPerformanceEvent(
-    site: DetailedSiteInfo,
-    projectKey: string,
-    duration: number,
-    performanceEnabled: boolean,
-    projectsCount?: number,
-    failed?: boolean,
-): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'loaded', 'createIssueForceUpdateFields', {
-        attributes: {
-            duration: duration,
-            projectKey: projectKey,
-            performanceEnabled: performanceEnabled,
-            operationType: performanceEnabled ? 'optimized' : 'original',
-            performanceMetric: true,
-            projectsCount: projectsCount,
-            failedOperation: failed,
-        },
-    });
-}
 // PR events
 
 export async function createPrTerminalLinkDetectedEvent(isNotifEnabled: boolean): Promise<TrackEvent> {

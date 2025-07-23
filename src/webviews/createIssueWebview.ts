@@ -7,7 +7,7 @@ import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
 import { commands, Position, Uri, ViewColumn, window } from 'vscode';
 
 import { issueCreatedEvent } from '../analytics';
-import { createIssueForceUpdateFieldsPerformanceEvent } from '../analytics';
+import { jiraIssuePerformanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { showIssue } from '../commands/jira/showIssue';
 import { configuration } from '../config/configuration';
@@ -289,14 +289,12 @@ export class CreateIssueWebview
                 Experiments.AtlascodePerformanceExperiment,
             );
             const startCreateIssueUIRenderTime = process.hrtime();
-            let numOfProjectsForSite: number = 0;
 
             if (performanceEnabled) {
                 const [projectsWithCreateIssuesPermission, screenData] = await Promise.all([
                     this.getProjectsWithPermission(this._siteDetails),
                     fetchCreateIssueUI(this._siteDetails, this._currentProject.key),
                 ]);
-                numOfProjectsForSite = projectsWithCreateIssuesPermission.length;
                 const isHasPermissionForCurrentProject = projectsWithCreateIssuesPermission.find(
                     (project) => project.id === this._currentProject?.id,
                 );
@@ -361,7 +359,6 @@ export class CreateIssueWebview
                 this.postMessage(createData);
             } else {
                 const projectsWithCreateIssuesPermission = await this.getProjectsWithPermission(this._siteDetails);
-                numOfProjectsForSite = projectsWithCreateIssuesPermission.length;
                 const isHasPermissionForCurrentProject = projectsWithCreateIssuesPermission.find(
                     (project) => project.id === this._currentProject?.id,
                 );
@@ -428,13 +425,13 @@ export class CreateIssueWebview
             const endCreateIssueUIRenderTime = process.hrtime(startCreateIssueUIRenderTime);
             const endCreateIssueUIRenderTimeMs =
                 endCreateIssueUIRenderTime[0] * 1000 + Math.floor(endCreateIssueUIRenderTime[1] / 1000000);
-            createIssueForceUpdateFieldsPerformanceEvent(
+            jiraIssuePerformanceEvent(
                 this._siteDetails,
-                this._currentProject.id,
+                'createJiraIssueRender.ttr',
                 endCreateIssueUIRenderTimeMs,
-                performanceEnabled,
-                numOfProjectsForSite,
-            );
+            ).then((event) => {
+                Container.analyticsClient.sendTrackEvent(event);
+            });
         } catch (e) {
             Logger.error(e, 'error updating issue fields');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });

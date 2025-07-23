@@ -90,6 +90,11 @@ jest.mock('src/util/featureFlags', () => ({
     },
 }));
 
+jest.mock('../analytics', () => ({
+    jiraIssuePerformanceEvent: jest.fn().mockResolvedValue({}),
+    issueUrlCopiedEvent: jest.fn().mockResolvedValue({}),
+}));
+
 describe('JiraIssueWebview', () => {
     let jiraIssueWebview: JiraIssueWebview;
     let mockJiraClient: any;

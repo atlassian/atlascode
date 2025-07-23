@@ -1,6 +1,6 @@
 import { EpicFieldInfo, getEpicFieldInfo, IssueLinkType } from '@atlassianlabs/jira-pi-common-models';
 import { Fields, readField } from '@atlassianlabs/jira-pi-meta-models';
-import { IssueCreateMetadata } from '@atlassianlabs/jira-pi-meta-models'; // also import emptyProjectIssueCreateMetadata
+import { IssueCreateMetadata } from '@atlassianlabs/jira-pi-meta-models';
 import { Disposable } from 'vscode';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
@@ -63,7 +63,7 @@ export class JiraSettingsManager extends Disposable {
                 cMeta = await client.getCreateIssueMetadata(projectKey);
                 this._projectKeyCMetaStore.set(projectKey, cMeta);
             } catch (error) {
-                Logger.error(error, 'cMeta Data not avaliable.');
+                Logger.error(error, 'Create issue metadata not available.');
             }
         }
         return this._projectKeyCMetaStore.get(projectKey);

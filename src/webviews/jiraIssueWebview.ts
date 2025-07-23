@@ -17,7 +17,7 @@ import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
 import { commands, env } from 'vscode';
 
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
-import { editIssueFieldsUpdatePerformanceEvent, editIssueUIRenderPerformanceEvent } from '../analytics';
+import { jiraIssuePerformanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
 import { PullRequestData } from '../bitbucket/model';
@@ -61,14 +61,12 @@ export class JiraIssueWebview
     private _issue: MinimalIssue<DetailedSiteInfo>;
     private _editUIData: EditIssueData;
     private _currentUser: User;
-    private _componentUpdateCount: number;
 
     constructor(extensionPath: string) {
         super(extensionPath);
         this._issue = createEmptyMinimalIssue(emptySiteInfo);
         this._editUIData = emptyEditIssueData;
         this._currentUser = emptyUser;
-        this._componentUpdateCount = 0;
     }
 
     public get title(): string {
@@ -143,25 +141,17 @@ export class JiraIssueWebview
 
             msg.type = 'update';
 
-            this.postMessage(msg);
+            this.postMessage(msg); // Issue has rendered
             const endRenderUITime = process.hrtime(startRenderUITime);
             const endRenderUITimeMs = endRenderUITime[0] * 1000 + Math.floor(endRenderUITime[1] / 1000000);
-            editIssueUIRenderPerformanceEvent(
-                this._issue.siteDetails,
-                this._issue.key,
-                endRenderUITimeMs,
-                performanceEnabled,
-            )
-                .then((event) => {
+            jiraIssuePerformanceEvent(this._issue.siteDetails, 'editJiraIssueRender.ttr', endRenderUITimeMs).then(
+                (event) => {
                     Container.analyticsClient.sendTrackEvent(event);
-                })
-                .catch((error) => {
-                    Logger.debug('Failed to send performance analytics for Render EditUI', error);
-                });
+                },
+            );
 
             // UI component updates
             const startIssueFieldsUpdates = process.hrtime();
-            this._componentUpdateCount = 0;
             // call async-able update functions here
             if (performanceEnabled) {
                 await Promise.allSettled([
@@ -181,19 +171,13 @@ export class JiraIssueWebview
             const endIssueFieldsUpdates = process.hrtime(startIssueFieldsUpdates);
             const endIssueFieldsUpdatesMs =
                 endIssueFieldsUpdates[0] * 1000 + Math.floor(endIssueFieldsUpdates[1] / 1000000);
-            editIssueFieldsUpdatePerformanceEvent(
+            jiraIssuePerformanceEvent(
                 this._issue.siteDetails,
-                this._issue.key,
+                'editJiraIssueUpdates.ttr',
                 endIssueFieldsUpdatesMs,
-                performanceEnabled,
-                this._componentUpdateCount,
-            )
-                .then((event) => {
-                    Container.analyticsClient.sendTrackEvent(event);
-                })
-                .catch((error) => {
-                    Logger.debug('Failed to send performance analytics for updating issue UI components.', error);
-                });
+            ).then((event) => {
+                Container.analyticsClient.sendTrackEvent(event);
+            });
         } catch (e) {
             Logger.error(e, 'Error updating issue');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -231,7 +215,6 @@ export class JiraIssueWebview
                 const searchResults = await readSearchResults(res, site, epicInfo);
                 this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
             }
-            this._componentUpdateCount += 1;
         }
     }
 
@@ -240,7 +223,6 @@ export class JiraIssueWebview
             const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
             const user = await client.getCurrentUser();
             this._currentUser = user;
-            this._componentUpdateCount += 1;
             this.postMessage({ type: 'currentUserUpdate', currentUser: user });
         }
     }
@@ -248,7 +230,6 @@ export class JiraIssueWebview
     async updateRelatedPullRequests() {
         const relatedPrs = await this.recentPullRequests();
         if (relatedPrs.length > 0) {
-            this._componentUpdateCount += 1;
             this.postMessage({ type: 'pullRequestUpdate', recentPullRequests: relatedPrs });
         }
     }
@@ -259,7 +240,6 @@ export class JiraIssueWebview
             const watches = await client.getWatchers(this._issue.key);
 
             this._editUIData.fieldValues['watches'] = watches;
-            this._componentUpdateCount += 1;
             this.postMessage({
                 type: 'fieldValueUpdate',
                 fieldValues: { watches: this._editUIData.fieldValues['watches'] },
@@ -273,7 +253,6 @@ export class JiraIssueWebview
             const votes = await client.getVotes(this._issue.key);
 
             this._editUIData.fieldValues['votes'] = votes;
-            this._componentUpdateCount += 1;
             this.postMessage({
                 type: 'fieldValueUpdate',
                 fieldValues: { votes: this._editUIData.fieldValues['votes'] },

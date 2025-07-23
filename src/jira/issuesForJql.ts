@@ -1,6 +1,5 @@
 import { MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
-import { issuesForJqlPerformanceEvent } from 'src/analytics';
-import { Logger } from 'src/logger';
+import { jiraIssuePerformanceEvent } from 'src/analytics';
 import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
@@ -11,17 +10,16 @@ export const MAX_RESULTS = 100;
 export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise<MinimalIssue<DetailedSiteInfo>[]> {
     const client = await Container.clientManager.jiraClient(site);
     const performanceEnabled = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment);
+    let issues: MinimalIssue<DetailedSiteInfo>[] = [];
     const startTime = process.hrtime();
     if (performanceEnabled) {
         const [fields, epicFieldInfo] = await Promise.all([
             Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site),
             Container.jiraSettingsManager.getEpicFieldsForSite(site),
         ]);
-        // const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
 
         let index = 0;
         let total = 0;
-        let issues: MinimalIssue<DetailedSiteInfo>[] = [];
         do {
             const res = await client.searchForIssuesUsingJqlGet(jql, fields, MAX_RESULTS, index);
             const searchResults = await readSearchResults(res, site, epicFieldInfo);
@@ -42,41 +40,26 @@ export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise
                 }
             }
         }
-        const endTime = process.hrtime(startTime);
-        const endTimeMs = endTime[0] * 1000 + Math.floor(endTime[1] / 1000000);
-        issuesForJqlPerformanceEvent(site, endTimeMs, performanceEnabled, issues.length)
-            .then((event) => {
-                Container.analyticsClient.sendTrackEvent(event);
-            })
-            .catch((error) => {
-                Logger.debug('Failed to send performance analytics for JQL', error);
-            });
-        return issues;
+    } else {
+        const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
+        const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
+
+        let index = 0;
+        let total = 0;
+        do {
+            const res = await client.searchForIssuesUsingJqlGet(jql, fields, MAX_RESULTS, index);
+            const searchResults = await readSearchResults(res, site, epicFieldInfo);
+            // While Cloud will let us fetch 100 at a time it's possible server instances will be configured
+            // with a lower maximum, so update the index to reflect what's actually being returned.
+            index += searchResults.issues.length;
+            issues = issues.concat(searchResults.issues);
+            total = searchResults.total;
+        } while (Container.config.jira.explorer.fetchAllQueryResults && index < total);
     }
-
-    const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
-    const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
-
-    let index = 0;
-    let total = 0;
-    let issues: MinimalIssue<DetailedSiteInfo>[] = [];
-    do {
-        const res = await client.searchForIssuesUsingJqlGet(jql, fields, MAX_RESULTS, index);
-        const searchResults = await readSearchResults(res, site, epicFieldInfo);
-        // While Cloud will let us fetch 100 at a time it's possible server instances will be configured
-        // with a lower maximum, so update the index to reflect what's actually being returned.
-        index += searchResults.issues.length;
-        issues = issues.concat(searchResults.issues);
-        total = searchResults.total;
-    } while (Container.config.jira.explorer.fetchAllQueryResults && index < total);
     const endTime = process.hrtime(startTime);
     const endTimeMs = endTime[0] * 1000 + Math.floor(endTime[1] / 1000000);
-    issuesForJqlPerformanceEvent(site, endTimeMs, performanceEnabled, issues.length)
-        .then((event) => {
-            Container.analyticsClient.sendTrackEvent(event);
-        })
-        .catch((error) => {
-            Logger.debug('Failed to send performance analytics for JQL', error);
-        });
+    jiraIssuePerformanceEvent(site, 'issuesForJql.ttr', endTimeMs).then((event) => {
+        Container.analyticsClient.sendTrackEvent(event);
+    });
     return issues;
 }
