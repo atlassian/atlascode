@@ -34,4 +34,4 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.Initialized>
     | ReducerAction<RovoDevProviderMessageType.CancelFailed>
     | ReducerAction<RovoDevProviderMessageType.ReturnText, { text: string }>
-    | ReducerAction<RovoDevProviderMessageType.CreatePRComplete>;
+    | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string } }>;

@@ -1,8 +1,16 @@
 import React from 'react';
 
-import { ErrorMessageItem, OpenFileFunc, TechnicalPlanComponent } from '../common/common';
+import { PostMessageFunc, PostMessagePromiseFunc } from '../../messagingApi';
+import {
+    ErrorMessageItem,
+    FollowUpActionFooter,
+    OpenFileFunc,
+    PullRequestButton,
+    TechnicalPlanComponent,
+} from '../common/common';
 import { RovoDevLanding } from '../rovoDevLanding';
 import { State } from '../rovoDevView';
+import { RovoDevViewResponse } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import {
     ChatMessage,
@@ -11,6 +19,7 @@ import {
     parseToolReturnMessage,
     scrollToEnd,
     TechnicalPlan,
+    ToolReturnParseResult,
 } from '../utils';
 import { ChatMessageItem } from './ChatMessageItem';
 import { MessageDrawer } from './MessageDrawer';
@@ -27,10 +36,16 @@ interface ChatHistoryProps {
         retryPromptAfterError: () => void;
         getOriginalText: (fp: string, lr?: number[]) => Promise<string>;
     };
+    messagingApi: {
+        postMessage: PostMessageFunc<RovoDevViewResponse>;
+        postMessageWithReturn: PostMessagePromiseFunc<RovoDevViewResponse, any>;
+    };
+    modifiedFiles?: ToolReturnParseResult[];
     pendingToolCall: string;
     deepPlanCreated: boolean;
     executeCodePlan: () => void;
     state: State;
+    injectMessage?: (msg: ChatMessage) => void;
 }
 
 export const ChatHistory: React.FC<ChatHistoryProps> = ({
@@ -40,11 +55,15 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     deepPlanCreated,
     executeCodePlan,
     state,
+    messagingApi: { postMessageWithReturn },
+    modifiedFiles,
+    injectMessage,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const [currentMessage, setCurrentMessage] = React.useState<DefaultMessage | null>(null);
     const [curThinkingMessages, setCurThinkingMessages] = React.useState<ChatMessage[]>([]);
     const [messageBlocks, setMessageBlocks] = React.useState<MessageBlockDetails[]>([]);
+    const [canCreatePR, setCanCreatePR] = React.useState(false);
 
     React.useEffect(() => {
         if (chatEndRef.current) {
@@ -60,7 +79,6 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
                 setMessageBlocks((prev) => [...prev, { messages: currentMessage }]);
             }
             setCurrentMessage(null);
-            return;
         }
 
         const handleMessages = () => {
@@ -83,6 +101,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
                         }
                         setCurrentMessage(null);
                         setMessageBlocks((prev) => [...prev, { messages: newMessage }]);
+                        setCanCreatePR(true);
                         return;
 
                     case 'RovoDev':
@@ -181,6 +200,28 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
             {currentMessage && <ChatMessageItem msg={currentMessage} index={messages.length - 1} />}
             {deepPlanCreated && (
                 <CodePlanButton execute={executeCodePlan} disabled={state !== State.WaitingForPrompt} />
+            )}
+
+            {state === State.WaitingForPrompt && (
+                <FollowUpActionFooter>
+                    {canCreatePR && (
+                        <PullRequestButton
+                            key="pull-request-button"
+                            postMessagePromise={postMessageWithReturn}
+                            modifiedFiles={modifiedFiles}
+                            onPullRequestCreated={(url) => {
+                                if (url) {
+                                    injectMessage?.({
+                                        source: 'RovoDev',
+                                        text: `Pull request prepared [here](${url})`,
+                                    });
+                                }
+                                // Errors are handled by the extension logic
+                                setCanCreatePR(false);
+                            }}
+                        />
+                    )}
+                </FollowUpActionFooter>
             )}
         </div>
     );

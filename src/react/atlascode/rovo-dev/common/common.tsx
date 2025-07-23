@@ -10,9 +10,11 @@ import { detectLanguage } from '@speed-highlight/core/detect';
 import { createPatch } from 'diff';
 import MarkdownIt from 'markdown-it';
 import React, { useCallback } from 'react';
-import { RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
+import { ConnectionTimeout } from 'src/util/time';
 
+import { PostMessagePromiseFunc } from '../../messagingApi';
 import { ChatMessageItem } from '../messaging/ChatMessageItem';
+import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import {
     agentMessageStyles,
     chatMessageStyles,
@@ -98,6 +100,58 @@ const RetryPromptButton: React.FC<{
     );
 };
 
+export const PullRequestButton: React.FC<{
+    postMessagePromise: PostMessagePromiseFunc<RovoDevViewResponse, any>;
+    modifiedFiles?: ToolReturnParseResult[];
+    onPullRequestCreated?: (url: string) => void;
+}> = ({ postMessagePromise, modifiedFiles, onPullRequestCreated }) => {
+    if (!modifiedFiles || modifiedFiles.length === 0) {
+        return null;
+    }
+
+    const [isPullRequestLoading, setIsPullRequestLoading] = React.useState(false);
+
+    return (
+        <button
+            style={{
+                color: 'var(--vscode-button-secondaryForeground)',
+                backgroundColor: 'var(--vscode-button-background)',
+                border: '1px solid var(--vscode-button-secondaryBorder)',
+                ...undoKeepButtonStyles,
+            }}
+            onClick={async () => {
+                setIsPullRequestLoading(true);
+                const response = await postMessagePromise(
+                    {
+                        type: RovoDevViewResponseType.CreatePR,
+                    },
+                    RovoDevViewResponseType.CreatePRComplete,
+                    ConnectionTimeout,
+                );
+                setIsPullRequestLoading(false);
+                console.log('BRUH:', response);
+                onPullRequestCreated?.((response as any).data.url || '');
+            }}
+            title="Create Pull Request"
+        >
+            {!isPullRequestLoading ? (
+                <i className="codicon codicon-git-pull-request-create" />
+            ) : (
+                <i className="codicon codicon-loading codicon-modifier-spin" />
+            )}
+            Create Pull Request
+        </button>
+    );
+};
+
+export const FollowUpActionFooter: React.FC<{}> = ({ children }) => {
+    return (
+        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', marginTop: '8px' }}>
+            {children}
+        </div>
+    );
+};
+
 export const renderChatHistory = (
     msg: ChatMessage,
     index: number,
@@ -143,18 +197,10 @@ export const UpdatedFilesComponent: React.FC<{
     modifiedFiles: ToolReturnParseResult[];
     onUndo: (filePath: string[]) => void;
     onKeep: (filePath: string[]) => void;
-    onCreatePR: () => void;
     openDiff: OpenFileFunc;
-}> = ({ modifiedFiles, onUndo, onKeep, openDiff, onCreatePR }) => {
+}> = ({ modifiedFiles, onUndo, onKeep, openDiff }) => {
     const [isUndoHovered, setIsUndoHovered] = React.useState(false);
     const [isKeepHovered, setIsKeepHovered] = React.useState(false);
-    const [isPullRequestLoading, setIsPullRequestLoading] = React.useState(false);
-
-    window.addEventListener('message', (event) => {
-        if (event.data.type === RovoDevProviderMessageType.CreatePRComplete) {
-            setIsPullRequestLoading(false);
-        }
-    });
 
     const handleKeepAll = useCallback(() => {
         const filePaths = modifiedFiles.map((msg) => msg.filePath).filter((path) => path !== undefined);
@@ -225,25 +271,6 @@ export const UpdatedFilesComponent: React.FC<{
                         onMouseLeave={() => setIsKeepHovered(false)}
                     >
                         Keep
-                    </button>
-                    <button
-                        style={{
-                            color: 'var(--vscode-button-secondaryForeground)',
-                            backgroundColor: 'var(--vscode-button-background)',
-                            border: '1px solid var(--vscode-button-secondaryBorder)',
-                            ...undoKeepButtonStyles,
-                        }}
-                        onClick={() => {
-                            setIsPullRequestLoading(true);
-                            onCreatePR();
-                        }}
-                        title="Create Pull Request"
-                    >
-                        {!isPullRequestLoading ? (
-                            <i className="codicon codicon-git-pull-request-create" />
-                        ) : (
-                            <i className="codicon codicon-loading codicon-modifier-spin" />
-                        )}
                     </button>
                 </div>
             </div>

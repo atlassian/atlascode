@@ -520,14 +520,18 @@ ${message}`;
     }
 
     private async createPR() {
+        let prLink: string | undefined;
         try {
-            await this._prHandler.createPR();
+            prLink = await this._prHandler.createPR();
         } catch (e) {
             await this.processError(e, false);
         } finally {
             const webview = this._webView!;
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CreatePRComplete,
+                data: {
+                    url: prLink,
+                },
             });
         }
     }

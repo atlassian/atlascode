@@ -320,10 +320,13 @@ const RovoDevView: React.FC = () => {
                     }
                     break;
                 case RovoDevProviderMessageType.ReturnText:
-                    break; // This is handled in getOriginalText function
+                case RovoDevProviderMessageType.CreatePRComplete:
+                    break; // This is handled elsewhere
                 default:
                     handleAppendChatHistory({
                         source: 'RovoDevError',
+                        // event.type complains if this is unreachable
+                        // @ts-expect-error ts(2339)
                         text: `Unknown message type: ${event.type}`,
                         isRetriable: false,
                         uid: v4(),
@@ -485,10 +488,16 @@ const RovoDevView: React.FC = () => {
                     retryPromptAfterError,
                     getOriginalText,
                 }}
+                messagingApi={{
+                    postMessage,
+                    postMessageWithReturn,
+                }}
                 pendingToolCall={pendingToolCallMessage}
                 deepPlanCreated={isDeepPlanCreated}
                 executeCodePlan={executeCodePlan}
                 state={currentState}
+                modifiedFiles={totalModifiedFiles}
+                injectMessage={handleAppendChatHistory}
             />
             <div style={styles.rovoDevInputSectionStyles}>
                 <UpdatedFilesComponent
@@ -496,11 +505,6 @@ const RovoDevView: React.FC = () => {
                     onUndo={undoFiles}
                     onKeep={keepFiles}
                     openDiff={openFile}
-                    onCreatePR={() => {
-                        postMessage({
-                            type: RovoDevViewResponseType.CreatePR,
-                        });
-                    }}
                 />
                 <div style={styles.rovoDevPromptContainerStyles}>
                     <div
