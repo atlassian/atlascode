@@ -110,6 +110,10 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                 ...{ description: '', summary: '' },
                             },
                         });
+                        // Refresh sidebar tree views after successful issue creation
+                        this.postMessage({
+                            action: 'refreshTreeViews',
+                        });
                     }
                     break;
                 }
