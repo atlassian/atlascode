@@ -1,4 +1,5 @@
 import Button from '@atlaskit/button';
+import StatusErrorIcon from '@atlaskit/icon/core/error';
 import CheckIcon from '@atlaskit/icon/glyph/check';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import ChevronRightIcon from '@atlaskit/icon/glyph/chevron-right';
@@ -9,22 +10,24 @@ import { detectLanguage } from '@speed-highlight/core/detect';
 import { createPatch } from 'diff';
 import MarkdownIt from 'markdown-it';
 import React, { useCallback } from 'react';
-import { RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
+import { ConnectionTimeout } from 'src/util/time';
 
+import { PostMessagePromiseFunc } from '../../messagingApi';
+import { ChatMessageItem } from '../messaging/ChatMessageItem';
+import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import {
     agentMessageStyles,
     chatMessageStyles,
     errorMessageStyles,
-    inlineMofidyButtonStyles,
+    inChatButtonStyles,
+    inlineModifyButtonStyles,
     messageContentStyles,
     undoKeepButtonStyles,
-    userMessageStyles,
 } from '../rovoDevViewStyles';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import {
     ChatMessage,
     CodeSnippetToChange,
-    DefaultMessage,
     ErrorMessage,
     parseToolReturnMessage,
     TechnicalPlan,
@@ -33,7 +36,7 @@ import {
     ToolReturnParseResult,
 } from '../utils';
 
-const md = new MarkdownIt({
+export const mdParser = new MarkdownIt({
     html: true,
     breaks: true,
     linkify: true,
@@ -44,28 +47,7 @@ export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
 }
 
-const ChatMessageItem: React.FC<{
-    msg: DefaultMessage;
-    index: number;
-}> = ({ msg, index }) => {
-    const messageTypeStyles = msg.source === 'User' ? userMessageStyles : agentMessageStyles;
-
-    const content = (
-        <div
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-            key="parsed-content"
-            dangerouslySetInnerHTML={{ __html: md.render(msg.text || '') }}
-        />
-    );
-
-    return (
-        <div key={index} style={{ ...chatMessageStyles, ...messageTypeStyles }}>
-            <div style={messageContentStyles}>{content}</div>
-        </div>
-    );
-};
-
-const ErrorMessageItem: React.FC<{
+export const ErrorMessageItem: React.FC<{
     msg: ErrorMessage;
     index: number;
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
@@ -75,32 +57,97 @@ const ErrorMessageItem: React.FC<{
         <div
             style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
             key="parsed-content"
-            dangerouslySetInnerHTML={{ __html: md.render(msg.text || '') }}
+            dangerouslySetInnerHTML={{ __html: mdParser.render(msg.text || '') }}
         />
     );
 
     return (
         <div key={index} style={{ ...chatMessageStyles, ...errorMessageStyles }}>
-            <div style={messageContentStyles}>{content}</div>
-            {msg.isRetriable && (
-                <RetryPromptButton
-                    enabled={isRetryAfterErrorButtonEnabled(msg.uid)}
-                    retryAfterError={retryAfterError}
-                />
-            )}
+            <div style={{ display: 'flex', flexDirection: 'row' }}>
+                <div style={{ padding: '4px', color: 'var(--vscode-editorError-foreground)' }}>
+                    <StatusErrorIcon label="Rovo Dev encountered an error" />
+                </div>
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                        paddingTop: '2px',
+                        paddingLeft: '2px',
+                        width: '100%',
+                    }}
+                >
+                    <div style={messageContentStyles}>Rovo Dev encountered an error</div>
+                    <div style={messageContentStyles}>{content}</div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '8px' }}>
+                        {msg.isRetriable && isRetryAfterErrorButtonEnabled(msg.uid) && (
+                            <RetryPromptButton retryAfterError={retryAfterError} />
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
 
 const RetryPromptButton: React.FC<{
-    enabled: boolean;
     retryAfterError: () => void;
-}> = ({ enabled, retryAfterError }) => {
+}> = ({ retryAfterError }) => {
     return (
-        <div style={{ marginTop: '12px' }}>
-            <button disabled={!enabled} onClick={retryAfterError}>
-                Try again
-            </button>
+        <button style={inChatButtonStyles} onClick={retryAfterError}>
+            Try again
+        </button>
+    );
+};
+
+export const PullRequestButton: React.FC<{
+    postMessagePromise: PostMessagePromiseFunc<RovoDevViewResponse, any>;
+    modifiedFiles?: ToolReturnParseResult[];
+    onPullRequestCreated?: (url: string) => void;
+}> = ({ postMessagePromise, modifiedFiles, onPullRequestCreated }) => {
+    if (!modifiedFiles || modifiedFiles.length === 0) {
+        return null;
+    }
+
+    const [isPullRequestLoading, setIsPullRequestLoading] = React.useState(false);
+
+    return (
+        <button
+            style={{
+                color: 'var(--vscode-button-secondaryForeground)',
+                backgroundColor: 'var(--vscode-button-background)',
+                border: '1px solid var(--vscode-button-secondaryBorder)',
+                ...undoKeepButtonStyles,
+            }}
+            onClick={async () => {
+                setIsPullRequestLoading(true);
+                const response = await postMessagePromise(
+                    {
+                        type: RovoDevViewResponseType.CreatePR,
+                    },
+                    RovoDevViewResponseType.CreatePRComplete,
+                    ConnectionTimeout,
+                );
+                setIsPullRequestLoading(false);
+                console.log('BRUH:', response);
+                onPullRequestCreated?.((response as any).data.url || '');
+            }}
+            title="Create Pull Request"
+        >
+            {!isPullRequestLoading ? (
+                <i className="codicon codicon-git-pull-request-create" />
+            ) : (
+                <i className="codicon codicon-loading codicon-modifier-spin" />
+            )}
+            Create Pull Request
+        </button>
+    );
+};
+
+export const FollowUpActionFooter: React.FC<{}> = ({ children }) => {
+    return (
+        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', marginTop: '8px' }}>
+            {children}
         </div>
     );
 };
@@ -150,18 +197,10 @@ export const UpdatedFilesComponent: React.FC<{
     modifiedFiles: ToolReturnParseResult[];
     onUndo: (filePath: string[]) => void;
     onKeep: (filePath: string[]) => void;
-    onCreatePR: () => void;
     openDiff: OpenFileFunc;
-}> = ({ modifiedFiles, onUndo, onKeep, openDiff, onCreatePR }) => {
+}> = ({ modifiedFiles, onUndo, onKeep, openDiff }) => {
     const [isUndoHovered, setIsUndoHovered] = React.useState(false);
     const [isKeepHovered, setIsKeepHovered] = React.useState(false);
-    const [isPullRequestLoading, setIsPullRequestLoading] = React.useState(false);
-
-    window.addEventListener('message', (event) => {
-        if (event.data.type === RovoDevProviderMessageType.CreatePRComplete) {
-            setIsPullRequestLoading(false);
-        }
-    });
 
     const handleKeepAll = useCallback(() => {
         const filePaths = modifiedFiles.map((msg) => msg.filePath).filter((path) => path !== undefined);
@@ -233,25 +272,6 @@ export const UpdatedFilesComponent: React.FC<{
                     >
                         Keep
                     </button>
-                    <button
-                        style={{
-                            color: 'var(--vscode-button-secondaryForeground)',
-                            backgroundColor: 'var(--vscode-button-background)',
-                            border: '1px solid var(--vscode-button-secondaryBorder)',
-                            ...undoKeepButtonStyles,
-                        }}
-                        onClick={() => {
-                            setIsPullRequestLoading(true);
-                            onCreatePR();
-                        }}
-                        title="Create Pull Request"
-                    >
-                        {!isPullRequestLoading ? (
-                            <i className="codicon codicon-git-pull-request-create" />
-                        ) : (
-                            <i className="codicon codicon-loading codicon-modifier-spin" />
-                        )}
-                    </button>
                 </div>
             </div>
             <div
@@ -291,6 +311,8 @@ const ModifiedFileItem: React.FC<{
     const [isUndoHovered, setIsUndoHovered] = React.useState(false);
     const [isKeepHovered, setIsKeepHovered] = React.useState(false);
 
+    const isDeletion = msg.type === 'delete';
+
     const filePath = msg.filePath;
     if (!filePath) {
         return null;
@@ -325,14 +347,14 @@ const ModifiedFileItem: React.FC<{
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <div>{filePath}</div>
+            <div id={isDeletion ? 'deleted-file' : undefined}>{filePath}</div>
             <div
                 style={{ display: isHovered ? 'flex' : 'none', alignItems: 'center', flexDirection: 'row', gap: '4px' }}
             >
                 <Button
                     spacing="none"
                     style={{
-                        ...inlineMofidyButtonStyles,
+                        ...inlineModifyButtonStyles,
                         color: isUndoHovered
                             ? 'var(--vscode-textLink-foreground) !important'
                             : 'var(--vscode-textForeground) !important',
@@ -344,7 +366,7 @@ const ModifiedFileItem: React.FC<{
                 />
                 <Button
                     style={{
-                        ...inlineMofidyButtonStyles,
+                        ...inlineModifyButtonStyles,
                         color: isKeepHovered
                             ? 'var(--vscode-textLink-foreground) !important'
                             : 'var(--vscode-textForeground) !important',
@@ -367,7 +389,7 @@ type TechnicalPlanProps = {
     onMount?: () => void;
 };
 
-const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile, getText, onMount }) => {
+export const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile, getText }) => {
     const clarifyingQuestions = content.logicalChanges.flatMap((change) => {
         return change.filesToChange
             .map((file) => {
@@ -416,7 +438,7 @@ const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFil
                             />
                             <div style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}>
                                 <div>{idx + 1}. </div>
-                                <span dangerouslySetInnerHTML={{ __html: md.render(question) }} />
+                                <span dangerouslySetInnerHTML={{ __html: mdParser.render(question) }} />
                             </div>
                         </div>
                     );
@@ -513,7 +535,7 @@ const FileToChangeComponent: React.FC<{
         codeSnippetsToChange.some((snippet) => snippet.code !== undefined && snippet.code.trim() !== '');
 
     const renderDescription = (description: string) => {
-        return <span dangerouslySetInnerHTML={{ __html: md.render(description) }} />;
+        return <span dangerouslySetInnerHTML={{ __html: mdParser.render(description) }} />;
     };
     return (
         <div className="file-to-change">

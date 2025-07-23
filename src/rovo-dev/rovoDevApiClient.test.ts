@@ -205,7 +205,28 @@ describe('RovoDevApiClient', () => {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message }),
+                body: JSON.stringify({ message, enable_deep_plan: false }),
+            });
+            expect(response).toBe(mockResponse);
+        });
+
+        it('should request a deep plan successfully', async () => {
+            const mockResponse = {
+                status: 200,
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const message = 'Hello, how can I help?';
+            const response = await client.chat(message, true);
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/chat', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message, enable_deep_plan: true }),
             });
             expect(response).toBe(mockResponse);
         });
@@ -225,7 +246,7 @@ describe('RovoDevApiClient', () => {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message: '' }),
+                body: JSON.stringify({ message: '', enable_deep_plan: false }),
             });
             expect(response).toBe(mockResponse);
         });
@@ -246,7 +267,7 @@ describe('RovoDevApiClient', () => {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message }),
+                body: JSON.stringify({ message, enable_deep_plan: false }),
             });
             expect(response).toBe(mockResponse);
         });

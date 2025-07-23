@@ -8,15 +8,22 @@ export const enum RovoDevViewResponseType {
     KeepFileChanges = 'keepFileChanges',
     GetOriginalText = 'getOriginalText',
     CreatePR = 'createPR',
+    CreatePRComplete = 'createPRComplete',
     RetryPromptAfterError = 'retryPromptAfterError',
 }
 
+export interface PromptMessage {
+    text: string;
+    enable_deep_plan?: boolean;
+}
+
 export type RovoDevViewResponse =
-    | ReducerAction<RovoDevViewResponseType.Prompt, { text: string }>
+    | ReducerAction<RovoDevViewResponseType.Prompt, PromptMessage>
     | ReducerAction<RovoDevViewResponseType.CancelResponse>
     | ReducerAction<RovoDevViewResponseType.OpenFile, { filePath: string; tryShowDiff: boolean; range?: number[] }>
     | ReducerAction<RovoDevViewResponseType.UndoFileChanges, { filePaths: string[] }>
     | ReducerAction<RovoDevViewResponseType.KeepFileChanges, { filePaths: string[] }>
     | ReducerAction<RovoDevViewResponseType.GetOriginalText, { filePath: string; range?: number[]; requestId: string }>
     | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>
-    | ReducerAction<RovoDevViewResponseType.CreatePR>;
+    | ReducerAction<RovoDevViewResponseType.CreatePR>
+    | ReducerAction<RovoDevViewResponseType.CreatePRComplete, { url?: string; error?: string }>;
