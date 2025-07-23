@@ -1,13 +1,8 @@
 import React from 'react';
 
 import { PostMessageFunc, PostMessagePromiseFunc } from '../../messagingApi';
-import {
-    ErrorMessageItem,
-    FollowUpActionFooter,
-    OpenFileFunc,
-    PullRequestButton,
-    TechnicalPlanComponent,
-} from '../common/common';
+import { ErrorMessageItem, FollowUpActionFooter, OpenFileFunc, TechnicalPlanComponent } from '../common/common';
+import { PullRequestForm } from '../create-pr/PullRequestForm';
 import { RovoDevLanding } from '../rovoDevLanding';
 import { State } from '../rovoDevView';
 import { RovoDevViewResponse } from '../rovoDevViewMessages';
@@ -64,6 +59,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     const [curThinkingMessages, setCurThinkingMessages] = React.useState<ChatMessage[]>([]);
     const [messageBlocks, setMessageBlocks] = React.useState<MessageBlockDetails[]>([]);
     const [canCreatePR, setCanCreatePR] = React.useState(false);
+    const [isFormVisible, setIsFormVisible] = React.useState(false);
 
     React.useEffect(() => {
         if (chatEndRef.current) {
@@ -151,7 +147,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
             }
         };
         handleMessages();
-    }, [curThinkingMessages, currentMessage, messages, state]);
+    }, [curThinkingMessages, currentMessage, messages, state, isFormVisible]);
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
@@ -205,20 +201,24 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
             {state === State.WaitingForPrompt && (
                 <FollowUpActionFooter>
                     {canCreatePR && (
-                        <PullRequestButton
-                            key="pull-request-button"
-                            postMessagePromise={postMessageWithReturn}
+                        <PullRequestForm
+                            onCancel={() => {
+                                setCanCreatePR(false);
+                                setIsFormVisible(false);
+                            }}
+                            postMessageWithReturn={postMessageWithReturn}
                             modifiedFiles={modifiedFiles}
                             onPullRequestCreated={(url) => {
-                                if (url) {
-                                    injectMessage?.({
+                                setCanCreatePR(false);
+                                if (injectMessage) {
+                                    injectMessage({
+                                        text: `Pull Request ready: ${url}`,
                                         source: 'RovoDev',
-                                        text: `Pull request prepared [here](${url})`,
                                     });
                                 }
-                                // Errors are handled by the extension logic
-                                setCanCreatePR(false);
                             }}
+                            isFormVisible={isFormVisible}
+                            setFormVisible={setIsFormVisible}
                         />
                     )}
                 </FollowUpActionFooter>
