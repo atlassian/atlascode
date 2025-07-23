@@ -2,7 +2,7 @@ import React from 'react';
 
 import { PostMessageFunc, PostMessagePromiseFunc } from '../../messagingApi';
 import { ErrorMessageItem, FollowUpActionFooter, OpenFileFunc, TechnicalPlanComponent } from '../common/common';
-import { PullRequestForm } from '../create-pr/PullRequestForm';
+import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
 import { RovoDevLanding } from '../rovoDevLanding';
 import { State } from '../rovoDevView';
 import { RovoDevViewResponse } from '../rovoDevViewMessages';
@@ -113,6 +113,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
                         return;
 
                     case 'RovoDevError':
+                    case 'PullRequest':
                         setMessageBlocks((prev) => [...prev, { messages: newMessage }]);
 
                         setCurrentMessage(null);
@@ -182,6 +183,8 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
                                     retryAfterError={renderProps.retryPromptAfterError}
                                 />
                             );
+                        } else if (block.messages.source === 'PullRequest') {
+                            return <PullRequestChatItem msg={block.messages} />;
                         }
                     }
 
@@ -213,11 +216,18 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
                             onPullRequestCreated={(url) => {
                                 setCanCreatePR(false);
                                 setIsFormVisible(false);
-                                if (injectMessage && url) {
-                                    injectMessage({
-                                        text: `Pull Request ready: ${url}`,
-                                        source: 'RovoDev',
-                                    });
+                                if (injectMessage) {
+                                    if (url) {
+                                        injectMessage({
+                                            text: `Pull request ready: ${url}`,
+                                            source: 'PullRequest',
+                                        });
+                                    } else {
+                                        injectMessage({
+                                            text: 'Successfully pushed changes to the remote repository.',
+                                            source: 'PullRequest',
+                                        });
+                                    }
                                     keepAllFileChanges?.();
                                 }
                             }}

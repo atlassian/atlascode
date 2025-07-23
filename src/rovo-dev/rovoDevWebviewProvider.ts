@@ -185,6 +185,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     this._pendingCancellation = false;
                     await this.executeRetryPromptAfterError();
                     break;
+
+                case RovoDevViewResponseType.GetCurrentBranchName:
+                    await this.getCurrentBranchName();
+                    break;
             }
         });
 
@@ -539,6 +543,20 @@ ${message}`;
         }
     }
 
+    private async getCurrentBranchName(): Promise<void> {
+        const webview = this._webView!;
+        try {
+            const branchName = await this._prHandler.getCurrentBranchName();
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.GetCurrentBranchNameComplete,
+                data: {
+                    branchName,
+                },
+            });
+        } catch (e) {
+            await this.processError(e, false);
+        }
+    }
     private async executeApiWithErrorHandling<T>(
         func: (client: RovoDevApiClient) => Promise<T>,
         cancellationAware?: true,

@@ -13,7 +13,7 @@ export type ChatMessage =
 
 export interface DefaultMessage {
     text: string;
-    source: 'User' | 'RovoDev';
+    source: 'User' | 'RovoDev' | 'PullRequest';
 }
 
 export interface ErrorMessage {

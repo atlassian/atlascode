@@ -321,6 +321,7 @@ const RovoDevView: React.FC = () => {
                     break;
                 case RovoDevProviderMessageType.ReturnText:
                 case RovoDevProviderMessageType.CreatePRComplete:
+                case RovoDevProviderMessageType.GetCurrentBranchNameComplete:
                     break; // This is handled elsewhere
                 default:
                     handleAppendChatHistory({

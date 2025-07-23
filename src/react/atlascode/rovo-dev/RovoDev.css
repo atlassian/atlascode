@@ -402,3 +402,10 @@ body {
 .pull-request-submit-button:hover {
     background-color: var(--vscode-button-hoverBackground);
 }
+
+.pull-request-chat-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}

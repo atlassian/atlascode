@@ -1,17 +1,24 @@
 import PullRequestIcon from '@atlaskit/icon/core/pull-request';
 import React from 'react';
+import { RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
 import { PostMessagePromiseFunc } from '../../messagingApi';
+import { mdParser } from '../common/common';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
-import { ToolReturnParseResult } from '../utils';
+import { DefaultMessage, ToolReturnParseResult } from '../utils';
 
 const PullRequestButton: React.FC<{
-    onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
-}> = ({ onClick }) => {
+    onClick: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>;
+    isLoading?: boolean;
+}> = ({ onClick, isLoading }) => {
     return (
         <button className="pull-request-button" onClick={onClick} title="Create Pull Request">
-            <PullRequestIcon label="Create Pull Request" spacing="none" />
+            {isLoading ? (
+                <i className="codicon codicon-loading codicon-modifier-spin" />
+            ) : (
+                <PullRequestIcon label="Create Pull Request" spacing="none" />
+            )}
             Create Pull Request
         </button>
     );
@@ -38,9 +45,24 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
         return null;
     }
     const [isPullRequestLoading, setPullRequestLoading] = React.useState(false);
+    const [isBranchNameLoading, setBranchNameLoading] = React.useState(false);
+    const [branchName, setBranchName] = React.useState<string | undefined>(undefined);
 
-    const handleToggleForm = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const getCurrentBranchName = async () => {
+        setBranchNameLoading(true);
+        const response = await postMessageWithReturn(
+            { type: RovoDevViewResponseType.GetCurrentBranchName },
+            RovoDevProviderMessageType.GetCurrentBranchNameComplete,
+            ConnectionTimeout,
+        );
+        setBranchNameLoading(false);
+        const name = (response as any).data.branchName || undefined;
+        setBranchName(name);
+    };
+
+    const handleToggleForm = async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
+        await getCurrentBranchName();
         setFormVisible?.(true);
     };
 
@@ -95,6 +117,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                                     id="pr-branch-name"
                                     name="pr-branch-name"
                                     placeholder="Enter a branch name"
+                                    defaultValue={branchName}
                                     required
                                 />
                             </div>
@@ -115,8 +138,23 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                     </form>
                 </div>
             ) : (
-                <PullRequestButton onClick={handleToggleForm} />
+                <PullRequestButton onClick={handleToggleForm} isLoading={isBranchNameLoading} />
             )}
         </>
+    );
+};
+
+export const PullRequestChatItem: React.FC<{ msg: DefaultMessage }> = ({ msg }) => {
+    const content = (
+        <div
+            style={{ display: 'flex', flexDirection: 'column' }}
+            dangerouslySetInnerHTML={{ __html: mdParser.render(msg.text || '') }}
+        />
+    );
+    return (
+        <div className="chat-message pull-request-chat-item agent-message">
+            <PullRequestIcon label="pull-request-icon" spacing="none" />
+            <div className="message-content">{content}</div>
+        </div>
     );
 };

@@ -69,7 +69,10 @@ export class RovoDevPullRequestHandler {
         const repo = await this.getGitRepository(gitExt);
 
         await repo.fetch();
-        await repo.createBranch(branchName, true);
+        const curBranch = repo.state.HEAD?.name;
+        if (curBranch !== branchName) {
+            await repo.createBranch(branchName, true);
+        }
         await repo.commit(commitMessage, {
             all: true,
         });
@@ -86,5 +89,12 @@ export class RovoDevPullRequestHandler {
         }
 
         return prLink;
+    }
+
+    public async getCurrentBranchName(): Promise<string | undefined> {
+        const gitExt = await this.getGitExtension();
+        const repo = await this.getGitRepository(gitExt);
+
+        return repo.state.HEAD?.name;
     }
 }

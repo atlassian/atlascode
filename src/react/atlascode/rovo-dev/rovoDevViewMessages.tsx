@@ -10,6 +10,7 @@ export const enum RovoDevViewResponseType {
     CreatePR = 'createPR',
     CreatePRComplete = 'createPRComplete',
     RetryPromptAfterError = 'retryPromptAfterError',
+    GetCurrentBranchName = 'getCurrentBranchName',
 }
 
 export interface PromptMessage {
@@ -26,4 +27,5 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.GetOriginalText, { filePath: string; range?: number[]; requestId: string }>
     | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>
     | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage: string } }>
-    | ReducerAction<RovoDevViewResponseType.CreatePRComplete, { url?: string; error?: string }>;
+    | ReducerAction<RovoDevViewResponseType.CreatePRComplete, { url?: string; error?: string }>
+    | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>;
