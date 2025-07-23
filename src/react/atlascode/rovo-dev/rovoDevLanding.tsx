@@ -67,6 +67,10 @@ const RovoDevImg = () => {
 };
 
 export const RovoDevLanding: React.FC<{}> = () => {
+    if (process.env.ROVODEV_BBY) {
+        return null;
+    }
+
     return (
         <div
             style={{

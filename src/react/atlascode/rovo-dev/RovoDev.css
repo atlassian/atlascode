@@ -2,6 +2,10 @@ body {
     padding: 0 !important;
 }
 
+.rovoDevChat button {
+    cursor: pointer;
+}
+
 .logical-change-container {
     display: flex;
     flex-direction: column;
