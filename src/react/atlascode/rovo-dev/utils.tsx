@@ -65,7 +65,7 @@ export interface ToolReturnTechnicalPlanMessage {
 export interface ToolReturnGenericMessage {
     tool_name: string;
     source: 'ToolReturn' | 'ModifiedFile' | 'RovoDevRetry';
-    content?: any;
+    content: string;
     parsedContent?: object | undefined;
     tool_call_id: string;
     args?: string;
