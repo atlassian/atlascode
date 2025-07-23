@@ -41,6 +41,7 @@ interface ChatHistoryProps {
     executeCodePlan: () => void;
     state: State;
     injectMessage?: (msg: ChatMessage) => void;
+    keepAllFileChanges?: () => void;
 }
 
 export const ChatHistory: React.FC<ChatHistoryProps> = ({
@@ -53,6 +54,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     messagingApi: { postMessageWithReturn },
     modifiedFiles,
     injectMessage,
+    keepAllFileChanges,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const [currentMessage, setCurrentMessage] = React.useState<DefaultMessage | null>(null);
@@ -210,11 +212,13 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
                             modifiedFiles={modifiedFiles}
                             onPullRequestCreated={(url) => {
                                 setCanCreatePR(false);
-                                if (injectMessage) {
+                                setIsFormVisible(false);
+                                if (injectMessage && url) {
                                     injectMessage({
                                         text: `Pull Request ready: ${url}`,
                                         source: 'RovoDev',
                                     });
+                                    keepAllFileChanges?.();
                                 }
                             }}
                             isFormVisible={isFormVisible}

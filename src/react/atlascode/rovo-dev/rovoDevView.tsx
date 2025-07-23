@@ -498,6 +498,11 @@ const RovoDevView: React.FC = () => {
                 state={currentState}
                 modifiedFiles={totalModifiedFiles}
                 injectMessage={handleAppendChatHistory}
+                keepAllFileChanges={() => {
+                    if (totalModifiedFiles.length > 0) {
+                        keepFiles(totalModifiedFiles.map((file) => file.filePath!));
+                    }
+                }}
             />
             <div style={styles.rovoDevInputSectionStyles}>
                 <UpdatedFilesComponent
