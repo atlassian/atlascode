@@ -114,11 +114,20 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
                         });
                         return;
 
+                    case 'RovoDevRetry':
+                        if (currentMessage) {
+                            setCurThinkingMessages((prev) => [...prev, currentMessage]);
+                        }
+                        setCurrentMessage(null);
+                        setCurThinkingMessages((prev) => [...prev, newMessage]);
+                        return;
+
                     case 'RovoDevError':
                         setMessageBlocks((prev) => [...prev, { messages: newMessage }]);
 
                         setCurrentMessage(null);
                         return;
+
                     case 'ToolReturn':
                         if (currentMessage) {
                             setCurThinkingMessages((prev) => [...prev, currentMessage]);
