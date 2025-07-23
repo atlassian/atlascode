@@ -544,11 +544,11 @@ export class CreateIssueWebview
                                 await client.addAttachments(resp.key, formData);
                             }
                             // TODO: [VSCODE-601] add a new analytic event for issue updates
-                            await commands.executeCommand(
+                            commands.executeCommand(
                                 Commands.RefreshAssignedWorkItemsExplorer,
                                 OnJiraEditedRefreshDelay,
                             );
-                            await commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
+                            commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
 
                             this.postMessage({
                                 type: 'issueCreated',
