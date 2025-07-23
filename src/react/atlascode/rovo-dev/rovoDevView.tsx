@@ -235,6 +235,7 @@ const RovoDevView: React.FC = () => {
                         source: 'ToolReturn',
                         tool_name: data.tool_name,
                         content: data.content || '',
+                        parsedContent: data.parsedContent,
                         tool_call_id: data.tool_call_id, // Optional ID for tracking
                         args: data.toolCallMessage.args,
                     };

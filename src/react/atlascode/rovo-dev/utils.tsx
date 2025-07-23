@@ -57,7 +57,7 @@ export interface ToolReturnGrepFileContentMessage {
 export interface ToolReturnTechnicalPlanMessage {
     tool_name: 'create_technical_plan';
     source: 'ToolReturn';
-    content: string; // JSON string representing the technical plan
+    parsedContent?: object | undefined;
     tool_call_id: string;
     args?: string;
 }
@@ -65,7 +65,8 @@ export interface ToolReturnTechnicalPlanMessage {
 export interface ToolReturnGenericMessage {
     tool_name: string;
     source: 'ToolReturn' | 'ModifiedFile';
-    content?: any;
+    content: string;
+    parsedContent?: object | undefined;
     tool_call_id: string;
     args?: string;
 }
@@ -190,10 +191,12 @@ export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolRe
             break;
 
         case 'create_technical_plan':
-            resp.push({
-                content: 'A cool technical plan',
-                technicalPlan: JSON.parse(msg.content) as TechnicalPlan | undefined,
-            });
+            if (msg.parsedContent) {
+                resp.push({
+                    content: '',
+                    technicalPlan: msg.parsedContent as TechnicalPlan,
+                });
+            }
             break;
 
         default:
