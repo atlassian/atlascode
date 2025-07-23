@@ -23,6 +23,7 @@ import {
 import {
     rovoDevFileChangedActionEvent,
     rovoDevNewSessionActionEvent,
+    rovoDevPromptSentEvent,
     rovoDevStopActionEvent,
 } from '../../src/analytics';
 import { Container } from '../../src/container';
@@ -60,7 +61,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private _chatSessionId: string = '';
     private _currentPromptId: string = '';
-    private _previousPrompt: PromptMessage | undefined;
+    private _currentPrompt: PromptMessage | undefined;
     private _pendingPrompt: PromptMessage | undefined;
 
     private _pendingCancellation = false;
@@ -235,10 +236,20 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private async processChatResponse(fetchOp: Promise<Response> | Response, firePerfTelemetry: boolean) {
+    private async processChatResponse(
+        sourceApi: 'chat' | 'replay',
+        fetchOp: Promise<Response>,
+        firePerfTelemetry: boolean,
+    ) {
         const response = await fetchOp;
         if (!response.body) {
             throw new Error('No response body');
+        }
+
+        if (sourceApi === 'chat') {
+            rovoDevPromptSentEvent(this._chatSessionId, this._currentPromptId).then((evt) =>
+                Container.analyticsClient.sendTrackEvent(evt),
+            );
         }
 
         this._perfLogger.promptStarted(this._currentPromptId);
@@ -350,7 +361,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             case 'user-prompt':
                 // receiving a user-prompt pre-initialized means we are in the 'replay' response
                 if (!this._initialized) {
-                    this._previousPrompt = {
+                    this._currentPrompt = {
                         text: response.content,
                     };
                     return this.sendUserPromptToView(response.content);
@@ -392,7 +403,16 @@ ${message}`;
             await this.sendUserPromptToView(message, enable_deep_plan);
         }
 
-        this._previousPrompt = {
+        // NOTE: if chatSessionId empty, it means this is the first prompt of a new rovo dev instance
+        if (!this._chatSessionId) {
+            this._chatSessionId = v4();
+            await rovoDevNewSessionActionEvent(this._chatSessionId, false).then((evt) =>
+                Container.analyticsClient.sendTrackEvent(evt),
+            );
+        }
+
+        this._currentPromptId = v4();
+        this._currentPrompt = {
             text: message,
             enable_deep_plan,
         };
@@ -401,7 +421,7 @@ ${message}`;
 
         if (this._initialized) {
             await this.executeApiWithErrorHandling((client) => {
-                return this.processChatResponse(client.chat(payloadToSend, enable_deep_plan), true);
+                return this.processChatResponse('chat', client.chat(payloadToSend), true);
             }, true);
         } else {
             this._pendingPrompt = {
@@ -414,20 +434,20 @@ ${message}`;
     private async executeRetryPromptAfterError() {
         const webview = this._webView!;
 
-        if (!this._initialized || !this._previousPrompt) {
+        if (!this._initialized || !this._currentPrompt) {
             return;
         }
 
-        const previousPrompt = this._previousPrompt;
-        const payloadToSend = this.addRetryAfterErrorContextToPrompt(previousPrompt.text);
+        const currentPrompt = this._currentPrompt;
+        const payloadToSend = this.addRetryAfterErrorContextToPrompt(currentPrompt.text);
 
         await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
-            enable_deep_plan: !!previousPrompt.enable_deep_plan,
+            enable_deep_plan: !!currentPrompt.enable_deep_plan,
         });
 
         await this.executeApiWithErrorHandling((client) => {
-            return this.processChatResponse(client.chat(payloadToSend, previousPrompt.enable_deep_plan), true);
+            return this.processChatResponse('chat', client.chat(payloadToSend), true);
         }, true);
     }
 
@@ -479,7 +499,7 @@ ${message}`;
 
     private async executeReplay(): Promise<void> {
         await this.executeApiWithErrorHandling(async (client) => {
-            return this.processChatResponse(client.replay(), false);
+            return this.processChatResponse('replay', client.replay(), false);
         });
     }
 

@@ -1,268 +1,303 @@
-import * as analytics from '../../src/analytics';
+import {
+    rovoDevTimeToRespondEndEvent,
+    rovoDevTimeToRespondStartEvent,
+    rovoDevTimeToTechPlanReturnedEvent,
+} from '../../src/analytics';
 import { Container } from '../../src/container';
+import Perf from '../util/perf';
 import { PerformanceLogger } from './performanceLogger';
 
-// Mock the analytics module
-jest.mock('../../src/analytics', () => ({
-    rovoDevTimeToRespondStartEvent: jest.fn(),
-    rovoDevTimeToTechPlanReturnedEvent: jest.fn(),
-    rovoDevTimeToRespondEndEvent: jest.fn(),
-}));
+// Mock dependencies
+jest.mock('../../src/analytics');
+jest.mock('../../src/container');
+jest.mock('../util/perf');
 
-// Mock the Container
-jest.mock('../../src/container', () => ({
-    Container: {
-        analyticsClient: {
-            sendTrackEvent: jest.fn(),
-        },
-    },
-}));
-
-// Mock the Performance API
-const mockMark = jest.fn();
-const mockMeasure = jest.fn();
-
-Object.defineProperty(global, 'performance', {
-    value: {
-        mark: mockMark,
-        measure: mockMeasure,
-    },
-    writable: true,
-});
+const mockRovoDevTimeToRespondStartEvent = rovoDevTimeToRespondStartEvent as jest.MockedFunction<
+    typeof rovoDevTimeToRespondStartEvent
+>;
+const mockRovoDevTimeToRespondEndEvent = rovoDevTimeToRespondEndEvent as jest.MockedFunction<
+    typeof rovoDevTimeToRespondEndEvent
+>;
+const mockRovoDevTimeToTechPlanReturnedEvent = rovoDevTimeToTechPlanReturnedEvent as jest.MockedFunction<
+    typeof rovoDevTimeToTechPlanReturnedEvent
+>;
+const mockPerf = Perf as jest.Mocked<typeof Perf>;
+const mockContainer = Container as jest.Mocked<typeof Container>;
 
 describe('PerformanceLogger', () => {
     let performanceLogger: PerformanceLogger;
-    let mockSendTrackEvent: jest.Mock;
-
-    const mockSessionId = 'test-session-123';
-    const mockPromptId = 'test-prompt-456';
-    const mockDuration = 1500; // ms
-    const mockEvent = { type: 'track', name: 'testEvent' };
+    let mockAnalyticsClient: jest.Mocked<any>;
 
     beforeEach(() => {
         performanceLogger = new PerformanceLogger();
-        mockSendTrackEvent = Container.analyticsClient.sendTrackEvent as jest.Mock;
+
+        // Setup mock analytics client
+        mockAnalyticsClient = {
+            sendTrackEvent: jest.fn().mockResolvedValue(undefined),
+        };
+
+        // Mock the getter for analyticsClient
+        Object.defineProperty(mockContainer, 'analyticsClient', {
+            get: jest.fn(() => mockAnalyticsClient),
+            configurable: true,
+        });
 
         // Reset all mocks
         jest.clearAllMocks();
 
-        // Setup default mock returns
-        mockMeasure.mockReturnValue({ duration: mockDuration });
-        (analytics.rovoDevTimeToRespondStartEvent as jest.Mock).mockResolvedValue(mockEvent);
-        (analytics.rovoDevTimeToTechPlanReturnedEvent as jest.Mock).mockResolvedValue(mockEvent);
-        (analytics.rovoDevTimeToRespondEndEvent as jest.Mock).mockResolvedValue(mockEvent);
-        mockSendTrackEvent.mockResolvedValue(undefined);
+        // Setup default mock return values
+        mockPerf.mark.mockImplementation(() => {});
+        mockPerf.measure.mockReturnValue(100);
+        mockPerf.clear.mockImplementation(() => {});
+
+        mockRovoDevTimeToRespondStartEvent.mockResolvedValue({ type: 'start', data: {} } as any);
+        mockRovoDevTimeToRespondEndEvent.mockResolvedValue({ type: 'end', data: {} } as any);
+        mockRovoDevTimeToTechPlanReturnedEvent.mockResolvedValue({ type: 'techPlan', data: {} } as any);
     });
 
     describe('sessionStarted', () => {
-        it('should store the session ID', () => {
-            performanceLogger.sessionStarted(mockSessionId);
+        it('should set the current session ID', () => {
+            const sessionId = 'test-session-123';
 
-            // Since currentSessionId is private, we can verify its storage by checking
-            // subsequent method calls that use it
-            expect(() => performanceLogger.sessionStarted(mockSessionId)).not.toThrow();
+            performanceLogger.sessionStarted(sessionId);
+
+            // We can't directly access private properties, but we can test the behavior
+            // by checking that subsequent method calls use this session ID
+            expect(() => performanceLogger.sessionStarted(sessionId)).not.toThrow();
+        });
+
+        it('should update session ID when called multiple times', () => {
+            performanceLogger.sessionStarted('session-1');
+            performanceLogger.sessionStarted('session-2');
+
+            // Should not throw and should accept the new session ID
+            expect(() => performanceLogger.sessionStarted('session-2')).not.toThrow();
         });
     });
 
     describe('promptStarted', () => {
-        it('should create a performance mark with the prompt ID', () => {
-            performanceLogger.promptStarted(mockPromptId);
+        it('should call Perf.mark with the prompt ID', () => {
+            const promptId = 'test-prompt-123';
 
-            expect(mockMark).toHaveBeenCalledWith(mockPromptId);
-            expect(mockMark).toHaveBeenCalledTimes(1);
+            performanceLogger.promptStarted(promptId);
+
+            expect(mockPerf.mark).toHaveBeenCalledWith(promptId);
+            expect(mockPerf.mark).toHaveBeenCalledTimes(1);
+        });
+
+        it('should handle multiple prompt starts', () => {
+            performanceLogger.promptStarted('prompt-1');
+            performanceLogger.promptStarted('prompt-2');
+
+            expect(mockPerf.mark).toHaveBeenCalledTimes(2);
+            expect(mockPerf.mark).toHaveBeenNthCalledWith(1, 'prompt-1');
+            expect(mockPerf.mark).toHaveBeenNthCalledWith(2, 'prompt-2');
         });
     });
 
     describe('promptFirstMessageReceived', () => {
         beforeEach(() => {
-            performanceLogger.sessionStarted(mockSessionId);
+            performanceLogger.sessionStarted('test-session');
         });
 
         it('should measure performance and send analytics event', async () => {
-            await performanceLogger.promptFirstMessageReceived(mockPromptId);
+            const promptId = 'test-prompt';
+            const expectedMeasurement = 150;
+            mockPerf.measure.mockReturnValue(expectedMeasurement);
 
-            expect(mockMeasure).toHaveBeenCalledWith(mockPromptId);
-            expect(analytics.rovoDevTimeToRespondStartEvent).toHaveBeenCalledWith(
-                mockSessionId,
-                mockPromptId,
-                mockDuration,
+            await performanceLogger.promptFirstMessageReceived(promptId);
+
+            expect(mockPerf.measure).toHaveBeenCalledWith(promptId);
+            expect(mockRovoDevTimeToRespondStartEvent).toHaveBeenCalledWith(
+                'test-session',
+                promptId,
+                expectedMeasurement,
             );
-            expect(mockSendTrackEvent).toHaveBeenCalledWith(mockEvent);
+            expect(mockAnalyticsClient.sendTrackEvent).toHaveBeenCalledWith({ type: 'start', data: {} });
         });
 
-        it('should handle analytics errors gracefully', async () => {
-            const error = new Error('Analytics error');
-            (analytics.rovoDevTimeToRespondStartEvent as jest.Mock).mockRejectedValue(error);
+        it('should handle analytics event creation failure', async () => {
+            const promptId = 'test-prompt';
+            mockRovoDevTimeToRespondStartEvent.mockRejectedValue(new Error('Analytics error'));
 
-            await expect(performanceLogger.promptFirstMessageReceived(mockPromptId)).rejects.toThrow('Analytics error');
+            await expect(performanceLogger.promptFirstMessageReceived(promptId)).rejects.toThrow('Analytics error');
         });
 
-        it('should handle track event sending errors gracefully', async () => {
-            const error = new Error('Send event error');
-            mockSendTrackEvent.mockRejectedValue(error);
+        it('should handle analytics client send failure', async () => {
+            const promptId = 'test-prompt';
+            mockAnalyticsClient.sendTrackEvent.mockRejectedValue(new Error('Send error'));
 
-            await expect(performanceLogger.promptFirstMessageReceived(mockPromptId)).rejects.toThrow(
-                'Send event error',
-            );
+            await expect(performanceLogger.promptFirstMessageReceived(promptId)).rejects.toThrow('Send error');
         });
     });
 
     describe('promptTechnicalPlanReceived', () => {
         beforeEach(() => {
-            performanceLogger.sessionStarted(mockSessionId);
+            performanceLogger.sessionStarted('test-session');
         });
 
-        it('should measure performance and send analytics event with correct parameters', async () => {
-            // First, simulate the first message received to set timeToFirstMessage
-            await performanceLogger.promptFirstMessageReceived(mockPromptId);
+        it('should measure performance and send analytics event with both timing values', async () => {
+            const promptId = 'test-prompt';
+            const firstMessageTime = 100;
+            const techPlanTime = 200;
 
-            // Clear mocks to isolate this test
+            // Setup first message received to set timeToFirstMessage
+            mockPerf.measure.mockReturnValueOnce(firstMessageTime);
+            await performanceLogger.promptFirstMessageReceived(promptId);
+
+            // Reset mocks and setup for tech plan
             jest.clearAllMocks();
-            mockMeasure.mockReturnValue({ duration: mockDuration });
-            (analytics.rovoDevTimeToTechPlanReturnedEvent as jest.Mock).mockResolvedValue(mockEvent);
+            mockPerf.measure.mockReturnValue(techPlanTime);
 
-            await performanceLogger.promptTechnicalPlanReceived(mockPromptId);
+            await performanceLogger.promptTechnicalPlanReceived(promptId);
 
-            expect(mockMeasure).toHaveBeenCalledWith(mockPromptId);
-            expect(analytics.rovoDevTimeToTechPlanReturnedEvent).toHaveBeenCalledWith(
-                mockSessionId,
-                mockPromptId,
-                mockDuration, // timeToFirstMessage from previous call
-                mockDuration, // timeToTechnicalPlan from current call
+            expect(mockPerf.measure).toHaveBeenCalledWith(promptId);
+            expect(mockRovoDevTimeToTechPlanReturnedEvent).toHaveBeenCalledWith(
+                'test-session',
+                promptId,
+                firstMessageTime,
+                techPlanTime,
             );
-            expect(mockSendTrackEvent).toHaveBeenCalledWith(mockEvent);
+            expect(mockAnalyticsClient.sendTrackEvent).toHaveBeenCalledWith({ type: 'techPlan', data: {} });
         });
 
-        it('should work without prior first message call', async () => {
-            await performanceLogger.promptTechnicalPlanReceived(mockPromptId);
+        it('should work when called before first message received', async () => {
+            const promptId = 'test-prompt';
+            const techPlanTime = 200;
+            mockPerf.measure.mockReturnValue(techPlanTime);
 
-            expect(analytics.rovoDevTimeToTechPlanReturnedEvent).toHaveBeenCalledWith(
-                mockSessionId,
-                mockPromptId,
-                -1, // default timeToFirstMessage
-                mockDuration,
+            await performanceLogger.promptTechnicalPlanReceived(promptId);
+
+            expect(mockRovoDevTimeToTechPlanReturnedEvent).toHaveBeenCalledWith(
+                'test-session',
+                promptId,
+                -1, // Default value for timeToFirstMessage
+                techPlanTime,
             );
         });
     });
 
     describe('promptLastMessageReceived', () => {
         beforeEach(() => {
-            performanceLogger.sessionStarted(mockSessionId);
+            performanceLogger.sessionStarted('test-session');
         });
 
-        it('should measure performance and send analytics event with all timing data', async () => {
-            const firstMessageDuration = 800;
-            const techPlanDuration = 1200;
-            const lastMessageDuration = 2000;
+        it('should measure performance, clear performance data, and send final analytics event', async () => {
+            const promptId = 'test-prompt';
+            const firstMessageTime = 100;
+            const techPlanTime = 200;
+            const lastMessageTime = 300;
 
-            // Simulate the sequence of calls
-            mockMeasure.mockReturnValueOnce({ duration: firstMessageDuration });
-            await performanceLogger.promptFirstMessageReceived(mockPromptId);
+            // Setup previous timing data
+            mockPerf.measure.mockReturnValueOnce(firstMessageTime);
+            await performanceLogger.promptFirstMessageReceived(promptId);
 
-            mockMeasure.mockReturnValueOnce({ duration: techPlanDuration });
-            await performanceLogger.promptTechnicalPlanReceived(mockPromptId);
+            mockPerf.measure.mockReturnValueOnce(techPlanTime);
+            await performanceLogger.promptTechnicalPlanReceived(promptId);
 
-            // Clear mocks to isolate this test
+            // Reset mocks and setup for last message
             jest.clearAllMocks();
-            mockMeasure.mockReturnValue({ duration: lastMessageDuration });
-            (analytics.rovoDevTimeToRespondEndEvent as jest.Mock).mockResolvedValue(mockEvent);
+            mockPerf.measure.mockReturnValue(lastMessageTime);
 
-            await performanceLogger.promptLastMessageReceived(mockPromptId);
+            await performanceLogger.promptLastMessageReceived(promptId);
 
-            expect(mockMeasure).toHaveBeenCalledWith(mockPromptId);
-            expect(analytics.rovoDevTimeToRespondEndEvent).toHaveBeenCalledWith(
-                mockSessionId,
-                mockPromptId,
-                firstMessageDuration,
-                techPlanDuration,
-                lastMessageDuration,
+            expect(mockPerf.measure).toHaveBeenCalledWith(promptId);
+            expect(mockPerf.clear).toHaveBeenCalledWith(promptId);
+            expect(mockRovoDevTimeToRespondEndEvent).toHaveBeenCalledWith(
+                'test-session',
+                promptId,
+                firstMessageTime,
+                techPlanTime,
+                lastMessageTime,
             );
-            expect(mockSendTrackEvent).toHaveBeenCalledWith(mockEvent);
+            expect(mockAnalyticsClient.sendTrackEvent).toHaveBeenCalledWith({ type: 'end', data: {} });
         });
 
-        it('should work with partial timing data', async () => {
-            const lastMessageDuration = 2000;
-            mockMeasure.mockReturnValue({ duration: lastMessageDuration });
+        it('should work with default timing values when other methods not called', async () => {
+            const promptId = 'test-prompt';
+            const lastMessageTime = 300;
+            mockPerf.measure.mockReturnValue(lastMessageTime);
 
-            await performanceLogger.promptLastMessageReceived(mockPromptId);
+            await performanceLogger.promptLastMessageReceived(promptId);
 
-            expect(analytics.rovoDevTimeToRespondEndEvent).toHaveBeenCalledWith(
-                mockSessionId,
-                mockPromptId,
-                -1, // default timeToFirstMessage
-                -1, // default timeToTechnicalPlan
-                lastMessageDuration,
+            expect(mockRovoDevTimeToRespondEndEvent).toHaveBeenCalledWith(
+                'test-session',
+                promptId,
+                -1, // Default timeToFirstMessage
+                -1, // Default timeToTechnicalPlan
+                lastMessageTime,
             );
+        });
+
+        it('should clear performance marker even if analytics fails', async () => {
+            const promptId = 'test-prompt';
+            mockAnalyticsClient.sendTrackEvent.mockRejectedValue(new Error('Analytics error'));
+
+            await expect(performanceLogger.promptLastMessageReceived(promptId)).rejects.toThrow('Analytics error');
+
+            expect(mockPerf.clear).toHaveBeenCalledWith(promptId);
         });
     });
 
     describe('integration scenarios', () => {
-        it('should handle a complete prompt lifecycle', async () => {
-            const durations = {
-                firstMessage: 500,
-                techPlan: 1000,
-                lastMessage: 1500,
-            };
+        it('should handle complete prompt lifecycle correctly', async () => {
+            const sessionId = 'integration-session';
+            const promptId = 'integration-prompt';
 
-            performanceLogger.sessionStarted(mockSessionId);
-            performanceLogger.promptStarted(mockPromptId);
+            // Mock timing values
+            const firstMessageTime = 100;
+            const techPlanTime = 250;
+            const lastMessageTime = 400;
 
-            // First message
-            mockMeasure.mockReturnValueOnce({ duration: durations.firstMessage });
-            await performanceLogger.promptFirstMessageReceived(mockPromptId);
+            performanceLogger.sessionStarted(sessionId);
+            performanceLogger.promptStarted(promptId);
 
-            // Technical plan
-            mockMeasure.mockReturnValueOnce({ duration: durations.techPlan });
-            await performanceLogger.promptTechnicalPlanReceived(mockPromptId);
+            mockPerf.measure.mockReturnValueOnce(firstMessageTime);
+            await performanceLogger.promptFirstMessageReceived(promptId);
 
-            // Last message
-            mockMeasure.mockReturnValueOnce({ duration: durations.lastMessage });
-            await performanceLogger.promptLastMessageReceived(mockPromptId);
+            mockPerf.measure.mockReturnValueOnce(techPlanTime);
+            await performanceLogger.promptTechnicalPlanReceived(promptId);
 
-            // Verify all analytics events were called correctly
-            expect(analytics.rovoDevTimeToRespondStartEvent).toHaveBeenCalledWith(
-                mockSessionId,
-                mockPromptId,
-                durations.firstMessage,
+            mockPerf.measure.mockReturnValueOnce(lastMessageTime);
+            await performanceLogger.promptLastMessageReceived(promptId);
+
+            // Verify all analytics events were sent with correct data
+            expect(mockRovoDevTimeToRespondStartEvent).toHaveBeenCalledWith(sessionId, promptId, firstMessageTime);
+            expect(mockRovoDevTimeToTechPlanReturnedEvent).toHaveBeenCalledWith(
+                sessionId,
+                promptId,
+                firstMessageTime,
+                techPlanTime,
             );
-            expect(analytics.rovoDevTimeToTechPlanReturnedEvent).toHaveBeenCalledWith(
-                mockSessionId,
-                mockPromptId,
-                durations.firstMessage,
-                durations.techPlan,
+            expect(mockRovoDevTimeToRespondEndEvent).toHaveBeenCalledWith(
+                sessionId,
+                promptId,
+                firstMessageTime,
+                techPlanTime,
+                lastMessageTime,
             );
-            expect(analytics.rovoDevTimeToRespondEndEvent).toHaveBeenCalledWith(
-                mockSessionId,
-                mockPromptId,
-                durations.firstMessage,
-                durations.techPlan,
-                durations.lastMessage,
-            );
-
-            // Verify all events were sent
-            expect(mockSendTrackEvent).toHaveBeenCalledTimes(3);
+            expect(mockAnalyticsClient.sendTrackEvent).toHaveBeenCalledTimes(3);
+            expect(mockPerf.clear).toHaveBeenCalledWith(promptId);
         });
 
-        it('should handle multiple prompts in the same session', async () => {
+        it('should handle multiple concurrent prompts', async () => {
+            const sessionId = 'multi-session';
             const promptId1 = 'prompt-1';
             const promptId2 = 'prompt-2';
 
-            performanceLogger.sessionStarted(mockSessionId);
-
-            // First prompt
+            performanceLogger.sessionStarted(sessionId);
             performanceLogger.promptStarted(promptId1);
-            mockMeasure.mockReturnValueOnce({ duration: 100 });
+            performanceLogger.promptStarted(promptId2);
+
+            mockPerf.measure.mockReturnValue(100);
             await performanceLogger.promptFirstMessageReceived(promptId1);
 
-            // Second prompt
-            performanceLogger.promptStarted(promptId2);
-            mockMeasure.mockReturnValueOnce({ duration: 200 });
+            mockPerf.measure.mockReturnValue(150);
             await performanceLogger.promptFirstMessageReceived(promptId2);
 
-            expect(mockMark).toHaveBeenCalledWith(promptId1);
-            expect(mockMark).toHaveBeenCalledWith(promptId2);
-            expect(analytics.rovoDevTimeToRespondStartEvent).toHaveBeenCalledWith(mockSessionId, promptId1, 100);
-            expect(analytics.rovoDevTimeToRespondStartEvent).toHaveBeenCalledWith(mockSessionId, promptId2, 200);
+            expect(mockPerf.mark).toHaveBeenCalledWith(promptId1);
+            expect(mockPerf.mark).toHaveBeenCalledWith(promptId2);
+            expect(mockRovoDevTimeToRespondStartEvent).toHaveBeenCalledTimes(2);
         });
     });
 });

@@ -186,6 +186,7 @@ export async function rovoDevNewSessionActionEvent(sessionId: string, isManually
     });
 }
 
+// TODO call this
 export async function rovoDevTechnicalPlanningShownEvent(
     sessionId: string,
     stepsCount: number,

@@ -4,6 +4,7 @@ import {
     rovoDevTimeToTechPlanReturnedEvent,
 } from '../../src/analytics';
 import { Container } from '../../src/container';
+import Perf from '../util/perf';
 
 export class PerformanceLogger {
     private currentSessionId: string = '';
@@ -16,18 +17,18 @@ export class PerformanceLogger {
     }
 
     public promptStarted(promptId: string) {
-        performance.mark(promptId);
+        Perf.mark(promptId);
     }
 
     public async promptFirstMessageReceived(promptId: string) {
-        this.timeToFirstMessage = performance.measure(promptId).duration;
+        this.timeToFirstMessage = Perf.measure(promptId);
 
         const evt = await rovoDevTimeToRespondStartEvent(this.currentSessionId, promptId, this.timeToFirstMessage);
         await Container.analyticsClient.sendTrackEvent(evt);
     }
 
     public async promptTechnicalPlanReceived(promptId: string) {
-        this.timeToTechnicalPlan = performance.measure(promptId).duration;
+        this.timeToTechnicalPlan = Perf.measure(promptId);
 
         const evt = await rovoDevTimeToTechPlanReturnedEvent(
             this.currentSessionId,
@@ -39,7 +40,8 @@ export class PerformanceLogger {
     }
 
     public async promptLastMessageReceived(promptId: string) {
-        const timeToLastMessage = performance.measure(promptId).duration;
+        const timeToLastMessage = Perf.measure(promptId);
+        Perf.clear(promptId);
 
         const evt = await rovoDevTimeToRespondEndEvent(
             this.currentSessionId,
