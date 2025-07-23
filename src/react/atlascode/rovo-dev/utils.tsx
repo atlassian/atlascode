@@ -57,7 +57,7 @@ export interface ToolReturnGrepFileContentMessage {
 export interface ToolReturnTechnicalPlanMessage {
     tool_name: 'create_technical_plan';
     source: 'ToolReturn';
-    content: string; // JSON string representing the technical plan
+    parsedContent?: object | undefined;
     tool_call_id: string;
     args?: string;
 }
@@ -65,7 +65,8 @@ export interface ToolReturnTechnicalPlanMessage {
 export interface ToolReturnGenericMessage {
     tool_name: string;
     source: 'ToolReturn' | 'ModifiedFile';
-    content?: any;
+    content: string;
+    parsedContent?: object | undefined;
     tool_call_id: string;
     args?: string;
 }
@@ -190,10 +191,12 @@ export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolRe
             break;
 
         case 'create_technical_plan':
-            resp.push({
-                content: 'A cool technical plan',
-                technicalPlan: JSON.parse(msg.content) as TechnicalPlan | undefined,
-            });
+            if (msg.parsedContent) {
+                resp.push({
+                    content: '',
+                    technicalPlan: msg.parsedContent as TechnicalPlan,
+                });
+            }
             break;
 
         default:
@@ -212,3 +215,33 @@ export const isCodeChangeTool = (toolName: string): boolean => {
 };
 
 export const CODE_PLAN_EXECUTE_PROMPT = 'Execute the code plan that you have created';
+
+// this function scrolls the element to the end, but it prevents scrolling too frequently to avoid the UI to get overloaded.
+// the delay is implemented globally, not per element. which is fine for now, because we only scroll 1 element.
+export const scrollToEnd = (() => {
+    const SCROLL_DELAY = 250;
+    let lastScroll: number = 0;
+    let scrollTimeout: NodeJS.Timeout | number = 0;
+
+    function doScrollNow(element: HTMLDivElement) {
+        element.scroll({ top: element.scrollHeight, behavior: 'smooth' });
+        return performance.now();
+    }
+
+    return (element: HTMLDivElement) => {
+        if (scrollTimeout) {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = 0;
+        }
+
+        const delay = lastScroll - performance.now() + SCROLL_DELAY;
+
+        if (delay < 0) {
+            lastScroll = doScrollNow(element);
+            // schedule one extra scroll to adjust for react rendering asynchronousness
+            scrollTimeout = setTimeout(() => (lastScroll = doScrollNow(element)), SCROLL_DELAY);
+        } else {
+            scrollTimeout = setTimeout(() => (lastScroll = doScrollNow(element)), delay);
+        }
+    };
+})();

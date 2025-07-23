@@ -41,7 +41,7 @@ import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
-const MIN_SUPPORTED_ROVODEV_VERSION = '0.8.2';
+const MIN_SUPPORTED_ROVODEV_VERSION = '0.9.3';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;
@@ -597,14 +597,18 @@ ${message}`;
     }
 
     private async createPR() {
+        let prLink: string | undefined;
         try {
-            await this._prHandler.createPR();
+            prLink = await this._prHandler.createPR();
         } catch (e) {
             await this.processError(e, false);
         } finally {
             const webview = this._webView!;
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CreatePRComplete,
+                data: {
+                    url: prLink,
+                },
             });
         }
     }

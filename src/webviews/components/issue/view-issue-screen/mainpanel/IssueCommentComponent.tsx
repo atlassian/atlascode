@@ -26,6 +26,10 @@ type IssueCommentComponentProps = {
     fetchImage: (url: string) => Promise<string>;
     onDelete: (commentId: string) => void;
     isRteEnabled?: boolean;
+    commentText: string;
+    onCommentTextChange: (text: string) => void;
+    isEditingComment: boolean;
+    onEditingCommentChange: (editing: boolean) => void;
 };
 const CommentComponent: React.FC<{
     siteDetails: DetailedSiteInfo;
@@ -137,10 +141,21 @@ const AddCommentComponent: React.FC<{
     onCreate: (t: string, restriction?: CommentVisibility) => void;
     isServiceDeskProject?: boolean;
     isRteEnabled?: boolean;
-}> = ({ fetchUsers, user, onCreate, isServiceDeskProject, isRteEnabled = false }) => {
-    const [commentText, setCommentText] = React.useState('');
-    const [isEditing, setIsEditing] = React.useState(false);
-
+    commentText: string;
+    setCommentText: (text: string) => void;
+    isEditing: boolean;
+    setIsEditing: (editing: boolean) => void;
+}> = ({
+    fetchUsers,
+    user,
+    onCreate,
+    isServiceDeskProject,
+    isRteEnabled = false,
+    commentText,
+    setCommentText,
+    isEditing,
+    setIsEditing,
+}) => {
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             <Box style={{ display: 'flex', flexDirection: 'row', alignItems: isEditing ? 'start' : 'center' }}>
@@ -208,6 +223,10 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
     fetchImage,
     onDelete,
     isRteEnabled = false,
+    commentText,
+    onCommentTextChange,
+    isEditingComment,
+    onEditingCommentChange,
 }) => {
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', paddingTop: '8px' }}>
@@ -215,7 +234,12 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                 fetchUsers={fetchUsers}
                 user={currentUser}
                 onCreate={onCreate}
+                isServiceDeskProject={isServiceDeskProject}
                 isRteEnabled={isRteEnabled}
+                commentText={commentText}
+                setCommentText={onCommentTextChange}
+                isEditing={isEditingComment}
+                setIsEditing={onEditingCommentChange}
             />
             {comments
                 .sort((a, b) => (a.created > b.created ? -1 : 1))

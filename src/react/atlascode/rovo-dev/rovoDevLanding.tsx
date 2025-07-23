@@ -67,6 +67,10 @@ const RovoDevImg = () => {
 };
 
 export const RovoDevLanding: React.FC<{}> = () => {
+    if (process.env.ROVODEV_BBY) {
+        return null;
+    }
+
     return (
         <div
             style={{
@@ -76,6 +80,7 @@ export const RovoDevLanding: React.FC<{}> = () => {
                 alignItems: 'center',
                 textAlign: 'center',
                 padding: '12px 0',
+                marginBottom: '12px',
             }}
         >
             <div>

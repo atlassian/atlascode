@@ -82,7 +82,7 @@ export class RovoDevPullRequestHandler {
 
     // This is the happy path for single small repository
     // There would probably need to be a lot of logic in monorepos/multiple repos etc.
-    public async createPR(): Promise<void> {
+    public async createPR(): Promise<string | undefined> {
         const gitExt = await this.getGitExtension();
         const repo = await this.getGitRepository(gitExt);
         const { branchName, commitMessage } = await this.getBranchAndCommitInfo(repo);
@@ -103,5 +103,7 @@ export class RovoDevPullRequestHandler {
         if (prLink) {
             env.openExternal(Uri.parse(prLink));
         }
+
+        return prLink;
     }
 }

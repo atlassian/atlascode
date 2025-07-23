@@ -14,18 +14,18 @@ import { v4 } from 'uuid';
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
 import { useMessagingApi } from '../messagingApi';
-import { renderChatHistory, UpdatedFilesComponent } from './common/common';
-import { RovoDevLanding } from './rovoDevLanding';
+import { UpdatedFilesComponent } from './common/common';
+import { ChatHistory } from './messaging/ChatHistory';
 import { RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import * as styles from './rovoDevViewStyles';
-import { CodePlanButton } from './technical-plan/CodePlanButton';
-import { parseToolCallMessage, ToolCallItem } from './tools/ToolCallItem';
+import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
     ChatMessage,
     CODE_PLAN_EXECUTE_PROMPT,
     ErrorMessage,
     isCodeChangeTool,
     parseToolReturnMessage,
+    scrollToEnd,
     ToolCallMessage,
     ToolReturnGenericMessage,
     ToolReturnParseResult,
@@ -55,7 +55,7 @@ const CloseIconDeepPlan: React.FC<{}> = () => {
     );
 };
 
-const enum State {
+export const enum State {
     WaitingForPrompt,
     GeneratingResponse,
     CancellingResponse,
@@ -68,36 +68,6 @@ const TextAreaMessages: Record<State, string> = {
     [State.CancellingResponse]: 'Cancelling the response...',
     [State.ExecutingPlan]: 'Executing the code plan...',
 };
-
-// this function scrolls the element to the end, but it prevents scrolling too frequently to avoid the UI to get overloaded.
-// the delay is implemented globally, not per element. which is fine for now, because we only scroll 1 element.
-const scrollToEnd = (() => {
-    const SCROLL_DELAY = 250;
-    let lastScroll: number = 0;
-    let scrollTimeout: NodeJS.Timeout | number = 0;
-
-    function doScrollNow(element: HTMLDivElement) {
-        element.scroll({ top: element.scrollHeight, behavior: 'smooth' });
-        return performance.now();
-    }
-
-    return (element: HTMLDivElement) => {
-        if (scrollTimeout) {
-            clearTimeout(scrollTimeout);
-            scrollTimeout = 0;
-        }
-
-        const delay = lastScroll - performance.now() + SCROLL_DELAY;
-
-        if (delay < 0) {
-            lastScroll = doScrollNow(element);
-            // schedule one extra scroll to adjust for react rendering asynchronousness
-            scrollTimeout = setTimeout(() => (lastScroll = doScrollNow(element)), SCROLL_DELAY);
-        } else {
-            scrollTimeout = setTimeout(() => (lastScroll = doScrollNow(element)), delay);
-        }
-    };
-})();
 
 const RovoDevView: React.FC = () => {
     const [sendButtonDisabled, setSendButtonDisabled] = useState(false);
@@ -265,6 +235,7 @@ const RovoDevView: React.FC = () => {
                         source: 'ToolReturn',
                         tool_name: data.tool_name,
                         content: data.content || '',
+                        parsedContent: data.parsedContent,
                         tool_call_id: data.tool_call_id, // Optional ID for tracking
                         args: data.toolCallMessage.args,
                     };
@@ -350,10 +321,13 @@ const RovoDevView: React.FC = () => {
                     }
                     break;
                 case RovoDevProviderMessageType.ReturnText:
-                    break; // This is handled in getOriginalText function
+                case RovoDevProviderMessageType.CreatePRComplete:
+                    break; // This is handled elsewhere
                 default:
                     handleAppendChatHistory({
                         source: 'RovoDevError',
+                        // event.type complains if this is unreachable
+                        // @ts-expect-error ts(2339)
                         text: `Unknown message type: ${event.type}`,
                         isRetriable: false,
                         uid: v4(),
@@ -506,37 +480,32 @@ const RovoDevView: React.FC = () => {
     );
 
     return (
-        <div style={styles.rovoDevContainerStyles}>
-            <div ref={chatEndRef} style={styles.outerChatContainerStyles}>
-                <RovoDevLanding />
-                <div style={styles.chatMessagesContainerStyles}>
-                    {chatHistory.map((msg, index) =>
-                        renderChatHistory(
-                            msg,
-                            index,
-                            openFile,
-                            isRetryAfterErrorButtonEnabled,
-                            retryPromptAfterError,
-                            getOriginalText,
-                        ),
-                    )}
-                    {pendingToolCallMessage && <ToolCallItem toolMessage={pendingToolCallMessage} />}
-                    {isDeepPlanCreated && (
-                        <CodePlanButton execute={executeCodePlan} disabled={currentState !== State.WaitingForPrompt} />
-                    )}
-                </div>
-            </div>
+        <div className="rovoDevChat" style={styles.rovoDevContainerStyles}>
+            <ChatHistory
+                messages={chatHistory}
+                renderProps={{
+                    openFile,
+                    isRetryAfterErrorButtonEnabled,
+                    retryPromptAfterError,
+                    getOriginalText,
+                }}
+                messagingApi={{
+                    postMessage,
+                    postMessageWithReturn,
+                }}
+                pendingToolCall={pendingToolCallMessage}
+                deepPlanCreated={isDeepPlanCreated}
+                executeCodePlan={executeCodePlan}
+                state={currentState}
+                modifiedFiles={totalModifiedFiles}
+                injectMessage={handleAppendChatHistory}
+            />
             <div style={styles.rovoDevInputSectionStyles}>
                 <UpdatedFilesComponent
                     modifiedFiles={totalModifiedFiles}
                     onUndo={undoFiles}
                     onKeep={keepFiles}
                     openDiff={openFile}
-                    onCreatePR={() => {
-                        postMessage({
-                            type: RovoDevViewResponseType.CreatePR,
-                        });
-                    }}
                 />
                 <div style={styles.rovoDevPromptContainerStyles}>
                     <div
