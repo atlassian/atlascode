@@ -2,11 +2,11 @@ FROM node:23-slim
 
 # Install dependencies and xvfb
 RUN apt-get update \
-    && apt-get install -y wget gpg xauth curl git \ 
+    && apt-get install -y wget gpg xauth curl git \
     && npm install --global playwright@1.53.0 \
     && npx playwright install --with-deps chromium
 
-# install code-server 
+# install code-server
 RUN curl -fsSL https://code-server.dev/install.sh -o install-code-server.sh \
     && sh install-code-server.sh \
     && curl -fL https://open-vsx.org/api/redhat/vscode-yaml/1.18.0/file/redhat.vscode-yaml-1.18.0.vsix -o redhat.vscode-yaml-1.18.0.vsix
@@ -42,10 +42,18 @@ code-server --install-extension ../redhat.vscode-yaml-1.18.0.vsix --force
 echo "installing atlascode"
 code-server --install-extension atlascode-*.vsix --force
 
-echo "starting code-server"
-code-server --auth none --disable-workspace-trust --bind-addr localhost:9988 &
-echo "Running tests"
-npx playwright test ./e2e/tests/**/*.spec.ts --workers=1
+if [[ -z "\${ONLYSERVER}" ]]; then
+    # start tests if ONLYSERVER is not set
+
+    echo "starting code-server"
+    code-server --auth none --disable-workspace-trust --bind-addr localhost:9988 &
+    echo "Running tests"
+    npx playwright test ./e2e/tests/**/*.spec.ts --workers=1
+else
+     # Only start server if ONLYSERVER is set
+    echo "No e2e tests started. Only starting code-server."
+    code-server --auth none --bind-addr 0.0.0.0:9988
+fi
 
 EOF
 

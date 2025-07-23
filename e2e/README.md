@@ -40,3 +40,16 @@ To run E2E tests against changed code, you might need to re-build the extension 
 ```sh
 npm run extension:package
 ```
+
+---
+
+### Running code-server Locally for Testing
+
+1. Follow the first two steps from the [How do I use it?](#how-do-i-use-it) section above.
+
+2. Use the following command to start the testing environment
+```sh
+  npm test:e2e:docker:serve
+```
+
+3. Open *http://127.0.0.1:9988* in browser. The code-server UI should be available.
