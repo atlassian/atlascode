@@ -32,7 +32,7 @@ import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
-const MIN_SUPPORTED_ROVODEV_VERSION = '0.8.2';
+const MIN_SUPPORTED_ROVODEV_VERSION = '0.9.3';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;
