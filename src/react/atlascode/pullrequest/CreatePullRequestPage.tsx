@@ -1,4 +1,4 @@
-import { RefreshButton, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
 import {
     AppBar,
@@ -33,6 +33,7 @@ import { User } from '../../../bitbucket/model';
 import { Branch } from '../../../typings/git';
 import { colorToLozengeAppearanceMap } from '../../vscode/theme/colors';
 import { VSCodeStyles, VSCodeStylesContext } from '../../vscode/theme/styles';
+import { RefreshButton } from '../common/button';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import Lozenge from '../common/Lozenge';

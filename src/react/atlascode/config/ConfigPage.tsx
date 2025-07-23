@@ -1,4 +1,3 @@
-import { RefreshButton } from '@atlassianlabs/guipi-core-components';
 import {
     AppBar,
     Badge,
@@ -23,6 +22,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
 
 import { ConfigSection, ConfigSubSection, ConfigTarget } from '../../../lib/ipc/models/config';
+import { RefreshButton } from '../common/button';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';

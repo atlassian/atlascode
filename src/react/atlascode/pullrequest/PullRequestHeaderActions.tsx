@@ -1,8 +1,8 @@
-import { RefreshButton } from '@atlassianlabs/guipi-core-components';
 import { Box } from '@material-ui/core';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { ApprovalStatus } from '../../../bitbucket/model';
+import { RefreshButton } from '../common/button';
 import { CopyLinkButton } from '../common/CopyLinkButton';
 import { ApproveButton } from './ApproveButton';
 import { MergeDialog } from './MergeDialog';

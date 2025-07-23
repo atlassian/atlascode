@@ -1,4 +1,3 @@
-import { RefreshButton } from '@atlassianlabs/guipi-core-components';
 import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
 import {
     AppBar,
@@ -46,6 +45,7 @@ import { ConnectionTimeout } from '../../../util/time';
 import { RenderedContent } from '../../../webviews/components/RenderedContent';
 import { colorToLozengeAppearanceMap } from '../../vscode/theme/colors';
 import { VSCodeStyles, VSCodeStylesContext } from '../../vscode/theme/styles';
+import { RefreshButton } from '../common/button';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import Lozenge from '../common/Lozenge';
