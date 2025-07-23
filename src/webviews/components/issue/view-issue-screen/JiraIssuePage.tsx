@@ -183,12 +183,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     fetchUsers = (input: string) => {
-        return this.loadSelectOptions(
-            input,
-            `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?${
-                this.state.siteDetails.isCloud ? 'query' : 'username'
-            }=`,
-        );
+        const userSearchUrl = this.state.siteDetails.isCloud
+            ? `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?query=`
+            : `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?username=`;
+
+        return this.loadSelectOptions(input, userSearchUrl);
     };
 
     protected handleInlineEdit = async (field: FieldUI, newValue: any) => {
