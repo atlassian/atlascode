@@ -251,24 +251,37 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     };
 
     private async forceUserFocusUpdate(editor: TextEditor | undefined = window.activeTextEditor, selection?: Range) {
+        if (!this._webView) {
+            return;
+        }
+
         selection = selection || (editor ? editor.selection : undefined);
 
-        const context = editor
-            ? {
-                  file: this.getOpenFileInfo(editor.document),
-                  selection:
-                      selection && !selection.isEmpty
-                          ? { start: selection.start.line, end: selection.end.line }
-                          : undefined,
-              }
-            : { file: { name: '', absolutePath: '', relativePath: '' }, selection: undefined };
-
-        if (this._webView) {
+        if (!editor) {
             await this._webView.postMessage({
                 type: RovoDevProviderMessageType.UserFocusUpdated,
-                userFocus: context,
+                userFocus: {
+                    file: { name: '', absolutePath: '', relativePath: '' },
+                    selection: undefined,
+                    invalid: true,
+                },
             });
+            return;
         }
+
+        const fileInfo = this.getOpenFileInfo(editor.document);
+
+        await this._webView.postMessage({
+            type: RovoDevProviderMessageType.UserFocusUpdated,
+            userFocus: {
+                file: fileInfo,
+                selection:
+                    selection && !selection.isEmpty
+                        ? { start: selection.start.line, end: selection.end.line }
+                        : undefined,
+                invalid: fileInfo.absolutePath === '' || !fs.existsSync(fileInfo.absolutePath),
+            },
+        });
     }
 
     // Listen to active editor and selection changes
@@ -401,7 +414,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
 
         let extra = '';
-        if (context.focusInfo && context.focusInfo.enabled) {
+        if (context.focusInfo && context.focusInfo.enabled && !context.focusInfo.invalid) {
             extra += `
             <context>
                 Consider that the user has the following open in the editor:
