@@ -1,4 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { RovoDevContext, RovoDevPrompt } from 'src/rovo-dev/rovoDevTypes';
 
 export const enum RovoDevViewResponseType {
     Prompt = 'prompt',
@@ -10,17 +11,13 @@ export const enum RovoDevViewResponseType {
     CreatePR = 'createPR',
     RetryPromptAfterError = 'retryPromptAfterError',
     GetCurrentBranchName = 'getCurrentBranchName',
+    AddContext = 'addContext',
     ReportChangedFilesPanelShown = 'reportChangedFilesPanelShown',
     ReportChangesGitPushed = 'reportChangesGitPushed',
 }
 
-export interface PromptMessage {
-    text: string;
-    enable_deep_plan?: boolean;
-}
-
 export type RovoDevViewResponse =
-    | ReducerAction<RovoDevViewResponseType.Prompt, PromptMessage>
+    | ReducerAction<RovoDevViewResponseType.Prompt, RovoDevPrompt>
     | ReducerAction<RovoDevViewResponseType.CancelResponse>
     | ReducerAction<RovoDevViewResponseType.OpenFile, { filePath: string; tryShowDiff: boolean; range?: number[] }>
     | ReducerAction<RovoDevViewResponseType.UndoFileChanges, { filePaths: string[] }>
@@ -29,5 +26,6 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>
     | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage: string } }>
     | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>
+    | ReducerAction<RovoDevViewResponseType.AddContext, { currentContext: RovoDevContext }>
     | ReducerAction<RovoDevViewResponseType.ReportChangedFilesPanelShown, { filesCount: number }>
     | ReducerAction<RovoDevViewResponseType.ReportChangesGitPushed, { pullRequestCreated: boolean }>;

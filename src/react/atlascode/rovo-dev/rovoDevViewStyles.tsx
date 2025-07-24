@@ -24,6 +24,8 @@ export const rovoDevInputSectionStyles: React.CSSProperties = {
 export const rovoDevPromptContainerStyles: React.CSSProperties = {
     display: 'flex',
     width: '100%',
+    flexDirection: 'column',
+    gap: '2px',
 };
 
 export const rovoDevTextareaStyles: React.CSSProperties = {

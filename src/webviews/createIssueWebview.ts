@@ -23,6 +23,7 @@ import { Action } from '../ipc/messaging';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { WebViewID } from '../lib/ipc/models/common';
 import { Logger } from '../logger';
+import { OnJiraEditedRefreshDelay } from '../util/time';
 import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
@@ -543,8 +544,11 @@ export class CreateIssueWebview
                                 await client.addAttachments(resp.key, formData);
                             }
                             // TODO: [VSCODE-601] add a new analytic event for issue updates
-                            commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
-                            commands.executeCommand(Commands.RefreshCustomJqlExplorer);
+                            commands.executeCommand(
+                                Commands.RefreshAssignedWorkItemsExplorer,
+                                OnJiraEditedRefreshDelay,
+                            );
+                            commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
 
                             this.postMessage({
                                 type: 'issueCreated',
@@ -570,6 +574,13 @@ export class CreateIssueWebview
                             });
                         }
                     }
+                    break;
+                }
+                case 'refreshTreeViews': {
+                    handled = true;
+                    // Pass delay to allow Jira's indexes to update before refreshing
+                    await commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer, OnJiraEditedRefreshDelay);
+                    await commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
                     break;
                 }
                 case 'openProblemReport': {
