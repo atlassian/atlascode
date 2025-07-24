@@ -1,8 +1,9 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { Box, IconButton, TextField, TextFieldProps } from '@material-ui/core';
 import ClearIcon from '@material-ui/icons/Clear';
 import SaveIcon from '@material-ui/icons/Save';
 import React, { useEffect, useReducer, useRef, useState } from 'react';
+
+import { ReducerAction } from '../../../../shared/reducerAction';
 
 type InlineTextEditorProps = {
     onSave?: (value: string) => void;

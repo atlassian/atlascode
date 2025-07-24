@@ -1,4 +1,4 @@
-import { defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { defaultStateGuard } from '@atlassianlabs/guipi-core-controller';
 import {
     Box,
     Button,
@@ -16,6 +16,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import React, { useEffect, useMemo, useReducer, useState } from 'react';
 import { uid } from 'react-uid';
 
+import { ReducerAction } from '../../../../shared/reducerAction';
 import { InlineTextEditor } from '../editor/InlineTextEditor';
 
 interface InlineTextEditorListProps {

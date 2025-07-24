@@ -1,4 +1,4 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { ReducerAction } from '../../../shared/reducerAction';
 
 export enum CommonMessageType {
     Error = 'error',
