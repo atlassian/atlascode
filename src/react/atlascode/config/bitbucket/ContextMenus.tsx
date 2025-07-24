@@ -1,7 +1,7 @@
-import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { Switch } from '@material-ui/core';
 import React, { memo, useContext } from 'react';
 
+import { ToggleWithLabel } from '../../common/toggle';
 import { ConfigControllerContext } from '../configController';
 
 type ContextMenuProps = {

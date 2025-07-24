@@ -1,4 +1,4 @@
-import { InlineTextEditor, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { InlineTextEditor } from '@atlassianlabs/guipi-core-components';
 import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import {
     Box,
@@ -23,6 +23,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { Commit, MergeStrategy, PullRequestData } from '../../../bitbucket/model';
+import { ToggleWithLabel } from '../common/toggle';
 import { JiraTransitionMenu } from './JiraTransitionMenu';
 import { MergeChecks } from './MergeChecks';
 

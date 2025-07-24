@@ -1,9 +1,9 @@
-import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { Grid, makeStyles, Switch, Theme, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 
 import { ConfigSection } from '../../../../lib/ipc/models/config';
 import { IntervalInput } from '../../common/IntervalInput';
+import { ToggleWithLabel } from '../../common/toggle';
 import { ConfigControllerContext } from '../configController';
 
 type PRExplorerProps = {

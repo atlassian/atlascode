@@ -1,4 +1,3 @@
-import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { Box, Button, CircularProgress, Grid, makeStyles, Switch, TextField, Theme, useTheme } from '@material-ui/core';
 import { baseKeymap } from 'prosemirror-commands';
 import { dropCursor } from 'prosemirror-dropcursor';
@@ -22,6 +21,7 @@ import { EditorView } from 'prosemirror-view';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { User } from '../../../../bitbucket/model';
+import { ToggleWithLabel } from '../toggle';
 
 function markInputRule(regexp: RegExp, markType: any, getAttrs: any) {
     return new InputRule(regexp, (state: EditorState, match: string[], start: number, end: number) => {
