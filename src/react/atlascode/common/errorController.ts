@@ -1,7 +1,6 @@
-import { defaultStateGuard } from '@atlassianlabs/guipi-core-controller';
 import { createContext, useCallback, useMemo, useReducer } from 'react';
 
-import { ReducerAction } from '../../../shared/reducerAction';
+import { defaultStateGuard, ReducerAction } from '../../../shared/reducerAction';
 
 interface ErrorControllerApi {
     showError: (details: any) => void;
