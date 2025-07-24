@@ -1,3 +1,5 @@
+import { RovoDevContext } from 'src/rovo-dev/rovoDevTypes';
+
 export type ToolReturnMessage =
     | ToolReturnFileMessage
     | ToolReturnBashMessage
@@ -14,6 +16,7 @@ export type ChatMessage =
 export interface DefaultMessage {
     text: string;
     source: 'User' | 'RovoDev' | 'PullRequest';
+    context?: RovoDevContext;
 }
 
 export interface ErrorMessage {

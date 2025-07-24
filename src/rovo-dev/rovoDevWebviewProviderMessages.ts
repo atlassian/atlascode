@@ -2,6 +2,7 @@ import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 
 import { ChatMessage, ErrorMessage } from '../react/atlascode/rovo-dev/utils';
 import { RovoDevResponse } from './responseParser';
+import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
 export const enum RovoDevProviderMessageType {
     PromptSent = 'promptSent',
@@ -17,6 +18,8 @@ export const enum RovoDevProviderMessageType {
     ReturnText = 'returnText',
     CreatePRComplete = 'createPRComplete',
     GetCurrentBranchNameComplete = 'getCurrentBranchNameComplete',
+    UserFocusUpdated = 'userFocusUpdated',
+    ContextAdded = 'contextAdded',
 }
 
 export interface RovoDevObjectResponse {
@@ -24,7 +27,7 @@ export interface RovoDevObjectResponse {
 }
 
 export type RovoDevProviderMessage =
-    | ReducerAction<RovoDevProviderMessageType.PromptSent, { enable_deep_plan: boolean }>
+    | ReducerAction<RovoDevProviderMessageType.PromptSent, RovoDevPrompt>
     | ReducerAction<RovoDevProviderMessageType.Response, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.UserChatMessage, { message: ChatMessage }>
     | ReducerAction<RovoDevProviderMessageType.CompleteMessage>
@@ -36,4 +39,7 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.CancelFailed>
     | ReducerAction<RovoDevProviderMessageType.ReturnText, { text: string }>
     | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string } }>
-    | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>;
+    | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>
+    | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string } }>
+    | ReducerAction<RovoDevProviderMessageType.UserFocusUpdated, { userFocus: RovoDevContextItem }>
+    | ReducerAction<RovoDevProviderMessageType.ContextAdded, { context: RovoDevContextItem }>;
