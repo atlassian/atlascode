@@ -146,7 +146,8 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
                     if (currentMessage) {
                         setCurThinkingMessages((prev) => [...prev, currentMessage]);
                         setCurrentMessage(null);
-                      
+                    }
+                    
                     if (newMessage.tool_name === 'create_technical_plan') {
                         const parsedMessage = parseToolReturnMessage(newMessage);
 
