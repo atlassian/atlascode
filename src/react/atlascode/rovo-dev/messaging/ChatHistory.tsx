@@ -24,6 +24,7 @@ interface MessageBlockDetails {
     messages: ChatMessage[] | DefaultMessage | ErrorMessage | null;
     technicalPlan?: TechnicalPlan;
 }
+
 interface ChatHistoryProps {
     messages: ChatMessage[];
     renderProps: {
@@ -36,13 +37,12 @@ interface ChatHistoryProps {
         postMessage: PostMessageFunc<RovoDevViewResponse>;
         postMessageWithReturn: PostMessagePromiseFunc<RovoDevViewResponse, any>;
     };
-    modifiedFiles?: ToolReturnParseResult[];
+    modifiedFiles: ToolReturnParseResult[];
     pendingToolCall: string;
     deepPlanCreated: boolean;
     executeCodePlan: () => void;
     state: State;
-    injectMessage?: (msg: ChatMessage) => void;
-    keepAllFileChanges?: () => void;
+    onChangesGitPushed: (msg: ChatMessage, pullRequestCreated: boolean) => void;
 }
 
 export const ChatHistory: React.FC<ChatHistoryProps> = ({
@@ -54,8 +54,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     state,
     messagingApi: { postMessageWithReturn },
     modifiedFiles,
-    injectMessage,
-    keepAllFileChanges,
+    onChangesGitPushed,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const [currentMessage, setCurrentMessage] = React.useState<DefaultMessage | null>(null);
@@ -235,20 +234,15 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
                             onPullRequestCreated={(url) => {
                                 setCanCreatePR(false);
                                 setIsFormVisible(false);
-                                if (injectMessage) {
-                                    if (url) {
-                                        injectMessage({
-                                            text: `Pull request ready: ${url}`,
-                                            source: 'PullRequest',
-                                        });
-                                    } else {
-                                        injectMessage({
-                                            text: 'Successfully pushed changes to the remote repository.',
-                                            source: 'PullRequest',
-                                        });
-                                    }
-                                    keepAllFileChanges?.();
-                                }
+                                onChangesGitPushed(
+                                    {
+                                        source: 'PullRequest',
+                                        text: url
+                                            ? `Pull request ready: ${url}`
+                                            : 'Successfully pushed changes to the remote repository.',
+                                    },
+                                    !!url,
+                                );
                             }}
                             isFormVisible={isFormVisible}
                             setFormVisible={setIsFormVisible}

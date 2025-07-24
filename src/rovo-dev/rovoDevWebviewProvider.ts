@@ -24,6 +24,7 @@ import {
 import {
     rovoDevFileChangedActionEvent,
     rovoDevFilesSummaryShownEvent,
+    rovoDevGitPushActionEvent,
     rovoDevNewSessionActionEvent,
     rovoDevPromptSentEvent,
     rovoDevStopActionEvent,
@@ -206,6 +207,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                 case RovoDevViewResponseType.ReportChangedFilesPanelShown:
                     rovoDevFilesSummaryShownEvent(this._chatSessionId, e.filesCount).then((evt) =>
+                        Container.analyticsClient.sendTrackEvent(evt),
+                    );
+                    break;
+
+                case RovoDevViewResponseType.ReportChangesGitPushed:
+                    rovoDevGitPushActionEvent(this._chatSessionId, e.pullRequestCreated).then((evt) =>
                         Container.analyticsClient.sendTrackEvent(evt),
                     );
                     break;

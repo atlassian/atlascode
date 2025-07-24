@@ -8,10 +8,10 @@ export const enum RovoDevViewResponseType {
     KeepFileChanges = 'keepFileChanges',
     GetOriginalText = 'getOriginalText',
     CreatePR = 'createPR',
-    CreatePRComplete = 'createPRComplete',
     RetryPromptAfterError = 'retryPromptAfterError',
     GetCurrentBranchName = 'getCurrentBranchName',
     ReportChangedFilesPanelShown = 'reportChangedFilesPanelShown',
+    ReportChangesGitPushed = 'reportChangesGitPushed',
 }
 
 export interface PromptMessage {
@@ -28,6 +28,6 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.GetOriginalText, { filePath: string; range?: number[]; requestId: string }>
     | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>
     | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage: string } }>
-    | ReducerAction<RovoDevViewResponseType.CreatePRComplete, { url?: string; error?: string }>
     | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>
-    | ReducerAction<RovoDevViewResponseType.ReportChangedFilesPanelShown, { filesCount: number }>;
+    | ReducerAction<RovoDevViewResponseType.ReportChangedFilesPanelShown, { filesCount: number }>
+    | ReducerAction<RovoDevViewResponseType.ReportChangesGitPushed, { pullRequestCreated: boolean }>;

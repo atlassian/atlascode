@@ -1,6 +1,6 @@
 import PullRequestIcon from '@atlaskit/icon/core/pull-request';
 import React from 'react';
-import { RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
 import { PostMessagePromiseFunc } from '../../messagingApi';
@@ -26,7 +26,7 @@ const PullRequestButton: React.FC<{
 
 interface PullRequestFormProps {
     onCancel: () => void;
-    postMessageWithReturn: PostMessagePromiseFunc<RovoDevViewResponse, any>;
+    postMessageWithReturn: PostMessagePromiseFunc<RovoDevViewResponse, RovoDevProviderMessage>;
     modifiedFiles?: ToolReturnParseResult[];
     onPullRequestCreated: (url: string) => void;
     isFormVisible?: boolean;
@@ -56,7 +56,10 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
             ConnectionTimeout,
         );
         setBranchNameLoading(false);
-        const name = (response as any).data.branchName || undefined;
+        const name =
+            response.type === RovoDevProviderMessageType.GetCurrentBranchNameComplete
+                ? response.data.branchName
+                : undefined;
         setBranchName(name);
     };
 
@@ -83,11 +86,12 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                 type: RovoDevViewResponseType.CreatePR,
                 payload: { branchName, commitMessage: message },
             },
-            RovoDevViewResponseType.CreatePRComplete,
+            RovoDevProviderMessageType.CreatePRComplete,
             ConnectionTimeout,
         );
         setPullRequestLoading(false);
-        onPullRequestCreated((response as any).data.url || '');
+        const url = response.type === RovoDevProviderMessageType.CreatePRComplete ? response.data.url : undefined;
+        onPullRequestCreated(url || '');
     };
 
     return (

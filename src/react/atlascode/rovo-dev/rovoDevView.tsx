@@ -366,9 +366,11 @@ const RovoDevView: React.FC = () => {
         ],
     );
 
-    const [postMessage, postMessageWithReturn] = useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, any>(
-        onMessageHandler,
-    );
+    const [postMessage, postMessageWithReturn] = useMessagingApi<
+        RovoDevViewResponse,
+        RovoDevProviderMessage,
+        RovoDevProviderMessage
+    >(onMessageHandler);
 
     React.useEffect(() => {
         if (outgoingMessage) {
@@ -495,7 +497,8 @@ const RovoDevView: React.FC = () => {
                 uniqueNonce,
             );
 
-            return (res.text as string) || '';
+            const text = res.type === RovoDevProviderMessageType.ReturnText ? res.text : undefined;
+            return text || '';
         },
         [postMessageWithReturn],
     );
@@ -503,6 +506,22 @@ const RovoDevView: React.FC = () => {
     const isRetryAfterErrorButtonEnabled = useCallback(
         (uid: string) => retryAfterErrorEnabled === uid,
         [retryAfterErrorEnabled],
+    );
+
+    const onChangesGitPushed = useCallback(
+        (msg: ChatMessage, pullRequestCreated: boolean) => {
+            if (totalModifiedFiles.length > 0) {
+                keepFiles(totalModifiedFiles.map((file) => file.filePath!));
+            }
+
+            handleAppendChatHistory(msg);
+
+            postMessage({
+                type: RovoDevViewResponseType.ReportChangesGitPushed,
+                pullRequestCreated,
+            });
+        },
+        [keepFiles, handleAppendChatHistory, postMessage, totalModifiedFiles],
     );
 
     return (
@@ -524,12 +543,7 @@ const RovoDevView: React.FC = () => {
                 executeCodePlan={executeCodePlan}
                 state={currentState}
                 modifiedFiles={totalModifiedFiles}
-                injectMessage={handleAppendChatHistory}
-                keepAllFileChanges={() => {
-                    if (totalModifiedFiles.length > 0) {
-                        keepFiles(totalModifiedFiles.map((file) => file.filePath!));
-                    }
-                }}
+                onChangesGitPushed={onChangesGitPushed}
             />
             <div style={styles.rovoDevInputSectionStyles}>
                 <UpdatedFilesComponent

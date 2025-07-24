@@ -215,7 +215,6 @@ export async function rovoDevStopActionEvent(sessionId: string, failed: boolean)
     });
 }
 
-// TODO call this
 export async function rovoDevGitPushActionEvent(sessionId: string, prCreated: boolean) {
     return trackEvent('rovoDevGitPushAction', 'atlascode', {
         attributes: { sessionId, prCreated },
