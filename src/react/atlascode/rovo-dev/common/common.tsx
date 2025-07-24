@@ -10,11 +10,8 @@ import { detectLanguage } from '@speed-highlight/core/detect';
 import { createPatch } from 'diff';
 import MarkdownIt from 'markdown-it';
 import React, { useCallback } from 'react';
-import { ConnectionTimeout } from 'src/util/time';
 
-import { PostMessagePromiseFunc } from '../../messagingApi';
 import { ChatMessageItem } from '../messaging/ChatMessageItem';
-import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import {
     agentMessageStyles,
     chatMessageStyles,
@@ -100,53 +97,17 @@ const RetryPromptButton: React.FC<{
     );
 };
 
-export const PullRequestButton: React.FC<{
-    postMessagePromise: PostMessagePromiseFunc<RovoDevViewResponse, any>;
-    modifiedFiles?: ToolReturnParseResult[];
-    onPullRequestCreated?: (url: string) => void;
-}> = ({ postMessagePromise, modifiedFiles, onPullRequestCreated }) => {
-    if (!modifiedFiles || modifiedFiles.length === 0) {
-        return null;
-    }
-
-    const [isPullRequestLoading, setIsPullRequestLoading] = React.useState(false);
-
-    return (
-        <button
-            style={{
-                color: 'var(--vscode-button-secondaryForeground)',
-                backgroundColor: 'var(--vscode-button-background)',
-                border: '1px solid var(--vscode-button-secondaryBorder)',
-                ...undoKeepButtonStyles,
-            }}
-            onClick={async () => {
-                setIsPullRequestLoading(true);
-                const response = await postMessagePromise(
-                    {
-                        type: RovoDevViewResponseType.CreatePR,
-                    },
-                    RovoDevViewResponseType.CreatePRComplete,
-                    ConnectionTimeout,
-                );
-                setIsPullRequestLoading(false);
-                console.log('BRUH:', response);
-                onPullRequestCreated?.((response as any).data.url || '');
-            }}
-            title="Create Pull Request"
-        >
-            {!isPullRequestLoading ? (
-                <i className="codicon codicon-git-pull-request-create" />
-            ) : (
-                <i className="codicon codicon-loading codicon-modifier-spin" />
-            )}
-            Create Pull Request
-        </button>
-    );
-};
-
 export const FollowUpActionFooter: React.FC<{}> = ({ children }) => {
     return (
-        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', marginTop: '8px' }}>
+        <div
+            style={{
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'flex-end',
+                marginTop: '8px',
+                marginBottom: '8px',
+            }}
+        >
             {children}
         </div>
     );

@@ -11,7 +11,7 @@ export const ChatMessageItem: React.FC<{
 
     const content = (
         <div
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+            style={{ display: 'flex', flexDirection: 'column' }}
             key="parsed-content"
             dangerouslySetInnerHTML={{ __html: mdParser.render(msg.text || '') }}
         />

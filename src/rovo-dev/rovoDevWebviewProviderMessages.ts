@@ -16,6 +16,7 @@ export const enum RovoDevProviderMessageType {
     CancelFailed = 'cancelFailed',
     ReturnText = 'returnText',
     CreatePRComplete = 'createPRComplete',
+    GetCurrentBranchNameComplete = 'getCurrentBranchNameComplete',
 }
 
 export interface RovoDevObjectResponse {
@@ -34,4 +35,5 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.Initialized>
     | ReducerAction<RovoDevProviderMessageType.CancelFailed>
     | ReducerAction<RovoDevProviderMessageType.ReturnText, { text: string }>
-    | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string } }>;
+    | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string } }>
+    | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>;

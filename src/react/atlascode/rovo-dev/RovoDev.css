@@ -189,14 +189,6 @@ body {
     }
 }
 
-.chat-message {
-    max-width: 100%;
-    margin-bottom: 8px;
-    border-radius: 8px;
-    position: relative;
-}
-
-
 #deleted-file {
     color: var(--vscode-list-errorForeground);
     text-decoration: line-through;
@@ -230,6 +222,14 @@ body {
 .code-plan-button span {
     font-size: 14px;
     color: var(--vscode-editor-foreground);
+}
+
+/* Messaging styles */
+.chat-message {
+    max-width: 100%;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    position: relative;
 }
 
 .chat-message-container {
@@ -299,5 +299,117 @@ body {
     white-space: normal;
     word-break: break-word;
     color: var(--vscode-editor-foreground);
-    font-size: 13px;
+}
+
+/* Pull Request button styles */
+.pull-request-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 11px;
+    gap: 8px;
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    border: 0;
+}
+.pull-request-button:hover {
+    background-color: var(--vscode-button-hoverBackground);
+    cursor: pointer;
+}
+
+/* Pull Request form styles */
+.pull-request-form-container {
+    display: flex;
+    padding: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    border-radius: 8px;
+    border: 1px solid var(--vscode-editorWidget-border);
+    flex: 1 0 0;
+}
+
+.pull-request-form-body {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+}
+
+.pull-request-form-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+.pull-request-form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+    align-self: stretch;
+}
+
+.pull-request-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+    align-self: stretch;
+}
+
+.pull-request-form-field label {
+    font-size: 11px;
+    color: var(--vscode-editor-foreground);
+}
+
+.pull-request-form-field input[type="text"] {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--vscode-input-border);
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+}
+
+.pull-request-form-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.pull-request-cancel-button,
+.pull-request-submit-button {
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    cursor: pointer;
+}
+
+.pull-request-cancel-button {
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+}
+
+.pull-request-cancel-button:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.pull-request-submit-button {
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+}
+
+.pull-request-submit-button:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+.pull-request-chat-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
 }
