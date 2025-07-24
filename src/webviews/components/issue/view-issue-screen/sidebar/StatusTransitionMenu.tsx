@@ -1,183 +1,154 @@
+import { LoadingButton } from '@atlaskit/button';
+import DropdownMenu, { DropdownItem } from '@atlaskit/dropdown-menu';
+import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
+import Lozenge from '@atlaskit/lozenge';
 import { Status, Transition } from '@atlassianlabs/jira-pi-common-models';
-import { fireEvent, render } from '@testing-library/react';
+import { Box } from '@material-ui/core';
 import React from 'react';
 
-import { StatusTransitionMenu } from './StatusTransitionMenu';
+import { colorToLozengeAppearanceMap } from '../../../colors';
 
-describe('StatusTransitionMenu', () => {
-    const mockTransitions: Transition[] = [
-        {
-            name: 'In Progress',
-            to: {
-                name: 'In Progress',
-                statusCategory: {
-                    colorName: 'yellow',
-                    id: 0,
-                    key: '',
-                    name: '',
-                    self: '',
-                },
-                description: '',
-                iconUrl: '',
-                id: '',
-                self: '',
-            },
-            hasScreen: false,
-            id: '0',
-            isConditional: false,
-            isGlobal: false,
-            isInitial: false,
-        },
-        {
-            name: 'Done',
-            to: {
-                name: 'Done',
-                statusCategory: {
-                    colorName: 'green',
-                    id: 0,
-                    key: '',
-                    name: '',
-                    self: '',
-                },
-                description: '',
-                iconUrl: '',
-                id: '',
-                self: '',
-            },
-            hasScreen: false,
-            id: '1',
-            isConditional: false,
-            isGlobal: false,
-            isInitial: false,
-        },
-    ];
+const statusCategoryOrder: Record<string, number> = {
+    new: 1,
+    indeterminate: 2,
+    done: 3,
+};
 
-    const mockCurrentStatus: Status = {
-        name: 'To Do',
-        statusCategory: {
-            colorName: 'blue-gray',
-            id: 0,
-            key: '',
-            name: '',
-            self: '',
-        },
-        description: '',
-        iconUrl: '',
-        id: '2',
-        self: '',
-    };
-
-    const mockOnStatusChange = jest.fn();
-
-    it('renders the current status name', () => {
-        const { getByText } = render(
-            <StatusTransitionMenu
-                transitions={mockTransitions}
-                currentStatus={mockCurrentStatus}
-                isStatusButtonLoading={false}
-                onStatusChange={mockOnStatusChange}
-            />,
-        );
-
-        expect(getByText('To Do')).toBeTruthy();
+// Sort transitions by status category (new → indeterminate → done)
+const sortTransitionsByStatusCategory = (transitions: Transition[]): Transition[] =>
+    [...transitions].sort((a, b) => {
+        const aOrder = statusCategoryOrder[a.to.statusCategory.key] ?? transitions.length;
+        const bOrder = statusCategoryOrder[b.to.statusCategory.key] ?? transitions.length;
+        if (aOrder !== bOrder) {
+            return aOrder - bOrder;
+        }
+        return parseInt(a.to.id) - parseInt(b.to.id);
     });
 
-    it('displays the dropdown menu when clicked', () => {
-        const { getByText, queryByText } = render(
-            <StatusTransitionMenu
-                transitions={mockTransitions}
-                currentStatus={mockCurrentStatus}
-                isStatusButtonLoading={false}
-                onStatusChange={mockOnStatusChange}
-            />,
-        );
+const StatusOption = (data: Transition) => (
+    <Box>
+        <Lozenge appearance={colorToLozengeAppearanceMap[data.to.statusCategory.colorName]}>{data.to.name}</Lozenge>
+    </Box>
+);
 
-        fireEvent.click(getByText('To Do'));
-        expect(queryByText('In Progress')).toBeTruthy();
-        expect(queryByText('Done')).toBeTruthy();
-    });
+const StatusOptionWithTransitionName = (data: Transition) => (
+    <Box>
+        {`${data.name} → `}
+        <Lozenge appearance={colorToLozengeAppearanceMap[data.to.statusCategory.colorName]}>{data.to.name}</Lozenge>
+    </Box>
+);
 
-    it('calls onStatusChange when a transition is selected', () => {
-        const { getByText } = render(
-            <StatusTransitionMenu
-                transitions={mockTransitions}
-                currentStatus={mockCurrentStatus}
-                isStatusButtonLoading={false}
-                onStatusChange={mockOnStatusChange}
-            />,
-        );
+type Props = {
+    transitions: Transition[];
+    currentStatus: Status;
+    isStatusButtonLoading: boolean;
+    onStatusChange: (item: Transition) => void;
+};
 
-        fireEvent.click(getByText('To Do'));
-        fireEvent.click(getByText('In Progress'));
+export const StatusTransitionMenu: React.FC<Props> = (props) => {
+    const [isHovered, setIsHovered] = React.useState(false);
+    const [isOpen, setIsOpen] = React.useState(false);
 
-        expect(mockOnStatusChange).toHaveBeenCalledWith(mockTransitions[0]);
-    });
+    const { border, background } = getDynamicStyles(props.currentStatus.statusCategory.colorName);
+    const hasTransitions = props?.transitions?.length > 0;
+    const transitionsSortedByCategory = sortTransitionsByStatusCategory(props.transitions);
+    const shouldShowTransitionName = props.transitions.some((t) => t.name !== t.to.name);
 
-    it('displays the transition name if it differs from the target status name', () => {
-        const transitionsWithDifferentNames: Transition[] = [
-            {
-                name: 'Start Progress',
-                to: {
-                    name: 'In Progress',
-                    statusCategory: {
-                        colorName: 'yellow',
-                        id: 0,
-                        key: '',
-                        name: '',
-                        self: '',
+    const dropdownContent = hasTransitions ? (
+        <Box
+            data-testid="issue.status-transition-menu-dropdown"
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                backgroundColor: 'var(--vscode-settings-textInputBackground)',
+                paddingTop: '4px',
+                paddingBottom: '4px',
+                border: '1px solid var(--vscode-list-focusOutline)',
+            }}
+        >
+            {transitionsSortedByCategory.map((t) => (
+                <DropdownItem
+                    key={t.id}
+                    css={{
+                        ':hover': {
+                            background: 'var(--vscode-editor-selectionHighlightBackground) !important',
+                        },
+                    }}
+                    onClick={() => props.onStatusChange(t)}
+                >
+                    {shouldShowTransitionName ? StatusOptionWithTransitionName(t) : StatusOption(t)}
+                </DropdownItem>
+            ))}
+        </Box>
+    ) : null;
+
+    return (
+        <Box
+            style={{
+                display: 'flex',
+            }}
+        >
+            <DropdownMenu<HTMLButtonElement>
+                css={{
+                    backgroundColor: 'var(--vscode-settings-textInputBackground)!important',
+                    ':hover': {
+                        backgroundColor: 'var(--vscode-editor-selectionHighlightBackground)!important',
                     },
-                    description: '',
-                    iconUrl: '',
-                    id: '',
-                    self: '',
-                },
-                hasScreen: false,
-                id: '',
-                isConditional: false,
-                isGlobal: false,
-                isInitial: false,
-            },
-        ];
+                }}
+                onOpenChange={(open) => setIsOpen(open.isOpen)}
+                isLoading={props.isStatusButtonLoading}
+                trigger={({ triggerRef, ...properties }) => (
+                    <LoadingButton
+                        isLoading={props.isStatusButtonLoading}
+                        isDisabled={!hasTransitions}
+                        onMouseOver={() => setIsHovered(true)}
+                        onMouseLeave={() => setIsHovered(false)}
+                        style={{
+                            alignContent: 'center',
+                            border:
+                                (isOpen || isHovered) && hasTransitions
+                                    ? '1px solid var(--vscode-list-focusOutline)'
+                                    : border,
+                            backgroundColor: background,
 
-        const { getByText } = render(
-            <StatusTransitionMenu
-                transitions={transitionsWithDifferentNames}
-                currentStatus={mockCurrentStatus}
-                isStatusButtonLoading={false}
-                onStatusChange={mockOnStatusChange}
-            />,
-        );
+                            color: 'var(--vscode-editor-foreground)',
+                        }}
+                        {...properties}
+                        ref={triggerRef}
+                        iconAfter={hasTransitions ? <ChevronDownIcon label="Status" /> : undefined}
+                    >
+                        {props.currentStatus.name}
+                    </LoadingButton>
+                )}
+            >
+                {dropdownContent}
+            </DropdownMenu>
+        </Box>
+    );
+};
 
-        fireEvent.click(getByText('To Do'));
-        expect(getByText('Start Progress →')).toBeTruthy();
-        expect(getByText('In Progress')).toBeTruthy();
-    });
+const getDynamicStyles = (colorName: string) => {
+    let fields = { border: '', bg: '' };
+    if (!statusCategoryToColorTokenMap[colorName]) {
+        fields = statusCategoryToColorTokenMap['default'];
+    } else {
+        fields = statusCategoryToColorTokenMap[colorName];
+    }
+    return {
+        border: `1px solid ${fields.border}`,
+        background: fields.bg,
+    };
+};
 
-    it('Renders the dropdown arrow icon next to the current status', () => {
-        const { getByRole } = render(
-            <StatusTransitionMenu
-                transitions={mockTransitions}
-                currentStatus={mockCurrentStatus}
-                isStatusButtonLoading={false}
-                onStatusChange={mockOnStatusChange}
-            />,
-        );
-
-        const statusButton = getByRole('button', { name: 'To Do Status' });
-        expect(statusButton).toHaveProperty('disabled', false);
-        expect(getByRole('img', { name: 'Status' })).toBeTruthy();
-    });
-
-    it('disables dropdown when there are no transitions', () => {
-        const { getByRole } = render(
-            <StatusTransitionMenu
-                transitions={[]}
-                currentStatus={mockCurrentStatus}
-                isStatusButtonLoading={false}
-                onStatusChange={mockOnStatusChange}
-            />,
-        );
-        const statusButton = getByRole('button', { name: 'To Do' });
-        expect(statusButton).toHaveProperty('disabled', true);
-    });
-});
+const statusCategoryToColorTokenMap: { [key: string]: { border: string; bg: string } } = {
+    yellow: { border: '#669DF1', bg: '#669DF133' },
+    green: { border: '#94C748', bg: '#94C74833' },
+    'blue-gray': {
+        border: '#B0BEC5',
+        bg: '#B0BEC533',
+    },
+    default: {
+        border: '#B0BEC5',
+        bg: '#B0BEC533',
+    },
+};
