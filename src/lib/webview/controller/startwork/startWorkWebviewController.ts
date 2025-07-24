@@ -1,10 +1,10 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import * as vscode from 'vscode';
 
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel } from '../../../../bitbucket/model';
 import { Commands } from '../../../../constants';
 import { Container } from '../../../../container';
+import { defaultActionGuard } from '../../../../shared/reducerAction';
 import { OnJiraEditedRefreshDelay } from '../../../../util/time';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
