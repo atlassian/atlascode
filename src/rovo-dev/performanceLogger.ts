@@ -26,7 +26,7 @@ export class PerformanceLogger {
 
         const evt = await rovoDevTimeToRespondStartEvent(this.currentSessionId, promptId, this.timeToFirstMessage);
 
-        Logger.debug('Event fired: rovoDevTimeToRespondStartEvent');
+        Logger.debug(`Event fired: rovoDevTimeToRespondStartEvent ${this.timeToFirstMessage} ms`);
         await Container.analyticsClient.sendTrackEvent(evt);
     }
 
@@ -40,7 +40,9 @@ export class PerformanceLogger {
             this.timeToTechnicalPlan,
         );
 
-        Logger.debug('Event fired: rovoDevTimeToTechPlanReturnedEvent');
+        Logger.debug(
+            `Event fired: rovoDevTimeToTechPlanReturnedEvent ${this.timeToFirstMessage} ms ${this.timeToTechnicalPlan} ms`,
+        );
         await Container.analyticsClient.sendTrackEvent(evt);
     }
 
@@ -56,7 +58,9 @@ export class PerformanceLogger {
             timeToLastMessage,
         );
 
-        Logger.debug('Event fired: rovoDevTimeToRespondEndEvent');
+        Logger.debug(
+            `Event fired: rovoDevTimeToRespondEndEvent ${this.timeToFirstMessage} ms ${this.timeToTechnicalPlan} ms ${timeToLastMessage} ms`,
+        );
         await Container.analyticsClient.sendTrackEvent(evt);
     }
 }

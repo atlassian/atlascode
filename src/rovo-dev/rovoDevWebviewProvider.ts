@@ -206,14 +206,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     break;
 
                 case RovoDevViewResponseType.ReportChangedFilesPanelShown:
-                    Logger.debug('Event fired: rovoDevFilesSummaryShownEvent');
+                    Logger.debug(`Event fired: rovoDevFilesSummaryShownEvent ${e.filesCount}`);
                     await rovoDevFilesSummaryShownEvent(this._chatSessionId, e.filesCount).then((evt) =>
                         Container.analyticsClient.sendTrackEvent(evt),
                     );
                     break;
 
                 case RovoDevViewResponseType.ReportChangesGitPushed:
-                    Logger.debug('Event fired: rovoDevGitPushActionEvent');
+                    Logger.debug(`Event fired: rovoDevGitPushActionEvent ${e.pullRequestCreated}`);
                     await rovoDevGitPushActionEvent(this._chatSessionId, e.pullRequestCreated).then((evt) =>
                         Container.analyticsClient.sendTrackEvent(evt),
                     );
@@ -267,10 +267,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
 
         if (fireTelemetry) {
-            Logger.debug('Event fired: rovoDevPromptSentEvent');
-            await rovoDevPromptSentEvent(this._chatSessionId, this._currentPromptId).then((evt) =>
-                Container.analyticsClient.sendTrackEvent(evt),
-            );
+            Logger.debug(`Event fired: rovoDevPromptSentEvent ${!!this._currentPrompt!.enable_deep_plan}`);
+            await rovoDevPromptSentEvent(
+                this._chatSessionId,
+                this._currentPromptId,
+                !!this._currentPrompt!.enable_deep_plan,
+            ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
         }
 
         this._perfLogger.promptStarted(this._currentPromptId);
@@ -381,7 +383,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         0,
                     );
 
-                    Logger.debug('Event fired: rovoDevTechnicalPlanningShownEvent');
+                    Logger.debug(
+                        `Event fired: rovoDevTechnicalPlanningShownEvent ${stepsCount} ${filesCount} ${questionsCount}`,
+                    );
                     rovoDevTechnicalPlanningShownEvent(
                         this._chatSessionId,
                         stepsCount,
@@ -449,7 +453,7 @@ ${message}`;
         // NOTE: if chatSessionId empty, it means this is the first prompt of a new rovo dev instance
         if (!this._chatSessionId) {
             this._chatSessionId = v4();
-            Logger.debug('Event fired: rovoDevNewSessionActionEvent');
+            Logger.debug('Event fired: rovoDevNewSessionActionEvent false');
             await rovoDevNewSessionActionEvent(this._chatSessionId, false).then((evt) =>
                 Container.analyticsClient.sendTrackEvent(evt),
             );
@@ -528,7 +532,7 @@ ${message}`;
         const success =
             !!cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress');
 
-        Logger.debug('Event fired: rovoDevStopActionEvent');
+        Logger.debug(`Event fired: rovoDevStopActionEvent ${success}`);
         await rovoDevStopActionEvent(this._chatSessionId, success).then((evt) =>
             Container.analyticsClient.sendTrackEvent(evt),
         );
@@ -624,7 +628,7 @@ ${message}`;
 
         this._revertedChanges.push(...filePaths);
 
-        Logger.debug('Event fired: rovoDevFileChangedActionEvent');
+        Logger.debug(`Event fired: rovoDevFileChangedActionEvent undo ${filePaths.length}`);
         await rovoDevFileChangedActionEvent(this._chatSessionId, 'undo', filePaths.length).then((evt) =>
             Container.analyticsClient.sendTrackEvent(evt),
         );
@@ -638,7 +642,7 @@ ${message}`;
 
         await Promise.all(promises);
 
-        Logger.debug('Event fired: rovoDevFileChangedActionEvent');
+        Logger.debug(`Event fired: rovoDevFileChangedActionEvent keep ${filePaths.length}`);
         await rovoDevFileChangedActionEvent(this._chatSessionId, 'keep', filePaths.length).then((evt) =>
             Container.analyticsClient.sendTrackEvent(evt),
         );
