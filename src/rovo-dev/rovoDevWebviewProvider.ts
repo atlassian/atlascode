@@ -189,12 +189,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     break;
 
                 case RovoDevViewResponseType.CreatePR:
-                    await this.createPR();
+                    await this.createPR(e.payload.commitMessage, e.payload.branchName);
                     break;
 
                 case RovoDevViewResponseType.RetryPromptAfterError:
                     this._pendingCancellation = false;
                     await this.executeRetryPromptAfterError();
+                    break;
+
+                case RovoDevViewResponseType.GetCurrentBranchName:
+                    await this.getCurrentBranchName();
                     break;
             }
         });
@@ -596,10 +600,13 @@ ${message}`;
         );
     }
 
-    private async createPR() {
+    private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
         let prLink: string | undefined;
         try {
-            prLink = await this._prHandler.createPR();
+            if (!commitMessage || !branchName) {
+                throw new Error('Commit message and branch name are required to create a PR');
+            }
+            prLink = await this._prHandler.createPR(branchName, commitMessage);
         } catch (e) {
             await this.processError(e, false);
         } finally {
@@ -613,6 +620,20 @@ ${message}`;
         }
     }
 
+    private async getCurrentBranchName(): Promise<void> {
+        const webview = this._webView!;
+        try {
+            const branchName = await this._prHandler.getCurrentBranchName();
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.GetCurrentBranchNameComplete,
+                data: {
+                    branchName,
+                },
+            });
+        } catch (e) {
+            await this.processError(e, false);
+        }
+    }
     private async executeApiWithErrorHandling<T>(
         func: (client: RovoDevApiClient) => Promise<T>,
         cancellationAware?: true,

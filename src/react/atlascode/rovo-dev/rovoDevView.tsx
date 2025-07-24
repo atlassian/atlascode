@@ -322,6 +322,7 @@ const RovoDevView: React.FC = () => {
                     break;
                 case RovoDevProviderMessageType.ReturnText:
                 case RovoDevProviderMessageType.CreatePRComplete:
+                case RovoDevProviderMessageType.GetCurrentBranchNameComplete:
                     break; // This is handled elsewhere
                 default:
                     handleAppendChatHistory({
@@ -499,6 +500,11 @@ const RovoDevView: React.FC = () => {
                 state={currentState}
                 modifiedFiles={totalModifiedFiles}
                 injectMessage={handleAppendChatHistory}
+                keepAllFileChanges={() => {
+                    if (totalModifiedFiles.length > 0) {
+                        keepFiles(totalModifiedFiles.map((file) => file.filePath!));
+                    }
+                }}
             />
             <div style={styles.rovoDevInputSectionStyles}>
                 <UpdatedFilesComponent

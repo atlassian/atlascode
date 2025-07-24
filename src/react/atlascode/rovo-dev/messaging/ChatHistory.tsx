@@ -1,13 +1,9 @@
-import React from 'react';
+import { useCallback } from 'react';
+import * as React from 'react';
 
 import { PostMessageFunc, PostMessagePromiseFunc } from '../../messagingApi';
-import {
-    ErrorMessageItem,
-    FollowUpActionFooter,
-    OpenFileFunc,
-    PullRequestButton,
-    TechnicalPlanComponent,
-} from '../common/common';
+import { ErrorMessageItem, FollowUpActionFooter, OpenFileFunc, TechnicalPlanComponent } from '../common/common';
+import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
 import { RovoDevLanding } from '../rovoDevLanding';
 import { State } from '../rovoDevView';
 import { RovoDevViewResponse } from '../rovoDevViewMessages';
@@ -46,6 +42,7 @@ interface ChatHistoryProps {
     executeCodePlan: () => void;
     state: State;
     injectMessage?: (msg: ChatMessage) => void;
+    keepAllFileChanges?: () => void;
 }
 
 export const ChatHistory: React.FC<ChatHistoryProps> = ({
@@ -58,16 +55,43 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     messagingApi: { postMessageWithReturn },
     modifiedFiles,
     injectMessage,
+    keepAllFileChanges,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const [currentMessage, setCurrentMessage] = React.useState<DefaultMessage | null>(null);
     const [curThinkingMessages, setCurThinkingMessages] = React.useState<ChatMessage[]>([]);
     const [messageBlocks, setMessageBlocks] = React.useState<MessageBlockDetails[]>([]);
     const [canCreatePR, setCanCreatePR] = React.useState(false);
+    const [msgProcessedCount, setMsgProcessedCount] = React.useState(0);
+    const [isFormVisible, setIsFormVisible] = React.useState(false);
+
+    const reset = useCallback(() => {
+        setCurrentMessage(null);
+        setCurThinkingMessages([]);
+        setMessageBlocks([]);
+        setCanCreatePR(false);
+        setMsgProcessedCount(0);
+        setIsFormVisible(false);
+    }, [
+        setCurrentMessage,
+        setCurThinkingMessages,
+        setMessageBlocks,
+        setCanCreatePR,
+        setMsgProcessedCount,
+        setIsFormVisible,
+    ]);
 
     React.useEffect(() => {
         if (chatEndRef.current) {
             scrollToEnd(chatEndRef.current);
+        }
+
+        // clear everything if there was a reset
+        if (messages.length === 0) {
+            if (msgProcessedCount > 0) {
+                reset();
+            }
+            return;
         }
 
         if (state === State.WaitingForPrompt) {
@@ -81,77 +105,64 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
             setCurrentMessage(null);
         }
 
-        const handleMessages = () => {
-            if (messages.length === 0) {
-                return;
-            }
+        const processedCount = msgProcessedCount;
+        setMsgProcessedCount(messages.length);
 
-            const newMessage = messages.pop();
+        for (let i = processedCount; i < messages.length; ++i) {
+            const newMessage = messages[i];
+            switch (newMessage.source) {
+                case 'User':
+                    if (curThinkingMessages.length > 0) {
+                        setMessageBlocks((prev) => [...prev, { messages: curThinkingMessages }]);
+                        setCurThinkingMessages([]);
+                    }
 
-            if (newMessage && newMessage !== currentMessage) {
-                switch (newMessage.source) {
-                    case 'User':
-                        if (curThinkingMessages.length > 0) {
-                            setMessageBlocks((prev) => [...prev, { messages: curThinkingMessages }]);
-                            setCurThinkingMessages([]);
-                        }
+                    if (currentMessage && currentMessage.source === 'RovoDev') {
+                        setMessageBlocks((prev) => [...prev, { messages: currentMessage }]);
+                    }
+                    setCurrentMessage(null);
+                    setMessageBlocks((prev) => [...prev, { messages: newMessage }]);
+                    setCanCreatePR(true);
+                    break;
 
-                        if (currentMessage && currentMessage.source === 'RovoDev') {
-                            setMessageBlocks((prev) => [...prev, { messages: currentMessage }]);
-                        }
+                case 'RovoDev':
+                    setCurrentMessage(newMessage);
+                    break;
+
+                case 'RovoDevError':
+                case 'PullRequest':
+                    setMessageBlocks((prev) => [...prev, { messages: newMessage }]);
+                    setCurrentMessage(null);
+                    break;
+
+                case 'ToolReturn':
+                    if (currentMessage) {
+                        setCurThinkingMessages((prev) => [...prev, currentMessage]);
                         setCurrentMessage(null);
-                        setMessageBlocks((prev) => [...prev, { messages: newMessage }]);
-                        setCanCreatePR(true);
-                        return;
+                    }
 
-                    case 'RovoDev':
-                        setCurrentMessage((prev) => {
-                            if (prev && prev.text === '...') {
-                                return newMessage;
+                    if (newMessage.tool_name === 'create_technical_plan') {
+                        const parsedMessage = parseToolReturnMessage(newMessage);
+
+                        parsedMessage.map((msg, index) => {
+                            if (!msg.technicalPlan) {
+                                console.error('Technical plan message is missing technicalPlan property');
+                                return;
                             }
-                            newMessage.text = prev ? prev.text + newMessage.text : newMessage.text;
-                            return newMessage;
+
+                            setMessageBlocks((prev) => [...prev, { messages: null, technicalPlan: msg.technicalPlan }]);
                         });
-                        return;
+                    } else {
+                        setCurThinkingMessages((prev) => [...prev, newMessage]);
+                    }
+                    break;
 
-                    case 'RovoDevError':
-                        setMessageBlocks((prev) => [...prev, { messages: newMessage }]);
-
-                        setCurrentMessage(null);
-                        return;
-                    case 'ToolReturn':
-                        if (currentMessage) {
-                            setCurThinkingMessages((prev) => [...prev, currentMessage]);
-                            setCurrentMessage(null);
-                        }
-
-                        if (newMessage.tool_name === 'create_technical_plan') {
-                            const parsedMessage = parseToolReturnMessage(newMessage);
-
-                            parsedMessage.map((msg, index) => {
-                                if (!msg.technicalPlan) {
-                                    console.error('Technical plan message is missing technicalPlan property');
-                                    return;
-                                }
-
-                                setMessageBlocks((prev) => [
-                                    ...prev,
-                                    { messages: null, technicalPlan: msg.technicalPlan },
-                                ]);
-                            });
-                        } else {
-                            setCurThinkingMessages((prev) => [...prev, newMessage]);
-                        }
-                        return;
-
-                    default:
-                        console.warn(`Unknown message source: ${newMessage.source}`);
-                        return;
-                }
+                default:
+                    console.warn(`Unknown message source: ${newMessage.source}`);
+                    break;
             }
-        };
-        handleMessages();
-    }, [curThinkingMessages, currentMessage, messages, state]);
+        }
+    }, [curThinkingMessages, currentMessage, setMsgProcessedCount, reset, messages, state, msgProcessedCount]);
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
@@ -184,6 +195,8 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
                                     retryAfterError={renderProps.retryPromptAfterError}
                                 />
                             );
+                        } else if (block.messages.source === 'PullRequest') {
+                            return <PullRequestChatItem msg={block.messages} />;
                         }
                     }
 
@@ -205,20 +218,33 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
             {state === State.WaitingForPrompt && (
                 <FollowUpActionFooter>
                     {canCreatePR && (
-                        <PullRequestButton
-                            key="pull-request-button"
-                            postMessagePromise={postMessageWithReturn}
+                        <PullRequestForm
+                            onCancel={() => {
+                                setCanCreatePR(false);
+                                setIsFormVisible(false);
+                            }}
+                            postMessageWithReturn={postMessageWithReturn}
                             modifiedFiles={modifiedFiles}
                             onPullRequestCreated={(url) => {
-                                if (url) {
-                                    injectMessage?.({
-                                        source: 'RovoDev',
-                                        text: `Pull request prepared [here](${url})`,
-                                    });
-                                }
-                                // Errors are handled by the extension logic
                                 setCanCreatePR(false);
+                                setIsFormVisible(false);
+                                if (injectMessage) {
+                                    if (url) {
+                                        injectMessage({
+                                            text: `Pull request ready: ${url}`,
+                                            source: 'PullRequest',
+                                        });
+                                    } else {
+                                        injectMessage({
+                                            text: 'Successfully pushed changes to the remote repository.',
+                                            source: 'PullRequest',
+                                        });
+                                    }
+                                    keepAllFileChanges?.();
+                                }
                             }}
+                            isFormVisible={isFormVisible}
+                            setFormVisible={setIsFormVisible}
                         />
                     )}
                 </FollowUpActionFooter>
