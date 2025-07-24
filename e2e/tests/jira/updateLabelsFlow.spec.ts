@@ -7,6 +7,7 @@ test('User can add and remove existing labels', async ({ page, request }) => {
     const label = 'testing';
 
     await authenticateWithJira(page);
+
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
     const drawer = new AtlascodeDrawer(page);
