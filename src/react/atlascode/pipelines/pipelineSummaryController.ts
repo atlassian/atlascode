@@ -1,4 +1,3 @@
-import { defaultStateGuard } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
 
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
@@ -10,7 +9,7 @@ import {
     PipelineSummaryMessageType,
 } from '../../../lib/ipc/toUI/pipelineSummary';
 import { PipelineLogReference, PipelineStep } from '../../../pipelines/model';
-import { ReducerAction } from '../../../shared/reducerAction';
+import { defaultStateGuard, ReducerAction } from '../../../shared/reducerAction';
 import { useMessagingApi } from '../messagingApi';
 
 export interface PipelineSummaryControllerApi {
