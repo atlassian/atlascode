@@ -6,6 +6,7 @@ test('Add comment flow', async ({ page }) => {
     const commentText = 'This is a test comment added via e2e test';
 
     await authenticateWithJira(page);
+
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
     const drawer = new AtlascodeDrawer(page);
