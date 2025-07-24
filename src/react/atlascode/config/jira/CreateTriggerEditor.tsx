@@ -1,7 +1,7 @@
-import { InlineTextEditorList } from '@atlassianlabs/guipi-core-components';
 import { Box, Grid, Switch, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 
+import { InlineTextEditorList } from '../../common/list/InlineTextEditorList';
 import { ToggleWithLabel } from '../../common/toggle';
 import { useBorderBoxStyles } from '../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../configController';
