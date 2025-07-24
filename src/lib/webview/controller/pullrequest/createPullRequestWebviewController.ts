@@ -1,9 +1,9 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
 
 import { Registry } from '../../../../analytics';
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { WorkspaceRepo } from '../../../../bitbucket/model';
+import { defaultActionGuard } from '../../../../shared/reducerAction';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { CreatePullRequestAction, CreatePullRequestActionType } from '../../../ipc/fromUI/createPullRequest';

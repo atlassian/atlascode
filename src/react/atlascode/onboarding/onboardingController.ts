@@ -1,4 +1,3 @@
-import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
 
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../atlclients/authInfo';
@@ -13,6 +12,7 @@ import {
     OnboardingMessageType,
     OnboardingResponse,
 } from '../../../lib/ipc/toUI/onboarding';
+import { defaultActionGuard, defaultStateGuard, ReducerAction } from '../../../shared/reducerAction';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
 
 export interface OnboardingControllerApi {

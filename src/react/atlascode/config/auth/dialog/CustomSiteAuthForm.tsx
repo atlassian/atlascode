@@ -1,10 +1,10 @@
-import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { Box, Grid, IconButton, Radio, RadioGroup, Switch, Tab, Tabs, TextField } from '@material-ui/core';
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
 import React from 'react';
 import { BasicAuthInfo } from 'src/atlclients/authInfo';
 import { SiteWithAuthInfo } from 'src/lib/ipc/toUI/config';
+import { ToggleWithLabel } from 'src/react/atlascode/common/toggle';
 import { FIELD_NAMES } from 'src/react/atlascode/constants';
 import { clearFieldsAndWatches } from 'src/react/atlascode/util/authFormUtils';
 

@@ -1,4 +1,3 @@
-import { RefreshButton } from '@atlassianlabs/guipi-core-components';
 import {
     Avatar,
     Button,
@@ -32,6 +31,7 @@ import {
     Status,
     statusForState,
 } from '../../../pipelines/model';
+import { RefreshButton } from '../common/button';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import FailedIcon from '../icons/FailedIcon';
 import InProgressIcon from '../icons/InProgressIcon';

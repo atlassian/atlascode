@@ -1,4 +1,4 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { ReducerAction } from '../../../shared/reducerAction';
 
 export const enum RovoDevViewResponseType {
     Prompt = 'prompt',

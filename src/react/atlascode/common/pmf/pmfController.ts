@@ -1,8 +1,8 @@
-import { defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { createContext, useCallback, useMemo, useReducer } from 'react';
 
 import { CommonAction, CommonActionType } from '../../../../lib/ipc/fromUI/common';
 import { PMFData } from '../../../../lib/ipc/models/common';
+import { defaultStateGuard, ReducerAction } from '../../../../shared/reducerAction';
 import { PostMessageFunc } from '../../messagingApi';
 
 export enum PMFDismissal {

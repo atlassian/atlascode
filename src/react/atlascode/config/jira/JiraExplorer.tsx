@@ -1,4 +1,3 @@
-import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { Box, Grid, Link, makeStyles, Switch, Theme, Tooltip, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 
@@ -7,6 +6,7 @@ import { JQLEntry } from '../../../../config/model';
 import { ConfigSection } from '../../../../lib/ipc/models/config';
 import { IntervalInput } from '../../common/IntervalInput';
 import { PrepareCommitTip } from '../../common/PrepareCommitTip';
+import { ToggleWithLabel } from '../../common/toggle';
 import { useBorderBoxStyles } from '../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../configController';
 import { JQLListEditor } from './jql/JQLListEditor';

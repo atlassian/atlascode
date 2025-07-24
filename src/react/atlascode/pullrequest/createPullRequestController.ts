@@ -1,4 +1,3 @@
-import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { v4 } from 'uuid';
@@ -20,6 +19,7 @@ import {
     FetchUsersResponseMessage,
     SubmitResponseMessage,
 } from '../../../lib/ipc/toUI/createPullRequest';
+import { defaultActionGuard, defaultStateGuard, ReducerAction } from '../../../shared/reducerAction';
 import { Branch } from '../../../typings/git';
 import { ConnectionTimeout } from '../../../util/time';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';

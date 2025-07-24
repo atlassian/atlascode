@@ -1,9 +1,9 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { WebviewPanel } from 'vscode';
 
 import { configuration } from '../../../../../src/config/configuration';
 import { Container } from '../../../../../src/container';
 import { isBasicAuthInfo, ProductBitbucket, ProductJira } from '../../../../atlclients/authInfo';
+import { defaultActionGuard } from '../../../../shared/reducerAction';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonAction, CommonActionType } from '../../../ipc/fromUI/common';
 import { OnboardingAction, OnboardingActionType } from '../../../ipc/fromUI/onboarding';
