@@ -1,4 +1,3 @@
-import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
 import {
     Avatar,
     Box,
@@ -27,6 +26,7 @@ import { uid } from 'react-uid';
 import { AuthInfoState, DetailedSiteInfo, emptyUserInfo, Product, ProductJira } from '../../../../atlclients/authInfo';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { useBorderBoxStyles } from '../../common/useBorderBoxStyles';
+import { JiraIcon } from '../../icons/JiraIcon';
 import { ConfigControllerContext } from '../configController';
 
 type SiteListProps = {
@@ -67,7 +67,7 @@ function generateListItems(
     }
     return sites.map((swa: SiteWithAuthInfo, i: number) => {
         const avatarUrl = swa.site.avatarUrl && swa.site.avatarUrl.length > 0 ? swa.site.avatarUrl : fallbackImg;
-
+        console.log(`Avatar URL for ${swa.site.name}: ${avatarUrl}`);
         return (
             <React.Fragment key={uid(swa, i)}>
                 <ListItem key={swa.site.name}>
@@ -79,7 +79,7 @@ function generateListItems(
                         )}
                     </ListItemIcon>
                     <ListItemAvatar>
-                        <Avatar src={avatarUrl}>
+                        <Avatar src={'http://test.com'}>
                             <JiraIcon />
                         </Avatar>
                     </ListItemAvatar>
