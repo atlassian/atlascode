@@ -1,12 +1,5 @@
 import { expect, test } from '@playwright/test';
-import {
-    authenticateWithJira,
-    cleanupWireMockMapping,
-    getIssueFrame,
-    setupWireMockMapping,
-    updateIssueField,
-} from 'e2e/helpers';
-import fs from 'fs';
+import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
 
 test('Rename Jira issue', async ({ page, request }) => {
     const oldTitle = '(Sample) User Interface Bugs';
@@ -40,12 +33,7 @@ test('Rename Jira issue', async ({ page, request }) => {
     await page.waitForTimeout(500);
 
     // Add the updated mock
-    const issueJSON = JSON.parse(fs.readFileSync('e2e/wiremock-mappings/mockedteams/BTS-1/bts1.json', 'utf-8'));
-    const updatedIssue = updateIssueField(issueJSON, {
-        summary: newTitle,
-    });
-
-    const { id } = await setupWireMockMapping(request, 'GET', updatedIssue, '/rest/api/2/issue/BTS-1');
+    const cleanupIssueMock = await setupIssueMock(request, { summary: newTitle });
 
     await saveButton.click();
     await page.waitForTimeout(2000);
@@ -55,5 +43,5 @@ test('Rename Jira issue', async ({ page, request }) => {
     await expect(issueFrame.getByText(oldTitle)).not.toBeVisible();
     await expect(issueFrame.getByText(newTitle)).toBeVisible();
 
-    await cleanupWireMockMapping(request, id);
+    await cleanupIssueMock();
 });
