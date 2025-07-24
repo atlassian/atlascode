@@ -1,4 +1,3 @@
-import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import {
     Box,
     Button,
@@ -17,6 +16,8 @@ import { useForm } from 'react-hook-form';
 import { CommonAction, CommonActionType } from '../../../../lib/ipc/fromUI/common';
 import { FeedbackData, FeedbackType, FeedbackUser } from '../../../../lib/ipc/models/common';
 import { PostMessageFunc } from '../../messagingApi';
+import { ToggleWithLabel } from '../toggle';
+
 type FeedbackDialogButtonProps = {
     user: FeedbackUser;
     postMessageFunc: PostMessageFunc<CommonAction>;

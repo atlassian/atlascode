@@ -26,7 +26,7 @@ export const RefreshButton: React.FunctionComponent<RefreshButtonProps> = ({ loa
     const classes = useStyles();
 
     return (
-        <Tooltip title="click to refresh TEST">
+        <Tooltip title="click to refresh">
             <IconButton
                 size="small"
                 color="inherit"
