@@ -1,6 +1,6 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 
+import { ReducerAction } from '../../..//shared/reducerAction';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { BitbucketSite, FileDiff, SiteRemote, User, WorkspaceRepo } from '../../../bitbucket/model';
 import { Branch } from '../../../typings/git';

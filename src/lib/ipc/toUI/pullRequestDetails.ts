@@ -1,4 +1,3 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
@@ -16,6 +15,7 @@ import {
     Task,
     User,
 } from '../../../bitbucket/model';
+import { ReducerAction } from '../../../shared/reducerAction';
 
 export enum PullRequestDetailsMessageType {
     Init = 'init',
