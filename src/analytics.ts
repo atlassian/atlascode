@@ -186,7 +186,6 @@ export async function rovoDevNewSessionActionEvent(sessionId: string, isManually
     });
 }
 
-// TODO call this
 export async function rovoDevTechnicalPlanningShownEvent(
     sessionId: string,
     stepsCount: number,
@@ -198,27 +197,9 @@ export async function rovoDevTechnicalPlanningShownEvent(
     });
 }
 
-// TODO call this
-export async function rovoDevFilesSummaryShownEvent(
-    sessionId: string,
-    isNew: false,
-    prevFilesCount: number,
-    newFilesCount: number,
-): Promise<TrackEvent>;
-export async function rovoDevFilesSummaryShownEvent(
-    sessionId: string,
-    isNew: true,
-    prevFilesCount: 0,
-    newFilesCount: number,
-): Promise<TrackEvent>;
-export async function rovoDevFilesSummaryShownEvent(
-    sessionId: string,
-    isNew: boolean,
-    prevFilesCount: number,
-    newFilesCount: number,
-) {
+export async function rovoDevFilesSummaryShownEvent(sessionId: string, filesCount: number) {
     return trackEvent('rovoDevFilesSummaryShown', 'atlascode', {
-        attributes: { sessionId, isNew, prevFilesCount, newFilesCount },
+        attributes: { sessionId, filesCount },
     });
 }
 

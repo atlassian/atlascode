@@ -842,41 +842,13 @@ describe('analytics', () => {
         });
 
         it('should create rovoDevFilesSummaryShownEvent for new files summary', async () => {
-            const isNew = true;
-            const prevFilesCount = 0;
-            const newFilesCount = 4;
-            const event = await analytics.rovoDevFilesSummaryShownEvent(
-                mockSessionId,
-                isNew,
-                prevFilesCount,
-                newFilesCount,
-            );
+            const filesCount = 4;
+            const event = await analytics.rovoDevFilesSummaryShownEvent(mockSessionId, filesCount);
 
             expect(event.trackEvent.action).toEqual('rovoDevFilesSummaryShown');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
             expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
-            expect(event.trackEvent.attributes.isNew).toEqual(isNew);
-            expect(event.trackEvent.attributes.prevFilesCount).toEqual(prevFilesCount);
-            expect(event.trackEvent.attributes.newFilesCount).toEqual(newFilesCount);
-        });
-
-        it('should create rovoDevFilesSummaryShownEvent for updated files summary', async () => {
-            const isNew = false;
-            const prevFilesCount = 2;
-            const newFilesCount = 5;
-            const event = await analytics.rovoDevFilesSummaryShownEvent(
-                mockSessionId,
-                isNew,
-                prevFilesCount,
-                newFilesCount,
-            );
-
-            expect(event.trackEvent.action).toEqual('rovoDevFilesSummaryShown');
-            expect(event.trackEvent.actionSubject).toEqual('atlascode');
-            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
-            expect(event.trackEvent.attributes.isNew).toEqual(isNew);
-            expect(event.trackEvent.attributes.prevFilesCount).toEqual(prevFilesCount);
-            expect(event.trackEvent.attributes.newFilesCount).toEqual(newFilesCount);
+            expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
         });
 
         it('should create rovoDevFileChangedActionEvent for undo action', async () => {

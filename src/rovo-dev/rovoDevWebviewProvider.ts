@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import path from 'path';
 import { gte as semver_gte } from 'semver';
+import { TechnicalPlan } from 'src/react/atlascode/rovo-dev/utils';
 import { setTimeout } from 'timers/promises';
 import { v4 } from 'uuid';
 import {
@@ -22,9 +23,11 @@ import {
 
 import {
     rovoDevFileChangedActionEvent,
+    rovoDevFilesSummaryShownEvent,
     rovoDevNewSessionActionEvent,
     rovoDevPromptSentEvent,
     rovoDevStopActionEvent,
+    rovoDevTechnicalPlanningShownEvent,
 } from '../../src/analytics';
 import { Container } from '../../src/container';
 import { Logger } from '../../src/logger';
@@ -200,6 +203,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 case RovoDevViewResponseType.GetCurrentBranchName:
                     await this.getCurrentBranchName();
                     break;
+
+                case RovoDevViewResponseType.ReportChangedFilesPanelShown:
+                    rovoDevFilesSummaryShownEvent(this._chatSessionId, e.filesCount).then((evt) =>
+                        Container.analyticsClient.sendTrackEvent(evt),
+                    );
+                    break;
             }
         });
 
@@ -240,17 +249,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private async processChatResponse(
-        sourceApi: 'chat' | 'replay',
-        fetchOp: Promise<Response>,
-        firePerfTelemetry: boolean,
-    ) {
+    private async processChatResponse(sourceApi: 'chat' | 'replay', fetchOp: Promise<Response>) {
+        const fireTelemetry = sourceApi === 'chat';
+
         const response = await fetchOp;
         if (!response.body) {
             throw new Error('No response body');
         }
 
-        if (sourceApi === 'chat') {
+        if (fireTelemetry) {
             rovoDevPromptSentEvent(this._chatSessionId, this._currentPromptId).then((evt) =>
                 Container.analyticsClient.sendTrackEvent(evt),
             );
@@ -267,7 +274,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         while (true) {
             const { done, value } = await reader.read();
 
-            if (firePerfTelemetry && isFirstResponse) {
+            if (fireTelemetry && isFirstResponse) {
                 // first response of the stream -> fire performance telemetry event
                 this._perfLogger.promptFirstMessageReceived(this._currentPromptId);
                 isFirstResponse = false;
@@ -275,19 +282,19 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             if (done) {
                 // last response of the stream -> fire performance telemetry event
-                if (firePerfTelemetry) {
+                if (fireTelemetry) {
                     this._perfLogger.promptLastMessageReceived(this._currentPromptId);
                 }
 
                 for (const msg of parser.flush()) {
-                    await this.processRovoDevResponse(msg, firePerfTelemetry);
+                    await this.processRovoDevResponse(sourceApi, msg);
                 }
                 break;
             }
 
             const data = decoder.decode(value, { stream: true });
             for (const msg of parser.parse(data)) {
-                await this.processRovoDevResponse(msg, firePerfTelemetry);
+                await this.processRovoDevResponse(sourceApi, msg);
             }
         }
 
@@ -334,7 +341,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private processRovoDevResponse(response: RovoDevResponse, firePerfTelemetry: boolean): Thenable<boolean> {
+    private processRovoDevResponse(sourceApi: 'chat' | 'replay', response: RovoDevResponse): Thenable<boolean> {
+        const fireTelemetry = sourceApi === 'chat';
         const webview = this._webView!;
 
         switch (response.event_kind) {
@@ -351,12 +359,31 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 });
 
             case 'tool-return':
-            case 'retry-prompt':
-                // we received a technical plan -> fire performance telemetry event
-                if (firePerfTelemetry && response.tool_name === 'create_technical_plan') {
+                // we received a technical plan -> fire related telemetry events
+                if (fireTelemetry && response.tool_name === 'create_technical_plan' && response.parsedContent) {
                     this._perfLogger.promptTechnicalPlanReceived(this._currentPromptId);
+
+                    const parsedContent = response.parsedContent as TechnicalPlan;
+                    const stepsCount = parsedContent.logicalChanges.length;
+                    const filesCount = parsedContent.logicalChanges.reduce((p, c) => p + c.filesToChange.length, 0);
+                    const questionsCount = parsedContent.logicalChanges.reduce(
+                        (p, c) => p + c.filesToChange.reduce((p2, c2) => p2 + (c2.clarifyingQuestionIfAny ? 1 : 0), 0),
+                        0,
+                    );
+                    rovoDevTechnicalPlanningShownEvent(
+                        this._chatSessionId,
+                        stepsCount,
+                        filesCount,
+                        questionsCount,
+                    ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
                 }
 
+                return webview.postMessage({
+                    type: RovoDevProviderMessageType.ToolReturn,
+                    dataObject: response,
+                });
+
+            case 'retry-prompt':
                 return webview.postMessage({
                     type: RovoDevProviderMessageType.ToolReturn,
                     dataObject: response,
@@ -425,7 +452,7 @@ ${message}`;
 
         if (this._initialized) {
             await this.executeApiWithErrorHandling((client) => {
-                return this.processChatResponse('chat', client.chat(payloadToSend), true);
+                return this.processChatResponse('chat', client.chat(payloadToSend));
             }, true);
         } else {
             this._pendingPrompt = {
@@ -451,7 +478,7 @@ ${message}`;
         });
 
         await this.executeApiWithErrorHandling((client) => {
-            return this.processChatResponse('chat', client.chat(payloadToSend), true);
+            return this.processChatResponse('chat', client.chat(payloadToSend));
         }, true);
     }
 
@@ -503,7 +530,7 @@ ${message}`;
 
     private async executeReplay(): Promise<void> {
         await this.executeApiWithErrorHandling(async (client) => {
-            return this.processChatResponse('replay', client.replay(), false);
+            return this.processChatResponse('replay', client.replay());
         });
     }
 

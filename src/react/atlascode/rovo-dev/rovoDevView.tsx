@@ -73,7 +73,6 @@ const RovoDevView: React.FC = () => {
     const [sendButtonDisabled, setSendButtonDisabled] = useState(false);
     const [currentState, setCurrentState] = useState(State.WaitingForPrompt);
     const [promptContainerFocused, setPromptContainerFocused] = useState(false);
-
     const [promptText, setPromptText] = useState('');
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
     const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
@@ -81,6 +80,8 @@ const RovoDevView: React.FC = () => {
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
     const [isDeepPlanCreated, setIsDeepPlanCreated] = useState(false);
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
+
+    const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
 
     const chatEndRef = React.useRef<HTMLDivElement>(null);
 
@@ -262,12 +263,22 @@ const RovoDevView: React.FC = () => {
         ],
     );
 
-    const setWaitingForPrompt = useCallback(() => {
+    const finalizeResponse = useCallback(() => {
         setSendButtonDisabled(false);
         setCurrentState(State.WaitingForPrompt);
         setPendingToolCallMessage('');
         setIsDeepPlanToggled(false);
-    }, [setSendButtonDisabled, setCurrentState, setPendingToolCallMessage, setIsDeepPlanToggled]);
+
+        const changedFilesCount = totalModifiedFiles.filter(
+            (x) => x.type === 'create' || x.type === 'modify' || x.type === 'delete',
+        ).length;
+        if (changedFilesCount) {
+            dispatch({
+                type: RovoDevViewResponseType.ReportChangedFilesPanelShown,
+                filesCount: changedFilesCount,
+            });
+        }
+    }, [setSendButtonDisabled, setCurrentState, setPendingToolCallMessage, setIsDeepPlanToggled, totalModifiedFiles]);
 
     const onMessageHandler = useCallback(
         (event: RovoDevProviderMessage): void => {
@@ -281,6 +292,8 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.Response:
+                case RovoDevProviderMessageType.ToolCall:
+                case RovoDevProviderMessageType.ToolReturn:
                     handleResponse(event.dataObject);
                     break;
 
@@ -289,21 +302,13 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.CompleteMessage:
-                    setWaitingForPrompt();
+                    finalizeResponse();
                     validateResponseFinalized();
-                    break;
-
-                case RovoDevProviderMessageType.ToolCall:
-                    handleResponse(event.dataObject);
-                    break;
-
-                case RovoDevProviderMessageType.ToolReturn:
-                    handleResponse(event.dataObject);
                     break;
 
                 case RovoDevProviderMessageType.ErrorMessage:
                     handleAppendChatHistory(event.message);
-                    setWaitingForPrompt();
+                    finalizeResponse();
                     break;
 
                 case RovoDevProviderMessageType.NewSession:
@@ -320,10 +325,12 @@ const RovoDevView: React.FC = () => {
                         setCurrentState(State.GeneratingResponse);
                     }
                     break;
+
                 case RovoDevProviderMessageType.ReturnText:
                 case RovoDevProviderMessageType.CreatePRComplete:
                 case RovoDevProviderMessageType.GetCurrentBranchNameComplete:
                     break; // This is handled elsewhere
+
                 default:
                     handleAppendChatHistory({
                         source: 'RovoDevError',
@@ -344,13 +351,20 @@ const RovoDevView: React.FC = () => {
             appendCurrentResponse,
             clearChatHistory,
             validateResponseFinalized,
-            setWaitingForPrompt,
+            finalizeResponse,
         ],
     );
 
     const [postMessage, postMessageWithReturn] = useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, any>(
         onMessageHandler,
     );
+
+    React.useEffect(() => {
+        if (outgoingMessage) {
+            postMessage(outgoingMessage);
+            dispatch(undefined);
+        }
+    }, [postMessage, dispatch, outgoingMessage]);
 
     const sendPrompt = useCallback(
         (text: string): void => {
