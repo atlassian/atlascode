@@ -10,8 +10,7 @@ test('Rename Jira issue', async ({ page, request }) => {
 
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
-    const drawer = new AtlascodeDrawer(page);
-    await drawer.openJiraIssue('BTS-1 - User Interface Bugs');
+    await new AtlascodeDrawer(page).openJiraIssue('BTS-1 - User Interface Bugs');
 
     const issueFrame = await getIssueFrame(page);
 
