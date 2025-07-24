@@ -1,9 +1,9 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { WebviewPanel } from 'vscode';
 
 import { isBasicAuthInfo } from '../../../../atlclients/authInfo';
 import { configuration } from '../../../../config/configuration';
 import { Container } from '../../../../container';
+import { defaultActionGuard } from '../../../../shared/reducerAction';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { OnboardingActionType } from '../../../ipc/fromUI/onboarding';
@@ -16,7 +16,7 @@ import { CommonActionMessageHandler } from '../common/commonActionMessageHandler
 import { OnboardingActionApi } from './onboardingActionApi';
 import { id, OnboardingWebviewController } from './onboardingWebviewController';
 
-jest.mock('@atlassianlabs/guipi-core-controller', () => ({
+jest.mock('../../../../shared/reducerAction', () => ({
     defaultActionGuard: jest.fn(),
 }));
 

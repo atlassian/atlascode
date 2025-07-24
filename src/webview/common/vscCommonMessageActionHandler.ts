@@ -1,4 +1,3 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { env, Uri } from 'vscode';
 
 import { IntegrationsLinkParams } from '../../atlclients/authInfo';
@@ -12,6 +11,7 @@ import { CancellationManager } from '../../lib/cancellation';
 import { CommonAction, CommonActionType } from '../../lib/ipc/fromUI/common';
 import { KnownLinkID, knownLinkIdMap, numForPMFLevel } from '../../lib/ipc/models/common';
 import { CommonActionMessageHandler } from '../../lib/webview/controller/common/commonActionMessageHandler';
+import { defaultActionGuard } from '../../shared/reducerAction';
 
 export class VSCCommonMessageHandler implements CommonActionMessageHandler {
     private _analytics: AnalyticsApi;
