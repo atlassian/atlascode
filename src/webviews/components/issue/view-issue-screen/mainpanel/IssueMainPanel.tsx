@@ -165,6 +165,7 @@ const IssueMainPanel: React.FC<Props> = ({
                         />
                     ) : (
                         <div
+                            data-testid="issue.description"
                             css={{
                                 ':hover': {
                                     backgroundColor: 'var(--vscode-editor-selectionHighlightBackground)!important',

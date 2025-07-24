@@ -5,6 +5,7 @@ import { AtlascodeDrawer } from 'e2e/page-objects';
 
 test('Test upload image to attachments', async ({ page, request }) => {
     await authenticateWithJira(page);
+
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
     const drawer = new AtlascodeDrawer(page);
@@ -12,8 +13,6 @@ test('Test upload image to attachments', async ({ page, request }) => {
 
     // Get the issue frame using the existing helper
     const issueFrame = await getIssueFrame(page);
-
-    await page.waitForTimeout(2000);
 
     // Click on the Add span element
     await issueFrame.locator('span').filter({ hasText: 'Add' }).click();
