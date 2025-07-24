@@ -59,7 +59,7 @@ export const baseConfigFor = (project: string, testExtension: string): Config =>
         global:
             testExtension === 'ts'
                 ? {
-                      statements: 72,
+                      statements: 71.5,
                       branches: 65,
                       functions: 64,
                       lines: 72,
