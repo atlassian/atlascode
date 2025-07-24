@@ -72,7 +72,14 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
         setCanCreatePR(false);
         setMsgProcessedCount(0);
         setIsFormVisible(false);
-    }, [setCurrentMessage, setCurThinkingMessages, setMessageBlocks, setCanCreatePR, setMsgProcessedCount, setIsFormVisible]);
+    }, [
+        setCurrentMessage,
+        setCurThinkingMessages,
+        setMessageBlocks,
+        setCanCreatePR,
+        setMsgProcessedCount,
+        setIsFormVisible,
+    ]);
 
     React.useEffect(() => {
         if (chatEndRef.current) {
@@ -119,13 +126,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
                     break;
 
                 case 'RovoDev':
-                    setCurrentMessage((prev) => {
-                        if (prev && prev.text === '...') {
-                            return newMessage;
-                        }
-                        newMessage.text = prev ? prev.text + newMessage.text : newMessage.text;
-                        return newMessage;
-                    });
+                    setCurrentMessage(newMessage);
                     break;
 
                 case 'RovoDevError':
