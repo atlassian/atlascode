@@ -1,4 +1,3 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { JqlAutocompleteRestData, Suggestion } from '@atlassianlabs/guipi-jira-components';
 import { FilterSearchResults, JQLErrors } from '@atlassianlabs/jira-pi-common-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
@@ -19,7 +18,7 @@ import {
     SectionChangeMessage,
     SiteWithAuthInfo,
 } from '../../../lib/ipc/toUI/config';
-import { defaultStateGuard, ReducerAction } from '../../../shared/reducerAction';
+import { defaultActionGuard, defaultStateGuard, ReducerAction } from '../../../shared/reducerAction';
 import { ConnectionTimeout } from '../../../util/time';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
 

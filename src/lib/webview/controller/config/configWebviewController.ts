@@ -1,4 +1,3 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
 import { v4 } from 'uuid';
 import { env } from 'vscode';
@@ -7,6 +6,7 @@ import * as vscode from 'vscode';
 import { isBasicAuthInfo, isEmptySiteInfo, isPATAuthInfo } from '../../../../atlclients/authInfo';
 import { ExtensionId } from '../../../../constants';
 import { Container } from '../../../../container';
+import { defaultActionGuard } from '../../../../shared/reducerAction';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { ConfigAction, ConfigActionType } from '../../../ipc/fromUI/config';
