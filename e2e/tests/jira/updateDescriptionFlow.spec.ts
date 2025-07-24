@@ -1,40 +1,30 @@
-import { expect, test } from '@playwright/test';
+import { test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
-import { AtlascodeDrawer } from 'e2e/page-objects';
+import { AtlascodeDrawer, JiraIssuePage } from 'e2e/page-objects';
 
 test('Update description flow', async ({ page, request }) => {
     const oldDescription = 'Track and resolve bugs related to the user interface.';
     const newDescription = 'Add e2e test for this functionality';
 
     await authenticateWithJira(page);
+
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
-    const drawer = new AtlascodeDrawer(page);
-    await drawer.openJiraIssue('BTS-1 - User Interface Bugs');
+    await new AtlascodeDrawer(page).openJiraIssue('BTS-1 - User Interface Bugs');
 
-    const issueFrame = await getIssueFrame(page);
+    const frame = await getIssueFrame(page);
+    const issuePage = new JiraIssuePage(frame);
 
-    // Check the existing description
-    await expect(issueFrame.getByText(oldDescription)).toBeVisible();
-
-    // Click on the description element to enter edit mode
-    await issueFrame.getByText(oldDescription).click();
-    const textarea = issueFrame.locator('textarea');
-    await expect(textarea).toBeVisible();
-
-    // Clear the existing description and enter new one
-    await textarea.clear();
-    await textarea.fill(newDescription);
+    await issuePage.expectDescription(oldDescription);
+    await issuePage.updateDescription(newDescription);
     await page.waitForTimeout(500);
 
-    // Add the updated mock
     const cleanupIssueMock = await setupIssueMock(request, { description: newDescription });
 
-    await issueFrame.getByRole('button', { name: 'Save' }).click();
-    await page.waitForTimeout(2000);
+    await issuePage.saveChanges();
+    await page.waitForTimeout(1_000);
 
-    await expect(issueFrame.getByText(oldDescription)).not.toBeVisible();
-    await expect(issueFrame.getByText(newDescription)).toBeVisible();
+    await issuePage.expectDescription(newDescription);
 
     await cleanupIssueMock();
 });
