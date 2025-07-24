@@ -1,6 +1,6 @@
-import { InlineTextEditorList } from '@atlassianlabs/guipi-core-components';
 import { Box, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
+import { InlineTextEditorList } from 'src/react/atlascode/common/list/InlineTextEditorList';
 
 import { ConfigSection } from '../../../../../lib/ipc/models/config';
 import { ConfigControllerContext } from '../../configController';

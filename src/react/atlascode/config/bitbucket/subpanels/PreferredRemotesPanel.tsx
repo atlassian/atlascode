@@ -1,10 +1,10 @@
-import { InlineTextEditorList } from '@atlassianlabs/guipi-core-components';
 import { Box, ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary, Grid, Typography } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 
 import { ConfigSection, ConfigSubSection } from '../../../../../lib/ipc/models/config';
 import { CommonSubpanelProps } from '../../../common/commonPanelProps';
+import { InlineTextEditorList } from '../../../common/list/InlineTextEditorList';
 import { PanelSubtitle } from '../../../common/PanelSubtitle';
 import { PanelTitle } from '../../../common/PanelTitle';
 import { useBorderBoxStyles } from '../../../common/useBorderBoxStyles';
