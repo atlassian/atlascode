@@ -1314,7 +1314,6 @@
         "@atlaskit/toggle": "^14.2.0",
         "@atlaskit/tooltip": "^17.5.1",
         "@atlaskit/width-detector": "^3.0.6",
-        "@atlassianlabs/guipi-core-components": "^0.1.2",
         "@atlassianlabs/guipi-core-controller": "^0.1.2",
         "@atlassianlabs/guipi-jira-components": "^0.1.2",
         "@atlassianlabs/jira-metaui-client": "^1.1.0",

@@ -1,7 +1,7 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { flatten } from 'flatten-anything';
 
 import { emptyConfig } from '../../../config/model';
+import { ReducerAction } from '../../../shared/reducerAction';
 import { ConfigTarget, FlattenedConfig } from '../models/config';
 
 export enum OnboardingMessageType {
