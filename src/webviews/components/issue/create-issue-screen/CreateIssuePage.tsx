@@ -85,16 +85,20 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                 case 'update': {
                     handled = true;
                     const issueData = e as CreateIssueData;
+                    const { fieldValues } = issueData;
 
-                    if (issueData.fieldValues) {
-                        if (Object.keys(this.initialFieldValues).length === 0) {
-                            if (Object.keys(issueData.fieldValues).length > 0) {
-                                this.initialFieldValues = { ...issueData.fieldValues };
-                            }
-                        } else {
+                    if (fieldValues) {
+                        const isInitialFieldsEmpty = Object.keys(this.initialFieldValues).length === 0;
+                        const hasIncomingFields = Object.keys(fieldValues).length > 0;
+
+                        if (isInitialFieldsEmpty && hasIncomingFields) {
+                            this.initialFieldValues = { ...fieldValues };
+                        }
+
+                        if (!isInitialFieldsEmpty) {
                             Object.keys(this.initialFieldValues).forEach((key) => {
-                                if (key in issueData.fieldValues) {
-                                    this.initialFieldValues[key] = issueData.fieldValues[key];
+                                if (key in fieldValues) {
+                                    this.initialFieldValues[key] = fieldValues[key];
                                 }
                             });
                         }
