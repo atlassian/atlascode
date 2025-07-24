@@ -7,6 +7,7 @@ test('Rename Jira issue', async ({ page, request }) => {
     const newTitle = 'Check if renaming works';
 
     await authenticateWithJira(page);
+
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
     const drawer = new AtlascodeDrawer(page);

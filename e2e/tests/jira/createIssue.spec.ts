@@ -7,9 +7,9 @@ test('Create an issue via side panel flow', async ({ page }) => {
 
     await authenticateWithJira(page);
 
-    await page.getByRole('button', { name: 'Create Jira issue' }).click();
-
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
+
+    await page.getByRole('button', { name: 'Create Jira issue' }).click();
 
     const createIssueFrame = page.frameLocator('iframe.webview').frameLocator('iframe[title="Create Jira Issue"]');
 

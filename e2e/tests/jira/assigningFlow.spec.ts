@@ -9,14 +9,13 @@ test('Assigning Jira issue to myself works', async ({ page, request }) => {
     // See: https://playwright.dev/docs/test-timeouts#set-timeout-for-a-single-test
     test.setTimeout(50_000);
 
-    // Authenticate and open BTS-1 issue
     await authenticateWithJira(page);
+
+    await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
     const drawer = new AtlascodeDrawer(page);
     await drawer.openJiraIssue('BTS-1 - User Interface Bugs');
 
-    // Close settings tab to focus on the issue
-    await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
     const issueFrame = await getIssueFrame(page);
 
     // Step 1: Verify and clear current assignee (Mocked McMock)

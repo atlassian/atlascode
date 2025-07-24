@@ -4,6 +4,7 @@ import { AtlascodeDrawer } from 'e2e/page-objects';
 
 test('Test image display in ticket description', async ({ page }) => {
     await authenticateWithJira(page);
+
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
     const drawer = new AtlascodeDrawer(page);
@@ -12,7 +13,6 @@ test('Test image display in ticket description', async ({ page }) => {
     // Get the issue frame using the existing helper
     const issueFrame = await getIssueFrame(page);
 
-    await page.waitForTimeout(2000);
     // Check if the image with test ID exists
     const testImage = issueFrame.locator('img[data-testid="description-image"]');
     await expect(testImage).toBeVisible();
