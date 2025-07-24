@@ -109,12 +109,12 @@ export abstract class AbstractIssueEditorPage<
     abstract getProjectKey(): string;
     abstract fetchUsers: (input: string) => Promise<any[]>;
 
-    private getApiVersionFromState(): string {
-        const state = this.state as any;
-        if ('apiVersion' in state && state.apiVersion !== null && state.apiVersion !== undefined) {
-            return String(state.apiVersion);
-        }
-        return '2';
+    /**
+     * Get the API version for URL construction. Child classes should override this
+     * to provide properly typed access to their apiVersion from state.
+     */
+    protected getApiVersion(): string {
+        throw new Error('getApiVersion() must be implemented by child classes');
     }
 
     protected handleInlineEdit = (field: FieldUI, newValue: any): Promise<void> => {
@@ -323,7 +323,7 @@ export abstract class AbstractIssueEditorPage<
         this.setState({ isSomethingLoading: true, loadingField: field.key });
 
         if (field.valueType === ValueType.User) {
-            const apiVersion = this.getApiVersionFromState();
+            const apiVersion = this.getApiVersion();
             const userSearchUrl = this.state.siteDetails.isCloud
                 ? `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?query=`
                 : `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?username=`;

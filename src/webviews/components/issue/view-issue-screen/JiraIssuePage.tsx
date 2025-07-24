@@ -74,6 +74,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         return this.state.key.substring(0, this.state.key.indexOf('-'));
     };
 
+    protected getApiVersion(): string {
+        return String(this.state.apiVersion);
+    }
+
     onMessageReceived(e: any): boolean {
         const handled = super.onMessageReceived(e);
 
@@ -183,9 +187,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     fetchUsers = (input: string) => {
+        const apiVersion = this.getApiVersion();
         const userSearchUrl = this.state.siteDetails.isCloud
-            ? `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?query=`
-            : `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?username=`;
+            ? `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?query=`
+            : `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?username=`;
 
         return this.loadSelectOptions(input, userSearchUrl);
     };
