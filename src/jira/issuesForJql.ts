@@ -1,5 +1,4 @@
 import { MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
-import { jiraIssuePerformanceEvent } from 'src/analytics';
 import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
@@ -11,7 +10,6 @@ export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise
     const client = await Container.clientManager.jiraClient(site);
     const performanceEnabled = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment);
     let issues: MinimalIssue<DetailedSiteInfo>[] = [];
-    const startTime = process.hrtime();
     if (performanceEnabled) {
         const [fields, epicFieldInfo] = await Promise.all([
             Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site),
@@ -56,10 +54,5 @@ export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise
             total = searchResults.total;
         } while (Container.config.jira.explorer.fetchAllQueryResults && index < total);
     }
-    const endTime = process.hrtime(startTime);
-    const endTimeMs = endTime[0] * 1000 + Math.floor(endTime[1] / 1000000);
-    jiraIssuePerformanceEvent(site, 'issuesForJql.ttr', endTimeMs).then((event) => {
-        Container.analyticsClient.sendTrackEvent(event);
-    });
     return issues;
 }

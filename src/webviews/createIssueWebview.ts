@@ -4,6 +4,7 @@ import { decode } from 'base64-arraybuffer-es6';
 import { format } from 'date-fns';
 import FormData from 'form-data';
 import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
+import timer from 'src/util/perf';
 import { commands, Position, Uri, ViewColumn, window } from 'vscode';
 
 import { issueCreatedEvent } from '../analytics';
@@ -288,7 +289,7 @@ export class CreateIssueWebview
             const performanceEnabled = FeatureFlagClient.checkExperimentValue(
                 Experiments.AtlascodePerformanceExperiment,
             );
-            const startCreateIssueUIRenderTime = process.hrtime();
+            timer.mark('createJiraIssueRender.ttr');
 
             if (performanceEnabled) {
                 const [projectsWithCreateIssuesPermission, screenData] = await Promise.all([
@@ -422,14 +423,9 @@ export class CreateIssueWebview
 
                 this.postMessage(createData);
             }
-            const endCreateIssueUIRenderTime = process.hrtime(startCreateIssueUIRenderTime);
-            const endCreateIssueUIRenderTimeMs =
-                endCreateIssueUIRenderTime[0] * 1000 + Math.floor(endCreateIssueUIRenderTime[1] / 1000000);
-            jiraIssuePerformanceEvent(
-                this._siteDetails,
-                'createJiraIssueRender.ttr',
-                endCreateIssueUIRenderTimeMs,
-            ).then((event) => {
+            const createDuration = timer.measure('createJiraIssueRender.ttr');
+            timer.clear('createJiraIssueRender.ttr');
+            jiraIssuePerformanceEvent(this._siteDetails, 'createJiraIssueRender.ttr', createDuration).then((event) => {
                 Container.analyticsClient.sendTrackEvent(event);
             });
         } catch (e) {
