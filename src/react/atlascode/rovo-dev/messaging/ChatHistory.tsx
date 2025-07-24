@@ -116,7 +116,6 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
                         setMessageBlocks((prev) => [...prev, { messages: curThinkingMessages }]);
                         setCurThinkingMessages([]);
                     }
-
                     if (currentMessage && currentMessage.source === 'RovoDev') {
                         setMessageBlocks((prev) => [...prev, { messages: currentMessage }]);
                     }
@@ -127,6 +126,14 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
 
                 case 'RovoDev':
                     setCurrentMessage(newMessage);
+                    break;
+
+                case 'RovoDevRetry':
+                    if (currentMessage) {
+                        setCurThinkingMessages((prev) => [...prev, currentMessage]);
+                    }
+                    setCurrentMessage(null);
+                    setCurThinkingMessages((prev) => [...prev, newMessage]);
                     break;
 
                 case 'RovoDevError':

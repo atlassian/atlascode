@@ -6,7 +6,8 @@ import { DefaultMessage } from '../utils';
 export const ChatMessageItem: React.FC<{
     msg: DefaultMessage;
     index: number;
-}> = ({ msg, index }) => {
+    icon?: React.ReactNode;
+}> = ({ msg, index, icon }) => {
     const messageTypeStyles = msg.source === 'User' ? 'user-message' : 'agent-message';
 
     const content = (
@@ -18,7 +19,12 @@ export const ChatMessageItem: React.FC<{
     );
 
     return (
-        <div key={index} className={`chat-message ${messageTypeStyles}`}>
+        <div
+            key={index}
+            className={`chat-message ${messageTypeStyles}`}
+            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px' }}
+        >
+            {icon && <div className="message-icon">{icon}</div>}
             <div className="message-content">{content}</div>
         </div>
     );

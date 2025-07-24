@@ -25,6 +25,7 @@ import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import {
     ChatMessage,
     CodeSnippetToChange,
+    DefaultMessage,
     ErrorMessage,
     parseToolReturnMessage,
     TechnicalPlan,
@@ -149,6 +150,18 @@ export const renderChatHistory = (
         case 'RovoDev':
         case 'User':
             return <ChatMessageItem index={index} msg={msg} />;
+        case 'RovoDevRetry':
+            const retryMsg: DefaultMessage = {
+                text: 'Unable to process the request ' + '`' + msg.tool_name + '`',
+                source: 'RovoDev',
+            };
+            return (
+                <ChatMessageItem
+                    index={index}
+                    msg={retryMsg}
+                    icon={<StatusErrorIcon color="var(--ds-icon-danger)" label="error-icon" spacing="none" />}
+                />
+            );
         default:
             return <div key={index}>Unknown message type</div>;
     }

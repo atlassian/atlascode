@@ -250,6 +250,17 @@ const RovoDevView: React.FC = () => {
                     handleAppendModifiedFileToolReturns(returnMessage);
                     break;
 
+                case 'retry-prompt':
+                    const msg: ToolReturnGenericMessage = {
+                        source: 'RovoDevRetry',
+                        tool_name: data.tool_name,
+                        content: data.content || '',
+                        tool_call_id: data.tool_call_id, // Optional ID for tracking
+                    };
+
+                    handleAppendChatHistory(msg);
+                    break;
+
                 default:
                     appendCurrentResponse(`\n\nUnknown part_kind: ${data.event_kind}\n\n`);
                     break;

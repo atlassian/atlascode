@@ -123,7 +123,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                             </div>
                         </div>
                         <div className="pull-request-form-actions">
-                            <button onClick={() => onCancel()} className="pull-request-cancel-button">
+                            <button type="button" onClick={() => onCancel()} className="pull-request-cancel-button">
                                 Cancel
                             </button>
                             <button type="submit" className="pull-request-submit-button">

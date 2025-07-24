@@ -299,6 +299,7 @@ body {
     white-space: normal;
     word-break: break-word;
     color: var(--vscode-editor-foreground);
+    max-width: 100%;
 }
 
 /* Pull Request button styles */

@@ -34,6 +34,7 @@ export interface ToolReturnFileMessage {
     tool_name: 'expand_code_chunks' | 'find_and_replace_code' | 'open_files' | 'create_file' | 'delete_file';
     source: 'ToolReturn';
     content: string;
+    parsedContent?: object | undefined;
     tool_call_id: string;
     args?: string;
 }
@@ -64,7 +65,7 @@ export interface ToolReturnTechnicalPlanMessage {
 
 export interface ToolReturnGenericMessage {
     tool_name: string;
-    source: 'ToolReturn' | 'ModifiedFile';
+    source: 'ToolReturn' | 'ModifiedFile' | 'RovoDevRetry';
     content: string;
     parsedContent?: object | undefined;
     tool_call_id: string;
@@ -138,13 +139,22 @@ export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolRe
         case 'open_files':
         case 'create_file':
         case 'delete_file':
-            const contentArray = msg.content.split('\n\n');
+            const contentArray = msg.parsedContent ? msg.parsedContent : [msg.content];
+            if (!Array.isArray(contentArray)) {
+                console.warn('Invalid content format in ToolReturnMessage:', msg.content);
+                break;
+            }
 
             for (const line of contentArray) {
-                const matches = line.match(
+                if (typeof line !== 'string') {
+                    console.warn('Invalid line format in ToolReturnMessage:', line);
+                    continue;
+                }
+
+                const trimmedLine = line.split('\n\n')[0].trim();
+                const matches = trimmedLine.match(
                     /^Successfully\s+(expanded code chunks|replaced code|opened|created|deleted|updated)(?:\s+in)?\s+(.+)?$/,
                 );
-
                 if (matches && matches.length >= 3) {
                     let filePath = matches[2].trim();
                     // Remove trailing colon if present
