@@ -1,9 +1,9 @@
-import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
 import { Fade, Grid, makeStyles, Theme } from '@material-ui/core';
 import React, { useCallback, useContext, useState } from 'react';
 
 import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';
 import BitbucketIcon from '../../icons/BitbucketIcon';
+import { JiraIcon } from '../../icons/JiraIcon';
 import { DemoDialog } from '../../onboarding/DemoDialog';
 import { ConfigControllerContext } from '../configController';
 import AltDemoButton from './AltDemoButton';

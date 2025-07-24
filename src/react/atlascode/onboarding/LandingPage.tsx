@@ -1,4 +1,3 @@
-import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
 import { Button, Grid, lighten, makeStyles, Theme, Typography } from '@material-ui/core';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import React, { useCallback, useContext, useState } from 'react';
@@ -6,6 +5,7 @@ import React, { useCallback, useContext, useState } from 'react';
 import { KnownLinkID } from '../../../lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
 import BitbucketIcon from '../icons/BitbucketIcon';
+import { JiraIcon } from '../icons/JiraIcon';
 import DemoButton from './DemoButton';
 import { DemoDialog } from './DemoDialog';
 import { OnboardingControllerContext } from './onboardingController';
