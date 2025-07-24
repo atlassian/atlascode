@@ -1,4 +1,4 @@
-import { InlineTextEditor, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { InlineTextEditor } from '@atlassianlabs/guipi-core-components';
 import {
     Divider,
     Fade,
@@ -18,6 +18,7 @@ import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
 import clsx from 'clsx';
 import React, { memo, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
+import { ToggleWithLabel } from '../../common/toggle';
 import { ConfigControllerContext } from '../configController';
 
 type DebugProps = {

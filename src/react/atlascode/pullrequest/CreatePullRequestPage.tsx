@@ -1,4 +1,3 @@
-import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
 import {
     AppBar,
@@ -38,6 +37,7 @@ import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import Lozenge from '../common/Lozenge';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
+import { ToggleWithLabel } from '../common/toggle';
 import { BranchWarning } from './BranchWarning';
 import { Commits } from './Commits';
 import { CreatePullRequestControllerContext, useCreatePullRequestController } from './createPullRequestController';

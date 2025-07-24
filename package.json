@@ -1434,6 +1434,8 @@
         "prosemirror-view": "^1.39.3",
         "react": "^16.13.1",
         "react-async-hook": "^4.0.0",
+        "react-beautiful-dnd": "^12.2.0",
+        "@types/react-beautiful-dnd": "12.2.0",
         "react-dom": "^16.13.1",
         "react-dropzone": "^14.3.8",
         "react-editext": "7.0.0",
