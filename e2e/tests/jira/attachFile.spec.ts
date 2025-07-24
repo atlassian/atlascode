@@ -8,8 +8,7 @@ test('Test upload image to attachments', async ({ page, request }) => {
 
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
-    const drawer = new AtlascodeDrawer(page);
-    await drawer.openJiraIssue('BTS-1 - User Interface Bugs');
+    await new AtlascodeDrawer(page).openJiraIssue('BTS-1 - User Interface Bugs');
 
     // Get the issue frame using the existing helper
     const issueFrame = await getIssueFrame(page);
