@@ -1,4 +1,3 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import {
     AutocompleteSuggestion,
     FilterSearchResults,
@@ -9,6 +8,7 @@ import { flatten } from 'flatten-anything';
 
 import { AuthInfo, DetailedSiteInfo, emptyBasicAuthInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import { emptyConfig } from '../../../config/model';
+import { ReducerAction } from '../../../shared/reducerAction';
 import { emptyFeedbackUser, FeedbackUser } from '../models/common';
 import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '../models/config';
 

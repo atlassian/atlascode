@@ -1,8 +1,8 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 
 import { UIErrorInfo } from '../../../analyticsTypes';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import { ReducerAction } from '../../../shared/reducerAction';
 import { FeedbackData, PMFData } from '../models/common';
 
 export enum CommonActionType {

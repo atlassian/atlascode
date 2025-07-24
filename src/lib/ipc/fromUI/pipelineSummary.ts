@@ -1,6 +1,5 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-
 import { PipelineLogReference } from '../../../pipelines/model';
+import { ReducerAction } from '../../../shared/reducerAction';
 import { CommonAction } from './common';
 
 export enum PipelineSummaryActionType {

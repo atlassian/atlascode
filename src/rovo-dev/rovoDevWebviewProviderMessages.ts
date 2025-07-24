@@ -1,6 +1,5 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-
 import { ChatMessage, ErrorMessage } from '../react/atlascode/rovo-dev/utils';
+import { ReducerAction } from '../shared/reducerAction';
 import { RovoDevResponse } from './responseParser';
 import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
