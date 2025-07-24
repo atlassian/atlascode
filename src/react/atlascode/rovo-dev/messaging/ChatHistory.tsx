@@ -135,7 +135,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
                     setCurrentMessage(null);
                     setCurThinkingMessages((prev) => [...prev, newMessage]);
                     break;
-                
+
                 case 'RovoDevError':
                 case 'PullRequest':
                     setMessageBlocks((prev) => [...prev, { messages: newMessage }]);
