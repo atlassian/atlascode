@@ -1,4 +1,3 @@
-import { InlineTextEditor } from '@atlassianlabs/guipi-core-components';
 import {
     Box,
     Button,
@@ -17,6 +16,7 @@ import React from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
 
 import { User } from '../../../bitbucket/model';
+import { InlineTextEditor } from '../common/editor/InlineTextEditor';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { BranchInfo } from './BranchInfo';
 import {

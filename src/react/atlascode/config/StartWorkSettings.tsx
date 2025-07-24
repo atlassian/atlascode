@@ -1,8 +1,9 @@
-import { InlineTextEditor, InlineTextEditorList } from '@atlassianlabs/guipi-core-components';
 import { Box, FormHelperText, Grid, Link, Typography } from '@material-ui/core';
 import Mustache from 'mustache';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
+import { InlineTextEditor } from '../common/editor/InlineTextEditor';
+import { InlineTextEditorList } from '../common/list/InlineTextEditorList';
 import { useBorderBoxStyles } from '../common/useBorderBoxStyles';
 import { ConfigControllerContext } from './configController';
 
