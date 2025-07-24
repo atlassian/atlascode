@@ -1,16 +1,17 @@
 import { expect, test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
+import { AtlascodeDrawer } from 'e2e/page-objects';
 
 test('Update description flow', async ({ page, request }) => {
     const oldDescription = 'Track and resolve bugs related to the user interface.';
     const newDescription = 'Add e2e test for this functionality';
 
     await authenticateWithJira(page);
-
-    await page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' }).click();
-    await page.waitForTimeout(250);
-
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
+
+    const drawer = new AtlascodeDrawer(page);
+    await drawer.openJiraIssue('BTS-1 - User Interface Bugs');
+
     const issueFrame = await getIssueFrame(page);
 
     // Check the existing description

@@ -1,15 +1,14 @@
 import { expect, test } from '@playwright/test';
 import { attachment } from 'e2e/fixtures/attachment';
 import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
+import { AtlascodeDrawer } from 'e2e/page-objects';
 
 test('Test upload image to attachments', async ({ page, request }) => {
     await authenticateWithJira(page);
-
-    await page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' }).click();
-    await page.waitForTimeout(2000);
-
-    // Close the Settings tab to focus on the issue view
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
+
+    const drawer = new AtlascodeDrawer(page);
+    await drawer.openJiraIssue('BTS-1 - User Interface Bugs');
 
     // Get the issue frame using the existing helper
     const issueFrame = await getIssueFrame(page);

@@ -1,14 +1,17 @@
 import { expect, test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
+import { AtlascodeDrawer } from 'e2e/page-objects';
 
 test('User can add and remove existing labels', async ({ page, request }) => {
     const labelsFieldPlaceholder = 'Type to search';
     const label = 'testing';
-    await authenticateWithJira(page);
 
-    await page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' }).click();
-    await page.waitForTimeout(1000);
+    await authenticateWithJira(page);
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
+
+    const drawer = new AtlascodeDrawer(page);
+    await drawer.openJiraIssue('BTS-1 - User Interface Bugs');
+
     const issueFrame = await getIssueFrame(page);
 
     await expect(issueFrame.getByText(labelsFieldPlaceholder)).toBeVisible();
