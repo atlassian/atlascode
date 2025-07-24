@@ -13,6 +13,7 @@ export const enum RovoDevViewResponseType {
     RetryPromptAfterError = 'retryPromptAfterError',
     GetCurrentBranchName = 'getCurrentBranchName',
     AddContext = 'addContext',
+    ForceUserFocusUpdate = 'forceUserFocusUpdate',
 }
 
 export type RovoDevViewResponse =
@@ -26,4 +27,5 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage: string } }>
     | ReducerAction<RovoDevViewResponseType.CreatePRComplete, { url?: string; error?: string }>
     | ReducerAction<RovoDevViewResponseType.AddContext, { currentContext: RovoDevContext }>
-    | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>;
+    | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>
+    | ReducerAction<RovoDevViewResponseType.ForceUserFocusUpdate>;

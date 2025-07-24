@@ -11,6 +11,7 @@ import {
     Memento,
     Position,
     Range,
+    TextEditor,
     Uri,
     Webview,
     WebviewView,
@@ -37,58 +38,6 @@ interface TypedWebview<MessageOut, MessageIn> extends Webview {
 }
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
-    // Listen to active editor and selection changes
-    private _registerEditorListeners() {
-        // Helper to send focus info to the webview
-        const sendUserFocus = ({ file, selection }: RovoDevContextItem) => {
-            if (this._webView) {
-                this._webView.postMessage({
-                    type: RovoDevProviderMessageType.UserFocusUpdated,
-                    userFocus: { file, selection },
-                });
-            }
-        };
-
-        // Helper to get openFile info from a document
-        const getOpenFileInfo = (doc: { uri: Uri; fileName: string }) => {
-            const workspaceFolder = workspace.getWorkspaceFolder(doc.uri);
-            const baseName = doc.fileName.split(path.sep).pop() || '';
-            return {
-                name: baseName,
-                absolutePath: doc.uri.fsPath,
-                relativePath: workspaceFolder
-                    ? path.relative(workspaceFolder.uri.fsPath, doc.uri.fsPath)
-                    : doc.fileName,
-            };
-        };
-
-        // Listen for active editor changes
-        this._disposables.push(
-            window.onDidChangeActiveTextEditor((editor) => {
-                if (editor) {
-                    const sel = editor.selection;
-                    sendUserFocus({
-                        file: getOpenFileInfo(editor.document),
-                        selection: sel && !sel.isEmpty ? { start: sel.start.line, end: sel.end.line } : undefined,
-                    });
-                } else {
-                    // No active editor, send empty
-                    sendUserFocus({ file: { name: '', absolutePath: '', relativePath: '' }, selection: undefined });
-                }
-            }),
-        );
-        // Listen for selection changes
-        this._disposables.push(
-            window.onDidChangeTextEditorSelection((event) => {
-                const editor = event.textEditor;
-                const sel = editor.selection;
-                sendUserFocus({
-                    file: getOpenFileInfo(editor.document),
-                    selection: sel && !sel.isEmpty ? { start: sel.start.line, end: sel.end.line } : undefined,
-                });
-            }),
-        );
-    }
     private readonly viewType = 'atlascodeRovoDev';
     private _prHandler = new RovoDevPullRequestHandler();
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
@@ -242,6 +191,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     await this.getCurrentBranchName();
                     break;
 
+                case RovoDevViewResponseType.ForceUserFocusUpdate:
+                    await this.forceUserFocusUpdate();
+                    break;
+
                 case RovoDevViewResponseType.AddContext:
                     await this.executeAddContext(e.currentContext);
                     break;
@@ -273,8 +226,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this._initialized = true;
 
             // send this message regardless, so the UI can unblock the send button
+
             await webviewView.webview.postMessage({
-                type: 'initialized',
+                type: RovoDevProviderMessageType.Initialized,
             });
 
             // re-send the buffered prompt
@@ -283,6 +237,54 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 this._pendingPrompt = undefined;
             }
         });
+    }
+
+    // Helper to get openFile info from a document
+    private getOpenFileInfo = (doc: { uri: Uri; fileName: string }) => {
+        const workspaceFolder = workspace.getWorkspaceFolder(doc.uri);
+        const baseName = doc.fileName.split(path.sep).pop() || '';
+        return {
+            name: baseName,
+            absolutePath: doc.uri.fsPath,
+            relativePath: workspaceFolder ? path.relative(workspaceFolder.uri.fsPath, doc.uri.fsPath) : doc.fileName,
+        };
+    };
+
+    private async forceUserFocusUpdate(editor: TextEditor | undefined = window.activeTextEditor, selection?: Range) {
+        selection = selection || (editor ? editor.selection : undefined);
+
+        const context = editor
+            ? {
+                  file: this.getOpenFileInfo(editor.document),
+                  selection:
+                      selection && !selection.isEmpty
+                          ? { start: selection.start.line, end: selection.end.line }
+                          : undefined,
+              }
+            : { file: { name: '', absolutePath: '', relativePath: '' }, selection: undefined };
+
+        if (this._webView) {
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.UserFocusUpdated,
+                userFocus: context,
+            });
+        }
+    }
+
+    // Listen to active editor and selection changes
+    private _registerEditorListeners() {
+        // Listen for active editor changes
+        this._disposables.push(
+            window.onDidChangeActiveTextEditor((editor) => {
+                this.forceUserFocusUpdate(editor);
+            }),
+        );
+        // Listen for selection changes
+        this._disposables.push(
+            window.onDidChangeTextEditorSelection((event) => {
+                this.forceUserFocusUpdate(event.textEditor);
+            }),
+        );
     }
 
     private async processChatResponse(fetchOp: Promise<Response>) {

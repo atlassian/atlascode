@@ -412,6 +412,13 @@ const RovoDevView: React.FC = () => {
         [sendButtonDisabled, currentState, isDeepPlanCreated, isDeepPlanToggled, postMessage, promptContextCollection],
     );
 
+    // On the first render, get the context update
+    React.useEffect(() => {
+        postMessage?.({
+            type: RovoDevViewResponseType.ForceUserFocusUpdate,
+        });
+    }, [postMessage]);
+
     const executeCodePlan = useCallback(() => {
         if (currentState !== State.WaitingForPrompt) {
             return;
