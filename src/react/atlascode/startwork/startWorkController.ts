@@ -1,4 +1,3 @@
-import { defaultStateGuard } from '@atlassianlabs/guipi-core-controller';
 import { Transition } from '@atlassianlabs/jira-pi-common-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
 
@@ -15,7 +14,7 @@ import {
     StartWorkResponse,
     StartWorkResponseMessage,
 } from '../../../lib/ipc/toUI/startWork';
-import { ReducerAction } from '../../../shared/reducerAction';
+import { defaultStateGuard, ReducerAction } from '../../../shared/reducerAction';
 import { Branch } from '../../../typings/git';
 import { ConnectionTimeout } from '../../../util/time';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
