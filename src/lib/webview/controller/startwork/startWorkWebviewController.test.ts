@@ -1,9 +1,9 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { createEmptyMinimalIssue, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 
 import { DetailedSiteInfo, emptySiteInfo, ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel, WorkspaceRepo } from '../../../../bitbucket/model';
 import { Container } from '../../../../container';
+import { defaultActionGuard } from '../../../../shared/reducerAction';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { StartWorkAction, StartWorkActionType } from '../../../ipc/fromUI/startWork';
@@ -24,7 +24,7 @@ import { StartWorkActionApi } from './startWorkActionApi';
 import { StartWorkWebviewController } from './startWorkWebviewController';
 
 // Mock dependencies
-jest.mock('@atlassianlabs/guipi-core-controller');
+jest.mock('../../../../shared/reducerAction');
 jest.mock('../../../../container');
 jest.mock('../../formatError');
 

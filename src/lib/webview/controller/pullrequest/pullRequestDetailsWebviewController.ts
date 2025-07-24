@@ -1,4 +1,3 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import Axios from 'axios';
 import { Uri } from 'vscode';
@@ -15,6 +14,7 @@ import {
     Task,
     User,
 } from '../../../../bitbucket/model';
+import { defaultActionGuard } from '../../../../shared/reducerAction';
 import { NotificationManagerImpl } from '../../../../views/notifications/notificationManager';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonAction, CommonActionType } from '../../../ipc/fromUI/common';
