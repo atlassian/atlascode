@@ -433,7 +433,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 </context>`;
         }
 
-        return `${message}\n${extra.replace(/\s+/g, '')}`.trim();
+        // Trim excessive whitespace:
+        extra = extra.replace(/\s+/g, ' ').trim();
+        return `${message}\n${extra}`.trim();
     }
 
     private addUndoContextToPrompt(message: string): string {
