@@ -4,6 +4,7 @@ import {
     rovoDevTimeToTechPlanReturnedEvent,
 } from '../../src/analytics';
 import { Container } from '../../src/container';
+import { Logger } from '../../src/logger';
 import Perf from '../util/perf';
 
 export class PerformanceLogger {
@@ -24,6 +25,8 @@ export class PerformanceLogger {
         this.timeToFirstMessage = Perf.measure(promptId);
 
         const evt = await rovoDevTimeToRespondStartEvent(this.currentSessionId, promptId, this.timeToFirstMessage);
+
+        Logger.debug('Event fired: rovoDevTimeToRespondStartEvent');
         await Container.analyticsClient.sendTrackEvent(evt);
     }
 
@@ -36,6 +39,8 @@ export class PerformanceLogger {
             this.timeToFirstMessage,
             this.timeToTechnicalPlan,
         );
+
+        Logger.debug('Event fired: rovoDevTimeToTechPlanReturnedEvent');
         await Container.analyticsClient.sendTrackEvent(evt);
     }
 
@@ -50,6 +55,8 @@ export class PerformanceLogger {
             this.timeToTechnicalPlan,
             timeToLastMessage,
         );
+
+        Logger.debug('Event fired: rovoDevTimeToRespondEndEvent');
         await Container.analyticsClient.sendTrackEvent(evt);
     }
 }
