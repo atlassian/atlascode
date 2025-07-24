@@ -74,7 +74,6 @@ export interface CommonEditorViewState extends Message {
     errorDetails: any;
     commentInputValue: string;
     isRteEnabled: boolean;
-    apiVersion: string;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -91,7 +90,6 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     errorDetails: undefined,
     commentInputValue: '',
     isRteEnabled: false,
-    apiVersion: '2',
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -317,9 +315,10 @@ export abstract class AbstractIssueEditorPage<
         this.setState({ isSomethingLoading: true, loadingField: field.key });
 
         if (field.valueType === ValueType.User) {
+            const apiVersion = (this.state as any).apiVersion || '2';
             const userSearchUrl = this.state.siteDetails.isCloud
-                ? `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?query=`
-                : `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?username=`;
+                ? `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?query=`
+                : `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?username=`;
             return this.loadSelectOptions(input, userSearchUrl);
         }
 
