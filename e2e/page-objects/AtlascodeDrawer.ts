@@ -18,6 +18,7 @@ export class AtlascodeDrawer {
     async openJiraIssue(name: string) {
         const item = this.jiraItemsTree.getByRole('treeitem', { name });
         await item.click();
+        await this.page.waitForTimeout(1_000);
     }
 
     async getJiraIssueStatus(name: string) {
