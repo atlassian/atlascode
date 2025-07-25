@@ -21,6 +21,9 @@ import {
     workspace,
 } from 'vscode';
 
+import { rovoDevNewSessionActionEvent, rovoDevPromptSentEvent } from '../../src/analytics';
+import { Container } from '../../src/container';
+import { Logger } from '../../src/logger';
 import { rovodevInfo } from '../constants';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
@@ -305,7 +308,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         );
     }
 
-    private async processChatResponse(sourceApi: 'chat' | 'replay', fetchOp: Promise<Response>) {
+    private async processChatResponse(sourceApi: 'chat' | 'replay', fetchOp: Promise<Response> | Response) {
         const fireTelemetry = sourceApi === 'chat';
         const response = await fetchOp;
         if (!response.body) {
@@ -524,6 +527,10 @@ ${message}`;
         // NOTE: if chatSessionId empty, it means this is the first prompt of a new rovo dev instance
         if (!this._chatSessionId) {
             this._chatSessionId = v4();
+            Logger.debug('Event fired: rovoDevNewSessionActionEvent false');
+            await rovoDevNewSessionActionEvent(this._chatSessionId, false).then((evt) =>
+                Container.analyticsClient.sendTrackEvent(evt),
+            );
             this._perfLogger.sessionStarted(this._chatSessionId);
         }
 
@@ -535,14 +542,25 @@ ${message}`;
         };
 
         let payloadToSend = this.addUndoContextToPrompt(text);
-        if (context) {
-            payloadToSend = this.addContextToPrompt(payloadToSend, context);
-        }
+        payloadToSend = this.addContextToPrompt(payloadToSend, context);
+
+        const currentPrompt = this._currentPrompt;
+        const fetchOp = async (client: RovoDevApiClient) => {
+            const response = await client.chat(payloadToSend, enable_deep_plan);
+
+            Logger.debug(`Event fired: rovoDevPromptSentEvent chat ${!!currentPrompt.enable_deep_plan}`);
+            await rovoDevPromptSentEvent(
+                this._chatSessionId,
+                this._currentPromptId,
+                'chat',
+                !!currentPrompt.enable_deep_plan,
+            ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
+
+            return this.processChatResponse('chat', response);
+        };
 
         if (this._initialized) {
-            await this.executeApiWithErrorHandling((client) => {
-                return this.processChatResponse('chat', client.chat(payloadToSend, enable_deep_plan));
-            }, true);
+            await this.executeApiWithErrorHandling(fetchOp, true);
         } else {
             this._pendingPrompt = {
                 text: payloadToSend,
@@ -559,17 +577,32 @@ ${message}`;
             return;
         }
 
-        const previousPrompt = this._currentPrompt;
-        const payloadToSend = this.addRetryAfterErrorContextToPrompt(previousPrompt.text);
+        const currentPrompt = this._currentPrompt;
+        const payloadToSend = this.addRetryAfterErrorContextToPrompt(currentPrompt.text);
 
+        // we need to echo back the prompt to the View since it's not user submitted
         await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
-            ...previousPrompt,
+            text: payloadToSend,
+            enable_deep_plan: currentPrompt.enable_deep_plan,
+            context: currentPrompt.context,
         });
 
-        await this.executeApiWithErrorHandling((client) => {
-            return this.processChatResponse('chat', client.chat(payloadToSend, previousPrompt.enable_deep_plan));
-        }, true);
+        const fetchOp = async (client: RovoDevApiClient) => {
+            const response = await client.chat(payloadToSend, currentPrompt.enable_deep_plan);
+
+            Logger.debug(`Event fired: rovoDevPromptSentEvent chat ${!!currentPrompt.enable_deep_plan}`);
+            await rovoDevPromptSentEvent(
+                this._chatSessionId,
+                this._currentPromptId,
+                'chat',
+                !!currentPrompt.enable_deep_plan,
+            ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
+
+            return this.processChatResponse('chat', response);
+        };
+
+        await this.executeApiWithErrorHandling(fetchOp, true);
     }
 
     public async addContextItem(contextItem: RovoDevContextItem): Promise<void> {
@@ -657,6 +690,10 @@ ${message}`;
         if (success) {
             this._chatSessionId = v4();
             this._perfLogger.sessionStarted(this._chatSessionId);
+            Logger.debug('Event fired: rovoDevNewSessionActionEvent true');
+            await rovoDevNewSessionActionEvent(this._chatSessionId, true).then((evt) =>
+                Container.analyticsClient.sendTrackEvent(evt),
+            );
         }
     }
 
