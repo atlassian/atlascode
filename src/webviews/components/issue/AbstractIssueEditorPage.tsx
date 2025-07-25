@@ -109,13 +109,7 @@ export abstract class AbstractIssueEditorPage<
     abstract getProjectKey(): string;
     abstract fetchUsers: (input: string) => Promise<any[]>;
 
-    /**
-     * Get the API version for URL construction. Child classes should override this
-     * to provide properly typed access to their apiVersion from state.
-     */
-    protected getApiVersion(): string {
-        throw new Error('getApiVersion() must be implemented by child classes');
-    }
+    protected abstract getApiVersion(): string;
 
     protected handleInlineEdit = (field: FieldUI, newValue: any): Promise<void> => {
         return Promise.resolve();
