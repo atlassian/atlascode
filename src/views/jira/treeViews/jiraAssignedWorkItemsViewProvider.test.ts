@@ -68,6 +68,14 @@ jest.mock('../../RefreshTimer');
 jest.mock('../../../logger');
 jest.mock('../../../analytics', () => ({
     viewScreenEvent: () => Promise.resolve({ eventName: 'viewScreenEvent' }),
+    jiraIssuePerformanceEvent: () => Promise.resolve({ eventName: 'jiraIssuePerformanceEvent' }),
+}));
+jest.mock('src/util/perf', () => ({
+    default: {
+        mark: () => {},
+        measure: () => 100,
+        clear: () => {},
+    },
 }));
 jest.mock('../../../config/configuration', () => ({
     configuration: {
@@ -97,6 +105,7 @@ jest.mock('../../../container', () => ({
         },
         analyticsClient: {
             sendScreenEvent: () => {},
+            sendTrackEvent: () => {},
         },
     },
 }));

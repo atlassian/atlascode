@@ -425,7 +425,7 @@ export class CreateIssueWebview
             }
             const createDuration = timer.measure('createJiraIssueRender.ttr');
             timer.clear('createJiraIssueRender.ttr');
-            jiraIssuePerformanceEvent(this._siteDetails, 'createJiraIssueRender.ttr', createDuration).then((event) => {
+            jiraIssuePerformanceEvent('createJiraIssueRender.ttr', createDuration).then((event) => {
                 Container.analyticsClient.sendTrackEvent(event);
             });
         } catch (e) {

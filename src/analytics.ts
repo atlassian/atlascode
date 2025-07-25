@@ -242,12 +242,9 @@ export async function notificationChangeEvent(
 }
 
 // Jira issue performance event
-
-export async function jiraIssuePerformanceEvent(site: DetailedSiteInfo, type: string, latency: number) {
-    return instanceTrackEvent(site, 'loaded', type, {
-        attributes: {
-            latency: latency,
-        },
+export async function jiraIssuePerformanceEvent(type: string, latency: number) {
+    return trackEvent('jiraIssuePerformanceEvent', type, {
+        attributes: { latency },
     });
 }
 

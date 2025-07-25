@@ -125,7 +125,7 @@ export class JiraIssueWebview
                 this._issue = await fetchMinimalIssue(this._issue.key, this._issue.siteDetails);
             }
             // First Request begins here for issue rendering
-            timer.mark('editJiraIssueUIRender.ttr');
+            timer.mark(`editJiraIssueUIRender.ttr_${this._issue.id}`);
             const editUI: EditIssueUI<DetailedSiteInfo> = await fetchEditIssueUI(this._issue);
             if (this._panel) {
                 this._panel.title = `${this._issue.key}`;
@@ -143,16 +143,14 @@ export class JiraIssueWebview
             msg.type = 'update';
 
             this.postMessage(msg); // Issue has rendered
-            const uiDuration = timer.measure('editJiraIssueUIRender.ttr');
-            timer.clear('editJiraIssueUIRender.ttr');
-            jiraIssuePerformanceEvent(this._issue.siteDetails, 'editJiraIssueUIRender.ttr', uiDuration).then(
-                (event) => {
-                    Container.analyticsClient.sendTrackEvent(event);
-                },
-            );
+            const uiDuration = timer.measure(`editJiraIssueUIRender.ttr_${this._issue.id}`);
+            timer.clear(`editJiraIssueUIRender.ttr_${this._issue.id}`);
+            jiraIssuePerformanceEvent('editJiraIssueUIRender.ttr', uiDuration).then((event) => {
+                Container.analyticsClient.sendTrackEvent(event);
+            });
 
             // UI component updates
-            timer.mark('editJiraIssueUpdates.ttr');
+            timer.mark(`editJiraIssueUIRender.ttr_${this._issue.id}`);
             const performanceEnabled = FeatureFlagClient.checkExperimentValue(
                 Experiments.AtlascodePerformanceExperiment,
             );
@@ -172,13 +170,11 @@ export class JiraIssueWebview
                 this.updateVoters();
                 this.updateRelatedPullRequests();
             }
-            const updatesDuration = timer.measure('editJiraIssueUpdates.ttr');
-            timer.clear('editJiraIssueUpdates.ttr');
-            jiraIssuePerformanceEvent(this._issue.siteDetails, 'editJiraIssueUpdates.ttr', updatesDuration).then(
-                (event) => {
-                    Container.analyticsClient.sendTrackEvent(event);
-                },
-            );
+            const updatesDuration = timer.measure(`editJiraIssueUIRender.ttr_${this._issue.id}`);
+            timer.clear(`editJiraIssueUIRender.ttr_${this._issue.id}`);
+            jiraIssuePerformanceEvent('editJiraIssueUpdates.ttr', updatesDuration).then((event) => {
+                Container.analyticsClient.sendTrackEvent(event);
+            });
         } catch (e) {
             Logger.error(e, 'Error updating issue');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
