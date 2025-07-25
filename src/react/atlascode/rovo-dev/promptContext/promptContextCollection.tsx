@@ -40,7 +40,7 @@ export const PromptContextCollection: React.FC<{
             }}
         >
             {!readonly && <AddContextButton onClick={onAddContext} />}
-            {content.focusInfo && showFocusInfo && (
+            {content.focusInfo && !content.focusInfo.invalid && showFocusInfo && (
                 <PromptContextItem
                     file={content.focusInfo.file}
                     selection={content.focusInfo.selection}

@@ -12,6 +12,7 @@ export const enum RovoDevViewResponseType {
     RetryPromptAfterError = 'retryPromptAfterError',
     GetCurrentBranchName = 'getCurrentBranchName',
     AddContext = 'addContext',
+    ForceUserFocusUpdate = 'forceUserFocusUpdate',
     ReportChangedFilesPanelShown = 'reportChangedFilesPanelShown',
     ReportChangesGitPushed = 'reportChangesGitPushed',
 }
@@ -23,9 +24,10 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.UndoFileChanges, { filePaths: string[] }>
     | ReducerAction<RovoDevViewResponseType.KeepFileChanges, { filePaths: string[] }>
     | ReducerAction<RovoDevViewResponseType.GetOriginalText, { filePath: string; range?: number[]; requestId: string }>
-    | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>
     | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage: string } }>
+    | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>
     | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>
     | ReducerAction<RovoDevViewResponseType.AddContext, { currentContext: RovoDevContext }>
+    | ReducerAction<RovoDevViewResponseType.ForceUserFocusUpdate>
     | ReducerAction<RovoDevViewResponseType.ReportChangedFilesPanelShown, { filesCount: number }>
     | ReducerAction<RovoDevViewResponseType.ReportChangesGitPushed, { pullRequestCreated: boolean }>;

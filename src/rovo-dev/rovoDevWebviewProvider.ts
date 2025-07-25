@@ -12,6 +12,7 @@ import {
     Memento,
     Position,
     Range,
+    TextEditor,
     Uri,
     Webview,
     WebviewView,
@@ -205,6 +206,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     await this.getCurrentBranchName();
                     break;
 
+                case RovoDevViewResponseType.ForceUserFocusUpdate:
+                    await this.forceUserFocusUpdate();
+                    break;
+
                 case RovoDevViewResponseType.AddContext:
                     await this.executeAddContext(e.currentContext);
                     break;
@@ -249,8 +254,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this._initialized = true;
 
             // send this message regardless, so the UI can unblock the send button
+
             await webviewView.webview.postMessage({
-                type: 'initialized',
+                type: RovoDevProviderMessageType.Initialized,
             });
 
             // re-send the buffered prompt
@@ -261,9 +267,69 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
+    // Helper to get openFile info from a document
+    private getOpenFileInfo = (doc: { uri: Uri; fileName: string }) => {
+        const workspaceFolder = workspace.getWorkspaceFolder(doc.uri);
+        const baseName = doc.fileName.split(path.sep).pop() || '';
+        return {
+            name: baseName,
+            absolutePath: doc.uri.fsPath,
+            relativePath: workspaceFolder ? path.relative(workspaceFolder.uri.fsPath, doc.uri.fsPath) : doc.fileName,
+        };
+    };
+
+    private async forceUserFocusUpdate(editor: TextEditor | undefined = window.activeTextEditor, selection?: Range) {
+        if (!this._webView) {
+            return;
+        }
+
+        selection = selection || (editor ? editor.selection : undefined);
+
+        if (!editor) {
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.UserFocusUpdated,
+                userFocus: {
+                    file: { name: '', absolutePath: '', relativePath: '' },
+                    selection: undefined,
+                    invalid: true,
+                },
+            });
+            return;
+        }
+
+        const fileInfo = this.getOpenFileInfo(editor.document);
+
+        await this._webView.postMessage({
+            type: RovoDevProviderMessageType.UserFocusUpdated,
+            userFocus: {
+                file: fileInfo,
+                selection:
+                    selection && !selection.isEmpty
+                        ? { start: selection.start.line, end: selection.end.line }
+                        : undefined,
+                invalid: fileInfo.absolutePath === '' || !fs.existsSync(fileInfo.absolutePath),
+            },
+        });
+    }
+
+    // Listen to active editor and selection changes
+    private _registerEditorListeners() {
+        // Listen for active editor changes
+        this._disposables.push(
+            window.onDidChangeActiveTextEditor((editor) => {
+                this.forceUserFocusUpdate(editor);
+            }),
+        );
+        // Listen for selection changes
+        this._disposables.push(
+            window.onDidChangeTextEditorSelection((event) => {
+                this.forceUserFocusUpdate(event.textEditor);
+            }),
+        );
+    }
+
     private async processChatResponse(sourceApi: 'chat' | 'replay', fetchOp: Promise<Response> | Response) {
         const fireTelemetry = sourceApi === 'chat';
-
         const response = await fetchOp;
         if (!response.body) {
             throw new Error('No response body');
@@ -424,7 +490,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
 
         let extra = '';
-        if (context.focusInfo && context.focusInfo.enabled) {
+        if (context.focusInfo && context.focusInfo.enabled && !context.focusInfo.invalid) {
             extra += `
             <context>
                 Consider that the user has the following open in the editor:

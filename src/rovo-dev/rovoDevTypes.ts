@@ -13,6 +13,9 @@ export type RovoDevContextItem = {
     file: RovoDevContextFileInfo;
     selection?: RovoDevContextSelectionInfo;
     enabled?: boolean;
+    // Optional indication of the editor pointing to an invalid file
+    // e.g. welcome page, webview tab, etc
+    invalid?: boolean;
 };
 
 export type RovoDevContext = {
