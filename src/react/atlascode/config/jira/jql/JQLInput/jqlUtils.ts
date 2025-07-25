@@ -148,7 +148,8 @@ export function typeForPredicate(token: JQLToken): string {
         return '';
     }
 
-    return PredicateTypes[token.value.toUpperCase()] ? PredicateTypes[token.value.toUpperCase()] : '';
+    const tokenValue = token.value.toUpperCase();
+    return tokenValue in PredicateTypes ? PredicateTypes[tokenValue as keyof typeof PredicateTypes] : '';
 }
 
 export function isSeparatorToken(token: JQLToken): boolean {

@@ -52,7 +52,6 @@ export default tseslint.config(
                 'error',
                 {
                     patterns: [
-                        '@atlassianlabs/guipi-jira-components/*',
                         '@atlassianlabs/jira-metaui-client/*',
                         '@atlassianlabs/jira-metaui-transformer/*',
                         '@atlassianlabs/jira-pi-client/*',
