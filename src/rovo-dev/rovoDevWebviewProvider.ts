@@ -948,6 +948,23 @@ ${message}`;
         await this.executeChat({ text: prompt, context }, false);
     }
 
+    /**
+     * Adds a context item to the RovoDev webview. Intended for external calls, e.g. commands
+     * @param contextItem The context item to add.
+     * @returns A promise that resolves when the context item has been added.
+     */
+    async addToContext(contextItem: RovoDevContextItem): Promise<void> {
+        if (!this._webView) {
+            console.error('Webview is not initialized.');
+            return;
+        }
+
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.ContextAdded,
+            context: contextItem,
+        });
+    }
+
     private async waitFor(
         check: () => Promise<boolean> | boolean,
         timeoutMs: number,

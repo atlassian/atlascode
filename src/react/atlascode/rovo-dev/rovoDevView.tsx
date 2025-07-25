@@ -9,7 +9,7 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import { RovoDevContext } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevContext, RovoDevContextItem } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
@@ -386,10 +386,23 @@ const RovoDevView: React.FC = () => {
                     }));
                     break;
                 case RovoDevProviderMessageType.ContextAdded:
-                    setPromptContextCollection((prev) => ({
-                        ...prev,
-                        contextItems: [...(prev.contextItems || []), event.context],
-                    }));
+                    setPromptContextCollection((prev) => {
+                        const newItem = event.context;
+                        const match = (item: any) =>
+                            item.file.absolutePath === newItem.file.absolutePath &&
+                            item.selection?.start === newItem.selection?.start &&
+                            item.selection?.end === newItem.selection?.end;
+
+                        const contextItems = prev.contextItems || [];
+                        const idx = contextItems.findIndex(match);
+                        // Add new item only if it does not already exist
+                        return idx === -1
+                            ? {
+                                  ...prev,
+                                  contextItems: [...contextItems, newItem],
+                              }
+                            : prev;
+                    });
                     break;
 
                 case RovoDevProviderMessageType.ReturnText:
@@ -630,11 +643,14 @@ const RovoDevView: React.FC = () => {
                                     currentContext: promptContextCollection,
                                 });
                             }}
-                            onRemoveContext={(filePath) => {
+                            onRemoveContext={(item: RovoDevContextItem) => {
                                 setPromptContextCollection((prev) => ({
                                     ...prev,
                                     contextItems: prev.contextItems?.filter(
-                                        (item) => item.file.absolutePath !== filePath,
+                                        (contextItem) =>
+                                            contextItem.file.absolutePath !== item.file.absolutePath ||
+                                            contextItem.selection?.start !== item.selection?.start ||
+                                            contextItem.selection?.end !== item.selection?.end,
                                     ),
                                 }));
                             }}
