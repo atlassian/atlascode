@@ -229,9 +229,9 @@ export async function rovoDevTechnicalPlanningShownEvent(
     });
 }
 
-export async function rovoDevFilesSummaryShownEvent(sessionId: string, filesCount: number) {
+export async function rovoDevFilesSummaryShownEvent(sessionId: string, promptId: string, filesCount: number) {
     return trackEvent('rovoDevFilesSummaryShown', 'atlascode', {
-        attributes: { sessionId, filesCount },
+        attributes: { sessionId, promptId, filesCount },
     });
 }
 

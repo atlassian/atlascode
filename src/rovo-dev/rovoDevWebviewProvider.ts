@@ -23,6 +23,7 @@ import {
 
 import {
     rovoDevFileChangedActionEvent,
+    rovoDevFilesSummaryShownEvent,
     rovoDevNewSessionActionEvent,
     rovoDevPromptSentEvent,
     rovoDevStopActionEvent,
@@ -211,6 +212,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                 case RovoDevViewResponseType.AddContext:
                     await this.executeAddContext(e.currentContext);
+                    break;
+
+                case RovoDevViewResponseType.ReportChangedFilesPanelShown:
+                    Logger.debug(`Event fired: rovoDevFilesSummaryShownEvent ${e.filesCount}`);
+                    rovoDevFilesSummaryShownEvent(this._chatSessionId, this._currentPromptId, e.filesCount).then(
+                        (evt) => Container.analyticsClient.sendTrackEvent(evt),
+                    );
                     break;
             }
         });
@@ -746,6 +754,8 @@ ${message}`;
     }
 
     private async executeReplay(): Promise<void> {
+        this._currentPromptId = 'replay';
+
         await this.executeApiWithErrorHandling(async (client) => {
             return this.processChatResponse('replay', client.replay());
         }, false);

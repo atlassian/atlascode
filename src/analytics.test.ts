@@ -1072,11 +1072,12 @@ describe('analytics', () => {
 
         it('should create rovoDevFilesSummaryShownEvent for new files summary', async () => {
             const filesCount = 4;
-            const event = await analytics.rovoDevFilesSummaryShownEvent(mockSessionId, filesCount);
+            const event = await analytics.rovoDevFilesSummaryShownEvent(mockSessionId, mockPromptId, filesCount);
 
             expect(event.trackEvent.action).toEqual('rovoDevFilesSummaryShown');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
             expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
             expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
         });
 
