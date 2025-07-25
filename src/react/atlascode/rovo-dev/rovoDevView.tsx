@@ -88,6 +88,8 @@ const RovoDevView: React.FC = () => {
     const [isDeepPlanCreated, setIsDeepPlanCreated] = useState(false);
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
 
+    const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
+
     React.useEffect(() => {
         if (currentState === State.WaitingForPrompt) {
             if (curThinkingMessages.length > 0) {
@@ -105,6 +107,30 @@ const RovoDevView: React.FC = () => {
             highlightElement(block, detectLanguage(block.textContent || ''));
         });
     }, [chatStream, curThinkingMessages, currentMessage, currentState, pendingToolCallMessage]);
+
+    const finalizeResponse = useCallback(() => {
+        setSendButtonDisabled(false);
+        setCurrentState(State.WaitingForPrompt);
+        setPendingToolCallMessage('');
+        setIsDeepPlanToggled(false);
+
+        const changedFilesCount = totalModifiedFiles.filter(
+            (x) => x.type === 'create' || x.type === 'modify' || x.type === 'delete',
+        ).length;
+        if (changedFilesCount) {
+            dispatch({
+                type: RovoDevViewResponseType.ReportChangedFilesPanelShown,
+                filesCount: changedFilesCount,
+            });
+        }
+    }, [
+        setSendButtonDisabled,
+        setCurrentState,
+        setPendingToolCallMessage,
+        setIsDeepPlanToggled,
+        dispatch,
+        totalModifiedFiles,
+    ]);
 
     const handleAppendError = useCallback((msg: ErrorMessage) => {
         setChatStream((prev) => {
@@ -299,13 +325,6 @@ const RovoDevView: React.FC = () => {
         [handleAppendCurrentResponse, handleAppendModifiedFileToolReturns, handleAppendToolReturn],
     );
 
-    const setWaitingForPrompt = useCallback(() => {
-        setSendButtonDisabled(false);
-        setCurrentState(State.WaitingForPrompt);
-        setPendingToolCallMessage('');
-        setIsDeepPlanToggled(false);
-    }, [setSendButtonDisabled, setCurrentState, setPendingToolCallMessage, setIsDeepPlanToggled]);
-
     const onMessageHandler = useCallback(
         (event: RovoDevProviderMessage): void => {
             switch (event.type) {
@@ -326,7 +345,7 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.CompleteMessage:
-                    setWaitingForPrompt();
+                    finalizeResponse();
                     validateResponseFinalized();
                     break;
 
@@ -340,7 +359,7 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.ErrorMessage:
                     handleAppendError(event.message);
-                    setWaitingForPrompt();
+                    finalizeResponse();
                     break;
 
                 case RovoDevProviderMessageType.NewSession:
@@ -393,7 +412,7 @@ const RovoDevView: React.FC = () => {
             handleAppendCurrentResponse,
             handleResponse,
             handleAppendUserPrompt,
-            setWaitingForPrompt,
+            finalizeResponse,
             validateResponseFinalized,
             clearChatHistory,
             currentState,
@@ -404,6 +423,13 @@ const RovoDevView: React.FC = () => {
     const [postMessage, postMessageWithReturn] = useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, any>(
         onMessageHandler,
     );
+
+    React.useEffect(() => {
+        if (outgoingMessage) {
+            postMessage(outgoingMessage);
+            dispatch(undefined);
+        }
+    }, [postMessage, dispatch, outgoingMessage]);
 
     // TODO: move this to a separate component, colocate with prompt submission
     const [promptContextCollection, setPromptContextCollection] = useState<RovoDevContext>({});
