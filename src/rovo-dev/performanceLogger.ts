@@ -1,8 +1,4 @@
-import {
-    rovoDevTimeToRespondEndEvent,
-    rovoDevTimeToRespondStartEvent,
-    rovoDevTimeToTechPlanReturnedEvent,
-} from '../../src/analytics';
+import { performanceEvent } from '../../src/analytics';
 import { Container } from '../../src/container';
 import { Logger } from '../../src/logger';
 import Perf from '../util/perf';
@@ -10,57 +6,61 @@ import Perf from '../util/perf';
 export class PerformanceLogger {
     private currentSessionId: string = '';
 
-    private timeToFirstMessage: number = -1;
-    private timeToTechnicalPlan: number = -1;
-
     public sessionStarted(sessionId: string) {
         this.currentSessionId = sessionId;
     }
 
     public promptStarted(promptId: string) {
+        if (!this.currentSessionId) {
+            throw new Error('Session not started');
+        }
+
         Perf.mark(promptId);
     }
 
+    public async promptFirstByteReceived(promptId: string) {
+        const measure = Perf.measure(promptId);
+        const evt = await performanceEvent('rovodev.response.timeToFirstByte', measure, {
+            sessionId: this.currentSessionId,
+            promptId,
+        });
+
+        Logger.debug(`Event fired: rovodev.response.timeToFirstByte ${measure} ms`);
+        await Container.analyticsClient.sendTrackEvent(evt);
+    }
+
     public async promptFirstMessageReceived(promptId: string) {
-        this.timeToFirstMessage = Perf.measure(promptId);
+        const measure = Perf.measure(promptId);
+        const evt = await performanceEvent('rovodev.response.timeToFirstMessage', measure, {
+            sessionId: this.currentSessionId,
+            promptId,
+        });
 
-        const evt = await rovoDevTimeToRespondStartEvent(this.currentSessionId, promptId, this.timeToFirstMessage);
-
-        Logger.debug(`Event fired: rovoDevTimeToRespondStartEvent ${this.timeToFirstMessage} ms`);
+        Logger.debug(`Event fired: rovodev.response.timeToFirstMessage ${measure} ms`);
         await Container.analyticsClient.sendTrackEvent(evt);
     }
 
     public async promptTechnicalPlanReceived(promptId: string) {
-        this.timeToTechnicalPlan = Perf.measure(promptId);
-
-        const evt = await rovoDevTimeToTechPlanReturnedEvent(
-            this.currentSessionId,
+        const measure = Perf.measure(promptId);
+        const evt = await performanceEvent('rovodev.response.timeToTechPlan', measure, {
+            sessionId: this.currentSessionId,
             promptId,
-            this.timeToFirstMessage,
-            this.timeToTechnicalPlan,
-        );
+        });
 
-        Logger.debug(
-            `Event fired: rovoDevTimeToTechPlanReturnedEvent ${this.timeToFirstMessage} ms ${this.timeToTechnicalPlan} ms`,
-        );
+        Logger.debug(`Event fired: rovodev.response.timeToTechPlan ${measure} ms`);
         await Container.analyticsClient.sendTrackEvent(evt);
     }
 
     public async promptLastMessageReceived(promptId: string) {
-        const timeToLastMessage = Perf.measure(promptId);
+        const measure = Perf.measure(promptId);
+        const evt = await performanceEvent('rovodev.response.timeToLastMessage', measure, {
+            sessionId: this.currentSessionId,
+            promptId,
+        });
+
         Perf.clear(promptId);
 
-        const evt = await rovoDevTimeToRespondEndEvent(
-            this.currentSessionId,
-            promptId,
-            this.timeToFirstMessage,
-            this.timeToTechnicalPlan,
-            timeToLastMessage,
-        );
-
-        Logger.debug(
-            `Event fired: rovoDevTimeToRespondEndEvent ${this.timeToFirstMessage} ms ${this.timeToTechnicalPlan} ms ${timeToLastMessage} ms`,
-        );
+        Logger.debug(`Event fired: rovodev.response.timeToLastMessage ${measure} ms`);
         await Container.analyticsClient.sendTrackEvent(evt);
     }
 }

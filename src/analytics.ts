@@ -172,6 +172,34 @@ export async function featureFlagClientInitializedEvent(
     });
 }
 
+// Perf events
+
+type RovoDevPerfEvents =
+    | 'rovodev.response.timeToFirstByte'
+    | 'rovodev.response.timeToFirstMessage'
+    | 'rovodev.response.timeToTechPlan'
+    | 'rovodev.response.timeToLastMessage';
+
+interface RovoDevCommonParams {
+    sessionId: string;
+    promptId: string;
+}
+
+export async function performanceEvent(
+    tag: RovoDevPerfEvents,
+    measure: number,
+    params: RovoDevCommonParams,
+): Promise<TrackEvent>;
+export async function performanceEvent(
+    tag: string,
+    measure: number,
+    params?: Record<string, any>,
+): Promise<TrackEvent> {
+    return trackEvent('performanceEvent', 'atlascode', {
+        attributes: { tag, measure, ...(params || {}) },
+    });
+}
+
 // Rovo Dev events
 
 export async function rovoDevPromptSentEvent(
@@ -226,39 +254,9 @@ export async function rovoDevGitPushActionEvent(sessionId: string, prCreated: bo
     });
 }
 
-// TODO call this
 export async function rovoDevDetailsExpandedEvent(sessionId: string) {
     return trackEvent('rovoDevDetailsExpanded', 'atlascode', {
         attributes: { sessionId },
-    });
-}
-
-export async function rovoDevTimeToRespondStartEvent(sessionId: string, promptId: string, ttrStart: number) {
-    return trackEvent('rovoDevTimeToRespondStart', 'atlascode', {
-        attributes: { sessionId, promptId, ttrStart },
-    });
-}
-
-export async function rovoDevTimeToTechPlanReturnedEvent(
-    sessionId: string,
-    promptId: string,
-    ttrStart: number,
-    ttrTechPlan: number,
-) {
-    return trackEvent('rovoDevTimeToTechPlanReturned', 'atlascode', {
-        attributes: { sessionId, promptId, ttrStart, ttrTechPlan },
-    });
-}
-
-export async function rovoDevTimeToRespondEndEvent(
-    sessionId: string,
-    promptId: string,
-    ttrStart: number,
-    ttrTechPlan: number,
-    ttrEnd: number,
-) {
-    return trackEvent('rovoDevTimeToRespondEnd', 'atlascode', {
-        attributes: { sessionId, promptId, ttrStart, ttrTechPlan, ttrEnd },
     });
 }
 

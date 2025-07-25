@@ -63,8 +63,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private _chatSessionId: string = '';
     private _currentPromptId: string = '';
-    private _pendingPrompt: RovoDevPrompt | undefined;
     private _currentPrompt: RovoDevPrompt | undefined;
+    private _pendingPrompt: RovoDevPrompt | undefined;
 
     private _pendingCancellation = false;
 
@@ -332,7 +332,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const fireTelemetry = sourceApi === 'chat';
         const response = await fetchOp;
         if (!response.body) {
-            throw new Error('No response body');
+            throw new Error("Error processing the Rovo Dev's response: response is empty.");
+        }
+
+        if (fireTelemetry) {
+            this._perfLogger.promptStarted(this._currentPromptId);
         }
 
         this._perfLogger.promptStarted(this._currentPromptId);
@@ -341,15 +345,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const decoder = new TextDecoder();
         const parser = new RovoDevResponseParser();
 
-        let isFirstResponse = true;
+        let isFirstByte = true;
+        let isFirstMessage = true;
 
         while (true) {
             const { done, value } = await reader.read();
 
-            if (fireTelemetry && isFirstResponse) {
-                // first response of the stream -> fire performance telemetry event
-                this._perfLogger.promptFirstMessageReceived(this._currentPromptId);
-                isFirstResponse = false;
+            if (fireTelemetry && isFirstByte) {
+                this._perfLogger.promptFirstByteReceived(this._currentPromptId);
+                isFirstByte = false;
             }
 
             if (done) {
@@ -366,6 +370,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             const data = decoder.decode(value, { stream: true });
             for (const msg of parser.parse(data)) {
+                if (fireTelemetry && isFirstMessage) {
+                    this._perfLogger.promptFirstMessageReceived(this._currentPromptId);
+                    isFirstMessage = false;
+                }
+
                 await this.processRovoDevResponse(sourceApi, msg);
             }
         }
@@ -716,10 +725,11 @@ ${message}`;
             });
 
             return true;
-        });
+        }, false);
 
         if (success) {
             this._chatSessionId = v4();
+            this._perfLogger.sessionStarted(this._chatSessionId);
             await rovoDevNewSessionActionEvent(this._chatSessionId, true).then((evt) =>
                 Container.analyticsClient.sendTrackEvent(evt),
             );
@@ -731,7 +741,7 @@ ${message}`;
 
         const cancelResponse = await this.executeApiWithErrorHandling(async (client) => {
             return await client.cancel();
-        });
+        }, false);
 
         const success =
             !!cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress');
@@ -754,7 +764,7 @@ ${message}`;
     private async executeReplay(): Promise<void> {
         await this.executeApiWithErrorHandling(async (client) => {
             return this.processChatResponse('replay', client.replay());
-        });
+        }, false);
     }
 
     private async executeHealthcheck(): Promise<boolean> {
@@ -889,6 +899,7 @@ ${message}`;
 
     private async executeApiWithErrorHandling<T>(
         func: (client: RovoDevApiClient) => Promise<T>,
+        isErrorRetriable: boolean,
         cancellationAware?: true,
     ): Promise<T | void> {
         if (this.rovoDevApiClient) {
@@ -899,7 +910,7 @@ ${message}`;
                     this._pendingCancellation = false;
                     this.completeChatResponse();
                 } else {
-                    await this.processError(error, true);
+                    await this.processError(error, isErrorRetriable);
                 }
             }
         } else {
