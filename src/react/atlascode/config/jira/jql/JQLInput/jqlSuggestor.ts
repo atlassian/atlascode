@@ -691,8 +691,7 @@ export class JqlSuggestor {
                         break;
                     }
 
-                    case TokenTypes.orderBy: {
-                    }
+                    case TokenTypes.orderBy:
                     case TokenTypes.join: {
                         completeType = AutocompleteTypes.fieldName;
                         break;
