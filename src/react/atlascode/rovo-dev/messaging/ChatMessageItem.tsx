@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { mdParser } from '../common/common';
-import { PromptContextCollection } from '../promptContext/promptContextCollection';
+import { PromptContextCollection } from '../prompt-box/promptContext/promptContextCollection';
 import { DefaultMessage } from '../utils';
 
 export const ChatMessageItem: React.FC<{
