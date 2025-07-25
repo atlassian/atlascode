@@ -21,7 +21,11 @@ import {
     workspace,
 } from 'vscode';
 
-import { rovoDevNewSessionActionEvent, rovoDevPromptSentEvent } from '../../src/analytics';
+import {
+    rovoDevNewSessionActionEvent,
+    rovoDevPromptSentEvent,
+    rovoDevTechnicalPlanningShownEvent,
+} from '../../src/analytics';
 import { Container } from '../../src/container';
 import { Logger } from '../../src/logger';
 import { rovodevInfo } from '../constants';
@@ -31,7 +35,7 @@ import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
-import { RovoDevContext, RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
+import { RovoDevContext, RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 const MIN_SUPPORTED_ROVODEV_VERSION = '0.9.3';
@@ -421,6 +425,24 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             case 'tool-return':
                 if (fireTelemetry && response.tool_name === 'create_technical_plan' && response.parsedContent) {
                     this._perfLogger.promptTechnicalPlanReceived(this._currentPromptId);
+
+                    const parsedContent = response.parsedContent as TechnicalPlan;
+                    const stepsCount = parsedContent.logicalChanges.length;
+                    const filesCount = parsedContent.logicalChanges.reduce((p, c) => p + c.filesToChange.length, 0);
+                    const questionsCount = parsedContent.logicalChanges.reduce(
+                        (p, c) => p + c.filesToChange.reduce((p2, c2) => p2 + (c2.clarifyingQuestionIfAny ? 1 : 0), 0),
+                        0,
+                    );
+
+                    Logger.debug(
+                        `Event fired: rovoDevTechnicalPlanningShownEvent ${stepsCount} ${filesCount} ${questionsCount}`,
+                    );
+                    rovoDevTechnicalPlanningShownEvent(
+                        this._chatSessionId,
+                        stepsCount,
+                        filesCount,
+                        questionsCount,
+                    ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
                 }
                 return webview.postMessage({
                     type: RovoDevProviderMessageType.ToolReturn,
