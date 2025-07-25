@@ -172,10 +172,6 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            <div className="codicon codicon-attach"></div>
-            <svg>
-                <use xlinkHref="codicon.svg#add" />
-            </svg>
             <RovoDevLanding />
             {messageBlocks &&
                 messageBlocks.map((block, idx) => {
