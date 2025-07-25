@@ -11,12 +11,22 @@ export const ModifiedFileItem: React.FC<{
     onFileClick: (filePath: string) => void;
 }> = ({ msg, onUndo, onKeep, onFileClick }) => {
     const isDeletion = msg.type === 'delete';
+    const isCreation = msg.type === 'create';
+
+    const getId = () => {
+        if (isDeletion) {
+            return 'deleted-file';
+        }
+        if (isCreation) {
+            return 'created-file';
+        }
+        return undefined;
+    };
 
     const filePath = msg.filePath;
     if (!filePath) {
         return null;
     }
-
     const handleUndo = (e: React.MouseEvent) => {
         e.stopPropagation();
         onUndo(filePath);
@@ -29,7 +39,7 @@ export const ModifiedFileItem: React.FC<{
 
     return (
         <div className="modified-file-item" onClick={() => onFileClick(filePath)}>
-            <div id={isDeletion ? 'deleted-file' : undefined}>{filePath}</div>
+            <div id={getId()}>{filePath}</div>
             <div className="modified-file-actions">
                 <button className="modified-file-action" onClick={handleUndo} aria-label="Undo changes to this file">
                     <CrossIcon size="small" label="Undo" />
