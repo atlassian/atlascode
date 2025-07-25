@@ -111,6 +111,8 @@ export interface ToolReturnParseResult {
     type?: 'modify' | 'create' | 'delete' | 'open' | 'bash';
 }
 
+export type MessageBlockDetails = ChatMessage[] | DefaultMessage | ErrorMessage | ToolReturnGenericMessage | null;
+
 interface ToolReturnInfo {
     title: string;
     type: 'modify' | 'create' | 'delete' | 'open' | 'bash';
