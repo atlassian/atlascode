@@ -174,9 +174,14 @@ export async function featureFlagClientInitializedEvent(
 
 // Rovo Dev events
 
-export async function rovoDevPromptSentEvent(sessionId: string, promptId: string, deepPlanEnabled: boolean) {
+export async function rovoDevPromptSentEvent(
+    sessionId: string,
+    promptId: string,
+    source: 'replay' | 'chat',
+    deepPlanEnabled: boolean,
+) {
     return trackEvent('rovoDevPromptSent', 'atlascode', {
-        attributes: { sessionId, promptId, deepPlanEnabled },
+        attributes: { sessionId, promptId, source, deepPlanEnabled },
     });
 }
 

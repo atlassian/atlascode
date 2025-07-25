@@ -804,12 +804,13 @@ describe('analytics', () => {
         });
 
         it('should create rovoDevPromptSentEvent with session and prompt IDs', async () => {
-            const event = await analytics.rovoDevPromptSentEvent(mockSessionId, mockPromptId, true);
+            const event = await analytics.rovoDevPromptSentEvent(mockSessionId, mockPromptId, 'chat', true);
 
             expect(event.trackEvent.action).toEqual('rovoDevPromptSent');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
             expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
             expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
+            expect(event.trackEvent.attributes.source).toEqual('chat');
             expect(event.trackEvent.attributes.deepPlanEnabled).toEqual(true);
         });
 

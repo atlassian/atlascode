@@ -50,58 +50,6 @@ interface TypedWebview<MessageOut, MessageIn> extends Webview {
 }
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
-    // Listen to active editor and selection changes
-    private _registerEditorListeners() {
-        // Helper to send focus info to the webview
-        const sendUserFocus = ({ file, selection }: RovoDevContextItem) => {
-            if (this._webView) {
-                this._webView.postMessage({
-                    type: RovoDevProviderMessageType.UserFocusUpdated,
-                    userFocus: { file, selection },
-                });
-            }
-        };
-
-        // Helper to get openFile info from a document
-        const getOpenFileInfo = (doc: { uri: Uri; fileName: string }) => {
-            const workspaceFolder = workspace.getWorkspaceFolder(doc.uri);
-            const baseName = doc.fileName.split(path.sep).pop() || '';
-            return {
-                name: baseName,
-                absolutePath: doc.uri.fsPath,
-                relativePath: workspaceFolder
-                    ? path.relative(workspaceFolder.uri.fsPath, doc.uri.fsPath)
-                    : doc.fileName,
-            };
-        };
-
-        // Listen for active editor changes
-        this._disposables.push(
-            window.onDidChangeActiveTextEditor((editor) => {
-                if (editor) {
-                    const sel = editor.selection;
-                    sendUserFocus({
-                        file: getOpenFileInfo(editor.document),
-                        selection: sel && !sel.isEmpty ? { start: sel.start.line, end: sel.end.line } : undefined,
-                    });
-                } else {
-                    // No active editor, send empty
-                    sendUserFocus({ file: { name: '', absolutePath: '', relativePath: '' }, selection: undefined });
-                }
-            }),
-        );
-        // Listen for selection changes
-        this._disposables.push(
-            window.onDidChangeTextEditorSelection((event) => {
-                const editor = event.textEditor;
-                const sel = editor.selection;
-                sendUserFocus({
-                    file: getOpenFileInfo(editor.document),
-                    selection: sel && !sel.isEmpty ? { start: sel.start.line, end: sel.end.line } : undefined,
-                });
-            }),
-        );
-    }
     private readonly viewType = 'atlascodeRovoDev';
 
     private _prHandler = new RovoDevPullRequestHandler();
@@ -114,7 +62,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private _chatSessionId: string = '';
     private _currentPromptId: string = '';
-    private _previousPrompt: RovoDevPrompt | undefined;
     private _pendingPrompt: RovoDevPrompt | undefined;
     private _currentPrompt: RovoDevPrompt | undefined;
 
@@ -314,21 +261,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private async processChatResponse(sourceApi: 'chat' | 'replay', fetchOp: Promise<Response>) {
+    private async processChatResponse(sourceApi: 'chat' | 'replay', fetchOp: Promise<Response> | Response) {
         const fireTelemetry = sourceApi === 'chat';
 
         const response = await fetchOp;
         if (!response.body) {
             throw new Error('No response body');
-        }
-
-        if (fireTelemetry) {
-            Logger.debug(`Event fired: rovoDevPromptSentEvent ${!!this._currentPrompt!.enable_deep_plan}`);
-            await rovoDevPromptSentEvent(
-                this._chatSessionId,
-                this._currentPromptId,
-                !!this._currentPrompt!.enable_deep_plan,
-            ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
         }
 
         this._perfLogger.promptStarted(this._currentPromptId);
@@ -377,11 +315,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private processError(error: Error, isRetriable: boolean) {
+    private async processError(error: Error, isRetriable: boolean) {
         Logger.error('RovoDev', error);
 
         const webview = this._webView!;
-        return webview.postMessage({
+        return await webview.postMessage({
             type: RovoDevProviderMessageType.ErrorMessage,
             message: {
                 text: `Error: ${error.message}`,
@@ -565,19 +503,29 @@ ${message}`;
         }
 
         this._currentPromptId = v4();
-        this._currentPrompt = {
-            text: text,
-        };
+        this._currentPrompt = { text, enable_deep_plan, context };
 
         let payloadToSend = this.addUndoContextToPrompt(text);
         if (context) {
             payloadToSend = this.addContextToPrompt(payloadToSend, context);
         }
 
+        const fetchOp = async (client: RovoDevApiClient) => {
+            const response = await client.chat(payloadToSend);
+
+            Logger.debug(`Event fired: rovoDevPromptSentEvent chat ${!!this._currentPrompt!.enable_deep_plan}`);
+            await rovoDevPromptSentEvent(
+                this._chatSessionId,
+                this._currentPromptId,
+                'chat',
+                !!this._currentPrompt!.enable_deep_plan,
+            ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
+
+            return this.processChatResponse('chat', response);
+        };
+
         if (this._initialized) {
-            await this.executeApiWithErrorHandling((client) => {
-                return this.processChatResponse('chat', client.chat(payloadToSend));
-            }, true);
+            await this.executeApiWithErrorHandling((client) => fetchOp(client), true);
         } else {
             this._pendingPrompt = {
                 text: payloadToSend,
@@ -599,13 +547,26 @@ ${message}`;
 
         await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
-            ...previousPrompt,
-            enable_deep_plan: !!currentPrompt.enable_deep_plan,
+            text: payloadToSend,
+            enable_deep_plan: currentPrompt.enable_deep_plan,
+            context: currentPrompt.context,
         });
 
-        await this.executeApiWithErrorHandling((client) => {
-            return this.processChatResponse('chat', client.chat(payloadToSend));
-        }, true);
+        const fetchOp = async (client: RovoDevApiClient) => {
+            const response = await client.chat(payloadToSend);
+
+            Logger.debug(`Event fired: rovoDevPromptSentEvent chat ${!!this._currentPrompt!.enable_deep_plan}`);
+            await rovoDevPromptSentEvent(
+                this._chatSessionId,
+                this._currentPromptId,
+                'chat',
+                !!this._currentPrompt!.enable_deep_plan,
+            ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
+
+            return this.processChatResponse('chat', response);
+        };
+
+        await this.executeApiWithErrorHandling((client) => fetchOp(client), true);
     }
 
     public async addContextItem(contextItem: RovoDevContextItem): Promise<void> {
@@ -859,6 +820,7 @@ ${message}`;
             await this.processError(e, false);
         }
     }
+
     private async executeApiWithErrorHandling<T>(
         func: (client: RovoDevApiClient) => Promise<T>,
         cancellationAware?: true,
@@ -947,5 +909,59 @@ ${message}`;
                 reject(error);
             }
         });
+    }
+
+    // Listen to active editor and selection changes
+    private _registerEditorListeners() {
+        // Helper to send focus info to the webview
+        const sendUserFocus = ({ file, selection }: RovoDevContextItem) => {
+            if (this._webView) {
+                this._webView.postMessage({
+                    type: RovoDevProviderMessageType.UserFocusUpdated,
+                    userFocus: { file, selection },
+                });
+            }
+        };
+
+        // Helper to get openFile info from a document
+        const getOpenFileInfo = (doc: { uri: Uri; fileName: string }) => {
+            const workspaceFolder = workspace.getWorkspaceFolder(doc.uri);
+            const baseName = doc.fileName.split(path.sep).pop() || '';
+            return {
+                name: baseName,
+                absolutePath: doc.uri.fsPath,
+                relativePath: workspaceFolder
+                    ? path.relative(workspaceFolder.uri.fsPath, doc.uri.fsPath)
+                    : doc.fileName,
+            };
+        };
+
+        // Listen for active editor changes
+        this._disposables.push(
+            window.onDidChangeActiveTextEditor((editor) => {
+                if (editor) {
+                    const sel = editor.selection;
+                    sendUserFocus({
+                        file: getOpenFileInfo(editor.document),
+                        selection: sel && !sel.isEmpty ? { start: sel.start.line, end: sel.end.line } : undefined,
+                    });
+                } else {
+                    // No active editor, send empty
+                    sendUserFocus({ file: { name: '', absolutePath: '', relativePath: '' }, selection: undefined });
+                }
+            }),
+        );
+
+        // Listen for selection changes
+        this._disposables.push(
+            window.onDidChangeTextEditorSelection((event) => {
+                const editor = event.textEditor;
+                const sel = editor.selection;
+                sendUserFocus({
+                    file: getOpenFileInfo(editor.document),
+                    selection: sel && !sel.isEmpty ? { start: sel.start.line, end: sel.end.line } : undefined,
+                });
+            }),
+        );
     }
 }
