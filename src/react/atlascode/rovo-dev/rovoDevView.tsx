@@ -88,7 +88,6 @@ const RovoDevView: React.FC = () => {
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
 
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
-
     React.useEffect(() => {
         if (currentState === State.WaitingForPrompt) {
             if (curThinkingMessages.length > 0) {
