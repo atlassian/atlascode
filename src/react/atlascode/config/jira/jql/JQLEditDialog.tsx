@@ -1,4 +1,4 @@
-import { JqlAutocompleteRestData, JQLInput, SiteSelector, Suggestion } from '@atlassianlabs/guipi-jira-components';
+import { JQLInput } from '@atlassianlabs/guipi-jira-components';
 import { JQLErrors } from '@atlassianlabs/jira-pi-common-models';
 import {
     Box,
@@ -20,6 +20,8 @@ import { v4 } from 'uuid';
 import { DetailedSiteInfo, emptySiteInfo } from '../../../../../atlclients/authInfo';
 import { JQLEntry } from '../../../../../config/model';
 import { ConfigControllerContext } from '../../configController';
+import { SiteSelector } from '../SiteSelector';
+import { JqlAutocompleteRestData, Suggestion } from './jqlTypes';
 import { useJqlValidator } from './useJqlValidator';
 
 export type JQLEditDialogProps = {

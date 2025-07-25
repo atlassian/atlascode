@@ -1,4 +1,3 @@
-import { JqlAutocompleteRestData, Suggestion } from '@atlassianlabs/guipi-jira-components';
 import { FilterSearchResults, JQLErrors } from '@atlassianlabs/jira-pi-common-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { UIErrorInfo } from 'src/analyticsTypes';
@@ -21,6 +20,7 @@ import {
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from '../../../shared/reducerAction';
 import { ConnectionTimeout } from '../../../util/time';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
+import { JqlAutocompleteRestData, Suggestion } from './jira/jql/jqlTypes';
 
 export interface ConfigControllerApi {
     postMessage: PostMessageFunc<ConfigAction>;
