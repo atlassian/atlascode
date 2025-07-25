@@ -456,9 +456,20 @@ body {
     color: var(--vscode-textLink-foreground);
 }
 
+.modified-file-item-info {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 4px;
+}
+
 #deleted-file {
     color: var(--vscode-list-errorForeground);
     text-decoration: line-through;
+}
+
+#created-file {
+    color: var(--vscode-gitDecoration-untrackedResourceForeground);
 }
 
 .updated-files-container {
