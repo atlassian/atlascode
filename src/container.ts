@@ -1,4 +1,5 @@
-import { env, ExtensionContext, UIKind, workspace } from 'vscode';
+import { env, ExtensionContext, languages, UIKind, workspace } from 'vscode';
+import * as vscode from 'vscode';
 
 import { featureFlagClientInitializedEvent } from './analytics';
 import { AnalyticsClient, analyticsClient } from './analytics-node-client/src/client.min.js';
@@ -29,6 +30,7 @@ import { CommonActionMessageHandler } from './lib/webview/controller/common/comm
 import { Logger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
 import { Pipeline } from './pipelines/model';
+import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
@@ -154,6 +156,11 @@ export class Container {
         context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
         context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
+        context.subscriptions.push(
+            languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
+                providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
+            }),
+        );
 
         const pipelinesV2Webview = new MultiWebview<Pipeline, PipelineSummaryAction>(
             context.extensionPath,

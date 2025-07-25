@@ -18,6 +18,7 @@
 - Fixed a bug when Save site button is enabled without valid credentials
 - Fixed a bug where after creating a new Jira issue, the issue would not appear in the sidebar
 - Fixed a bug where fields were not being cleared after a successful form submission and issue creation
+- Fixed an unexpected status dropdown behavior when user doesn't have enough permissions to change it.
 
 ## What's new in 3.8.6
 

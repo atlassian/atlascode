@@ -77,7 +77,19 @@
         "dev": "concurrently -r npm:watch:extension npm:watch:react"
     },
     "contributes": {
+        "keybindings": [
+            {
+                "command": "atlascode.rovodev.askInteractive",
+                "key": "ctrl+alt+a",
+                "when": "editorTextFocus",
+                "mac": "cmd+alt+a"
+            }
+        ],
         "commands": [
+            {
+                "command": "atlascode.rovodev.askInteractive",
+                "title": "Rovo Dev: Quick Ask"
+            },
             {
                 "command": "atlascode.rovodev.askRovoDev",
                 "title": "Ask Rovo Dev"

@@ -1,4 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { RovoDevContext, RovoDevPrompt } from 'src/rovo-dev/rovoDevTypes';
 
 export const enum RovoDevViewResponseType {
     Prompt = 'prompt',
@@ -11,15 +12,12 @@ export const enum RovoDevViewResponseType {
     CreatePRComplete = 'createPRComplete',
     RetryPromptAfterError = 'retryPromptAfterError',
     GetCurrentBranchName = 'getCurrentBranchName',
-}
-
-export interface PromptMessage {
-    text: string;
-    enable_deep_plan?: boolean;
+    AddContext = 'addContext',
+    ForceUserFocusUpdate = 'forceUserFocusUpdate',
 }
 
 export type RovoDevViewResponse =
-    | ReducerAction<RovoDevViewResponseType.Prompt, PromptMessage>
+    | ReducerAction<RovoDevViewResponseType.Prompt, RovoDevPrompt>
     | ReducerAction<RovoDevViewResponseType.CancelResponse>
     | ReducerAction<RovoDevViewResponseType.OpenFile, { filePath: string; tryShowDiff: boolean; range?: number[] }>
     | ReducerAction<RovoDevViewResponseType.UndoFileChanges, { filePaths: string[] }>
@@ -28,4 +26,6 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>
     | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage: string } }>
     | ReducerAction<RovoDevViewResponseType.CreatePRComplete, { url?: string; error?: string }>
-    | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>;
+    | ReducerAction<RovoDevViewResponseType.AddContext, { currentContext: RovoDevContext }>
+    | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>
+    | ReducerAction<RovoDevViewResponseType.ForceUserFocusUpdate>;

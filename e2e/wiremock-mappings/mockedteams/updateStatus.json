@@ -1,0 +1,22 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/rest/api/2/issue/BTS-1/transitions",
+    "headers": {
+      "Content-Type": {
+        "contains": "application/json"
+      }
+    },
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "$.transition.id"
+      }
+    ]
+  },
+  "response": {
+    "status": 204,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
