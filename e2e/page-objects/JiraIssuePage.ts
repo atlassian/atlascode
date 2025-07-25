@@ -28,6 +28,11 @@ export class JiraIssuePage {
         await nextOption.click();
     }
 
+    async expectStatus(expectedStatus: string) {
+        const currentStatus = await this.statusMenu.textContent();
+        expect(currentStatus).toMatch(new RegExp(expectedStatus, 'i'));
+    }
+
     async getDescription() {
         return await this.description.textContent();
     }
