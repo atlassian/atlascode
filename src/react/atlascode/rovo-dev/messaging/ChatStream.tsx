@@ -39,7 +39,7 @@ interface ChatStreamProps {
     deepPlanCreated: boolean;
     executeCodePlan: () => void;
     state: State;
-    injectMessage?: (msg: ChatMessage) => void;
+    injectMessage?: (msg: DefaultMessage) => void;
     keepAllFileChanges?: () => void;
 }
 
