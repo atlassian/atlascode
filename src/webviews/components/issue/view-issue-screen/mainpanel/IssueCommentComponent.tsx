@@ -158,7 +158,10 @@ const AddCommentComponent: React.FC<{
 }) => {
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-            <Box style={{ display: 'flex', flexDirection: 'row', alignItems: isEditing ? 'start' : 'center' }}>
+            <Box
+                data-testid="issue.comment-container"
+                style={{ display: 'flex', flexDirection: 'row', alignItems: isEditing ? 'start' : 'center' }}
+            >
                 <Box style={{ marginRight: '8px', marginTop: isEditing ? '4px' : '0px' }}>
                     <Avatar
                         src={user.avatarUrls['48x48']}
