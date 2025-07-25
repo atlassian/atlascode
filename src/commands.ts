@@ -246,15 +246,15 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             if (!prompt?.trim()) {
                 return;
             }
-            Container.rovodevWebviewProvder.invokeRovoDevAskCommand(prompt, context);
+            Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
     );
     vscodeContext.subscriptions.push(
         commands.registerCommand(Commands.RovodevAsk, (prompt: string, context?: RovoDevContext) => {
-            Container.rovodevWebviewProvder.invokeRovoDevAskCommand(prompt, context);
+            Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
         commands.registerCommand(Commands.RovodevNewSession, () => {
-            Container.rovodevWebviewProvder.executeReset();
+            Container.rovodevWebviewProvider.executeReset();
         }),
     );
 }
