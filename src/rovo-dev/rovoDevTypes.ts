@@ -28,3 +28,25 @@ export interface RovoDevPrompt {
     enable_deep_plan?: boolean;
     context?: RovoDevContext;
 }
+
+export interface CodeSnippetToChange {
+    startLine: number;
+    endLine: number;
+    code: string;
+}
+
+export interface TechnicalPlanFileToChange {
+    filePath: string;
+    descriptionOfChange: string;
+    clarifyingQuestionIfAny: string | null;
+    codeSnippetsToChange: CodeSnippetToChange[];
+}
+
+export interface TechnicalPlanLogicalChange {
+    summary: string;
+    filesToChange: TechnicalPlanFileToChange[];
+}
+
+export interface TechnicalPlan {
+    logicalChanges: TechnicalPlanLogicalChange[];
+}

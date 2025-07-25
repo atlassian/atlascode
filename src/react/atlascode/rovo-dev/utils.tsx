@@ -1,4 +1,4 @@
-import { RovoDevContext } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevContext, TechnicalPlan } from '../../../../src/rovo-dev/rovoDevTypes';
 
 export type ToolReturnMessage =
     | ToolReturnFileMessage
@@ -78,28 +78,6 @@ export interface ToolReturnGenericMessage {
 export interface ToolReturnGroupedMessage {
     source: 'ReturnGroup';
     tool_returns: ToolReturnGenericMessage[];
-}
-
-export interface CodeSnippetToChange {
-    startLine: number;
-    endLine: number;
-    code: string;
-}
-
-export interface TechnicalPlanFileToChange {
-    filePath: string;
-    descriptionOfChange: string;
-    clarifyingQuestionIfAny: string | null;
-    codeSnippetsToChange: CodeSnippetToChange[];
-}
-
-export interface TechnicalPlanLogicalChange {
-    summary: string;
-    filesToChange: TechnicalPlanFileToChange[];
-}
-
-export interface TechnicalPlan {
-    logicalChanges: TechnicalPlanLogicalChange[];
 }
 
 export interface ToolReturnParseResult {
