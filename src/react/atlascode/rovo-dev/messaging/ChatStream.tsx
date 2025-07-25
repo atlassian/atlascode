@@ -39,8 +39,7 @@ interface ChatStreamProps {
     deepPlanCreated: boolean;
     executeCodePlan: () => void;
     state: State;
-    injectMessage?: (msg: DefaultMessage) => void;
-    keepAllFileChanges?: () => void;
+    onChangesGitPushed: (msg: DefaultMessage, pullRequestCreated: boolean) => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -54,8 +53,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     state,
     messagingApi: { postMessageWithReturn },
     modifiedFiles,
-    injectMessage,
-    keepAllFileChanges,
+    onChangesGitPushed,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const [canCreatePR, setCanCreatePR] = React.useState(false);
@@ -138,20 +136,17 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             onPullRequestCreated={(url) => {
                                 setCanCreatePR(false);
                                 setIsFormVisible(false);
-                                if (injectMessage) {
-                                    if (url) {
-                                        injectMessage({
-                                            text: `Pull request ready: ${url}`,
-                                            source: 'PullRequest',
-                                        });
-                                    } else {
-                                        injectMessage({
-                                            text: 'Successfully pushed changes to the remote repository.',
-                                            source: 'PullRequest',
-                                        });
-                                    }
-                                    keepAllFileChanges?.();
-                                }
+
+                                const pullRequestCreated = !!url;
+                                onChangesGitPushed(
+                                    {
+                                        source: 'PullRequest',
+                                        text: url
+                                            ? `Pull request ready: ${url}`
+                                            : 'Successfully pushed changes to the remote repository.',
+                                    },
+                                    pullRequestCreated,
+                                );
                             }}
                             isFormVisible={isFormVisible}
                             setFormVisible={setIsFormVisible}

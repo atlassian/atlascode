@@ -15,6 +15,7 @@ export const enum RovoDevViewResponseType {
     AddContext = 'addContext',
     ForceUserFocusUpdate = 'forceUserFocusUpdate',
     ReportChangedFilesPanelShown = 'reportChangedFilesPanelShown',
+    ReportChangesGitPushed = 'reportChangesGitPushed',
 }
 
 export type RovoDevViewResponse =
@@ -30,4 +31,5 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>
     | ReducerAction<RovoDevViewResponseType.AddContext, { currentContext: RovoDevContext }>
     | ReducerAction<RovoDevViewResponseType.ForceUserFocusUpdate>
-    | ReducerAction<RovoDevViewResponseType.ReportChangedFilesPanelShown, { filesCount: number }>;
+    | ReducerAction<RovoDevViewResponseType.ReportChangedFilesPanelShown, { filesCount: number }>
+    | ReducerAction<RovoDevViewResponseType.ReportChangesGitPushed, { pullRequestCreated: boolean }>;
