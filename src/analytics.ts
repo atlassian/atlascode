@@ -235,15 +235,20 @@ export async function rovoDevFilesSummaryShownEvent(sessionId: string, filesCoun
     });
 }
 
-export async function rovoDevFileChangedActionEvent(sessionId: string, action: 'undo' | 'keep', filesCount: number) {
+export async function rovoDevFileChangedActionEvent(
+    sessionId: string,
+    promptId: string,
+    action: 'undo' | 'keep',
+    filesCount: number,
+) {
     return trackEvent('rovoDevFileChangedAction', 'atlascode', {
-        attributes: { sessionId, action, filesCount },
+        attributes: { sessionId, promptId, action, filesCount },
     });
 }
 
-export async function rovoDevStopActionEvent(sessionId: string, failed: boolean) {
+export async function rovoDevStopActionEvent(sessionId: string, promptId: string, failed: boolean) {
     return trackEvent('rovoDevStopAction', 'atlascode', {
-        attributes: { sessionId, failed },
+        attributes: { sessionId, promptId, failed },
     });
 }
 

@@ -22,8 +22,10 @@ import {
 } from 'vscode';
 
 import {
+    rovoDevFileChangedActionEvent,
     rovoDevNewSessionActionEvent,
     rovoDevPromptSentEvent,
+    rovoDevStopActionEvent,
     rovoDevTechnicalPlanningShownEvent,
 } from '../../src/analytics';
 import { Container } from '../../src/container';
@@ -550,7 +552,7 @@ ${message}`;
         if (!this._chatSessionId) {
             this._chatSessionId = v4();
             Logger.debug('Event fired: rovoDevNewSessionActionEvent false');
-            await rovoDevNewSessionActionEvent(this._chatSessionId, false).then((evt) =>
+            rovoDevNewSessionActionEvent(this._chatSessionId, false).then((evt) =>
                 Container.analyticsClient.sendTrackEvent(evt),
             );
             this._perfLogger.sessionStarted(this._chatSessionId);
@@ -571,7 +573,7 @@ ${message}`;
             const response = await client.chat(payloadToSend, enable_deep_plan);
 
             Logger.debug(`Event fired: rovoDevPromptSentEvent chat ${!!currentPrompt.enable_deep_plan}`);
-            await rovoDevPromptSentEvent(
+            rovoDevPromptSentEvent(
                 this._chatSessionId,
                 this._currentPromptId,
                 'chat',
@@ -614,7 +616,7 @@ ${message}`;
             const response = await client.chat(payloadToSend, currentPrompt.enable_deep_plan);
 
             Logger.debug(`Event fired: rovoDevPromptSentEvent chat ${!!currentPrompt.enable_deep_plan}`);
-            await rovoDevPromptSentEvent(
+            rovoDevPromptSentEvent(
                 this._chatSessionId,
                 this._currentPromptId,
                 'chat',
@@ -713,7 +715,7 @@ ${message}`;
             this._chatSessionId = v4();
             this._perfLogger.sessionStarted(this._chatSessionId);
             Logger.debug('Event fired: rovoDevNewSessionActionEvent true');
-            await rovoDevNewSessionActionEvent(this._chatSessionId, true).then((evt) =>
+            rovoDevNewSessionActionEvent(this._chatSessionId, true).then((evt) =>
                 Container.analyticsClient.sendTrackEvent(evt),
             );
         }
@@ -726,7 +728,14 @@ ${message}`;
             return await client.cancel();
         }, false);
 
-        if (cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress')) {
+        const success =
+            !!cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress');
+        Logger.debug(`Event fired: rovoDevStopActionEvent ${success}`);
+        rovoDevStopActionEvent(this._chatSessionId, this._currentPromptId, success).then((evt) =>
+            Container.analyticsClient.sendTrackEvent(evt),
+        );
+
+        if (success) {
             return true;
         } else {
             await webview.postMessage({
@@ -816,6 +825,11 @@ ${message}`;
         await Promise.all(promises);
 
         this._revertedChanges.push(...filePaths);
+
+        Logger.debug(`Event fired: rovoDevFileChangedActionEvent undo ${filePaths.length}`);
+        rovoDevFileChangedActionEvent(this._chatSessionId, this._currentPromptId, 'undo', filePaths.length).then(
+            (evt) => Container.analyticsClient.sendTrackEvent(evt),
+        );
     }
 
     private async executeKeepFiles(filePaths: string[]) {
@@ -825,6 +839,11 @@ ${message}`;
         });
 
         await Promise.all(promises);
+
+        Logger.debug(`Event fired: rovoDevFileChangedActionEvent keep ${filePaths.length}`);
+        rovoDevFileChangedActionEvent(this._chatSessionId, this._currentPromptId, 'keep', filePaths.length).then(
+            (evt) => Container.analyticsClient.sendTrackEvent(evt),
+        );
     }
 
     private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
