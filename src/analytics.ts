@@ -173,32 +173,27 @@ export async function featureFlagClientInitializedEvent(
 
 // Perf events
 
+type RovoDevPerfEvents =
+    | 'rovodev.response.timeToFirstByte'
+    | 'rovodev.response.timeToFirstMessage'
+    | 'rovodev.response.timeToTechPlan'
+    | 'rovodev.response.timeToLastMessage';
+
 interface RovoDevCommonParams {
     sessionId: string;
     promptId: string;
 }
 
 export async function performanceEvent(
-    tag: 'rovodev.response.timeToFirstByte',
+    tag: RovoDevPerfEvents,
     measure: number,
     params: RovoDevCommonParams,
 ): Promise<TrackEvent>;
 export async function performanceEvent(
-    tag: 'rovodev.response.timeToFirstMessage',
+    tag: string,
     measure: number,
-    params: RovoDevCommonParams,
-): Promise<TrackEvent>;
-export async function performanceEvent(
-    tag: 'rovodev.response.timeToTechPlan',
-    measure: number,
-    params: RovoDevCommonParams,
-): Promise<TrackEvent>;
-export async function performanceEvent(
-    tag: 'rovodev.response.timeToLastMessage',
-    measure: number,
-    params: RovoDevCommonParams,
-): Promise<TrackEvent>;
-export async function performanceEvent(tag: string, measure: number, params: Record<string, any>): Promise<TrackEvent> {
+    params?: Record<string, any>,
+): Promise<TrackEvent> {
     return trackEvent('performanceEvent', 'atlascode', {
         attributes: { tag, measure, ...(params || {}) },
     });
