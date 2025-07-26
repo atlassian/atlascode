@@ -80,7 +80,6 @@ const RovoDevView: React.FC = () => {
     const [sendButtonDisabled, setSendButtonDisabled] = useState(false);
     const [currentState, setCurrentState] = useState(State.WaitingForPrompt);
     const [promptContainerFocused, setPromptContainerFocused] = useState(false);
-
     const [promptText, setPromptText] = useState('');
     const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
     const [retryAfterErrorEnabled, setRetryAfterErrorEnabled] = useState('');
@@ -337,6 +336,8 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.Response:
+                case RovoDevProviderMessageType.ToolCall:
+                case RovoDevProviderMessageType.ToolReturn:
                     handleResponse(event.dataObject);
                     break;
 
@@ -347,14 +348,6 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.CompleteMessage:
                     finalizeResponse();
                     validateResponseFinalized();
-                    break;
-
-                case RovoDevProviderMessageType.ToolCall:
-                    handleResponse(event.dataObject);
-                    break;
-
-                case RovoDevProviderMessageType.ToolReturn:
-                    handleResponse(event.dataObject);
                     break;
 
                 case RovoDevProviderMessageType.ErrorMessage:
@@ -409,6 +402,7 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.CreatePRComplete:
                 case RovoDevProviderMessageType.GetCurrentBranchNameComplete:
                     break; // This is handled elsewhere
+
                 default:
                     handleAppendError({
                         source: 'RovoDevError',
@@ -433,9 +427,18 @@ const RovoDevView: React.FC = () => {
         ],
     );
 
-    const [postMessage, postMessageWithReturn] = useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, any>(
-        onMessageHandler,
-    );
+    const [postMessage, postMessageWithReturn] = useMessagingApi<
+        RovoDevViewResponse,
+        RovoDevProviderMessage,
+        RovoDevProviderMessage
+    >(onMessageHandler);
+
+    React.useEffect(() => {
+        if (outgoingMessage) {
+            postMessage(outgoingMessage);
+            dispatch(undefined);
+        }
+    }, [postMessage, dispatch, outgoingMessage]);
 
     React.useEffect(() => {
         if (outgoingMessage) {
@@ -573,7 +576,8 @@ const RovoDevView: React.FC = () => {
                 uniqueNonce,
             );
 
-            return (res.text as string) || '';
+            const text = res.type === RovoDevProviderMessageType.ReturnText ? res.text : undefined;
+            return text || '';
         },
         [postMessageWithReturn],
     );
