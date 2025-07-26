@@ -376,6 +376,7 @@ const RovoDevView: React.FC = () => {
                         setCurrentState(State.GeneratingResponse);
                     }
                     break;
+
                 case RovoDevProviderMessageType.UserFocusUpdated:
                     setPromptContextCollection((prev) => ({
                         ...prev,
@@ -385,6 +386,7 @@ const RovoDevView: React.FC = () => {
                         },
                     }));
                     break;
+
                 case RovoDevProviderMessageType.ContextAdded:
                     setPromptContextCollection((prev) => ({
                         ...prev,
@@ -396,12 +398,12 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.CreatePRComplete:
                 case RovoDevProviderMessageType.GetCurrentBranchNameComplete:
                     break; // This is handled elsewhere
+
                 default:
+                    // this is never supposed to happen since there aren't other type of messages
                     handleAppendError({
                         source: 'RovoDevError',
-                        // event.type complains if this is unreachable
-                        // @ts-expect-error ts(2339)
-                        text: `Unknown message type: ${event.type}`,
+                        text: `Unknown message type: ${(event as any).type}`,
                         isRetriable: false,
                         uid: v4(),
                     });

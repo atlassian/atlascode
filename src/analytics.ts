@@ -1,7 +1,7 @@
 import { Uri } from 'vscode';
 
 import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/types';
-import { CreatePrTerminalSelection, UIErrorInfo } from './analyticsTypes';
+import { CreatePrTerminalSelection, ErrorProductArea, UIErrorInfo } from './analyticsTypes';
 import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira, SiteInfo } from './atlclients/authInfo';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
@@ -123,19 +123,24 @@ function sanitizeStackTrace(stack?: string): string | undefined {
     return stack || undefined;
 }
 
+interface ErrorEventPayload {
+    productArea: ErrorProductArea;
+    name: string;
+    message?: string;
+    capturedBy?: string;
+    stack?: string;
+    additionalParams?: string;
+}
+
 export async function errorEvent(
+    productArea: ErrorProductArea,
     errorMessage: string,
     error?: Error,
     capturedBy?: string,
     additionalParams?: string,
 ): Promise<TrackEvent> {
-    const attributes: {
-        name: string;
-        message?: string;
-        capturedBy?: string;
-        stack?: string;
-        additionalParams?: string;
-    } = {
+    const attributes: ErrorEventPayload = {
+        productArea,
         message: sanitazeErrorMessage(errorMessage),
         name: error?.name || 'Error',
         capturedBy,
