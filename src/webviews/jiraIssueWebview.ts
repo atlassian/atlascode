@@ -13,9 +13,12 @@ import {
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
+import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
+import timer from 'src/util/perf';
 import { commands, env } from 'vscode';
 
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
+import { jiraIssuePerformanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
 import { PullRequestData } from '../bitbucket/model';
@@ -121,8 +124,9 @@ export class JiraIssueWebview
             if (refetchMinimalIssue) {
                 this._issue = await fetchMinimalIssue(this._issue.key, this._issue.siteDetails);
             }
+            // First Request begins here for issue rendering
+            timer.mark(`editJiraIssueUIRender.ttr_${this._issue.id}`);
             const editUI: EditIssueUI<DetailedSiteInfo> = await fetchEditIssueUI(this._issue);
-
             if (this._panel) {
                 this._panel.title = `${this._issue.key}`;
             }
@@ -138,14 +142,39 @@ export class JiraIssueWebview
 
             msg.type = 'update';
 
-            this.postMessage(msg);
+            this.postMessage(msg); // Issue has rendered
+            const uiDuration = timer.measure(`editJiraIssueUIRender.ttr_${this._issue.id}`);
+            timer.clear(`editJiraIssueUIRender.ttr_${this._issue.id}`);
+            jiraIssuePerformanceEvent('editJiraIssueUIRender.ttr', uiDuration).then((event) => {
+                Container.analyticsClient.sendTrackEvent(event);
+            });
 
+            // UI component updates
+            timer.mark(`editJiraIssueUIRender.ttr_${this._issue.id}`);
+            const performanceEnabled = FeatureFlagClient.checkExperimentValue(
+                Experiments.AtlascodePerformanceExperiment,
+            );
             // call async-able update functions here
-            this.updateEpicChildren();
-            this.updateCurrentUser();
-            this.updateWatchers();
-            this.updateVoters();
-            this.updateRelatedPullRequests();
+            if (performanceEnabled) {
+                await Promise.allSettled([
+                    this.updateEpicChildren(),
+                    this.updateCurrentUser(),
+                    this.updateWatchers(),
+                    this.updateVoters(),
+                    this.updateRelatedPullRequests(),
+                ]);
+            } else {
+                this.updateEpicChildren();
+                this.updateCurrentUser();
+                this.updateWatchers();
+                this.updateVoters();
+                this.updateRelatedPullRequests();
+            }
+            const updatesDuration = timer.measure(`editJiraIssueUIRender.ttr_${this._issue.id}`);
+            timer.clear(`editJiraIssueUIRender.ttr_${this._issue.id}`);
+            jiraIssuePerformanceEvent('editJiraIssueUpdates.ttr', updatesDuration).then((event) => {
+                Container.analyticsClient.sendTrackEvent(event);
+            });
         } catch (e) {
             Logger.error(e, 'Error updating issue');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -156,19 +185,39 @@ export class JiraIssueWebview
     async updateEpicChildren() {
         if (this._issue.isEpic) {
             const site = this._issue.siteDetails;
-            const client = await Container.clientManager.jiraClient(site);
-            const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
-            const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
-
-            let jqlQuery: string = '';
-            if (site.isCloud) {
-                jqlQuery = `parent = "${this._issue.key}" order by lastViewed DESC`;
+            const performanceEnabled = FeatureFlagClient.checkExperimentValue(
+                Experiments.AtlascodePerformanceExperiment,
+            );
+            if (performanceEnabled) {
+                const [client, fields, epicInfo] = await Promise.all([
+                    Container.clientManager.jiraClient(site),
+                    Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site),
+                    Container.jiraSettingsManager.getEpicFieldsForSite(site),
+                ]);
+                let jqlQuery: string = '';
+                if (site.isCloud) {
+                    jqlQuery = `parent = "${this._issue.key}" order by lastViewed DESC`;
+                } else {
+                    jqlQuery = `"Epic Link" = ${this._issue.key} order by lastViewed DESC`;
+                }
+                const res = await client.searchForIssuesUsingJqlGet(jqlQuery, fields);
+                const searchResults = await readSearchResults(res, site, epicInfo);
+                this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
             } else {
-                jqlQuery = `"Epic Link" = ${this._issue.key} order by lastViewed DESC`;
+                const client = await Container.clientManager.jiraClient(site);
+                const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
+                const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
+
+                let jqlQuery: string = '';
+                if (site.isCloud) {
+                    jqlQuery = `parent = "${this._issue.key}" order by lastViewed DESC`;
+                } else {
+                    jqlQuery = `"Epic Link" = ${this._issue.key} order by lastViewed DESC`;
+                }
+                const res = await client.searchForIssuesUsingJqlGet(jqlQuery, fields);
+                const searchResults = await readSearchResults(res, site, epicInfo);
+                this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
             }
-            const res = await client.searchForIssuesUsingJqlGet(jqlQuery, fields);
-            const searchResults = await readSearchResults(res, site, epicInfo);
-            this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
         }
     }
 

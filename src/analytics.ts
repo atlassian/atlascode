@@ -339,6 +339,13 @@ export async function notificationChangeEvent(
     });
 }
 
+// Jira issue performance event
+export async function jiraIssuePerformanceEvent(type: string, latency: number) {
+    return trackEvent('jiraIssuePerformanceEvent', type, {
+        attributes: { latency },
+    });
+}
+
 // PR events
 
 export async function createPrTerminalLinkDetectedEvent(isNotifEnabled: boolean): Promise<TrackEvent> {

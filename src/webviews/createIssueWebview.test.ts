@@ -1,5 +1,6 @@
 import { IssueType, MinimalORIssueLink, Project } from '@atlassianlabs/jira-pi-common-models';
 import { CreateMetaTransformerResult, FieldUI, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { FeatureFlagClient } from 'src/util/featureFlags';
 import { expansionCastTo } from 'testsutil';
 import { Position, Uri, window } from 'vscode';
 
@@ -80,11 +81,28 @@ jest.mock('form-data', () => ({
 jest.mock('../commands/jira/showIssue', () => ({
     showIssue: jest.fn(),
 }));
+// Added feature flag mock as with jiraIssueWebview.test.ts
+jest.mock('src/util/featureFlags', () => ({
+    FeatureFlagClient: {
+        checkExperimentValue: jest.fn(),
+    },
+    Experiments: {
+        AtlascodePerformanceExperiment: 'atlascode-performance-experiment',
+    },
+}));
 
 jest.mock('../views/jira/searchJiraHelper', () => ({
     SearchJiraHelper: {
         getAssignedIssuesPerSite: jest.fn().mockReturnValue([]),
     },
+}));
+
+jest.mock('../analytics', () => ({
+    authenticatedEvent: jest.fn(),
+    editedEvent: jest.fn(),
+    loggedOutEvent: jest.fn(),
+    issueCreatedEvent: jest.fn().mockResolvedValue({}),
+    jiraIssuePerformanceEvent: jest.fn().mockResolvedValue({}),
 }));
 
 const mockWindow = window as jest.Mocked<typeof window>;
@@ -143,6 +161,9 @@ describe('CreateIssueWebview', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        // Mock FeatureFlagClient to return false by default (performance disabled)
+        (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(false);
 
         // Setup mocks
         Container.siteManager.getSiteForId = jest.fn().mockReturnValue(mockSiteDetails);

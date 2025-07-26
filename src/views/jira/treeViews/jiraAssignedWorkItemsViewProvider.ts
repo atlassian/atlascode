@@ -1,3 +1,4 @@
+import timer from 'src/util/perf';
 import {
     commands,
     ConfigurationChangeEvent,
@@ -10,6 +11,7 @@ import {
 } from 'vscode';
 
 import { viewScreenEvent } from '../../../analytics';
+import { jiraIssuePerformanceEvent } from '../../../analytics';
 import { ProductJira } from '../../../atlclients/authInfo';
 import { CommandContext, setCommandContext } from '../../../commandContext';
 import { configuration } from '../../../config/configuration';
@@ -57,6 +59,7 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
 
         const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
         if (jqlEntries.length) {
+            timer.mark('initial_cumulative_jql_fetch.ttr');
             this._initPromises = new PromiseRacer(jqlEntries.map(executeJqlQuery));
         }
 
@@ -145,12 +148,19 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
             if (!this._initPromises.isEmpty()) {
                 // need to trigger a DidChangeTreeData after this method ends - 10ms as a small-enough timeout
                 setTimeout(() => this._onDidChangeTreeData.fire(), 10);
+            } else {
+                const jqlInitialDuration = timer.measure('initial_cumulative_jql_fetch.ttr');
+                timer.clear('initial_cumulative_jql_fetch.ttr');
+                jiraIssuePerformanceEvent('initial_cumulative_jql_fetch.ttr', jqlInitialDuration).then((event) => {
+                    Container.analyticsClient.sendTrackEvent(event);
+                });
             }
 
             return this._initChildren;
         }
         // this branch triggers when refresing an already rendered panel
         else {
+            timer.mark('refresh_cumulative_jql_fetch.ttr');
             const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
             if (!jqlEntries.length) {
                 return [AssignedWorkItemsViewProvider._treeItemConfigureJiraMessage];
@@ -166,6 +176,11 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
             }
 
             SearchJiraHelper.setIssues(allIssues, AssignedWorkItemsViewProviderId);
+            const jqlRefreshDuration = timer.measure('refresh_cumulative_jql_fetch.ttr');
+            timer.clear('refresh_cumulative_jql_fetch.ttr');
+            jiraIssuePerformanceEvent('refresh_cumulative_jql_fetch.ttr', jqlRefreshDuration).then((event) => {
+                Container.analyticsClient.sendTrackEvent(event);
+            });
 
             return this.buildTreeItemsFromIssues(allIssues);
         }

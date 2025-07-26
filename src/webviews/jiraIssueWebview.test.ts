@@ -1,4 +1,5 @@
 import { createEmptyMinimalIssue, emptyUser, MinimalIssue, User } from '@atlassianlabs/jira-pi-common-models';
+import { FeatureFlagClient } from 'src/util/featureFlags';
 import { expansionCastTo } from 'testsutil/miscFunctions';
 import { commands, env, WebviewPanel } from 'vscode';
 
@@ -83,6 +84,20 @@ jest.mock('../resources', () => ({
         JIRAICON: 'jira-icon',
     },
 }));
+// Added mock feature flag inspired by other feature files
+jest.mock('src/util/featureFlags', () => ({
+    FeatureFlagClient: {
+        checkExperimentValue: jest.fn(),
+    },
+    Experiments: {
+        AtlascodePerformanceExperiment: 'atlascode-performance-experiment',
+    },
+}));
+
+jest.mock('../analytics', () => ({
+    jiraIssuePerformanceEvent: jest.fn().mockResolvedValue({}),
+    issueUrlCopiedEvent: jest.fn().mockResolvedValue({}),
+}));
 
 describe('JiraIssueWebview', () => {
     let jiraIssueWebview: JiraIssueWebview;
@@ -143,6 +158,9 @@ describe('JiraIssueWebview', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        // Defaulted value for AtlascodePerformanceExperiment should be false
+        (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(false);
 
         mockJiraClient = {
             editIssue: jest.fn(),
