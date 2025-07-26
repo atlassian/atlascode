@@ -31,6 +31,7 @@ import { Logger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
 import { Pipeline } from './pipelines/model';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
+import { RovoDevDecorator } from './rovo-dev/rovoDevDecorator';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
@@ -156,11 +157,6 @@ export class Container {
         context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
         context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
-        context.subscriptions.push(
-            languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
-                providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
-            }),
-        );
 
         const pipelinesV2Webview = new MultiWebview<Pipeline, PipelineSummaryAction>(
             context.extensionPath,
@@ -203,8 +199,14 @@ export class Container {
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
 
         if (!!process.env.ROVODEV_ENABLED) {
+            context.subscriptions.push(new RovoDevDecorator());
             context.subscriptions.push(
-                (this._rovodevWebviewProvder = new RovoDevWebviewProvider(context.extensionPath, context.globalState)),
+                languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
+                    providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
+                }),
+            );
+            context.subscriptions.push(
+                (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context.extensionPath, context.globalState)),
             );
         }
 
@@ -411,8 +413,8 @@ export class Container {
         return this._onboardingProvider;
     }
 
-    private static _rovodevWebviewProvder: RovoDevWebviewProvider;
-    public static get rovodevWebviewProvder() {
-        return this._rovodevWebviewProvder;
+    private static _rovodevWebviewProvider: RovoDevWebviewProvider;
+    public static get rovodevWebviewProvider() {
+        return this._rovodevWebviewProvider;
     }
 }

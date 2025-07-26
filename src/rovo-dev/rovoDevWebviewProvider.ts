@@ -40,7 +40,7 @@ import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
-import { RovoDevContext, RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
+import { RovoDevContext, RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 const MIN_SUPPORTED_ROVODEV_VERSION = '0.9.3';
@@ -213,17 +213,18 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 case RovoDevViewResponseType.AddContext:
                     await this.executeAddContext(e.currentContext);
                     break;
+
                 case RovoDevViewResponseType.ReportChangedFilesPanelShown:
                     Logger.debug(`Event fired: rovoDevFilesSummaryShownEvent ${e.filesCount}`);
-                    await rovoDevFilesSummaryShownEvent(this._chatSessionId, e.filesCount).then((evt) =>
-                        Container.analyticsClient.sendTrackEvent(evt),
+                    rovoDevFilesSummaryShownEvent(this._chatSessionId, this._currentPromptId, e.filesCount).then(
+                        (evt) => Container.analyticsClient.sendTrackEvent(evt),
                     );
                     break;
 
                 case RovoDevViewResponseType.ReportChangesGitPushed:
                     Logger.debug(`Event fired: rovoDevGitPushActionEvent ${e.pullRequestCreated}`);
-                    await rovoDevGitPushActionEvent(this._chatSessionId, e.pullRequestCreated).then((evt) =>
-                        Container.analyticsClient.sendTrackEvent(evt),
+                    rovoDevGitPushActionEvent(this._chatSessionId, this._currentPromptId, e.pullRequestCreated).then(
+                        (evt) => Container.analyticsClient.sendTrackEvent(evt),
                     );
                     break;
             }
@@ -572,7 +573,7 @@ ${message}`;
         if (!this._chatSessionId) {
             this._chatSessionId = v4();
             Logger.debug('Event fired: rovoDevNewSessionActionEvent false');
-            await rovoDevNewSessionActionEvent(this._chatSessionId, false).then((evt) =>
+            rovoDevNewSessionActionEvent(this._chatSessionId, false).then((evt) =>
                 Container.analyticsClient.sendTrackEvent(evt),
             );
         }
@@ -581,9 +582,22 @@ ${message}`;
         this._currentPrompt = { text, enable_deep_plan, context };
 
         let payloadToSend = this.addUndoContextToPrompt(text);
-        if (context) {
-            payloadToSend = this.addContextToPrompt(payloadToSend, context);
-        }
+        payloadToSend = this.addContextToPrompt(payloadToSend, context);
+
+        const currentPrompt = this._currentPrompt;
+        const fetchOp = async (client: RovoDevApiClient) => {
+            const response = await client.chat(payloadToSend, enable_deep_plan);
+
+            Logger.debug(`Event fired: rovoDevPromptSentEvent chat ${!!currentPrompt.enable_deep_plan}`);
+            rovoDevPromptSentEvent(
+                this._chatSessionId,
+                this._currentPromptId,
+                'chat',
+                !!currentPrompt.enable_deep_plan,
+            ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
+
+            return this.processChatResponse('chat', response);
+        };
 
         const fetchOp = async (client: RovoDevApiClient) => {
             const response = await client.chat(payloadToSend);
@@ -600,7 +614,7 @@ ${message}`;
         };
 
         if (this._initialized) {
-            await this.executeApiWithErrorHandling((client) => fetchOp(client), true);
+            await this.executeApiWithErrorHandling(fetchOp, true);
         } else {
             this._pendingPrompt = {
                 text: payloadToSend,
@@ -620,6 +634,7 @@ ${message}`;
         const currentPrompt = this._currentPrompt;
         const payloadToSend = this.addRetryAfterErrorContextToPrompt(currentPrompt.text);
 
+        // we need to echo back the prompt to the View since it's not user submitted
         await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
             text: payloadToSend,
@@ -628,20 +643,20 @@ ${message}`;
         });
 
         const fetchOp = async (client: RovoDevApiClient) => {
-            const response = await client.chat(payloadToSend);
+            const response = await client.chat(payloadToSend, currentPrompt.enable_deep_plan);
 
-            Logger.debug(`Event fired: rovoDevPromptSentEvent chat ${!!this._currentPrompt!.enable_deep_plan}`);
-            await rovoDevPromptSentEvent(
+            Logger.debug(`Event fired: rovoDevPromptSentEvent chat ${!!currentPrompt.enable_deep_plan}`);
+            rovoDevPromptSentEvent(
                 this._chatSessionId,
                 this._currentPromptId,
                 'chat',
-                !!this._currentPrompt!.enable_deep_plan,
+                !!currentPrompt.enable_deep_plan,
             ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
 
             return this.processChatResponse('chat', response);
         };
 
-        await this.executeApiWithErrorHandling((client) => fetchOp(client), true);
+        await this.executeApiWithErrorHandling(fetchOp, true);
     }
 
     public async addContextItem(contextItem: RovoDevContextItem): Promise<void> {
@@ -730,7 +745,8 @@ ${message}`;
         if (success) {
             this._chatSessionId = v4();
             this._perfLogger.sessionStarted(this._chatSessionId);
-            await rovoDevNewSessionActionEvent(this._chatSessionId, true).then((evt) =>
+            Logger.debug('Event fired: rovoDevNewSessionActionEvent true');
+            rovoDevNewSessionActionEvent(this._chatSessionId, true).then((evt) =>
                 Container.analyticsClient.sendTrackEvent(evt),
             );
         }
@@ -745,9 +761,8 @@ ${message}`;
 
         const success =
             !!cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress');
-
         Logger.debug(`Event fired: rovoDevStopActionEvent ${success}`);
-        await rovoDevStopActionEvent(this._chatSessionId, success).then((evt) =>
+        rovoDevStopActionEvent(this._chatSessionId, this._currentPromptId, success).then((evt) =>
             Container.analyticsClient.sendTrackEvent(evt),
         );
 
@@ -762,6 +777,8 @@ ${message}`;
     }
 
     private async executeReplay(): Promise<void> {
+        this._currentPromptId = 'replay';
+
         await this.executeApiWithErrorHandling(async (client) => {
             return this.processChatResponse('replay', client.replay());
         }, false);
@@ -843,8 +860,8 @@ ${message}`;
         this._revertedChanges.push(...filePaths);
 
         Logger.debug(`Event fired: rovoDevFileChangedActionEvent undo ${filePaths.length}`);
-        await rovoDevFileChangedActionEvent(this._chatSessionId, 'undo', filePaths.length).then((evt) =>
-            Container.analyticsClient.sendTrackEvent(evt),
+        rovoDevFileChangedActionEvent(this._chatSessionId, this._currentPromptId, 'undo', filePaths.length).then(
+            (evt) => Container.analyticsClient.sendTrackEvent(evt),
         );
     }
 
@@ -857,8 +874,8 @@ ${message}`;
         await Promise.all(promises);
 
         Logger.debug(`Event fired: rovoDevFileChangedActionEvent keep ${filePaths.length}`);
-        await rovoDevFileChangedActionEvent(this._chatSessionId, 'keep', filePaths.length).then((evt) =>
-            Container.analyticsClient.sendTrackEvent(evt),
+        rovoDevFileChangedActionEvent(this._chatSessionId, this._currentPromptId, 'keep', filePaths.length).then(
+            (evt) => Container.analyticsClient.sendTrackEvent(evt),
         );
     }
 

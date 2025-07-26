@@ -230,27 +230,32 @@ export async function rovoDevTechnicalPlanningShownEvent(
     });
 }
 
-export async function rovoDevFilesSummaryShownEvent(sessionId: string, filesCount: number) {
+export async function rovoDevFilesSummaryShownEvent(sessionId: string, promptId: string, filesCount: number) {
     return trackEvent('rovoDevFilesSummaryShown', 'atlascode', {
-        attributes: { sessionId, filesCount },
+        attributes: { sessionId, promptId, filesCount },
     });
 }
 
-export async function rovoDevFileChangedActionEvent(sessionId: string, action: 'undo' | 'keep', filesCount: number) {
+export async function rovoDevFileChangedActionEvent(
+    sessionId: string,
+    promptId: string,
+    action: 'undo' | 'keep',
+    filesCount: number,
+) {
     return trackEvent('rovoDevFileChangedAction', 'atlascode', {
-        attributes: { sessionId, action, filesCount },
+        attributes: { sessionId, promptId, action, filesCount },
     });
 }
 
-export async function rovoDevStopActionEvent(sessionId: string, failed: boolean) {
+export async function rovoDevStopActionEvent(sessionId: string, promptId: string, failed: boolean) {
     return trackEvent('rovoDevStopAction', 'atlascode', {
-        attributes: { sessionId, failed },
+        attributes: { sessionId, promptId, failed },
     });
 }
 
-export async function rovoDevGitPushActionEvent(sessionId: string, prCreated: boolean) {
+export async function rovoDevGitPushActionEvent(sessionId: string, promptId: string, prCreated: boolean) {
     return trackEvent('rovoDevGitPushAction', 'atlascode', {
-        attributes: { sessionId, prCreated },
+        attributes: { sessionId, promptId, prCreated },
     });
 }
 

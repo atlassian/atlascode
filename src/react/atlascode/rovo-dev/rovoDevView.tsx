@@ -88,6 +88,7 @@ const RovoDevView: React.FC = () => {
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
 
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
+
     React.useEffect(() => {
         if (currentState === State.WaitingForPrompt) {
             if (curThinkingMessages.length > 0) {
@@ -105,6 +106,30 @@ const RovoDevView: React.FC = () => {
             highlightElement(block, detectLanguage(block.textContent || ''));
         });
     }, [chatStream, curThinkingMessages, currentMessage, currentState, pendingToolCallMessage]);
+
+    const finalizeResponse = useCallback(() => {
+        setSendButtonDisabled(false);
+        setCurrentState(State.WaitingForPrompt);
+        setPendingToolCallMessage('');
+        setIsDeepPlanToggled(false);
+
+        const changedFilesCount = totalModifiedFiles.filter(
+            (x) => x.type === 'create' || x.type === 'modify' || x.type === 'delete',
+        ).length;
+        if (changedFilesCount) {
+            dispatch({
+                type: RovoDevViewResponseType.ReportChangedFilesPanelShown,
+                filesCount: changedFilesCount,
+            });
+        }
+    }, [
+        setSendButtonDisabled,
+        setCurrentState,
+        setPendingToolCallMessage,
+        setIsDeepPlanToggled,
+        dispatch,
+        totalModifiedFiles,
+    ]);
 
     const handleAppendError = useCallback((msg: ErrorMessage) => {
         setChatStream((prev) => {
@@ -299,23 +324,6 @@ const RovoDevView: React.FC = () => {
         [handleAppendCurrentResponse, handleAppendModifiedFileToolReturns, handleAppendToolReturn],
     );
 
-    const finalizeResponse = useCallback(() => {
-        setSendButtonDisabled(false);
-        setCurrentState(State.WaitingForPrompt);
-        setPendingToolCallMessage('');
-        setIsDeepPlanToggled(false);
-
-        const changedFilesCount = totalModifiedFiles.filter(
-            (x) => x.type === 'create' || x.type === 'modify' || x.type === 'delete',
-        ).length;
-        if (changedFilesCount) {
-            dispatch({
-                type: RovoDevViewResponseType.ReportChangedFilesPanelShown,
-                filesCount: changedFilesCount,
-            });
-        }
-    }, [setSendButtonDisabled, setCurrentState, setPendingToolCallMessage, setIsDeepPlanToggled, totalModifiedFiles]);
-
     const onMessageHandler = useCallback(
         (event: RovoDevProviderMessage): void => {
             switch (event.type) {
@@ -411,6 +419,13 @@ const RovoDevView: React.FC = () => {
         RovoDevProviderMessage,
         RovoDevProviderMessage
     >(onMessageHandler);
+
+    React.useEffect(() => {
+        if (outgoingMessage) {
+            postMessage(outgoingMessage);
+            dispatch(undefined);
+        }
+    }, [postMessage, dispatch, outgoingMessage]);
 
     React.useEffect(() => {
         if (outgoingMessage) {

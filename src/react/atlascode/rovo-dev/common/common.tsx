@@ -11,6 +11,12 @@ import { createPatch } from 'diff';
 import MarkdownIt from 'markdown-it';
 import React, { useCallback } from 'react';
 
+import {
+    CodeSnippetToChange,
+    TechnicalPlan,
+    TechnicalPlanFileToChange,
+    TechnicalPlanLogicalChange,
+} from '../../../../../src/rovo-dev/rovoDevTypes';
 import { ChatMessageItem } from '../messaging/ChatMessageItem';
 import {
     agentMessageStyles,
@@ -22,17 +28,7 @@ import {
     undoKeepButtonStyles,
 } from '../rovoDevViewStyles';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import {
-    ChatMessage,
-    CodeSnippetToChange,
-    DefaultMessage,
-    ErrorMessage,
-    parseToolReturnMessage,
-    TechnicalPlan,
-    TechnicalPlanFileToChange,
-    TechnicalPlanLogicalChange,
-    ToolReturnParseResult,
-} from '../utils';
+import { ChatMessage, DefaultMessage, ErrorMessage, parseToolReturnMessage, ToolReturnParseResult } from '../utils';
 
 export const mdParser = new MarkdownIt({
     html: true,

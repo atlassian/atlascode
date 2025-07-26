@@ -136,6 +136,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             onPullRequestCreated={(url) => {
                                 setCanCreatePR(false);
                                 setIsFormVisible(false);
+
+                                const pullRequestCreated = !!url;
                                 onChangesGitPushed(
                                     {
                                         source: 'PullRequest',
@@ -143,7 +145,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                             ? `Pull request ready: ${url}`
                                             : 'Successfully pushed changes to the remote repository.',
                                     },
-                                    !!url,
+                                    pullRequestCreated,
                                 );
                             }}
                             isFormVisible={isFormVisible}
