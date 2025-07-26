@@ -416,7 +416,8 @@ const RovoDevView: React.FC = () => {
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendError({
                         source: 'RovoDevError',
-                        text: `Unknown message type: ${(event as any).type}`,
+                        // @ts-expect-error ts(2339) - event here should be 'never'
+                        text: `Unknown message type: ${event.type}`,
                         isRetriable: false,
                         uid: v4(),
                     });
