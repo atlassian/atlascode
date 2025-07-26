@@ -24,6 +24,7 @@ import {
 import {
     rovoDevFileChangedActionEvent,
     rovoDevFilesSummaryShownEvent,
+    rovoDevGitPushActionEvent,
     rovoDevNewSessionActionEvent,
     rovoDevPromptSentEvent,
     rovoDevStopActionEvent,
@@ -217,6 +218,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 case RovoDevViewResponseType.ReportChangedFilesPanelShown:
                     Logger.debug(`Event fired: rovoDevFilesSummaryShownEvent ${e.filesCount}`);
                     rovoDevFilesSummaryShownEvent(this._chatSessionId, this._currentPromptId, e.filesCount).then(
+                        (evt) => Container.analyticsClient.sendTrackEvent(evt),
+                    );
+                    break;
+
+                case RovoDevViewResponseType.ReportChangesGitPushed:
+                    Logger.debug(`Event fired: rovoDevGitPushActionEvent ${e.pullRequestCreated}`);
+                    rovoDevGitPushActionEvent(this._chatSessionId, this._currentPromptId, e.pullRequestCreated).then(
                         (evt) => Container.analyticsClient.sendTrackEvent(evt),
                     );
                     break;
@@ -946,6 +954,23 @@ ${message}`;
 
         // Actually invoke the rovodev service, feed responses to the webview as normal
         await this.executeChat({ text: prompt, context }, false);
+    }
+
+    /**
+     * Adds a context item to the RovoDev webview. Intended for external calls, e.g. commands
+     * @param contextItem The context item to add.
+     * @returns A promise that resolves when the context item has been added.
+     */
+    async addToContext(contextItem: RovoDevContextItem): Promise<void> {
+        if (!this._webView) {
+            console.error('Webview is not initialized.');
+            return;
+        }
+
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.ContextAdded,
+            context: contextItem,
+        });
     }
 
     private async waitFor(

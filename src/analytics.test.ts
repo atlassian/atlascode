@@ -1141,21 +1141,23 @@ describe('analytics', () => {
 
         it('should create rovoDevGitPushActionEvent when PR is created', async () => {
             const prCreated = true;
-            const event = await analytics.rovoDevGitPushActionEvent(mockSessionId, prCreated);
+            const event = await analytics.rovoDevGitPushActionEvent(mockSessionId, mockPromptId, prCreated);
 
             expect(event.trackEvent.action).toEqual('rovoDevGitPushAction');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
             expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
             expect(event.trackEvent.attributes.prCreated).toEqual(prCreated);
         });
 
         it('should create rovoDevGitPushActionEvent when PR is not created', async () => {
             const prCreated = false;
-            const event = await analytics.rovoDevGitPushActionEvent(mockSessionId, prCreated);
+            const event = await analytics.rovoDevGitPushActionEvent(mockSessionId, mockPromptId, prCreated);
 
             expect(event.trackEvent.action).toEqual('rovoDevGitPushAction');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
             expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
             expect(event.trackEvent.attributes.prCreated).toEqual(prCreated);
         });
 

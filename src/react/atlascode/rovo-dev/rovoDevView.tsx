@@ -6,7 +6,7 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import { RovoDevContext } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevContext, RovoDevContextItem } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
@@ -376,10 +376,23 @@ const RovoDevView: React.FC = () => {
                     }));
                     break;
                 case RovoDevProviderMessageType.ContextAdded:
-                    setPromptContextCollection((prev) => ({
-                        ...prev,
-                        contextItems: [...(prev.contextItems || []), event.context],
-                    }));
+                    setPromptContextCollection((prev) => {
+                        const newItem = event.context;
+                        const match = (item: any) =>
+                            item.file.absolutePath === newItem.file.absolutePath &&
+                            item.selection?.start === newItem.selection?.start &&
+                            item.selection?.end === newItem.selection?.end;
+
+                        const contextItems = prev.contextItems || [];
+                        const idx = contextItems.findIndex(match);
+                        // Add new item only if it does not already exist
+                        return idx === -1
+                            ? {
+                                  ...prev,
+                                  contextItems: [...contextItems, newItem],
+                              }
+                            : prev;
+                    });
                     break;
 
                 case RovoDevProviderMessageType.ReturnText:
@@ -550,6 +563,22 @@ const RovoDevView: React.FC = () => {
         [retryAfterErrorEnabled],
     );
 
+    const onChangesGitPushed = useCallback(
+        (msg: DefaultMessage, pullRequestCreated: boolean) => {
+            if (totalModifiedFiles.length > 0) {
+                keepFiles(totalModifiedFiles.map((file) => file.filePath!));
+            }
+
+            setChatStream((prev) => [...prev, msg]);
+
+            postMessage({
+                type: RovoDevViewResponseType.ReportChangesGitPushed,
+                pullRequestCreated,
+            });
+        },
+        [keepFiles, setChatStream, postMessage, totalModifiedFiles],
+    );
+
     return (
         <div className="rovoDevChat" style={styles.rovoDevContainerStyles}>
             <ChatStream
@@ -571,14 +600,7 @@ const RovoDevView: React.FC = () => {
                 executeCodePlan={executeCodePlan}
                 state={currentState}
                 modifiedFiles={totalModifiedFiles}
-                injectMessage={(msg: DefaultMessage) => {
-                    setChatStream((prev) => [...prev, msg]);
-                }}
-                keepAllFileChanges={() => {
-                    if (totalModifiedFiles.length > 0) {
-                        keepFiles(totalModifiedFiles.map((file) => file.filePath!));
-                    }
-                }}
+                onChangesGitPushed={onChangesGitPushed}
             />
             <div className="input-section-container">
                 <UpdatedFilesComponent
@@ -598,10 +620,15 @@ const RovoDevView: React.FC = () => {
                                 currentContext: promptContextCollection,
                             });
                         }}
-                        onRemoveContext={(filePath) => {
+                        onRemoveContext={(item: RovoDevContextItem) => {
                             setPromptContextCollection((prev) => ({
                                 ...prev,
-                                contextItems: prev.contextItems?.filter((item) => item.file.absolutePath !== filePath),
+                                contextItems: prev.contextItems?.filter(
+                                    (contextItem) =>
+                                        contextItem.file.absolutePath !== item.file.absolutePath ||
+                                        contextItem.selection?.start !== item.selection?.start ||
+                                        contextItem.selection?.end !== item.selection?.end,
+                                ),
                             }));
                         }}
                         onToggleActiveItem={(enabled) => {

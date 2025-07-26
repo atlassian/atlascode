@@ -80,6 +80,12 @@
         "keybindings": [
             {
                 "command": "atlascode.rovodev.askInteractive",
+                "key": "ctrl+alt+i",
+                "when": "editorTextFocus",
+                "mac": "cmd+alt+i"
+            },
+            {
+                "command": "atlascode.rovodev.addToContext",
                 "key": "ctrl+alt+a",
                 "when": "editorTextFocus",
                 "mac": "cmd+alt+a"
@@ -93,6 +99,10 @@
             {
                 "command": "atlascode.rovodev.askRovoDev",
                 "title": "Ask Rovo Dev"
+            },
+            {
+                "command": "atlascode.rovodev.addToContext",
+                "title": "Add selection to Rovo Dev context"
             },
             {
                 "command": "atlascode.rovodev.newChatSession",
@@ -744,6 +754,10 @@
                 {
                     "command": "atlascode.rovodev.newChatSession",
                     "when": "atlascode:rovoDevEnabled"
+                },
+                {
+                    "command": "atlascode.rovodev.addToContext",
+                    "when": "false"
                 },
                 {
                     "command": "atlascode.extensionContext.showConfigPage",
