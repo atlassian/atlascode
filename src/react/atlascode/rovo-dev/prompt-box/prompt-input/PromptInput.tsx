@@ -54,7 +54,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     return (
         <>
             <textarea
-                style={{ ...{ 'field-sizing': 'content' }, ...rovoDevTextareaStyles }}
+                style={{ ...{ fieldSizing: 'content' }, ...rovoDevTextareaStyles }}
                 placeholder={getTextAreaPlaceholder()}
                 onChange={(element) => onPromptTextChange(element.target.value)}
                 onKeyDown={handleKeyDown}
