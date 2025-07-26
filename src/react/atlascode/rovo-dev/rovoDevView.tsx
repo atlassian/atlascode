@@ -685,47 +685,71 @@ const RovoDevView: React.FC = () => {
                             onKeyDown={handleKeyDown}
                             value={promptText}
                         />
-                        <div style={styles.rovoDevButtonStyles}>
+                        <div
+                            style={{
+                                ...styles.rovoDevButtonStyles,
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                            }}
+                        >
+                            {/* Left-side Add Context Button */}
                             <LoadingButton
                                 style={{
-                                    ...styles.rovoDevDeepPlanStylesSelector(
-                                        isDeepPlanToggled,
-                                        currentState !== State.WaitingForPrompt,
-                                    ),
+                                    ...styles.rovoDevPromptButtonStyles,
                                 }}
                                 spacing="compact"
-                                label="Enable deep plan"
-                                iconBefore={<AiGenerativeTextSummaryIcon />}
-                                iconAfter={isDeepPlanToggled ? <CloseIconDeepPlan /> : undefined}
-                                isDisabled={currentState !== State.WaitingForPrompt}
-                                onClick={() => setIsDeepPlanToggled(!isDeepPlanToggled)}
-                            >
-                                {isDeepPlanToggled ? 'Deep plan enabled' : ''}
-                            </LoadingButton>
-                            {currentState === State.WaitingForPrompt && (
+                                label="Add context"
+                                iconBefore={<i className="codicon codicon-add" />}
+                                onClick={() => {
+                                    postMessage({
+                                        type: RovoDevViewResponseType.AddContext,
+                                        currentContext: promptContextCollection,
+                                    });
+                                }}
+                            />
+                            <div style={{ display: 'flex', gap: 8 }}>
                                 <LoadingButton
                                     style={{
-                                        ...styles.rovoDevPromptButtonStyles,
-                                        color: 'var(--vscode-button-foreground) !important',
-                                        backgroundColor: 'var(--vscode-button-background)',
+                                        ...styles.rovoDevDeepPlanStylesSelector(
+                                            isDeepPlanToggled,
+                                            currentState !== State.WaitingForPrompt,
+                                        ),
                                     }}
                                     spacing="compact"
-                                    label="Send prompt"
-                                    iconBefore={<SendIcon label="Send prompt" />}
-                                    isDisabled={sendButtonDisabled}
-                                    onClick={() => sendPrompt(promptText)}
-                                />
-                            )}
-                            {currentState !== State.WaitingForPrompt && (
-                                <LoadingButton
-                                    style={styles.rovoDevPromptButtonStyles}
-                                    spacing="compact"
-                                    label="Stop"
-                                    iconBefore={<StopIcon label="Stop" />}
-                                    isDisabled={currentState === State.CancellingResponse}
-                                    onClick={() => cancelResponse()}
-                                />
-                            )}
+                                    label="Enable deep plan"
+                                    iconBefore={<AiGenerativeTextSummaryIcon />}
+                                    iconAfter={isDeepPlanToggled ? <CloseIconDeepPlan /> : undefined}
+                                    isDisabled={currentState !== State.WaitingForPrompt}
+                                    onClick={() => setIsDeepPlanToggled(!isDeepPlanToggled)}
+                                >
+                                    {isDeepPlanToggled ? 'Deep plan enabled' : ''}
+                                </LoadingButton>
+                                {currentState === State.WaitingForPrompt && (
+                                    <LoadingButton
+                                        style={{
+                                            ...styles.rovoDevPromptButtonStyles,
+                                            color: 'var(--vscode-button-foreground) !important',
+                                            backgroundColor: 'var(--vscode-button-background)',
+                                        }}
+                                        spacing="compact"
+                                        label="Send prompt"
+                                        iconBefore={<SendIcon label="Send prompt" />}
+                                        isDisabled={sendButtonDisabled}
+                                        onClick={() => sendPrompt(promptText)}
+                                    />
+                                )}
+                                {currentState !== State.WaitingForPrompt && (
+                                    <LoadingButton
+                                        style={styles.rovoDevPromptButtonStyles}
+                                        spacing="compact"
+                                        label="Stop"
+                                        iconBefore={<StopIcon label="Stop" />}
+                                        isDisabled={currentState === State.CancellingResponse}
+                                        onClick={() => cancelResponse()}
+                                    />
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
