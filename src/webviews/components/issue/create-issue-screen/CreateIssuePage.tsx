@@ -6,8 +6,9 @@ import Page from '@atlaskit/page';
 import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
 import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { FieldUI, FieldValues, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import * as React from 'react';
+import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
 import { DetailedSiteInfo, emptySiteInfo } from '../../../../atlclients/authInfo';
@@ -33,12 +34,14 @@ type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;
 interface ViewState extends CommonEditorViewState, CreateIssueData {
     createdIssue: IssueKeyAndSite<DetailedSiteInfo>;
+    formKey: string;
 }
 
 const emptyState: ViewState = {
     ...emptyCommonEditorState,
     ...emptyCreateIssueData,
     createdIssue: { key: '', siteDetails: emptySiteInfo },
+    formKey: v4(),
 };
 
 const IconOption = (props: any) => (
@@ -63,6 +66,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     private advancedFields: FieldUI[] = [];
     private commonFields: FieldUI[] = [];
     private attachingInProgress = false;
+    private initialFieldValues: FieldValues = {};
 
     getProjectKey(): string {
         return this.state.fieldValues['project'].key;
@@ -81,6 +85,25 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                 case 'update': {
                     handled = true;
                     const issueData = e as CreateIssueData;
+                    const { fieldValues } = issueData;
+
+                    if (fieldValues) {
+                        const isInitialFieldsEmpty = Object.keys(this.initialFieldValues).length === 0;
+                        const hasIncomingFields = Object.keys(fieldValues).length > 0;
+
+                        if (isInitialFieldsEmpty && hasIncomingFields) {
+                            this.initialFieldValues = { ...fieldValues };
+                        }
+
+                        if (!isInitialFieldsEmpty) {
+                            Object.keys(this.initialFieldValues).forEach((key) => {
+                                if (key in fieldValues) {
+                                    this.initialFieldValues[key] = fieldValues[key];
+                                }
+                            });
+                        }
+                    }
+
                     this.updateInternals(issueData);
                     this.setState(issueData, () => {
                         this.setState({
@@ -105,10 +128,8 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                             isSomethingLoading: false,
                             loadingField: '',
                             createdIssue: e.issueData,
-                            fieldValues: {
-                                ...this.state.fieldValues,
-                                ...{ description: '', summary: '' },
-                            },
+                            fieldValues: this.initialFieldValues,
+                            formKey: v4(),
                         });
                         // Refresh sidebar tree views after successful issue creation
                         this.postMessage({
@@ -364,7 +385,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                         errorDetails={this.state.errorDetails}
                                     />
                                 )}
-                                <Form name="create-issue" onSubmit={this.handleSubmit}>
+                                <Form name="create-issue" key={this.state.formKey} onSubmit={this.handleSubmit}>
                                     {(frmArgs: any) => {
                                         return (
                                             <form {...frmArgs.formProps}>
