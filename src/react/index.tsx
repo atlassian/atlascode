@@ -29,6 +29,9 @@ const routes: Record<string, any> = {
     startWorkPageV2: React.lazy(
         () => import(/* webpackChunkName: "startWorkPageV2" */ './atlascode/startwork/StartWorkPage'),
     ),
+    startWorkPageV3: React.lazy(
+        () => import(/* webpackChunkName: "startWorkPageV3" */ './atlascode/startwork/v3/StartWorkPageV3'),
+    ),
     pipelineSummaryV2: React.lazy(
         () => import(/* webpackChunkName: "pipelineSummaryV2" */ './atlascode/pipelines/PipelineSummaryPage'),
     ),

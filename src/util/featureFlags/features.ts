@@ -2,6 +2,7 @@ export const enum Features {
     EnableErrorTelemetry = 'atlascode-send-error-telemetry',
     JiraRichText = 'atlascode-jira-rte',
     AtlassianNotifications = 'atlascode-atlassian-notifications-v2',
+    StartWorkV3 = 'atlascode-start-work-v3',
 }
 
 export const enum Experiments {
