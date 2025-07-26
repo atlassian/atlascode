@@ -43,6 +43,7 @@ services:
             - ${PWD}/..:/atlascode
         environment:
             - NODE_TLS_REJECT_UNAUTHORIZED=0
+            - ONLYSERVER
         depends_on:
             - wiremock-mockedteams
             - wiremock-bitbucket
@@ -50,3 +51,4 @@ services:
             - e2e
         ports:
             - '9988:9988'
+            - '31415:31415'
