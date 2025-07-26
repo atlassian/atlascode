@@ -38,7 +38,7 @@ export const ModifiedFileItem: React.FC<{
     };
 
     return (
-        <div className="modified-file-item" onClick={() => onFileClick(filePath)}>
+        <div aria-label="modified-file-item" className="modified-file-item" onClick={() => onFileClick(filePath)}>
             <div id={getId()}>{filePath}</div>
             <div className="modified-file-actions">
                 <button className="modified-file-action" onClick={handleUndo} aria-label="Undo changes to this file">
