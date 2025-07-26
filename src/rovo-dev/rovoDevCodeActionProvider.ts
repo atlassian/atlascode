@@ -17,6 +17,13 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
         return [
             this.generateCommand('Rovo Dev: Explain', 'Please explain this code', document, range),
             this.generateCommand('Rovo Dev: Fix Code', 'Please fix this code', document, range),
+            {
+                title: 'Rovo Dev: Add to Context',
+                command: {
+                    command: Commands.RovodevAddToContext,
+                    title: 'Add to Rovo Dev Context',
+                },
+            },
         ];
     }
 
