@@ -56,20 +56,23 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _perfLogger = new PerformanceLogger();
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _rovoDevApiClient?: RovoDevApiClient;
-    private _disposables: Disposable[] = [];
-    private _extensionUri: Uri;
     private _initialized = false;
 
     private _chatSessionId: string = '';
     private _currentPromptId: string = '';
     private _currentPrompt: RovoDevPrompt | undefined;
     private _pendingPrompt: RovoDevPrompt | undefined;
-
     private _pendingCancellation = false;
 
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
     private _revertedChanges: string[] = [];
+
+    private _disposables: Disposable[] = [];
+
+    private _globalState: Memento;
+    private _extensionPath: string;
+    private _extensionUri: Uri;
 
     private get rovoDevApiClient() {
         if (!this._rovoDevApiClient) {
@@ -83,15 +86,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return this._rovoDevApiClient;
     }
 
-    constructor(
-        private _extensionPath: string,
-        private _globalState: Memento,
-    ) {
+    constructor(extensionPath: string, globalState: Memento) {
         super(() => {
             this._dispose();
         });
 
+        this._extensionPath = extensionPath;
         this._extensionUri = Uri.file(this._extensionPath);
+        this._globalState = globalState;
 
         // Register the webview view provider
         this._disposables.push(
@@ -339,8 +341,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this._perfLogger.promptStarted(this._currentPromptId);
         }
 
-        this._perfLogger.promptStarted(this._currentPromptId);
-
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         const parser = new RovoDevResponseParser();
@@ -390,11 +390,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private async processError(error: Error, isRetriable: boolean) {
+    private processError(error: Error, isRetriable: boolean) {
         Logger.error('RovoDev', error);
 
         const webview = this._webView!;
-        return await webview.postMessage({
+        return webview.postMessage({
             type: RovoDevProviderMessageType.ErrorMessage,
             message: {
                 text: `Error: ${error.message}`,
@@ -443,7 +443,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 });
 
             case 'tool-return':
-                // we received a technical plan -> fire related telemetry events
                 if (fireTelemetry && response.tool_name === 'create_technical_plan' && response.parsedContent) {
                     this._perfLogger.promptTechnicalPlanReceived(this._currentPromptId);
 
@@ -465,7 +464,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         questionsCount,
                     ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
                 }
-
                 return webview.postMessage({
                     type: RovoDevProviderMessageType.ToolReturn,
                     dataObject: response,
@@ -575,10 +573,15 @@ ${message}`;
             rovoDevNewSessionActionEvent(this._chatSessionId, false).then((evt) =>
                 Container.analyticsClient.sendTrackEvent(evt),
             );
+            this._perfLogger.sessionStarted(this._chatSessionId);
         }
 
         this._currentPromptId = v4();
-        this._currentPrompt = { text, enable_deep_plan, context };
+        this._currentPrompt = {
+            text,
+            enable_deep_plan,
+            context,
+        };
 
         let payloadToSend = this.addUndoContextToPrompt(text);
         payloadToSend = this.addContextToPrompt(payloadToSend, context);
@@ -714,7 +717,6 @@ ${message}`;
 
     async executeReset(): Promise<void> {
         const webview = this._webView!;
-
         const success = await this.executeApiWithErrorHandling(async (client) => {
             await client.reset();
 
@@ -898,7 +900,6 @@ ${message}`;
             await this.processError(e, false);
         }
     }
-
     private async executeApiWithErrorHandling<T>(
         func: (client: RovoDevApiClient) => Promise<T>,
         isErrorRetriable: boolean,

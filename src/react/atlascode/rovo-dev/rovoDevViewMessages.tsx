@@ -9,6 +9,7 @@ export const enum RovoDevViewResponseType {
     KeepFileChanges = 'keepFileChanges',
     GetOriginalText = 'getOriginalText',
     CreatePR = 'createPR',
+    CreatePRComplete = 'createPRComplete',
     RetryPromptAfterError = 'retryPromptAfterError',
     GetCurrentBranchName = 'getCurrentBranchName',
     AddContext = 'addContext',
@@ -25,6 +26,7 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.KeepFileChanges, { filePaths: string[] }>
     | ReducerAction<RovoDevViewResponseType.GetOriginalText, { filePath: string; range?: number[]; requestId: string }>
     | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage: string } }>
+    | ReducerAction<RovoDevViewResponseType.CreatePRComplete, { url?: string; error?: string }>
     | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>
     | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>
     | ReducerAction<RovoDevViewResponseType.AddContext, { currentContext: RovoDevContext }>

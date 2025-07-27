@@ -112,10 +112,7 @@ describe('PullRequestForm', () => {
     });
 
     it('submits form with correct data', async () => {
-        mockPostMessageWithReturn.mockResolvedValue({
-            type: RovoDevProviderMessageType.CreatePRComplete,
-            data: { url: 'http://pr-url.com' },
-        });
+        mockPostMessageWithReturn.mockResolvedValue({ data: { url: 'http://pr-url.com' } });
 
         render(
             <PullRequestForm
@@ -142,7 +139,7 @@ describe('PullRequestForm', () => {
                     type: RovoDevViewResponseType.CreatePR,
                     payload: { branchName: 'test-branch', commitMessage: 'Test commit message' },
                 },
-                RovoDevProviderMessageType.CreatePRComplete,
+                RovoDevViewResponseType.CreatePRComplete,
                 expect.any(Number),
             );
             expect(mockOnPullRequestCreated).toHaveBeenCalledWith('http://pr-url.com');
