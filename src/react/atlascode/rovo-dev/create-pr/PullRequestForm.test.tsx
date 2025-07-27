@@ -139,7 +139,7 @@ describe('PullRequestForm', () => {
                     type: RovoDevViewResponseType.CreatePR,
                     payload: { branchName: 'test-branch', commitMessage: 'Test commit message' },
                 },
-                RovoDevViewResponseType.CreatePRComplete,
+                RovoDevProviderMessageType.CreatePRComplete,
                 expect.any(Number),
             );
             expect(mockOnPullRequestCreated).toHaveBeenCalledWith('http://pr-url.com');
