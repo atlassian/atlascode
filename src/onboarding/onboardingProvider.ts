@@ -1,6 +1,6 @@
+import { Logger } from 'src/logger';
 import { commands, env, InputBox, UIKind, window } from 'vscode';
 
-import { Logger } from '../../src/logger';
 import { authenticateButtonEvent, viewScreenEvent } from '../analytics';
 import { type AnalyticsClient } from '../analytics-node-client/src/client.min';
 import { BasicAuthInfo, Product, ProductBitbucket, ProductJira, SiteInfo } from '../atlclients/authInfo';

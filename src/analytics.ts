@@ -123,6 +123,15 @@ function sanitizeStackTrace(stack?: string): string | undefined {
     return stack || undefined;
 }
 
+interface ErrorEventPayload {
+    productArea: ErrorProductArea;
+    name: string;
+    message?: string;
+    capturedBy?: string;
+    stack?: string;
+    additionalParams?: string;
+}
+
 export async function errorEvent(
     productArea: ErrorProductArea,
     errorMessage: string,
@@ -130,13 +139,8 @@ export async function errorEvent(
     capturedBy?: string,
     additionalParams?: string,
 ): Promise<TrackEvent> {
-    const attributes: {
-        name: string;
-        message?: string;
-        capturedBy?: string;
-        stack?: string;
-        additionalParams?: string;
-    } = {
+    const attributes: ErrorEventPayload = {
+        productArea,
         message: sanitazeErrorMessage(errorMessage),
         name: error?.name || 'Error',
         capturedBy,

@@ -5,9 +5,9 @@
  * The annotation is shown only if enabled via the `atlascode.rovodev.showKeybinding` setting.
  * Decoration updates automatically on selection, editor, and configuration changes.
  */
-import { Disposable, Range, window, workspace } from 'vscode';
+import { Range, ThemeColor, window, workspace } from 'vscode';
 
-export class RovoDevDecorator implements Disposable {
+export class RovoDevDecorator {
     private enabled: boolean;
     private keybindingDecoration;
 
@@ -16,7 +16,7 @@ export class RovoDevDecorator implements Disposable {
         this.keybindingDecoration = window.createTextEditorDecorationType({
             after: {
                 contentText: RovoDevDecorator.buildKeybindingLabel(),
-                color: '#888888',
+                color: new ThemeColor('editorCodeLens.foreground'),
             },
         });
         this.updateKeybindingDecoration();

@@ -9,7 +9,7 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import { RovoDevContext } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevContext, RovoDevContextItem } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
@@ -369,6 +369,7 @@ const RovoDevView: React.FC = () => {
                         setCurrentState(State.GeneratingResponse);
                     }
                     break;
+
                 case RovoDevProviderMessageType.UserFocusUpdated:
                     setPromptContextCollection((prev) => ({
                         ...prev,
@@ -378,11 +379,25 @@ const RovoDevView: React.FC = () => {
                         },
                     }));
                     break;
+
                 case RovoDevProviderMessageType.ContextAdded:
-                    setPromptContextCollection((prev) => ({
-                        ...prev,
-                        contextItems: [...(prev.contextItems || []), event.context],
-                    }));
+                    setPromptContextCollection((prev) => {
+                        const newItem = event.context;
+                        const match = (item: any) =>
+                            item.file.absolutePath === newItem.file.absolutePath &&
+                            item.selection?.start === newItem.selection?.start &&
+                            item.selection?.end === newItem.selection?.end;
+
+                        const contextItems = prev.contextItems || [];
+                        const idx = contextItems.findIndex(match);
+                        // Add new item only if it does not already exist
+                        return idx === -1
+                            ? {
+                                  ...prev,
+                                  contextItems: [...contextItems, newItem],
+                              }
+                            : prev;
+                    });
                     break;
 
                 case RovoDevProviderMessageType.ReturnText:
@@ -391,10 +406,10 @@ const RovoDevView: React.FC = () => {
                     break; // This is handled elsewhere
 
                 default:
+                    // this is never supposed to happen since there aren't other type of messages
                     handleAppendError({
                         source: 'RovoDevError',
-                        // event.type complains if this is unreachable
-                        // @ts-expect-error ts(2339)
+                        // @ts-expect-error ts(2339) - event here should be 'never'
                         text: `Unknown message type: ${event.type}`,
                         isRetriable: false,
                         uid: v4(),
@@ -643,11 +658,14 @@ const RovoDevView: React.FC = () => {
                                     currentContext: promptContextCollection,
                                 });
                             }}
-                            onRemoveContext={(filePath) => {
+                            onRemoveContext={(item: RovoDevContextItem) => {
                                 setPromptContextCollection((prev) => ({
                                     ...prev,
                                     contextItems: prev.contextItems?.filter(
-                                        (item) => item.file.absolutePath !== filePath,
+                                        (contextItem) =>
+                                            contextItem.file.absolutePath !== item.file.absolutePath ||
+                                            contextItem.selection?.start !== item.selection?.start ||
+                                            contextItem.selection?.end !== item.selection?.end,
                                     ),
                                 }));
                             }}
@@ -673,47 +691,71 @@ const RovoDevView: React.FC = () => {
                             onKeyDown={handleKeyDown}
                             value={promptText}
                         />
-                        <div style={styles.rovoDevButtonStyles}>
+                        <div
+                            style={{
+                                ...styles.rovoDevButtonStyles,
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                            }}
+                        >
+                            {/* Left-side Add Context Button */}
                             <LoadingButton
                                 style={{
-                                    ...styles.rovoDevDeepPlanStylesSelector(
-                                        isDeepPlanToggled,
-                                        currentState !== State.WaitingForPrompt,
-                                    ),
+                                    ...styles.rovoDevPromptButtonStyles,
                                 }}
                                 spacing="compact"
-                                label="Enable deep plan"
-                                iconBefore={<AiGenerativeTextSummaryIcon />}
-                                iconAfter={isDeepPlanToggled ? <CloseIconDeepPlan /> : undefined}
-                                isDisabled={currentState !== State.WaitingForPrompt}
-                                onClick={() => setIsDeepPlanToggled(!isDeepPlanToggled)}
-                            >
-                                {isDeepPlanToggled ? 'Deep plan enabled' : ''}
-                            </LoadingButton>
-                            {currentState === State.WaitingForPrompt && (
+                                label="Add context"
+                                iconBefore={<i className="codicon codicon-add" />}
+                                onClick={() => {
+                                    postMessage({
+                                        type: RovoDevViewResponseType.AddContext,
+                                        currentContext: promptContextCollection,
+                                    });
+                                }}
+                            />
+                            <div style={{ display: 'flex', gap: 8 }}>
                                 <LoadingButton
                                     style={{
-                                        ...styles.rovoDevPromptButtonStyles,
-                                        color: 'var(--vscode-button-foreground) !important',
-                                        backgroundColor: 'var(--vscode-button-background)',
+                                        ...styles.rovoDevDeepPlanStylesSelector(
+                                            isDeepPlanToggled,
+                                            currentState !== State.WaitingForPrompt,
+                                        ),
                                     }}
                                     spacing="compact"
-                                    label="Send prompt"
-                                    iconBefore={<SendIcon label="Send prompt" />}
-                                    isDisabled={sendButtonDisabled}
-                                    onClick={() => sendPrompt(promptText)}
-                                />
-                            )}
-                            {currentState !== State.WaitingForPrompt && (
-                                <LoadingButton
-                                    style={styles.rovoDevPromptButtonStyles}
-                                    spacing="compact"
-                                    label="Stop"
-                                    iconBefore={<StopIcon label="Stop" />}
-                                    isDisabled={currentState === State.CancellingResponse}
-                                    onClick={() => cancelResponse()}
-                                />
-                            )}
+                                    label="Enable deep plan"
+                                    iconBefore={<AiGenerativeTextSummaryIcon />}
+                                    iconAfter={isDeepPlanToggled ? <CloseIconDeepPlan /> : undefined}
+                                    isDisabled={currentState !== State.WaitingForPrompt}
+                                    onClick={() => setIsDeepPlanToggled(!isDeepPlanToggled)}
+                                >
+                                    {isDeepPlanToggled ? 'Deep plan enabled' : ''}
+                                </LoadingButton>
+                                {currentState === State.WaitingForPrompt && (
+                                    <LoadingButton
+                                        style={{
+                                            ...styles.rovoDevPromptButtonStyles,
+                                            color: 'var(--vscode-button-foreground) !important',
+                                            backgroundColor: 'var(--vscode-button-background)',
+                                        }}
+                                        spacing="compact"
+                                        label="Send prompt"
+                                        iconBefore={<SendIcon label="Send prompt" />}
+                                        isDisabled={sendButtonDisabled}
+                                        onClick={() => sendPrompt(promptText)}
+                                    />
+                                )}
+                                {currentState !== State.WaitingForPrompt && (
+                                    <LoadingButton
+                                        style={styles.rovoDevPromptButtonStyles}
+                                        spacing="compact"
+                                        label="Stop"
+                                        iconBefore={<StopIcon label="Stop" />}
+                                        isDisabled={currentState === State.CancellingResponse}
+                                        onClick={() => cancelResponse()}
+                                    />
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import path from 'path';
 import { gte as semver_gte } from 'semver';
-import { TechnicalPlan } from 'src/react/atlascode/rovo-dev/utils';
 import { setTimeout } from 'timers/promises';
 import { v4 } from 'uuid';
 import {
@@ -599,20 +598,6 @@ ${message}`;
             return this.processChatResponse('chat', response);
         };
 
-        const fetchOp = async (client: RovoDevApiClient) => {
-            const response = await client.chat(payloadToSend);
-
-            Logger.debug(`Event fired: rovoDevPromptSentEvent chat ${!!this._currentPrompt!.enable_deep_plan}`);
-            await rovoDevPromptSentEvent(
-                this._chatSessionId,
-                this._currentPromptId,
-                'chat',
-                !!this._currentPrompt!.enable_deep_plan,
-            ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
-
-            return this.processChatResponse('chat', response);
-        };
-
         if (this._initialized) {
             await this.executeApiWithErrorHandling(fetchOp, true);
         } else {
@@ -970,6 +955,23 @@ ${message}`;
 
         // Actually invoke the rovodev service, feed responses to the webview as normal
         await this.executeChat({ text: prompt, context }, false);
+    }
+
+    /**
+     * Adds a context item to the RovoDev webview. Intended for external calls, e.g. commands
+     * @param contextItem The context item to add.
+     * @returns A promise that resolves when the context item has been added.
+     */
+    async addToContext(contextItem: RovoDevContextItem): Promise<void> {
+        if (!this._webView) {
+            console.error('Webview is not initialized.');
+            return;
+        }
+
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.ContextAdded,
+            context: contextItem,
+        });
     }
 
     private async waitFor(

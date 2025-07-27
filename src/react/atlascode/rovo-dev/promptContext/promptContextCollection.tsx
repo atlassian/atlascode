@@ -1,7 +1,7 @@
 import React from 'react';
-import { RovoDevContext } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevContext, RovoDevContextItem } from 'src/rovo-dev/rovoDevTypes';
 
-import { AddContextButton, PromptContextItem } from './promptContextItem';
+import { PromptContextItem } from './promptContextItem';
 
 // PromptContextCollection: displays a row or column of PromptContextItem
 export const PromptContextCollection: React.FC<{
@@ -11,7 +11,7 @@ export const PromptContextCollection: React.FC<{
     onToggleActiveItem?: (enabled: boolean) => void;
     readonly?: boolean;
     onAddContext?: () => void;
-    onRemoveContext?: (filePath: string) => void;
+    onRemoveContext?: (item: RovoDevContextItem) => void;
 }> = ({
     content,
     direction = 'row',
@@ -39,7 +39,8 @@ export const PromptContextCollection: React.FC<{
                 boxSizing: 'border-box',
             }}
         >
-            {!readonly && <AddContextButton onClick={onAddContext} />}
+            {/* Disabled for now in favor of the larger button outside the collection */}
+            {/* {!readonly && <AddContextButton onClick={onAddContext} />} */}
             {content.focusInfo && !content.focusInfo.invalid && showFocusInfo && (
                 <PromptContextItem
                     file={content.focusInfo.file}
@@ -55,9 +56,7 @@ export const PromptContextCollection: React.FC<{
                         key={index}
                         file={item.file}
                         selection={item.selection}
-                        onRemove={
-                            !readonly && onRemoveContext ? () => onRemoveContext(item.file.absolutePath) : undefined
-                        }
+                        onRemove={!readonly && onRemoveContext ? () => onRemoveContext(item) : undefined}
                     />
                 ))}
         </div>

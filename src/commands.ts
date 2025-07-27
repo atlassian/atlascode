@@ -257,4 +257,15 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             Container.rovodevWebviewProvider.executeReset();
         }),
     );
+    vscodeContext.subscriptions.push(
+        commands.registerCommand(Commands.RovodevAddToContext, async () => {
+            const context = buildContext(window.activeTextEditor, vscodeContext);
+            if (!context || !context.focusInfo) {
+                // Do nothing, this should only have effect in editor context
+                return;
+            }
+            commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+            Container.rovodevWebviewProvider.addToContext(context.focusInfo);
+        }),
+    );
 }
