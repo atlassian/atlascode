@@ -109,6 +109,8 @@ export abstract class AbstractIssueEditorPage<
     abstract getProjectKey(): string;
     abstract fetchUsers: (input: string) => Promise<any[]>;
 
+    protected abstract getApiVersion(): string;
+
     protected handleInlineEdit = (field: FieldUI, newValue: any): Promise<void> => {
         return Promise.resolve();
     };
@@ -313,6 +315,15 @@ export abstract class AbstractIssueEditorPage<
 
     protected loadSelectOptionsForField = (field: SelectFieldUI, input: string): Promise<any[]> => {
         this.setState({ isSomethingLoading: true, loadingField: field.key });
+
+        if (field.valueType === ValueType.User) {
+            const apiVersion = this.getApiVersion();
+            const userSearchUrl = this.state.siteDetails.isCloud
+                ? `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?query=`
+                : `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?username=`;
+            return this.loadSelectOptions(input, userSearchUrl);
+        }
+
         return this.loadSelectOptions(input, this.fixAutocompleteUrl(field.autoCompleteUrl));
     };
 
