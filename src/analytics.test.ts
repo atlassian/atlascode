@@ -242,7 +242,7 @@ describe('analytics', () => {
             const capturedBy = 'test-function';
             const additionalParams = 'additional-info';
 
-            const event = await analytics.errorEvent(errorMessage, error, capturedBy, additionalParams);
+            const event = await analytics.errorEvent(undefined, errorMessage, error, capturedBy, additionalParams);
 
             expect(event.trackEvent.action).toEqual('errorEvent_v2');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
@@ -258,7 +258,7 @@ describe('analytics', () => {
             const error = new Error('Test error');
             error.stack = 'Error: Test error\n    at TestFunction (/Users/realuser/test.js:10:15)';
 
-            const event = await analytics.errorEvent(errorMessage, error);
+            const event = await analytics.errorEvent(undefined, errorMessage, error);
 
             // Check if the username was sanitized
             expect(event.trackEvent.attributes.stack).toContain('/Users/<user>/');
@@ -735,7 +735,7 @@ describe('analytics', () => {
 
         it('should sanitize IP addresses in error messages', async () => {
             const ipErrorMessage = 'connect error 192.168.1.1 failed';
-            const event = await analytics.errorEvent(ipErrorMessage);
+            const event = await analytics.errorEvent(undefined, ipErrorMessage);
 
             expect(event.trackEvent.attributes.message).not.toContain('192.168.1.1');
             expect(event.trackEvent.attributes.message).toContain('<ip>');
@@ -743,16 +743,10 @@ describe('analytics', () => {
 
         it('should sanitize domain names in getaddrinfo errors', async () => {
             const domainErrorMessage = 'getaddrinfo ENOTFOUND example.com';
-            const event = await analytics.errorEvent(domainErrorMessage);
+            const event = await analytics.errorEvent(undefined, domainErrorMessage);
 
             expect(event.trackEvent.attributes.message).not.toContain('example.com');
             expect(event.trackEvent.attributes.message).toContain('<domain>');
-        });
-
-        it('should handle null error messages', async () => {
-            const event = await analytics.errorEvent(undefined as any);
-
-            expect(event.trackEvent.attributes.message).toBeUndefined();
         });
 
         it('should handle anonymous user for analytics events when AAID is not available', async () => {

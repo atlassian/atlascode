@@ -1,7 +1,7 @@
 import React from 'react';
 import { RovoDevContext, RovoDevContextItem } from 'src/rovo-dev/rovoDevTypes';
 
-import { AddContextButton, PromptContextItem } from './promptContextItem';
+import { PromptContextItem } from './promptContextItem';
 
 // PromptContextCollection: displays a row or column of PromptContextItem
 export const PromptContextCollection: React.FC<{
@@ -39,7 +39,8 @@ export const PromptContextCollection: React.FC<{
                 boxSizing: 'border-box',
             }}
         >
-            {!readonly && <AddContextButton onClick={onAddContext} />}
+            {/* Disabled for now in favor of the larger button outside the collection */}
+            {/* {!readonly && <AddContextButton onClick={onAddContext} />} */}
             {content.focusInfo && !content.focusInfo.invalid && showFocusInfo && (
                 <PromptContextItem
                     file={content.focusInfo.file}

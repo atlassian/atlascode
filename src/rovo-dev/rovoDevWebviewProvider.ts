@@ -391,6 +391,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private processError(error: Error, isRetriable: boolean) {
+        Logger.error('RovoDev', error);
+
         const webview = this._webView!;
         return webview.postMessage({
             type: RovoDevProviderMessageType.ErrorMessage,

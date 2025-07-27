@@ -133,28 +133,60 @@ describe('errorReporting', () => {
                 const error = createError('Error1');
                 errorlistener!({ error });
 
-                expect(analytics.errorEvent).toHaveBeenCalledWith(error.message, error, undefined, undefined);
+                expect(analytics.errorEvent).toHaveBeenCalledWith(
+                    undefined,
+                    error.message,
+                    error,
+                    undefined,
+                    undefined,
+                );
             });
 
             it('with capturedBy', () => {
                 const error = createError('Error1');
                 errorlistener!({ error, capturedBy: 'foo' });
 
-                expect(analytics.errorEvent).toHaveBeenCalledWith(error.message, error, 'foo', undefined);
+                expect(analytics.errorEvent).toHaveBeenCalledWith(undefined, error.message, error, 'foo', undefined);
+            });
+
+            it('with productArea', () => {
+                const error = createError('Error1');
+                errorlistener!({ error, productArea: 'RovoDev' });
+
+                expect(analytics.errorEvent).toHaveBeenCalledWith(
+                    'RovoDev',
+                    error.message,
+                    error,
+                    undefined,
+                    undefined,
+                );
             });
 
             it('with a custom message', () => {
                 const error = createError('Error1');
                 errorlistener!({ error, errorMessage: "what's this" });
 
-                expect(analytics.errorEvent).toHaveBeenCalledWith("what's this", error, undefined, undefined);
+                expect(analytics.errorEvent).toHaveBeenCalledWith(
+                    undefined,
+                    "what's this",
+                    error,
+                    undefined,
+                    undefined,
+                );
             });
 
             it('with a custom message and capturedBy', () => {
                 const error = createError('Error1');
                 errorlistener!({ error, errorMessage: "what's this", capturedBy: 'fii' });
 
-                expect(analytics.errorEvent).toHaveBeenCalledWith("what's this", error, 'fii', undefined);
+                expect(analytics.errorEvent).toHaveBeenCalledWith(undefined, "what's this", error, 'fii', undefined);
+            });
+
+            it('with productArea, custom message, and capturedBy', () => {
+                const error = createError('Error1');
+                errorlistener!({ error, errorMessage: "what's this", capturedBy: 'fii', productArea: 'RovoDev' });
+
+                expect(analytics.errorEvent).toHaveBeenCalledWith('RovoDev', "what's this", error, 'fii', undefined);
             });
 
             it('with a single param', () => {
@@ -162,7 +194,13 @@ describe('errorReporting', () => {
                 const params = ['single param'];
                 errorlistener!({ error, params });
 
-                expect(analytics.errorEvent).toHaveBeenCalledWith(error.message, error, undefined, 'single param');
+                expect(analytics.errorEvent).toHaveBeenCalledWith(
+                    undefined,
+                    error.message,
+                    error,
+                    undefined,
+                    'single param',
+                );
             });
 
             it('with multiple params', () => {
@@ -171,6 +209,7 @@ describe('errorReporting', () => {
                 errorlistener!({ error, params });
 
                 expect(analytics.errorEvent).toHaveBeenCalledWith(
+                    undefined,
                     error.message,
                     error,
                     undefined,
@@ -183,7 +222,13 @@ describe('errorReporting', () => {
                 const params = [] as string[];
                 errorlistener!({ error, params });
 
-                expect(analytics.errorEvent).toHaveBeenCalledWith(error.message, error, undefined, undefined);
+                expect(analytics.errorEvent).toHaveBeenCalledWith(
+                    undefined,
+                    error.message,
+                    error,
+                    undefined,
+                    undefined,
+                );
             });
 
             it('captured by uncaughtException', () => {
@@ -191,6 +236,7 @@ describe('errorReporting', () => {
                 uncaughtExceptionListener(error);
 
                 expect(analytics.errorEvent).toHaveBeenCalledWith(
+                    undefined,
                     error.message,
                     error,
                     'NodeJS.uncaughtException',
@@ -203,6 +249,7 @@ describe('errorReporting', () => {
                 uncaughtExceptionMonitorListener(error);
 
                 expect(analytics.errorEvent).toHaveBeenCalledWith(
+                    undefined,
                     error.message,
                     error,
                     'NodeJS.uncaughtExceptionMonitor',
@@ -215,6 +262,7 @@ describe('errorReporting', () => {
                 unhandledRejectionListener(error);
 
                 expect(analytics.errorEvent).toHaveBeenCalledWith(
+                    undefined,
                     error.message,
                     error,
                     'NodeJS.unhandledRejection',
@@ -227,19 +275,20 @@ describe('errorReporting', () => {
             it('no extra params', () => {
                 errorlistener!({ error: 'Error1' as any });
 
-                expect(analytics.errorEvent).toHaveBeenCalledWith('Error1', undefined, undefined, undefined);
+                expect(analytics.errorEvent).toHaveBeenCalledWith(undefined, 'Error1', undefined, undefined, undefined);
             });
 
             it('with capturedBy', () => {
                 errorlistener!({ error: 'Error1' as any, capturedBy: 'foo' });
 
-                expect(analytics.errorEvent).toHaveBeenCalledWith('Error1', undefined, 'foo', undefined);
+                expect(analytics.errorEvent).toHaveBeenCalledWith(undefined, 'Error1', undefined, 'foo', undefined);
             });
 
             it('with a custom message', () => {
                 errorlistener!({ error: 'Seg fault' as any, errorMessage: 'Error reading stream buffer' });
 
                 expect(analytics.errorEvent).toHaveBeenCalledWith(
+                    undefined,
                     'Error reading stream buffer: Seg fault',
                     undefined,
                     undefined,
