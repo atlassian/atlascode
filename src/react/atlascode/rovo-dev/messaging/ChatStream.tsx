@@ -1,6 +1,5 @@
 import { random } from 'lodash';
 import * as React from 'react';
-import { RovoDevProviderMessage } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { PostMessageFunc, PostMessagePromiseFunc } from '../../messagingApi';
 import { ErrorMessageItem, FollowUpActionFooter, OpenFileFunc, TechnicalPlanComponent } from '../common/common';
@@ -33,7 +32,7 @@ interface ChatStreamProps {
     };
     messagingApi: {
         postMessage: PostMessageFunc<RovoDevViewResponse>;
-        postMessageWithReturn: PostMessagePromiseFunc<RovoDevViewResponse, RovoDevProviderMessage>;
+        postMessageWithReturn: PostMessagePromiseFunc<RovoDevViewResponse, any>;
     };
     modifiedFiles: ToolReturnParseResult[];
     pendingToolCall: string;

@@ -40,5 +40,6 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.ReturnText, { text: string }>
     | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string } }>
     | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>
+    | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string } }>
     | ReducerAction<RovoDevProviderMessageType.UserFocusUpdated, { userFocus: RovoDevContextItem }>
     | ReducerAction<RovoDevProviderMessageType.ContextAdded, { context: RovoDevContextItem }>;

@@ -1,6 +1,6 @@
 import PullRequestIcon from '@atlaskit/icon/core/pull-request';
 import React from 'react';
-import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
+import { RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
 import { PostMessagePromiseFunc } from '../../messagingApi';
@@ -26,7 +26,7 @@ const PullRequestButton: React.FC<{
 
 interface PullRequestFormProps {
     onCancel: () => void;
-    postMessageWithReturn: PostMessagePromiseFunc<RovoDevViewResponse, RovoDevProviderMessage>;
+    postMessageWithReturn: PostMessagePromiseFunc<RovoDevViewResponse, any>;
     modifiedFiles?: ToolReturnParseResult[];
     onPullRequestCreated: (url: string) => void;
     isFormVisible?: boolean;
@@ -83,13 +83,11 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                 type: RovoDevViewResponseType.CreatePR,
                 payload: { branchName, commitMessage: message },
             },
-            RovoDevProviderMessageType.CreatePRComplete,
+            RovoDevViewResponseType.CreatePRComplete,
             ConnectionTimeout,
         );
         setPullRequestLoading(false);
-
-        const url = response.type === RovoDevProviderMessageType.CreatePRComplete ? response.data.url : undefined;
-        onPullRequestCreated(url || '');
+        onPullRequestCreated((response as any).data.url || '');
     };
 
     return (

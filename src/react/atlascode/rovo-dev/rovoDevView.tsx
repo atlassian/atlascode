@@ -440,11 +440,9 @@ const RovoDevView: React.FC = () => {
         ],
     );
 
-    const [postMessage, postMessageWithReturn] = useMessagingApi<
-        RovoDevViewResponse,
-        RovoDevProviderMessage,
-        RovoDevProviderMessage
-    >(onMessageHandler);
+    const [postMessage, postMessageWithReturn] = useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, any>(
+        onMessageHandler,
+    );
 
     React.useEffect(() => {
         if (outgoingMessage) {
@@ -582,8 +580,7 @@ const RovoDevView: React.FC = () => {
                 uniqueNonce,
             );
 
-            const text = res.type === RovoDevProviderMessageType.ReturnText ? res.text : undefined;
-            return text || '';
+            return (res.text as string) || '';
         },
         [postMessageWithReturn],
     );
