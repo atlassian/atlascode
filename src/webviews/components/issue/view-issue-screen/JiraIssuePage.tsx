@@ -2,7 +2,7 @@ import { LoadingButton } from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
-import { CommentVisibility, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { CommentVisibility, IssueType, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, SelectFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { Box } from '@material-ui/core';
 import { formatDistanceToNow, parseISO } from 'date-fns';
@@ -66,12 +66,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     // TODO: proper error handling in webviews :'(
     // This is a temporary workaround to hopefully troubleshoot
     // https://github.com/atlassian/atlascode/issues/46
-    override getInputMarkup(field: FieldUI, editmode?: boolean, context?: String) {
+    override getInputMarkup(field: FieldUI, editmode?: boolean, currentIssueType?: IssueType, context?: String) {
         if (!field) {
             console.warn(`Field error - no field when trying to render ${context}`);
             return null;
         }
-        return super.getInputMarkup(field, editmode);
+        return super.getInputMarkup(field, editmode, currentIssueType);
     }
 
     getProjectKey = (): string => {
@@ -630,7 +630,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             .map((field) => {
                 return {
                     itemLabel: this.state.fields[field].name,
-                    itemComponent: this.getInputMarkup(this.state.fields[field], true, field),
+                    itemComponent: this.getInputMarkup(
+                        this.state.fields[field],
+                        true,
+                        this.state.fieldValues['issuetype'],
+                        field,
+                    ),
                 };
             });
 
@@ -642,7 +647,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     }
                     return {
                         itemLabel: field.name,
-                        itemComponent: this.getInputMarkup(field, true, `Advanced sidebar`),
+                        itemComponent: this.getInputMarkup(
+                            field,
+                            true,
+                            this.state.fieldValues['issuetype'],
+                            `Advanced sidebar`,
+                        ),
                     };
                 } else {
                     return undefined;
@@ -703,7 +713,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 markups.push(
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{field.name}</label>
-                        {this.getInputMarkup(field, true, `Advanced main`)}
+                        {this.getInputMarkup(field, true, this.state.fieldValues['issuetype'], `Advanced main`)}
                     </div>,
                 );
             }
@@ -756,7 +766,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 return (
                                     <div style={{ margin: '20px 16px 0px 16px' }}>
                                         {this.getMainPanelNavMarkup()}
-                                        <h1>{this.getInputMarkup(this.state.fields['summary'], true, 'summary')}</h1>
+                                        <h1>
+                                            {this.getInputMarkup(
+                                                this.state.fields['summary'],
+                                                true,
+                                                this.state.fieldValues['issuetype'],
+                                                'summary',
+                                            )}
+                                        </h1>
                                         {this.commonSidebar()}
                                         {this.getMainPanelBodyMarkup()}
                                         {this.createdUpdatedDates()}
@@ -775,6 +792,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                                             {this.getInputMarkup(
                                                                 this.state.fields['summary'],
                                                                 true,
+                                                                this.state.fieldValues['issuetype'],
                                                                 'summary',
                                                             )}
                                                         </h1>

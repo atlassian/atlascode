@@ -10,7 +10,9 @@ import Spinner from '@atlaskit/spinner';
 import Textfield from '@atlaskit/textfield';
 import {
     CommentVisibility,
+    emptyIssueType,
     IssuePickerIssue,
+    IssueType,
     JsdInternalCommentVisibility,
     MinimalIssueOrKeyAndSite,
 } from '@atlassianlabs/jira-pi-common-models';
@@ -52,6 +54,7 @@ import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
+import ParentIssueEditor from './ParentIssueEditor';
 import { ParticipantList } from './ParticipantList';
 import { TextAreaEditor } from './TextAreaEditor';
 
@@ -273,6 +276,14 @@ export abstract class AbstractIssueEditorPage<
         }
     };
 
+    protected fetchEpicOnly = async (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
+        const modifiedField = {
+            ...field,
+            autocompleteUrl: field.autoCompleteUrl + ' AND issuetype = Epic',
+        };
+        return await this.loadIssueOptions(modifiedField, input);
+    };
+
     protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
         return new Promise((resolve) => {
             const nonce: string = v4();
@@ -386,7 +397,11 @@ export abstract class AbstractIssueEditorPage<
         }
     }, 100);
 
-    protected getInputMarkup(field: FieldUI, editmode: boolean = false): any {
+    protected getInputMarkup(
+        field: FieldUI,
+        editmode: boolean = false,
+        currentIssueType: IssueType = emptyIssueType,
+    ): any {
         switch (field.uiType) {
             case UIType.Input: {
                 const validateFunc = this.getValidateFunction(field, editmode);
@@ -662,7 +677,28 @@ export abstract class AbstractIssueEditorPage<
                 }
                 return markup;
             }
-
+            case UIType.IssueLink: {
+                if (editmode) {
+                    return (
+                        <ParentIssueEditor
+                            label={field.name}
+                            currentIssueType={currentIssueType}
+                            isCreateMode={false} // currently editing
+                            onSave={(val: any) => {
+                                this.handleInlineEdit(field, val);
+                            }}
+                            onFetchEpics={async (input: string) =>
+                                await this.fetchEpicOnly(field as SelectFieldUI, input)
+                            }
+                            onFetchParentIssues={async (input: string) =>
+                                await this.fetchEpicOnly(field as SelectFieldUI, input)
+                            }
+                            isLoading={this.state.loadingField === field.key}
+                        />
+                    );
+                }
+                return <React.Fragment />;
+            }
             case UIType.IssueLinks: {
                 let markup = <div></div>;
                 if (editmode) {
