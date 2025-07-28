@@ -11,7 +11,7 @@ e2e/
 .npm/
 
 # Don't package anything from here specifically:
-resources/rovo-dev/
+# resources/rovo-dev/
 
 .env
 .env.example
