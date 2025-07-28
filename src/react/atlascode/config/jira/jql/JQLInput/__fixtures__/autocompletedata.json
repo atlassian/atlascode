@@ -1,0 +1,2487 @@
+{
+    "visibleFieldNames": [
+        {
+            "value": "\"[CHART] Date of First Response\"",
+            "displayName": "[CHART] Date of First Response - cf[10016]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10016]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "\"[CHART] Time in Status\"",
+            "displayName": "[CHART] Time in Status - cf[10017]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10017]",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "Account.category",
+            "displayName": "Account.category",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "Account.category.id",
+            "displayName": "Account.category.id",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "Account.category.key",
+            "displayName": "Account.category.key",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "Account.category.name",
+            "displayName": "Account.category.name",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "Account.category.type",
+            "displayName": "Account.category.type",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "Account.customer",
+            "displayName": "Account.customer",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "Account.customer.id",
+            "displayName": "Account.customer.id",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "Account.customer.key",
+            "displayName": "Account.customer.key",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "Account.customer.name",
+            "displayName": "Account.customer.name",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "Account.global",
+            "displayName": "Account.global",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "Account.id",
+            "displayName": "Account.id",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "Account.key",
+            "displayName": "Account.key",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "Account.status",
+            "displayName": "Account.status",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "Account",
+            "displayName": "Account - cf[10104]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10104]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.fields.issuefieldoption.IssueFieldOption"]
+        },
+        {
+            "value": "cf[10038]",
+            "displayName": "Address - cf[10038]",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "cf[10039]",
+            "displayName": "Address - cf[10039]",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "cf[10087]",
+            "displayName": "Address - cf[10087]",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "\"Advanced Group Picker\"",
+            "displayName": "Advanced Group Picker - cf[10117]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10117]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.crowd.embedded.api.Group"]
+        },
+        {
+            "value": "cf[10111]",
+            "displayName": "Affected services - cf[10111]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "cf[10112]",
+            "displayName": "Affected services - cf[10112]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "cf[10113]",
+            "displayName": "Affected services - cf[10113]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "cf[10114]",
+            "displayName": "Affected services - cf[10114]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "cf[10115]",
+            "displayName": "Affected services - cf[10115]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "affectedVersion",
+            "displayName": "affectedVersion",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["com.atlassian.jira.project.version.Version"]
+        },
+        {
+            "value": "Approvals",
+            "displayName": "Approvals - cf[10026]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10026]",
+            "operators": ["="],
+            "types": [
+                "com.atlassian.servicedesk.plugins.approvals.internal.searcher.ApprovalsDataTypes$ApprovalDataType"
+            ]
+        },
+        {
+            "value": "Approvers",
+            "displayName": "Approvers - cf[10003]",
+            "orderable": "true",
+            "cfid": "cf[10003]",
+            "operators": [],
+            "types": ["java.lang.Object"]
+        },
+        {
+            "value": "assignee",
+            "displayName": "assignee",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": [
+                "=",
+                "in",
+                "is not",
+                "not in",
+                "was in",
+                "changed",
+                "is",
+                "was",
+                "was not",
+                "was not in",
+                "!="
+            ],
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "assignee.property",
+            "displayName": "assignee.property",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">=", "~", "!~", "is", "is not"],
+            "types": ["java.lang.String", "java.util.Date", "java.lang.Number"]
+        },
+        {
+            "value": "attachments",
+            "displayName": "attachments",
+            "searchable": "true",
+            "operators": ["is", "is not"],
+            "types": ["com.atlassian.jira.issue.attachment.Attachment"]
+        },
+        {
+            "value": "buildName",
+            "displayName": "buildName",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "buildState",
+            "displayName": "buildState",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "\"Build time\"",
+            "displayName": "Build time - cf[10085]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10085]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "CAB",
+            "displayName": "CAB - cf[10082]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10082]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "category",
+            "displayName": "category",
+            "auto": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.project.ProjectCategory"]
+        },
+        {
+            "value": "\"Change completion date\"",
+            "displayName": "Change completion date - cf[10009]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10009]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "\"Change managers\"",
+            "displayName": "Change managers - cf[10081]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10081]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "\"Change reason\"",
+            "displayName": "Change reason - cf[10007]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10007]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "\"Change risk\"",
+            "displayName": "Change risk - cf[10006]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10006]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "\"Change start date\"",
+            "displayName": "Change start date - cf[10008]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10008]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "\"Change type\"",
+            "displayName": "Change type - cf[10005]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10005]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "\"Checkbox Field\"",
+            "displayName": "Checkbox Field - cf[10096]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10096]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "comment",
+            "displayName": "comment",
+            "searchable": "true",
+            "operators": ["~", "!~"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "component",
+            "displayName": "component",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.bc.project.component.ProjectComponent"]
+        },
+        {
+            "value": "created",
+            "displayName": "created",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "createdDate",
+            "displayName": "createdDate",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "creator",
+            "displayName": "creator",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "creator.property",
+            "displayName": "creator.property",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">=", "~", "!~", "is", "is not"],
+            "types": ["java.lang.String", "java.util.Date", "java.lang.Number"]
+        },
+        {
+            "value": "\"DateTime Field\"",
+            "displayName": "DateTime Field - cf[10097]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10097]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "deploymentEnvironmentName",
+            "displayName": "deploymentEnvironmentName",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "deploymentEnvironmentType",
+            "displayName": "deploymentEnvironmentType",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "deploymentName",
+            "displayName": "deploymentName",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "deploymentState",
+            "displayName": "deploymentState",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "description",
+            "displayName": "description",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "development",
+            "displayName": "development - cf[10000]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10000]",
+            "operators": ["<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "\"DropDown Field\"",
+            "displayName": "DropDown Field - cf[10093]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10093]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "\"DST Dropdown Field\"",
+            "displayName": "DST Dropdown Field - cf[10116]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10116]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "due",
+            "displayName": "due",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "duedate",
+            "displayName": "duedate",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "environment",
+            "displayName": "environment",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "\"Epic Color\"",
+            "displayName": "Epic Color - cf[10012]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10012]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "\"Epic Link\"",
+            "displayName": "Epic Link - cf[10013]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10013]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "\"Epic Name\"",
+            "displayName": "Epic Name - cf[10010]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10010]",
+            "operators": ["~", "!~", "=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "\"Epic Status\"",
+            "displayName": "Epic Status - cf[10011]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10011]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "filter",
+            "displayName": "filter",
+            "auto": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.search.SearchRequest"]
+        },
+        {
+            "value": "fixVersion",
+            "displayName": "fixVersion",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": [
+                "=",
+                "not in",
+                "was in",
+                "changed",
+                "is",
+                "<",
+                "was not",
+                "was not in",
+                ">",
+                ">=",
+                "in",
+                "is not",
+                "<=",
+                "was",
+                "!="
+            ],
+            "types": ["com.atlassian.jira.project.version.Version"]
+        },
+        {
+            "value": "flagDisabledRollout",
+            "displayName": "flagDisabledRollout",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "flagEnabled",
+            "displayName": "flagEnabled",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "flagEnabledRollout",
+            "displayName": "flagEnabledRollout",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "cf[10030]",
+            "displayName": "Flagged - cf[10030]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "cf[10032]",
+            "displayName": "Flagged - cf[10032]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "flagKey",
+            "displayName": "flagKey",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "flagName",
+            "displayName": "flagName",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "\"How can we improve this add-on for you?\"",
+            "displayName": "How can we improve this add-on for you? - cf[10126]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10126]",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "\"How would you feel if you could no longer use this add-on?\"",
+            "displayName": "How would you feel if you could no longer use this add-on? - cf[10125]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10125]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "id",
+            "displayName": "id",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">="],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "Impact",
+            "displayName": "Impact - cf[10004]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10004]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "Integration",
+            "displayName": "Integration - cf[10036]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10036]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.label.Label"]
+        },
+        {
+            "value": "\"Investigation reason\"",
+            "displayName": "Investigation reason - cf[10078]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10078]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "issue",
+            "displayName": "issue",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">="],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "issue.internal",
+            "displayName": "issue.internal",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "issue.property",
+            "displayName": "issue.property",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">=", "~", "!~", "is", "is not"],
+            "types": ["java.lang.String", "java.util.Date", "java.lang.Number"]
+        },
+        {
+            "value": "issueBlocks",
+            "displayName": "issueBlocks",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "issueCauses",
+            "displayName": "issueCauses",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "issueClones",
+            "displayName": "issueClones",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "\"Issue color\"",
+            "displayName": "Issue color - cf[10042]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10042]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "issueDuplicates",
+            "displayName": "issueDuplicates",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "issueIsBlockedBy",
+            "displayName": "issueIsBlockedBy",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "issueIsCausedBy",
+            "displayName": "issueIsCausedBy",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "issueIsClonedBy",
+            "displayName": "issueIsClonedBy",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "issueIsDuplicatedBy",
+            "displayName": "issueIsDuplicatedBy",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "issuekey",
+            "displayName": "issuekey",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">="],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "issueLink",
+            "displayName": "issueLink",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "issueLinkType",
+            "displayName": "issueLinkType",
+            "auto": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.link.IssueLinkType"]
+        },
+        {
+            "value": "issueRelatesTo",
+            "displayName": "issueRelatesTo",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "issuetype",
+            "displayName": "issuetype",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.issuetype.IssueType"]
+        },
+        {
+            "value": "\"Iteration Field\"",
+            "displayName": "Iteration Field - cf[10105]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10105]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "jsd-linked-incident-ids",
+            "displayName": "jsd-linked-incident-ids",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "JSIW::Q1",
+            "displayName": "JSIW::Q1 - cf[10131]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10131]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "JSIW::Q2",
+            "displayName": "JSIW::Q2 - cf[10132]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10132]",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "\"JSIW::Text area test\"",
+            "displayName": "JSIW::Text area test - cf[10130]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10130]",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "\"JSIW Radio button custom field\"",
+            "displayName": "JSIW Radio button custom field - cf[10129]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10129]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "key",
+            "displayName": "key",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">="],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "labels",
+            "displayName": "labels",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.label.Label"]
+        },
+        {
+            "value": "lastViewed",
+            "displayName": "lastViewed",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "level",
+            "displayName": "level",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.security.IssueSecurityLevel"]
+        },
+        {
+            "value": "linkedIssue",
+            "displayName": "linkedIssue",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "Mark",
+            "displayName": "Mark - cf[10086]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10086]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "\"Numeric Field\"",
+            "displayName": "Numeric Field - cf[10090]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10090]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "\"Operational categorization\"",
+            "displayName": "Operational categorization - cf[10076]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10076]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.CascadingOption"]
+        },
+        {
+            "value": "Organizations",
+            "displayName": "Organizations - cf[10002]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10002]",
+            "operators": ["=", "!=", "not in", "in"],
+            "types": ["com.atlassian.servicedesk.api.organization.CustomerOrganization"]
+        },
+        {
+            "value": "\"Orig Estimate\"",
+            "displayName": "Orig Estimate - cf[10091]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10091]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "originalEstimate",
+            "displayName": "originalEstimate",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["com.atlassian.jira.types.Duration"]
+        },
+        {
+            "value": "parent",
+            "displayName": "parent",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "parentEpic",
+            "displayName": "parentEpic",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "\"Parent Link\"",
+            "displayName": "Parent Link - cf[10015]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10015]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "\"Pending reason\"",
+            "displayName": "Pending reason - cf[10074]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10074]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "\"postmortem status\"",
+            "displayName": "postmortem status",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "priority",
+            "displayName": "priority",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": [
+                "=",
+                "not in",
+                "was in",
+                "changed",
+                "is",
+                "<",
+                "was not",
+                "was not in",
+                ">",
+                ">=",
+                "in",
+                "is not",
+                "<=",
+                "was",
+                "!="
+            ],
+            "types": ["com.atlassian.jira.issue.priority.Priority"]
+        },
+        {
+            "value": "\"Product categorization\"",
+            "displayName": "Product categorization - cf[10075]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10075]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.CascadingOption"]
+        },
+        {
+            "value": "Product",
+            "displayName": "Product - cf[10066]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10066]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "progress",
+            "displayName": "progress",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "project",
+            "displayName": "project",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.project.Project"]
+        },
+        {
+            "value": "project.accountName",
+            "displayName": "project.accountName",
+            "auto": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "project.property",
+            "displayName": "project.property",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">=", "~", "!~", "is", "is not"],
+            "types": ["java.lang.String", "java.util.Date", "java.lang.Number"]
+        },
+        {
+            "value": "project.teamName",
+            "displayName": "project.teamName",
+            "auto": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "project.teamProgramName",
+            "displayName": "project.teamProgramName",
+            "auto": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "projectType",
+            "displayName": "projectType",
+            "auto": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.project.type.ProjectTypeKey"]
+        },
+        {
+            "value": "RahulsPrimaryField",
+            "displayName": "RahulsPrimaryField - cf[10102]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10102]",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "RahulsSecondaryField",
+            "displayName": "RahulsSecondaryField - cf[10101]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10101]",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "Rank",
+            "displayName": "Rank - cf[10019]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10019]",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">="],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "remainingEstimate",
+            "displayName": "remainingEstimate",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["com.atlassian.jira.types.Duration"]
+        },
+        {
+            "value": "reporter",
+            "displayName": "reporter",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": [
+                "=",
+                "in",
+                "is not",
+                "not in",
+                "was in",
+                "changed",
+                "is",
+                "was",
+                "was not",
+                "was not in",
+                "!="
+            ],
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "reporter.property",
+            "displayName": "reporter.property",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">=", "~", "!~", "is", "is not"],
+            "types": ["java.lang.String", "java.util.Date", "java.lang.Number"]
+        },
+        {
+            "value": "request",
+            "displayName": "request",
+            "auto": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.search.SearchRequest"]
+        },
+        {
+            "value": "request-channel-type",
+            "displayName": "request-channel-type",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "\"Request language\"",
+            "displayName": "Request language - cf[10029]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10029]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.servicedesk.internal.api.customfields.requestlanguage.RequestLanguage"]
+        },
+        {
+            "value": "request-last-activity-time",
+            "displayName": "request-last-activity-time",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "\"Request participants\"",
+            "displayName": "Request participants - cf[10023]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10023]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "\"Request Type\"",
+            "displayName": "Request Type - cf[10022]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10022]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.servicedesk.internal.api.origin.VpOrigin"]
+        },
+        {
+            "value": "resolution",
+            "displayName": "resolution",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": [
+                "=",
+                "not in",
+                "was in",
+                "changed",
+                "is",
+                "<",
+                "was not",
+                "was not in",
+                ">",
+                ">=",
+                "in",
+                "is not",
+                "<=",
+                "was",
+                "!="
+            ],
+            "types": ["com.atlassian.jira.issue.resolution.Resolution"]
+        },
+        {
+            "value": "cf[10043]",
+            "displayName": "Resolution - cf[10043]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "resolutiondate",
+            "displayName": "resolutiondate",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "resolved",
+            "displayName": "resolved",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "\"Root cause\"",
+            "displayName": "Root cause - cf[10079]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10079]",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "Satisfaction",
+            "displayName": "Satisfaction - cf[10024]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10024]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "\"Satisfaction date\"",
+            "displayName": "Satisfaction date - cf[10025]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10025]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "savedfilter",
+            "displayName": "savedfilter",
+            "auto": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.search.SearchRequest"]
+        },
+        {
+            "value": "sd-kb-shared",
+            "displayName": "sd-kb-shared",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "searchrequest",
+            "displayName": "searchrequest",
+            "auto": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.search.SearchRequest"]
+        },
+        {
+            "value": "cf[10106]",
+            "displayName": "Severity - cf[10106]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "cf[10107]",
+            "displayName": "Severity - cf[10107]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "cf[10108]",
+            "displayName": "Severity - cf[10108]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "cf[10109]",
+            "displayName": "Severity - cf[10109]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "cf[10110]",
+            "displayName": "Severity - cf[10110]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "Source",
+            "displayName": "Source - cf[10077]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10077]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "\"Spent time\"",
+            "displayName": "Spent time - cf[10099]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10099]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "Sprint",
+            "displayName": "Sprint - cf[10018]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10018]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.greenhopper.service.sprint.Sprint"]
+        },
+        {
+            "value": "\"Start date\"",
+            "displayName": "Start date - cf[10014]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10014]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "status",
+            "displayName": "status",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": [
+                "=",
+                "in",
+                "is not",
+                "not in",
+                "was in",
+                "changed",
+                "is",
+                "was",
+                "was not",
+                "was not in",
+                "!="
+            ],
+            "types": ["com.atlassian.jira.issue.status.Status"]
+        },
+        {
+            "value": "statusCategory",
+            "displayName": "statusCategory",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.status.category.StatusCategory"]
+        },
+        {
+            "value": "statusCategoryChangedDate",
+            "displayName": "statusCategoryChangedDate",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "\"Story point estimate\"",
+            "displayName": "Story point estimate - cf[10033]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10033]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "cf[10031]",
+            "displayName": "Story Points - cf[10031]",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "cf[10088]",
+            "displayName": "Story Points - cf[10088]",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "cf[10089]",
+            "displayName": "Story Points - cf[10089]",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "Style",
+            "displayName": "Style - cf[10040]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10040]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "subtasks",
+            "displayName": "subtasks",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "summary",
+            "displayName": "summary",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "Team.id",
+            "displayName": "Team.id",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "Team.program",
+            "displayName": "Team.program",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "cf[10001]",
+            "displayName": "Team - cf[10001]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "cf[10103]",
+            "displayName": "Team - cf[10103]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.fields.issuefieldoption.IssueFieldOption"]
+        },
+        {
+            "value": "text",
+            "displayName": "text",
+            "searchable": "true",
+            "operators": ["~"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "cf[10098]",
+            "displayName": "Text - cf[10098]",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "\"Text Field\"",
+            "displayName": "Text Field - cf[10094]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10094]",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "timeestimate",
+            "displayName": "timeestimate",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["com.atlassian.jira.types.Duration"]
+        },
+        {
+            "value": "\"Time Field\"",
+            "displayName": "Time Field - cf[10095]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10095]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "timeoriginalestimate",
+            "displayName": "timeoriginalestimate",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["com.atlassian.jira.types.Duration"]
+        },
+        {
+            "value": "timespent",
+            "displayName": "timespent",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["com.atlassian.jira.types.Duration"]
+        },
+        {
+            "value": "\"Time to approve normal change\"",
+            "displayName": "Time to approve normal change - cf[10084]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10084]",
+            "operators": ["=", "!=", "<", "<=", ">", ">="],
+            "types": ["com.atlassian.servicedesk.internal.sla.searcher.SlaDataTypes$SlaDataType"]
+        },
+        {
+            "value": "\"Time to close after resolution\"",
+            "displayName": "Time to close after resolution - cf[10083]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10083]",
+            "operators": ["=", "!=", "<", "<=", ">", ">="],
+            "types": ["com.atlassian.servicedesk.internal.sla.searcher.SlaDataTypes$SlaDataType"]
+        },
+        {
+            "value": "\"Time to first response\"",
+            "displayName": "Time to first response - cf[10028]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10028]",
+            "operators": ["=", "!=", "<", "<=", ">", ">="],
+            "types": ["com.atlassian.servicedesk.internal.sla.searcher.SlaDataTypes$SlaDataType"]
+        },
+        {
+            "value": "TimeToFixInDays",
+            "displayName": "TimeToFixInDays - cf[10092]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10092]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "\"Time to resolution\"",
+            "displayName": "Time to resolution - cf[10027]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10027]",
+            "operators": ["=", "!=", "<", "<=", ">", ">="],
+            "types": ["com.atlassian.servicedesk.internal.sla.searcher.SlaDataTypes$SlaDataType"]
+        },
+        {
+            "value": "\"Time tracking\"",
+            "displayName": "Time tracking - cf[10100]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10100]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "Triaged",
+            "displayName": "Triaged - cf[10063]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10063]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "type",
+            "displayName": "type",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.issuetype.IssueType"]
+        },
+        {
+            "value": "updated",
+            "displayName": "updated",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "updatedDate",
+            "displayName": "updatedDate",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "Urgency",
+            "displayName": "Urgency - cf[10073]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10073]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "voter",
+            "displayName": "voter",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "voter.property",
+            "displayName": "voter.property",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">=", "~", "!~", "is", "is not"],
+            "types": ["java.lang.String", "java.util.Date", "java.lang.Number"]
+        },
+        {
+            "value": "votes",
+            "displayName": "votes",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "\"VSCODE: cascading select\"",
+            "displayName": "VSCODE: cascading select - cf[10050]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10050]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.CascadingOption"]
+        },
+        {
+            "value": "\"VSCODE: checkboxes\"",
+            "displayName": "VSCODE: checkboxes - cf[10044]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10044]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "\"VSCODE: date picker\"",
+            "displayName": "VSCODE: date picker - cf[10045]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10045]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "\"VSCODE: date time picker\"",
+            "displayName": "VSCODE: date time picker - cf[10046]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10046]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "\"VSCODE: labels\"",
+            "displayName": "VSCODE: labels - cf[10047]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10047]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.label.Label"]
+        },
+        {
+            "value": "\"VSCODE: multiline textfield\"",
+            "displayName": "VSCODE: multiline textfield - cf[10053]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10053]",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "\"VSCODE: multi select\"",
+            "displayName": "VSCODE: multi select - cf[10051]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10051]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "\"VSCODE: number\"",
+            "displayName": "VSCODE: number - cf[10048]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10048]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "\"VSCODE: radio\"",
+            "displayName": "VSCODE: radio - cf[10049]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10049]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "\"VSCODE: singleline textfield\"",
+            "displayName": "VSCODE: singleline textfield - cf[10054]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10054]",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "\"VSCODE: single select\"",
+            "displayName": "VSCODE: single select - cf[10052]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10052]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.issue.customfields.option.Option"]
+        },
+        {
+            "value": "\"VSCODE: url field\"",
+            "displayName": "VSCODE: url field - cf[10055]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10055]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "\"VSCODE: User picker\"",
+            "displayName": "VSCODE: User picker - cf[10056]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10056]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "\"VSCODE Multi Group Picker\"",
+            "displayName": "VSCODE Multi Group Picker - cf[10118]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10118]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.crowd.embedded.api.Group"]
+        },
+        {
+            "value": "\"VSCODE multi user picker\"",
+            "displayName": "VSCODE multi user picker - cf[10121]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10121]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "\"VSCODE no. Attachments\"",
+            "displayName": "VSCODE no. Attachments - cf[10119]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10119]",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "\"VSCODE Participants\"",
+            "displayName": "VSCODE Participants - cf[10120]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10120]",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "\"VSCODE Single Group Picker\"",
+            "displayName": "VSCODE Single Group Picker - cf[10123]",
+            "auto": "true",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10123]",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.crowd.embedded.api.Group"]
+        },
+        {
+            "value": "\"VSCODE user property\"",
+            "displayName": "VSCODE user property - cf[10122]",
+            "orderable": "true",
+            "cfid": "cf[10122]",
+            "operators": [],
+            "types": ["java.lang.Object"]
+        },
+        {
+            "value": "watcher",
+            "displayName": "watcher",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not"],
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "watcher.property",
+            "displayName": "watcher.property",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">=", "~", "!~", "is", "is not"],
+            "types": ["java.lang.String", "java.util.Date", "java.lang.Number"]
+        },
+        {
+            "value": "watchers",
+            "displayName": "watchers",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        },
+        {
+            "value": "cf[10127]",
+            "displayName": "What would you use as an alternative if this add-on were no longer available? - cf[10127]",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "cf[10128]",
+            "displayName": "What would you use as an alternative if this add-on were no longer available? - cf[10128]",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "Workaround",
+            "displayName": "Workaround - cf[10080]",
+            "orderable": "true",
+            "searchable": "true",
+            "cfid": "cf[10080]",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "worklogAuthor",
+            "displayName": "worklogAuthor",
+            "auto": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in"],
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "worklogComment",
+            "displayName": "worklogComment",
+            "searchable": "true",
+            "operators": ["~", "!~", "is", "is not"],
+            "types": ["java.lang.String"]
+        },
+        {
+            "value": "worklogDate",
+            "displayName": "worklogDate",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "<", "<=", ">", ">="],
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "workratio",
+            "displayName": "workratio",
+            "orderable": "true",
+            "searchable": "true",
+            "operators": ["=", "!=", "in", "not in", "is", "is not", "<", "<=", ">", ">="],
+            "types": ["java.lang.Number"]
+        }
+    ],
+    "visibleFunctionNames": [
+        {
+            "value": "approved()",
+            "displayName": "approved()",
+            "types": [
+                "com.atlassian.servicedesk.plugins.approvals.internal.searcher.ApprovalsDataTypes$ApprovalDataType"
+            ]
+        },
+        {
+            "value": "approver(\"\")",
+            "displayName": "approver(\"\")",
+            "types": [
+                "com.atlassian.servicedesk.plugins.approvals.internal.searcher.ApprovalsDataTypes$ApprovalDataType"
+            ]
+        },
+        {
+            "value": "breached()",
+            "displayName": "breached()",
+            "types": ["com.atlassian.servicedesk.internal.sla.searcher.SlaDataTypes$SlaDataType"]
+        },
+        {
+            "value": "cascadeOption(\"\")",
+            "displayName": "cascadeOption(\"\")",
+            "isList": "true",
+            "types": ["com.atlassian.jira.issue.customfields.option.CascadingOption"]
+        },
+        {
+            "value": "closedSprints()",
+            "displayName": "closedSprints()",
+            "isList": "true",
+            "types": ["com.atlassian.greenhopper.service.sprint.Sprint"]
+        },
+        {
+            "value": "completed()",
+            "displayName": "completed()",
+            "types": ["com.atlassian.servicedesk.internal.sla.searcher.SlaDataTypes$SlaDataType"]
+        },
+        {
+            "value": "componentsLeadByUser()",
+            "displayName": "componentsLeadByUser()",
+            "isList": "true",
+            "types": ["com.atlassian.jira.bc.project.component.ProjectComponent"]
+        },
+        {
+            "value": "currentLogin()",
+            "displayName": "currentLogin()",
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "currentUser()",
+            "displayName": "currentUser()",
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "earliestUnreleasedVersion()",
+            "displayName": "earliestUnreleasedVersion()",
+            "types": ["com.atlassian.jira.project.version.Version"]
+        },
+        {
+            "value": "elapsed(\"\")",
+            "displayName": "elapsed(\"\")",
+            "types": ["com.atlassian.servicedesk.internal.sla.searcher.SlaDataTypes$SlaDataType"]
+        },
+        {
+            "value": "endOfDay()",
+            "displayName": "endOfDay()",
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "endOfMonth()",
+            "displayName": "endOfMonth()",
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "endOfWeek()",
+            "displayName": "endOfWeek()",
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "endOfYear()",
+            "displayName": "endOfYear()",
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "everBreached()",
+            "displayName": "everBreached()",
+            "types": ["com.atlassian.servicedesk.internal.sla.searcher.SlaDataTypes$SlaDataType"]
+        },
+        {
+            "value": "futureSprints()",
+            "displayName": "futureSprints()",
+            "isList": "true",
+            "types": ["com.atlassian.greenhopper.service.sprint.Sprint"]
+        },
+        {
+            "value": "inactiveUsers()",
+            "displayName": "inactiveUsers()",
+            "isList": "true",
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "issueHistory()",
+            "displayName": "issueHistory()",
+            "isList": "true",
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "issuesWithRemoteLinksByGlobalId(\"\")",
+            "displayName": "issuesWithRemoteLinksByGlobalId(\"\")",
+            "isList": "true",
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "lastLogin()",
+            "displayName": "lastLogin()",
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "latestReleasedVersion()",
+            "displayName": "latestReleasedVersion()",
+            "types": ["com.atlassian.jira.project.version.Version"]
+        },
+        {
+            "value": "linkedIssues(\"\")",
+            "displayName": "linkedIssues(\"\")",
+            "isList": "true",
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "membersOf(\"\")",
+            "displayName": "membersOf(\"\")",
+            "isList": "true",
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "myApproval()",
+            "displayName": "myApproval()",
+            "types": [
+                "com.atlassian.servicedesk.plugins.approvals.internal.searcher.ApprovalsDataTypes$ApprovalDataType"
+            ]
+        },
+        {
+            "value": "myPending()",
+            "displayName": "myPending()",
+            "types": [
+                "com.atlassian.servicedesk.plugins.approvals.internal.searcher.ApprovalsDataTypes$ApprovalDataType"
+            ]
+        },
+        {
+            "value": "now()",
+            "displayName": "now()",
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "openSprints()",
+            "displayName": "openSprints()",
+            "isList": "true",
+            "types": ["com.atlassian.greenhopper.service.sprint.Sprint"]
+        },
+        {
+            "value": "organizationMembers(\"\")",
+            "displayName": "organizationMembers(\"\")",
+            "isList": "true",
+            "types": ["com.atlassian.jira.user.ApplicationUser"]
+        },
+        {
+            "value": "paused()",
+            "displayName": "paused()",
+            "types": ["com.atlassian.servicedesk.internal.sla.searcher.SlaDataTypes$SlaDataType"]
+        },
+        {
+            "value": "pending()",
+            "displayName": "pending()",
+            "types": [
+                "com.atlassian.servicedesk.plugins.approvals.internal.searcher.ApprovalsDataTypes$ApprovalDataType"
+            ]
+        },
+        {
+            "value": "pendingBy(\"\")",
+            "displayName": "pendingBy(\"\")",
+            "types": [
+                "com.atlassian.servicedesk.plugins.approvals.internal.searcher.ApprovalsDataTypes$ApprovalDataType"
+            ]
+        },
+        {
+            "value": "portfolioChildIssuesOf(\"\")",
+            "displayName": "portfolioChildIssuesOf(\"\")",
+            "isList": "true",
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "projectsLeadByUser()",
+            "displayName": "projectsLeadByUser()",
+            "isList": "true",
+            "types": ["com.atlassian.jira.project.Project"]
+        },
+        {
+            "value": "projectsWhereUserHasPermission(\"\")",
+            "displayName": "projectsWhereUserHasPermission(\"\")",
+            "isList": "true",
+            "types": ["com.atlassian.jira.project.Project"]
+        },
+        {
+            "value": "projectsWhereUserHasRole(\"\")",
+            "displayName": "projectsWhereUserHasRole(\"\")",
+            "isList": "true",
+            "types": ["com.atlassian.jira.project.Project"]
+        },
+        {
+            "value": "releasedVersions()",
+            "displayName": "releasedVersions()",
+            "isList": "true",
+            "types": ["com.atlassian.jira.project.version.Version"]
+        },
+        {
+            "value": "remaining(\"\")",
+            "displayName": "remaining(\"\")",
+            "types": ["com.atlassian.servicedesk.internal.sla.searcher.SlaDataTypes$SlaDataType"]
+        },
+        {
+            "value": "running()",
+            "displayName": "running()",
+            "types": ["com.atlassian.servicedesk.internal.sla.searcher.SlaDataTypes$SlaDataType"]
+        },
+        {
+            "value": "standardIssueTypes()",
+            "displayName": "standardIssueTypes()",
+            "isList": "true",
+            "types": ["com.atlassian.jira.issue.issuetype.IssueType"]
+        },
+        {
+            "value": "startOfDay()",
+            "displayName": "startOfDay()",
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "startOfMonth()",
+            "displayName": "startOfMonth()",
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "startOfWeek()",
+            "displayName": "startOfWeek()",
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "startOfYear()",
+            "displayName": "startOfYear()",
+            "types": ["java.util.Date"]
+        },
+        {
+            "value": "subTaskIssueTypes()",
+            "displayName": "subTaskIssueTypes()",
+            "isList": "true",
+            "types": ["com.atlassian.jira.issue.issuetype.IssueType"]
+        },
+        {
+            "value": "unreleasedVersions()",
+            "displayName": "unreleasedVersions()",
+            "isList": "true",
+            "types": ["com.atlassian.jira.project.version.Version"]
+        },
+        {
+            "value": "updatedBy(\"\")",
+            "displayName": "updatedBy(\"\")",
+            "isList": "true",
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "votedIssues()",
+            "displayName": "votedIssues()",
+            "isList": "true",
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "watchedIssues()",
+            "displayName": "watchedIssues()",
+            "isList": "true",
+            "types": ["com.atlassian.jira.issue.Issue"]
+        },
+        {
+            "value": "withinCalendarHours()",
+            "displayName": "withinCalendarHours()",
+            "types": ["com.atlassian.servicedesk.internal.sla.searcher.SlaDataTypes$SlaDataType"]
+        }
+    ],
+    "jqlReservedWords": [
+        "explain",
+        "select",
+        "isnull",
+        "commit",
+        "isempty",
+        "when",
+        "rowid",
+        "output",
+        "number",
+        "character",
+        "identified",
+        "sqrt",
+        "delimiter",
+        "else",
+        "exclusive",
+        "lock",
+        "catch",
+        "join",
+        "strict",
+        "greater",
+        "if",
+        "between",
+        "order",
+        "having",
+        "in",
+        "byte",
+        "double",
+        "subtract",
+        "outer",
+        "index",
+        "raw",
+        "is",
+        "then",
+        "execute",
+        "input",
+        "as",
+        "defaults",
+        "field",
+        "size",
+        "left",
+        "unique",
+        "difference",
+        "returns",
+        "begin",
+        "modulo",
+        "object",
+        "trans",
+        "minus",
+        "access",
+        "increment",
+        "sum",
+        "long",
+        "into",
+        "uid",
+        "current",
+        "default",
+        "file",
+        "goto",
+        "min",
+        "audit",
+        "by",
+        "share",
+        "where",
+        "after",
+        "power",
+        "escape",
+        "connect",
+        "noaudit",
+        "table",
+        "validate",
+        "cf",
+        "set",
+        "break",
+        "initial",
+        "max",
+        "more",
+        "column",
+        "right",
+        "trigger",
+        "union",
+        "asc",
+        "rename",
+        "decrement",
+        "equals",
+        "fetch",
+        "char",
+        "exists",
+        "notin",
+        "to",
+        "first",
+        "return",
+        "transaction",
+        "checkpoint",
+        "date",
+        "privileges",
+        "declare",
+        "before",
+        "do",
+        "integer",
+        "float",
+        "while",
+        "empty",
+        "mode",
+        "view",
+        "whenever",
+        "prior",
+        "continue",
+        "function",
+        "intersection",
+        "limit",
+        "raise",
+        "create",
+        "from",
+        "collation",
+        "alter",
+        "group",
+        "add",
+        "last",
+        "like",
+        "resource",
+        "count",
+        "check",
+        "less",
+        "encoding",
+        "inner",
+        "rownum",
+        "collate",
+        "null",
+        "abort",
+        "immediate",
+        "true",
+        "decimal",
+        "exec",
+        "nowait",
+        "changed",
+        "desc",
+        "option",
+        "drop",
+        "next",
+        "string",
+        "session",
+        "values",
+        "for",
+        "distinct",
+        "insert",
+        "revoke",
+        "update",
+        "delete",
+        "not",
+        "synonym",
+        "avg",
+        "public",
+        "and",
+        "of",
+        "define",
+        "alias",
+        "divide",
+        "end",
+        "row",
+        "multiply",
+        "on",
+        "or",
+        "intersect",
+        "previous",
+        "false",
+        "go",
+        "start",
+        "was",
+        "rows",
+        "any",
+        "int",
+        "modify",
+        "with",
+        "inout",
+        "boolean",
+        "grant",
+        "remainder",
+        "user"
+    ]
+}
