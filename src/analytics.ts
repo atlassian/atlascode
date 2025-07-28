@@ -202,20 +202,27 @@ export function performanceEvent(tag: string, measure: number, params?: Record<s
 
 // Rovo Dev events
 
-export function rovoDevNewSessionActionEvent(isBBY: boolean, sessionId: string, isManuallyCreated: boolean) {
+export type RovoDevEnv = 'IDE' | 'BBY';
+
+export function rovoDevNewSessionActionEvent(rovoDevEnv: RovoDevEnv, sessionId: string, isManuallyCreated: boolean) {
     return trackEvent('rovoDevNewSessionAction', 'atlascode', {
-        attributes: { isBBY, sessionId, isManuallyCreated },
+        attributes: { rovoDevEnv, sessionId, isManuallyCreated },
     });
 }
 
-export function rovoDevPromptSentEvent(isBBY: boolean, sessionId: string, promptId: string, deepPlanEnabled: boolean) {
+export function rovoDevPromptSentEvent(
+    rovoDevEnv: RovoDevEnv,
+    sessionId: string,
+    promptId: string,
+    deepPlanEnabled: boolean,
+) {
     return trackEvent('rovoDevPromptSent', 'atlascode', {
-        attributes: { isBBY, sessionId, promptId, deepPlanEnabled },
+        attributes: { rovoDevEnv, sessionId, promptId, deepPlanEnabled },
     });
 }
 
 export function rovoDevTechnicalPlanningShownEvent(
-    isBBY: boolean,
+    rovoDevEnv: RovoDevEnv,
     sessionId: string,
     promptId: string,
     stepsCount: number,
@@ -223,43 +230,53 @@ export function rovoDevTechnicalPlanningShownEvent(
     questionsCount: number,
 ) {
     return trackEvent('rovoDevTechnicalPlanningShown', 'atlascode', {
-        attributes: { isBBY, sessionId, promptId, stepsCount, filesCount, questionsCount },
+        attributes: { rovoDevEnv, sessionId, promptId, stepsCount, filesCount, questionsCount },
     });
 }
 
-export function rovoDevFilesSummaryShownEvent(isBBY: boolean, sessionId: string, promptId: string, filesCount: number) {
+export function rovoDevFilesSummaryShownEvent(
+    rovoDevEnv: RovoDevEnv,
+    sessionId: string,
+    promptId: string,
+    filesCount: number,
+) {
     return trackEvent('rovoDevFilesSummaryShown', 'atlascode', {
-        attributes: { isBBY, sessionId, promptId, filesCount },
+        attributes: { rovoDevEnv, sessionId, promptId, filesCount },
     });
 }
 
 export function rovoDevFileChangedActionEvent(
-    isBBY: boolean,
+    rovoDevEnv: RovoDevEnv,
     sessionId: string,
     promptId: string,
     action: 'undo' | 'keep',
     filesCount: number,
 ) {
     return trackEvent('rovoDevFileChangedAction', 'atlascode', {
-        attributes: { isBBY, sessionId, promptId, action, filesCount },
+        attributes: { rovoDevEnv, sessionId, promptId, action, filesCount },
     });
 }
 
-export function rovoDevStopActionEvent(isBBY: boolean, sessionId: string, promptId: string, failed: boolean) {
+export function rovoDevStopActionEvent(rovoDevEnv: RovoDevEnv, sessionId: string, promptId: string, failed: boolean) {
     return trackEvent('rovoDevStopAction', 'atlascode', {
-        attributes: { isBBY, sessionId, promptId, failed },
+        attributes: { rovoDevEnv, sessionId, promptId, failed },
     });
 }
 
-export function rovoDevGitPushActionEvent(isBBY: boolean, sessionId: string, promptId: string, prCreated: boolean) {
+export function rovoDevGitPushActionEvent(
+    rovoDevEnv: RovoDevEnv,
+    sessionId: string,
+    promptId: string,
+    prCreated: boolean,
+) {
     return trackEvent('rovoDevGitPushAction', 'atlascode', {
-        attributes: { isBBY, sessionId, promptId, prCreated },
+        attributes: { rovoDevEnv, sessionId, promptId, prCreated },
     });
 }
 
-export function rovoDevDetailsExpandedEvent(isBBY: boolean, sessionId: string, promptId: string) {
+export function rovoDevDetailsExpandedEvent(rovoDevEnv: RovoDevEnv, sessionId: string, promptId: string) {
     return trackEvent('rovoDevDetailsExpanded', 'atlascode', {
-        attributes: { isBBY, sessionId, promptId },
+        attributes: { rovoDevEnv, sessionId, promptId },
     });
 }
 

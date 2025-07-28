@@ -23,6 +23,7 @@ import {
 
 import {
     rovoDevDetailsExpandedEvent,
+    RovoDevEnv,
     rovoDevFileChangedActionEvent,
     rovoDevFilesSummaryShownEvent,
     rovoDevGitPushActionEvent,
@@ -334,8 +335,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (!this._firedTelemetryForCurrentPrompt[funcName]) {
             this._firedTelemetryForCurrentPrompt[funcName] = true;
 
-            // add `isBBY` and `sessionId` as the first two arguments
-            params.unshift(!!this.isBBY, this._chatSessionId);
+            // add `rovoDevEnv` and `sessionId` as the first two arguments
+            const rovoDevEnv: RovoDevEnv = this.isBBY ? 'BBY' : 'IDE';
+            params.unshift(rovoDevEnv, this._chatSessionId);
 
             const ret: ReturnType<(typeof rovoDevTelemetryEvents)[T]> = rovoDevTelemetryEvents[funcName].apply(
                 undefined,
