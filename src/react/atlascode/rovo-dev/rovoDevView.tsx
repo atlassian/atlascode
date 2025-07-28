@@ -436,9 +436,11 @@ const RovoDevView: React.FC = () => {
         ],
     );
 
-    const [postMessage, postMessageWithReturn] = useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, any>(
-        onMessageHandler,
-    );
+    const { postMessage, postMessagePromise } = useMessagingApi<
+        RovoDevViewResponse,
+        RovoDevProviderMessage,
+        RovoDevProviderMessage
+    >(onMessageHandler);
 
     React.useEffect(() => {
         if (outgoingMessage) {
@@ -564,7 +566,7 @@ const RovoDevView: React.FC = () => {
     const getOriginalText = useCallback(
         async (filePath: string, range?: number[]) => {
             const uniqueNonce = `${Math.random()}-${Date.now()}`; // Unique identifier for the request
-            const res = await postMessageWithReturn(
+            const res = await postMessagePromise(
                 {
                     type: RovoDevViewResponseType.GetOriginalText,
                     filePath,
@@ -576,9 +578,9 @@ const RovoDevView: React.FC = () => {
                 uniqueNonce,
             );
 
-            return (res.text as string) || '';
+            return res.text || '';
         },
-        [postMessageWithReturn],
+        [postMessagePromise],
     );
 
     const isRetryAfterErrorButtonEnabled = useCallback(
@@ -616,7 +618,7 @@ const RovoDevView: React.FC = () => {
                 }}
                 messagingApi={{
                     postMessage,
-                    postMessageWithReturn,
+                    postMessagePromise,
                 }}
                 pendingToolCall={pendingToolCallMessage}
                 deepPlanCreated={isDeepPlanCreated}

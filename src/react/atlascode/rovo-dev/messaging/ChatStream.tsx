@@ -1,7 +1,8 @@
 import { random } from 'lodash';
 import * as React from 'react';
+import { RovoDevProviderMessage } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
-import { PostMessageFunc, PostMessagePromiseFunc } from '../../messagingApi';
+import { useMessagingApi } from '../../messagingApi';
 import { ErrorMessageItem, FollowUpActionFooter, OpenFileFunc, TechnicalPlanComponent } from '../common/common';
 import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
 import { RovoDevLanding } from '../rovoDevLanding';
@@ -30,10 +31,9 @@ interface ChatStreamProps {
         retryPromptAfterError: () => void;
         getOriginalText: (fp: string, lr?: number[]) => Promise<string>;
     };
-    messagingApi: {
-        postMessage: PostMessageFunc<RovoDevViewResponse>;
-        postMessageWithReturn: PostMessagePromiseFunc<RovoDevViewResponse, any>;
-    };
+    messagingApi: ReturnType<
+        typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
+    >;
     modifiedFiles?: ToolReturnParseResult[];
     pendingToolCall: string;
     deepPlanCreated: boolean;
@@ -51,7 +51,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     deepPlanCreated,
     executeCodePlan,
     state,
-    messagingApi: { postMessageWithReturn },
+    messagingApi,
     modifiedFiles,
     onChangesGitPushed,
 }) => {
@@ -131,7 +131,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                 setCanCreatePR(false);
                                 setIsFormVisible(false);
                             }}
-                            postMessageWithReturn={postMessageWithReturn}
+                            messagingApi={messagingApi}
                             modifiedFiles={modifiedFiles}
                             onPullRequestCreated={(url) => {
                                 setCanCreatePR(false);

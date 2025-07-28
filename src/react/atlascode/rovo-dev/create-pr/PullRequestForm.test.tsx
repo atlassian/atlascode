@@ -7,7 +7,8 @@ import { RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { DefaultMessage, ToolReturnParseResult } from '../utils';
 import { PullRequestChatItem, PullRequestForm } from './PullRequestForm';
 
-const mockPostMessageWithReturn = jest.fn();
+const mockPostMessage = jest.fn();
+const mockPostMessagePromise = jest.fn();
 const mockOnCancel = jest.fn();
 const mockOnPullRequestCreated = jest.fn();
 const mockSetFormVisible = jest.fn();
@@ -29,7 +30,7 @@ describe('PullRequestForm', () => {
         const { container } = render(
             <PullRequestForm
                 onCancel={mockOnCancel}
-                postMessageWithReturn={mockPostMessageWithReturn}
+                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
                 modifiedFiles={[]}
                 onPullRequestCreated={mockOnPullRequestCreated}
             />,
@@ -41,7 +42,7 @@ describe('PullRequestForm', () => {
         render(
             <PullRequestForm
                 onCancel={mockOnCancel}
-                postMessageWithReturn={mockPostMessageWithReturn}
+                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
                 modifiedFiles={mockModifiedFiles}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={false}
@@ -56,7 +57,7 @@ describe('PullRequestForm', () => {
         render(
             <PullRequestForm
                 onCancel={mockOnCancel}
-                postMessageWithReturn={mockPostMessageWithReturn}
+                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
                 modifiedFiles={mockModifiedFiles}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={true}
@@ -71,12 +72,12 @@ describe('PullRequestForm', () => {
     });
 
     it('fetches branch name when toggle button is clicked', async () => {
-        mockPostMessageWithReturn.mockResolvedValue({ data: { branchName: 'feature-branch' } });
+        mockPostMessagePromise.mockResolvedValue({ data: { branchName: 'feature-branch' } });
 
         render(
             <PullRequestForm
                 onCancel={mockOnCancel}
-                postMessageWithReturn={mockPostMessageWithReturn}
+                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
                 modifiedFiles={mockModifiedFiles}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={false}
@@ -87,7 +88,7 @@ describe('PullRequestForm', () => {
         fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
 
         await waitFor(() => {
-            expect(mockPostMessageWithReturn).toHaveBeenCalledWith(
+            expect(mockPostMessagePromise).toHaveBeenCalledWith(
                 { type: RovoDevViewResponseType.GetCurrentBranchName },
                 RovoDevProviderMessageType.GetCurrentBranchNameComplete,
                 expect.any(Number),
@@ -100,7 +101,7 @@ describe('PullRequestForm', () => {
         render(
             <PullRequestForm
                 onCancel={mockOnCancel}
-                postMessageWithReturn={mockPostMessageWithReturn}
+                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
                 modifiedFiles={mockModifiedFiles}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={true}
@@ -112,12 +113,12 @@ describe('PullRequestForm', () => {
     });
 
     it('submits form with correct data', async () => {
-        mockPostMessageWithReturn.mockResolvedValue({ data: { url: 'http://pr-url.com' } });
+        mockPostMessagePromise.mockResolvedValue({ data: { url: 'http://pr-url.com' } });
 
         render(
             <PullRequestForm
                 onCancel={mockOnCancel}
-                postMessageWithReturn={mockPostMessageWithReturn}
+                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
                 modifiedFiles={mockModifiedFiles}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={true}
@@ -134,12 +135,12 @@ describe('PullRequestForm', () => {
         fireEvent.click(screen.getByRole('button', { name: /create pr/i }));
 
         await waitFor(() => {
-            expect(mockPostMessageWithReturn).toHaveBeenCalledWith(
+            expect(mockPostMessagePromise).toHaveBeenCalledWith(
                 {
                     type: RovoDevViewResponseType.CreatePR,
                     payload: { branchName: 'test-branch', commitMessage: 'Test commit message' },
                 },
-                RovoDevViewResponseType.CreatePRComplete,
+                RovoDevProviderMessageType.CreatePRComplete,
                 expect.any(Number),
             );
             expect(mockOnPullRequestCreated).toHaveBeenCalledWith('http://pr-url.com');
@@ -150,7 +151,7 @@ describe('PullRequestForm', () => {
         render(
             <PullRequestForm
                 onCancel={mockOnCancel}
-                postMessageWithReturn={mockPostMessageWithReturn}
+                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
                 modifiedFiles={mockModifiedFiles}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={true}
@@ -159,7 +160,7 @@ describe('PullRequestForm', () => {
 
         fireEvent.click(screen.getByRole('button', { name: /create pr/i }));
 
-        expect(mockPostMessageWithReturn).not.toHaveBeenCalled();
+        expect(mockPostMessagePromise).not.toHaveBeenCalled();
         expect(mockOnPullRequestCreated).not.toHaveBeenCalled();
     });
 });

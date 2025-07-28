@@ -270,7 +270,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         }
     }, []);
 
-    const [postMessage, postMessagePromise] = useMessagingApi<ConfigAction, ConfigMessage, ConfigResponse>(
+    const { postMessage, postMessagePromise } = useMessagingApi<ConfigAction, ConfigMessage, ConfigResponse>(
         onMessageHandler,
     );
 

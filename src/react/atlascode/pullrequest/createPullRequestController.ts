@@ -16,6 +16,7 @@ import {
     CreatePullRequestInitMessage,
     CreatePullRequestMessage,
     CreatePullRequestMessageType,
+    CreatePullRequestResponse,
     emptyCreatePullRequestInitMessage,
     FetchUsersResponseMessage,
     SubmitResponseMessage,
@@ -144,9 +145,11 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
         }
     }, []);
 
-    const [postMessage, postMessagePromise] = useMessagingApi<CreatePullRequestAction, CreatePullRequestMessage, {}>(
-        onMessageHandler,
-    );
+    const { postMessage, postMessagePromise } = useMessagingApi<
+        CreatePullRequestAction,
+        CreatePullRequestMessage,
+        CreatePullRequestResponse
+    >(onMessageHandler);
 
     const fetchUsers = useCallback(
         (site: BitbucketSite, query: string, abortSignal?: AbortSignal): Promise<User[]> => {

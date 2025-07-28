@@ -364,7 +364,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         }
     }, []);
 
-    const [postMessage, postMessagePromise] = useMessagingApi<
+    const { postMessage, postMessagePromise } = useMessagingApi<
         PullRequestDetailsAction,
         PullRequestDetailsMessage,
         PullRequestDetailsResponse

@@ -109,7 +109,7 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
         }
     }, []);
 
-    const [postMessage, postMessagePromise] = useMessagingApi<StartWorkAction, StartWorkMessage, StartWorkResponse>(
+    const { postMessage, postMessagePromise } = useMessagingApi<StartWorkAction, StartWorkMessage, StartWorkResponse>(
         onMessageHandler,
     );
 
