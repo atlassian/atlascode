@@ -142,7 +142,7 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
                             StartWorkMessageType.StartWorkResponse,
                             ConnectionTimeout,
                         );
-                        resolve(response as StartWorkResponseMessage);
+                        resolve(response);
                     } catch (e) {
                         reject(e);
                     }
