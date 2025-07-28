@@ -1455,6 +1455,7 @@
         "@jest/globals": "^30.0.2",
         "@playwright/test": "1.53.0",
         "@testing-library/react": "^12.1.5",
+        "@types/autosuggest-highlight": "^3.2.3",
         "@types/express": "^5.0.2",
         "@types/git-url-parse": "^9.0.1",
         "@types/jest": "^30.0.0",
