@@ -17,10 +17,10 @@ test('Test upload image to attachments', async ({ page, request }) => {
 
     const cleanupIssueMock = await setupIssueMock(request, { attachment });
 
-    await issuePage.addAttachment(FILE_PATH);
+    await issuePage.content.addAttachment(FILE_PATH);
     await page.waitForTimeout(1_000);
 
-    await issuePage.expectAttachment(FILE_NAME);
+    await issuePage.content.hasAttachment(FILE_NAME);
 
     await cleanupIssueMock();
 });

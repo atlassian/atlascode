@@ -20,14 +20,14 @@ export class IssueStatus {
         return this.statusMenu.textContent();
     }
 
-    async updateStatus(nextStatus: string) {
+    async changeTo(nextStatus: string) {
         await this.statusMenu.click();
         const nextOption = this.statusOptions.getByText(new RegExp(nextStatus, 'i'));
         await expect(nextOption).toBeVisible();
-        await nextOption.click();
+        return nextOption.click();
     }
 
-    async expectStatus(expectedStatus: string) {
+    async expectEqual(expectedStatus: string) {
         const currentStatus = await this.statusMenu.textContent();
         expect(currentStatus).toMatch(new RegExp(expectedStatus, 'i'));
     }

@@ -32,4 +32,9 @@ export class AtlascodeDrawer {
         const currentStatus = await this.getJiraIssueStatus(name);
         expect(currentStatus).toMatch(new RegExp(expectedStatus, 'i'));
     }
+
+    async expectIssueExists(name: string) {
+        const item = this.jiraItemsTree.getByRole('treeitem', { name });
+        return expect(item).toBeVisible();
+    }
 }

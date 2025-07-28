@@ -14,8 +14,8 @@ test('Update description flow', async ({ page, request }) => {
     const frame = await getIssueFrame(page);
     const issuePage = new JiraIssuePage(frame);
 
-    await issuePage.expectDescription(OLD_DESCRIPTION);
-    await issuePage.updateDescription(NEW_DESCRIPTION);
+    await issuePage.description.expectEqual(OLD_DESCRIPTION);
+    await issuePage.description.changeTo(NEW_DESCRIPTION);
     await page.waitForTimeout(500);
 
     const cleanupIssueMock = await setupIssueMock(request, { description: NEW_DESCRIPTION });
@@ -23,7 +23,7 @@ test('Update description flow', async ({ page, request }) => {
     await issuePage.saveChanges();
     await page.waitForTimeout(1_000);
 
-    await issuePage.expectDescription(NEW_DESCRIPTION);
+    await issuePage.description.expectEqual(NEW_DESCRIPTION);
 
     await cleanupIssueMock();
 });

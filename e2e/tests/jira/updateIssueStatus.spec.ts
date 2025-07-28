@@ -16,16 +16,16 @@ test('I can transition a Jira', async ({ page, request }) => {
 
     const issueFrame = await getIssueFrame(page);
     const jiraIssuePage = new JiraIssuePage(issueFrame);
-    await jiraIssuePage.expectStatus(CURRENT_STATUS);
+    await jiraIssuePage.status.expectEqual(CURRENT_STATUS);
 
     // setup mocks for next status
     const cleanupIssueMock = await setupIssueMock(request, { status: NEXT_STATUS });
     const cleanupSearchMock = await setupSearchMock(request, NEXT_STATUS);
 
-    await jiraIssuePage.updateStatus(NEXT_STATUS);
+    await jiraIssuePage.status.changeTo(NEXT_STATUS);
     await page.waitForTimeout(2_000);
 
-    await jiraIssuePage.expectStatus(NEXT_STATUS);
+    await jiraIssuePage.status.expectEqual(NEXT_STATUS);
     await atlascodeDrawer.expectStatusForJiraIssue(ISSUE_NAME, NEXT_STATUS);
 
     await cleanupIssueMock();

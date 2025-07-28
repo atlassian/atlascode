@@ -37,8 +37,8 @@ export class IssueQuickContent {
         await saveButton.click();
     }
 
-    async expectAttachment(filename: string) {
+    hasAttachment(filename: string) {
         const attachment = this.attachments.getByText(filename);
-        await expect(attachment).toBeVisible();
+        return expect(attachment).toBeVisible();
     }
 }

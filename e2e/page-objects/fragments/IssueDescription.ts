@@ -17,7 +17,7 @@ export class IssueDescription {
         return this.description.textContent();
     }
 
-    async updateDescription(newDescription: string) {
+    async changeTo(newDescription: string) {
         await this.description.click();
         const textarea = this.frame.locator('textarea');
         await expect(textarea).toBeVisible();
@@ -25,7 +25,7 @@ export class IssueDescription {
         await textarea.fill(newDescription);
     }
 
-    async expectDescription(description: string) {
+    async expectEqual(description: string) {
         const currentDescription = await this.getDescription();
         expect(currentDescription).toEqual(description);
     }

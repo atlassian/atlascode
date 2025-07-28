@@ -13,8 +13,8 @@ test('Add comment flow', async ({ page }) => {
     const issueFrame = await getIssueFrame(page);
     const issuePage = new JiraIssuePage(issueFrame);
 
-    await issuePage.addComment(COMMENT_TEXT);
+    await issuePage.comments.addNew(COMMENT_TEXT);
     await page.waitForTimeout(1_000);
 
-    await issuePage.expectComment(COMMENT_TEXT);
+    await issuePage.comments.expectExists(COMMENT_TEXT);
 });

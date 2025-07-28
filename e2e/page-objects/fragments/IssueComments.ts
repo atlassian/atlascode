@@ -16,9 +16,9 @@ export class IssueComments {
         this.newComment = this.frame.getByTestId(NEW_COMMENT_TEST_ID);
     }
 
-    async addComment(commentText: string) {
+    async addNew(commentText: string) {
         await this.fillComment(commentText);
-        await this.saveNewComment();
+        await this.saveNew();
     }
 
     async fillComment(commentText: string) {
@@ -29,13 +29,13 @@ export class IssueComments {
         await textarea.fill(commentText);
     }
 
-    async saveNewComment() {
+    async saveNew() {
         const saveButton = this.newComment.getByRole('button', { name: 'Save' });
         await expect(saveButton).toBeVisible();
         await saveButton.click();
     }
 
-    async expectComment(commentText: string) {
+    async expectExists(commentText: string) {
         const comment = this.commentsSection.getByText(commentText);
         await expect(comment).toBeVisible();
     }
