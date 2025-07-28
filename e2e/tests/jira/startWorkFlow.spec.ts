@@ -17,12 +17,14 @@ test.only('I can start work on a Jira', async ({ page, request }) => {
     const jiraIssuePage = new JiraIssuePage(issueFrame);
     await jiraIssuePage.expectStatus(currentStatus);
 
-    await jiraIssuePage.startWork();
-    await page.waitForTimeout(2_000);
-
     // setup mocks for next status
     const cleanupIssueMock = await setupIssueMock(request, { status: nextStatus });
     const cleanupSearchMock = await setupSearchMock(request, nextStatus);
+
+    await jiraIssuePage.startWork();
+
+    await page.getByRole('tab', { name: 'BTS-1', exact: true }).getByLabel(/close/i).click();
+    await page.waitForTimeout(2_000);
 
     const startWorkFrame = await getIssueFrame(page);
     const startWorkPage = new StartWorkPage(startWorkFrame);
