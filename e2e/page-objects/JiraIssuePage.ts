@@ -1,66 +1,62 @@
-import { expect, Frame, Locator } from 'playwright/test';
+import { Frame } from 'playwright/test';
+
+import { IssueComments, IssueDescription, IssueQuickContent, IssueStatus } from './fragments';
 
 export class JiraIssuePage {
     readonly frame: Frame;
-    readonly statusMenu: Locator;
-    readonly statusOptions: Locator;
 
-    readonly description: Locator;
-
-    readonly commentContainer: Locator;
+    readonly status: IssueStatus;
+    readonly description: IssueDescription;
+    readonly comments: IssueComments;
+    readonly content: IssueQuickContent;
 
     constructor(frame: Frame) {
         this.frame = frame;
-        this.statusMenu = this.frame.getByTestId('issue.status-transition-menu');
-        this.statusOptions = this.frame.getByTestId('issue.status-transition-menu-dropdown');
-        this.description = this.frame.getByTestId('issue.description');
-        this.commentContainer = this.frame.getByTestId('issue.comment-container');
+
+        this.status = new IssueStatus(this.frame);
+        this.description = new IssueDescription(this.frame);
+        this.comments = new IssueComments(this.frame);
+        this.content = new IssueQuickContent(this.frame);
     }
 
-    async getStatus() {
-        return await this.statusMenu.textContent();
+    getStatus() {
+        return this.status.getStatus();
     }
 
-    async updateStatus(nextStatus: string) {
-        await this.statusMenu.click();
-        const nextOption = this.statusOptions.getByText(new RegExp(nextStatus, 'i'));
-        await expect(nextOption).toBeVisible();
-        await nextOption.click();
+    updateStatus(nextStatus: string) {
+        return this.status.updateStatus(nextStatus);
     }
 
-    async expectStatus(expectedStatus: string) {
-        const currentStatus = await this.statusMenu.textContent();
-        expect(currentStatus).toMatch(new RegExp(expectedStatus, 'i'));
+    expectStatus(expectedStatus: string) {
+        return this.status.expectStatus(expectedStatus);
     }
 
-    async getDescription() {
-        return await this.description.textContent();
+    getDescription() {
+        return this.description.getDescription();
     }
 
-    async updateDescription(newDescription: string) {
-        await this.description.click();
-        const textarea = this.frame.locator('textarea');
-        await expect(textarea).toBeVisible();
-        await textarea.clear();
-        await textarea.fill(newDescription);
+    updateDescription(newDescription: string) {
+        return this.description.updateDescription(newDescription);
     }
 
-    async expectDescription(description: string) {
-        const currentDescription = await this.getDescription();
-        expect(currentDescription).toEqual(description);
+    expectDescription(description: string) {
+        return this.description.expectDescription(description);
     }
 
-    async addComment(commentText: string) {
-        const input = this.commentContainer.getByPlaceholder('Add a comment...');
-        await input.click();
+    addComment(commentText: string) {
+        return this.comments.addComment(commentText);
+    }
 
-        const textarea = this.commentContainer.locator('textarea').first();
-        await expect(textarea).toBeVisible();
-        await textarea.fill(commentText);
+    expectComment(commentText: string) {
+        return this.comments.expectComment(commentText);
+    }
 
-        const saveButton = this.commentContainer.getByRole('button', { name: 'Save' });
-        await expect(saveButton).toBeVisible();
-        await saveButton.click();
+    addAttachment(filePath: string) {
+        return this.content.addAttachment(filePath);
+    }
+
+    expectAttachment(filename: string) {
+        return this.content.expectAttachment(filename);
     }
 
     async saveChanges() {
