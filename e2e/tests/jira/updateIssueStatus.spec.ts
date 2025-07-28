@@ -1,7 +1,6 @@
 import { test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame, setupIssueMock, setupSearchMock } from 'e2e/helpers';
-import { AtlascodeDrawer } from 'e2e/page-objects/AtlascodeDrawer';
-import { JiraIssuePage } from 'e2e/page-objects/JiraIssuePage';
+import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
 
 test('I can transition a Jira', async ({ page, request }) => {
     const issueName = 'BTS-1 - User Interface Bugs';
@@ -9,7 +8,7 @@ test('I can transition a Jira', async ({ page, request }) => {
     const nextStatus = 'In Progress';
 
     await authenticateWithJira(page);
-    await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
+    await new AtlassianSettings(page).closeSettingsPage();
 
     const atlascodeDrawer = new AtlascodeDrawer(page);
     await atlascodeDrawer.expectStatusForJiraIssue(issueName, currentStatus);

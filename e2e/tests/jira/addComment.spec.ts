@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame } from 'e2e/helpers';
-import { AtlascodeDrawer, JiraIssuePage } from 'e2e/page-objects';
+import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
 
 test('Add comment flow', async ({ page }) => {
     const commentText = 'This is a test comment added via e2e test';
@@ -8,8 +8,7 @@ test('Add comment flow', async ({ page }) => {
     await authenticateWithJira(page);
 
     await new AtlascodeDrawer(page).openJiraIssue('BTS-1 - User Interface Bugs');
-
-    await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
+    await new AtlassianSettings(page).closeSettingsPage();
 
     const issueFrame = await getIssueFrame(page);
     const issuePage = new JiraIssuePage(issueFrame);

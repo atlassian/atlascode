@@ -1,14 +1,13 @@
 import { test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
-import { AtlascodeDrawer, JiraIssuePage } from 'e2e/page-objects';
+import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
 
 test('Update description flow', async ({ page, request }) => {
     const oldDescription = 'Track and resolve bugs related to the user interface.';
     const newDescription = 'Add e2e test for this functionality';
 
     await authenticateWithJira(page);
-
-    await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
+    await new AtlassianSettings(page).closeSettingsPage();
 
     await new AtlascodeDrawer(page).openJiraIssue('BTS-1 - User Interface Bugs');
 

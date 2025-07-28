@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { authenticateWithJira } from 'e2e/helpers';
+import { AtlassianSettings } from 'e2e/page-objects';
 
 test('Create an issue via side panel flow', async ({ page }) => {
     const newIssueSummary = 'Test Issue Created via E2E Test';
@@ -8,8 +9,7 @@ test('Create an issue via side panel flow', async ({ page }) => {
     await authenticateWithJira(page);
 
     await page.getByRole('button', { name: 'Create Jira issue' }).click();
-
-    await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
+    await new AtlassianSettings(page).closeSettingsPage();
 
     const createIssueFrame = page.frameLocator('iframe.webview').frameLocator('iframe[title="Create Jira Issue"]');
 

@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { attachment } from 'e2e/fixtures/attachment';
 import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
-import { AtlascodeDrawer } from 'e2e/page-objects';
+import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
 test('Test upload image to attachments', async ({ page, request }) => {
     await authenticateWithJira(page);
 
-    await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
+    await new AtlassianSettings(page).closeSettingsPage();
 
     await new AtlascodeDrawer(page).openJiraIssue('BTS-1 - User Interface Bugs');
 

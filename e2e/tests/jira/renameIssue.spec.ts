@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
-import { AtlascodeDrawer } from 'e2e/page-objects';
+import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
 test('Rename Jira issue', async ({ page, request }) => {
     const oldTitle = '(Sample) User Interface Bugs';
@@ -8,8 +8,7 @@ test('Rename Jira issue', async ({ page, request }) => {
 
     await authenticateWithJira(page);
 
-    await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
-
+    await new AtlassianSettings(page).closeSettingsPage();
     await new AtlascodeDrawer(page).openJiraIssue('BTS-1 - User Interface Bugs');
 
     const issueFrame = await getIssueFrame(page);

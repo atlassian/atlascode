@@ -1,12 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame } from 'e2e/helpers';
-import { AtlascodeDrawer } from 'e2e/page-objects';
+import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
 test('Test image display in ticket description', async ({ page }) => {
     await authenticateWithJira(page);
-
-    await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
-
+    await new AtlassianSettings(page).closeSettingsPage();
     await new AtlascodeDrawer(page).openJiraIssue('BTS-1 - User Interface Bugs');
 
     // Get the issue frame using the existing helper
