@@ -27,7 +27,14 @@ export type PMFDialogProps = {
 };
 
 export const PMFDialog: React.FunctionComponent<PMFDialogProps> = ({ open, onCancel, onSave }) => {
-    const { register, handleSubmit, errors, formState, triggerValidation, control, reset } = useForm<PMFData>({
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isValid },
+        trigger,
+        control,
+        reset,
+    } = useForm<PMFData>({
         mode: 'onChange',
     });
 
@@ -44,8 +51,8 @@ export const PMFDialog: React.FunctionComponent<PMFDialogProps> = ({ open, onCan
     }, [onCancel, reset]);
 
     const handleLevelBlur = useCallback(() => {
-        triggerValidation('level');
-    }, [triggerValidation]);
+        trigger('level');
+    }, [trigger]);
 
     // BUG: TextFields scroll when not focused. see: https://github.com/mui-org/material-ui/issues/20170
     return (
@@ -57,13 +64,16 @@ export const PMFDialog: React.FunctionComponent<PMFDialogProps> = ({ open, onCan
                 <Grid container direction="column" spacing={2}>
                     <Grid item>
                         <Controller
-                            as={
+                            name="level"
+                            control={control}
+                            rules={{ required: 'Level is required' }}
+                            render={({ field }) => (
                                 <FormControl component="fieldset" onBlur={handleLevelBlur}>
                                     <FormLabel component="legend" required error={errors.level !== undefined}>
                                         How disappointed would you feel if you could no longer use Atlassian for VS Code
                                         extension?
                                     </FormLabel>
-                                    <RadioGroup aria-label="level" name="level">
+                                    <RadioGroup aria-label="level" {...field}>
                                         <FormControlLabel
                                             value={PMFLevel.VERY}
                                             control={<Radio autoFocus color="primary" />}
@@ -84,14 +94,12 @@ export const PMFDialog: React.FunctionComponent<PMFDialogProps> = ({ open, onCan
                                         {errors.level ? errors.level.message : ''}
                                     </FormHelperText>
                                 </FormControl>
-                            }
-                            rules={{ required: 'Level is required' }}
-                            name="level"
-                            control={control}
+                            )}
                         />
                     </Grid>
                     <Grid item>
                         <TextField
+                            {...register('improvements')}
                             multiline
                             rows={3}
                             variant="outlined"
@@ -101,11 +109,11 @@ export const PMFDialog: React.FunctionComponent<PMFDialogProps> = ({ open, onCan
                             name="improvements"
                             label="How can we improve this extension for you?"
                             fullWidth
-                            inputRef={register}
                         />
                     </Grid>
                     <Grid item>
                         <TextField
+                            {...register('alternative')}
                             multiline
                             rows={3}
                             variant="outlined"
@@ -115,11 +123,11 @@ export const PMFDialog: React.FunctionComponent<PMFDialogProps> = ({ open, onCan
                             name="alternative"
                             label="What would you use as an alternative if this extension were no longer available?"
                             fullWidth
-                            inputRef={register}
                         />
                     </Grid>
                     <Grid item>
                         <TextField
+                            {...register('benefits')}
                             multiline
                             rows={3}
                             variant="outlined"
@@ -129,18 +137,12 @@ export const PMFDialog: React.FunctionComponent<PMFDialogProps> = ({ open, onCan
                             name="benefits"
                             label="What are the main benefits you receive from this extension?"
                             fullWidth
-                            inputRef={register}
                         />
                     </Grid>
                 </Grid>
             </DialogContent>
             <DialogActions>
-                <Button
-                    disabled={!formState.isValid}
-                    onClick={handleSubmit(handleSave)}
-                    variant="contained"
-                    color="primary"
-                >
+                <Button disabled={!isValid} onClick={handleSubmit(handleSave)} variant="contained" color="primary">
                     Submit
                 </Button>
                 <Button onClick={handleDialogClose} color="primary">

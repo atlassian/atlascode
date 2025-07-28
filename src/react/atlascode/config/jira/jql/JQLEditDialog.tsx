@@ -56,7 +56,12 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
         return await controller.fetchJqlOptions(site);
     }, [site]);
 
-    const { register, handleSubmit, errors, formState, control } = useForm<FormFields>({
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isValid },
+        control,
+    } = useForm<FormFields>({
         mode: 'onChange',
     });
 
@@ -131,6 +136,9 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
                 <Grid container direction="column" spacing={2}>
                     <Grid item>
                         <TextField
+                            {...register('name', {
+                                required: 'Name is required',
+                            })}
                             required
                             id="name"
                             name="name"
@@ -139,19 +147,16 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
                             helperText={errors.name ? errors.name.message : undefined}
                             fullWidth
                             error={!!errors.name}
-                            inputRef={register({
-                                required: 'Name is required',
-                            })}
                         />
                     </Grid>
                     <Grid item>
                         <Controller
                             control={control}
                             name="site"
-                            sites={sites}
                             defaultValue={site.id}
-                            as={
+                            render={({ field }) => (
                                 <SiteSelector
+                                    {...field}
                                     label="Select a site"
                                     required
                                     error={!!errors.site}
@@ -160,7 +165,7 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
                                     fullWidth
                                     onSiteChange={handleSiteChange}
                                 />
-                            }
+                            )}
                         />
                     </Grid>
                     <Grid item>
@@ -168,8 +173,9 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
                             <Controller
                                 control={control}
                                 name="jql"
-                                as={
+                                render={({ field }) => (
                                     <JQLInput
+                                        {...field}
                                         defaultValue={jqlEntry ? jqlEntry.query : ''}
                                         loading={jqlRestOptions.loading}
                                         disabled={jqlRestOptions.loading}
@@ -185,19 +191,14 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
                                         helperText={errors.jql ? errors.jql.message : undefined}
                                         error={!!errors.jql}
                                     />
-                                }
+                                )}
                             />
                         </div>
                     </Grid>
                 </Grid>
             </DialogContent>
             <DialogActions>
-                <Button
-                    disabled={!formState.isValid}
-                    onClick={handleSubmit(handleSave)}
-                    variant="contained"
-                    color="primary"
-                >
+                <Button disabled={!isValid} onClick={handleSubmit(handleSave)} variant="contained" color="primary">
                     Save JQL
                 </Button>
                 <Button onClick={onCancel} color="primary">
