@@ -25,7 +25,12 @@ export const AttachmentsModal: React.FunctionComponent<AttachmentsModalProps> = 
 
     return (
         <ModalTransition>
-            <Modal onClose={onCancel} heading="Add Attachment" shouldCloseOnEscapePress={false}>
+            <Modal
+                testId="issue.attachment-modal"
+                onClose={onCancel}
+                heading="Add Attachment"
+                shouldCloseOnEscapePress={false}
+            >
                 <AttachmentForm onFilesChanged={setFiles} />
                 <ButtonGroup>
                     <Button className="ac-button" onClick={doSave} isDisabled={files.length < 1}>
