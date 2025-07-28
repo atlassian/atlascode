@@ -1,4 +1,4 @@
-import moo from '@atlassianlabs/moo-relexed';
+import * as moo from '@atlassianlabs/moo-relexed';
 
 import { TokenTypes } from './jqlConstants';
 
