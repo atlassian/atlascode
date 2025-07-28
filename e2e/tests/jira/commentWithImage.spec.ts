@@ -2,15 +2,14 @@ import { expect, test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
 import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
-test('View image in Jira comment', async ({ page, request }) => {
-    const imageSrc = 'https://mockedteams.atlassian.net/secure/attachment/10001/test-image.jpg';
+const IMAGE_SRC = 'https://mockedteams.atlassian.net/secure/attachment/10001/test-image.jpg';
+const COMMENT_CONTENT = `<p><span class="image-wrap" style=""><img src="${IMAGE_SRC}" alt="test-image.jpg" height="360" width="540" style="border: 0px solid black" /></span></p>`;
 
+test('View image in Jira comment', async ({ page, request }) => {
     await authenticateWithJira(page);
     await new AtlassianSettings(page).closeSettingsPage();
 
-    const cleanupIssueMock = await setupIssueMock(request, {
-        comment: `<p><span class="image-wrap" style=""><img src="${imageSrc}" alt="test-image.jpg" height="360" width="540" style="border: 0px solid black" /></span></p>`,
-    });
+    const cleanupIssueMock = await setupIssueMock(request, { comment: COMMENT_CONTENT });
 
     await new AtlascodeDrawer(page).openJiraIssue('BTS-1 - User Interface Bugs');
 
@@ -18,7 +17,7 @@ test('View image in Jira comment', async ({ page, request }) => {
 
     await expect(issueFrame.locator('.image-wrap img')).toBeVisible();
 
-    await expect(issueFrame.locator('.image-wrap img')).toHaveAttribute('atlascode-original-src', imageSrc);
+    await expect(issueFrame.locator('.image-wrap img')).toHaveAttribute('atlascode-original-src', IMAGE_SRC);
 
     await cleanupIssueMock();
 });
