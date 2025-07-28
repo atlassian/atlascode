@@ -67,7 +67,6 @@ function generateListItems(
     }
     return sites.map((swa: SiteWithAuthInfo, i: number) => {
         const avatarUrl = swa.site.avatarUrl && swa.site.avatarUrl.length > 0 ? swa.site.avatarUrl : fallbackImg;
-        console.log(`Avatar URL for ${swa.site.name}: ${avatarUrl}`);
         return (
             <React.Fragment key={uid(swa, i)}>
                 <ListItem key={swa.site.name}>
@@ -79,7 +78,7 @@ function generateListItems(
                         )}
                     </ListItemIcon>
                     <ListItemAvatar>
-                        <Avatar src={'http://test.com'}>
+                        <Avatar src={avatarUrl}>
                             <JiraIcon />
                         </Avatar>
                     </ListItemAvatar>
