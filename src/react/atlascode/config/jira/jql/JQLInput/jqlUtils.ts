@@ -185,11 +185,9 @@ export function getFunctionsForType(fType: string, functions: JqlFuncRestData[])
 
 export function getUserInputPrefix(token: JQLToken, cursorIndex: number): string {
     let prefix: string = '';
-    //var quotedPrefix: string = '';
 
     if (cursorIndex > token.offset) {
         prefix = token.value;
-        //quotedPrefix = token.text.substr(0, cursorIndex - token.offset);
 
         const newCursorIndex =
             (token.text.endsWith('"') || token.text.endsWith("'")) && cursorIndex === token.offset + token.text.length
