@@ -1,10 +1,10 @@
-import { expect, test } from '@playwright/test';
+import { test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame } from 'e2e/helpers';
 import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
 
-test('Add comment flow', async ({ page }) => {
-    const commentText = 'This is a test comment added via e2e test';
+const COMMENT_TEXT = 'This is a test comment added via e2e test';
 
+test('Add comment flow', async ({ page }) => {
     await authenticateWithJira(page);
 
     await new AtlascodeDrawer(page).openJiraIssue('BTS-1 - User Interface Bugs');
@@ -13,9 +13,8 @@ test('Add comment flow', async ({ page }) => {
     const issueFrame = await getIssueFrame(page);
     const issuePage = new JiraIssuePage(issueFrame);
 
-    await issuePage.addComment(commentText);
+    await issuePage.addComment(COMMENT_TEXT);
     await page.waitForTimeout(1_000);
 
-    await expect(issueFrame.getByText(commentText)).toBeVisible();
-    await expect(issueFrame.locator('.jira-comment-author')).toBeVisible();
+    await issuePage.expectComment(COMMENT_TEXT);
 });

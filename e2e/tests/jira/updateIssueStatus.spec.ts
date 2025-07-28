@@ -2,31 +2,31 @@ import { test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame, setupIssueMock, setupSearchMock } from 'e2e/helpers';
 import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
 
-test('I can transition a Jira', async ({ page, request }) => {
-    const issueName = 'BTS-1 - User Interface Bugs';
-    const currentStatus = 'To Do';
-    const nextStatus = 'In Progress';
+const ISSUE_NAME = 'BTS-1 - User Interface Bugs';
+const CURRENT_STATUS = 'To Do';
+const NEXT_STATUS = 'In Progress';
 
+test('I can transition a Jira', async ({ page, request }) => {
     await authenticateWithJira(page);
     await new AtlassianSettings(page).closeSettingsPage();
 
     const atlascodeDrawer = new AtlascodeDrawer(page);
-    await atlascodeDrawer.expectStatusForJiraIssue(issueName, currentStatus);
-    await atlascodeDrawer.openJiraIssue(issueName);
+    await atlascodeDrawer.expectStatusForJiraIssue(ISSUE_NAME, CURRENT_STATUS);
+    await atlascodeDrawer.openJiraIssue(ISSUE_NAME);
 
     const issueFrame = await getIssueFrame(page);
     const jiraIssuePage = new JiraIssuePage(issueFrame);
-    await jiraIssuePage.expectStatus(currentStatus);
+    await jiraIssuePage.expectStatus(CURRENT_STATUS);
 
     // setup mocks for next status
-    const cleanupIssueMock = await setupIssueMock(request, { status: nextStatus });
-    const cleanupSearchMock = await setupSearchMock(request, nextStatus);
+    const cleanupIssueMock = await setupIssueMock(request, { status: NEXT_STATUS });
+    const cleanupSearchMock = await setupSearchMock(request, NEXT_STATUS);
 
-    await jiraIssuePage.updateStatus(nextStatus);
+    await jiraIssuePage.updateStatus(NEXT_STATUS);
     await page.waitForTimeout(2_000);
 
-    await jiraIssuePage.expectStatus(nextStatus);
-    await atlascodeDrawer.expectStatusForJiraIssue(issueName, nextStatus);
+    await jiraIssuePage.expectStatus(NEXT_STATUS);
+    await atlascodeDrawer.expectStatusForJiraIssue(ISSUE_NAME, NEXT_STATUS);
 
     await cleanupIssueMock();
     await cleanupSearchMock();

@@ -2,28 +2,28 @@ import { test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
 import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
 
+const OLD_DESCRIPTION = 'Track and resolve bugs related to the user interface.';
+const NEW_DESCRIPTION = 'Add e2e test for this functionality';
+
 test('Update description flow', async ({ page, request }) => {
-    const oldDescription = 'Track and resolve bugs related to the user interface.';
-    const newDescription = 'Add e2e test for this functionality';
-
     await authenticateWithJira(page);
-    await new AtlassianSettings(page).closeSettingsPage();
 
+    await new AtlassianSettings(page).closeSettingsPage();
     await new AtlascodeDrawer(page).openJiraIssue('BTS-1 - User Interface Bugs');
 
     const frame = await getIssueFrame(page);
     const issuePage = new JiraIssuePage(frame);
 
-    await issuePage.expectDescription(oldDescription);
-    await issuePage.updateDescription(newDescription);
+    await issuePage.expectDescription(OLD_DESCRIPTION);
+    await issuePage.updateDescription(NEW_DESCRIPTION);
     await page.waitForTimeout(500);
 
-    const cleanupIssueMock = await setupIssueMock(request, { description: newDescription });
+    const cleanupIssueMock = await setupIssueMock(request, { description: NEW_DESCRIPTION });
 
     await issuePage.saveChanges();
     await page.waitForTimeout(1_000);
 
-    await issuePage.expectDescription(newDescription);
+    await issuePage.expectDescription(NEW_DESCRIPTION);
 
     await cleanupIssueMock();
 });
