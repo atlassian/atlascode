@@ -1340,7 +1340,7 @@
         "@atlaskit/section-message": "^6.8.2",
         "@atlaskit/select": "^15.2.4",
         "@atlaskit/spinner": "^17.2.0",
-        "@atlaskit/table-tree": "^9.0.12",
+        "@atlaskit/table-tree": "^12.2.3",
         "@atlaskit/textarea": "^7.1.0",
         "@atlaskit/textfield": "^7.0.0",
         "@atlaskit/toggle": "^14.2.0",
