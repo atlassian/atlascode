@@ -1,40 +1,30 @@
 import Button from '@atlaskit/button';
 import StatusErrorIcon from '@atlaskit/icon/core/error';
-import CheckIcon from '@atlaskit/icon/glyph/check';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import ChevronRightIcon from '@atlaskit/icon/glyph/chevron-right';
-import CrossIcon from '@atlaskit/icon/glyph/cross';
 import QuestionCircleIcon from '@atlaskit/icon/glyph/question-circle';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { createPatch } from 'diff';
 import MarkdownIt from 'markdown-it';
-import React, { useCallback } from 'react';
-import { ConnectionTimeout } from 'src/util/time';
+import React from 'react';
 
-import { PostMessagePromiseFunc } from '../../messagingApi';
+import {
+    CodeSnippetToChange,
+    TechnicalPlan,
+    TechnicalPlanFileToChange,
+    TechnicalPlanLogicalChange,
+} from '../../../../../src/rovo-dev/rovoDevTypes';
 import { ChatMessageItem } from '../messaging/ChatMessageItem';
-import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import {
     agentMessageStyles,
     chatMessageStyles,
     errorMessageStyles,
     inChatButtonStyles,
-    inlineModifyButtonStyles,
     messageContentStyles,
-    undoKeepButtonStyles,
 } from '../rovoDevViewStyles';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import {
-    ChatMessage,
-    CodeSnippetToChange,
-    ErrorMessage,
-    parseToolReturnMessage,
-    TechnicalPlan,
-    TechnicalPlanFileToChange,
-    TechnicalPlanLogicalChange,
-    ToolReturnParseResult,
-} from '../utils';
+import { ChatMessage, DefaultMessage, ErrorMessage, parseToolReturnMessage } from '../utils';
 
 export const mdParser = new MarkdownIt({
     html: true,
@@ -100,53 +90,17 @@ const RetryPromptButton: React.FC<{
     );
 };
 
-export const PullRequestButton: React.FC<{
-    postMessagePromise: PostMessagePromiseFunc<RovoDevViewResponse, any>;
-    modifiedFiles?: ToolReturnParseResult[];
-    onPullRequestCreated?: (url: string) => void;
-}> = ({ postMessagePromise, modifiedFiles, onPullRequestCreated }) => {
-    if (!modifiedFiles || modifiedFiles.length === 0) {
-        return null;
-    }
-
-    const [isPullRequestLoading, setIsPullRequestLoading] = React.useState(false);
-
-    return (
-        <button
-            style={{
-                color: 'var(--vscode-button-secondaryForeground)',
-                backgroundColor: 'var(--vscode-button-background)',
-                border: '1px solid var(--vscode-button-secondaryBorder)',
-                ...undoKeepButtonStyles,
-            }}
-            onClick={async () => {
-                setIsPullRequestLoading(true);
-                const response = await postMessagePromise(
-                    {
-                        type: RovoDevViewResponseType.CreatePR,
-                    },
-                    RovoDevViewResponseType.CreatePRComplete,
-                    ConnectionTimeout,
-                );
-                setIsPullRequestLoading(false);
-                console.log('BRUH:', response);
-                onPullRequestCreated?.((response as any).data.url || '');
-            }}
-            title="Create Pull Request"
-        >
-            {!isPullRequestLoading ? (
-                <i className="codicon codicon-git-pull-request-create" />
-            ) : (
-                <i className="codicon codicon-loading codicon-modifier-spin" />
-            )}
-            Create Pull Request
-        </button>
-    );
-};
-
 export const FollowUpActionFooter: React.FC<{}> = ({ children }) => {
     return (
-        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', marginTop: '8px' }}>
+        <div
+            style={{
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'flex-end',
+                marginTop: '8px',
+                marginBottom: '8px',
+            }}
+        >
             {children}
         </div>
     );
@@ -188,198 +142,21 @@ export const renderChatHistory = (
         case 'RovoDev':
         case 'User':
             return <ChatMessageItem index={index} msg={msg} />;
+        case 'RovoDevRetry':
+            const retryMsg: DefaultMessage = {
+                text: 'Unable to process the request ' + '`' + msg.tool_name + '`',
+                source: 'RovoDev',
+            };
+            return (
+                <ChatMessageItem
+                    index={index}
+                    msg={retryMsg}
+                    icon={<StatusErrorIcon color="var(--ds-icon-danger)" label="error-icon" spacing="none" />}
+                />
+            );
         default:
             return <div key={index}>Unknown message type</div>;
     }
-};
-
-export const UpdatedFilesComponent: React.FC<{
-    modifiedFiles: ToolReturnParseResult[];
-    onUndo: (filePath: string[]) => void;
-    onKeep: (filePath: string[]) => void;
-    openDiff: OpenFileFunc;
-}> = ({ modifiedFiles, onUndo, onKeep, openDiff }) => {
-    const [isUndoHovered, setIsUndoHovered] = React.useState(false);
-    const [isKeepHovered, setIsKeepHovered] = React.useState(false);
-
-    const handleKeepAll = useCallback(() => {
-        const filePaths = modifiedFiles.map((msg) => msg.filePath).filter((path) => path !== undefined);
-        onKeep(filePaths);
-    }, [onKeep, modifiedFiles]);
-
-    const handleUndoAll = useCallback(() => {
-        const filePaths = modifiedFiles.map((msg) => msg.filePath).filter((path) => path !== undefined);
-        onUndo(filePaths);
-    }, [onUndo, modifiedFiles]);
-
-    if (!modifiedFiles || modifiedFiles.length === 0) {
-        return null;
-    }
-
-    return (
-        <div
-            style={{
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                background: 'var(--vscode-sideBar-background)',
-                paddingBottom: '4px',
-            }}
-        >
-            <div
-                style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    gap: '10px',
-                    padding: ' 0 8px',
-                    alignItems: 'center',
-                }}
-            >
-                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
-                    <i className="codicon codicon-source-control" />
-                    <span style={{ fontWeight: 'bold' }}>{modifiedFiles.length} Updated file(s)</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}>
-                    <button
-                        style={{
-                            color: 'var(--vscode-button-secondaryForeground)',
-                            backgroundColor: isUndoHovered
-                                ? 'var(--vscode-button-secondaryHoverBackground)'
-                                : 'var(--vscode-button-secondaryBackground)',
-                            border: '1px solid var(--vscode-button-secondaryBorder)',
-                            ...undoKeepButtonStyles,
-                        }}
-                        onClick={() => handleUndoAll()}
-                        onMouseEnter={() => setIsUndoHovered(true)}
-                        onMouseLeave={() => setIsUndoHovered(false)}
-                    >
-                        Undo
-                    </button>
-                    <button
-                        style={{
-                            color: 'var(--vscode-button-foreground)',
-                            backgroundColor: isKeepHovered
-                                ? 'var(--vscode-button-hoverBackground)'
-                                : 'var(--vscode-button-background)',
-                            border: '1px solid var(--vscode-button-border)',
-                            ...undoKeepButtonStyles,
-                        }}
-                        onClick={() => handleKeepAll()}
-                        onMouseEnter={() => setIsKeepHovered(true)}
-                        onMouseLeave={() => setIsKeepHovered(false)}
-                    >
-                        Keep
-                    </button>
-                </div>
-            </div>
-            <div
-                style={{
-                    width: '100%',
-                    height: '100%',
-                    display: 'block',
-                    overflowY: 'auto',
-                    maxHeight: '100px',
-                    padding: '4px 8px',
-                    borderTop: '1px solid var(--vscode-panel-border)',
-                }}
-            >
-                {modifiedFiles.map((msg, index) => {
-                    return (
-                        <ModifiedFileItem
-                            key={index}
-                            msg={msg}
-                            onFileClick={(path: string) => openDiff(path, true)}
-                            onUndo={(path: string) => onUndo([path])}
-                            onKeep={(path: string) => onKeep([path])}
-                        />
-                    );
-                })}
-            </div>
-        </div>
-    );
-};
-
-const ModifiedFileItem: React.FC<{
-    msg: ToolReturnParseResult;
-    onUndo: (filePath: string) => void;
-    onKeep: (filePath: string) => void;
-    onFileClick: (filePath: string) => void;
-}> = ({ msg, onUndo, onKeep, onFileClick }) => {
-    const [isHovered, setIsHovered] = React.useState(false);
-    const [isUndoHovered, setIsUndoHovered] = React.useState(false);
-    const [isKeepHovered, setIsKeepHovered] = React.useState(false);
-
-    const isDeletion = msg.type === 'delete';
-
-    const filePath = msg.filePath;
-    if (!filePath) {
-        return null;
-    }
-
-    const handleUndo = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        onUndo(filePath);
-    };
-
-    const handleKeep = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        onKeep(filePath);
-    };
-
-    return (
-        <div
-            style={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                backgroundColor: isHovered ? 'var(--vscode-list-hoverBackground)' : 'inherit',
-                cursor: 'pointer',
-                padding: '2px 8px',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                width: '100%',
-            }}
-            onClick={() => onFileClick(filePath)}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
-            <div id={isDeletion ? 'deleted-file' : undefined}>{filePath}</div>
-            <div
-                style={{ display: isHovered ? 'flex' : 'none', alignItems: 'center', flexDirection: 'row', gap: '4px' }}
-            >
-                <Button
-                    spacing="none"
-                    style={{
-                        ...inlineModifyButtonStyles,
-                        color: isUndoHovered
-                            ? 'var(--vscode-textLink-foreground) !important'
-                            : 'var(--vscode-textForeground) !important',
-                    }}
-                    onMouseEnter={() => setIsUndoHovered(true)}
-                    onMouseLeave={() => setIsUndoHovered(false)}
-                    iconBefore={<CrossIcon size="small" label="Close" />}
-                    onClick={handleUndo}
-                />
-                <Button
-                    style={{
-                        ...inlineModifyButtonStyles,
-                        color: isKeepHovered
-                            ? 'var(--vscode-textLink-foreground) !important'
-                            : 'var(--vscode-textForeground) !important',
-                    }}
-                    onMouseEnter={() => setIsKeepHovered(true)}
-                    onMouseLeave={() => setIsKeepHovered(false)}
-                    spacing="none"
-                    iconBefore={<CheckIcon size="small" label="Keep" />}
-                    onClick={handleKeep}
-                />
-            </div>
-        </div>
-    );
 };
 
 type TechnicalPlanProps = {

@@ -77,10 +77,32 @@
         "dev": "concurrently -r npm:watch:extension npm:watch:react"
     },
     "contributes": {
+        "keybindings": [
+            {
+                "command": "atlascode.rovodev.askInteractive",
+                "key": "ctrl+alt+i",
+                "when": "editorTextFocus",
+                "mac": "cmd+alt+i"
+            },
+            {
+                "command": "atlascode.rovodev.addToContext",
+                "key": "ctrl+alt+a",
+                "when": "editorTextFocus",
+                "mac": "cmd+alt+a"
+            }
+        ],
         "commands": [
+            {
+                "command": "atlascode.rovodev.askInteractive",
+                "title": "Rovo Dev: Quick Ask"
+            },
             {
                 "command": "atlascode.rovodev.askRovoDev",
                 "title": "Ask Rovo Dev"
+            },
+            {
+                "command": "atlascode.rovodev.addToContext",
+                "title": "Add selection to Rovo Dev context"
             },
             {
                 "command": "atlascode.rovodev.newChatSession",
@@ -734,6 +756,10 @@
                     "when": "atlascode:rovoDevEnabled"
                 },
                 {
+                    "command": "atlascode.rovodev.addToContext",
+                    "when": "false"
+                },
+                {
                     "command": "atlascode.extensionContext.showConfigPage",
                     "when": "false"
                 },
@@ -863,6 +889,12 @@
             "type": "object",
             "title": "Atlassian",
             "properties": {
+                "atlascode.rovodev.showKeybinding": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show the Rovo Dev keybinding annotation in the editor when a selection is present.",
+                    "scope": "window"
+                },
                 "atlascode.rovodev.executablePath": {
                     "type": "string",
                     "description": "The absolute path to the Rovo Dev executable"
@@ -1286,7 +1318,7 @@
         }
     },
     "dependencies": {
-        "@atlaskit/analytics-next": "^8.3.0",
+        "@atlaskit/analytics-next": "^10.3.1",
         "@atlaskit/avatar": "^20.5.1",
         "@atlaskit/avatar-group": "^8.5.4",
         "@atlaskit/breadcrumbs": "^11.5.0",
@@ -1307,13 +1339,13 @@
         "@atlaskit/radio": "^5.3.3",
         "@atlaskit/section-message": "^6.8.2",
         "@atlaskit/select": "^15.2.4",
-        "@atlaskit/spinner": "^15.1.3",
+        "@atlaskit/spinner": "^17.2.0",
         "@atlaskit/table-tree": "^9.0.12",
         "@atlaskit/textarea": "^7.1.0",
         "@atlaskit/textfield": "^7.0.0",
         "@atlaskit/toggle": "^14.2.0",
         "@atlaskit/tooltip": "^17.5.1",
-        "@atlaskit/width-detector": "^3.0.6",
+        "@atlaskit/width-detector": "^4.4.0",
         "@atlassianlabs/guipi-core-components": "^0.1.2",
         "@atlassianlabs/guipi-core-controller": "^0.1.2",
         "@atlassianlabs/guipi-jira-components": "^0.1.2",

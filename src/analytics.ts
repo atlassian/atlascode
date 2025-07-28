@@ -1,7 +1,7 @@
 import { Uri } from 'vscode';
 
 import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/types';
-import { CreatePrTerminalSelection, UIErrorInfo } from './analyticsTypes';
+import { CreatePrTerminalSelection, ErrorProductArea, UIErrorInfo } from './analyticsTypes';
 import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira, SiteInfo } from './atlclients/authInfo';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
@@ -123,19 +123,24 @@ function sanitizeStackTrace(stack?: string): string | undefined {
     return stack || undefined;
 }
 
+interface ErrorEventPayload {
+    productArea: ErrorProductArea;
+    name: string;
+    message?: string;
+    capturedBy?: string;
+    stack?: string;
+    additionalParams?: string;
+}
+
 export async function errorEvent(
+    productArea: ErrorProductArea,
     errorMessage: string,
     error?: Error,
     capturedBy?: string,
     additionalParams?: string,
 ): Promise<TrackEvent> {
-    const attributes: {
-        name: string;
-        message?: string;
-        capturedBy?: string;
-        stack?: string;
-        additionalParams?: string;
-    } = {
+    const attributes: ErrorEventPayload = {
+        productArea,
         message: sanitazeErrorMessage(errorMessage),
         name: error?.name || 'Error',
         capturedBy,
@@ -168,6 +173,99 @@ export async function featureFlagClientInitializedEvent(
 ): Promise<TrackEvent> {
     return trackEvent('initialized', 'featureFlagClient', {
         attributes: { success, errorType: errorType ?? 0, reason },
+    });
+}
+
+// Perf events
+
+type RovoDevPerfEvents =
+    | 'rovodev.response.timeToFirstByte'
+    | 'rovodev.response.timeToFirstMessage'
+    | 'rovodev.response.timeToTechPlan'
+    | 'rovodev.response.timeToLastMessage';
+
+interface RovoDevCommonParams {
+    sessionId: string;
+    promptId: string;
+}
+
+export async function performanceEvent(
+    tag: RovoDevPerfEvents,
+    measure: number,
+    params: RovoDevCommonParams,
+): Promise<TrackEvent>;
+export async function performanceEvent(
+    tag: string,
+    measure: number,
+    params?: Record<string, any>,
+): Promise<TrackEvent> {
+    return trackEvent('performanceEvent', 'atlascode', {
+        attributes: { tag, measure, ...(params || {}) },
+    });
+}
+
+// Rovo Dev events
+
+export async function rovoDevPromptSentEvent(
+    sessionId: string,
+    promptId: string,
+    source: 'replay' | 'chat',
+    deepPlanEnabled: boolean,
+) {
+    return trackEvent('rovoDevPromptSent', 'atlascode', {
+        attributes: { sessionId, promptId, source, deepPlanEnabled },
+    });
+}
+
+export async function rovoDevNewSessionActionEvent(sessionId: string, isManuallyCreated: boolean) {
+    return trackEvent('rovoDevNewSessionAction', 'atlascode', {
+        attributes: { sessionId, isManuallyCreated },
+    });
+}
+
+export async function rovoDevTechnicalPlanningShownEvent(
+    sessionId: string,
+    stepsCount: number,
+    filesCount: number,
+    questionsCount: number,
+) {
+    return trackEvent('rovoDevTechnicalPlanningShown', 'atlascode', {
+        attributes: { sessionId, stepsCount, filesCount, questionsCount },
+    });
+}
+
+export async function rovoDevFilesSummaryShownEvent(sessionId: string, promptId: string, filesCount: number) {
+    return trackEvent('rovoDevFilesSummaryShown', 'atlascode', {
+        attributes: { sessionId, promptId, filesCount },
+    });
+}
+
+export async function rovoDevFileChangedActionEvent(
+    sessionId: string,
+    promptId: string,
+    action: 'undo' | 'keep',
+    filesCount: number,
+) {
+    return trackEvent('rovoDevFileChangedAction', 'atlascode', {
+        attributes: { sessionId, promptId, action, filesCount },
+    });
+}
+
+export async function rovoDevStopActionEvent(sessionId: string, promptId: string, failed: boolean) {
+    return trackEvent('rovoDevStopAction', 'atlascode', {
+        attributes: { sessionId, promptId, failed },
+    });
+}
+
+export async function rovoDevGitPushActionEvent(sessionId: string, promptId: string, prCreated: boolean) {
+    return trackEvent('rovoDevGitPushAction', 'atlascode', {
+        attributes: { sessionId, promptId, prCreated },
+    });
+}
+
+export async function rovoDevDetailsExpandedEvent(sessionId: string) {
+    return trackEvent('rovoDevDetailsExpanded', 'atlascode', {
+        attributes: { sessionId },
     });
 }
 

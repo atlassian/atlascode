@@ -33,24 +33,6 @@ export class RovoDevPullRequestHandler {
         return gitApi.repositories[0];
     }
 
-    private async getBranchAndCommitInfo(repo: Repository): Promise<{ branchName: string; commitMessage: string }> {
-        const branchName = await window.showInputBox({
-            prompt: 'Enter a branch name for the PR',
-            value: 'my-branch',
-        });
-
-        const commitMessage = await window.showInputBox({
-            prompt: 'Enter a commit message for the PR',
-            value: 'My awesome work!',
-        });
-
-        if (!branchName || !commitMessage) {
-            throw new Error('Branch name and commit message are required');
-        }
-
-        return { branchName, commitMessage };
-    }
-
     public findPRLink(output: string): string | undefined {
         if (!output) {
             return undefined;
@@ -82,13 +64,15 @@ export class RovoDevPullRequestHandler {
 
     // This is the happy path for single small repository
     // There would probably need to be a lot of logic in monorepos/multiple repos etc.
-    public async createPR(): Promise<string | undefined> {
+    public async createPR(branchName: string, commitMessage: string): Promise<string | undefined> {
         const gitExt = await this.getGitExtension();
         const repo = await this.getGitRepository(gitExt);
-        const { branchName, commitMessage } = await this.getBranchAndCommitInfo(repo);
 
         await repo.fetch();
-        await repo.createBranch(branchName, true);
+        const curBranch = repo.state.HEAD?.name;
+        if (curBranch !== branchName) {
+            await repo.createBranch(branchName, true);
+        }
         await repo.commit(commitMessage, {
             all: true,
         });
@@ -105,5 +89,12 @@ export class RovoDevPullRequestHandler {
         }
 
         return prLink;
+    }
+
+    public async getCurrentBranchName(): Promise<string | undefined> {
+        const gitExt = await this.getGitExtension();
+        const repo = await this.getGitRepository(gitExt);
+
+        return repo.state.HEAD?.name;
     }
 }

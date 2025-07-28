@@ -83,6 +83,8 @@ export const enum Commands {
     CreateNewJql = 'atlascode.jira.createNewJql',
     ToDoIssue = 'atlascode.jira.todoIssue',
     RovodevAsk = 'atlascode.rovodev.askRovoDev',
+    RovodevAskInteractive = 'atlascode.rovodev.askInteractive',
+    RovodevAddToContext = 'atlascode.rovodev.addToContext',
     RovodevNewSession = 'atlascode.rovodev.newChatSession',
     InProgressIssue = 'atlascode.jira.inProgressIssue',
     DoneIssue = 'atlascode.jira.doneIssue',
