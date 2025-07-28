@@ -189,11 +189,6 @@ body {
     }
 }
 
-#deleted-file {
-    color: var(--vscode-list-errorForeground);
-    text-decoration: line-through;
-}
-
 .code-plan-button-container {
     display: flex;
     justify-content: flex-end;
@@ -413,4 +408,143 @@ body {
     flex-direction: row;
     align-items: center;
     gap: 8px;
+}
+
+/* Updated Files styles */
+.modified-files-list {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow-y: auto;
+    max-height: 100px;
+    padding: 4px 8px;
+    border-top: 1px solid var(--vscode-panel-border);
+}
+.modified-file-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 2px 8px;
+    width: 100%;
+}
+
+.modified-file-item:hover {
+    background-color: var(--vscode-list-hoverBackground);
+}
+
+.modified-file-actions {
+    display: none;
+    align-items: center;
+    flex-direction: row;
+    gap: 4px;
+}
+
+.modified-file-item:hover .modified-file-actions {
+    display: flex;
+}
+
+.modified-file-action {
+    background-color: transparent;
+    color: var(--vscode-editor-foreground);
+    padding: 0;
+    border: 0;
+}
+
+.modified-file-action:hover {
+    color: var(--vscode-textLink-foreground);
+}
+
+.modified-file-item-info {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+#deleted-file {
+    color: var(--vscode-list-errorForeground);
+    text-decoration: line-through;
+}
+
+#created-file {
+    color: var(--vscode-gitDecoration-untrackedResourceForeground);
+}
+
+.updated-files-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+    background: var(--vscode-sideBar-background);
+    padding-bottom: 4px;
+}
+
+.updated-files-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 8px;
+}
+
+.updated-files-header div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+.updated-files-header div span {
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.updated-files-action {
+    cursor: pointer;
+    padding: 2px 6px;
+}
+
+
+.secondary {
+    color: var(--vscode-button-secondaryForeground);
+    background-color: var(--vscode-button-secondaryBackground);
+    border: 1px solid var(--vscode-button-secondaryBorder);
+}
+.secondary:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.primary {
+    color: var(--vscode-button-foreground);
+    background-color: var(--vscode-button-background);
+    border: 1px solid var(--vscode-button-border);
+}
+.primary:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+/* Input styles */
+.input-section-container {
+    width: 100%;
+    background-color: var(--vscode-sideBar-background);
+    padding: 16px;
+    border-radius: 12px 12px 0 0;
+}
+
+.prompt-container {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 2px;
+    border : 1px solid var(--vscode-input-border);
+    border-radius: 4px;
+    background-color: var(--vscode-input-background);
+    padding: 8px;
+}
+
+.prompt-container:focus-within {
+    outline: var(--vscode-focusBorder) solid 1px;
 }

@@ -17,8 +17,6 @@ export type OnboardingMessage =
     | ReducerAction<OnboardingMessageType.SitesUpdate, SitesUpdateMessage>
     | ReducerAction<OnboardingMessageType.LoginResponse>;
 
-export type OnboardingResponse = any;
-
 export interface OnboardingInitMessage {
     jiraSitesConfigured: boolean;
     bitbucketSitesConfigured: boolean;

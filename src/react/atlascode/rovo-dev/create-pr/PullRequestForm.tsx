@@ -1,9 +1,9 @@
 import PullRequestIcon from '@atlaskit/icon/core/pull-request';
 import React from 'react';
-import { RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
-import { PostMessagePromiseFunc } from '../../messagingApi';
+import { useMessagingApi } from '../../messagingApi';
 import { mdParser } from '../common/common';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { DefaultMessage, ToolReturnParseResult } from '../utils';
@@ -26,7 +26,9 @@ const PullRequestButton: React.FC<{
 
 interface PullRequestFormProps {
     onCancel: () => void;
-    postMessageWithReturn: PostMessagePromiseFunc<RovoDevViewResponse, any>;
+    messagingApi: ReturnType<
+        typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
+    >;
     modifiedFiles?: ToolReturnParseResult[];
     onPullRequestCreated: (url: string) => void;
     isFormVisible?: boolean;
@@ -35,7 +37,7 @@ interface PullRequestFormProps {
 
 export const PullRequestForm: React.FC<PullRequestFormProps> = ({
     onCancel,
-    postMessageWithReturn,
+    messagingApi: { postMessagePromise },
     modifiedFiles,
     onPullRequestCreated,
     isFormVisible = false,
@@ -50,14 +52,13 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
 
     const getCurrentBranchName = async () => {
         setBranchNameLoading(true);
-        const response = await postMessageWithReturn(
+        const response = await postMessagePromise(
             { type: RovoDevViewResponseType.GetCurrentBranchName },
             RovoDevProviderMessageType.GetCurrentBranchNameComplete,
             ConnectionTimeout,
         );
         setBranchNameLoading(false);
-        const name = (response as any).data.branchName || undefined;
-        setBranchName(name);
+        setBranchName(response.data.branchName || undefined);
     };
 
     const handleToggleForm = async (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -78,16 +79,16 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
 
         setPullRequestLoading(true);
 
-        const response = await postMessageWithReturn(
+        const response = await postMessagePromise(
             {
                 type: RovoDevViewResponseType.CreatePR,
                 payload: { branchName, commitMessage: message },
             },
-            RovoDevViewResponseType.CreatePRComplete,
+            RovoDevProviderMessageType.CreatePRComplete,
             ConnectionTimeout,
         );
         setPullRequestLoading(false);
-        onPullRequestCreated((response as any).data.url || '');
+        onPullRequestCreated(response.data.url || '');
     };
 
     return (

@@ -1,0 +1,60 @@
+import React from 'react';
+
+import { OpenFileFunc } from '../../common/common';
+import { ToolReturnParseResult } from '../../utils';
+import { ModifiedFileItem } from './ModifiedFileItem';
+
+export const UpdatedFilesComponent: React.FC<{
+    modifiedFiles: ToolReturnParseResult[];
+    onUndo: (filePath: string[]) => void;
+    onKeep: (filePath: string[]) => void;
+    openDiff: OpenFileFunc;
+}> = ({ modifiedFiles, onUndo, onKeep, openDiff }) => {
+    const handleKeepAll = React.useCallback(() => {
+        const filePaths = modifiedFiles.map((msg) => msg.filePath).filter((path) => path !== undefined);
+        onKeep(filePaths);
+    }, [onKeep, modifiedFiles]);
+
+    const handleUndoAll = React.useCallback(() => {
+        const filePaths = modifiedFiles.map((msg) => msg.filePath).filter((path) => path !== undefined);
+        onUndo(filePaths);
+    }, [onUndo, modifiedFiles]);
+
+    if (!modifiedFiles || modifiedFiles.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="updated-files-container">
+            <div className="updated-files-header">
+                <div>
+                    <i className="codicon codicon-source-control" />
+                    <span>
+                        {modifiedFiles.length} Updated file{modifiedFiles.length > 1 ? 's' : ''}
+                    </span>
+                </div>
+                <div>
+                    <button className="updated-files-action secondary" onClick={() => handleUndoAll()}>
+                        Undo
+                    </button>
+                    <button className="updated-files-action primary" onClick={() => handleKeepAll()}>
+                        Keep
+                    </button>
+                </div>
+            </div>
+            <div className="modified-files-list">
+                {modifiedFiles.map((msg, index) => {
+                    return (
+                        <ModifiedFileItem
+                            key={index}
+                            msg={msg}
+                            onFileClick={(path: string) => openDiff(path, true)}
+                            onUndo={(path: string) => onUndo([path])}
+                            onKeep={(path: string) => onKeep([path])}
+                        />
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
