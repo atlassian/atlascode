@@ -14,6 +14,6 @@ test('Authenticating with Jira works, and assigned items are displayed', async (
     const atlascodeDrawer = new AtlascodeDrawer(page);
 
     for (const issueName of EXPECTED_ISSUES) {
-        await atlascodeDrawer.expectIssueExists(issueName);
+        await atlascodeDrawer.jira.expectIssueExists(issueName);
     }
 });

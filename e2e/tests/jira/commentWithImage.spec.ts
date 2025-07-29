@@ -11,7 +11,7 @@ test('View image in Jira comment', async ({ page, request }) => {
 
     const cleanupIssueMock = await setupIssueMock(request, { comment: COMMENT_CONTENT });
 
-    await new AtlascodeDrawer(page).openJiraIssue('BTS-1 - User Interface Bugs');
+    await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');
 
     const issueFrame = await getIssueFrame(page);
 

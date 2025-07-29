@@ -9,7 +9,7 @@ test('User can add and remove existing labels', async ({ page, request }) => {
     await authenticateWithJira(page);
     await new AtlassianSettings(page).closeSettingsPage();
 
-    await new AtlascodeDrawer(page).openJiraIssue('BTS-1 - User Interface Bugs');
+    await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');
 
     const issueFrame = await getIssueFrame(page);
 

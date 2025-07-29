@@ -11,8 +11,8 @@ test('I can transition a Jira', async ({ page, request }) => {
     await new AtlassianSettings(page).closeSettingsPage();
 
     const atlascodeDrawer = new AtlascodeDrawer(page);
-    await atlascodeDrawer.expectStatusForJiraIssue(ISSUE_NAME, CURRENT_STATUS);
-    await atlascodeDrawer.openJiraIssue(ISSUE_NAME);
+    await atlascodeDrawer.jira.expectIssueStatus(ISSUE_NAME, CURRENT_STATUS);
+    await atlascodeDrawer.jira.openIssue(ISSUE_NAME);
 
     const issueFrame = await getIssueFrame(page);
     const jiraIssuePage = new JiraIssuePage(issueFrame);
@@ -26,7 +26,7 @@ test('I can transition a Jira', async ({ page, request }) => {
     await page.waitForTimeout(2_000);
 
     await jiraIssuePage.status.expectEqual(NEXT_STATUS);
-    await atlascodeDrawer.expectStatusForJiraIssue(ISSUE_NAME, NEXT_STATUS);
+    await atlascodeDrawer.jira.expectIssueStatus(ISSUE_NAME, NEXT_STATUS);
 
     await cleanupIssueMock();
     await cleanupSearchMock();

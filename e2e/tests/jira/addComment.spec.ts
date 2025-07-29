@@ -7,7 +7,7 @@ const COMMENT_TEXT = 'This is a test comment added via e2e test';
 test('Add comment flow', async ({ page }) => {
     await authenticateWithJira(page);
 
-    await new AtlascodeDrawer(page).openJiraIssue('BTS-1 - User Interface Bugs');
+    await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');
     await new AtlassianSettings(page).closeSettingsPage();
 
     const issueFrame = await getIssueFrame(page);
