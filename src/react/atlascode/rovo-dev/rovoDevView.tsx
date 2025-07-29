@@ -613,6 +613,7 @@ const RovoDevView: React.FC = () => {
                     onUndo={undoFiles}
                     onKeep={keepFiles}
                     openDiff={openFile}
+                    actionsEnabled={currentState === State.WaitingForPrompt}
                 />
                 <div className="prompt-container">
                     {' '}
