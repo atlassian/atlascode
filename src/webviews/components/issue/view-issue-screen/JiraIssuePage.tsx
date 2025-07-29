@@ -40,6 +40,8 @@ type Accept = CommonEditorPageAccept | EditIssueData;
 export interface ViewState extends CommonEditorViewState, EditIssueData {
     showMore: boolean;
     currentInlineDialog: string;
+    commentText: string;
+    isEditingComment: boolean;
 }
 
 const emptyState: ViewState = {
@@ -47,6 +49,8 @@ const emptyState: ViewState = {
     ...emptyEditIssueData,
     showMore: false,
     currentInlineDialog: '',
+    commentText: '',
+    isEditingComment: false,
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -197,7 +201,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 this.setState({ isSomethingLoading: true, loadingField: field.key });
                 const payload: any = newValue;
                 payload.project = { key: this.getProjectKey() };
-                payload.parent = { key: this.state.key };
+                if (this.state.siteDetails.isCloud) {
+                    payload.parent = { key: this.state.key }; // Cloud instances have parent-child relationships for epics and non-epics
+                } else {
+                    if (this.state.isEpic) {
+                        payload[this.state.epicFieldInfo.epicLink.id] = this.state.key; // Epic children
+                    } else {
+                        payload.parent = { key: this.state.key }; // Regular subtasks
+                    }
+                }
                 this.postMessage({
                     action: 'createIssue',
                     site: this.state.siteDetails,
@@ -291,7 +303,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     protected handleCreateComment = (commentBody: string, restriction?: CommentVisibility) => {
-        this.setState({ isSomethingLoading: true, loadingField: 'comment' });
+        this.setState({ isSomethingLoading: true, loadingField: 'comment', commentText: '', isEditingComment: false });
         const commentAction: IssueCommentAction = {
             action: 'comment',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
@@ -300,6 +312,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         };
 
         this.postMessage(commentAction);
+    };
+
+    private handleCommentTextChange = (text: string) => {
+        this.setState({ commentText: text });
+    };
+
+    private handleCommentEditingChange = (editing: boolean) => {
+        this.setState({ isEditingComment: editing });
     };
 
     protected handleUpdateComment = (commentBody: string, commentId: string, restriction?: CommentVisibility) => {
@@ -542,6 +562,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     subtaskTypes={this.state.selectFieldOptions['subtasks']}
                     linkTypes={this.state.selectFieldOptions['issuelinks']}
                     isEpic={this.state.isEpic}
+                    epicChildren={this.state.epicChildren}
+                    epicChildrenTypes={
+                        this.state.siteDetails.isCloud
+                            ? this.state.selectFieldOptions['issuetype']
+                            : this.state.selectFieldOptions['issuetype'].filter((type) => {
+                                  return type.name !== 'Epic'; // The array is size 4 by default so no perf problems, filter reduces to 3
+                              })
+                    }
                     handleInlineEdit={this.handleInlineEdit}
                     handleOpenIssue={this.handleOpenIssue}
                     onFetchIssues={async (input: string) =>
@@ -586,6 +614,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 this.state.fieldValues['project'].projectTypeKey === 'service_desk'
                             }
                             isRteEnabled={this.state.isRteEnabled}
+                            commentText={this.state.commentText}
+                            onCommentTextChange={this.handleCommentTextChange}
+                            isEditingComment={this.state.isEditingComment}
+                            onEditingCommentChange={this.handleCommentEditingChange}
                         />
                     </div>
                 )}

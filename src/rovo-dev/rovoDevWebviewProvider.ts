@@ -11,6 +11,7 @@ import {
     Memento,
     Position,
     Range,
+    TextEditor,
     Uri,
     Webview,
     WebviewView,
@@ -20,19 +21,28 @@ import {
     workspace,
 } from 'vscode';
 
-import { rovodevInfo } from '../constants';
 import {
-    PromptMessage,
-    RovoDevViewResponse,
-    RovoDevViewResponseType,
-} from '../react/atlascode/rovo-dev/rovoDevViewMessages';
+    rovoDevFileChangedActionEvent,
+    rovoDevFilesSummaryShownEvent,
+    rovoDevGitPushActionEvent,
+    rovoDevNewSessionActionEvent,
+    rovoDevPromptSentEvent,
+    rovoDevStopActionEvent,
+    rovoDevTechnicalPlanningShownEvent,
+} from '../../src/analytics';
+import { Container } from '../../src/container';
+import { Logger } from '../../src/logger';
+import { rovodevInfo } from '../constants';
+import { RovoDevViewResponse, RovoDevViewResponseType } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
+import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
+import { RovoDevContext, RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
-const MIN_SUPPORTED_ROVODEV_VERSION = '0.8.2';
+const MIN_SUPPORTED_ROVODEV_VERSION = '0.9.3';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;
@@ -41,13 +51,17 @@ interface TypedWebview<MessageOut, MessageIn> extends Webview {
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
     private readonly viewType = 'atlascodeRovoDev';
+
     private _prHandler = new RovoDevPullRequestHandler();
+    private _perfLogger = new PerformanceLogger();
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _rovoDevApiClient?: RovoDevApiClient;
     private _initialized = false;
 
-    private _previousPrompt: PromptMessage | undefined;
-    private _pendingPrompt: PromptMessage | undefined;
+    private _chatSessionId: string = '';
+    private _currentPromptId: string = '';
+    private _currentPrompt: RovoDevPrompt | undefined;
+    private _pendingPrompt: RovoDevPrompt | undefined;
     private _pendingCancellation = false;
 
     // we keep the data in this collection so we can attach some metadata to the next
@@ -87,6 +101,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 webviewOptions: { retainContextWhenHidden: true },
             }),
         );
+
+        // Register editor listeners
+        this._registerEditorListeners();
     }
 
     private getWorkspacePort(): number | undefined {
@@ -142,7 +159,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             switch (e.type) {
                 case RovoDevViewResponseType.Prompt:
                     this._pendingCancellation = false;
-                    await this.executeChat(e.text, e.enable_deep_plan);
+                    await this.executeChat(e);
                     break;
 
                 case RovoDevViewResponseType.CancelResponse:
@@ -178,12 +195,38 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     break;
 
                 case RovoDevViewResponseType.CreatePR:
-                    await this.createPR();
+                    await this.createPR(e.payload.commitMessage, e.payload.branchName);
                     break;
 
                 case RovoDevViewResponseType.RetryPromptAfterError:
                     this._pendingCancellation = false;
                     await this.executeRetryPromptAfterError();
+                    break;
+
+                case RovoDevViewResponseType.GetCurrentBranchName:
+                    await this.getCurrentBranchName();
+                    break;
+
+                case RovoDevViewResponseType.ForceUserFocusUpdate:
+                    await this.forceUserFocusUpdate();
+                    break;
+
+                case RovoDevViewResponseType.AddContext:
+                    await this.executeAddContext(e.currentContext);
+                    break;
+
+                case RovoDevViewResponseType.ReportChangedFilesPanelShown:
+                    Logger.debug(`Event fired: rovoDevFilesSummaryShownEvent ${e.filesCount}`);
+                    rovoDevFilesSummaryShownEvent(this._chatSessionId, this._currentPromptId, e.filesCount).then(
+                        (evt) => Container.analyticsClient.sendTrackEvent(evt),
+                    );
+                    break;
+
+                case RovoDevViewResponseType.ReportChangesGitPushed:
+                    Logger.debug(`Event fired: rovoDevGitPushActionEvent ${e.pullRequestCreated}`);
+                    rovoDevGitPushActionEvent(this._chatSessionId, this._currentPromptId, e.pullRequestCreated).then(
+                        (evt) => Container.analyticsClient.sendTrackEvent(evt),
+                    );
                     break;
             }
         });
@@ -213,40 +256,126 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this._initialized = true;
 
             // send this message regardless, so the UI can unblock the send button
+
             await webviewView.webview.postMessage({
-                type: 'initialized',
+                type: RovoDevProviderMessageType.Initialized,
             });
 
             // re-send the buffered prompt
             if (this._pendingPrompt) {
-                this.executeChat(this._pendingPrompt.text, this._pendingPrompt.enable_deep_plan, true);
+                this.executeChat(this._pendingPrompt, true);
                 this._pendingPrompt = undefined;
             }
         });
     }
 
-    private async processChatResponse(fetchOp: Promise<Response>) {
+    // Helper to get openFile info from a document
+    private getOpenFileInfo = (doc: { uri: Uri; fileName: string }) => {
+        const workspaceFolder = workspace.getWorkspaceFolder(doc.uri);
+        const baseName = doc.fileName.split(path.sep).pop() || '';
+        return {
+            name: baseName,
+            absolutePath: doc.uri.fsPath,
+            relativePath: workspaceFolder ? path.relative(workspaceFolder.uri.fsPath, doc.uri.fsPath) : doc.fileName,
+        };
+    };
+
+    private async forceUserFocusUpdate(editor: TextEditor | undefined = window.activeTextEditor, selection?: Range) {
+        if (!this._webView) {
+            return;
+        }
+
+        selection = selection || (editor ? editor.selection : undefined);
+
+        if (!editor) {
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.UserFocusUpdated,
+                userFocus: {
+                    file: { name: '', absolutePath: '', relativePath: '' },
+                    selection: undefined,
+                    invalid: true,
+                },
+            });
+            return;
+        }
+
+        const fileInfo = this.getOpenFileInfo(editor.document);
+
+        await this._webView.postMessage({
+            type: RovoDevProviderMessageType.UserFocusUpdated,
+            userFocus: {
+                file: fileInfo,
+                selection:
+                    selection && !selection.isEmpty
+                        ? { start: selection.start.line, end: selection.end.line }
+                        : undefined,
+                invalid: fileInfo.absolutePath === '' || !fs.existsSync(fileInfo.absolutePath),
+            },
+        });
+    }
+
+    // Listen to active editor and selection changes
+    private _registerEditorListeners() {
+        // Listen for active editor changes
+        this._disposables.push(
+            window.onDidChangeActiveTextEditor((editor) => {
+                this.forceUserFocusUpdate(editor);
+            }),
+        );
+        // Listen for selection changes
+        this._disposables.push(
+            window.onDidChangeTextEditorSelection((event) => {
+                this.forceUserFocusUpdate(event.textEditor);
+            }),
+        );
+    }
+
+    private async processChatResponse(sourceApi: 'chat' | 'replay', fetchOp: Promise<Response> | Response) {
+        const fireTelemetry = sourceApi === 'chat';
         const response = await fetchOp;
         if (!response.body) {
-            throw new Error('No response body');
+            throw new Error("Error processing the Rovo Dev's response: response is empty.");
+        }
+
+        if (fireTelemetry) {
+            this._perfLogger.promptStarted(this._currentPromptId);
         }
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         const parser = new RovoDevResponseParser();
 
+        let isFirstByte = true;
+        let isFirstMessage = true;
+
         while (true) {
             const { done, value } = await reader.read();
+
+            if (fireTelemetry && isFirstByte) {
+                this._perfLogger.promptFirstByteReceived(this._currentPromptId);
+                isFirstByte = false;
+            }
+
             if (done) {
+                // last response of the stream -> fire performance telemetry event
+                if (fireTelemetry) {
+                    this._perfLogger.promptLastMessageReceived(this._currentPromptId);
+                }
+
                 for (const msg of parser.flush()) {
-                    await this.processRovoDevResponse(msg);
+                    await this.processRovoDevResponse(sourceApi, msg);
                 }
                 break;
             }
 
             const data = decoder.decode(value, { stream: true });
             for (const msg of parser.parse(data)) {
-                await this.processRovoDevResponse(msg);
+                if (fireTelemetry && isFirstMessage) {
+                    this._perfLogger.promptFirstMessageReceived(this._currentPromptId);
+                    isFirstMessage = false;
+                }
+
+                await this.processRovoDevResponse(sourceApi, msg);
             }
         }
 
@@ -262,6 +391,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private processError(error: Error, isRetriable: boolean) {
+        Logger.error('RovoDev', error);
+
         const webview = this._webView!;
         return webview.postMessage({
             type: RovoDevProviderMessageType.ErrorMessage,
@@ -274,24 +405,28 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private async sendUserPromptToView(message: string, enable_deep_plan?: boolean) {
+    private async sendUserPromptToView({ text, enable_deep_plan, context }: RovoDevPrompt) {
         const webview = this._webView!;
 
         await webview.postMessage({
             type: RovoDevProviderMessageType.UserChatMessage,
             message: {
-                text: message,
+                text: text,
                 source: 'User',
+                context: context,
             },
         });
 
         return await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
-            enable_deep_plan: !!enable_deep_plan,
+            text,
+            enable_deep_plan,
+            context: context,
         });
     }
 
-    private processRovoDevResponse(response: RovoDevResponse): Thenable<boolean> {
+    private processRovoDevResponse(sourceApi: 'chat' | 'replay', response: RovoDevResponse): Thenable<boolean> {
+        const fireTelemetry = sourceApi === 'chat';
         const webview = this._webView!;
 
         switch (response.event_kind) {
@@ -308,6 +443,32 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 });
 
             case 'tool-return':
+                if (fireTelemetry && response.tool_name === 'create_technical_plan' && response.parsedContent) {
+                    this._perfLogger.promptTechnicalPlanReceived(this._currentPromptId);
+
+                    const parsedContent = response.parsedContent as TechnicalPlan;
+                    const stepsCount = parsedContent.logicalChanges.length;
+                    const filesCount = parsedContent.logicalChanges.reduce((p, c) => p + c.filesToChange.length, 0);
+                    const questionsCount = parsedContent.logicalChanges.reduce(
+                        (p, c) => p + c.filesToChange.reduce((p2, c2) => p2 + (c2.clarifyingQuestionIfAny ? 1 : 0), 0),
+                        0,
+                    );
+
+                    Logger.debug(
+                        `Event fired: rovoDevTechnicalPlanningShownEvent ${stepsCount} ${filesCount} ${questionsCount}`,
+                    );
+                    rovoDevTechnicalPlanningShownEvent(
+                        this._chatSessionId,
+                        stepsCount,
+                        filesCount,
+                        questionsCount,
+                    ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
+                }
+                return webview.postMessage({
+                    type: RovoDevProviderMessageType.ToolReturn,
+                    dataObject: response,
+                });
+
             case 'retry-prompt':
                 return webview.postMessage({
                     type: RovoDevProviderMessageType.ToolReturn,
@@ -317,16 +478,62 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             case 'user-prompt':
                 // receiving a user-prompt pre-initialized means we are in the 'replay' response
                 if (!this._initialized) {
-                    this._previousPrompt = {
+                    this._currentPrompt = {
                         text: response.content,
+                        // TODO: content is not restored here at the moment, so we'll just render all prompts as they were submitted
                     };
-                    return this.sendUserPromptToView(response.content);
+                    return this.sendUserPromptToView({ text: response.content });
                 }
                 return Promise.resolve(false);
 
             default:
                 return Promise.resolve(false);
         }
+    }
+
+    private addContextToPrompt(message: string, context?: RovoDevContext): string {
+        if (!context) {
+            return message;
+        }
+
+        let extra = '';
+        if (context.focusInfo && context.focusInfo.enabled && !context.focusInfo.invalid) {
+            extra += `
+            <context>
+                Consider that the user has the following open in the editor:
+                    <name>${context.focusInfo.file.name}</name>
+                        <absolute_path>${context.focusInfo.file.absolutePath}</absolute_path>
+                        <relative_path>${context.focusInfo.file.relativePath}</relative_path>
+                        ${
+                            context.focusInfo.selection
+                                ? `<lines>${context.focusInfo.selection.start}-${context.focusInfo.selection.end}</lines>`
+                                : ''
+                        }
+                        Please avoid excessively repeating the context in the response.
+                </context>`;
+        }
+
+        if (context.contextItems && context.contextItems.length > 0) {
+            extra += `
+                <context>
+                    The user has the following additional context items:
+                    ${context.contextItems
+                        .map(
+                            (item) => `
+                        <item>
+                            <name>${item.file.name}</name>
+                            <absolute_path>${item.file.absolutePath}</absolute_path>
+                            <relative_path>${item.file.relativePath}</relative_path>
+                            ${item.selection ? `<lines>${item.selection.start}-${item.selection.end}</lines>` : ''}
+                        </item>`,
+                        )
+                        .join('\n')}
+                </context>`;
+        }
+
+        // Trim excessive whitespace:
+        extra = extra.replace(/\s+/g, ' ').trim();
+        return `${message}\n${extra}`.trim();
     }
 
     private addUndoContextToPrompt(message: string): string {
@@ -350,30 +557,57 @@ ${message}`;
 </context>`;
     }
 
-    private async executeChat(message: string, enable_deep_plan?: boolean, suppressEcho?: boolean) {
-        if (!message) {
+    private async executeChat({ text, enable_deep_plan, context }: RovoDevPrompt, suppressEcho?: boolean) {
+        if (!text) {
             return;
         }
 
         if (!suppressEcho) {
-            await this.sendUserPromptToView(message, enable_deep_plan);
+            await this.sendUserPromptToView({ text, enable_deep_plan, context });
         }
 
-        this._previousPrompt = {
-            text: message,
+        // NOTE: if chatSessionId empty, it means this is the first prompt of a new rovo dev instance
+        if (!this._chatSessionId) {
+            this._chatSessionId = v4();
+            Logger.debug('Event fired: rovoDevNewSessionActionEvent false');
+            rovoDevNewSessionActionEvent(this._chatSessionId, false).then((evt) =>
+                Container.analyticsClient.sendTrackEvent(evt),
+            );
+            this._perfLogger.sessionStarted(this._chatSessionId);
+        }
+
+        this._currentPromptId = v4();
+        this._currentPrompt = {
+            text,
             enable_deep_plan,
+            context,
         };
 
-        const payloadToSend = this.addUndoContextToPrompt(message);
+        let payloadToSend = this.addUndoContextToPrompt(text);
+        payloadToSend = this.addContextToPrompt(payloadToSend, context);
+
+        const currentPrompt = this._currentPrompt;
+        const fetchOp = async (client: RovoDevApiClient) => {
+            const response = await client.chat(payloadToSend, enable_deep_plan);
+
+            Logger.debug(`Event fired: rovoDevPromptSentEvent chat ${!!currentPrompt.enable_deep_plan}`);
+            rovoDevPromptSentEvent(
+                this._chatSessionId,
+                this._currentPromptId,
+                'chat',
+                !!currentPrompt.enable_deep_plan,
+            ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
+
+            return this.processChatResponse('chat', response);
+        };
 
         if (this._initialized) {
-            await this.executeApiWithErrorHandling((client) => {
-                return this.processChatResponse(client.chat(payloadToSend, enable_deep_plan));
-            }, true);
+            await this.executeApiWithErrorHandling(fetchOp, true);
         } else {
             this._pendingPrompt = {
                 text: payloadToSend,
                 enable_deep_plan,
+                context,
             };
         }
     }
@@ -381,26 +615,109 @@ ${message}`;
     private async executeRetryPromptAfterError() {
         const webview = this._webView!;
 
-        if (!this._initialized || !this._previousPrompt) {
+        if (!this._initialized || !this._currentPrompt) {
             return;
         }
 
-        const previousPrompt = this._previousPrompt;
-        const payloadToSend = this.addRetryAfterErrorContextToPrompt(previousPrompt.text);
+        const currentPrompt = this._currentPrompt;
+        const payloadToSend = this.addRetryAfterErrorContextToPrompt(currentPrompt.text);
 
+        // we need to echo back the prompt to the View since it's not user submitted
         await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
-            enable_deep_plan: !!previousPrompt.enable_deep_plan,
+            text: payloadToSend,
+            enable_deep_plan: currentPrompt.enable_deep_plan,
+            context: currentPrompt.context,
         });
 
-        await this.executeApiWithErrorHandling((client) => {
-            return this.processChatResponse(client.chat(payloadToSend, previousPrompt.enable_deep_plan));
-        }, true);
+        const fetchOp = async (client: RovoDevApiClient) => {
+            const response = await client.chat(payloadToSend, currentPrompt.enable_deep_plan);
+
+            Logger.debug(`Event fired: rovoDevPromptSentEvent chat ${!!currentPrompt.enable_deep_plan}`);
+            rovoDevPromptSentEvent(
+                this._chatSessionId,
+                this._currentPromptId,
+                'chat',
+                !!currentPrompt.enable_deep_plan,
+            ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
+
+            return this.processChatResponse('chat', response);
+        };
+
+        await this.executeApiWithErrorHandling(fetchOp, true);
+    }
+
+    public async addContextItem(contextItem: RovoDevContextItem): Promise<void> {
+        const webview = this._webView!;
+        await webview.postMessage({
+            type: RovoDevProviderMessageType.ContextAdded,
+            context: contextItem,
+        });
+    }
+
+    public async selectContextItem(): Promise<RovoDevContextItem | undefined> {
+        // Get all workspace files
+        const files = await workspace.findFiles('**/*', '**/node_modules/**');
+        if (!files.length) {
+            window.showWarningMessage('No files found in workspace.');
+            return;
+        }
+
+        // Show QuickPick to select a file
+        const items = files.map((uri) => {
+            const workspaceFolder = workspace.getWorkspaceFolder(uri);
+            const absolutePath = uri.fsPath;
+            const relativePath = workspaceFolder ? path.relative(workspaceFolder.uri.fsPath, uri.fsPath) : uri.fsPath;
+            const name = path.basename(uri.fsPath);
+            return {
+                label: name,
+                description: relativePath,
+                uri,
+                absolutePath,
+                relativePath,
+                name,
+            };
+        });
+
+        const picked = await window.showQuickPick(items, {
+            placeHolder: 'Select a file to add as context',
+        });
+
+        if (!picked) {
+            return;
+        }
+
+        return {
+            file: {
+                name: picked.name,
+                absolutePath: picked.absolutePath,
+                relativePath: picked.relativePath,
+            },
+            selection: undefined,
+        };
+    }
+
+    async executeAddContext(currentContext?: RovoDevContext): Promise<void> {
+        // Get all workspace files
+        const picked = await this.selectContextItem();
+        if (!picked) {
+            return;
+        }
+
+        // Do nothing if the new item is already present in the context
+        if (
+            currentContext?.focusInfo?.file.absolutePath === picked.file.absolutePath ||
+            currentContext?.contextItems?.some((item) => item.file.absolutePath === picked.file.absolutePath)
+        ) {
+            return;
+        }
+
+        return await this.addContextItem(picked);
     }
 
     async executeReset(): Promise<void> {
         const webview = this._webView!;
-        await this.executeApiWithErrorHandling(async (client) => {
+        const success = await this.executeApiWithErrorHandling(async (client) => {
             await client.reset();
 
             this._revertedChanges = [];
@@ -408,7 +725,18 @@ ${message}`;
             await webview.postMessage({
                 type: RovoDevProviderMessageType.NewSession,
             });
-        });
+
+            return true;
+        }, false);
+
+        if (success) {
+            this._chatSessionId = v4();
+            this._perfLogger.sessionStarted(this._chatSessionId);
+            Logger.debug('Event fired: rovoDevNewSessionActionEvent true');
+            rovoDevNewSessionActionEvent(this._chatSessionId, true).then((evt) =>
+                Container.analyticsClient.sendTrackEvent(evt),
+            );
+        }
     }
 
     private async executeCancel(): Promise<boolean> {
@@ -416,9 +744,16 @@ ${message}`;
 
         const cancelResponse = await this.executeApiWithErrorHandling(async (client) => {
             return await client.cancel();
-        });
+        }, false);
 
-        if (cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress')) {
+        const success =
+            !!cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress');
+        Logger.debug(`Event fired: rovoDevStopActionEvent ${success}`);
+        rovoDevStopActionEvent(this._chatSessionId, this._currentPromptId, success).then((evt) =>
+            Container.analyticsClient.sendTrackEvent(evt),
+        );
+
+        if (success) {
             return true;
         } else {
             await webview.postMessage({
@@ -429,9 +764,11 @@ ${message}`;
     }
 
     private async executeReplay(): Promise<void> {
+        this._currentPromptId = 'replay';
+
         await this.executeApiWithErrorHandling(async (client) => {
-            return this.processChatResponse(client.replay());
-        });
+            return this.processChatResponse('replay', client.replay());
+        }, false);
     }
 
     private async executeHealthcheck(): Promise<boolean> {
@@ -508,6 +845,11 @@ ${message}`;
         await Promise.all(promises);
 
         this._revertedChanges.push(...filePaths);
+
+        Logger.debug(`Event fired: rovoDevFileChangedActionEvent undo ${filePaths.length}`);
+        rovoDevFileChangedActionEvent(this._chatSessionId, this._currentPromptId, 'undo', filePaths.length).then(
+            (evt) => Container.analyticsClient.sendTrackEvent(evt),
+        );
     }
 
     private async executeKeepFiles(filePaths: string[]) {
@@ -517,23 +859,50 @@ ${message}`;
         });
 
         await Promise.all(promises);
+
+        Logger.debug(`Event fired: rovoDevFileChangedActionEvent keep ${filePaths.length}`);
+        rovoDevFileChangedActionEvent(this._chatSessionId, this._currentPromptId, 'keep', filePaths.length).then(
+            (evt) => Container.analyticsClient.sendTrackEvent(evt),
+        );
     }
 
-    private async createPR() {
+    private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
+        let prLink: string | undefined;
         try {
-            await this._prHandler.createPR();
+            if (!commitMessage || !branchName) {
+                throw new Error('Commit message and branch name are required to create a PR');
+            }
+            prLink = await this._prHandler.createPR(branchName, commitMessage);
         } catch (e) {
             await this.processError(e, false);
         } finally {
             const webview = this._webView!;
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CreatePRComplete,
+                data: {
+                    url: prLink,
+                },
             });
         }
     }
 
+    private async getCurrentBranchName(): Promise<void> {
+        const webview = this._webView!;
+        try {
+            const branchName = await this._prHandler.getCurrentBranchName();
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.GetCurrentBranchNameComplete,
+                data: {
+                    branchName,
+                },
+            });
+        } catch (e) {
+            await this.processError(e, false);
+        }
+    }
     private async executeApiWithErrorHandling<T>(
         func: (client: RovoDevApiClient) => Promise<T>,
+        isErrorRetriable: boolean,
         cancellationAware?: true,
     ): Promise<T | void> {
         if (this.rovoDevApiClient) {
@@ -544,7 +913,7 @@ ${message}`;
                     this._pendingCancellation = false;
                     this.completeChatResponse();
                 } else {
-                    await this.processError(error, true);
+                    await this.processError(error, isErrorRetriable);
                 }
             }
         } else {
@@ -574,7 +943,7 @@ ${message}`;
         return text;
     }
 
-    async invokeRovoDevAskCommand(prompt: string): Promise<void> {
+    async invokeRovoDevAskCommand(prompt: string, context?: RovoDevContext): Promise<void> {
         // focus on the specific vscode view
         commands.executeCommand('atlascode.views.rovoDev.webView.focus');
 
@@ -586,7 +955,24 @@ ${message}`;
         }
 
         // Actually invoke the rovodev service, feed responses to the webview as normal
-        await this.executeChat(prompt);
+        await this.executeChat({ text: prompt, context }, false);
+    }
+
+    /**
+     * Adds a context item to the RovoDev webview. Intended for external calls, e.g. commands
+     * @param contextItem The context item to add.
+     * @returns A promise that resolves when the context item has been added.
+     */
+    async addToContext(contextItem: RovoDevContextItem): Promise<void> {
+        if (!this._webView) {
+            console.error('Webview is not initialized.');
+            return;
+        }
+
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.ContextAdded,
+            context: contextItem,
+        });
     }
 
     private async waitFor(

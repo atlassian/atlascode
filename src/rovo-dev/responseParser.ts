@@ -128,6 +128,7 @@ export interface RovoDevToolReturnResponse {
     parsedContent?: object;
     tool_call_id: string;
     timestamp: string;
+    toolCallMessage: RovoDevToolCallResponse;
 }
 
 export interface RovoDevRetryPromptResponse {
@@ -189,7 +190,10 @@ function parseResponseToolCall(
     }
 }
 
-function parseResponseToolReturn(data: RovoDevToolReturnResponseRaw): RovoDevToolReturnResponse {
+function parseResponseToolReturn(
+    data: RovoDevToolReturnResponseRaw,
+    toolCalls: Record<string, RovoDevToolCallResponse>,
+): RovoDevToolReturnResponse {
     return {
         event_kind: 'tool-return',
         tool_name: data.tool_name || '',
@@ -197,6 +201,7 @@ function parseResponseToolReturn(data: RovoDevToolReturnResponseRaw): RovoDevToo
         parsedContent: typeof data.content === 'object' ? data.content : undefined,
         tool_call_id: data.tool_call_id,
         timestamp: data.timestamp,
+        toolCallMessage: toolCalls[data.tool_call_id],
     };
 }
 
@@ -224,6 +229,9 @@ function parseResponseRetryPrompt(
 export class RovoDevResponseParser {
     private buffer = '';
     private previousChunk: RovoDevResponse | undefined;
+
+    // this map stores the tool-call messages, so they can be attached to the tool-return messages
+    private toolCalls: Record<string, RovoDevToolCallResponse> = {};
 
     *parse(data: string) {
         this.buffer += data;
@@ -266,7 +274,7 @@ export class RovoDevResponseParser {
                     data: data_inner,
                 } as RovoDevSingleChunk;
 
-                this.previousChunk = parseGenericReponse(partStartChunk);
+                this.previousChunk = parseGenericReponse(this.toolCalls, partStartChunk);
 
                 if (event_kind_inner === 'text') {
                     // if the event is a text message, send them out immediately instead
@@ -285,7 +293,7 @@ export class RovoDevResponseParser {
                     data: data_inner,
                 } as RovoDevSingleChunk;
 
-                this.previousChunk = parseGenericReponse(partDeltaChunk, this.previousChunk);
+                this.previousChunk = parseGenericReponse(this.toolCalls, partDeltaChunk, this.previousChunk);
 
                 if (event_kind_inner === 'text') {
                     // if the event is a text message, send them out immediately instead
@@ -302,7 +310,7 @@ export class RovoDevResponseParser {
                     yield tmpChunkToFlush;
                 }
 
-                yield parseGenericReponse(chunk);
+                yield parseGenericReponse(this.toolCalls, chunk);
             }
         }
     }
@@ -322,11 +330,22 @@ export class RovoDevResponseParser {
     private flushPreviousChunk() {
         const chunk = this.previousChunk;
         this.previousChunk = undefined;
+
+        if (chunk?.event_kind === 'tool-call') {
+            this.toolCalls[chunk.tool_call_id] = chunk;
+        } else if (chunk?.event_kind === 'tool-return') {
+            delete this.toolCalls[chunk.tool_call_id];
+        }
+
         return chunk;
     }
 }
 
-function parseGenericReponse(chunk: RovoDevSingleChunk, buffer?: RovoDevResponse): RovoDevResponse {
+function parseGenericReponse(
+    toolCalls: Record<string, RovoDevToolCallResponse>,
+    chunk: RovoDevSingleChunk,
+    buffer?: RovoDevResponse,
+): RovoDevResponse {
     switch (chunk.event_kind) {
         case 'user-prompt':
         case 'user_prompt':
@@ -350,7 +369,7 @@ function parseGenericReponse(chunk: RovoDevSingleChunk, buffer?: RovoDevResponse
             if (buffer) {
                 throw new Error('RovoDev parser error: tool-return seem to be split');
             }
-            return parseResponseToolReturn(chunk.data);
+            return parseResponseToolReturn(chunk.data, toolCalls);
 
         case 'retry-prompt':
         case 'retry_prompt':

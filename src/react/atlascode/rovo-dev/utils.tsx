@@ -1,3 +1,5 @@
+import { RovoDevContext, TechnicalPlan } from '../../../../src/rovo-dev/rovoDevTypes';
+
 export type ToolReturnMessage =
     | ToolReturnFileMessage
     | ToolReturnBashMessage
@@ -13,7 +15,8 @@ export type ChatMessage =
 
 export interface DefaultMessage {
     text: string;
-    source: 'User' | 'RovoDev';
+    source: 'User' | 'RovoDev' | 'PullRequest';
+    context?: RovoDevContext;
 }
 
 export interface ErrorMessage {
@@ -34,6 +37,7 @@ export interface ToolReturnFileMessage {
     tool_name: 'expand_code_chunks' | 'find_and_replace_code' | 'open_files' | 'create_file' | 'delete_file';
     source: 'ToolReturn';
     content: string;
+    parsedContent?: object | undefined;
     tool_call_id: string;
     args?: string;
 }
@@ -57,15 +61,16 @@ export interface ToolReturnGrepFileContentMessage {
 export interface ToolReturnTechnicalPlanMessage {
     tool_name: 'create_technical_plan';
     source: 'ToolReturn';
-    content: string; // JSON string representing the technical plan
+    parsedContent?: object | undefined;
     tool_call_id: string;
     args?: string;
 }
 
 export interface ToolReturnGenericMessage {
     tool_name: string;
-    source: 'ToolReturn' | 'ModifiedFile';
-    content?: any;
+    source: 'ToolReturn' | 'ModifiedFile' | 'RovoDevRetry';
+    content: string;
+    parsedContent?: object | undefined;
     tool_call_id: string;
     args?: string;
 }
@@ -73,28 +78,6 @@ export interface ToolReturnGenericMessage {
 export interface ToolReturnGroupedMessage {
     source: 'ReturnGroup';
     tool_returns: ToolReturnGenericMessage[];
-}
-
-export interface CodeSnippetToChange {
-    startLine: number;
-    endLine: number;
-    code: string;
-}
-
-export interface TechnicalPlanFileToChange {
-    filePath: string;
-    descriptionOfChange: string;
-    clarifyingQuestionIfAny: string | null;
-    codeSnippetsToChange: CodeSnippetToChange[];
-}
-
-export interface TechnicalPlanLogicalChange {
-    summary: string;
-    filesToChange: TechnicalPlanFileToChange[];
-}
-
-export interface TechnicalPlan {
-    logicalChanges: TechnicalPlanLogicalChange[];
 }
 
 export interface ToolReturnParseResult {
@@ -105,6 +88,8 @@ export interface ToolReturnParseResult {
     technicalPlan?: TechnicalPlan;
     type?: 'modify' | 'create' | 'delete' | 'open' | 'bash';
 }
+
+export type MessageBlockDetails = ChatMessage[] | DefaultMessage | ErrorMessage | ToolReturnGenericMessage | null;
 
 interface ToolReturnInfo {
     title: string;
@@ -137,13 +122,22 @@ export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolRe
         case 'open_files':
         case 'create_file':
         case 'delete_file':
-            const contentArray = msg.content.split('\n\n');
+            const contentArray = msg.parsedContent ? msg.parsedContent : [msg.content];
+            if (!Array.isArray(contentArray)) {
+                console.warn('Invalid content format in ToolReturnMessage:', msg.content);
+                break;
+            }
 
             for (const line of contentArray) {
-                const matches = line.match(
+                if (typeof line !== 'string') {
+                    console.warn('Invalid line format in ToolReturnMessage:', line);
+                    continue;
+                }
+
+                const trimmedLine = line.split('\n\n')[0].trim();
+                const matches = trimmedLine.match(
                     /^Successfully\s+(expanded code chunks|replaced code|opened|created|deleted|updated)(?:\s+in)?\s+(.+)?$/,
                 );
-
                 if (matches && matches.length >= 3) {
                     let filePath = matches[2].trim();
                     // Remove trailing colon if present
@@ -164,51 +158,38 @@ export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolRe
                     });
                 }
             }
-
-            if (resp.length === 0) {
-                // If no matches found, return the raw content
-                resp.push({
-                    content: msg.content,
-                });
-            }
             break;
 
         case 'bash':
             const args = msg.args && JSON.parse(msg.args);
-            let command = '';
-            if (!args || !args.command) {
-                console.warn('Bash command not found in args:', msg.args);
-            } else {
-                command = args.command;
+            if (args?.command) {
+                resp.push({
+                    title: args.command,
+                    content: 'Executed command',
+                    type: 'bash',
+                });
             }
-            resp.push({
-                title: command,
-                content: 'Executed command',
-                type: 'bash',
-            });
             break;
 
         case 'grep_file_content':
             const grepArgs = msg.args && JSON.parse(msg.args);
-
-            let pattern = '';
-            if (!grepArgs || !grepArgs.pattern) {
-                console.warn('Grep pattern not found in args:', msg.args);
-            } else {
-                pattern = grepArgs.pattern;
+            if (grepArgs?.pattern) {
+                const pattern = grepArgs.pattern;
+                resp.push({
+                    content: `Searched file content${pattern ? ` for pattern:` : ''}`,
+                    title: `"${pattern}"`,
+                    type: 'open',
+                });
             }
-            resp.push({
-                content: `Searched file content${pattern ? ` for pattern:` : ''}`,
-                title: `"${pattern}"`,
-                type: 'open',
-            });
             break;
 
         case 'create_technical_plan':
-            resp.push({
-                content: 'A cool technical plan',
-                technicalPlan: JSON.parse(msg.content) as TechnicalPlan | undefined,
-            });
+            if (msg.parsedContent) {
+                resp.push({
+                    content: '',
+                    technicalPlan: msg.parsedContent as TechnicalPlan,
+                });
+            }
             break;
 
         default:
@@ -227,3 +208,33 @@ export const isCodeChangeTool = (toolName: string): boolean => {
 };
 
 export const CODE_PLAN_EXECUTE_PROMPT = 'Execute the code plan that you have created';
+
+// this function scrolls the element to the end, but it prevents scrolling too frequently to avoid the UI to get overloaded.
+// the delay is implemented globally, not per element. which is fine for now, because we only scroll 1 element.
+export const scrollToEnd = (() => {
+    const SCROLL_DELAY = 250;
+    let lastScroll: number = 0;
+    let scrollTimeout: NodeJS.Timeout | number = 0;
+
+    function doScrollNow(element: HTMLDivElement) {
+        element.scroll({ top: element.scrollHeight, behavior: 'smooth' });
+        return performance.now();
+    }
+
+    return (element: HTMLDivElement) => {
+        if (scrollTimeout) {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = 0;
+        }
+
+        const delay = lastScroll - performance.now() + SCROLL_DELAY;
+
+        if (delay < 0) {
+            lastScroll = doScrollNow(element);
+            // schedule one extra scroll to adjust for react rendering asynchronousness
+            scrollTimeout = setTimeout(() => (lastScroll = doScrollNow(element)), SCROLL_DELAY);
+        } else {
+            scrollTimeout = setTimeout(() => (lastScroll = doScrollNow(element)), delay);
+        }
+    };
+})();

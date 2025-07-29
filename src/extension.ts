@@ -127,7 +127,7 @@ export async function activate(context: ExtensionContext) {
 }
 
 function activateErrorReporting(): void {
-    if (FeatureFlagClient.checkGate(Features.EnableErrorTelemetry)) {
+    if (Container.isDebugging || FeatureFlagClient.checkGate(Features.EnableErrorTelemetry)) {
         registerAnalyticsClient(Container.analyticsClient);
     } else {
         unregisterErrorReporting();

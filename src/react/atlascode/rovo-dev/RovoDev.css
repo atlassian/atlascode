@@ -2,6 +2,10 @@ body {
     padding: 0 !important;
 }
 
+.rovoDevChat button {
+    cursor: pointer;
+}
+
 .logical-change-container {
     display: flex;
     flex-direction: column;
@@ -139,18 +143,28 @@ body {
     gap: 4px;
 }
 
-.tool-call-item,
-.tool-return-item {
+.tool-call-item-base,
+.tool-return-item-base {
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 4px 8px 4px 0;
     gap: 4px;
+}
+
+.tool-call-item,
+.tool-return-item {
+    padding: 4px 6px;
     background-color: inherit;
     color: var(--vscode-editor-foreground);
     width: fit-content;
     border-radius: 4px;
+    border: 1px solid var(--vscode-editorWidget-border);
     margin-bottom: 8px;
+}
+
+.tool-return-item code {
+    white-space: pre-wrap;
+    word-break: break-all;
 }
 
 #tool-return-file-path:hover {
@@ -162,7 +176,7 @@ body {
     color: var(--vscode-input-placeholderForeground);
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    word-break: break-all;
 }
 
 .tool-return-bash-command {
@@ -173,19 +187,6 @@ body {
             padding: 0 4px;
         }
     }
-}
-
-.chat-message {
-    margin-bottom: 8px;
-    padding: 8px 12px;
-    border-radius: 8px;
-    position: relative;
-}
-
-
-#deleted-file {
-    color: var(--vscode-list-errorForeground);
-    text-decoration: line-through;
 }
 
 .code-plan-button-container {
@@ -216,4 +217,334 @@ body {
 .code-plan-button span {
     font-size: 14px;
     color: var(--vscode-editor-foreground);
+}
+
+/* Messaging styles */
+.chat-message {
+    max-width: 100%;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    position: relative;
+}
+
+.chat-message-container {
+    width: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    padding: 10px 16px 0 16px;
+}
+
+.message-drawer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--vscode-editorWidget-border);
+    align-items: flex-start;
+    margin-bottom: 8px;
+    gap: 8px;
+}
+
+.message-drawer-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    cursor: pointer;
+}
+
+.message-drawer-title {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    span {
+        font-size: 13px;
+        color: var(--vscode-editor-foreground);
+    }
+}
+.message-drawer-lozenge {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    background-color: var(--vscode-editorWidget-border);
+    font-size: 9px;
+}
+
+.agent-message {
+    align-self: flex-start;
+}
+
+.user-message {
+    background-color: var(--vscode-editor-selectionBackground);
+    align-self: flex-end;
+    border-bottom-right-radius: 0px;
+    padding: 8px 12px;
+    max-width: 100%;
+    width: fit-content;
+}
+
+.message-content {
+    white-space: normal;
+    word-break: break-word;
+    color: var(--vscode-editor-foreground);
+    max-width: 100%;
+}
+
+/* Pull Request button styles */
+.pull-request-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 11px;
+    gap: 8px;
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    border: 0;
+}
+.pull-request-button:hover {
+    background-color: var(--vscode-button-hoverBackground);
+    cursor: pointer;
+}
+
+/* Pull Request form styles */
+.pull-request-form-container {
+    display: flex;
+    padding: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    border-radius: 8px;
+    border: 1px solid var(--vscode-editorWidget-border);
+    flex: 1 0 0;
+}
+
+.pull-request-form-body {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+}
+
+.pull-request-form-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+.pull-request-form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+    align-self: stretch;
+}
+
+.pull-request-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+    align-self: stretch;
+}
+
+.pull-request-form-field label {
+    font-size: 11px;
+    color: var(--vscode-editor-foreground);
+}
+
+.pull-request-form-field input[type="text"] {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--vscode-input-border);
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+}
+
+.pull-request-form-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.pull-request-cancel-button,
+.pull-request-submit-button {
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    cursor: pointer;
+}
+
+.pull-request-cancel-button {
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+}
+
+.pull-request-cancel-button:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.pull-request-submit-button {
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+}
+
+.pull-request-submit-button:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+.pull-request-chat-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Updated Files styles */
+.modified-files-list {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow-y: auto;
+    max-height: 100px;
+    padding: 4px 8px;
+    border-top: 1px solid var(--vscode-panel-border);
+}
+.modified-file-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 2px 8px;
+    width: 100%;
+}
+
+.modified-file-item:hover {
+    background-color: var(--vscode-list-hoverBackground);
+}
+
+.modified-file-actions {
+    display: none;
+    align-items: center;
+    flex-direction: row;
+    gap: 4px;
+}
+
+.modified-file-item:hover .modified-file-actions {
+    display: flex;
+}
+
+.modified-file-action {
+    background-color: transparent;
+    color: var(--vscode-editor-foreground);
+    padding: 0;
+    border: 0;
+}
+
+.modified-file-action:hover {
+    color: var(--vscode-textLink-foreground);
+}
+
+.modified-file-item-info {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+#deleted-file {
+    color: var(--vscode-list-errorForeground);
+    text-decoration: line-through;
+}
+
+#created-file {
+    color: var(--vscode-gitDecoration-untrackedResourceForeground);
+}
+
+.updated-files-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+    background: var(--vscode-sideBar-background);
+    padding-bottom: 4px;
+}
+
+.updated-files-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 8px;
+}
+
+.updated-files-header div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+.updated-files-header div span {
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.updated-files-action {
+    cursor: pointer;
+    padding: 2px 6px;
+}
+
+
+.secondary {
+    color: var(--vscode-button-secondaryForeground);
+    background-color: var(--vscode-button-secondaryBackground);
+    border: 1px solid var(--vscode-button-secondaryBorder);
+}
+.secondary:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.primary {
+    color: var(--vscode-button-foreground);
+    background-color: var(--vscode-button-background);
+    border: 1px solid var(--vscode-button-border);
+}
+.primary:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+/* Input styles */
+.input-section-container {
+    width: 100%;
+    background-color: var(--vscode-sideBar-background);
+    padding: 16px;
+    border-radius: 12px 12px 0 0;
+}
+
+.prompt-container {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 2px;
+    border : 1px solid var(--vscode-input-border);
+    border-radius: 4px;
+    background-color: var(--vscode-input-background);
+    padding: 8px;
+}
+
+.prompt-container:focus-within {
+    outline: var(--vscode-focusBorder) solid 1px;
 }

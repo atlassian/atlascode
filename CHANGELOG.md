@@ -16,6 +16,8 @@
 - Fixed a bug where the 'Vote for this issue' option was not accessible to the reporter
 - Fixed a bug with the vote calculation where the username who voted for the issue only updated to the correct value after refreshing the page
 - Fixed a bug when Save site button is enabled without valid credentials
+- Fixed a bug where after creating a new Jira issue, the issue would not appear in the sidebar
+- Fixed an unexpected status dropdown behavior when user doesn't have enough permissions to change it.
 
 ## What's new in 3.8.6
 

@@ -1,6 +1,7 @@
+import { Logger } from 'src/logger';
 import { commands, env, InputBox, UIKind, window } from 'vscode';
 
-import { authenticateButtonEvent, errorEvent, viewScreenEvent } from '../analytics';
+import { authenticateButtonEvent, viewScreenEvent } from '../analytics';
 import { type AnalyticsClient } from '../analytics-node-client/src/client.min';
 import { BasicAuthInfo, Product, ProductBitbucket, ProductJira, SiteInfo } from '../atlclients/authInfo';
 import { Commands } from '../constants';
@@ -139,9 +140,7 @@ class OnboardingProvider {
 
     private _handleError(message: string, error: Error) {
         window.showErrorMessage(message);
-        errorEvent(message, error, this.id).then((event) => {
-            this._analyticsClient.sendTrackEvent(event);
-        });
+        Logger.error(error, message);
     }
 
     private _handleSkip(product: Product) {

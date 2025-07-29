@@ -152,4 +152,32 @@ describe('StatusTransitionMenu', () => {
         expect(getByText('Start Progress →')).toBeTruthy();
         expect(getByText('In Progress')).toBeTruthy();
     });
+
+    it('Renders the dropdown arrow icon next to the current status', () => {
+        const { getByRole } = render(
+            <StatusTransitionMenu
+                transitions={mockTransitions}
+                currentStatus={mockCurrentStatus}
+                isStatusButtonLoading={false}
+                onStatusChange={mockOnStatusChange}
+            />,
+        );
+
+        const statusButton = getByRole('button', { name: 'To Do Status' });
+        expect(statusButton).toHaveProperty('disabled', false);
+        expect(getByRole('img', { name: 'Status' })).toBeTruthy();
+    });
+
+    it('disables dropdown when there are no transitions', () => {
+        const { getByRole } = render(
+            <StatusTransitionMenu
+                transitions={[]}
+                currentStatus={mockCurrentStatus}
+                isStatusButtonLoading={false}
+                onStatusChange={mockOnStatusChange}
+            />,
+        );
+        const statusButton = getByRole('button', { name: 'To Do' });
+        expect(statusButton).toHaveProperty('disabled', true);
+    });
 });

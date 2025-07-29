@@ -16,12 +16,8 @@ import {
     ConfigMessageType,
     ConfigResponse,
     emptyConfigInitMessage,
-    FilterSearchResponseMessage,
-    JQLOptionsResponseMessage,
-    JQLSuggestionsResponseMessage,
     SectionChangeMessage,
     SiteWithAuthInfo,
-    ValidateJqlResponseMessage,
 } from '../../../lib/ipc/toUI/config';
 import { ConnectionTimeout } from '../../../util/time';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
@@ -270,7 +266,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         }
     }, []);
 
-    const [postMessage, postMessagePromise] = useMessagingApi<ConfigAction, ConfigMessage, ConfigResponse>(
+    const { postMessage, postMessagePromise } = useMessagingApi<ConfigAction, ConfigMessage, ConfigResponse>(
         onMessageHandler,
     );
 
@@ -344,7 +340,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                             ConfigMessageType.JQLOptionsResponse,
                             ConnectionTimeout,
                         );
-                        resolve((response as JQLOptionsResponseMessage).data);
+                        resolve(response.data);
                     } catch (e) {
                         reject(e);
                     }
@@ -390,7 +386,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                             ConfigMessageType.JQLSuggestionsResponse,
                             ConnectionTimeout,
                         );
-                        resolve((response as JQLSuggestionsResponseMessage).data);
+                        resolve(response.data);
                     } catch (e) {
                         reject(e);
                     }
@@ -436,7 +432,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                             ConfigMessageType.FilterSearchResponse,
                             ConnectionTimeout,
                         );
-                        resolve((response as FilterSearchResponseMessage).data);
+                        resolve(response.data);
                     } catch (e) {
                         reject(e);
                     }
@@ -474,7 +470,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                             ConfigMessageType.ValidateJqlResponse,
                             ConnectionTimeout,
                         );
-                        resolve((response as ValidateJqlResponseMessage).data);
+                        resolve(response.data);
                     } catch (e) {
                         reject(e);
                     }

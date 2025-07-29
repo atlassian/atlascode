@@ -1,4 +1,5 @@
-import { env, ExtensionContext, UIKind, workspace } from 'vscode';
+import { env, ExtensionContext, languages, UIKind, workspace } from 'vscode';
+import * as vscode from 'vscode';
 
 import { featureFlagClientInitializedEvent } from './analytics';
 import { AnalyticsClient, analyticsClient } from './analytics-node-client/src/client.min.js';
@@ -29,6 +30,8 @@ import { CommonActionMessageHandler } from './lib/webview/controller/common/comm
 import { Logger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
 import { Pipeline } from './pipelines/model';
+import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
+import { RovoDevDecorator } from './rovo-dev/rovoDevDecorator';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
@@ -57,6 +60,7 @@ import { VSCPullRequestDetailsActionApi } from './webview/pullrequest/vscPullReq
 import { VSCPullRequestDetailsWebviewControllerFactory } from './webview/pullrequest/vscPullRequestDetailsWebviewControllerFactory';
 import { SingleWebview } from './webview/singleViewFactory';
 import { VSCStartWorkActionApi } from './webview/startwork/vscStartWorkActionApi';
+import { VSCStartWorkV3WebviewControllerFactory } from './webview/startwork/vscStartWorkV3WebviewControllerFactory';
 import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscStartWorkWebviewControllerFactory';
 import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
@@ -140,6 +144,16 @@ export class Container {
             this._analyticsApi,
         );
 
+        const startWorkV3ViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
+            context.extensionPath,
+            new VSCStartWorkV3WebviewControllerFactory(
+                new VSCStartWorkActionApi(),
+                this._commonMessageHandler,
+                this._analyticsApi,
+            ),
+            this._analyticsApi,
+        );
+
         const createPullRequestV2ViewFactory = new SingleWebview<WorkspaceRepo, StartWorkAction>(
             context.extensionPath,
             new VSCCreatePullRequestWebviewControllerFactory(
@@ -153,6 +167,7 @@ export class Container {
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
         context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
+        context.subscriptions.push((this._startWorkV3WebviewFactory = startWorkV3ViewFactory));
         context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
 
         const pipelinesV2Webview = new MultiWebview<Pipeline, PipelineSummaryAction>(
@@ -196,8 +211,14 @@ export class Container {
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
 
         if (!!process.env.ROVODEV_ENABLED) {
+            context.subscriptions.push(new RovoDevDecorator());
             context.subscriptions.push(
-                (this._rovodevWebviewProvder = new RovoDevWebviewProvider(context.extensionPath, context.globalState)),
+                languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
+                    providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
+                }),
+            );
+            context.subscriptions.push(
+                (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context.extensionPath, context.globalState)),
             );
         }
 
@@ -329,6 +350,11 @@ export class Container {
         return this._startWorkWebviewFactory;
     }
 
+    private static _startWorkV3WebviewFactory: SingleWebview<StartWorkIssueMessage, StartWorkAction>;
+    public static get startWorkV3WebviewFactory() {
+        return this._startWorkV3WebviewFactory;
+    }
+
     private static _createPullRequestWebviewFactory: SingleWebview<WorkspaceRepo, StartWorkAction>;
     public static get createPullRequestWebviewFactory() {
         return this._createPullRequestWebviewFactory;
@@ -404,8 +430,8 @@ export class Container {
         return this._onboardingProvider;
     }
 
-    private static _rovodevWebviewProvder: RovoDevWebviewProvider;
-    public static get rovodevWebviewProvder() {
-        return this._rovodevWebviewProvder;
+    private static _rovodevWebviewProvider: RovoDevWebviewProvider;
+    public static get rovodevWebviewProvider() {
+        return this._rovodevWebviewProvider;
     }
 }

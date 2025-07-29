@@ -15,13 +15,15 @@ export const ToolReturnParsedItem: React.FC<{
 
     return (
         <a
-            className="tool-return-item"
+            className="tool-return-item-base tool-return-item"
             id={msg.filePath ? 'tool-return-file-path' : undefined}
             onClick={() => msg.filePath && openFile(msg.filePath)}
         >
             {toolIcon && <>{toolIcon}</>}
-            {msg.content}
-            {renderTitle(msg)}
+            <div className="tool-return-item-base" style={{ flexWrap: 'wrap' }}>
+                {msg.content}
+                {renderTitle(msg)}
+            </div>
         </a>
     );
 };
