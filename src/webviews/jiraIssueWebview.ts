@@ -18,7 +18,7 @@ import timer from 'src/util/perf';
 import { commands, env } from 'vscode';
 
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
-import { jiraIssuePerformanceEvent } from '../analytics';
+import { performanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
 import { PullRequestData } from '../bitbucket/model';
@@ -54,6 +54,9 @@ import { getJiraIssueUri } from '../views/jira/treeViews/utils';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
+
+const EditJiraIssueUIRenderEventName = 'jira.editJiraIssueUIRender.timeToRender';
+const EditJiraIssueUpdatesEventName = 'jira.editJiraIssueUpdates.timeToRender';
 
 export class JiraIssueWebview
     extends AbstractIssueEditorWebview
@@ -125,7 +128,9 @@ export class JiraIssueWebview
                 this._issue = await fetchMinimalIssue(this._issue.key, this._issue.siteDetails);
             }
             // First Request begins here for issue rendering
-            timer.mark(`editJiraIssueUIRender.ttr_${this._issue.id}`);
+            const renderPerfMarker = `${EditJiraIssueUIRenderEventName}_${this._issue.id}`;
+            timer.mark(renderPerfMarker);
+
             const editUI: EditIssueUI<DetailedSiteInfo> = await fetchEditIssueUI(this._issue);
             if (this._panel) {
                 this._panel.title = `${this._issue.key}`;
@@ -143,14 +148,14 @@ export class JiraIssueWebview
             msg.type = 'update';
 
             this.postMessage(msg); // Issue has rendered
-            const uiDuration = timer.measure(`editJiraIssueUIRender.ttr_${this._issue.id}`);
-            timer.clear(`editJiraIssueUIRender.ttr_${this._issue.id}`);
-            jiraIssuePerformanceEvent('editJiraIssueUIRender.ttr', uiDuration).then((event) => {
+            const uiDuration = timer.measureAndClear(renderPerfMarker);
+            performanceEvent(EditJiraIssueUIRenderEventName, uiDuration).then((event) => {
                 Container.analyticsClient.sendTrackEvent(event);
             });
 
             // UI component updates
-            timer.mark(`editJiraIssueUIRender.ttr_${this._issue.id}`);
+            const updatePerfMarker = `${EditJiraIssueUpdatesEventName}_${this._issue.id}`;
+            timer.mark(updatePerfMarker);
             const performanceEnabled = FeatureFlagClient.checkExperimentValue(
                 Experiments.AtlascodePerformanceExperiment,
             );
@@ -170,9 +175,8 @@ export class JiraIssueWebview
                 this.updateVoters();
                 this.updateRelatedPullRequests();
             }
-            const updatesDuration = timer.measure(`editJiraIssueUIRender.ttr_${this._issue.id}`);
-            timer.clear(`editJiraIssueUIRender.ttr_${this._issue.id}`);
-            jiraIssuePerformanceEvent('editJiraIssueUpdates.ttr', updatesDuration).then((event) => {
+            const updatesDuration = timer.measureAndClear(updatePerfMarker);
+            performanceEvent(EditJiraIssueUpdatesEventName, updatesDuration).then((event) => {
                 Container.analyticsClient.sendTrackEvent(event);
             });
         } catch (e) {

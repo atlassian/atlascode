@@ -184,6 +184,13 @@ type RovoDevPerfEvents =
     | 'rovodev.response.timeToTechPlan'
     | 'rovodev.response.timeToLastMessage';
 
+type JiraPerfEvents =
+    | 'jira.initial_cumulative_jql_fetch.timeToRender'
+    | 'jira.refresh_cumulative_jql_fetch.timeToRender'
+    | 'jira.createJiraIssueRender.timeToRender'
+    | 'jira.editJiraIssueUIRender.timeToRender'
+    | 'jira.editJiraIssueUpdates.timeToRender';
+
 interface RovoDevCommonParams {
     sessionId: string;
     promptId: string;
@@ -194,6 +201,7 @@ export async function performanceEvent(
     measure: number,
     params: RovoDevCommonParams,
 ): Promise<TrackEvent>;
+export async function performanceEvent(tag: JiraPerfEvents, measure: number): Promise<TrackEvent>;
 export async function performanceEvent(
     tag: string,
     measure: number,
@@ -336,13 +344,6 @@ export async function notificationChangeEvent(
             notificationSurface: notificationSurface,
             delta: delta,
         },
-    });
-}
-
-// Jira issue performance event
-export async function jiraIssuePerformanceEvent(type: string, latency: number) {
-    return trackEvent('jiraIssuePerformanceEvent', type, {
-        attributes: { latency },
     });
 }
 

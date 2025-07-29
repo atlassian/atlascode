@@ -8,7 +8,7 @@ import timer from 'src/util/perf';
 import { commands, Position, Uri, ViewColumn, window } from 'vscode';
 
 import { issueCreatedEvent } from '../analytics';
-import { jiraIssuePerformanceEvent } from '../analytics';
+import { performanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { showIssue } from '../commands/jira/showIssue';
 import { configuration } from '../config/configuration';
@@ -56,6 +56,8 @@ const emptyCreateMetaResult: CreateMetaTransformerResult<DetailedSiteInfo> = {
     problems: {},
     issueTypes: [],
 };
+
+const CreateJiraIssueRenderEventName = 'jira.createJiraIssueRender.timeToRender';
 
 export class CreateIssueWebview
     extends AbstractIssueEditorWebview
@@ -290,7 +292,7 @@ export class CreateIssueWebview
             const performanceEnabled = FeatureFlagClient.checkExperimentValue(
                 Experiments.AtlascodePerformanceExperiment,
             );
-            timer.mark('createJiraIssueRender.ttr');
+            timer.mark(CreateJiraIssueRenderEventName);
 
             if (performanceEnabled) {
                 const [projectsWithCreateIssuesPermission, screenData] = await Promise.all([
@@ -424,9 +426,8 @@ export class CreateIssueWebview
 
                 this.postMessage(createData);
             }
-            const createDuration = timer.measure('createJiraIssueRender.ttr');
-            timer.clear('createJiraIssueRender.ttr');
-            jiraIssuePerformanceEvent('createJiraIssueRender.ttr', createDuration).then((event) => {
+            const createDuration = timer.measureAndClear(CreateJiraIssueRenderEventName);
+            performanceEvent(CreateJiraIssueRenderEventName, createDuration).then((event) => {
                 Container.analyticsClient.sendTrackEvent(event);
             });
         } catch (e) {

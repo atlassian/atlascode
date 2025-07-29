@@ -11,7 +11,7 @@ import {
 } from 'vscode';
 
 import { viewScreenEvent } from '../../../analytics';
-import { jiraIssuePerformanceEvent } from '../../../analytics';
+import { performanceEvent } from '../../../analytics';
 import { ProductJira } from '../../../atlclients/authInfo';
 import { CommandContext, setCommandContext } from '../../../commandContext';
 import { configuration } from '../../../config/configuration';
@@ -26,6 +26,9 @@ import { SearchJiraHelper } from '../searchJiraHelper';
 import { executeJqlQuery, JiraIssueNode, loginToJiraMessageNode, TreeViewIssue } from './utils';
 
 const AssignedWorkItemsViewProviderId = AssignedJiraItemsViewId;
+
+const InitialCumulativeJqlFetchEventName = 'jira.initial_cumulative_jql_fetch.timeToRender';
+const RefreshCumulativeJqlFetchEventName = 'jira.refresh_cumulative_jql_fetch.timeToRender';
 
 export class AssignedWorkItemsViewProvider extends Disposable implements TreeDataProvider<TreeItem> {
     private static readonly _treeItemConfigureJiraMessage = loginToJiraMessageNode;
@@ -59,7 +62,7 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
 
         const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
         if (jqlEntries.length) {
-            timer.mark('initial_cumulative_jql_fetch.ttr');
+            timer.mark(InitialCumulativeJqlFetchEventName);
             this._initPromises = new PromiseRacer(jqlEntries.map(executeJqlQuery));
         }
 
@@ -149,9 +152,8 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
                 // need to trigger a DidChangeTreeData after this method ends - 10ms as a small-enough timeout
                 setTimeout(() => this._onDidChangeTreeData.fire(), 10);
             } else {
-                const jqlInitialDuration = timer.measure('initial_cumulative_jql_fetch.ttr');
-                timer.clear('initial_cumulative_jql_fetch.ttr');
-                jiraIssuePerformanceEvent('initial_cumulative_jql_fetch.ttr', jqlInitialDuration).then((event) => {
+                const jqlInitialDuration = timer.measureAndClear(InitialCumulativeJqlFetchEventName);
+                performanceEvent(InitialCumulativeJqlFetchEventName, jqlInitialDuration).then((event) => {
                     Container.analyticsClient.sendTrackEvent(event);
                 });
             }
@@ -160,7 +162,7 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
         }
         // this branch triggers when refresing an already rendered panel
         else {
-            timer.mark('refresh_cumulative_jql_fetch.ttr');
+            timer.mark(RefreshCumulativeJqlFetchEventName);
             const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
             if (!jqlEntries.length) {
                 return [AssignedWorkItemsViewProvider._treeItemConfigureJiraMessage];
@@ -176,9 +178,8 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
             }
 
             SearchJiraHelper.setIssues(allIssues, AssignedWorkItemsViewProviderId);
-            const jqlRefreshDuration = timer.measure('refresh_cumulative_jql_fetch.ttr');
-            timer.clear('refresh_cumulative_jql_fetch.ttr');
-            jiraIssuePerformanceEvent('refresh_cumulative_jql_fetch.ttr', jqlRefreshDuration).then((event) => {
+            const jqlRefreshDuration = timer.measureAndClear(RefreshCumulativeJqlFetchEventName);
+            performanceEvent(RefreshCumulativeJqlFetchEventName, jqlRefreshDuration).then((event) => {
                 Container.analyticsClient.sendTrackEvent(event);
             });
 

@@ -27,4 +27,9 @@ export default {
     mark,
     measure,
     clear,
+    measureAndClear: (marker: string) => {
+        const val = measure(marker);
+        clear(marker);
+        return val;
+    },
 };
