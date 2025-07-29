@@ -27,8 +27,8 @@ import { executeJqlQuery, JiraIssueNode, loginToJiraMessageNode, TreeViewIssue }
 
 const AssignedWorkItemsViewProviderId = AssignedJiraItemsViewId;
 
-const InitialCumulativeJqlFetchEventName = 'jira.initial_cumulative_jql_fetch.timeToRender';
-const RefreshCumulativeJqlFetchEventName = 'jira.refresh_cumulative_jql_fetch.timeToRender';
+const InitialCumulativeJqlFetchEventName = 'ui.cumulativeJqlFetch.render.lcp';
+const RefreshCumulativeJqlFetchEventName = 'ui.cumulativeJqlFetch.update.lcp';
 
 export class AssignedWorkItemsViewProvider extends Disposable implements TreeDataProvider<TreeItem> {
     private static readonly _treeItemConfigureJiraMessage = loginToJiraMessageNode;

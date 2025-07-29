@@ -57,7 +57,7 @@ const emptyCreateMetaResult: CreateMetaTransformerResult<DetailedSiteInfo> = {
     issueTypes: [],
 };
 
-const CreateJiraIssueRenderEventName = 'jira.createJiraIssueRender.timeToRender';
+const CreateJiraIssueRenderEventName = 'ui.createJiraIssue.render.lcp';
 
 export class CreateIssueWebview
     extends AbstractIssueEditorWebview

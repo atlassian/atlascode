@@ -185,11 +185,11 @@ type RovoDevPerfEvents =
     | 'rovodev.response.timeToLastMessage';
 
 type JiraPerfEvents =
-    | 'jira.initial_cumulative_jql_fetch.timeToRender'
-    | 'jira.refresh_cumulative_jql_fetch.timeToRender'
-    | 'jira.createJiraIssueRender.timeToRender'
-    | 'jira.editJiraIssueUIRender.timeToRender'
-    | 'jira.editJiraIssueUpdates.timeToRender';
+    | 'ui.cumulativeJqlFetch.render.lcp'
+    | 'ui.cumulativeJqlFetch.update.lcp'
+    | 'ui.createJiraIssue.render.lcp'
+    | 'ui.editJiraIssue.render.lcp'
+    | 'ui.editJiraIssue.update.lcp';
 
 interface RovoDevCommonParams {
     sessionId: string;
