@@ -18,7 +18,7 @@ test('Test upload image to attachments', async ({ page, request }) => {
     const cleanupIssueMock = await setupIssueMock(request, { attachment });
 
     await issuePage.content.addAttachment(FILE_PATH);
-    await page.waitForTimeout(2_000);
+    await page.waitForTimeout(1_000);
 
     await issuePage.content.hasAttachment(FILE_NAME);
 

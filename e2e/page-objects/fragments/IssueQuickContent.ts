@@ -38,7 +38,7 @@ export class IssueQuickContent {
     }
 
     hasAttachment(filename: string) {
-        const attachment = this.attachments.getByText(filename);
+        const attachment = this.attachments.getByText(filename, { exact: true });
         return expect(attachment).toBeVisible();
     }
 }

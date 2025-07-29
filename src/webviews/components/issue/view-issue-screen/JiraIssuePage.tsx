@@ -771,7 +771,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                             <div style={{ paddingTop: '8px' }}>
                                                 <Grid layout="fluid">
                                                     <GridColumn medium={8}>
-                                                        <h1>
+                                                        <h1 data-testid="issue.title">
                                                             {this.getInputMarkup(
                                                                 this.state.fields['summary'],
                                                                 true,
