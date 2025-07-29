@@ -113,6 +113,11 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.jira.quickLogin",
+                "title": "Quick Login to Jira",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.jira.searchIssues",
                 "title": "Search Jira Issue Results",
                 "icon": {
@@ -856,9 +861,29 @@
                 {
                     "command": "atlascode.showExploreSettings",
                     "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.quickLogin",
+                    "when": "!atlascode:isJiraAuthenticated"
                 }
             ]
         },
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "atlascode.jira.quickLogin",
+                    "when": "!atlascode:isJiraAuthenticated"
+                }
+            ]
+        },
+        "keybindings": [
+            {
+                "command": "atlascode.jira.quickLogin",
+                "key": "ctrl+shift+j",
+                "mac": "cmd+shift+j",
+                "when": "!inDebugMode"
+            }
+        ],
         "configuration": {
             "type": "object",
             "title": "Atlassian",

@@ -14,6 +14,7 @@ import { rerunPipeline } from './commands/bitbucket/rerunPipeline';
 import { runPipeline } from './commands/bitbucket/runPipeline';
 import { assignIssue } from './commands/jira/assignIssue';
 import { createIssue } from './commands/jira/createIssue';
+import { quickLoginToJira } from './commands/jira/quickLogin';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey, showIssueForURL } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { configuration } from './config/configuration';
@@ -204,6 +205,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             Container.openPullRequestHandler(data.pullRequestUrl);
         }),
         commands.registerCommand(Commands.ShowOnboardingFlow, () => Container.onboardingProvider.start()),
+        commands.registerCommand('atlascode.jira.quickLogin', quickLoginToJira),
     );
 }
 
