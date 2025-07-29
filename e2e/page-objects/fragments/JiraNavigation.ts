@@ -33,4 +33,8 @@ export class JiraNavigation {
         const item = this.jiraItemsTree.getByRole('treeitem', { name });
         return expect(item).toBeVisible();
     }
+
+    async expectLoginToJiraItemExists() {
+        await expect(this.page.getByRole('treeitem', { name: 'Please login to Jira' })).toBeVisible();
+    }
 }
