@@ -1046,7 +1046,7 @@ ${message}`;
     public addModifiedFiles(newFiles: ToolReturnParseResult[]): void {
         const filesMap = new Map([...this._totalModifiedFiles].map((item) => [item.filePath!, item]));
 
-        // Logic for handling deletions and modifications (same as webview logic)
+        // Logic for handling deletions and modifications
         newFiles.forEach((file) => {
             if (!file.filePath) {
                 return;

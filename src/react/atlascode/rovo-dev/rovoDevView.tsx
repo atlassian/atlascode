@@ -309,7 +309,6 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.NewSession:
                     clearChatHistory();
                     setPendingToolCallMessage('');
-                    // totalModifiedFiles is now managed by provider
                     break;
 
                 case RovoDevProviderMessageType.Initialized:
