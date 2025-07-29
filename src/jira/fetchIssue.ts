@@ -18,22 +18,13 @@ export async function fetchCreateIssueUI(
     projectKey: string,
 ): Promise<CreateMetaTransformerResult<DetailedSiteInfo>> {
     const client = await Container.clientManager.jiraClient(siteDetails);
-    const performanceEnabled = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment);
-    if (performanceEnabled) {
+    if (FeatureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment)) {
         const [fields, issuelinkTypes, cMeta] = await Promise.all([
             Container.jiraSettingsManager.getAllFieldsForSite(siteDetails),
             Container.jiraSettingsManager.getIssueLinkTypes(siteDetails),
             Container.jiraSettingsManager.getIssueCreateMetadata(projectKey, siteDetails),
         ]);
-        return await createIssueUI(
-            projectKey,
-            client,
-            DEFAULT_API_VERSION,
-            fields,
-            issuelinkTypes,
-            cMeta,
-            performanceEnabled,
-        );
+        return await createIssueUI(projectKey, client, DEFAULT_API_VERSION, fields, issuelinkTypes, cMeta, true);
     }
     return await createIssueUI(projectKey, client);
 }
@@ -79,8 +70,7 @@ export async function fetchMinimalIssue(
 
 export async function fetchEditIssueUI(issue: MinimalIssue<DetailedSiteInfo>): Promise<EditIssueUI<DetailedSiteInfo>> {
     const client = await Container.clientManager.jiraClient(issue.siteDetails);
-    const performanceEnabled = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment);
-    if (performanceEnabled) {
+    if (FeatureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment)) {
         const [fields, issuelinkTypes, cMeta] = await Promise.all([
             Container.jiraSettingsManager.getAllFieldsForSite(issue.siteDetails),
             Container.jiraSettingsManager.getIssueLinkTypes(issue.siteDetails),
@@ -89,7 +79,7 @@ export async function fetchEditIssueUI(issue: MinimalIssue<DetailedSiteInfo>): P
                 issue.siteDetails,
             ),
         ]);
-        return await editIssueUI(issue, client, DEFAULT_API_VERSION, fields, issuelinkTypes, cMeta, performanceEnabled);
+        return await editIssueUI(issue, client, DEFAULT_API_VERSION, fields, issuelinkTypes, cMeta, true);
     }
     return await editIssueUI(issue, client);
 }

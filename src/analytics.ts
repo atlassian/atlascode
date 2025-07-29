@@ -195,13 +195,20 @@ interface RovoDevCommonParams {
     sessionId: string;
     promptId: string;
 }
+interface JiraIssueTypeParams {
+    isEpic: boolean;
+}
 
 export async function performanceEvent(
     tag: RovoDevPerfEvents,
     measure: number,
     params: RovoDevCommonParams,
 ): Promise<TrackEvent>;
-export async function performanceEvent(tag: JiraPerfEvents, measure: number): Promise<TrackEvent>;
+export async function performanceEvent(
+    tag: JiraPerfEvents,
+    measure: number,
+    params?: JiraIssueTypeParams,
+): Promise<TrackEvent>;
 export async function performanceEvent(
     tag: string,
     measure: number,

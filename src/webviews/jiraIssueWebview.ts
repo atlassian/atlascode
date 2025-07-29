@@ -140,6 +140,9 @@ export class JiraIssueWebview
             if (this._issue.issuetype.name === 'Epic') {
                 this._issue.isEpic = true;
                 this._editUIData.isEpic = true;
+            } else {
+                this._issue.isEpic = false;
+                this._editUIData.isEpic = false;
             }
             this._editUIData.recentPullRequests = [];
 
@@ -149,34 +152,25 @@ export class JiraIssueWebview
 
             this.postMessage(msg); // Issue has rendered
             const uiDuration = timer.measureAndClear(renderPerfMarker);
-            performanceEvent(EditJiraIssueUIRenderEventName, uiDuration).then((event) => {
+            const epicFlag = { isEpic: this._issue.isEpic };
+            performanceEvent(EditJiraIssueUIRenderEventName, uiDuration, epicFlag).then((event) => {
                 Container.analyticsClient.sendTrackEvent(event);
             });
 
             // UI component updates
             const updatePerfMarker = `${EditJiraIssueUpdatesEventName}_${this._issue.id}`;
             timer.mark(updatePerfMarker);
-            const performanceEnabled = FeatureFlagClient.checkExperimentValue(
-                Experiments.AtlascodePerformanceExperiment,
-            );
             // call async-able update functions here
-            if (performanceEnabled) {
-                await Promise.allSettled([
-                    this.updateEpicChildren(),
-                    this.updateCurrentUser(),
-                    this.updateWatchers(),
-                    this.updateVoters(),
-                    this.updateRelatedPullRequests(),
-                ]);
-            } else {
-                this.updateEpicChildren();
-                this.updateCurrentUser();
-                this.updateWatchers();
-                this.updateVoters();
-                this.updateRelatedPullRequests();
-            }
+            await Promise.allSettled([
+                this.updateEpicChildren(),
+                this.updateCurrentUser(),
+                this.updateWatchers(),
+                this.updateVoters(),
+                this.updateRelatedPullRequests(),
+            ]);
+
             const updatesDuration = timer.measureAndClear(updatePerfMarker);
-            performanceEvent(EditJiraIssueUpdatesEventName, updatesDuration).then((event) => {
+            performanceEvent(EditJiraIssueUpdatesEventName, updatesDuration, epicFlag).then((event) => {
                 Container.analyticsClient.sendTrackEvent(event);
             });
         } catch (e) {

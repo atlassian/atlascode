@@ -105,6 +105,22 @@ describe('JiraSettingsManager', () => {
             expect(result).toBeUndefined();
         });
 
+        it('should return cached result when projects array is empty', async () => {
+            // First call with empty projects array
+            const emptyMetadata: IssueCreateMetadata = { projects: [] };
+            mockJiraClient.getCreateIssueMetadata.mockResolvedValueOnce(emptyMetadata);
+
+            await settingsManager.getIssueCreateMetadata(projectKey, mockSiteDetails);
+
+            // Second call should fetch again since projects array was empty
+            mockJiraClient.getCreateIssueMetadata.mockResolvedValueOnce(mockIssueMetadata);
+            const result = await settingsManager.getIssueCreateMetadata(projectKey, mockSiteDetails);
+
+            expect(Container.clientManager.jiraClient).toHaveBeenCalledTimes(2);
+            expect(mockJiraClient.getCreateIssueMetadata).toHaveBeenCalledTimes(2);
+            expect(result).toEqual(mockIssueMetadata);
+        });
+
         it('should cache results for the same project key', async () => {
             mockJiraClient.getCreateIssueMetadata.mockResolvedValueOnce(mockIssueMetadata);
             await settingsManager.getIssueCreateMetadata(projectKey, mockSiteDetails);
