@@ -890,7 +890,7 @@ ${message}`;
         const promises = filePaths.map(async (filePath) => {
             const resolvedPath = this.makeRelativePathAbsolute(filePath);
             const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(filePath);
-            await this.getPromise((callback) => fs.rm(resolvedPath, callback));
+            await this.getPromise((callback) => fs.rm(resolvedPath, { force: true }, callback));
             await this.getPromise((callback) => fs.copyFile(cachedFilePath, resolvedPath, callback));
             await this.getPromise((callback) => fs.rm(cachedFilePath, callback));
         });

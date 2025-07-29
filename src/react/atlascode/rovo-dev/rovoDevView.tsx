@@ -155,11 +155,32 @@ const RovoDevView: React.FC = () => {
         });
     }, [setChatStream, setRetryAfterErrorEnabled]);
 
+    const removeModifiedFileToolReturns = useCallback(
+        (filePaths: string[]) => {
+            setTotalModifiedFiles((prev) => prev.filter((x) => !filePaths.includes(x.filePath!)));
+        },
+        [setTotalModifiedFiles],
+    );
+
+    const keepFiles = useCallback(
+        (filePaths: string[]) => {
+            dispatch({
+                type: RovoDevViewResponseType.KeepFileChanges,
+                filePaths,
+            });
+            removeModifiedFileToolReturns(filePaths);
+        },
+        [dispatch, removeModifiedFileToolReturns],
+    );
+
     const clearChatHistory = useCallback(() => {
         setChatStream([]);
+        keepFiles(totalModifiedFiles.map((file) => file.filePath!).filter((filePath) => !!filePath));
+        setTotalModifiedFiles([]);
+        setIsDeepPlanCreated(false);
         setCurThinkingMessages([]);
         setCurrentMessage(null);
-    }, []);
+    }, [totalModifiedFiles, keepFiles]);
 
     const handleAppendModifiedFileToolReturns = useCallback(
         (toolReturn: ToolReturnGenericMessage) => {
@@ -195,13 +216,6 @@ const RovoDevView: React.FC = () => {
             }
         },
         [totalModifiedFiles],
-    );
-
-    const removeModifiedFileToolReturns = useCallback(
-        (filePaths: string[]) => {
-            setTotalModifiedFiles((prev) => prev.filter((x) => !filePaths.includes(x.filePath!)));
-        },
-        [setTotalModifiedFiles],
     );
 
     const handleAppendToolReturn = useCallback(
@@ -528,17 +542,6 @@ const RovoDevView: React.FC = () => {
         (filePaths: string[]) => {
             postMessage({
                 type: RovoDevViewResponseType.UndoFileChanges,
-                filePaths,
-            });
-            removeModifiedFileToolReturns(filePaths);
-        },
-        [postMessage, removeModifiedFileToolReturns],
-    );
-
-    const keepFiles = useCallback(
-        (filePaths: string[]) => {
-            postMessage({
-                type: RovoDevViewResponseType.KeepFileChanges,
                 filePaths,
             });
             removeModifiedFileToolReturns(filePaths);
