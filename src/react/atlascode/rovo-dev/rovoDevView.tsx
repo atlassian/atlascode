@@ -355,6 +355,7 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.NewSession:
                     clearChatHistory();
                     setPendingToolCallMessage('');
+                    setTotalModifiedFiles([]);
                     break;
 
                 case RovoDevProviderMessageType.Initialized:
