@@ -47,7 +47,14 @@ describe('MessageDrawer', () => {
     });
 
     it('renders with default closed state', () => {
-        render(<MessageDrawer messages={mockMessages} renderProps={mockRenderProps} />);
+        render(
+            <MessageDrawer
+                opened={false}
+                messages={mockMessages}
+                renderProps={mockRenderProps}
+                onCollapsiblePanelExpanded={() => {}}
+            />,
+        );
 
         expect(screen.getByText('Thinking')).toBeTruthy();
         expect(screen.getByText('2')).toBeTruthy();
@@ -56,7 +63,14 @@ describe('MessageDrawer', () => {
     });
 
     it('renders with opened state when opened prop is true', () => {
-        render(<MessageDrawer messages={mockMessages} renderProps={mockRenderProps} opened={true} />);
+        render(
+            <MessageDrawer
+                opened={true}
+                messages={mockMessages}
+                renderProps={mockRenderProps}
+                onCollapsiblePanelExpanded={() => {}}
+            />,
+        );
 
         expect(screen.getByTestId('chevron-down')).toBeTruthy();
         expect(screen.queryByTestId('chevron-right')).not.toBeTruthy();
@@ -65,7 +79,14 @@ describe('MessageDrawer', () => {
     });
 
     it('toggles open state when header is clicked', () => {
-        render(<MessageDrawer messages={mockMessages} renderProps={mockRenderProps} />);
+        render(
+            <MessageDrawer
+                opened={false}
+                messages={mockMessages}
+                renderProps={mockRenderProps}
+                onCollapsiblePanelExpanded={() => {}}
+            />,
+        );
 
         const header = screen.getByText('Thinking').closest('.message-drawer-header');
 
@@ -84,7 +105,14 @@ describe('MessageDrawer', () => {
 
     it('displays correct message count', () => {
         const emptyMessages: ChatMessage[] = [];
-        render(<MessageDrawer messages={emptyMessages} renderProps={mockRenderProps} />);
+        render(
+            <MessageDrawer
+                opened={false}
+                messages={emptyMessages}
+                renderProps={mockRenderProps}
+                onCollapsiblePanelExpanded={() => {}}
+            />,
+        );
 
         expect(screen.getByText('0')).toBeTruthy();
     });
@@ -93,7 +121,13 @@ describe('MessageDrawer', () => {
         const pendingToolCall = 'Pending tool call';
 
         render(
-            <MessageDrawer messages={mockMessages} renderProps={mockRenderProps} pendingToolCall={pendingToolCall} />,
+            <MessageDrawer
+                opened={false}
+                messages={mockMessages}
+                renderProps={mockRenderProps}
+                pendingToolCall={pendingToolCall}
+                onCollapsiblePanelExpanded={() => {}}
+            />,
         );
 
         expect(screen.getByTestId('tool-call-item')).toBeTruthy();

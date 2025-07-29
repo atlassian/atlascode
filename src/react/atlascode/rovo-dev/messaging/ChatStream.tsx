@@ -34,12 +34,13 @@ interface ChatStreamProps {
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
     >;
-    modifiedFiles?: ToolReturnParseResult[];
+    modifiedFiles: ToolReturnParseResult[];
     pendingToolCall: string;
     deepPlanCreated: boolean;
     executeCodePlan: () => void;
     state: State;
     onChangesGitPushed: (msg: DefaultMessage, pullRequestCreated: boolean) => void;
+    onCollapsiblePanelExpanded: () => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -54,6 +55,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     messagingApi,
     modifiedFiles,
     onChangesGitPushed,
+    onCollapsiblePanelExpanded,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const [canCreatePR, setCanCreatePR] = React.useState(false);
@@ -76,7 +78,14 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 chatHistory.map((block, idx) => {
                     if (block) {
                         if (Array.isArray(block)) {
-                            return <MessageDrawer messages={block} opened={false} renderProps={renderProps} />;
+                            return (
+                                <MessageDrawer
+                                    messages={block}
+                                    opened={false}
+                                    renderProps={renderProps}
+                                    onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
+                                />
+                            );
                         } else if (block.source === 'User' || block.source === 'RovoDev') {
                             return <ChatMessageItem msg={block} index={idx} />;
                         } else if (block.source === 'ToolReturn') {
@@ -115,6 +124,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     messages={currentThinking}
                     opened={true}
                     renderProps={renderProps}
+                    onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                     pendingToolCall={pendingToolCall || undefined}
                 />
             )}
