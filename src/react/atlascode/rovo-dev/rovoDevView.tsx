@@ -335,8 +335,10 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.CompleteMessage:
-                    finalizeResponse();
-                    validateResponseFinalized();
+                    if (currentState !== State.WaitingForPrompt) {
+                        finalizeResponse();
+                        validateResponseFinalized();
+                    }
                     break;
 
                 case RovoDevProviderMessageType.ToolCall:
@@ -349,7 +351,9 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.ErrorMessage:
                     handleAppendError(event.message);
-                    finalizeResponse();
+                    if (currentState !== State.WaitingForPrompt) {
+                        finalizeResponse();
+                    }
                     break;
 
                 case RovoDevProviderMessageType.NewSession:
@@ -584,6 +588,12 @@ const RovoDevView: React.FC = () => {
         [keepFiles, setChatStream, postMessage, totalModifiedFiles],
     );
 
+    const onCollapsiblePanelExpanded = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.ReportThinkingDrawerExpanded,
+        });
+    }, [postMessage]);
+
     return (
         <div className="rovoDevChat" style={styles.rovoDevContainerStyles}>
             <ChatStream
@@ -606,6 +616,7 @@ const RovoDevView: React.FC = () => {
                 state={currentState}
                 modifiedFiles={totalModifiedFiles}
                 onChangesGitPushed={onChangesGitPushed}
+                onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
             />
             <div className="input-section-container">
                 <UpdatedFilesComponent
