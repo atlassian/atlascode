@@ -16,4 +16,8 @@ export class AtlascodeDrawer {
         this.pullRequests = new PullRequestsNavigation(page);
         this.helpFeedbackTree = page.getByRole('tree', { name: 'Help and Feedback' });
     }
+
+    async openCreateIssuePage() {
+        await this.page.getByRole('button', { name: 'Create Jira issue' }).click();
+    }
 }

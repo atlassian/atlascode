@@ -16,7 +16,6 @@ test('View image in Jira comment', async ({ page, request }) => {
     const issueFrame = await getIssueFrame(page);
 
     await expect(issueFrame.locator('.image-wrap img')).toBeVisible();
-
     await expect(issueFrame.locator('.image-wrap img')).toHaveAttribute('atlascode-original-src', IMAGE_SRC);
 
     await cleanupIssueMock();
