@@ -336,7 +336,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this._firedTelemetryForCurrentPrompt[funcName] = true;
 
             // add `rovoDevEnv` and `sessionId` as the first two arguments
-            const rovoDevEnv: RovoDevEnv = this.isBBY ? 'BBY' : 'IDE';
+            const rovoDevEnv: RovoDevEnv = this.isBBY ? 'Boysenberry' : 'IDE';
             params.unshift(rovoDevEnv, this._chatSessionId);
 
             const ret: ReturnType<(typeof rovoDevTelemetryEvents)[T]> = rovoDevTelemetryEvents[funcName].apply(

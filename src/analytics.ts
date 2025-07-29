@@ -202,7 +202,7 @@ export function performanceEvent(tag: string, measure: number, params?: Record<s
 
 // Rovo Dev events
 
-export type RovoDevEnv = 'IDE' | 'BBY';
+export type RovoDevEnv = 'IDE' | 'Boysenberry';
 
 export function rovoDevNewSessionActionEvent(rovoDevEnv: RovoDevEnv, sessionId: string, isManuallyCreated: boolean) {
     return trackEvent('rovoDevNewSessionAction', 'atlascode', {

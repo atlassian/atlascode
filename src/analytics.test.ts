@@ -22,7 +22,7 @@ function setProcessPlatform(platform: NodeJS.Platform) {
     });
 }
 
-const RovoDevEnvironments: analytics.RovoDevEnv[] = ['IDE', 'BBY'];
+const RovoDevEnvironments: analytics.RovoDevEnv[] = ['IDE', 'Boysenberry'];
 
 describe('analytics', () => {
     describe('viewScreenEvent', () => {
