@@ -263,7 +263,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             // re-send the buffered prompt
             if (this._pendingPrompt) {
-                this.executeChat(this._pendingPrompt, true);
+                this.executeChat(this._pendingPrompt, true, true);
                 this._pendingPrompt = undefined;
             }
         });
@@ -425,6 +425,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
+    private async sendPromptSentToView({ text, enable_deep_plan, context }: RovoDevPrompt) {
+        const webview = this._webView!;
+
+        return await webview.postMessage({
+            type: RovoDevProviderMessageType.PromptSent,
+            text,
+            enable_deep_plan,
+            context: context,
+        });
+    }
+
     private processRovoDevResponse(sourceApi: 'chat' | 'replay', response: RovoDevResponse): Thenable<boolean> {
         const fireTelemetry = sourceApi === 'chat';
         const webview = this._webView!;
@@ -557,13 +568,22 @@ ${message}`;
 </context>`;
     }
 
-    private async executeChat({ text, enable_deep_plan, context }: RovoDevPrompt, suppressEcho?: boolean) {
+    private async executeChat(
+        { text, enable_deep_plan, context }: RovoDevPrompt,
+        suppressEcho?: boolean,
+        isPendingMessage?: boolean,
+    ) {
         if (!text) {
             return;
         }
 
         if (!suppressEcho) {
             await this.sendUserPromptToView({ text, enable_deep_plan, context });
+        }
+
+        // This allows for the streaming to work properly even if there is pending message
+        if (isPendingMessage) {
+            await this.sendPromptSentToView({ text, enable_deep_plan, context });
         }
 
         // NOTE: if chatSessionId empty, it means this is the first prompt of a new rovo dev instance
@@ -765,6 +785,8 @@ ${message}`;
 
     private async executeReplay(): Promise<void> {
         this._currentPromptId = 'replay';
+
+        await this.sendPromptSentToView({ text: 'Replaying previous chat session...' });
 
         await this.executeApiWithErrorHandling(async (client) => {
             return this.processChatResponse('replay', client.replay());
