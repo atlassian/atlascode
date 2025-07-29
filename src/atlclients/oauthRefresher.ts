@@ -58,6 +58,7 @@ export class OAuthRefesher implements Disposable {
 
                 response.tokens = {
                     accessToken: data.access_token,
+                    refreshToken: data.refresh_token,
                     receivedAt: Date.now(),
                 };
 

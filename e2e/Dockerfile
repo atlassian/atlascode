@@ -17,6 +17,12 @@ RUN curl -fsSL https://code-server.dev/install.sh -o install-code-server.sh \
 # otherwise tsc might generate wrong paths for e2e tests
 WORKDIR /atlascode
 
+RUN mkdir /mock-repository && cd /mock-repository \
+    && git init \
+    && git remote add origin git@bitbucket.org/test-repository.git \
+    && touch test.json \
+    && cd ..
+
 # Where our vscode, chromedriver, images etc. will go
 ENV TEST_RESOURCES=/atlascode/e2e/.resources
 
@@ -37,7 +43,7 @@ echo "installing atlascode"
 code-server --install-extension atlascode-*.vsix --force
 
 echo "starting code-server"
-code-server --auth none --bind-addr localhost:9988 &
+code-server --auth none --disable-workspace-trust --bind-addr localhost:9988 &
 echo "Running tests"
 npx playwright test ./e2e/tests/**/*.spec.ts --workers=1
 
