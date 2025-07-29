@@ -5,6 +5,7 @@ import {
     isProject,
     isProjectsResult,
     IssuePickerIssue,
+    IssuePickerResult,
 } from '@atlassianlabs/jira-pi-common-models';
 import { ValueType } from '@atlassianlabs/jira-pi-meta-models';
 
@@ -86,9 +87,24 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                             try {
                                 const client = await Container.clientManager.jiraClient(msg.site);
                                 let suggestions: IssuePickerIssue[] = [];
-                                if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
+                                if (
+                                    msg.query &&
+                                    msg.currentJQL &&
+                                    msg.currentJQL.trim() !== '' &&
+                                    msg.query.trim() !== ''
+                                ) {
+                                    const apiUrl = `${client.baseUrl}/api/${client.apiVersion}/issue/picker?query=${encodeURIComponent(msg.query)}&currentJQL=${encodeURIComponent(msg.currentJQL)}`;
+                                    // We could do this via the pi-client but that would involve modifications to getIssuePickerSuggestions function to accept currentJQL
+                                    const res = await client.getAutocompleteDataFromUrl(apiUrl);
+                                    const result: IssuePickerResult = res as IssuePickerResult;
+                                    if (Array.isArray(result.sections)) {
+                                        suggestions = result.sections.reduce(
+                                            (prev, curr) => prev.concat(curr.issues),
+                                            [] as IssuePickerIssue[],
+                                        );
+                                    }
+                                } else if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
                                     suggestions = await client.getAutocompleteDataFromUrl(
-                                        // Change this so we can call with query and jql filtering
                                         msg.autocompleteUrl + encodeURIComponent(msg.query),
                                     );
                                 } else {

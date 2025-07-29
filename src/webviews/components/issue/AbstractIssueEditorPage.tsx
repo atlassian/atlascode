@@ -277,22 +277,18 @@ export abstract class AbstractIssueEditorPage<
     };
 
     protected fetchEpicOnly = async (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
-        const modifiedField = {
-            ...field,
-            autoCompleteUrl: field.autoCompleteUrl + ' AND issuetype = Epic',
-        };
-        return await this.loadIssueOptions(modifiedField, input);
+        return await this.loadIssueOptions(field, input, 'issuetype = Epic');
     };
 
     protected fetchParentIssues = async (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
-        const modifiedField = {
-            ...field,
-            autoCompleteUrl: field.autoCompleteUrl + ' AND issuetype = Epic',
-        };
-        return await this.loadIssueOptions(modifiedField, input);
+        return await this.loadIssueOptions(field, input, 'issuetype in standardIssueType()');
     };
 
-    protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
+    protected loadIssueOptions = (
+        field: SelectFieldUI,
+        input: string,
+        currentJQL?: string,
+    ): Promise<IssuePickerIssue[]> => {
         return new Promise((resolve) => {
             const nonce: string = v4();
             // this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl, nonce: nonce });
@@ -305,6 +301,7 @@ export abstract class AbstractIssueEditorPage<
                             site: this.state.siteDetails,
                             autocompleteUrl: field.autoCompleteUrl,
                             nonce: nonce,
+                            currentJQL: currentJQL,
                         },
                         'issueSuggestionsList',
                         ConnectionTimeout,
