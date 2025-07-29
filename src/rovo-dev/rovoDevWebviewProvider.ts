@@ -740,7 +740,9 @@ ${message}`;
             await client.reset();
 
             this._revertedChanges = [];
-            this.clearModifiedFiles();
+            this.executeKeepFiles(
+                this._totalModifiedFiles.map((f) => f.filePath).filter((path): path is string => path !== undefined),
+            );
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.NewSession,
