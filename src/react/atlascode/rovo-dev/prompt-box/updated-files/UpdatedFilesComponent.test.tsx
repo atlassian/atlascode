@@ -78,7 +78,7 @@ describe('UpdatedFilesComponent', () => {
         );
 
         fireEvent.click(screen.getByText('Undo'));
-        expect(mockOnUndo).toHaveBeenCalledWith(['src/file1.ts', 'src/file2.ts', 'src/file3.ts']);
+        expect(mockOnUndo).toHaveBeenCalledWith(mockModifiedFiles);
     });
 
     it('calls onKeep with all file paths when Keep All is clicked', () => {
@@ -92,27 +92,7 @@ describe('UpdatedFilesComponent', () => {
         );
 
         fireEvent.click(screen.getByText('Keep'));
-        expect(mockOnKeep).toHaveBeenCalledWith(['src/file1.ts', 'src/file2.ts', 'src/file3.ts']);
-    });
-
-    it('filters out undefined file paths', () => {
-        const filesWithUndefined: ToolReturnParseResult[] = [
-            { filePath: 'src/file1.ts', content: 'content1' },
-            { filePath: undefined, content: 'content2' },
-            { filePath: 'src/file3.ts', content: 'content3' },
-        ];
-
-        render(
-            <UpdatedFilesComponent
-                modifiedFiles={filesWithUndefined}
-                onUndo={mockOnUndo}
-                onKeep={mockOnKeep}
-                openDiff={mockOpenDiff}
-            />,
-        );
-
-        fireEvent.click(screen.getByText('Keep'));
-        expect(mockOnKeep).toHaveBeenCalledWith(['src/file1.ts', 'src/file3.ts']);
+        expect(mockOnKeep).toHaveBeenCalledWith(mockModifiedFiles);
     });
 
     it('renders ModifiedFileItem for each file', () => {

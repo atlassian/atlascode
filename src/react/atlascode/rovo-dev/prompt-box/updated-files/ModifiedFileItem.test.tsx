@@ -41,7 +41,7 @@ describe('ModifiedFileItem', () => {
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
         fireEvent.click(screen.getByLabelText('Undo changes to this file'));
-        expect(mockOnUndo).toHaveBeenCalledWith('/path/to/file.ts');
+        expect(mockOnUndo).toHaveBeenCalledWith(msg);
         expect(mockOnFileClick).not.toHaveBeenCalled();
     });
 
@@ -50,29 +50,30 @@ describe('ModifiedFileItem', () => {
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
         fireEvent.click(screen.getByLabelText('Keep changes to this file'));
-        expect(mockOnKeep).toHaveBeenCalledWith('/path/to/file.ts');
+        expect(mockOnKeep).toHaveBeenCalledWith(msg);
         expect(mockOnFileClick).not.toHaveBeenCalled();
     });
 
-    it('renders with deleted-file id for deletion type', () => {
+    it('renders with deleted-file class for deletion type', () => {
         const msg = createMockMsg('delete', '/path/to/file.ts');
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
-        expect(screen.getByText('/path/to/file.ts').id).toBe('deleted-file');
+        expect(screen.getByText('/path/to/file.ts').className).toContain('deleted-file');
     });
 
-    it('renders with created-file id for creation type', () => {
+    it('renders with created-file class for creation type', () => {
         const msg = createMockMsg('create', '/path/to/file.ts');
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
-        expect(screen.getByText('/path/to/file.ts').id).toBe('created-file');
+        expect(screen.getByText('/path/to/file.ts').className).toContain('created-file');
     });
 
-    it('renders without id for modify type', () => {
+    it('renders without class for modify type', () => {
         const msg = createMockMsg('modify', '/path/to/file.ts');
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
-        expect(screen.getByText('/path/to/file.ts').id).toBe('');
+        expect(screen.getByText('/path/to/file.ts').className).not.toContain('deleted-file');
+        expect(screen.getByText('/path/to/file.ts').className).not.toContain('created-file');
     });
 
     it('returns null when filePath is not provided', () => {

@@ -26,22 +26,24 @@ export const ModifiedFileItem: React.FC<{
         return null;
     }
 
+    const handleUndo = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onUndo(msg);
+    };
+
+    const handleKeep = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onKeep(msg);
+    };
+
     return (
         <div aria-label="modified-file-item" className="modified-file-item" onClick={() => onFileClick(filePath)}>
             <div className={getClassName(msg)}>{filePath}</div>
             <div className="modified-file-actions">
-                <button
-                    className="modified-file-action"
-                    onClick={() => onUndo(msg)}
-                    aria-label="Undo changes to this file"
-                >
+                <button className="modified-file-action" onClick={handleUndo} aria-label="Undo changes to this file">
                     <CrossIcon size="small" label="Undo" />
                 </button>
-                <button
-                    className="modified-file-action"
-                    onClick={() => onKeep(msg)}
-                    aria-label="Keep changes to this file"
-                >
+                <button className="modified-file-action" onClick={handleKeep} aria-label="Keep changes to this file">
                     <CheckIcon size="small" label="Keep" />
                 </button>
             </div>
