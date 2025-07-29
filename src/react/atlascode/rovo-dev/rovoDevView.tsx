@@ -16,7 +16,7 @@ import { ChatStream } from './messaging/ChatStream';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
-import { RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
+import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import * as styles from './rovoDevViewStyles';
 import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
@@ -198,8 +198,8 @@ const RovoDevView: React.FC = () => {
     );
 
     const removeModifiedFileToolReturns = useCallback(
-        (filePaths: string[]) => {
-            setTotalModifiedFiles((prev) => prev.filter((x) => !filePaths.includes(x.filePath!)));
+        (files: ToolReturnParseResult[]) => {
+            setTotalModifiedFiles((prev) => prev.filter((x) => !files.includes(x)));
         },
         [setTotalModifiedFiles],
     );
@@ -525,23 +525,23 @@ const RovoDevView: React.FC = () => {
     );
 
     const undoFiles = useCallback(
-        (filePaths: string[]) => {
+        (files: ToolReturnParseResult[]) => {
             postMessage({
                 type: RovoDevViewResponseType.UndoFileChanges,
-                filePaths,
+                files: files.map((file) => ({ filePath: file.filePath, type: file.type }) as ModifiedFile),
             });
-            removeModifiedFileToolReturns(filePaths);
+            removeModifiedFileToolReturns(files);
         },
         [postMessage, removeModifiedFileToolReturns],
     );
 
     const keepFiles = useCallback(
-        (filePaths: string[]) => {
+        (files: ToolReturnParseResult[]) => {
             postMessage({
                 type: RovoDevViewResponseType.KeepFileChanges,
-                filePaths,
+                files: files.map((file) => ({ filePath: file.filePath, type: file.type }) as ModifiedFile),
             });
-            removeModifiedFileToolReturns(filePaths);
+            removeModifiedFileToolReturns(files);
         },
         [postMessage, removeModifiedFileToolReturns],
     );
@@ -575,7 +575,7 @@ const RovoDevView: React.FC = () => {
     const onChangesGitPushed = useCallback(
         (msg: DefaultMessage, pullRequestCreated: boolean) => {
             if (totalModifiedFiles.length > 0) {
-                keepFiles(totalModifiedFiles.map((file) => file.filePath!));
+                keepFiles(totalModifiedFiles);
             }
 
             setChatStream((prev) => [...prev, msg]);

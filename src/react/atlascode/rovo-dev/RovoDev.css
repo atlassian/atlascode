@@ -167,7 +167,7 @@ body {
     word-break: break-all;
 }
 
-#tool-return-file-path:hover {
+.tool-return-file-path:hover {
     background-color: var(--vscode-list-hoverBackground);
     cursor: pointer;
 }
@@ -463,12 +463,12 @@ body {
     gap: 4px;
 }
 
-#deleted-file {
+.deleted-file {
     color: var(--vscode-list-errorForeground);
     text-decoration: line-through;
 }
 
-#created-file {
+.created-file {
     color: var(--vscode-gitDecoration-untrackedResourceForeground);
 }
 

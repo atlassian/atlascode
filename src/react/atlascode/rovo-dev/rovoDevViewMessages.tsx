@@ -18,12 +18,17 @@ export const enum RovoDevViewResponseType {
     ReportThinkingDrawerExpanded = 'reportThinkingDrawerExpanded',
 }
 
+export interface ModifiedFile {
+    filePath: string;
+    type: 'modify' | 'create' | 'delete';
+}
+
 export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.Prompt, RovoDevPrompt>
     | ReducerAction<RovoDevViewResponseType.CancelResponse>
     | ReducerAction<RovoDevViewResponseType.OpenFile, { filePath: string; tryShowDiff: boolean; range?: number[] }>
-    | ReducerAction<RovoDevViewResponseType.UndoFileChanges, { filePaths: string[] }>
-    | ReducerAction<RovoDevViewResponseType.KeepFileChanges, { filePaths: string[] }>
+    | ReducerAction<RovoDevViewResponseType.UndoFileChanges, { files: ModifiedFile[] }>
+    | ReducerAction<RovoDevViewResponseType.KeepFileChanges, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.GetOriginalText, { filePath: string; range?: number[]; requestId: string }>
     | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage: string } }>
     | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>

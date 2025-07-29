@@ -35,7 +35,11 @@ import {
 import { Container } from '../../src/container';
 import { Logger } from '../../src/logger';
 import { rovodevInfo } from '../constants';
-import { RovoDevViewResponse, RovoDevViewResponseType } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
+import {
+    ModifiedFile,
+    RovoDevViewResponse,
+    RovoDevViewResponseType,
+} from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
@@ -205,11 +209,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.UndoFileChanges:
-                        await this.executeUndoFiles(e.filePaths);
+                        await this.executeUndoFiles(e.files);
                         break;
 
                     case RovoDevViewResponseType.KeepFileChanges:
-                        await this.executeKeepFiles(e.filePaths);
+                        await this.executeKeepFiles(e.files);
                         break;
 
                     case RovoDevViewResponseType.GetOriginalText:
@@ -886,31 +890,35 @@ ${message}`;
         }
     }
 
-    private async executeUndoFiles(filePaths: string[]) {
-        const promises = filePaths.map(async (filePath) => {
-            const resolvedPath = this.makeRelativePathAbsolute(filePath);
-            const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(filePath);
+    private async executeUndoFiles(files: ModifiedFile[]) {
+        const promises = files.map(async (file) => {
+            const resolvedPath = this.makeRelativePathAbsolute(file.filePath);
             await this.getPromise((callback) => fs.rm(resolvedPath, callback));
-            await this.getPromise((callback) => fs.copyFile(cachedFilePath, resolvedPath, callback));
-            await this.getPromise((callback) => fs.rm(cachedFilePath, callback));
+
+            if (file.type !== 'create') {
+                const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(file.filePath);
+                await this.getPromise((callback) => fs.copyFile(cachedFilePath, resolvedPath, callback));
+                await this.getPromise((callback) => fs.rm(cachedFilePath, callback));
+            }
         });
 
         await Promise.all(promises);
 
-        this._revertedChanges.push(...filePaths);
+        const paths = files.map((x) => x.filePath);
+        this._revertedChanges.push(...paths);
 
-        this.fireTelemetryEvent('rovoDevFileChangedActionEvent', this._currentPromptId, 'undo', filePaths.length);
+        this.fireTelemetryEvent('rovoDevFileChangedActionEvent', this._currentPromptId, 'undo', files.length);
     }
 
-    private async executeKeepFiles(filePaths: string[]) {
-        const promises = filePaths.map(async (filePath) => {
-            const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(filePath);
+    private async executeKeepFiles(files: ModifiedFile[]) {
+        const promises = files.map(async (file) => {
+            const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(file.filePath);
             await this.getPromise((callback) => fs.rm(cachedFilePath, callback));
         });
 
         await Promise.all(promises);
 
-        this.fireTelemetryEvent('rovoDevFileChangedActionEvent', this._currentPromptId, 'keep', filePaths.length);
+        this.fireTelemetryEvent('rovoDevFileChangedActionEvent', this._currentPromptId, 'keep', files.length);
     }
 
     private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
