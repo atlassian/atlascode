@@ -3,7 +3,6 @@ import ChevronRight from '@atlaskit/icon/glyph/chevron-right';
 import React from 'react';
 
 import { OpenFileFunc, renderChatHistory } from '../common/common';
-import { ToolCallItem } from '../tools/ToolCallItem';
 import { ChatMessage } from '../utils';
 
 interface MessageDrawerProps {
@@ -15,14 +14,12 @@ interface MessageDrawerProps {
         getOriginalText: (fp: string, lr?: number[]) => Promise<string>;
     };
     opened?: boolean;
-    pendingToolCall?: string;
 }
 
 export const MessageDrawer: React.FC<MessageDrawerProps> = ({
     messages,
     renderProps: { openFile, isRetryAfterErrorButtonEnabled, retryPromptAfterError, getOriginalText },
     opened,
-    pendingToolCall,
 }) => {
     const [isOpen, setIsOpen] = React.useState(opened || false);
 
@@ -53,7 +50,6 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
                     ),
                 )}
             </div>
-            {pendingToolCall && <ToolCallItem toolMessage={pendingToolCall} />}
         </div>
     );
 };

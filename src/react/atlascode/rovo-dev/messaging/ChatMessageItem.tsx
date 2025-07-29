@@ -6,7 +6,7 @@ import { DefaultMessage } from '../utils';
 
 export const ChatMessageItem: React.FC<{
     msg: DefaultMessage;
-    index: number;
+    index?: number;
     icon?: React.ReactNode;
 }> = ({ msg, index, icon }) => {
     const messageTypeStyles = msg.source === 'User' ? 'user-message' : 'agent-message';

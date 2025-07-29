@@ -63,6 +63,8 @@ export const enum State {
     ExecutingPlan,
 }
 
+const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
+
 const RovoDevView: React.FC = () => {
     const [chatStream, setChatStream] = useState<MessageBlockDetails[]>([]);
     const [currentMessage, setCurrentMessage] = useState<DefaultMessage | null>(null);
@@ -291,7 +293,7 @@ const RovoDevView: React.FC = () => {
                         args: data.toolCallMessage.args,
                     };
 
-                    setPendingToolCallMessage(''); // Clear pending tool call
+                    setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE); // Clear pending tool call
                     handleAppendToolReturn(returnMessage);
                     handleAppendModifiedFileToolReturns(returnMessage);
                     break;
@@ -323,7 +325,7 @@ const RovoDevView: React.FC = () => {
                     setSendButtonDisabled(true);
                     setIsDeepPlanToggled(event.enable_deep_plan || false);
                     setCurrentState(State.GeneratingResponse);
-                    handleAppendCurrentResponse('...');
+                    setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE);
                     break;
 
                 case RovoDevProviderMessageType.Response:
@@ -415,7 +417,6 @@ const RovoDevView: React.FC = () => {
             }
         },
         [
-            handleAppendCurrentResponse,
             handleResponse,
             handleAppendUserPrompt,
             finalizeResponse,

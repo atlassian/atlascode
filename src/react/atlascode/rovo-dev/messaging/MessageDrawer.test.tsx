@@ -88,15 +88,4 @@ describe('MessageDrawer', () => {
 
         expect(screen.getByText('0')).toBeTruthy();
     });
-
-    it('renders pending tool call when provided', () => {
-        const pendingToolCall = 'Pending tool call';
-
-        render(
-            <MessageDrawer messages={mockMessages} renderProps={mockRenderProps} pendingToolCall={pendingToolCall} />,
-        );
-
-        expect(screen.getByTestId('tool-call-item')).toBeTruthy();
-        expect(screen.getByText('Pending tool call')).toBeTruthy();
-    });
 });
