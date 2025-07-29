@@ -38,7 +38,6 @@ export class IssueQuickContent {
     }
 
     hasAttachment(filename: string) {
-        const attachment = this.attachments.getByText(filename, { exact: true });
-        return expect(attachment).toBeVisible();
+        return expect(this.attachments.locator(`text=${filename}`)).toBeVisible();
     }
 }
