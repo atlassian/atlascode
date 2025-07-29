@@ -1194,4 +1194,319 @@ describe('analytics', () => {
             expect(event.trackEvent.platform).toEqual('unknown');
         });
     });
+
+    // JiraPerfEvents performance overload tests
+    describe('JiraPerfEvents performance overload', () => {
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        describe('jira.initial_cumulative_jql_fetch.timeToRender', () => {
+            it('should create a performance event with correct tag and measure', async () => {
+                const measure = 1200;
+                const event = await analytics.performanceEvent(
+                    'jira.initial_cumulative_jql_fetch.timeToRender',
+                    measure,
+                );
+
+                expect(event.trackEvent.action).toEqual('performanceEvent');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.tag).toEqual('jira.initial_cumulative_jql_fetch.timeToRender');
+                expect(event.trackEvent.attributes.measure).toEqual(measure);
+                expect(event.trackEvent.attributes.sessionId).toBeUndefined();
+                expect(event.trackEvent.attributes.promptId).toBeUndefined();
+            });
+
+            it('should handle zero measure value', async () => {
+                const measure = 0;
+                const event = await analytics.performanceEvent(
+                    'jira.initial_cumulative_jql_fetch.timeToRender',
+                    measure,
+                );
+
+                expect(event.trackEvent.attributes.measure).toEqual(0);
+            });
+
+            it('should handle large measure values', async () => {
+                const measure = 999999;
+                const event = await analytics.performanceEvent(
+                    'jira.initial_cumulative_jql_fetch.timeToRender',
+                    measure,
+                );
+
+                expect(event.trackEvent.attributes.measure).toEqual(999999);
+            });
+        });
+
+        describe('jira.refresh_cumulative_jql_fetch.timeToRender', () => {
+            it('should create a performance event with correct tag and measure', async () => {
+                const measure = 800;
+                const event = await analytics.performanceEvent(
+                    'jira.refresh_cumulative_jql_fetch.timeToRender',
+                    measure,
+                );
+
+                expect(event.trackEvent.action).toEqual('performanceEvent');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.tag).toEqual('jira.refresh_cumulative_jql_fetch.timeToRender');
+                expect(event.trackEvent.attributes.measure).toEqual(measure);
+                expect(event.trackEvent.attributes.sessionId).toBeUndefined();
+                expect(event.trackEvent.attributes.promptId).toBeUndefined();
+            });
+
+            it('should handle decimal measure values', async () => {
+                const measure = 123.45;
+                const event = await analytics.performanceEvent(
+                    'jira.refresh_cumulative_jql_fetch.timeToRender',
+                    measure,
+                );
+
+                expect(event.trackEvent.attributes.measure).toEqual(123.45);
+            });
+        });
+
+        describe('jira.createJiraIssueRender.timeToRender', () => {
+            it('should create a performance event with correct tag and measure', async () => {
+                const measure = 450;
+                const event = await analytics.performanceEvent('jira.createJiraIssueRender.timeToRender', measure);
+
+                expect(event.trackEvent.action).toEqual('performanceEvent');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.tag).toEqual('jira.createJiraIssueRender.timeToRender');
+                expect(event.trackEvent.attributes.measure).toEqual(measure);
+                expect(event.trackEvent.attributes.sessionId).toBeUndefined();
+                expect(event.trackEvent.attributes.promptId).toBeUndefined();
+            });
+
+            it('should handle negative measure values', async () => {
+                const measure = -1;
+                const event = await analytics.performanceEvent('jira.createJiraIssueRender.timeToRender', measure);
+
+                expect(event.trackEvent.attributes.measure).toEqual(-1);
+            });
+        });
+
+        describe('jira.editJiraIssueUIRender.timeToRender', () => {
+            it('should create a performance event with correct tag and measure', async () => {
+                const measure = 320;
+                const event = await analytics.performanceEvent('jira.editJiraIssueUIRender.timeToRender', measure);
+
+                expect(event.trackEvent.action).toEqual('performanceEvent');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.tag).toEqual('jira.editJiraIssueUIRender.timeToRender');
+                expect(event.trackEvent.attributes.measure).toEqual(measure);
+                expect(event.trackEvent.attributes.sessionId).toBeUndefined();
+                expect(event.trackEvent.attributes.promptId).toBeUndefined();
+            });
+        });
+
+        describe('jira.editJiraIssueUpdates.timeToRender', () => {
+            it('should create a performance event with correct tag and measure', async () => {
+                const measure = 180;
+                const event = await analytics.performanceEvent('jira.editJiraIssueUpdates.timeToRender', measure);
+
+                expect(event.trackEvent.action).toEqual('performanceEvent');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.tag).toEqual('jira.editJiraIssueUpdates.timeToRender');
+                expect(event.trackEvent.attributes.measure).toEqual(measure);
+                expect(event.trackEvent.attributes.sessionId).toBeUndefined();
+                expect(event.trackEvent.attributes.promptId).toBeUndefined();
+            });
+        });
+
+        describe('JiraPerfEvents overload behavior', () => {
+            it('should not include sessionId or promptId parameters for Jira events', async () => {
+                const event = await analytics.performanceEvent('jira.initial_cumulative_jql_fetch.timeToRender', 100);
+
+                expect(event.trackEvent.attributes.sessionId).toBeUndefined();
+                expect(event.trackEvent.attributes.promptId).toBeUndefined();
+                expect(event.trackEvent.attributes.tag).toEqual('jira.initial_cumulative_jql_fetch.timeToRender');
+                expect(event.trackEvent.attributes.measure).toEqual(100);
+            });
+
+            it('should include platform information based on process.platform', async () => {
+                setProcessPlatform('darwin');
+                const event = await analytics.performanceEvent('jira.createJiraIssueRender.timeToRender', 200);
+
+                expect(event.trackEvent.platform).toEqual('mac');
+            });
+
+            it('should include origin information', async () => {
+                const event = await analytics.performanceEvent('jira.editJiraIssueUIRender.timeToRender', 300);
+
+                expect(event.trackEvent.origin).toEqual('desktop');
+            });
+
+            it('should include source information', async () => {
+                const event = await analytics.performanceEvent('jira.editJiraIssueUpdates.timeToRender', 400);
+
+                expect(event.trackEvent.source).toEqual('vscode');
+            });
+
+            it('should have consistent action and actionSubject across all Jira performance events', async () => {
+                const jiraPerfEvents: Array<
+                    | 'jira.initial_cumulative_jql_fetch.timeToRender'
+                    | 'jira.refresh_cumulative_jql_fetch.timeToRender'
+                    | 'jira.createJiraIssueRender.timeToRender'
+                    | 'jira.editJiraIssueUIRender.timeToRender'
+                    | 'jira.editJiraIssueUpdates.timeToRender'
+                > = [
+                    'jira.initial_cumulative_jql_fetch.timeToRender',
+                    'jira.refresh_cumulative_jql_fetch.timeToRender',
+                    'jira.createJiraIssueRender.timeToRender',
+                    'jira.editJiraIssueUIRender.timeToRender',
+                    'jira.editJiraIssueUpdates.timeToRender',
+                ];
+
+                for (const eventTag of jiraPerfEvents) {
+                    const event = await analytics.performanceEvent(eventTag, 100);
+                    expect(event.trackEvent.action).toEqual('performanceEvent');
+                    expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                }
+            });
+
+            it('should return a valid TrackEvent structure for Jira performance events', async () => {
+                const event = await analytics.performanceEvent('jira.initial_cumulative_jql_fetch.timeToRender', 500);
+
+                // Validate TrackEvent structure
+                expect(event).toHaveProperty('trackEvent');
+                expect(event).toHaveProperty('userIdType');
+                expect(event).toHaveProperty('userId');
+                expect(event).toHaveProperty('tenantIdType');
+
+                // Validate trackEvent structure
+                expect(event.trackEvent).toHaveProperty('action');
+                expect(event.trackEvent).toHaveProperty('actionSubject');
+                expect(event.trackEvent).toHaveProperty('attributes');
+                expect(event.trackEvent).toHaveProperty('platform');
+                expect(event.trackEvent).toHaveProperty('origin');
+                expect(event.trackEvent).toHaveProperty('source');
+
+                // Validate attributes structure
+                expect(event.trackEvent.attributes).toHaveProperty('tag');
+                expect(event.trackEvent.attributes).toHaveProperty('measure');
+            });
+
+            it('should handle anonymous user for Jira performance events when AAID is not available', async () => {
+                mockedData.getFirstAAID_value = undefined;
+                const event = await analytics.performanceEvent('jira.createJiraIssueRender.timeToRender', 100);
+
+                expect(event.userId).toBeUndefined();
+                expect(event.anonymousId).toEqual('test-machine-id');
+            });
+
+            it('should include user ID for Jira performance events when AAID is available', async () => {
+                mockedData.getFirstAAID_value = 'test-user-id';
+                const event = await analytics.performanceEvent('jira.editJiraIssueUIRender.timeToRender', 100);
+
+                expect(event.userId).toEqual('test-user-id');
+                expect(event.userIdType).toEqual('atlassianAccount');
+                expect(event.anonymousId).toEqual('test-machine-id');
+            });
+
+            it('should set tenant type to null for Jira performance events', async () => {
+                const event = await analytics.performanceEvent('jira.editJiraIssueUpdates.timeToRender', 100);
+
+                expect(event.tenantId).toBeUndefined();
+                expect(event.tenantIdType).toBeNull();
+            });
+        });
+
+        describe('JiraPerfEvents type validation', () => {
+            it('should accept all valid JiraPerfEvents values', async () => {
+                // Test that all JiraPerfEvents values are accepted by the overload
+                const validEvents = [
+                    'jira.initial_cumulative_jql_fetch.timeToRender',
+                    'jira.refresh_cumulative_jql_fetch.timeToRender',
+                    'jira.createJiraIssueRender.timeToRender',
+                    'jira.editJiraIssueUIRender.timeToRender',
+                    'jira.editJiraIssueUpdates.timeToRender',
+                ] as const;
+
+                for (const eventTag of validEvents) {
+                    const event = await analytics.performanceEvent(eventTag, 100);
+                    expect(event.trackEvent.attributes.tag).toEqual(eventTag);
+                    expect(event.trackEvent.attributes.measure).toEqual(100);
+                }
+            });
+
+            it('should follow consistent naming convention for Jira performance events', async () => {
+                const validEvents = [
+                    'jira.initial_cumulative_jql_fetch.timeToRender',
+                    'jira.refresh_cumulative_jql_fetch.timeToRender',
+                    'jira.createJiraIssueRender.timeToRender',
+                    'jira.editJiraIssueUIRender.timeToRender',
+                    'jira.editJiraIssueUpdates.timeToRender',
+                ] as const;
+
+                for (const eventTag of validEvents) {
+                    expect(eventTag).toMatch(/^jira\./);
+                    expect(eventTag).toMatch(/\.timeToRender$/);
+                }
+            });
+        });
+
+        describe('Performance measurement edge cases', () => {
+            it('should handle very small measure values', async () => {
+                const measure = 0.001;
+                const event = await analytics.performanceEvent(
+                    'jira.initial_cumulative_jql_fetch.timeToRender',
+                    measure,
+                );
+
+                expect(event.trackEvent.attributes.measure).toEqual(0.001);
+            });
+
+            it('should handle very large measure values', async () => {
+                const measure = Number.MAX_SAFE_INTEGER;
+                const event = await analytics.performanceEvent(
+                    'jira.refresh_cumulative_jql_fetch.timeToRender',
+                    measure,
+                );
+
+                expect(event.trackEvent.attributes.measure).toEqual(Number.MAX_SAFE_INTEGER);
+            });
+
+            it('should handle Infinity measure values', async () => {
+                const measure = Infinity;
+                const event = await analytics.performanceEvent('jira.createJiraIssueRender.timeToRender', measure);
+
+                expect(event.trackEvent.attributes.measure).toEqual(Infinity);
+            });
+
+            it('should handle NaN measure values', async () => {
+                const measure = NaN;
+                const event = await analytics.performanceEvent('jira.editJiraIssueUIRender.timeToRender', measure);
+
+                expect(event.trackEvent.attributes.measure).toBeNaN();
+            });
+        });
+
+        describe('Comparison with RovoDevPerfEvents overload', () => {
+            it('should differentiate between Jira and RovoDev performance events', async () => {
+                // Test Jira event (no additional params)
+                const jiraEvent = await analytics.performanceEvent(
+                    'jira.initial_cumulative_jql_fetch.timeToRender',
+                    100,
+                );
+
+                // Test RovoDev event (with additional params)
+                const rovoDevEvent = await analytics.performanceEvent('rovodev.response.timeToFirstByte', 100, {
+                    sessionId: 'test-session',
+                    promptId: 'test-prompt',
+                });
+
+                // Jira event should not have sessionId/promptId
+                expect(jiraEvent.trackEvent.attributes.sessionId).toBeUndefined();
+                expect(jiraEvent.trackEvent.attributes.promptId).toBeUndefined();
+                expect(jiraEvent.trackEvent.attributes.tag).toEqual('jira.initial_cumulative_jql_fetch.timeToRender');
+
+                // RovoDev event should have sessionId/promptId
+                expect(rovoDevEvent.trackEvent.attributes.sessionId).toEqual('test-session');
+                expect(rovoDevEvent.trackEvent.attributes.promptId).toEqual('test-prompt');
+                expect(rovoDevEvent.trackEvent.attributes.tag).toEqual('rovodev.response.timeToFirstByte');
+            });
+        });
+    });
 });
