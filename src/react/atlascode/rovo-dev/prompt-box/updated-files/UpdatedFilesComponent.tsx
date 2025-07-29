@@ -9,7 +9,8 @@ export const UpdatedFilesComponent: React.FC<{
     onUndo: (files: ToolReturnParseResult[]) => void;
     onKeep: (files: ToolReturnParseResult[]) => void;
     openDiff: OpenFileFunc;
-}> = ({ modifiedFiles, onUndo, onKeep, openDiff }) => {
+    actionsEnabled?: boolean;
+}> = ({ modifiedFiles, onUndo, onKeep, openDiff, actionsEnabled }) => {
     if (!modifiedFiles || modifiedFiles.length === 0) {
         return null;
     }
@@ -24,10 +25,18 @@ export const UpdatedFilesComponent: React.FC<{
                     </span>
                 </div>
                 <div>
-                    <button className="updated-files-action secondary" onClick={() => onUndo(modifiedFiles)}>
+                    <button
+                        disabled={!actionsEnabled}
+                        className="updated-files-action secondary"
+                        onClick={() => onUndo(modifiedFiles)}
+                    >
                         Undo
                     </button>
-                    <button className="updated-files-action primary" onClick={() => onKeep(modifiedFiles)}>
+                    <button
+                        disabled={!actionsEnabled}
+                        className="updated-files-action primary"
+                        onClick={() => onKeep(modifiedFiles)}
+                    >
                         Keep
                     </button>
                 </div>
@@ -41,6 +50,7 @@ export const UpdatedFilesComponent: React.FC<{
                             onFileClick={(path: string) => openDiff(path, true)}
                             onUndo={(file: ToolReturnParseResult) => onUndo([file])}
                             onKeep={(file: ToolReturnParseResult) => onKeep([file])}
+                            actionsEnabled={actionsEnabled}
                         />
                     );
                 })}

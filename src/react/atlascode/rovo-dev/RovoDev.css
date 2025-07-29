@@ -456,6 +456,10 @@ body {
     color: var(--vscode-textLink-foreground);
 }
 
+.modified-file-action:disabled {
+    cursor: not-allowed;
+}
+
 .modified-file-item-info {
     display: flex;
     flex-direction: row;
@@ -505,6 +509,10 @@ body {
 .updated-files-action {
     cursor: pointer;
     padding: 2px 6px;
+}
+
+.updated-files-action:disabled {
+    cursor: not-allowed;
 }
 
 

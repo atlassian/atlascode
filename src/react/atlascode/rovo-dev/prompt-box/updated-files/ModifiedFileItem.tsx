@@ -9,7 +9,8 @@ export const ModifiedFileItem: React.FC<{
     onUndo: (file: ToolReturnParseResult) => void;
     onKeep: (file: ToolReturnParseResult) => void;
     onFileClick: (filePath: string) => void;
-}> = ({ msg, onUndo, onKeep, onFileClick }) => {
+    actionsEnabled?: boolean;
+}> = ({ msg, onUndo, onKeep, onFileClick, actionsEnabled = true }) => {
     const getClassName = (msg: ToolReturnParseResult) => {
         switch (msg.type) {
             case 'delete':
@@ -40,10 +41,20 @@ export const ModifiedFileItem: React.FC<{
         <div aria-label="modified-file-item" className="modified-file-item" onClick={() => onFileClick(filePath)}>
             <div className={getClassName(msg)}>{filePath}</div>
             <div className="modified-file-actions">
-                <button className="modified-file-action" onClick={handleUndo} aria-label="Undo changes to this file">
+                <button
+                    disabled={!actionsEnabled}
+                    className="modified-file-action"
+                    onClick={handleUndo}
+                    aria-label="Undo changes to this file"
+                >
                     <CrossIcon size="small" label="Undo" />
                 </button>
-                <button className="modified-file-action" onClick={handleKeep} aria-label="Keep changes to this file">
+                <button
+                    disabled={!actionsEnabled}
+                    className="modified-file-action"
+                    onClick={handleKeep}
+                    aria-label="Keep changes to this file"
+                >
                     <CheckIcon size="small" label="Keep" />
                 </button>
             </div>

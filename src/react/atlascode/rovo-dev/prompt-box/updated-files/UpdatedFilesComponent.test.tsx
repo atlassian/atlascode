@@ -26,6 +26,7 @@ describe('UpdatedFilesComponent', () => {
                 onUndo={mockOnUndo}
                 onKeep={mockOnKeep}
                 openDiff={mockOpenDiff}
+                actionsEnabled={true}
             />,
         );
         expect(container.firstChild).toBeNull();
@@ -38,6 +39,7 @@ describe('UpdatedFilesComponent', () => {
                 onUndo={mockOnUndo}
                 onKeep={mockOnKeep}
                 openDiff={mockOpenDiff}
+                actionsEnabled={true}
             />,
         );
         expect(container.firstChild).toBeNull();
@@ -50,6 +52,7 @@ describe('UpdatedFilesComponent', () => {
                 onUndo={mockOnUndo}
                 onKeep={mockOnKeep}
                 openDiff={mockOpenDiff}
+                actionsEnabled={true}
             />,
         );
         expect(screen.getByText('3 Updated files')).toBeTruthy();
@@ -62,6 +65,7 @@ describe('UpdatedFilesComponent', () => {
                 onUndo={mockOnUndo}
                 onKeep={mockOnKeep}
                 openDiff={mockOpenDiff}
+                actionsEnabled={true}
             />,
         );
         expect(screen.getByText('1 Updated file')).toBeTruthy();
@@ -74,6 +78,7 @@ describe('UpdatedFilesComponent', () => {
                 onUndo={mockOnUndo}
                 onKeep={mockOnKeep}
                 openDiff={mockOpenDiff}
+                actionsEnabled={true}
             />,
         );
 
@@ -88,6 +93,7 @@ describe('UpdatedFilesComponent', () => {
                 onUndo={mockOnUndo}
                 onKeep={mockOnKeep}
                 openDiff={mockOpenDiff}
+                actionsEnabled={true}
             />,
         );
 
@@ -102,6 +108,7 @@ describe('UpdatedFilesComponent', () => {
                 onUndo={mockOnUndo}
                 onKeep={mockOnKeep}
                 openDiff={mockOpenDiff}
+                actionsEnabled={true}
             />,
         );
 
@@ -116,6 +123,7 @@ describe('UpdatedFilesComponent', () => {
                 onUndo={mockOnUndo}
                 onKeep={mockOnKeep}
                 openDiff={mockOpenDiff}
+                actionsEnabled={true}
             />,
         );
 
@@ -131,9 +139,30 @@ describe('UpdatedFilesComponent', () => {
                 onUndo={mockOnUndo}
                 onKeep={mockOnKeep}
                 openDiff={mockOpenDiff}
+                actionsEnabled={true}
             />,
         );
 
         expect(document.querySelector('.codicon.codicon-source-control')).toBeTruthy();
+    });
+
+    it('disables buttons when actionsEnabled is false', () => {
+        render(
+            <UpdatedFilesComponent
+                modifiedFiles={mockModifiedFiles}
+                onUndo={mockOnUndo}
+                onKeep={mockOnKeep}
+                openDiff={mockOpenDiff}
+                actionsEnabled={false}
+            />,
+        );
+
+        expect(screen.getByText('Undo').closest('button')?.disabled).toBe(true);
+        expect(screen.getByText('Keep').closest('button')?.disabled).toBe(true);
+
+        fireEvent.click(screen.getByText('Undo'));
+        expect(mockOnUndo).not.toHaveBeenCalled();
+        fireEvent.click(screen.getByText('Keep'));
+        expect(mockOnKeep).not.toHaveBeenCalled();
     });
 });
