@@ -5,7 +5,6 @@ import {
     isProject,
     isProjectsResult,
     IssuePickerIssue,
-    IssuePickerResult,
 } from '@atlassianlabs/jira-pi-common-models';
 import { ValueType } from '@atlassianlabs/jira-pi-meta-models';
 
@@ -62,6 +61,19 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
         return suggestions;
     }
 
+    // public async getIssuePickerSuggestions(query: string): Promise<IssuePickerIssue[]> {
+    //     const res = await this.getFromJira('issue/picker', { query: query }); // this.getFromJira already includes the API route with the 'issue/picker' adding the route location
+
+    //     const result: IssuePickerResult = res as IssuePickerResult;
+
+    //     let suggestions: IssuePickerIssue[] = [];
+    //     if (Array.isArray(result.sections)) {
+    //         suggestions = result.sections.reduce((prev, curr) => prev.concat(curr.issues), [] as IssuePickerIssue[]);
+    //     }
+
+    //     return suggestions;
+    // }
+
     protected async onMessageReceived(msg: any): Promise<boolean> {
         let handled = await super.onMessageReceived(msg);
 
@@ -75,15 +87,10 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 const client = await Container.clientManager.jiraClient(msg.site);
                                 let suggestions: IssuePickerIssue[] = [];
                                 if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
-                                    const result: IssuePickerResult = await client.getAutocompleteDataFromUrl(
+                                    suggestions = await client.getAutocompleteDataFromUrl(
+                                        // Change this so we can call with query and jql filtering
                                         msg.autocompleteUrl + encodeURIComponent(msg.query),
                                     );
-                                    if (Array.isArray(result.sections)) {
-                                        suggestions = result.sections.reduce(
-                                            (prev, curr) => prev.concat(curr.issues),
-                                            [] as IssuePickerIssue[],
-                                        );
-                                    }
                                 } else {
                                     suggestions = await client.getIssuePickerSuggestions(encodeURIComponent(msg.query));
                                 }

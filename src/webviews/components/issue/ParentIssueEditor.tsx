@@ -232,12 +232,12 @@ export default class ParentIssueEditor extends React.Component<Props, State> {
                         value={this.state.selectedParent}
                         className="ac-form-select-container"
                         classNamePrefix="ac-form-select"
-                        loadOptions={this.getFetchFunction}
+                        loadOptions={this.getFetchFunction()}
                         getOptionLabel={(option: any) => option.key}
                         getOptionValue={(option: any) => option.key}
                         placeholder="Search for parent issue"
-                        isLoading={this.state.isIssueLoading}
-                        isDisabled={this.state.isIssueLoading}
+                        isLoading={this.state.isLoading}
+                        isDisabled={this.state.isLoading}
                         onChange={this.handleParentChange}
                         isClearable={true}
                         components={{
@@ -275,8 +275,8 @@ export default class ParentIssueEditor extends React.Component<Props, State> {
                                     getOptionLabel={(option: any) => option.key}
                                     getOptionValue={(option: any) => option.key}
                                     placeholder="Search for parent issue"
-                                    isLoading={this.state.isIssueLoading}
-                                    isDisabled={this.state.isIssueLoading}
+                                    isLoading={this.state.isLoading}
+                                    isDisabled={this.state.isLoading}
                                     onChange={this.handleParentChange}
                                     components={{
                                         Option: SelectFieldHelper.IssueSuggestionOption,

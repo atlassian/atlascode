@@ -279,7 +279,15 @@ export abstract class AbstractIssueEditorPage<
     protected fetchEpicOnly = async (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
         const modifiedField = {
             ...field,
-            autocompleteUrl: field.autoCompleteUrl + ' AND issuetype = Epic',
+            autoCompleteUrl: field.autoCompleteUrl + ' AND issuetype = Epic',
+        };
+        return await this.loadIssueOptions(modifiedField, input);
+    };
+
+    protected fetchParentIssues = async (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
+        const modifiedField = {
+            ...field,
+            autoCompleteUrl: field.autoCompleteUrl + ' AND issuetype = Epic',
         };
         return await this.loadIssueOptions(modifiedField, input);
     };
@@ -678,26 +686,43 @@ export abstract class AbstractIssueEditorPage<
                 return markup;
             }
             case UIType.IssueLink: {
+                // Remember to get currentParent for both create and edit issue **
                 if (editmode) {
-                    return (
-                        <ParentIssueEditor
-                            label={field.name}
-                            currentIssueType={currentIssueType}
-                            isCreateMode={false} // currently editing
-                            onSave={(val: any) => {
-                                this.handleInlineEdit(field, val);
-                            }}
-                            onFetchEpics={async (input: string) =>
-                                await this.fetchEpicOnly(field as SelectFieldUI, input)
-                            }
-                            onFetchParentIssues={async (input: string) =>
-                                await this.fetchEpicOnly(field as SelectFieldUI, input)
-                            }
-                            isLoading={this.state.loadingField === field.key}
-                        />
-                    );
+                    // Does not work right now. Working on create Issue right now :)
+                    // return (
+                    //     <ParentIssueEditor
+                    //         label={field.name}
+                    //         currentIssueType={currentIssueType}
+                    //         isCreateMode={false} // currently editing
+                    //         onSave={(val: any) => {
+                    //             this.handleInlineEdit(field, val);
+                    //         }}
+                    //         onFetchEpics={async (input: string) =>
+                    //             await this.fetchEpicOnly(field as SelectFieldUI, input)
+                    //         }
+                    //         onFetchParentIssues={async (input: string) =>
+                    //             await this.fetchEpicOnly(field as SelectFieldUI, input)
+                    //         }
+                    //         isLoading={this.state.loadingField === field.key}
+                    //     />
+                    // );
+                    return <React.Fragment />;
                 }
-                return <React.Fragment />;
+                return (
+                    <ParentIssueEditor
+                        label={field.name}
+                        currentIssueType={currentIssueType}
+                        isCreateMode={true} // currently editing
+                        onSave={(val: any) => {
+                            this.handleInlineEdit(field, val);
+                        }}
+                        onFetchEpics={async (input: string) => await this.fetchEpicOnly(field as SelectFieldUI, input)}
+                        onFetchParentIssues={async (input: string) =>
+                            await this.fetchParentIssues(field as SelectFieldUI, input)
+                        }
+                        isLoading={this.state.loadingField === field.key}
+                    />
+                );
             }
             case UIType.IssueLinks: {
                 let markup = <div></div>;
