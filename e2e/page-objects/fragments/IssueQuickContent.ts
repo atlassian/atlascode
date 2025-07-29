@@ -38,6 +38,6 @@ export class IssueQuickContent {
     }
 
     hasAttachment(filename: string) {
-        return expect(this.attachments.locator(`text=${filename}`)).toBeVisible();
+        return expect(this.attachments.locator(`text=${filename}`).first()).toBeVisible();
     }
 }

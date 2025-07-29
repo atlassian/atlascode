@@ -1,9 +1,9 @@
 import { test } from '@playwright/test';
 import { authenticateWithBitbucketCloud } from 'e2e/helpers';
-import { PullRequestsNavigation } from 'e2e/page-objects/fragments';
+import { AtlascodeDrawer } from 'e2e/page-objects';
 
 test('Authenticating with Bitbucket Cloud works', async ({ page, context }) => {
     await authenticateWithBitbucketCloud(page, context);
 
-    await new PullRequestsNavigation(page).expectMenuItems();
+    await new AtlascodeDrawer(page).pullRequests.expectMenuItems();
 });
