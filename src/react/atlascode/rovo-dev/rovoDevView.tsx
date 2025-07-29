@@ -24,9 +24,7 @@ import {
     CODE_PLAN_EXECUTE_PROMPT,
     DefaultMessage,
     ErrorMessage,
-    isCodeChangeTool,
     MessageBlockDetails,
-    parseToolReturnMessage,
     ToolCallMessage,
     ToolReturnGenericMessage,
     ToolReturnParseResult,
@@ -161,48 +159,15 @@ const RovoDevView: React.FC = () => {
         setCurrentMessage(null);
     }, []);
 
-    const handleAppendModifiedFileToolReturns = useCallback(
-        (toolReturn: ToolReturnGenericMessage) => {
-            if (isCodeChangeTool(toolReturn.tool_name)) {
-                const msg = parseToolReturnMessage(toolReturn).filter((msg) => msg.filePath !== undefined);
+    const handleAppendModifiedFileToolReturns = useCallback((toolReturn: ToolReturnGenericMessage) => {
+        // This is now handled by the provider, so we can remove this logic
+        // The provider will send updates via TotalModifiedFilesUpdated message
+    }, []);
 
-                const filesMap = new Map([...totalModifiedFiles].map((item) => [item.filePath!, item]));
-
-                // Logic for handling deletions and modifications
-                msg.forEach((file) => {
-                    if (!file.filePath) {
-                        return;
-                    }
-                    if (file.type === 'delete') {
-                        if (filesMap.has(file.filePath)) {
-                            const existingFile = filesMap.get(file.filePath);
-                            if (existingFile?.type === 'modify') {
-                                filesMap.set(file.filePath, file); // If file was only modified but not created by RovoDev, still show deletion
-                            } else {
-                                filesMap.delete(file.filePath); // If file was created by RovoDev, remove it from the map
-                            }
-                        } else {
-                            filesMap.set(file.filePath, file);
-                        }
-                    } else {
-                        if (!filesMap.has(file.filePath) || filesMap.get(file.filePath)?.type === 'delete') {
-                            filesMap.set(file.filePath, file); // Only add on first modification so we can track if file was created by RovoDev or just modified
-                        }
-                    }
-                });
-
-                setTotalModifiedFiles(Array.from(filesMap.values()));
-            }
-        },
-        [totalModifiedFiles],
-    );
-
-    const removeModifiedFileToolReturns = useCallback(
-        (filePaths: string[]) => {
-            setTotalModifiedFiles((prev) => prev.filter((x) => !filePaths.includes(x.filePath!)));
-        },
-        [setTotalModifiedFiles],
-    );
+    const removeModifiedFileToolReturns = useCallback((filePaths: string[]) => {
+        // This is now handled by the provider when undo/keep operations are performed
+        // No need to update local state here
+    }, []);
 
     const handleAppendToolReturn = useCallback(
         (msg: ToolReturnGenericMessage) => {
@@ -355,7 +320,7 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.NewSession:
                     clearChatHistory();
                     setPendingToolCallMessage('');
-                    setTotalModifiedFiles([]);
+                    // totalModifiedFiles is now managed by provider
                     break;
 
                 case RovoDevProviderMessageType.Initialized:
@@ -396,6 +361,10 @@ const RovoDevView: React.FC = () => {
                               }
                             : prev;
                     });
+                    break;
+
+                case RovoDevProviderMessageType.TotalModifiedFilesUpdated:
+                    setTotalModifiedFiles(event.totalModifiedFiles);
                     break;
 
                 case RovoDevProviderMessageType.ReturnText:

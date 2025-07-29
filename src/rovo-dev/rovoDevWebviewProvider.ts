@@ -34,6 +34,7 @@ import { Container } from '../../src/container';
 import { Logger } from '../../src/logger';
 import { rovodevInfo } from '../constants';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
+import { isCodeChangeTool, parseToolReturnMessage, ToolReturnParseResult } from '../react/atlascode/rovo-dev/utils';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
@@ -67,6 +68,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
     private _revertedChanges: string[] = [];
+    private _totalModifiedFiles: ToolReturnParseResult[] = [];
 
     private _disposables: Disposable[] = [];
 
@@ -464,6 +466,23 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         questionsCount,
                     ).then((evt) => Container.analyticsClient.sendTrackEvent(evt));
                 }
+
+                // Update provider-managed state for code change tools
+                if (isCodeChangeTool(response.tool_name)) {
+                    const toolReturnMessage = {
+                        source: 'ToolReturn' as const,
+                        tool_name: response.tool_name,
+                        content: response.content || '',
+                        parsedContent: response.parsedContent,
+                        tool_call_id: response.tool_call_id,
+                        args: response.toolCallMessage?.args,
+                    };
+                    const parsedFiles = parseToolReturnMessage(toolReturnMessage).filter(
+                        (msg) => msg.filePath !== undefined,
+                    );
+                    this.addModifiedFiles(parsedFiles);
+                }
+
                 return webview.postMessage({
                     type: RovoDevProviderMessageType.ToolReturn,
                     dataObject: response,
@@ -721,6 +740,7 @@ ${message}`;
             await client.reset();
 
             this._revertedChanges = [];
+            this.clearModifiedFiles();
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.NewSession,
@@ -845,6 +865,7 @@ ${message}`;
         await Promise.all(promises);
 
         this._revertedChanges.push(...filePaths);
+        this.removeModifiedFiles(filePaths);
 
         Logger.debug(`Event fired: rovoDevFileChangedActionEvent undo ${filePaths.length}`);
         rovoDevFileChangedActionEvent(this._chatSessionId, this._currentPromptId, 'undo', filePaths.length).then(
@@ -859,6 +880,8 @@ ${message}`;
         });
 
         await Promise.all(promises);
+
+        this.removeModifiedFiles(filePaths);
 
         Logger.debug(`Event fired: rovoDevFileChangedActionEvent keep ${filePaths.length}`);
         rovoDevFileChangedActionEvent(this._chatSessionId, this._currentPromptId, 'keep', filePaths.length).then(
@@ -1006,5 +1029,64 @@ ${message}`;
                 reject(error);
             }
         });
+    }
+
+    // Provider-managed state methods for totalModifiedFiles
+    public getTotalModifiedFiles(): ToolReturnParseResult[] {
+        return [...this._totalModifiedFiles]; // Return a copy to prevent external mutation
+    }
+
+    public updateTotalModifiedFiles(files: ToolReturnParseResult[]): void {
+        this._totalModifiedFiles = [...files];
+        this.syncTotalModifiedFilesToWebview();
+    }
+
+    public addModifiedFiles(newFiles: ToolReturnParseResult[]): void {
+        const filesMap = new Map([...this._totalModifiedFiles].map((item) => [item.filePath!, item]));
+
+        // Logic for handling deletions and modifications (same as webview logic)
+        newFiles.forEach((file) => {
+            if (!file.filePath) {
+                return;
+            }
+            if (file.type === 'delete') {
+                if (filesMap.has(file.filePath)) {
+                    const existingFile = filesMap.get(file.filePath);
+                    if (existingFile?.type === 'modify') {
+                        filesMap.set(file.filePath, file); // If file was only modified but not created by RovoDev, still show deletion
+                    } else {
+                        filesMap.delete(file.filePath); // If file was created by RovoDev, remove it from the map
+                    }
+                } else {
+                    filesMap.set(file.filePath, file);
+                }
+            } else {
+                if (!filesMap.has(file.filePath) || filesMap.get(file.filePath)?.type === 'delete') {
+                    filesMap.set(file.filePath, file); // Only add on first modification so we can track if file was created by RovoDev or just modified
+                }
+            }
+        });
+
+        this._totalModifiedFiles = Array.from(filesMap.values());
+        this.syncTotalModifiedFilesToWebview();
+    }
+
+    public removeModifiedFiles(filePaths: string[]): void {
+        this._totalModifiedFiles = this._totalModifiedFiles.filter((x) => !filePaths.includes(x.filePath!));
+        this.syncTotalModifiedFilesToWebview();
+    }
+
+    public clearModifiedFiles(): void {
+        this._totalModifiedFiles = [];
+        this.syncTotalModifiedFilesToWebview();
+    }
+
+    private syncTotalModifiedFilesToWebview(): void {
+        if (this._webView) {
+            this._webView.postMessage({
+                type: RovoDevProviderMessageType.TotalModifiedFilesUpdated,
+                totalModifiedFiles: this._totalModifiedFiles,
+            });
+        }
     }
 }

@@ -1,6 +1,6 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 
-import { ChatMessage, ErrorMessage } from '../react/atlascode/rovo-dev/utils';
+import { ChatMessage, ErrorMessage, ToolReturnParseResult } from '../react/atlascode/rovo-dev/utils';
 import { RovoDevResponse } from './responseParser';
 import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
@@ -20,6 +20,7 @@ export const enum RovoDevProviderMessageType {
     GetCurrentBranchNameComplete = 'getCurrentBranchNameComplete',
     UserFocusUpdated = 'userFocusUpdated',
     ContextAdded = 'contextAdded',
+    TotalModifiedFilesUpdated = 'totalModifiedFilesUpdated',
 }
 
 export interface RovoDevObjectResponse {
@@ -41,4 +42,8 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string } }>
     | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>
     | ReducerAction<RovoDevProviderMessageType.UserFocusUpdated, { userFocus: RovoDevContextItem }>
-    | ReducerAction<RovoDevProviderMessageType.ContextAdded, { context: RovoDevContextItem }>;
+    | ReducerAction<RovoDevProviderMessageType.ContextAdded, { context: RovoDevContextItem }>
+    | ReducerAction<
+          RovoDevProviderMessageType.TotalModifiedFilesUpdated,
+          { totalModifiedFiles: ToolReturnParseResult[] }
+      >;
