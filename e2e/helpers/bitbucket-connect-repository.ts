@@ -15,7 +15,6 @@ const addRepo = async (page: Page) => {
     await pathInput.waitFor({ state: 'visible' });
     await page.waitForTimeout(250);
 
-    await pathInput.clear();
     await page.waitForTimeout(250);
 
     await pathInput.fill('/mock-repository/');
