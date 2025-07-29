@@ -128,10 +128,6 @@ const RovoDevView: React.FC = () => {
         setChatStream((prev) => {
             setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
 
-            const last = prev[prev.length - 1];
-            if (!Array.isArray(last) && last?.source === 'RovoDev' && last.text === '...') {
-                prev.pop();
-            }
             return [...prev, msg];
         });
     }, []);
@@ -141,7 +137,7 @@ const RovoDevView: React.FC = () => {
         // if we use setHistory, we would not
         setChatStream((prev) => {
             const last = prev[prev.length - 1];
-            if (!Array.isArray(last) && last?.source === 'RovoDev' && last.text === '...') {
+            if (!Array.isArray(last) && last?.source === 'User') {
                 const msg: ErrorMessage = {
                     source: 'RovoDevError',
                     text: 'Error: something went wrong while processing the prompt',
