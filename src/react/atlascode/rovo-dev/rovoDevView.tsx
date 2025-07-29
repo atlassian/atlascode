@@ -159,16 +159,6 @@ const RovoDevView: React.FC = () => {
         setCurrentMessage(null);
     }, []);
 
-    const handleAppendModifiedFileToolReturns = useCallback((toolReturn: ToolReturnGenericMessage) => {
-        // This is now handled by the provider, so we can remove this logic
-        // The provider will send updates via TotalModifiedFilesUpdated message
-    }, []);
-
-    const removeModifiedFileToolReturns = useCallback((filePaths: string[]) => {
-        // This is now handled by the provider when undo/keep operations are performed
-        // No need to update local state here
-    }, []);
-
     const handleAppendToolReturn = useCallback(
         (msg: ToolReturnGenericMessage) => {
             if (currentMessage) {
@@ -258,7 +248,6 @@ const RovoDevView: React.FC = () => {
 
                     setPendingToolCallMessage(''); // Clear pending tool call
                     handleAppendToolReturn(returnMessage);
-                    handleAppendModifiedFileToolReturns(returnMessage);
                     break;
 
                 case 'retry-prompt':
@@ -277,7 +266,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [handleAppendCurrentResponse, handleAppendModifiedFileToolReturns, handleAppendToolReturn],
+        [handleAppendCurrentResponse, handleAppendToolReturn],
     );
 
     const onMessageHandler = useCallback(
@@ -496,9 +485,8 @@ const RovoDevView: React.FC = () => {
                 type: RovoDevViewResponseType.UndoFileChanges,
                 filePaths,
             });
-            removeModifiedFileToolReturns(filePaths);
         },
-        [postMessage, removeModifiedFileToolReturns],
+        [postMessage],
     );
 
     const keepFiles = useCallback(
@@ -507,9 +495,8 @@ const RovoDevView: React.FC = () => {
                 type: RovoDevViewResponseType.KeepFileChanges,
                 filePaths,
             });
-            removeModifiedFileToolReturns(filePaths);
         },
-        [postMessage, removeModifiedFileToolReturns],
+        [postMessage],
     );
 
     // Function to get the original text of a file for planning diff
