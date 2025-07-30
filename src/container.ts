@@ -13,6 +13,7 @@ import { PullRequest, WorkspaceRepo } from './bitbucket/model';
 import { BitbucketCloudPullRequestLinkProvider } from './bitbucket/terminal-link/createPrLinkProvider';
 import { openPullRequest } from './commands/bitbucket/pullRequest';
 import { configuration, IConfig } from './config/configuration';
+import { Commands } from './constants';
 import { PmfStats } from './feedback/pmfStats';
 import { JQLManager } from './jira/jqlManager';
 import { JiraProjectManager } from './jira/projectManager';
@@ -220,9 +221,39 @@ export class Container {
             context.subscriptions.push(
                 (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context.extensionPath, context.globalState)),
             );
+            this.configureRovodevSettingsCommands(context);
         }
 
         this._onboardingProvider = new OnboardingProvider();
+    }
+
+    static configureRovodevSettingsCommands(context: ExtensionContext) {
+        async function openConfigFile(subPath: string, friendlyName: string) {
+            const home = process.env.HOME || process.env.USERPROFILE;
+            if (!home) {
+                vscode.window.showErrorMessage('Could not determine home directory.');
+                return;
+            }
+            const filePath = `${home}/${subPath}`;
+            try {
+                const doc = await workspace.openTextDocument(filePath);
+                await vscode.window.showTextDocument(doc);
+            } catch (err) {
+                vscode.window.showErrorMessage(`Could not open ${friendlyName} (${filePath}): ${err}`);
+            }
+        }
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand(Commands.OpenRovoDevConfig, async () => {
+                await openConfigFile('.rovodev/config.yml', 'Rovo Dev settings file');
+            }),
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand(Commands.OpenRovoDevMcpJson, async () => {
+                await openConfigFile('.rovodev/mcp.json', 'Rovo Dev MCP configuration');
+            }),
+        );
     }
 
     static focus() {

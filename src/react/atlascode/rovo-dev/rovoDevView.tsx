@@ -63,6 +63,8 @@ export const enum State {
     ExecutingPlan,
 }
 
+const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
+
 const RovoDevView: React.FC = () => {
     const [chatStream, setChatStream] = useState<MessageBlockDetails[]>([]);
     const [currentMessage, setCurrentMessage] = useState<DefaultMessage | null>(null);
@@ -126,10 +128,6 @@ const RovoDevView: React.FC = () => {
         setChatStream((prev) => {
             setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
 
-            const last = prev[prev.length - 1];
-            if (!Array.isArray(last) && last?.source === 'RovoDev' && last.text === '...') {
-                prev.pop();
-            }
             return [...prev, msg];
         });
     }, []);
@@ -139,7 +137,7 @@ const RovoDevView: React.FC = () => {
         // if we use setHistory, we would not
         setChatStream((prev) => {
             const last = prev[prev.length - 1];
-            if (!Array.isArray(last) && last?.source === 'RovoDev' && last.text === '...') {
+            if (!Array.isArray(last) && last?.source === 'User') {
                 const msg: ErrorMessage = {
                     source: 'RovoDevError',
                     text: 'Error: something went wrong while processing the prompt',
@@ -155,11 +153,43 @@ const RovoDevView: React.FC = () => {
         });
     }, [setChatStream, setRetryAfterErrorEnabled]);
 
+    const removeModifiedFileToolReturns = useCallback(
+        (files: ToolReturnParseResult[]) => {
+            setTotalModifiedFiles((prev) => prev.filter((x) => !files.includes(x)));
+        },
+        [setTotalModifiedFiles],
+    );
+
+    const keepFiles = useCallback(
+        (files: ToolReturnParseResult[]) => {
+            dispatch({
+                type: RovoDevViewResponseType.KeepFileChanges,
+                files: files.map((file) => ({ filePath: file.filePath, type: file.type }) as ModifiedFile),
+            });
+            removeModifiedFileToolReturns(files);
+        },
+        [dispatch, removeModifiedFileToolReturns],
+    );
+
+    const undoFiles = useCallback(
+        (files: ToolReturnParseResult[]) => {
+            dispatch({
+                type: RovoDevViewResponseType.UndoFileChanges,
+                files: files.map((file) => ({ filePath: file.filePath, type: file.type }) as ModifiedFile),
+            });
+            removeModifiedFileToolReturns(files);
+        },
+        [dispatch, removeModifiedFileToolReturns],
+    );
+
     const clearChatHistory = useCallback(() => {
         setChatStream([]);
+        keepFiles(totalModifiedFiles);
+        setTotalModifiedFiles([]);
+        setIsDeepPlanCreated(false);
         setCurThinkingMessages([]);
         setCurrentMessage(null);
-    }, []);
+    }, [totalModifiedFiles, keepFiles]);
 
     const handleAppendModifiedFileToolReturns = useCallback(
         (toolReturn: ToolReturnGenericMessage) => {
@@ -195,13 +225,6 @@ const RovoDevView: React.FC = () => {
             }
         },
         [totalModifiedFiles],
-    );
-
-    const removeModifiedFileToolReturns = useCallback(
-        (files: ToolReturnParseResult[]) => {
-            setTotalModifiedFiles((prev) => prev.filter((x) => !files.includes(x)));
-        },
-        [setTotalModifiedFiles],
     );
 
     const handleAppendToolReturn = useCallback(
@@ -291,7 +314,7 @@ const RovoDevView: React.FC = () => {
                         args: data.toolCallMessage.args,
                     };
 
-                    setPendingToolCallMessage(''); // Clear pending tool call
+                    setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE); // Clear pending tool call
                     handleAppendToolReturn(returnMessage);
                     handleAppendModifiedFileToolReturns(returnMessage);
                     break;
@@ -323,7 +346,7 @@ const RovoDevView: React.FC = () => {
                     setSendButtonDisabled(true);
                     setIsDeepPlanToggled(event.enable_deep_plan || false);
                     setCurrentState(State.GeneratingResponse);
-                    handleAppendCurrentResponse('...');
+                    setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE);
                     break;
 
                 case RovoDevProviderMessageType.Response:
@@ -419,7 +442,6 @@ const RovoDevView: React.FC = () => {
             }
         },
         [
-            handleAppendCurrentResponse,
             handleResponse,
             handleAppendUserPrompt,
             finalizeResponse,
@@ -522,28 +544,6 @@ const RovoDevView: React.FC = () => {
             });
         },
         [postMessage],
-    );
-
-    const undoFiles = useCallback(
-        (files: ToolReturnParseResult[]) => {
-            postMessage({
-                type: RovoDevViewResponseType.UndoFileChanges,
-                files: files.map((file) => ({ filePath: file.filePath, type: file.type }) as ModifiedFile),
-            });
-            removeModifiedFileToolReturns(files);
-        },
-        [postMessage, removeModifiedFileToolReturns],
-    );
-
-    const keepFiles = useCallback(
-        (files: ToolReturnParseResult[]) => {
-            postMessage({
-                type: RovoDevViewResponseType.KeepFileChanges,
-                files: files.map((file) => ({ filePath: file.filePath, type: file.type }) as ModifiedFile),
-            });
-            removeModifiedFileToolReturns(files);
-        },
-        [postMessage, removeModifiedFileToolReturns],
     );
 
     // Function to get the original text of a file for planning diff

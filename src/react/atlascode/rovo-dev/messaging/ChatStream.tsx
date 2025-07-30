@@ -1,4 +1,3 @@
-import { random } from 'lodash';
 import * as React from 'react';
 import { RovoDevProviderMessage } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
@@ -9,6 +8,7 @@ import { RovoDevLanding } from '../rovoDevLanding';
 import { State } from '../rovoDevView';
 import { RovoDevViewResponse } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
+import { ToolCallItem } from '../tools/ToolCallItem';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import {
     ChatMessage,
@@ -69,7 +69,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         if (state === State.WaitingForPrompt) {
             setCanCreatePR(true);
         }
-    }, [state, chatHistory, currentThinking, currentMessage, isFormVisible]);
+    }, [state, chatHistory, currentThinking, currentMessage, isFormVisible, pendingToolCall]);
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
@@ -87,7 +87,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                 />
                             );
                         } else if (block.source === 'User' || block.source === 'RovoDev') {
-                            return <ChatMessageItem msg={block} index={idx} />;
+                            return <ChatMessageItem msg={block} />;
                         } else if (block.source === 'ToolReturn') {
                             const parsedMessages = parseToolReturnMessage(block);
 
@@ -125,10 +125,14 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     opened={true}
                     renderProps={renderProps}
                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
-                    pendingToolCall={pendingToolCall || undefined}
                 />
             )}
-            {currentMessage && <ChatMessageItem msg={currentMessage} index={random()} />}
+            {currentMessage && <ChatMessageItem msg={currentMessage} />}
+            {pendingToolCall && (
+                <div style={{ marginBottom: '16px' }}>
+                    <ToolCallItem toolMessage={pendingToolCall} />
+                </div>
+            )}
             {deepPlanCreated && (
                 <CodePlanButton execute={executeCodePlan} disabled={state !== State.WaitingForPrompt} />
             )}

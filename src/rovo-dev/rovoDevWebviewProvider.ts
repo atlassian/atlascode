@@ -893,7 +893,7 @@ ${message}`;
     private async executeUndoFiles(files: ModifiedFile[]) {
         const promises = files.map(async (file) => {
             const resolvedPath = this.makeRelativePathAbsolute(file.filePath);
-            await this.getPromise((callback) => fs.rm(resolvedPath, callback));
+            await this.getPromise((callback) => fs.rm(resolvedPath, { force: true }, callback));
 
             if (file.type !== 'create') {
                 const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(file.filePath);

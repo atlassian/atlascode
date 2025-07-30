@@ -116,21 +116,4 @@ describe('MessageDrawer', () => {
 
         expect(screen.getByText('0')).toBeTruthy();
     });
-
-    it('renders pending tool call when provided', () => {
-        const pendingToolCall = 'Pending tool call';
-
-        render(
-            <MessageDrawer
-                opened={false}
-                messages={mockMessages}
-                renderProps={mockRenderProps}
-                pendingToolCall={pendingToolCall}
-                onCollapsiblePanelExpanded={() => {}}
-            />,
-        );
-
-        expect(screen.getByTestId('tool-call-item')).toBeTruthy();
-        expect(screen.getByText('Pending tool call')).toBeTruthy();
-    });
 });

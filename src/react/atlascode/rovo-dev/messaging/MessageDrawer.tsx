@@ -3,7 +3,6 @@ import ChevronRight from '@atlaskit/icon/glyph/chevron-right';
 import React, { useCallback } from 'react';
 
 import { OpenFileFunc, renderChatHistory } from '../common/common';
-import { ToolCallItem } from '../tools/ToolCallItem';
 import { ChatMessage } from '../utils';
 
 interface MessageDrawerProps {
@@ -14,9 +13,8 @@ interface MessageDrawerProps {
         retryPromptAfterError: () => void;
         getOriginalText: (fp: string, lr?: number[]) => Promise<string>;
     };
-    onCollapsiblePanelExpanded: () => void;
     opened: boolean;
-    pendingToolCall?: string;
+    onCollapsiblePanelExpanded: () => void;
 }
 
 export const MessageDrawer: React.FC<MessageDrawerProps> = ({
@@ -24,7 +22,6 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
     renderProps: { openFile, isRetryAfterErrorButtonEnabled, retryPromptAfterError, getOriginalText },
     onCollapsiblePanelExpanded,
     opened,
-    pendingToolCall,
 }) => {
     const [isOpen, setIsOpen] = React.useState(opened);
 
@@ -65,7 +62,6 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
                     ),
                 )}
             </div>
-            {pendingToolCall && <ToolCallItem toolMessage={pendingToolCall} />}
         </div>
     );
 };
