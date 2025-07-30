@@ -9,7 +9,8 @@ export const UpdatedFilesComponent: React.FC<{
     onUndo: (filePath: string[]) => void;
     onKeep: (filePath: string[]) => void;
     openDiff: OpenFileFunc;
-}> = ({ modifiedFiles, onUndo, onKeep, openDiff }) => {
+    actionsEnabled?: boolean;
+}> = ({ modifiedFiles, onUndo, onKeep, openDiff, actionsEnabled }) => {
     const handleKeepAll = React.useCallback(() => {
         const filePaths = modifiedFiles.map((msg) => msg.filePath).filter((path) => path !== undefined);
         onKeep(filePaths);
@@ -34,10 +35,18 @@ export const UpdatedFilesComponent: React.FC<{
                     </span>
                 </div>
                 <div>
-                    <button className="updated-files-action secondary" onClick={() => handleUndoAll()}>
+                    <button
+                        disabled={!actionsEnabled}
+                        className="updated-files-action secondary"
+                        onClick={() => handleUndoAll()}
+                    >
                         Undo
                     </button>
-                    <button className="updated-files-action primary" onClick={() => handleKeepAll()}>
+                    <button
+                        disabled={!actionsEnabled}
+                        className="updated-files-action primary"
+                        onClick={() => handleKeepAll()}
+                    >
                         Keep
                     </button>
                 </div>
@@ -51,6 +60,7 @@ export const UpdatedFilesComponent: React.FC<{
                             onFileClick={(path: string) => openDiff(path, true)}
                             onUndo={(path: string) => onUndo([path])}
                             onKeep={(path: string) => onKeep([path])}
+                            actionsEnabled={actionsEnabled}
                         />
                     );
                 })}

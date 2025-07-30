@@ -114,6 +114,18 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.openRovoDevConfig",
+                "title": "Open Rovo Dev settings file",
+                "category": "Atlascode",
+                "description": "Opens the ~/.rovodev/config.yaml file in the editor."
+            },
+            {
+                "command": "atlascode.openRovoDevMcpJson",
+                "title": "Open Rovo Dev MCP configuration",
+                "category": "Atlascode",
+                "description": "Opens the ~/.rovodev/mcp.json file in the editor."
+            },
+            {
                 "command": "atlascode.jira.todoIssue",
                 "title": "TO DO"
             },
@@ -753,6 +765,18 @@
                 },
                 {
                     "command": "atlascode.rovodev.newChatSession",
+                    "when": "atlascode:rovoDevEnabled"
+                },
+                {
+                    "command": "atlascode.openRovoDevConfig",
+                    "when": "atlascode:rovoDevEnabled"
+                },
+                {
+                    "command": "atlascode.openRovoDevMcpJson",
+                    "when": "atlascode:rovoDevEnabled"
+                },
+                {
+                    "command": "atlascode.rovodev.askInteractive",
                     "when": "atlascode:rovoDevEnabled"
                 },
                 {

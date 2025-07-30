@@ -158,13 +158,24 @@ body {
     color: var(--vscode-editor-foreground);
     width: fit-content;
     border-radius: 4px;
-    border: 1px solid var(--vscode-editorWidget-border);
     margin-bottom: 8px;
+}
+
+.tool-return-item {
+    border: 1px solid var(--vscode-editorWidget-border);
+}
+
+.tool-return-item:hover {
+    color: var(--vscode-editor-foreground)
 }
 
 .tool-return-item code {
     white-space: pre-wrap;
     word-break: break-all;
+}
+
+.tool-call-item span {
+    color: var(--vscode-input-placeholderForeground)
 }
 
 #tool-return-file-path:hover {
@@ -456,6 +467,10 @@ body {
     color: var(--vscode-textLink-foreground);
 }
 
+.modified-file-action:disabled {
+    cursor: not-allowed;
+}
+
 .modified-file-item-info {
     display: flex;
     flex-direction: row;
@@ -505,6 +520,10 @@ body {
 .updated-files-action {
     cursor: pointer;
     padding: 2px 6px;
+}
+
+.updated-files-action:disabled {
+    cursor: not-allowed;
 }
 
 
