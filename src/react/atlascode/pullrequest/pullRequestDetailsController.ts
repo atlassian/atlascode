@@ -19,7 +19,6 @@ import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../lib/ipc/fromUI/pullRequestDetails';
 import {
     emptyPullRequestDetailsInitMessage,
-    FetchUsersResponseMessage,
     PullRequestDetailsApprovalMessage,
     PullRequestDetailsBuildStatusesMessage,
     PullRequestDetailsCheckoutBranchMessage,
@@ -364,7 +363,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         }
     }, []);
 
-    const [postMessage, postMessagePromise] = useMessagingApi<
+    const { postMessage, postMessagePromise } = useMessagingApi<
         PullRequestDetailsAction,
         PullRequestDetailsMessage,
         PullRequestDetailsResponse
@@ -409,7 +408,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                             PullRequestDetailsMessageType.FetchUsersResponse,
                             ConnectionTimeout,
                         );
-                        resolve((response as FetchUsersResponseMessage).users);
+                        resolve(response.users);
                     } catch (e) {
                         reject(e);
                     }

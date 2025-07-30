@@ -89,6 +89,8 @@ export const enum Commands {
     InProgressIssue = 'atlascode.jira.inProgressIssue',
     DoneIssue = 'atlascode.jira.doneIssue',
     ShowOnboardingFlow = 'atlascode.showOnboardingFlow',
+    OpenRovoDevConfig = 'atlascode.openRovoDevConfig',
+    OpenRovoDevMcpJson = 'atlascode.openRovoDevMcpJson',
 }
 
 // Rovodev port mapping settings

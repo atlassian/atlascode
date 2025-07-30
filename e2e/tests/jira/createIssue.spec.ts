@@ -17,6 +17,8 @@ test('Create an issue via side panel flow', async ({ page }) => {
 
     await createIssueFrame.getByLabel('Summary').click();
     await createIssueFrame.getByLabel('Summary').fill(newIssueSummary);
+    await createIssueFrame.locator('textarea').click();
+    await createIssueFrame.locator('textarea').fill('Text');
 
     await createIssueFrame.getByRole('button', { name: 'Create' }).scrollIntoViewIfNeeded();
     await page.waitForTimeout(500);
@@ -26,4 +28,7 @@ test('Create an issue via side panel flow', async ({ page }) => {
     await page.waitForTimeout(2000);
 
     await expect(page.getByRole('dialog', { name: new RegExp(`Issue ${newIssueKey} has been created`) })).toBeVisible();
+
+    await expect(createIssueFrame.getByLabel('Summary')).toBeEmpty();
+    await expect(createIssueFrame.locator('textarea')).toBeEmpty();
 });

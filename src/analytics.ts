@@ -189,16 +189,12 @@ interface RovoDevCommonParams {
     promptId: string;
 }
 
-export async function performanceEvent(
+export function performanceEvent(
     tag: RovoDevPerfEvents,
     measure: number,
     params: RovoDevCommonParams,
 ): Promise<TrackEvent>;
-export async function performanceEvent(
-    tag: string,
-    measure: number,
-    params?: Record<string, any>,
-): Promise<TrackEvent> {
+export function performanceEvent(tag: string, measure: number, params?: Record<string, any>): Promise<TrackEvent> {
     return trackEvent('performanceEvent', 'atlascode', {
         attributes: { tag, measure, ...(params || {}) },
     });
@@ -206,66 +202,81 @@ export async function performanceEvent(
 
 // Rovo Dev events
 
-export async function rovoDevPromptSentEvent(
+export type RovoDevEnv = 'IDE' | 'Boysenberry';
+
+export function rovoDevNewSessionActionEvent(rovoDevEnv: RovoDevEnv, sessionId: string, isManuallyCreated: boolean) {
+    return trackEvent('rovoDevNewSessionAction', 'atlascode', {
+        attributes: { rovoDevEnv, sessionId, isManuallyCreated },
+    });
+}
+
+export function rovoDevPromptSentEvent(
+    rovoDevEnv: RovoDevEnv,
     sessionId: string,
     promptId: string,
-    source: 'replay' | 'chat',
     deepPlanEnabled: boolean,
 ) {
     return trackEvent('rovoDevPromptSent', 'atlascode', {
-        attributes: { sessionId, promptId, source, deepPlanEnabled },
+        attributes: { rovoDevEnv, sessionId, promptId, deepPlanEnabled },
     });
 }
 
-export async function rovoDevNewSessionActionEvent(sessionId: string, isManuallyCreated: boolean) {
-    return trackEvent('rovoDevNewSessionAction', 'atlascode', {
-        attributes: { sessionId, isManuallyCreated },
-    });
-}
-
-export async function rovoDevTechnicalPlanningShownEvent(
+export function rovoDevTechnicalPlanningShownEvent(
+    rovoDevEnv: RovoDevEnv,
     sessionId: string,
+    promptId: string,
     stepsCount: number,
     filesCount: number,
     questionsCount: number,
 ) {
     return trackEvent('rovoDevTechnicalPlanningShown', 'atlascode', {
-        attributes: { sessionId, stepsCount, filesCount, questionsCount },
+        attributes: { rovoDevEnv, sessionId, promptId, stepsCount, filesCount, questionsCount },
     });
 }
 
-export async function rovoDevFilesSummaryShownEvent(sessionId: string, promptId: string, filesCount: number) {
+export function rovoDevFilesSummaryShownEvent(
+    rovoDevEnv: RovoDevEnv,
+    sessionId: string,
+    promptId: string,
+    filesCount: number,
+) {
     return trackEvent('rovoDevFilesSummaryShown', 'atlascode', {
-        attributes: { sessionId, promptId, filesCount },
+        attributes: { rovoDevEnv, sessionId, promptId, filesCount },
     });
 }
 
-export async function rovoDevFileChangedActionEvent(
+export function rovoDevFileChangedActionEvent(
+    rovoDevEnv: RovoDevEnv,
     sessionId: string,
     promptId: string,
     action: 'undo' | 'keep',
     filesCount: number,
 ) {
     return trackEvent('rovoDevFileChangedAction', 'atlascode', {
-        attributes: { sessionId, promptId, action, filesCount },
+        attributes: { rovoDevEnv, sessionId, promptId, action, filesCount },
     });
 }
 
-export async function rovoDevStopActionEvent(sessionId: string, promptId: string, failed: boolean) {
+export function rovoDevStopActionEvent(rovoDevEnv: RovoDevEnv, sessionId: string, promptId: string, failed: boolean) {
     return trackEvent('rovoDevStopAction', 'atlascode', {
-        attributes: { sessionId, promptId, failed },
+        attributes: { rovoDevEnv, sessionId, promptId, failed },
     });
 }
 
-export async function rovoDevGitPushActionEvent(sessionId: string, promptId: string, prCreated: boolean) {
+export function rovoDevGitPushActionEvent(
+    rovoDevEnv: RovoDevEnv,
+    sessionId: string,
+    promptId: string,
+    prCreated: boolean,
+) {
     return trackEvent('rovoDevGitPushAction', 'atlascode', {
-        attributes: { sessionId, promptId, prCreated },
+        attributes: { rovoDevEnv, sessionId, promptId, prCreated },
     });
 }
 
-export async function rovoDevDetailsExpandedEvent(sessionId: string) {
+export function rovoDevDetailsExpandedEvent(rovoDevEnv: RovoDevEnv, sessionId: string, promptId: string) {
     return trackEvent('rovoDevDetailsExpanded', 'atlascode', {
-        attributes: { sessionId },
+        attributes: { rovoDevEnv, sessionId, promptId },
     });
 }
 
