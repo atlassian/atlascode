@@ -1151,15 +1151,14 @@ describe('analytics', () => {
         );
 
         it.each(RovoDevEnvironments)('should create rovoDevStopActionEvent when successful', async (rovoDevEnv) => {
-            const failed = false;
-            const event = await analytics.rovoDevStopActionEvent(rovoDevEnv, mockSessionId, mockPromptId, failed);
+            const event = await analytics.rovoDevStopActionEvent(rovoDevEnv, mockSessionId, mockPromptId);
 
             expect(event.trackEvent.action).toEqual('rovoDevStopAction');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
             expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
             expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
             expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
-            expect(event.trackEvent.attributes.failed).toEqual(failed);
+            expect(event.trackEvent.attributes.failed).toBeUndefined();
         });
 
         it.each(RovoDevEnvironments)('should create rovoDevStopActionEvent when failed', async (rovoDevEnv) => {

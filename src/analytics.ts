@@ -272,7 +272,7 @@ export function rovoDevFileChangedActionEvent(
     });
 }
 
-export function rovoDevStopActionEvent(rovoDevEnv: RovoDevEnv, sessionId: string, promptId: string, failed: boolean) {
+export function rovoDevStopActionEvent(rovoDevEnv: RovoDevEnv, sessionId: string, promptId: string, failed?: boolean) {
     return trackEvent('rovoDevStopAction', 'atlascode', {
         attributes: { rovoDevEnv, sessionId, promptId, failed },
     });

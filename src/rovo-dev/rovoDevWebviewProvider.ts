@@ -811,11 +811,11 @@ ${message}`;
         const success =
             !!cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress');
 
-        this.fireTelemetryEvent('rovoDevStopActionEvent', this._currentPromptId, success);
-
         if (success) {
+            this.fireTelemetryEvent('rovoDevStopActionEvent', this._currentPromptId);
             return true;
         } else {
+            this.fireTelemetryEvent('rovoDevStopActionEvent', this._currentPromptId, true);
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CancelFailed,
             });
