@@ -70,8 +70,9 @@ const RovoDevView: React.FC = () => {
     const [currentMessage, setCurrentMessage] = useState<DefaultMessage | null>(null);
     const [curThinkingMessages, setCurThinkingMessages] = useState<ChatMessage[]>([]);
 
-    const [sendButtonDisabled, setSendButtonDisabled] = useState(false);
-    const [currentState, setCurrentState] = useState(State.WaitingForPrompt);
+    const [currentState, setCurrentState] = useState(
+        process.env.ROVODEV_BBY ? State.GeneratingResponse : State.WaitingForPrompt,
+    );
 
     const [promptText, setPromptText] = useState('');
     const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
@@ -101,7 +102,6 @@ const RovoDevView: React.FC = () => {
     }, [chatStream, curThinkingMessages, currentMessage, currentState, pendingToolCallMessage]);
 
     const finalizeResponse = useCallback(() => {
-        setSendButtonDisabled(false);
         setCurrentState(State.WaitingForPrompt);
         setPendingToolCallMessage('');
         setIsDeepPlanToggled(false);
@@ -115,14 +115,7 @@ const RovoDevView: React.FC = () => {
                 filesCount: changedFilesCount,
             });
         }
-    }, [
-        setSendButtonDisabled,
-        setCurrentState,
-        setPendingToolCallMessage,
-        setIsDeepPlanToggled,
-        dispatch,
-        totalModifiedFiles,
-    ]);
+    }, [setCurrentState, setPendingToolCallMessage, setIsDeepPlanToggled, dispatch, totalModifiedFiles]);
 
     const handleAppendError = useCallback((msg: ErrorMessage) => {
         setChatStream((prev) => {
@@ -332,7 +325,6 @@ const RovoDevView: React.FC = () => {
             switch (event.type) {
                 case RovoDevProviderMessageType.PromptSent:
                     // Disable the send button, and enable the pause button
-                    setSendButtonDisabled(true);
                     setIsDeepPlanToggled(event.enable_deep_plan || false);
                     setCurrentState(State.GeneratingResponse);
                     setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE);
@@ -349,7 +341,9 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.CompleteMessage:
                     if (currentState !== State.WaitingForPrompt) {
                         finalizeResponse();
-                        validateResponseFinalized();
+                        if (!event.isReplay) {
+                            validateResponseFinalized();
+                        }
                     }
                     break;
 
@@ -374,7 +368,6 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.Initialized:
-                    setSendButtonDisabled(false);
                     break;
 
                 case RovoDevProviderMessageType.CancelFailed:
@@ -459,7 +452,7 @@ const RovoDevView: React.FC = () => {
 
     const sendPrompt = useCallback(
         (text: string): void => {
-            if (sendButtonDisabled || text.trim() === '' || currentState !== State.WaitingForPrompt) {
+            if (text.trim() === '' || currentState !== State.WaitingForPrompt) {
                 return;
             }
 
@@ -468,7 +461,6 @@ const RovoDevView: React.FC = () => {
             }
 
             // Disable the send button, and enable the pause button
-            setSendButtonDisabled(true);
             setCurrentState(State.GeneratingResponse);
 
             // Send the prompt to backend
@@ -482,7 +474,7 @@ const RovoDevView: React.FC = () => {
             // Clear the input field
             setPromptText('');
         },
-        [sendButtonDisabled, currentState, isDeepPlanCreated, isDeepPlanToggled, postMessage, promptContextCollection],
+        [currentState, isDeepPlanCreated, isDeepPlanToggled, postMessage, promptContextCollection],
     );
 
     // On the first render, get the context update
@@ -502,7 +494,6 @@ const RovoDevView: React.FC = () => {
 
     const retryPromptAfterError = useCallback((): void => {
         // Disable the send button, and enable the pause button
-        setSendButtonDisabled(true);
         setCurrentState(State.GeneratingResponse);
 
         postMessage({
@@ -671,7 +662,7 @@ const RovoDevView: React.FC = () => {
                         onDeepPlanToggled={() => setIsDeepPlanToggled(!isDeepPlanToggled)}
                         onSend={sendPrompt}
                         onCancel={cancelResponse}
-                        sendButtonDisabled={sendButtonDisabled}
+                        sendButtonDisabled={currentState !== State.WaitingForPrompt}
                         onAddContext={() => {
                             postMessage({
                                 type: RovoDevViewResponseType.AddContext,

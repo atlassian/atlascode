@@ -269,9 +269,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 if (result) {
                     const version = ((await this.executeHealthcheckInfo()) ?? {}).version;
                     if (version && semver_gte(version, MIN_SUPPORTED_ROVODEV_VERSION)) {
-                        if (true || this.isBBY) {
+                        this.beginNewSession();
+                        if (this.isBBY) {
                             // TODO: we should obtain the session id from the boysenberry environment
-                            this.beginNewSession();
                             await this.executeReplay();
                         }
                     } else {
@@ -287,9 +287,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     throw new Error(errorMsg);
                 }
 
+                this._initialized = true;
                 // re-send the buffered prompt
                 if (this._pendingPrompt) {
-                    this.executeChat(this._pendingPrompt, true, true);
+                    this.executeChat(this._pendingPrompt, true);
                     this._pendingPrompt = undefined;
                 }
             })
@@ -460,13 +461,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
 
         // Send final complete message when stream ends
-        await this.completeChatResponse();
+        await this.completeChatResponse(sourceApi);
     }
 
-    private completeChatResponse() {
+    private completeChatResponse(sourceApi: 'replay' | 'chat' | 'error') {
         const webview = this._webView!;
         return webview.postMessage({
             type: RovoDevProviderMessageType.CompleteMessage,
+            isReplay: sourceApi === 'replay',
         });
     }
 
@@ -496,17 +498,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 context: context,
             },
         });
-
-        return await webview.postMessage({
-            type: RovoDevProviderMessageType.PromptSent,
-            text,
-            enable_deep_plan,
-            context: context,
-        });
-    }
-
-    private async sendPromptSentToView({ text, enable_deep_plan, context }: RovoDevPrompt) {
-        const webview = this._webView!;
 
         return await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
@@ -646,22 +637,13 @@ ${message}`;
 </context>`;
     }
 
-    private async executeChat(
-        { text, enable_deep_plan, context }: RovoDevPrompt,
-        suppressEcho?: boolean,
-        isPendingMessage?: boolean,
-    ) {
+    private async executeChat({ text, enable_deep_plan, context }: RovoDevPrompt, suppressEcho?: boolean) {
         if (!text) {
             return;
         }
 
         if (!suppressEcho) {
             await this.sendUserPromptToView({ text, enable_deep_plan, context });
-        }
-
-        // This allows for the streaming to work properly even if there is pending message
-        if (isPendingMessage) {
-            await this.sendPromptSentToView({ text, enable_deep_plan, context });
         }
 
         this.beginNewPrompt();
@@ -840,8 +822,6 @@ ${message}`;
     private async executeReplay(): Promise<void> {
         this.beginNewPrompt('replay');
 
-        await this.sendPromptSentToView({ text: 'Replaying previous chat session...' });
-
         await this.executeApiWithErrorHandling(async (client) => {
             return this.processChatResponse('replay', client.replay());
         }, false);
@@ -981,7 +961,7 @@ ${message}`;
             } catch (error) {
                 if (cancellationAware && this._pendingCancellation && error.cause?.code === 'UND_ERR_SOCKET') {
                     this._pendingCancellation = false;
-                    this.completeChatResponse();
+                    this.completeChatResponse('error');
                 } else {
                     await this.processError(error, isErrorRetriable);
                 }

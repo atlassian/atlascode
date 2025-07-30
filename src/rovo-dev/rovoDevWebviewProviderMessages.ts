@@ -30,7 +30,7 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.PromptSent, RovoDevPrompt>
     | ReducerAction<RovoDevProviderMessageType.Response, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.UserChatMessage, { message: ChatMessage }>
-    | ReducerAction<RovoDevProviderMessageType.CompleteMessage>
+    | ReducerAction<RovoDevProviderMessageType.CompleteMessage, { isReplay?: boolean }>
     | ReducerAction<RovoDevProviderMessageType.ToolCall, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ToolReturn, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ErrorMessage, { message: ErrorMessage }>
