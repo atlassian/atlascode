@@ -869,8 +869,8 @@ describe('analytics', () => {
             it('should include platform information based on process.platform', async () => {
                 setProcessPlatform('darwin');
                 const event = await analytics.performanceEvent('rovodev.response.timeToFirstByte', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 expect(event.trackEvent.platform).toEqual('mac');
@@ -878,8 +878,8 @@ describe('analytics', () => {
 
             it('should include origin information', async () => {
                 const event = await analytics.performanceEvent('rovodev.response.timeToFirstByte', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 expect(event.trackEvent.origin).toEqual('desktop');
@@ -887,8 +887,8 @@ describe('analytics', () => {
 
             it('should handle empty string parameters', async () => {
                 const event = await analytics.performanceEvent('rovodev.response.timeToFirstByte', 100, {
-                    sessionId: '',
-                    promptId: '',
+                    rovoDevSessionId: '',
+                    rovoDevPromptId: '',
                 });
 
                 expect(event.trackEvent.attributes.sessionId).toEqual('');
@@ -956,8 +956,8 @@ describe('analytics', () => {
         describe('event structure validation', () => {
             it('should return a valid TrackEvent structure', async () => {
                 const event = await analytics.performanceEvent('rovodev.response.timeToFirstByte', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 // Validate TrackEvent structure
@@ -976,8 +976,8 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToFirstByte', async () => {
                 const event = await analytics.performanceEvent('rovodev.response.timeToFirstByte', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 expect(event.trackEvent.action).toEqual('performanceEvent');
@@ -986,8 +986,8 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToFirstMessage', async () => {
                 const event = await analytics.performanceEvent('rovodev.response.timeToFirstMessage', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 expect(event.trackEvent.action).toEqual('performanceEvent');
@@ -996,8 +996,8 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToTechPlan', async () => {
                 const event = await analytics.performanceEvent('rovodev.response.timeToTechPlan', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 expect(event.trackEvent.action).toEqual('performanceEvent');
@@ -1006,8 +1006,8 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToLastMessage', async () => {
                 const event = await analytics.performanceEvent('rovodev.response.timeToLastMessage', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 expect(event.trackEvent.action).toEqual('performanceEvent');

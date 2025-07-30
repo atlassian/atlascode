@@ -185,8 +185,8 @@ type RovoDevPerfEvents =
     | 'rovodev.response.timeToLastMessage';
 
 interface RovoDevCommonParams {
-    sessionId: string;
-    promptId: string;
+    rovoDevSessionId: string;
+    rovoDevPromptId: string;
 }
 
 export function performanceEvent(
