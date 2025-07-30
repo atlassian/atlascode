@@ -1529,8 +1529,8 @@ describe('analytics', () => {
 
                 // Test RovoDev event (with additional params)
                 const rovoDevEvent = await analytics.performanceEvent('rovodev.response.timeToFirstByte', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 // Jira event should not have sessionId/promptId
@@ -1539,8 +1539,8 @@ describe('analytics', () => {
                 expect(jiraEvent.trackEvent.attributes.tag).toEqual('ui.cumulativeJqlFetch.render.lcp');
 
                 // RovoDev event should have sessionId/promptId
-                expect(rovoDevEvent.trackEvent.attributes.sessionId).toEqual('test-session');
-                expect(rovoDevEvent.trackEvent.attributes.promptId).toEqual('test-prompt');
+                expect(rovoDevEvent.trackEvent.attributes.rovoDevSessionId).toEqual('test-session');
+                expect(rovoDevEvent.trackEvent.attributes.rovoDevPromptId).toEqual('test-prompt');
                 expect(rovoDevEvent.trackEvent.attributes.tag).toEqual('rovodev.response.timeToFirstByte');
             });
         });
