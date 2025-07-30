@@ -54,7 +54,7 @@ import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
-import ParentIssueEditor from './ParentIssueEditor';
+// import ParentIssueEditor from './ParentIssueEditor';
 import { ParticipantList } from './ParticipantList';
 import { TextAreaEditor } from './TextAreaEditor';
 
@@ -274,14 +274,6 @@ export abstract class AbstractIssueEditorPage<
         if (field) {
             this.handleInlineEdit(field, files);
         }
-    };
-
-    protected fetchEpicOnly = async (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
-        return await this.loadIssueOptions(field, input, 'issuetype = Epic');
-    };
-
-    protected fetchParentIssues = async (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
-        return await this.loadIssueOptions(field, input, 'issuetype in standardIssueType()');
     };
 
     protected loadIssueOptions = (
@@ -685,41 +677,51 @@ export abstract class AbstractIssueEditorPage<
             case UIType.IssueLink: {
                 // Remember to get currentParent for both create and edit issue **
                 if (editmode) {
-                    // Does not work right now. Working on create Issue right now :)
-                    // return (
-                    //     <ParentIssueEditor
-                    //         label={field.name}
-                    //         currentIssueType={currentIssueType}
-                    //         isCreateMode={false} // currently editing
-                    //         onSave={(val: any) => {
-                    //             this.handleInlineEdit(field, val);
-                    //         }}
-                    //         onFetchEpics={async (input: string) =>
-                    //             await this.fetchEpicOnly(field as SelectFieldUI, input)
-                    //         }
-                    //         onFetchParentIssues={async (input: string) =>
-                    //             await this.fetchEpicOnly(field as SelectFieldUI, input)
-                    //         }
-                    //         isLoading={this.state.loadingField === field.key}
-                    //     />
-                    // );
                     return <React.Fragment />;
                 }
-                return (
-                    <ParentIssueEditor
-                        label={field.name}
-                        currentIssueType={currentIssueType}
-                        isCreateMode={true}
-                        onSave={(val: any) => {
-                            this.handleInlineEdit(field, val);
-                        }}
-                        onFetchEpics={async (input: string) => await this.fetchEpicOnly(field as SelectFieldUI, input)}
-                        onFetchParentIssues={async (input: string) =>
-                            await this.fetchParentIssues(field as SelectFieldUI, input)
-                        }
-                        isLoading={this.state.loadingField === field.key}
-                    />
-                );
+                if (currentIssueType.name !== 'Epic') {
+                    return (
+                        <Field
+                            label={<span>{field.name}</span>}
+                            isRequired={field.required}
+                            id={field.key}
+                            name={field.key}
+                        >
+                            {(fieldArgs: any) => {
+                                return (
+                                    <AsyncSelect
+                                        {...fieldArgs.fieldProps}
+                                        isClearable={!field.required}
+                                        isMulti={false}
+                                        className="ac-form-select-container"
+                                        classNamePrefix="ac-form-select"
+                                        loadOptions={async (input: string) =>
+                                            await this.loadIssueOptions(
+                                                field as SelectFieldUI,
+                                                input,
+                                                'issuetype = Epic',
+                                            )
+                                        }
+                                        getOptionLabel={(option: any) => option.key}
+                                        getOptionValue={(option: any) => option.key}
+                                        placeholder="Search for parent issue"
+                                        isLoading={this.state.loadingField === field.key}
+                                        isDisabled={this.state.isSomethingLoading}
+                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                            this.handleInlineEdit(field, val);
+                                        })}
+                                        components={{
+                                            Option: SelectFieldHelper.IssueSuggestionOption,
+                                            SingleValue: SelectFieldHelper.IssueSuggestionValue,
+                                        }}
+                                    />
+                                );
+                            }}
+                        </Field>
+                    );
+                } else {
+                    return <React.Fragment />;
+                }
             }
             case UIType.IssueLinks: {
                 let markup = <div></div>;

@@ -62,19 +62,6 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
         return suggestions;
     }
 
-    // public async getIssuePickerSuggestions(query: string): Promise<IssuePickerIssue[]> {
-    //     const res = await this.getFromJira('issue/picker', { query: query }); // this.getFromJira already includes the API route with the 'issue/picker' adding the route location
-
-    //     const result: IssuePickerResult = res as IssuePickerResult;
-
-    //     let suggestions: IssuePickerIssue[] = [];
-    //     if (Array.isArray(result.sections)) {
-    //         suggestions = result.sections.reduce((prev, curr) => prev.concat(curr.issues), [] as IssuePickerIssue[]);
-    //     }
-
-    //     return suggestions;
-    // }
-
     protected async onMessageReceived(msg: any): Promise<boolean> {
         let handled = await super.onMessageReceived(msg);
 
@@ -104,9 +91,15 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                         );
                                     }
                                 } else if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
-                                    suggestions = await client.getAutocompleteDataFromUrl(
+                                    const result: IssuePickerResult = await client.getAutocompleteDataFromUrl(
                                         msg.autocompleteUrl + encodeURIComponent(msg.query),
                                     );
+                                    if (Array.isArray(result.sections)) {
+                                        suggestions = result.sections.reduce(
+                                            (prev, curr) => prev.concat(curr.issues),
+                                            [] as IssuePickerIssue[],
+                                        );
+                                    }
                                 } else {
                                     suggestions = await client.getIssuePickerSuggestions(encodeURIComponent(msg.query));
                                 }

@@ -214,6 +214,11 @@ export class JiraIssueWebview
         }
     }
 
+    // async updateParentView() {
+    //     if (this._editUIData.fieldValues['parent']) {
+    //     }
+    // }
+
     async handleSelectOptionCreated(fieldKey: string, newValue: any, nonce?: string): Promise<void> {
         if (!Array.isArray(this._editUIData.fieldValues[fieldKey])) {
             this._editUIData.fieldValues[fieldKey] = [];
