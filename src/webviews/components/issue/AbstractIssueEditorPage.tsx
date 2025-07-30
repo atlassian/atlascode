@@ -709,7 +709,7 @@ export abstract class AbstractIssueEditorPage<
                     <ParentIssueEditor
                         label={field.name}
                         currentIssueType={currentIssueType}
-                        isCreateMode={true} // currently editing
+                        isCreateMode={true}
                         onSave={(val: any) => {
                             this.handleInlineEdit(field, val);
                         }}
