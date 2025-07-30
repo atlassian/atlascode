@@ -1039,7 +1039,7 @@ describe('analytics', () => {
                 expect(event.trackEvent.action).toEqual('rovoDevNewSessionAction');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
-                expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
                 expect(event.trackEvent.attributes.isManuallyCreated).toEqual(isManuallyCreated);
             },
         );
@@ -1052,8 +1052,8 @@ describe('analytics', () => {
                 expect(event.trackEvent.action).toEqual('rovoDevPromptSent');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
-                expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(mockSessionId);
-                expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(mockPromptId);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
                 expect(event.trackEvent.attributes.deepPlanEnabled).toEqual(true);
             },
         );
@@ -1076,8 +1076,8 @@ describe('analytics', () => {
                 expect(event.trackEvent.action).toEqual('rovoDevTechnicalPlanningShown');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
-                expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(mockSessionId);
-                expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(mockPromptId);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
                 expect(event.trackEvent.attributes.stepsCount).toEqual(stepsCount);
                 expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
                 expect(event.trackEvent.attributes.questionsCount).toEqual(questionsCount);
@@ -1098,8 +1098,8 @@ describe('analytics', () => {
                 expect(event.trackEvent.action).toEqual('rovoDevFilesSummaryShown');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
-                expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(mockSessionId);
-                expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(mockPromptId);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
                 expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
             },
         );
@@ -1120,8 +1120,8 @@ describe('analytics', () => {
                 expect(event.trackEvent.action).toEqual('rovoDevFileChangedAction');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
-                expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(mockSessionId);
-                expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(mockPromptId);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
                 expect(event.trackEvent.attributes.action).toEqual(action);
                 expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
             },
@@ -1143,8 +1143,8 @@ describe('analytics', () => {
                 expect(event.trackEvent.action).toEqual('rovoDevFileChangedAction');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
-                expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(mockSessionId);
-                expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(mockPromptId);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
                 expect(event.trackEvent.attributes.action).toEqual(action);
                 expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
             },
@@ -1157,8 +1157,8 @@ describe('analytics', () => {
             expect(event.trackEvent.action).toEqual('rovoDevStopAction');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
             expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
-            expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(mockSessionId);
-            expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(mockPromptId);
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
             expect(event.trackEvent.attributes.failed).toEqual(failed);
         });
 
@@ -1169,8 +1169,8 @@ describe('analytics', () => {
             expect(event.trackEvent.action).toEqual('rovoDevStopAction');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
             expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
-            expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(mockSessionId);
-            expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(mockPromptId);
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
             expect(event.trackEvent.attributes.failed).toEqual(failed);
         });
 
@@ -1188,8 +1188,8 @@ describe('analytics', () => {
                 expect(event.trackEvent.action).toEqual('rovoDevGitPushAction');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
-                expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(mockSessionId);
-                expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(mockPromptId);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
                 expect(event.trackEvent.attributes.prCreated).toEqual(prCreated);
             },
         );
@@ -1208,8 +1208,8 @@ describe('analytics', () => {
                 expect(event.trackEvent.action).toEqual('rovoDevGitPushAction');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
-                expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(mockSessionId);
-                expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(mockPromptId);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
                 expect(event.trackEvent.attributes.prCreated).toEqual(prCreated);
             },
         );
@@ -1220,8 +1220,8 @@ describe('analytics', () => {
             expect(event.trackEvent.action).toEqual('rovoDevDetailsExpanded');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
             expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
-            expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(mockSessionId);
-            expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(mockPromptId);
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
         });
     });
 

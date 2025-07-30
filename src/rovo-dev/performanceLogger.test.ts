@@ -41,9 +41,9 @@ describe('PerformanceLogger', () => {
 
     describe('sessionStarted', () => {
         it('should set the current session ID', () => {
-            const sessionId = 'test-session-123';
+            const rovoDevSessionId = 'test-session-123';
 
-            performanceLogger.sessionStarted(sessionId);
+            performanceLogger.sessionStarted(rovoDevSessionId);
 
             // Verify session is set by calling a method that requires it
             expect(() => performanceLogger.promptStarted('test-prompt')).not.toThrow();
@@ -60,19 +60,19 @@ describe('PerformanceLogger', () => {
 
     describe('promptStarted', () => {
         it('should throw error if session is not started', () => {
-            const promptId = 'test-prompt-123';
+            const rovoDevPromptId = 'test-prompt-123';
 
-            expect(() => performanceLogger.promptStarted(promptId)).toThrow('Session not started');
+            expect(() => performanceLogger.promptStarted(rovoDevPromptId)).toThrow('Session not started');
         });
 
         it('should mark performance start when session is active', () => {
-            const sessionId = 'test-session-123';
-            const promptId = 'test-prompt-123';
+            const rovoDevSessionId = 'test-session-123';
+            const rovoDevPromptId = 'test-prompt-123';
 
-            performanceLogger.sessionStarted(sessionId);
-            performanceLogger.promptStarted(promptId);
+            performanceLogger.sessionStarted(rovoDevSessionId);
+            performanceLogger.promptStarted(rovoDevPromptId);
 
-            expect(mockPerf.mark).toHaveBeenCalledWith(promptId);
+            expect(mockPerf.mark).toHaveBeenCalledWith(rovoDevPromptId);
         });
     });
 
@@ -82,19 +82,19 @@ describe('PerformanceLogger', () => {
         });
 
         it('should measure performance and send analytics event', async () => {
-            const promptId = 'test-prompt-123';
+            const rovoDevPromptId = 'test-prompt-123';
             const measureValue = 150;
             const mockEvent = { type: 'track', event: 'timeToFirstByte' };
 
             mockPerf.measure.mockReturnValue(measureValue);
             mockPerformanceEvent.mockResolvedValue(mockEvent as any);
 
-            await performanceLogger.promptFirstByteReceived(promptId);
+            await performanceLogger.promptFirstByteReceived(rovoDevPromptId);
 
-            expect(mockPerf.measure).toHaveBeenCalledWith(promptId);
+            expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
             expect(mockPerformanceEvent).toHaveBeenCalledWith('rovodev.response.timeToFirstByte', measureValue, {
-                sessionId: 'test-session-123',
-                promptId,
+                rovoDevSessionId: 'test-session-123',
+                rovoDevPromptId,
             });
             expect(mockLogger.debug).toHaveBeenCalledWith(
                 `Event fired: rovodev.response.timeToFirstByte ${measureValue} ms`,
@@ -103,10 +103,10 @@ describe('PerformanceLogger', () => {
         });
 
         it('should handle analytics client errors gracefully', async () => {
-            const promptId = 'test-prompt-123';
+            const rovoDevPromptId = 'test-prompt-123';
             mockAnalyticsClient.sendTrackEvent.mockRejectedValue(new Error('Network error'));
 
-            await expect(performanceLogger.promptFirstByteReceived(promptId)).rejects.toThrow('Network error');
+            await expect(performanceLogger.promptFirstByteReceived(rovoDevPromptId)).rejects.toThrow('Network error');
         });
     });
 
@@ -116,19 +116,19 @@ describe('PerformanceLogger', () => {
         });
 
         it('should measure performance and send analytics event', async () => {
-            const promptId = 'test-prompt-123';
+            const rovoDevPromptId = 'test-prompt-123';
             const measureValue = 200;
             const mockEvent = { type: 'track', event: 'timeToFirstMessage' };
 
             mockPerf.measure.mockReturnValue(measureValue);
             mockPerformanceEvent.mockResolvedValue(mockEvent as any);
 
-            await performanceLogger.promptFirstMessageReceived(promptId);
+            await performanceLogger.promptFirstMessageReceived(rovoDevPromptId);
 
-            expect(mockPerf.measure).toHaveBeenCalledWith(promptId);
+            expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
             expect(mockPerformanceEvent).toHaveBeenCalledWith('rovodev.response.timeToFirstMessage', measureValue, {
-                sessionId: 'test-session-123',
-                promptId,
+                rovoDevSessionId: 'test-session-123',
+                rovoDevPromptId,
             });
             expect(mockLogger.debug).toHaveBeenCalledWith(
                 `Event fired: rovodev.response.timeToFirstMessage ${measureValue} ms`,
@@ -143,19 +143,19 @@ describe('PerformanceLogger', () => {
         });
 
         it('should measure performance and send analytics event', async () => {
-            const promptId = 'test-prompt-123';
+            const rovoDevPromptId = 'test-prompt-123';
             const measureValue = 300;
             const mockEvent = { type: 'track', event: 'timeToTechPlan' };
 
             mockPerf.measure.mockReturnValue(measureValue);
             mockPerformanceEvent.mockResolvedValue(mockEvent as any);
 
-            await performanceLogger.promptTechnicalPlanReceived(promptId);
+            await performanceLogger.promptTechnicalPlanReceived(rovoDevPromptId);
 
-            expect(mockPerf.measure).toHaveBeenCalledWith(promptId);
+            expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
             expect(mockPerformanceEvent).toHaveBeenCalledWith('rovodev.response.timeToTechPlan', measureValue, {
-                sessionId: 'test-session-123',
-                promptId,
+                rovoDevSessionId: 'test-session-123',
+                rovoDevPromptId,
             });
             expect(mockLogger.debug).toHaveBeenCalledWith(
                 `Event fired: rovodev.response.timeToTechPlan ${measureValue} ms`,
@@ -170,20 +170,20 @@ describe('PerformanceLogger', () => {
         });
 
         it('should measure performance, clear performance data, and send analytics event', async () => {
-            const promptId = 'test-prompt-123';
+            const rovoDevPromptId = 'test-prompt-123';
             const measureValue = 500;
             const mockEvent = { type: 'track', event: 'timeToLastMessage' };
 
             mockPerf.measure.mockReturnValue(measureValue);
             mockPerformanceEvent.mockResolvedValue(mockEvent as any);
 
-            await performanceLogger.promptLastMessageReceived(promptId);
+            await performanceLogger.promptLastMessageReceived(rovoDevPromptId);
 
-            expect(mockPerf.measure).toHaveBeenCalledWith(promptId);
-            expect(mockPerf.clear).toHaveBeenCalledWith(promptId);
+            expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
+            expect(mockPerf.clear).toHaveBeenCalledWith(rovoDevPromptId);
             expect(mockPerformanceEvent).toHaveBeenCalledWith('rovodev.response.timeToLastMessage', measureValue, {
-                sessionId: 'test-session-123',
-                promptId,
+                rovoDevSessionId: 'test-session-123',
+                rovoDevPromptId,
             });
             expect(mockLogger.debug).toHaveBeenCalledWith(
                 `Event fired: rovodev.response.timeToLastMessage ${measureValue} ms`,
@@ -192,53 +192,55 @@ describe('PerformanceLogger', () => {
         });
 
         it('should clear performance data even if analytics fails', async () => {
-            const promptId = 'test-prompt-123';
+            const rovoDevPromptId = 'test-prompt-123';
             mockAnalyticsClient.sendTrackEvent.mockRejectedValue(new Error('Analytics error'));
 
-            await expect(performanceLogger.promptLastMessageReceived(promptId)).rejects.toThrow('Analytics error');
-            expect(mockPerf.clear).toHaveBeenCalledWith(promptId);
+            await expect(performanceLogger.promptLastMessageReceived(rovoDevPromptId)).rejects.toThrow(
+                'Analytics error',
+            );
+            expect(mockPerf.clear).toHaveBeenCalledWith(rovoDevPromptId);
         });
     });
 
     describe('integration scenarios', () => {
         it('should handle complete prompt lifecycle', async () => {
-            const sessionId = 'integration-session-123';
-            const promptId = 'integration-prompt-123';
+            const rovoDevSessionId = 'integration-session-123';
+            const rovoDevPromptId = 'integration-prompt-123';
 
             // Start session
-            performanceLogger.sessionStarted(sessionId);
+            performanceLogger.sessionStarted(rovoDevSessionId);
 
             // Start prompt
-            performanceLogger.promptStarted(promptId);
-            expect(mockPerf.mark).toHaveBeenCalledWith(promptId);
+            performanceLogger.promptStarted(rovoDevPromptId);
+            expect(mockPerf.mark).toHaveBeenCalledWith(rovoDevPromptId);
 
             // Receive first byte
-            await performanceLogger.promptFirstByteReceived(promptId);
-            expect(mockPerf.measure).toHaveBeenCalledWith(promptId);
+            await performanceLogger.promptFirstByteReceived(rovoDevPromptId);
+            expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
 
             // Receive first message
-            await performanceLogger.promptFirstMessageReceived(promptId);
-            expect(mockPerf.measure).toHaveBeenCalledWith(promptId);
+            await performanceLogger.promptFirstMessageReceived(rovoDevPromptId);
+            expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
 
             // Receive technical plan
-            await performanceLogger.promptTechnicalPlanReceived(promptId);
-            expect(mockPerf.measure).toHaveBeenCalledWith(promptId);
+            await performanceLogger.promptTechnicalPlanReceived(rovoDevPromptId);
+            expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
 
             // Receive last message
-            await performanceLogger.promptLastMessageReceived(promptId);
-            expect(mockPerf.measure).toHaveBeenCalledWith(promptId);
-            expect(mockPerf.clear).toHaveBeenCalledWith(promptId);
+            await performanceLogger.promptLastMessageReceived(rovoDevPromptId);
+            expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
+            expect(mockPerf.clear).toHaveBeenCalledWith(rovoDevPromptId);
 
             // Verify all analytics events were sent
             expect(mockAnalyticsClient.sendTrackEvent).toHaveBeenCalledTimes(4);
         });
 
         it('should handle multiple prompts in same session', async () => {
-            const sessionId = 'multi-prompt-session';
+            const rovoDevSessionId = 'multi-prompt-session';
             const promptId1 = 'prompt-1';
             const promptId2 = 'prompt-2';
 
-            performanceLogger.sessionStarted(sessionId);
+            performanceLogger.sessionStarted(rovoDevSessionId);
 
             // First prompt
             performanceLogger.promptStarted(promptId1);
@@ -254,24 +256,24 @@ describe('PerformanceLogger', () => {
         });
 
         it('should maintain session context across multiple prompt methods', async () => {
-            const sessionId = 'context-session-123';
-            const promptId = 'context-prompt-123';
+            const rovoDevSessionId = 'context-session-123';
+            const rovoDevPromptId = 'context-prompt-123';
 
-            performanceLogger.sessionStarted(sessionId);
+            performanceLogger.sessionStarted(rovoDevSessionId);
 
-            await performanceLogger.promptFirstByteReceived(promptId);
-            await performanceLogger.promptFirstMessageReceived(promptId);
+            await performanceLogger.promptFirstByteReceived(rovoDevPromptId);
+            await performanceLogger.promptFirstMessageReceived(rovoDevPromptId);
 
-            // Verify sessionId was used in both calls
+            // Verify rovoDevSessionId was used in both calls
             expect(mockPerformanceEvent).toHaveBeenCalledWith(
                 'rovodev.response.timeToFirstByte',
                 expect.any(Number),
-                expect.objectContaining({ sessionId }),
+                expect.objectContaining({ rovoDevSessionId }),
             );
             expect(mockPerformanceEvent).toHaveBeenCalledWith(
                 'rovodev.response.timeToFirstMessage',
                 expect.any(Number),
-                expect.objectContaining({ sessionId }),
+                expect.objectContaining({ rovoDevSessionId }),
             );
         });
     });
@@ -313,7 +315,7 @@ describe('PerformanceLogger', () => {
             expect(mockPerformanceEvent).toHaveBeenCalledWith(
                 'rovodev.response.timeToFirstByte',
                 expect.any(Number),
-                expect.objectContaining({ promptId: '' }),
+                expect.objectContaining({ rovoDevSessionId: 'non-empty-session', rovoDevPromptId: '' }),
             );
         });
     });
