@@ -64,22 +64,31 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     const [autoScrollEnabled, setAutoScrollEnabled] = React.useState(true);
     const lastUserScrollUpRef = React.useRef<number>(0);
 
+    // Helper to disable auto-scroll with timestamp
+    const disableAutoScroll = React.useCallback(() => {
+        lastUserScrollUpRef.current = Date.now();
+        setAutoScrollEnabled(false);
+    }, []);
+
+    // Helper to perform auto-scroll when enabled
+    const performAutoScroll = React.useCallback(() => {
+        if (autoScrollEnabled && chatEndRef.current) {
+            scrollToEnd(chatEndRef.current);
+        }
+    }, [autoScrollEnabled]);
+
     // Intersection observer to detect when user scrolls back to bottom
     React.useEffect(() => {
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
-                    // Only re-enable auto-scroll if enough time has passed since last upward scroll
                     const timeSinceLastUpScroll = Date.now() - lastUserScrollUpRef.current;
                     if (timeSinceLastUpScroll > 100) {
                         setAutoScrollEnabled(true);
                     }
                 }
             },
-            {
-                threshold: 0,
-                rootMargin: '0px',
-            },
+            { threshold: 0, rootMargin: '0px' },
         );
 
         if (sentinelRef.current) {
@@ -91,50 +100,47 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     // Scroll event detection to pause auto-scroll when user scrolls upward
     React.useEffect(() => {
+        const container = chatEndRef.current;
+        if (!container) {
+            return;
+        }
+
         let lastScrollTop = 0;
 
         const handleUserScroll = (event: Event) => {
-            const container = event.target as HTMLElement;
-            const currentScrollTop = container.scrollTop;
-
-            // Only disable auto-scroll if user scrolled upward AND auto-scroll was enabled
+            const currentScrollTop = (event.target as HTMLElement).scrollTop;
             if (currentScrollTop < lastScrollTop) {
-                lastUserScrollUpRef.current = Date.now();
-                setAutoScrollEnabled(false);
+                disableAutoScroll();
             }
-
             lastScrollTop = currentScrollTop;
         };
 
         const handleWheel = (event: WheelEvent) => {
-            // For wheel events, check deltaY to determine scroll direction
             if (event.deltaY < 0) {
-                // Negative deltaY means scrolling up
-                lastUserScrollUpRef.current = Date.now();
-                setAutoScrollEnabled(false);
+                // Scrolling up
+                disableAutoScroll();
             }
         };
 
-        const container = chatEndRef.current;
-        if (container) {
-            container.addEventListener('scroll', handleUserScroll, { passive: true });
-            container.addEventListener('wheel', handleWheel, { passive: true });
+        container.addEventListener('scroll', handleUserScroll, { passive: true });
+        container.addEventListener('wheel', handleWheel, { passive: true });
 
-            return () => {
-                container.removeEventListener('scroll', handleUserScroll);
-                container.removeEventListener('wheel', handleWheel);
-            };
-        }
+        return () => {
+            container.removeEventListener('scroll', handleUserScroll);
+            container.removeEventListener('wheel', handleWheel);
+        };
+    }, [disableAutoScroll]);
 
-        return () => {};
-    }, []);
-
-    // Auto-scroll effect - runs when content changes or auto-scroll is re-enabled
-    React.useEffect(() => {
-        if (autoScrollEnabled && chatEndRef.current) {
-            scrollToEnd(chatEndRef.current);
-        }
-    }, [chatHistory, currentThinking, currentMessage, isFormVisible, pendingToolCall, autoScrollEnabled]);
+    // Auto-scroll when content changes or when re-enabled
+    React.useEffect(performAutoScroll, [
+        chatHistory,
+        currentThinking,
+        currentMessage,
+        isFormVisible,
+        pendingToolCall,
+        autoScrollEnabled,
+        performAutoScroll,
+    ]);
 
     // Other state management effect
     React.useEffect(() => {
