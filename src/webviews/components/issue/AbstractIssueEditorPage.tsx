@@ -674,7 +674,6 @@ export abstract class AbstractIssueEditorPage<
                 return markup;
             }
             case UIType.IssueLink: {
-                // Remember to get currentParent for both create and edit issue **
                 if (editmode && currentIssueType.name !== 'Epic' && this.state.siteDetails.isCloud) {
                     let defaultParent: IssuePickerIssue | undefined;
                     if (this.state.fieldValues['parent']) {
@@ -707,7 +706,9 @@ export abstract class AbstractIssueEditorPage<
                                             await this.loadIssueOptions(
                                                 field as SelectFieldUI,
                                                 input,
-                                                'issuetype = Epic',
+                                                currentIssueType.subtask
+                                                    ? 'issuetype in standardIssueTypes()'
+                                                    : 'issuetype = Epic',
                                             )
                                         }
                                         getOptionLabel={(option: any) => option.key}

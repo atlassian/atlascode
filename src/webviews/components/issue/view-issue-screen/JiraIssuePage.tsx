@@ -265,6 +265,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 break;
             }
 
+            // case UIType.IssueLink: {
+            //     let newValueParent = {
+            //         ...newValue,
+            //         id: newValue.id.toString(),
+            //     };
+            //     await this.handleEditIssue(field.key, newValueParent);
+            //     break;
+            // }
+
             default: {
                 let typedVal = newValue;
 
