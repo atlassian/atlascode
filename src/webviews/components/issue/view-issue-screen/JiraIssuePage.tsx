@@ -625,7 +625,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         );
     }
     commonSidebar(): any {
-        const commonItems: SidebarItem[] = ['assignee', 'reporter', 'labels', 'priority', 'components', 'fixVersions'] // here we should add 'parent' for when we are ready to add parent to edit issue
+        const commonItems: SidebarItem[] = [
+            'assignee',
+            'reporter',
+            'labels',
+            'priority',
+            'components',
+            'fixVersions',
+            'parent',
+        ] // here we should add 'parent' for when we are ready to add parent to edit issue
             .filter((field) => !!this.state.fields[field])
             .map((field) => {
                 return {

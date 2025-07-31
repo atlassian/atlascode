@@ -54,7 +54,6 @@ import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
-// import ParentIssueEditor from './ParentIssueEditor';
 import { ParticipantList } from './ParticipantList';
 import { TextAreaEditor } from './TextAreaEditor';
 
@@ -676,10 +675,60 @@ export abstract class AbstractIssueEditorPage<
             }
             case UIType.IssueLink: {
                 // Remember to get currentParent for both create and edit issue **
-                if (editmode) {
-                    return <React.Fragment />;
+                if (editmode && currentIssueType.name !== 'Epic' && this.state.siteDetails.isCloud) {
+                    let defaultParent: IssuePickerIssue | undefined;
+                    if (this.state.fieldValues['parent']) {
+                        defaultParent = {
+                            img: '',
+                            key: this.state.fieldValues['parent'].key,
+                            keyHtml: `<b>${this.state.fieldValues['parent'].key}</b>`,
+                            summary: this.state.fieldValues['parent'].summary,
+                            summaryText: this.state.fieldValues['parent'].summary,
+                        };
+                    } else {
+                        defaultParent = undefined;
+                    }
+                    return (
+                        <Field
+                            isRequired={field.required}
+                            id={this.state.fieldValues['parent'].key}
+                            name={this.state.fieldValues['parent'].key}
+                        >
+                            {(fieldArgs: any) => {
+                                return (
+                                    <AsyncSelect
+                                        {...fieldArgs.fieldProps}
+                                        isClearable={!field.required}
+                                        isMulti={false}
+                                        defaultValue={defaultParent}
+                                        className="ac-select-container"
+                                        classNamePrefix="ac-select"
+                                        loadOptions={async (input: string) =>
+                                            await this.loadIssueOptions(
+                                                field as SelectFieldUI,
+                                                input,
+                                                'issuetype = Epic',
+                                            )
+                                        }
+                                        getOptionLabel={(option: any) => option.key}
+                                        getOptionValue={(option: any) => option.key}
+                                        placeholder="Search for parent issue"
+                                        isLoading={this.state.loadingField === field.key}
+                                        isDisabled={this.state.isSomethingLoading}
+                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                            this.handleInlineEdit(field, val);
+                                        })}
+                                        components={{
+                                            Option: SelectFieldHelper.IssueSuggestionOption,
+                                            SingleValue: SelectFieldHelper.IssueSuggestionValue,
+                                        }}
+                                    />
+                                );
+                            }}
+                        </Field>
+                    );
                 }
-                if (currentIssueType.name !== 'Epic') {
+                if (currentIssueType.name !== 'Epic' && this.state.siteDetails.isCloud) {
                     return (
                         <Field
                             label={<span>{field.name}</span>}
@@ -734,7 +783,6 @@ export abstract class AbstractIssueEditorPage<
                                 this.handleInlineEdit(field, val);
                             }}
                             isLoading={this.state.loadingField === field.key}
-                            //onFetchIssues={async (input: string) => ReactPromiseUtil.debouncePromise<IssuePickerIssue[]>(() => this.loadIssueOptions(field as SelectFieldUI, input), 100)()}
                             onFetchIssues={async (input: string) =>
                                 await this.loadIssueOptions(field as SelectFieldUI, input)
                             }
