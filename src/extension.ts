@@ -1,3 +1,7 @@
+/// <reference types="@emotion/react/types/css-prop" />
+// Reference above is a temporary fix for error: "Property 'css' does not exist on type 'IntrinsicAttributes & DropdownMenuProps<HTMLButtonElement>'"
+// TODO: review and remove this reference after update to newer version of react (18.0.0 or later)
+
 import { pid } from 'process';
 import { gt as semver_gt } from 'semver';
 import { commands, env, ExtensionContext, extensions, languages, Memento, window } from 'vscode';
