@@ -1,4 +1,4 @@
-import { Frame, Locator } from 'playwright/test';
+import { Frame } from 'playwright/test';
 
 import { IssueComments, IssueDescription, IssueQuickContent, IssueStatus, IssueTitle } from './fragments';
 
