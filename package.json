@@ -497,6 +497,11 @@
                     "id": "atlascode.views.helpTreeView",
                     "name": "Help and Feedback",
                     "when": "!atlascode:bbyEnvironmentActive && config.atlascode.helpExplorerEnabled"
+                },
+                {
+                    "id": "atlascode.views.asyncRovodevView",
+                    "type": "webview",
+                    "name": "#shipit Rovo Dev"
                 }
             ],
             "atlascode-rovo-dev": [
