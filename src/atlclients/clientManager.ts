@@ -12,7 +12,6 @@ import { ServerRepositoriesApi } from '../bitbucket/bitbucket-server/repositorie
 import { ClientError, HTTPClient } from '../bitbucket/httpClient';
 import { BitbucketApi } from '../bitbucket/model';
 import { configuration } from '../config/configuration';
-import { cannotGetClientFor } from '../constants';
 import { Container } from '../container';
 import {
     basicJiraTransportFactory,
@@ -317,6 +316,8 @@ export class ClientManager implements Disposable {
             this._agentChanged = false;
         }
 
-        return client ? client : Promise.reject(new Error(`${cannotGetClientFor}: ${site.product.name}`));
+        return client
+            ? client
+            : Promise.reject(new Error(`Unable to connect to ${site.product.name}. Please sign in again to continue.`));
     }
 }
