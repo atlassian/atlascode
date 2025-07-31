@@ -88,6 +88,11 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
             ConnectionTimeout,
         );
         setPullRequestLoading(false);
+
+        if (response.data.error) {
+            console.error(`Error creating PR: ${response.data.error}`);
+            return;
+        }
         onPullRequestCreated(response.data.url || '');
     };
 

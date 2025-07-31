@@ -40,6 +40,7 @@ import {
     RovoDevViewResponse,
     RovoDevViewResponseType,
 } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
+import { GitErrorCodes } from '../typings/git';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
@@ -476,14 +477,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private processError(error: Error, isRetriable: boolean) {
+    private processError(error: Error & { gitErrorCode?: GitErrorCodes }, isRetriable: boolean) {
         Logger.error('RovoDev', error);
 
         const webview = this._webView!;
         return webview.postMessage({
             type: RovoDevProviderMessageType.ErrorMessage,
             message: {
-                text: `Error: ${error.message}`,
+                text: `Error: ${error.message}${error.gitErrorCode ? `\n ${error.gitErrorCode}` : ''}`,
                 source: 'RovoDevError',
                 isRetriable,
                 uid: v4(),
@@ -926,19 +927,31 @@ ${message}`;
 
     private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
         let prLink: string | undefined;
+        const webview = this._webView!;
         try {
             if (!commitMessage || !branchName) {
                 throw new Error('Commit message and branch name are required to create a PR');
             }
             prLink = await this._prHandler.createPR(branchName, commitMessage);
-        } catch (e) {
-            await this.processError(e, false);
-        } finally {
-            const webview = this._webView!;
+
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CreatePRComplete,
                 data: {
                     url: prLink,
+                },
+            });
+        } catch (e) {
+            await this.processError(e, false);
+
+            const errorMessage = e.message;
+            const errorCode = e.gitErrorCode;
+
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.CreatePRComplete,
+                data: {
+                    error: e.message
+                        ? `${errorMessage}${errorCode ? ` (Error code: ${errorCode})` : ''}`
+                        : 'Unknown error occurred while creating PR',
                 },
             });
         }

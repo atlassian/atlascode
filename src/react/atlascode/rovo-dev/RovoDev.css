@@ -378,6 +378,10 @@ body {
     color: var(--vscode-input-foreground);
 }
 
+.pull-request-form-field input[type="text"]:focus {
+    outline: var(--vscode-focusBorder) solid 1px;
+}
+
 .pull-request-form-actions {
     display: flex;
     flex-direction: row;
