@@ -6,7 +6,7 @@ import { ConnectionTimeout } from 'src/util/time';
 import { useMessagingApi } from '../../messagingApi';
 import { mdParser } from '../common/common';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
-import { DefaultMessage, ToolReturnParseResult } from '../utils';
+import { DefaultMessage } from '../utils';
 
 const PullRequestButton: React.FC<{
     onClick: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>;
@@ -29,7 +29,6 @@ interface PullRequestFormProps {
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
     >;
-    modifiedFiles?: ToolReturnParseResult[];
     onPullRequestCreated: (url: string) => void;
     isFormVisible?: boolean;
     setFormVisible?: (visible: boolean) => void;
@@ -38,14 +37,10 @@ interface PullRequestFormProps {
 export const PullRequestForm: React.FC<PullRequestFormProps> = ({
     onCancel,
     messagingApi: { postMessagePromise },
-    modifiedFiles,
     onPullRequestCreated,
     isFormVisible = false,
     setFormVisible,
 }) => {
-    if (!modifiedFiles || modifiedFiles.length === 0) {
-        return null;
-    }
     const [isPullRequestLoading, setPullRequestLoading] = React.useState(false);
     const [isBranchNameLoading, setBranchNameLoading] = React.useState(false);
     const [branchName, setBranchName] = React.useState<string | undefined>(undefined);

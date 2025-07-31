@@ -259,6 +259,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         );
                         break;
 
+                    case RovoDevViewResponseType.CheckGitChanges:
+                        await this._prHandler.isGitStateClean().then((isClean) => {
+                            this._webView?.postMessage({
+                                type: RovoDevProviderMessageType.CheckGitChangesComplete,
+                                hasChanges: !isClean,
+                            });
+                        });
+                        break;
+
                     case RovoDevViewResponseType.ReportThinkingDrawerExpanded:
                         this.fireTelemetryEvent('rovoDevDetailsExpandedEvent', this._currentPromptId);
                         break;

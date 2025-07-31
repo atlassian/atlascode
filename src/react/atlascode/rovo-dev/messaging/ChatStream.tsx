@@ -1,12 +1,13 @@
 import * as React from 'react';
-import { RovoDevProviderMessage } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
+import { ConnectionTimeout } from 'src/util/time';
 
 import { useMessagingApi } from '../../messagingApi';
 import { ErrorMessageItem, FollowUpActionFooter, OpenFileFunc, TechnicalPlanComponent } from '../common/common';
 import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
 import { RovoDevLanding } from '../rovoDevLanding';
 import { State } from '../rovoDevView';
-import { RovoDevViewResponse } from '../rovoDevViewMessages';
+import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { ToolCallItem } from '../tools/ToolCallItem';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
@@ -59,7 +60,17 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const [canCreatePR, setCanCreatePR] = React.useState(false);
+    const [hasChangesInGit, setHasChangesInGit] = React.useState(false);
     const [isFormVisible, setIsFormVisible] = React.useState(false);
+
+    const checkGitChanges = React.useCallback(async () => {
+        const response = await messagingApi.postMessagePromise(
+            { type: RovoDevViewResponseType.CheckGitChanges },
+            RovoDevProviderMessageType.CheckGitChangesComplete,
+            ConnectionTimeout,
+        );
+        setHasChangesInGit(response.hasChanges);
+    }, [messagingApi]);
 
     React.useEffect(() => {
         if (chatEndRef.current) {
@@ -68,8 +79,12 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
         if (state === State.WaitingForPrompt) {
             setCanCreatePR(true);
+            if (currentMessage) {
+                // Only check git changes if there's something in the chat
+                checkGitChanges();
+            }
         }
-    }, [state, chatHistory, currentThinking, currentMessage, isFormVisible, pendingToolCall]);
+    }, [state, chatHistory, currentThinking, currentMessage, isFormVisible, pendingToolCall, checkGitChanges]);
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
@@ -139,14 +154,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
             {state === State.WaitingForPrompt && (
                 <FollowUpActionFooter>
-                    {canCreatePR && (
+                    {canCreatePR && hasChangesInGit && (
                         <PullRequestForm
                             onCancel={() => {
                                 setCanCreatePR(false);
                                 setIsFormVisible(false);
                             }}
                             messagingApi={messagingApi}
-                            modifiedFiles={modifiedFiles}
                             onPullRequestCreated={(url) => {
                                 setCanCreatePR(false);
                                 setIsFormVisible(false);

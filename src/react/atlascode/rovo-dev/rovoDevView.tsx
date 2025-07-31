@@ -419,6 +419,7 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.ReturnText:
                 case RovoDevProviderMessageType.CreatePRComplete:
                 case RovoDevProviderMessageType.GetCurrentBranchNameComplete:
+                case RovoDevProviderMessageType.CheckGitChangesComplete:
                     break; // This is handled elsewhere
 
                 default:
