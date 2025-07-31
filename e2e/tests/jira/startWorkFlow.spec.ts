@@ -1,8 +1,15 @@
 import { test } from '@playwright/test';
-import { authenticateWithJira, getIssueFrame, setupIssueMock, setupSearchMock } from 'e2e/helpers';
+import {
+    authenticateWithBitbucketCloud,
+    authenticateWithJira,
+    connectRepository,
+    getIssueFrame,
+    setupIssueMock,
+    setupSearchMock,
+} from 'e2e/helpers';
 import { AtlascodeDrawer, JiraIssuePage, StartWorkPage } from 'e2e/page-objects';
 
-test.only('I can start work on a Jira', async ({ page, request }) => {
+test.only('I can start work on a Jira', async ({ page, request, context }) => {
     const issueName = 'BTS-1 - User Interface Bugs';
     const currentStatus = 'To Do';
     const nextStatus = 'In Progress';
@@ -10,12 +17,15 @@ test.only('I can start work on a Jira', async ({ page, request }) => {
     await authenticateWithJira(page);
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
+    await authenticateWithBitbucketCloud(page, context);
+    await connectRepository(page);
+
     const atlascodeDrawer = new AtlascodeDrawer(page);
-    await atlascodeDrawer.openJiraIssue(issueName);
+    await atlascodeDrawer.jira.openIssue(issueName);
 
     const issueFrame = await getIssueFrame(page);
     const jiraIssuePage = new JiraIssuePage(issueFrame);
-    await jiraIssuePage.expectStatus(currentStatus);
+    await jiraIssuePage.status.expectEqual(currentStatus);
 
     // setup mocks for next status
     const cleanupIssueMock = await setupIssueMock(request, { status: nextStatus });
@@ -31,7 +41,7 @@ test.only('I can start work on a Jira', async ({ page, request }) => {
 
     await startWorkPage.startWork();
     await page.waitForTimeout(2_000);
-    await atlascodeDrawer.expectStatusForJiraIssue(issueName, nextStatus);
+    await atlascodeDrawer.jira.expectIssueStatus(issueName, nextStatus);
 
     await cleanupIssueMock();
     await cleanupSearchMock();
