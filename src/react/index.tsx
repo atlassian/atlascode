@@ -45,6 +45,7 @@ const routes: Record<string, any> = {
     atlascodeRovoDev: React.lazy(
         () => import(/* webpackChunkName: "atlascodeRovoDev" */ './atlascode/rovo-dev/rovoDevView'),
     ),
+    shipitWebview: React.lazy(() => import(/* webpackChunkName: "shipitWebview" */ '../shipit/ShipItWebview')),
 };
 
 const view = document.getElementById('reactView') as HTMLElement;

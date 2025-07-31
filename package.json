@@ -468,6 +468,11 @@
                     "id": "atlascode-rovo-dev",
                     "title": "Rovo Dev Beta",
                     "icon": "resources/rovodev-icon.svg"
+                },
+                {
+                    "id": "atlascode-shipit",
+                    "icon": "$(rocket)",
+                    "title": "#shipit Rovo Dev"
                 }
             ]
         },
@@ -497,9 +502,11 @@
                     "id": "atlascode.views.helpTreeView",
                     "name": "Help and Feedback",
                     "when": "!atlascode:bbyEnvironmentActive && config.atlascode.helpExplorerEnabled"
-                },
+                }
+            ],
+            "atlascode-shipit": [
                 {
-                    "id": "atlascode.views.asyncRovodevView",
+                    "id": "atlascode.views.shipitWebviewView",
                     "type": "webview",
                     "name": "#shipit Rovo Dev"
                 }

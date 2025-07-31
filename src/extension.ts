@@ -23,6 +23,7 @@ import {
 } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
 import { deactivateRovoDevProcessManager, initializeRovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
+import { ShipitWebviewProvider } from './shipit/shipitWebviewProvider';
 import { GitExtension } from './typings/git';
 import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
 import { NotificationManagerImpl } from './views/notifications/notificationManager';
@@ -56,6 +57,7 @@ export async function activate(context: ExtensionContext) {
 
         activateErrorReporting();
         registerRovoDevCommands(context);
+        context.subscriptions.push(new ShipitWebviewProvider(context.extensionPath));
 
         if (!process.env.ROVODEV_BBY) {
             registerCommands(context);
