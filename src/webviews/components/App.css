@@ -1115,15 +1115,21 @@ div[role='dialog'],
     border-color: var(--vscode-focusBorder) !important;
 }
 
-.ac-select__indicator,
-.ac-select__input {
+.ac-select__indicator {
     background: var(--vscode-editor-background) !important;
+    color: var(--vscode-input-foreground) !important;
+}
+.ac-select__input {
     color: var(--vscode-input-foreground) !important;
 }
 .ac-select__menu,
 .ac-select__menu-list {
     background: var(--vscode-dropdown-background) !important;
     color: var(--vscode-input-foreground) !important;
+}
+
+.ac-select__menu-notice > span {
+    color: var(--vscode-input-placeholderForeground) !important;
 }
 
 .ac-select__single-value {
@@ -1192,15 +1198,21 @@ div[role='dialog'],
     border-color: var(--vscode-focusBorder) !important;
 }
 
-.ac-form-select__indicator,
-.ac-form-select__input {
+.ac-form-select__indicator {
     background: var(--vscode-input-background) !important;
+    color: var(--vscode-input-foreground) !important;
+}
+.ac-form-select__input {
     color: var(--vscode-input-foreground) !important;
 }
 .ac-form-select__menu,
 .ac-form-select__menu-list {
     background: var(--vscode-dropdown-background) !important;
     color: var(--vscode-input-foreground) !important;
+}
+
+.ac-form-select__menu-notice > span {
+    color: var(--vscode-input-placeholderForeground) !important;
 }
 
 .ac-form-select__single-value {
