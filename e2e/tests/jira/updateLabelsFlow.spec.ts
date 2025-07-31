@@ -16,7 +16,7 @@ test('User can add and remove existing labels', async ({ page, request }) => {
     await expect(issueFrame.getByText(labelsFieldPlaceholder)).toBeVisible();
 
     const labelsInput = issueFrame.locator('#labels input[type="text"]');
-    await issueFrame.getByText(labelsFieldPlaceholder).click();
+    await issueFrame.locator('#labels .ac-select__control').click();
     await page.waitForTimeout(250);
     await expect(labelsInput).toBeVisible();
 
