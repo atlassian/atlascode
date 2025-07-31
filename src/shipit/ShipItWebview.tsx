@@ -63,6 +63,9 @@ const ShipitWebview = () => {
                 </div>
             )}
             {aggError && <p>Error: {aggError}</p>}
+
+            {/* Call some process */}
+            <button onClick={() => postMessage({ type: 'runProcess', echoText: 'Hello!' })}>Run Process</button>
         </div>
     );
 };

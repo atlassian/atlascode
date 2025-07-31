@@ -1,3 +1,4 @@
+import { exec } from 'child_process';
 import * as path from 'path';
 import { isBasicAuthInfo, ProductJira } from 'src/atlclients/authInfo';
 import { Container } from 'src/container';
@@ -72,6 +73,16 @@ export class ShipitWebviewProvider extends Disposable implements WebviewViewProv
                     error: 'Failed to ping AGG',
                 });
             }
+        },
+        runProcess: (message) => {
+            console.log('Running process with echoText:', message.echoText);
+            exec(`echo ${message.echoText}`, (error, stdout, stderr) => {
+                window.showInformationMessage(`Process output: ${stdout}`);
+                if (error) {
+                    console.error('Error running process:', error);
+                    window.showErrorMessage(`Error running process: ${stderr}`);
+                }
+            });
         },
     };
 
