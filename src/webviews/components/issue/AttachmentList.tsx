@@ -1,9 +1,8 @@
-import Button from '@atlaskit/button';
+import { LinkIconButton } from '@atlaskit/button/new';
 import ShortcutIcon from '@atlaskit/icon/glyph/shortcut';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
 import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
 import TableTree from '@atlaskit/table-tree';
-import Tooltip from '@atlaskit/tooltip';
 import { filesize } from 'filesize';
 import React, { useState } from 'react';
 
@@ -33,14 +32,21 @@ const Delete = (data: ItemData) => {
 
 const ExternalLink = (data: ItemData) => {
     return (
-        <Tooltip content="View in browser">
-            <Button
-                className="ac-link-button"
-                appearance="link"
-                iconBefore={<ShortcutIcon size="small" label="open-attachment" />}
-                href={`${data.baseLinkUrl}/rest/api/2/attachment/content/${data.attachment.id}`}
-            />
-        </Tooltip>
+        <LinkIconButton
+            href={`${data.baseLinkUrl}/rest/api/2/attachment/content/${data.attachment.id}`}
+            icon={(iconProps) => (
+                <ShortcutIcon
+                    {...iconProps}
+                    size="small"
+                    label="Open attachment"
+                    primaryColor="var(--vscode-textLink-foreground)"
+                />
+            )}
+            label="View in browser"
+            appearance="subtle"
+            spacing="compact"
+            isTooltipDisabled={false}
+        />
     );
 };
 

@@ -22,6 +22,8 @@ function setProcessPlatform(platform: NodeJS.Platform) {
     });
 }
 
+const RovoDevEnvironments: analytics.RovoDevEnv[] = ['IDE', 'Boysenberry'];
+
 describe('analytics', () => {
     describe('viewScreenEvent', () => {
         const originalPlatform = process.platform;
@@ -802,7 +804,7 @@ describe('analytics', () => {
         describe('rovodev.response.timeToFirstByte', () => {
             it('should create a performance event with correct tag and measure', async () => {
                 const measure = 150;
-                const params = { sessionId: 'test-session-123', promptId: 'test-prompt-123' };
+                const params = { rovoDevSessionId: 'test-session-123', rovoDevPromptId: 'test-prompt-123' };
 
                 const event = await analytics.performanceEvent('rovodev.response.timeToFirstByte', measure, params);
 
@@ -810,15 +812,15 @@ describe('analytics', () => {
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.tag).toEqual('rovodev.response.timeToFirstByte');
                 expect(event.trackEvent.attributes.measure).toEqual(measure);
-                expect(event.trackEvent.attributes.sessionId).toEqual(params.sessionId);
-                expect(event.trackEvent.attributes.promptId).toEqual(params.promptId);
+                expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(params.rovoDevSessionId);
+                expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(params.rovoDevPromptId);
             });
         });
 
         describe('rovodev.response.timeToFirstMessage', () => {
             it('should create a performance event with correct tag and measure', async () => {
                 const measure = 250;
-                const params = { sessionId: 'session-456', promptId: 'prompt-456' };
+                const params = { rovoDevSessionId: 'session-456', rovoDevPromptId: 'prompt-456' };
 
                 const event = await analytics.performanceEvent('rovodev.response.timeToFirstMessage', measure, params);
 
@@ -826,15 +828,15 @@ describe('analytics', () => {
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.tag).toEqual('rovodev.response.timeToFirstMessage');
                 expect(event.trackEvent.attributes.measure).toEqual(measure);
-                expect(event.trackEvent.attributes.sessionId).toEqual(params.sessionId);
-                expect(event.trackEvent.attributes.promptId).toEqual(params.promptId);
+                expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(params.rovoDevSessionId);
+                expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(params.rovoDevPromptId);
             });
         });
 
         describe('rovodev.response.timeToTechPlan', () => {
             it('should create a performance event with correct tag and measure', async () => {
                 const measure = 500;
-                const params = { sessionId: 'session-789', promptId: 'prompt-789' };
+                const params = { rovoDevSessionId: 'session-789', rovoDevPromptId: 'prompt-789' };
 
                 const event = await analytics.performanceEvent('rovodev.response.timeToTechPlan', measure, params);
 
@@ -842,15 +844,15 @@ describe('analytics', () => {
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.tag).toEqual('rovodev.response.timeToTechPlan');
                 expect(event.trackEvent.attributes.measure).toEqual(measure);
-                expect(event.trackEvent.attributes.sessionId).toEqual(params.sessionId);
-                expect(event.trackEvent.attributes.promptId).toEqual(params.promptId);
+                expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(params.rovoDevSessionId);
+                expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(params.rovoDevPromptId);
             });
         });
 
         describe('rovodev.response.timeToLastMessage', () => {
             it('should create a performance event with correct tag and measure', async () => {
                 const measure = 1000;
-                const params = { sessionId: 'session-999', promptId: 'prompt-999' };
+                const params = { rovoDevSessionId: 'session-999', rovoDevPromptId: 'prompt-999' };
 
                 const event = await analytics.performanceEvent('rovodev.response.timeToLastMessage', measure, params);
 
@@ -858,8 +860,8 @@ describe('analytics', () => {
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.tag).toEqual('rovodev.response.timeToLastMessage');
                 expect(event.trackEvent.attributes.measure).toEqual(measure);
-                expect(event.trackEvent.attributes.sessionId).toEqual(params.sessionId);
-                expect(event.trackEvent.attributes.promptId).toEqual(params.promptId);
+                expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(params.rovoDevSessionId);
+                expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(params.rovoDevPromptId);
             });
         });
 
@@ -867,8 +869,8 @@ describe('analytics', () => {
             it('should include platform information based on process.platform', async () => {
                 setProcessPlatform('darwin');
                 const event = await analytics.performanceEvent('rovodev.response.timeToFirstByte', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 expect(event.trackEvent.platform).toEqual('mac');
@@ -876,8 +878,8 @@ describe('analytics', () => {
 
             it('should include origin information', async () => {
                 const event = await analytics.performanceEvent('rovodev.response.timeToFirstByte', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 expect(event.trackEvent.origin).toEqual('desktop');
@@ -885,26 +887,26 @@ describe('analytics', () => {
 
             it('should handle empty string parameters', async () => {
                 const event = await analytics.performanceEvent('rovodev.response.timeToFirstByte', 100, {
-                    sessionId: '',
-                    promptId: '',
+                    rovoDevSessionId: '',
+                    rovoDevPromptId: '',
                 });
 
-                expect(event.trackEvent.attributes.sessionId).toEqual('');
-                expect(event.trackEvent.attributes.promptId).toEqual('');
+                expect(event.trackEvent.attributes.rovoDevSessionId).toEqual('');
+                expect(event.trackEvent.attributes.rovoDevPromptId).toEqual('');
             });
 
             it('should handle additional parameters in params object', async () => {
                 const params = {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                     additionalData: 'extra-info',
                     numericData: 42,
                 };
 
                 const event = await analytics.performanceEvent('rovodev.response.timeToFirstByte', 100, params);
 
-                expect(event.trackEvent.attributes.sessionId).toEqual('test-session');
-                expect(event.trackEvent.attributes.promptId).toEqual('test-prompt');
+                expect(event.trackEvent.attributes.rovoDevSessionId).toEqual('test-session');
+                expect(event.trackEvent.attributes.rovoDevPromptId).toEqual('test-prompt');
                 expect(event.trackEvent.attributes.additionalData).toEqual('extra-info');
                 expect(event.trackEvent.attributes.numericData).toEqual(42);
             });
@@ -933,8 +935,8 @@ describe('analytics', () => {
 
                 expect(event.trackEvent.attributes.tag).toEqual('rovodev.response.timeToFirstByte');
                 expect(event.trackEvent.attributes.measure).toEqual(100);
-                expect(event.trackEvent.attributes.sessionId).toBeUndefined();
-                expect(event.trackEvent.attributes.promptId).toBeUndefined();
+                expect(event.trackEvent.attributes.rovoDevSessionId).toBeUndefined();
+                expect(event.trackEvent.attributes.rovoDevPromptId).toBeUndefined();
             });
 
             it('should handle undefined params', async () => {
@@ -946,16 +948,16 @@ describe('analytics', () => {
 
                 expect(event.trackEvent.attributes.tag).toEqual('rovodev.response.timeToFirstByte');
                 expect(event.trackEvent.attributes.measure).toEqual(100);
-                expect(event.trackEvent.attributes.sessionId).toBeUndefined();
-                expect(event.trackEvent.attributes.promptId).toBeUndefined();
+                expect(event.trackEvent.attributes.rovoDevSessionId).toBeUndefined();
+                expect(event.trackEvent.attributes.rovoDevPromptId).toBeUndefined();
             });
         });
 
         describe('event structure validation', () => {
             it('should return a valid TrackEvent structure', async () => {
                 const event = await analytics.performanceEvent('rovodev.response.timeToFirstByte', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 // Validate TrackEvent structure
@@ -974,8 +976,8 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToFirstByte', async () => {
                 const event = await analytics.performanceEvent('rovodev.response.timeToFirstByte', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 expect(event.trackEvent.action).toEqual('performanceEvent');
@@ -984,8 +986,8 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToFirstMessage', async () => {
                 const event = await analytics.performanceEvent('rovodev.response.timeToFirstMessage', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 expect(event.trackEvent.action).toEqual('performanceEvent');
@@ -994,8 +996,8 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToTechPlan', async () => {
                 const event = await analytics.performanceEvent('rovodev.response.timeToTechPlan', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 expect(event.trackEvent.action).toEqual('performanceEvent');
@@ -1004,8 +1006,8 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToLastMessage', async () => {
                 const event = await analytics.performanceEvent('rovodev.response.timeToLastMessage', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 expect(event.trackEvent.action).toEqual('performanceEvent');
@@ -1024,143 +1026,201 @@ describe('analytics', () => {
             mockedData.getFirstAAID_value = 'some-user-id';
         });
 
-        it('should create rovoDevPromptSentEvent with session and prompt IDs', async () => {
-            const event = await analytics.rovoDevPromptSentEvent(mockSessionId, mockPromptId, 'chat', true);
+        it.each(RovoDevEnvironments)(
+            'should create rovoDevNewSessionActionEvent with session information',
+            async (rovoDevEnv) => {
+                const isManuallyCreated = true;
+                const event = await analytics.rovoDevNewSessionActionEvent(
+                    rovoDevEnv,
+                    mockSessionId,
+                    isManuallyCreated,
+                );
 
-            expect(event.trackEvent.action).toEqual('rovoDevPromptSent');
-            expect(event.trackEvent.actionSubject).toEqual('atlascode');
-            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
-            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
-            expect(event.trackEvent.attributes.source).toEqual('chat');
-            expect(event.trackEvent.attributes.deepPlanEnabled).toEqual(true);
-        });
+                expect(event.trackEvent.action).toEqual('rovoDevNewSessionAction');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.isManuallyCreated).toEqual(isManuallyCreated);
+            },
+        );
 
-        it('should create rovoDevNewSessionActionEvent with session information', async () => {
-            const isManuallyCreated = true;
-            const event = await analytics.rovoDevNewSessionActionEvent(mockSessionId, isManuallyCreated);
+        it.each(RovoDevEnvironments)(
+            'should create rovoDevPromptSentEvent with session and prompt IDs',
+            async (rovoDevEnv) => {
+                const event = await analytics.rovoDevPromptSentEvent(rovoDevEnv, mockSessionId, mockPromptId, true);
 
-            expect(event.trackEvent.action).toEqual('rovoDevNewSessionAction');
-            expect(event.trackEvent.actionSubject).toEqual('atlascode');
-            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
-            expect(event.trackEvent.attributes.isManuallyCreated).toEqual(isManuallyCreated);
-        });
+                expect(event.trackEvent.action).toEqual('rovoDevPromptSent');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
+                expect(event.trackEvent.attributes.deepPlanEnabled).toEqual(true);
+            },
+        );
 
-        it('should create rovoDevTechnicalPlanningShownEvent with planning details', async () => {
-            const stepsCount = 5;
-            const filesCount = 3;
-            const questionsCount = 2;
-            const event = await analytics.rovoDevTechnicalPlanningShownEvent(
-                mockSessionId,
-                stepsCount,
-                filesCount,
-                questionsCount,
-            );
+        it.each(RovoDevEnvironments)(
+            'should create rovoDevTechnicalPlanningShownEvent with planning details',
+            async (rovoDevEnv) => {
+                const stepsCount = 5;
+                const filesCount = 3;
+                const questionsCount = 2;
+                const event = await analytics.rovoDevTechnicalPlanningShownEvent(
+                    rovoDevEnv,
+                    mockSessionId,
+                    mockPromptId,
+                    stepsCount,
+                    filesCount,
+                    questionsCount,
+                );
 
-            expect(event.trackEvent.action).toEqual('rovoDevTechnicalPlanningShown');
-            expect(event.trackEvent.actionSubject).toEqual('atlascode');
-            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
-            expect(event.trackEvent.attributes.stepsCount).toEqual(stepsCount);
-            expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
-            expect(event.trackEvent.attributes.questionsCount).toEqual(questionsCount);
-        });
+                expect(event.trackEvent.action).toEqual('rovoDevTechnicalPlanningShown');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
+                expect(event.trackEvent.attributes.stepsCount).toEqual(stepsCount);
+                expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
+                expect(event.trackEvent.attributes.questionsCount).toEqual(questionsCount);
+            },
+        );
 
-        it('should create rovoDevFilesSummaryShownEvent for new files summary', async () => {
-            const filesCount = 4;
-            const event = await analytics.rovoDevFilesSummaryShownEvent(mockSessionId, mockPromptId, filesCount);
+        it.each(RovoDevEnvironments)(
+            'should create rovoDevFilesSummaryShownEvent for new files summary',
+            async (rovoDevEnv) => {
+                const filesCount = 4;
+                const event = await analytics.rovoDevFilesSummaryShownEvent(
+                    rovoDevEnv,
+                    mockSessionId,
+                    mockPromptId,
+                    filesCount,
+                );
 
-            expect(event.trackEvent.action).toEqual('rovoDevFilesSummaryShown');
-            expect(event.trackEvent.actionSubject).toEqual('atlascode');
-            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
-            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
-            expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
-        });
+                expect(event.trackEvent.action).toEqual('rovoDevFilesSummaryShown');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
+                expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
+            },
+        );
 
-        it('should create rovoDevFileChangedActionEvent for undo action', async () => {
-            const action = 'undo';
-            const filesCount = 3;
-            const event = await analytics.rovoDevFileChangedActionEvent(
-                mockSessionId,
-                mockPromptId,
-                action,
-                filesCount,
-            );
+        it.each(RovoDevEnvironments)(
+            'should create rovoDevFileChangedActionEvent for undo action',
+            async (rovoDevEnv) => {
+                const action = 'undo';
+                const filesCount = 3;
+                const event = await analytics.rovoDevFileChangedActionEvent(
+                    rovoDevEnv,
+                    mockSessionId,
+                    mockPromptId,
+                    action,
+                    filesCount,
+                );
 
-            expect(event.trackEvent.action).toEqual('rovoDevFileChangedAction');
-            expect(event.trackEvent.actionSubject).toEqual('atlascode');
-            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
-            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
-            expect(event.trackEvent.attributes.action).toEqual(action);
-            expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
-        });
+                expect(event.trackEvent.action).toEqual('rovoDevFileChangedAction');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
+                expect(event.trackEvent.attributes.action).toEqual(action);
+                expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
+            },
+        );
 
-        it('should create rovoDevFileChangedActionEvent for keep action', async () => {
-            const action = 'keep';
-            const filesCount = 2;
-            const event = await analytics.rovoDevFileChangedActionEvent(
-                mockSessionId,
-                mockPromptId,
-                action,
-                filesCount,
-            );
+        it.each(RovoDevEnvironments)(
+            'should create rovoDevFileChangedActionEvent for keep action',
+            async (rovoDevEnv) => {
+                const action = 'keep';
+                const filesCount = 2;
+                const event = await analytics.rovoDevFileChangedActionEvent(
+                    rovoDevEnv,
+                    mockSessionId,
+                    mockPromptId,
+                    action,
+                    filesCount,
+                );
 
-            expect(event.trackEvent.action).toEqual('rovoDevFileChangedAction');
-            expect(event.trackEvent.actionSubject).toEqual('atlascode');
-            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
-            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
-            expect(event.trackEvent.attributes.action).toEqual(action);
-            expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
-        });
+                expect(event.trackEvent.action).toEqual('rovoDevFileChangedAction');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
+                expect(event.trackEvent.attributes.action).toEqual(action);
+                expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
+            },
+        );
 
-        it('should create rovoDevStopActionEvent when successful', async () => {
-            const failed = false;
-            const event = await analytics.rovoDevStopActionEvent(mockSessionId, mockPromptId, failed);
+        it.each(RovoDevEnvironments)('should create rovoDevStopActionEvent when successful', async (rovoDevEnv) => {
+            const event = await analytics.rovoDevStopActionEvent(rovoDevEnv, mockSessionId, mockPromptId);
 
             expect(event.trackEvent.action).toEqual('rovoDevStopAction');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
             expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
             expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
-            expect(event.trackEvent.attributes.failed).toEqual(failed);
+            expect(event.trackEvent.attributes.failed).toBeUndefined();
         });
 
-        it('should create rovoDevStopActionEvent when failed', async () => {
+        it.each(RovoDevEnvironments)('should create rovoDevStopActionEvent when failed', async (rovoDevEnv) => {
             const failed = true;
-            const event = await analytics.rovoDevStopActionEvent(mockSessionId, mockPromptId, failed);
+            const event = await analytics.rovoDevStopActionEvent(rovoDevEnv, mockSessionId, mockPromptId, failed);
 
             expect(event.trackEvent.action).toEqual('rovoDevStopAction');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
             expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
             expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
             expect(event.trackEvent.attributes.failed).toEqual(failed);
         });
 
-        it('should create rovoDevGitPushActionEvent when PR is created', async () => {
-            const prCreated = true;
-            const event = await analytics.rovoDevGitPushActionEvent(mockSessionId, mockPromptId, prCreated);
+        it.each(RovoDevEnvironments)(
+            'should create rovoDevGitPushActionEvent when PR is created',
+            async (rovoDevEnv) => {
+                const prCreated = true;
+                const event = await analytics.rovoDevGitPushActionEvent(
+                    rovoDevEnv,
+                    mockSessionId,
+                    mockPromptId,
+                    prCreated,
+                );
 
-            expect(event.trackEvent.action).toEqual('rovoDevGitPushAction');
-            expect(event.trackEvent.actionSubject).toEqual('atlascode');
-            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
-            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
-            expect(event.trackEvent.attributes.prCreated).toEqual(prCreated);
-        });
+                expect(event.trackEvent.action).toEqual('rovoDevGitPushAction');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
+                expect(event.trackEvent.attributes.prCreated).toEqual(prCreated);
+            },
+        );
 
-        it('should create rovoDevGitPushActionEvent when PR is not created', async () => {
-            const prCreated = false;
-            const event = await analytics.rovoDevGitPushActionEvent(mockSessionId, mockPromptId, prCreated);
+        it.each(RovoDevEnvironments)(
+            'should create rovoDevGitPushActionEvent when PR is not created',
+            async (rovoDevEnv) => {
+                const prCreated = false;
+                const event = await analytics.rovoDevGitPushActionEvent(
+                    rovoDevEnv,
+                    mockSessionId,
+                    mockPromptId,
+                    prCreated,
+                );
 
-            expect(event.trackEvent.action).toEqual('rovoDevGitPushAction');
-            expect(event.trackEvent.actionSubject).toEqual('atlascode');
-            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
-            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
-            expect(event.trackEvent.attributes.prCreated).toEqual(prCreated);
-        });
+                expect(event.trackEvent.action).toEqual('rovoDevGitPushAction');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+                expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
+                expect(event.trackEvent.attributes.prCreated).toEqual(prCreated);
+            },
+        );
 
-        it('should create rovoDevDetailsExpandedEvent', async () => {
-            const event = await analytics.rovoDevDetailsExpandedEvent(mockSessionId);
+        it.each(RovoDevEnvironments)('should create rovoDevDetailsExpandedEvent', async (rovoDevEnv) => {
+            const event = await analytics.rovoDevDetailsExpandedEvent(rovoDevEnv, mockSessionId, mockPromptId);
 
             expect(event.trackEvent.action).toEqual('rovoDevDetailsExpanded');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
             expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
         });
     });
 
@@ -1192,6 +1252,297 @@ describe('analytics', () => {
             setProcessPlatform('haiku' as NodeJS.Platform);
             event = await analytics.issueUrlCopiedEvent();
             expect(event.trackEvent.platform).toEqual('unknown');
+        });
+    });
+
+    // JiraPerfEvents performance overload tests
+    describe('JiraPerfEvents performance overload', () => {
+        beforeEach(() => {
+            setProcessPlatform('win32');
+            mockedData.getFirstAAID_value = 'some-user-id';
+        });
+
+        describe('ui.cumulativeJqlFetch.render.lcp', () => {
+            it('should create a performance event with correct tag and measure', async () => {
+                const measure = 1200;
+                const event = await analytics.performanceEvent('ui.cumulativeJqlFetch.render.lcp', measure);
+
+                expect(event.trackEvent.action).toEqual('performanceEvent');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.tag).toEqual('ui.cumulativeJqlFetch.render.lcp');
+                expect(event.trackEvent.attributes.measure).toEqual(measure);
+                expect(event.trackEvent.attributes.sessionId).toBeUndefined();
+                expect(event.trackEvent.attributes.promptId).toBeUndefined();
+            });
+
+            it('should handle zero measure value', async () => {
+                const measure = 0;
+                const event = await analytics.performanceEvent('ui.cumulativeJqlFetch.render.lcp', measure);
+
+                expect(event.trackEvent.attributes.measure).toEqual(0);
+            });
+
+            it('should handle large measure values', async () => {
+                const measure = 999999;
+                const event = await analytics.performanceEvent('ui.cumulativeJqlFetch.render.lcp', measure);
+
+                expect(event.trackEvent.attributes.measure).toEqual(999999);
+            });
+        });
+
+        describe('ui.cumulativeJqlFetch.update.lcp', () => {
+            it('should create a performance event with correct tag and measure', async () => {
+                const measure = 800;
+                const event = await analytics.performanceEvent('ui.cumulativeJqlFetch.update.lcp', measure);
+
+                expect(event.trackEvent.action).toEqual('performanceEvent');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.tag).toEqual('ui.cumulativeJqlFetch.update.lcp');
+                expect(event.trackEvent.attributes.measure).toEqual(measure);
+                expect(event.trackEvent.attributes.sessionId).toBeUndefined();
+                expect(event.trackEvent.attributes.promptId).toBeUndefined();
+            });
+
+            it('should handle decimal measure values', async () => {
+                const measure = 123.45;
+                const event = await analytics.performanceEvent('ui.cumulativeJqlFetch.update.lcp', measure);
+
+                expect(event.trackEvent.attributes.measure).toEqual(123.45);
+            });
+        });
+
+        describe('ui.createJiraIssue.render.lcp', () => {
+            it('should create a performance event with correct tag and measure', async () => {
+                const measure = 450;
+                const event = await analytics.performanceEvent('ui.createJiraIssue.render.lcp', measure);
+
+                expect(event.trackEvent.action).toEqual('performanceEvent');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.tag).toEqual('ui.createJiraIssue.render.lcp');
+                expect(event.trackEvent.attributes.measure).toEqual(measure);
+                expect(event.trackEvent.attributes.sessionId).toBeUndefined();
+                expect(event.trackEvent.attributes.promptId).toBeUndefined();
+            });
+
+            it('should handle negative measure values', async () => {
+                const measure = -1;
+                const event = await analytics.performanceEvent('ui.createJiraIssue.render.lcp', measure);
+
+                expect(event.trackEvent.attributes.measure).toEqual(-1);
+            });
+        });
+
+        describe('ui.editJiraIssue.render.lcp', () => {
+            it('should create a performance event with correct tag and measure', async () => {
+                const measure = 320;
+                const event = await analytics.performanceEvent('ui.editJiraIssue.render.lcp', measure);
+
+                expect(event.trackEvent.action).toEqual('performanceEvent');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.tag).toEqual('ui.editJiraIssue.render.lcp');
+                expect(event.trackEvent.attributes.measure).toEqual(measure);
+                expect(event.trackEvent.attributes.sessionId).toBeUndefined();
+                expect(event.trackEvent.attributes.promptId).toBeUndefined();
+            });
+        });
+
+        describe('ui.editJiraIssue.update.lcp', () => {
+            it('should create a performance event with correct tag and measure', async () => {
+                const measure = 180;
+                const event = await analytics.performanceEvent('ui.editJiraIssue.update.lcp', measure);
+
+                expect(event.trackEvent.action).toEqual('performanceEvent');
+                expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                expect(event.trackEvent.attributes.tag).toEqual('ui.editJiraIssue.update.lcp');
+                expect(event.trackEvent.attributes.measure).toEqual(measure);
+                expect(event.trackEvent.attributes.sessionId).toBeUndefined();
+                expect(event.trackEvent.attributes.promptId).toBeUndefined();
+            });
+        });
+
+        describe('JiraPerfEvents overload behavior', () => {
+            it('should not include sessionId or promptId parameters for Jira events', async () => {
+                const event = await analytics.performanceEvent('ui.cumulativeJqlFetch.render.lcp', 100);
+
+                expect(event.trackEvent.attributes.sessionId).toBeUndefined();
+                expect(event.trackEvent.attributes.promptId).toBeUndefined();
+                expect(event.trackEvent.attributes.tag).toEqual('ui.cumulativeJqlFetch.render.lcp');
+                expect(event.trackEvent.attributes.measure).toEqual(100);
+            });
+
+            it('should include platform information based on process.platform', async () => {
+                setProcessPlatform('darwin');
+                const event = await analytics.performanceEvent('ui.createJiraIssue.render.lcp', 200);
+
+                expect(event.trackEvent.platform).toEqual('mac');
+            });
+
+            it('should include origin information', async () => {
+                const event = await analytics.performanceEvent('ui.editJiraIssue.render.lcp', 300);
+
+                expect(event.trackEvent.origin).toEqual('desktop');
+            });
+
+            it('should include source information', async () => {
+                const event = await analytics.performanceEvent('ui.editJiraIssue.update.lcp', 400);
+
+                expect(event.trackEvent.source).toEqual('vscode');
+            });
+
+            it('should have consistent action and actionSubject across all Jira performance events', async () => {
+                const jiraPerfEvents: Array<
+                    | 'ui.cumulativeJqlFetch.render.lcp'
+                    | 'ui.cumulativeJqlFetch.update.lcp'
+                    | 'ui.createJiraIssue.render.lcp'
+                    | 'ui.editJiraIssue.render.lcp'
+                    | 'ui.editJiraIssue.update.lcp'
+                > = [
+                    'ui.cumulativeJqlFetch.render.lcp',
+                    'ui.cumulativeJqlFetch.update.lcp',
+                    'ui.createJiraIssue.render.lcp',
+                    'ui.editJiraIssue.render.lcp',
+                    'ui.editJiraIssue.update.lcp',
+                ];
+
+                for (const eventTag of jiraPerfEvents) {
+                    const event = await analytics.performanceEvent(eventTag, 100);
+                    expect(event.trackEvent.action).toEqual('performanceEvent');
+                    expect(event.trackEvent.actionSubject).toEqual('atlascode');
+                }
+            });
+
+            it('should return a valid TrackEvent structure for Jira performance events', async () => {
+                const event = await analytics.performanceEvent('ui.cumulativeJqlFetch.render.lcp', 500);
+
+                // Validate TrackEvent structure
+                expect(event).toHaveProperty('trackEvent');
+                expect(event).toHaveProperty('userIdType');
+                expect(event).toHaveProperty('userId');
+                expect(event).toHaveProperty('tenantIdType');
+
+                // Validate trackEvent structure
+                expect(event.trackEvent).toHaveProperty('action');
+                expect(event.trackEvent).toHaveProperty('actionSubject');
+                expect(event.trackEvent).toHaveProperty('attributes');
+                expect(event.trackEvent).toHaveProperty('platform');
+                expect(event.trackEvent).toHaveProperty('origin');
+                expect(event.trackEvent).toHaveProperty('source');
+
+                // Validate attributes structure
+                expect(event.trackEvent.attributes).toHaveProperty('tag');
+                expect(event.trackEvent.attributes).toHaveProperty('measure');
+            });
+
+            it('should handle anonymous user for Jira performance events when AAID is not available', async () => {
+                mockedData.getFirstAAID_value = undefined;
+                const event = await analytics.performanceEvent('ui.createJiraIssue.render.lcp', 100);
+
+                expect(event.userId).toBeUndefined();
+                expect(event.anonymousId).toEqual('test-machine-id');
+            });
+
+            it('should include user ID for Jira performance events when AAID is available', async () => {
+                mockedData.getFirstAAID_value = 'test-user-id';
+                const event = await analytics.performanceEvent('ui.editJiraIssue.render.lcp', 100);
+
+                expect(event.userId).toEqual('test-user-id');
+                expect(event.userIdType).toEqual('atlassianAccount');
+                expect(event.anonymousId).toEqual('test-machine-id');
+            });
+
+            it('should set tenant type to null for Jira performance events', async () => {
+                const event = await analytics.performanceEvent('ui.editJiraIssue.update.lcp', 100);
+
+                expect(event.tenantId).toBeUndefined();
+                expect(event.tenantIdType).toBeNull();
+            });
+        });
+
+        describe('JiraPerfEvents type validation', () => {
+            it('should accept all valid JiraPerfEvents values', async () => {
+                // Test that all JiraPerfEvents values are accepted by the overload
+                const validEvents = [
+                    'ui.cumulativeJqlFetch.render.lcp',
+                    'ui.cumulativeJqlFetch.update.lcp',
+                    'ui.createJiraIssue.render.lcp',
+                    'ui.editJiraIssue.render.lcp',
+                    'ui.editJiraIssue.update.lcp',
+                ] as const;
+
+                for (const eventTag of validEvents) {
+                    const event = await analytics.performanceEvent(eventTag, 100);
+                    expect(event.trackEvent.attributes.tag).toEqual(eventTag);
+                    expect(event.trackEvent.attributes.measure).toEqual(100);
+                }
+            });
+
+            it('should follow consistent naming convention for Jira performance events', async () => {
+                const validEvents = [
+                    'ui.cumulativeJqlFetch.render.lcp',
+                    'ui.cumulativeJqlFetch.update.lcp',
+                    'ui.createJiraIssue.render.lcp',
+                    'ui.editJiraIssue.render.lcp',
+                    'ui.editJiraIssue.update.lcp',
+                ] as const;
+
+                for (const eventTag of validEvents) {
+                    expect(eventTag).toMatch(/^ui\./);
+                    expect(eventTag).toMatch(/\.lcp$/);
+                }
+            });
+        });
+
+        describe('Performance measurement edge cases', () => {
+            it('should handle very small measure values', async () => {
+                const measure = 0.001;
+                const event = await analytics.performanceEvent('ui.cumulativeJqlFetch.render.lcp', measure);
+
+                expect(event.trackEvent.attributes.measure).toEqual(0.001);
+            });
+
+            it('should handle very large measure values', async () => {
+                const measure = Number.MAX_SAFE_INTEGER;
+                const event = await analytics.performanceEvent('ui.cumulativeJqlFetch.update.lcp', measure);
+
+                expect(event.trackEvent.attributes.measure).toEqual(Number.MAX_SAFE_INTEGER);
+            });
+
+            it('should handle Infinity measure values', async () => {
+                const measure = Infinity;
+                const event = await analytics.performanceEvent('ui.createJiraIssue.render.lcp', measure);
+
+                expect(event.trackEvent.attributes.measure).toEqual(Infinity);
+            });
+
+            it('should handle NaN measure values', async () => {
+                const measure = NaN;
+                const event = await analytics.performanceEvent('ui.editJiraIssue.render.lcp', measure);
+
+                expect(event.trackEvent.attributes.measure).toBeNaN();
+            });
+        });
+
+        describe('Comparison with RovoDevPerfEvents overload', () => {
+            it('should differentiate between Jira and RovoDev performance events', async () => {
+                // Test Jira event (no additional params)
+                const jiraEvent = await analytics.performanceEvent('ui.cumulativeJqlFetch.render.lcp', 100);
+
+                // Test RovoDev event (with additional params)
+                const rovoDevEvent = await analytics.performanceEvent('rovodev.response.timeToFirstByte', 100, {
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
+                });
+
+                // Jira event should not have sessionId/promptId
+                expect(jiraEvent.trackEvent.attributes.sessionId).toBeUndefined();
+                expect(jiraEvent.trackEvent.attributes.promptId).toBeUndefined();
+                expect(jiraEvent.trackEvent.attributes.tag).toEqual('ui.cumulativeJqlFetch.render.lcp');
+
+                // RovoDev event should have sessionId/promptId
+                expect(rovoDevEvent.trackEvent.attributes.rovoDevSessionId).toEqual('test-session');
+                expect(rovoDevEvent.trackEvent.attributes.rovoDevPromptId).toEqual('test-prompt');
+                expect(rovoDevEvent.trackEvent.attributes.tag).toEqual('rovodev.response.timeToFirstByte');
+            });
         });
     });
 });

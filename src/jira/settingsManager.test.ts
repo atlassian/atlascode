@@ -1,4 +1,5 @@
 import { EpicFieldInfo, IssueLinkType } from '@atlassianlabs/jira-pi-common-models';
+import { IssueCreateMetadata } from '@atlassianlabs/jira-pi-meta-models';
 import { Fields } from '@atlassianlabs/jira-pi-meta-models';
 import { expansionCastTo } from 'testsutil';
 
@@ -17,6 +18,8 @@ describe('JiraSettingsManager', () => {
         id: 'site-1',
         name: 'Test Site',
     });
+
+    const projectKey: string = 'TEST';
 
     const mockIssueLinkTypes: IssueLinkType[] = [
         {
@@ -40,9 +43,24 @@ describe('JiraSettingsManager', () => {
         'custom-epic-name': { id: 'custom-epic-name', name: 'Epic Name' },
     } as unknown as Fields;
 
+    const mockIssueMetadata: IssueCreateMetadata = {
+        projects: [
+            {
+                id: 'project-1',
+                key: 'key-1',
+                name: 'project-1',
+                avatarUrls: {
+                    'avatar-1': 'avatar-link-1',
+                },
+                issuetypes: [],
+            },
+        ],
+    };
+
     const mockJiraClient = {
         getIssueLinkTypes: jest.fn(),
         getFields: jest.fn(),
+        getCreateIssueMetadata: jest.fn(),
     };
 
     let settingsManager: JiraSettingsManager;
@@ -57,6 +75,62 @@ describe('JiraSettingsManager', () => {
         };
 
         settingsManager = new JiraSettingsManager();
+    });
+
+    // Unit Tested the Metadata cache for project keys based off getIssueLinkTypes and getFields
+    describe('getIssueCreateMetadata', () => {
+        it('should return a cached createMeta from a particular project when available', async () => {
+            mockJiraClient.getCreateIssueMetadata.mockResolvedValueOnce(mockIssueMetadata);
+            const result = await settingsManager.getIssueCreateMetadata(projectKey, mockSiteDetails);
+
+            expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
+            expect(mockJiraClient.getCreateIssueMetadata).toHaveBeenCalled();
+            expect(result).toEqual(mockIssueMetadata);
+        });
+
+        it('should return undefined when error occurs', async () => {
+            mockJiraClient.getCreateIssueMetadata.mockRejectedValueOnce(new Error('Test Error'));
+            const result = await settingsManager.getIssueCreateMetadata(projectKey, mockSiteDetails);
+
+            expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Logger.error).toHaveBeenCalled();
+            expect(result).toBeUndefined();
+        });
+
+        it('should return undefined when result is not an array', async () => {
+            mockJiraClient.getCreateIssueMetadata.mockRejectedValueOnce(null);
+            const result = await settingsManager.getIssueCreateMetadata(projectKey, mockSiteDetails);
+
+            expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
+            expect(result).toBeUndefined();
+        });
+
+        it('should return cached result when projects array is empty', async () => {
+            // First call with empty projects array
+            const emptyMetadata: IssueCreateMetadata = { projects: [] };
+            mockJiraClient.getCreateIssueMetadata.mockResolvedValueOnce(emptyMetadata);
+
+            await settingsManager.getIssueCreateMetadata(projectKey, mockSiteDetails);
+
+            // Second call should fetch again since projects array was empty
+            mockJiraClient.getCreateIssueMetadata.mockResolvedValueOnce(mockIssueMetadata);
+            const result = await settingsManager.getIssueCreateMetadata(projectKey, mockSiteDetails);
+
+            expect(Container.clientManager.jiraClient).toHaveBeenCalledTimes(2);
+            expect(mockJiraClient.getCreateIssueMetadata).toHaveBeenCalledTimes(2);
+            expect(result).toEqual(mockIssueMetadata);
+        });
+
+        it('should cache results for the same project key', async () => {
+            mockJiraClient.getCreateIssueMetadata.mockResolvedValueOnce(mockIssueMetadata);
+            await settingsManager.getIssueCreateMetadata(projectKey, mockSiteDetails);
+
+            const result = await settingsManager.getIssueCreateMetadata(projectKey, mockSiteDetails);
+
+            expect(Container.clientManager.jiraClient).toHaveBeenCalledTimes(1);
+            expect(mockJiraClient.getCreateIssueMetadata).toHaveBeenCalledTimes(1);
+            expect(result).toEqual(mockIssueMetadata);
+        });
     });
 
     describe('getIssueLinkTypes', () => {

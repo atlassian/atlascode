@@ -1,12 +1,12 @@
 import React from 'react';
 
 import { mdParser } from '../common/common';
-import { PromptContextCollection } from '../promptContext/promptContextCollection';
+import { PromptContextCollection } from '../prompt-box/promptContext/promptContextCollection';
 import { DefaultMessage } from '../utils';
 
 export const ChatMessageItem: React.FC<{
     msg: DefaultMessage;
-    index: number;
+    index?: number;
     icon?: React.ReactNode;
 }> = ({ msg, index, icon }) => {
     const messageTypeStyles = msg.source === 'User' ? 'user-message' : 'agent-message';

@@ -1,13 +1,14 @@
-import { random } from 'lodash';
 import * as React from 'react';
+import { RovoDevProviderMessage } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
-import { PostMessageFunc, PostMessagePromiseFunc } from '../../messagingApi';
+import { useMessagingApi } from '../../messagingApi';
 import { ErrorMessageItem, FollowUpActionFooter, OpenFileFunc, TechnicalPlanComponent } from '../common/common';
 import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
 import { RovoDevLanding } from '../rovoDevLanding';
 import { State } from '../rovoDevView';
 import { RovoDevViewResponse } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
+import { ToolCallItem } from '../tools/ToolCallItem';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import {
     ChatMessage,
@@ -30,16 +31,16 @@ interface ChatStreamProps {
         retryPromptAfterError: () => void;
         getOriginalText: (fp: string, lr?: number[]) => Promise<string>;
     };
-    messagingApi: {
-        postMessage: PostMessageFunc<RovoDevViewResponse>;
-        postMessageWithReturn: PostMessagePromiseFunc<RovoDevViewResponse, any>;
-    };
-    modifiedFiles?: ToolReturnParseResult[];
+    messagingApi: ReturnType<
+        typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
+    >;
+    modifiedFiles: ToolReturnParseResult[];
     pendingToolCall: string;
     deepPlanCreated: boolean;
     executeCodePlan: () => void;
     state: State;
     onChangesGitPushed: (msg: DefaultMessage, pullRequestCreated: boolean) => void;
+    onCollapsiblePanelExpanded: () => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -51,9 +52,10 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     deepPlanCreated,
     executeCodePlan,
     state,
-    messagingApi: { postMessageWithReturn },
+    messagingApi,
     modifiedFiles,
     onChangesGitPushed,
+    onCollapsiblePanelExpanded,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const [canCreatePR, setCanCreatePR] = React.useState(false);
@@ -67,7 +69,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         if (state === State.WaitingForPrompt) {
             setCanCreatePR(true);
         }
-    }, [state, chatHistory, currentThinking, currentMessage, isFormVisible]);
+    }, [state, chatHistory, currentThinking, currentMessage, isFormVisible, pendingToolCall]);
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
@@ -76,9 +78,16 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 chatHistory.map((block, idx) => {
                     if (block) {
                         if (Array.isArray(block)) {
-                            return <MessageDrawer messages={block} opened={false} renderProps={renderProps} />;
+                            return (
+                                <MessageDrawer
+                                    messages={block}
+                                    opened={false}
+                                    renderProps={renderProps}
+                                    onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
+                                />
+                            );
                         } else if (block.source === 'User' || block.source === 'RovoDev') {
-                            return <ChatMessageItem msg={block} index={idx} />;
+                            return <ChatMessageItem msg={block} />;
                         } else if (block.source === 'ToolReturn') {
                             const parsedMessages = parseToolReturnMessage(block);
 
@@ -115,10 +124,15 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     messages={currentThinking}
                     opened={true}
                     renderProps={renderProps}
-                    pendingToolCall={pendingToolCall || undefined}
+                    onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                 />
             )}
-            {currentMessage && <ChatMessageItem msg={currentMessage} index={random()} />}
+            {currentMessage && <ChatMessageItem msg={currentMessage} />}
+            {pendingToolCall && (
+                <div style={{ marginBottom: '16px' }}>
+                    <ToolCallItem toolMessage={pendingToolCall} />
+                </div>
+            )}
             {deepPlanCreated && (
                 <CodePlanButton execute={executeCodePlan} disabled={state !== State.WaitingForPrompt} />
             )}
@@ -131,7 +145,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                 setCanCreatePR(false);
                                 setIsFormVisible(false);
                             }}
-                            postMessageWithReturn={postMessageWithReturn}
+                            messagingApi={messagingApi}
                             modifiedFiles={modifiedFiles}
                             onPullRequestCreated={(url) => {
                                 setCanCreatePR(false);

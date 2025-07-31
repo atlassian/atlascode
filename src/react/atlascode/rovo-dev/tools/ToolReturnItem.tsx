@@ -15,8 +15,7 @@ export const ToolReturnParsedItem: React.FC<{
 
     return (
         <a
-            className="tool-return-item-base tool-return-item"
-            id={msg.filePath ? 'tool-return-file-path' : undefined}
+            className={`tool-return-item-base tool-return-item ${msg.filePath ? 'tool-return-file-path' : ''}`}
             onClick={() => msg.filePath && openFile(msg.filePath)}
         >
             {toolIcon && <>{toolIcon}</>}

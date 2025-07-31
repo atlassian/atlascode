@@ -1,34 +1,23 @@
-import { expect, Locator, Page } from 'playwright/test';
+import { Locator, Page } from 'playwright/test';
+
+import { JiraNavigation, PullRequestsNavigation } from './fragments';
 
 export class AtlascodeDrawer {
     readonly page: Page;
 
-    readonly jiraItemsTree: Locator;
-    readonly bitbucketPrTree: Locator;
+    readonly jira: JiraNavigation;
+    readonly pullRequests: PullRequestsNavigation;
     readonly helpFeedbackTree: Locator;
 
     constructor(page: Page) {
         this.page = page;
 
-        this.jiraItemsTree = page.getByRole('tree', { name: 'Assigned Jira Work Items' });
-        this.bitbucketPrTree = page.getByRole('tree', { name: 'Bitbucket pull requests' });
+        this.jira = new JiraNavigation(page);
+        this.pullRequests = new PullRequestsNavigation(page);
         this.helpFeedbackTree = page.getByRole('tree', { name: 'Help and Feedback' });
     }
 
-    async openJiraIssue(name: string) {
-        const item = this.jiraItemsTree.getByRole('treeitem', { name });
-        await item.click();
-    }
-
-    async getJiraIssueStatus(name: string) {
-        const item = this.jiraItemsTree.getByRole('treeitem', { name });
-        await item.hover();
-        const status = item.getByRole('toolbar');
-        return status.getByRole('button').innerText();
-    }
-
-    async expectStatusForJiraIssue(name: string, expectedStatus: string) {
-        const currentStatus = await this.getJiraIssueStatus(name);
-        expect(currentStatus).toMatch(new RegExp(expectedStatus, 'i'));
+    async openCreateIssuePage() {
+        await this.page.getByRole('button', { name: 'Create Jira issue' }).click();
     }
 }

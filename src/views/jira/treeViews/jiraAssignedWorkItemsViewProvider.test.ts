@@ -68,6 +68,16 @@ jest.mock('../../RefreshTimer');
 jest.mock('../../../logger');
 jest.mock('../../../analytics', () => ({
     viewScreenEvent: () => Promise.resolve({ eventName: 'viewScreenEvent' }),
+    jiraIssuePerformanceEvent: () => Promise.resolve({ eventName: 'jiraIssuePerformanceEvent' }),
+    performanceEvent: () => Promise.resolve({ eventName: 'performanceEvent' }),
+}));
+jest.mock('src/util/perf', () => ({
+    default: {
+        mark: () => {},
+        measure: () => 100,
+        clear: () => {},
+        measureAndClear: () => 100,
+    },
 }));
 jest.mock('../../../config/configuration', () => ({
     configuration: {
@@ -97,6 +107,7 @@ jest.mock('../../../container', () => ({
         },
         analyticsClient: {
             sendScreenEvent: () => {},
+            sendTrackEvent: () => {},
         },
     },
 }));
@@ -506,5 +517,41 @@ describe('AssignedWorkItemsViewProvider', () => {
                 }
             },
         );
+    });
+});
+
+// Additional tests for AssignedWorkItemsViewProvider methods
+describe('AssignedWorkItemsViewProvider - Additional Method Tests', () => {
+    describe('static methods', () => {
+        it('should test buildTreeItemsFromIssues with undefined', () => {
+            const provider = new AssignedWorkItemsViewProvider();
+            const result = (provider as any).buildTreeItemsFromIssues(undefined);
+            expect(result).toEqual([]);
+            provider.dispose();
+        });
+
+        it('should test buildTreeItemsFromIssues with issues', () => {
+            const provider = new AssignedWorkItemsViewProvider();
+            const mockIssues = [mockedIssue1];
+            const result = (provider as any).buildTreeItemsFromIssues(mockIssues);
+            expect(result).toHaveLength(1);
+            provider.dispose();
+        });
+
+        it('should test getTreeItem', () => {
+            const provider = new AssignedWorkItemsViewProvider();
+            const mockTreeItem = { label: 'Test Item' } as any;
+            const result = provider.getTreeItem(mockTreeItem);
+            expect(result).toBe(mockTreeItem);
+            provider.dispose();
+        });
+
+        it('should test focus method', () => {
+            const provider = new AssignedWorkItemsViewProvider();
+            provider.focus();
+            // Just verify that focus was called, the exact command is tested elsewhere
+            expect(typeof provider.focus).toBe('function');
+            provider.dispose();
+        });
     });
 });

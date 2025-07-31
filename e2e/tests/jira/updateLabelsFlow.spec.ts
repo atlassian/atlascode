@@ -1,21 +1,16 @@
 import { expect, test } from '@playwright/test';
-import {
-    authenticateWithJira,
-    cleanupWireMockMapping,
-    getIssueFrame,
-    setupWireMockMapping,
-    updateIssueField,
-} from 'e2e/helpers';
-import fs from 'fs';
+import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
+import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
 test('User can add and remove existing labels', async ({ page, request }) => {
     const labelsFieldPlaceholder = 'Type to search';
     const label = 'testing';
-    await authenticateWithJira(page);
 
-    await page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' }).click();
-    await page.waitForTimeout(1000);
-    await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
+    await authenticateWithJira(page);
+    await new AtlassianSettings(page).closeSettingsPage();
+
+    await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');
+
     const issueFrame = await getIssueFrame(page);
 
     await expect(issueFrame.getByText(labelsFieldPlaceholder)).toBeVisible();
@@ -35,11 +30,7 @@ test('User can add and remove existing labels', async ({ page, request }) => {
     // Check the label option is visible and contains the label
     await expect(labelOption).toBeVisible();
 
-    const issueJSON = JSON.parse(fs.readFileSync('e2e/wiremock-mappings/mockedteams/BTS-1/bts1.json', 'utf-8'));
-    const updatedIssue = updateIssueField(issueJSON, {
-        labels: [label],
-    });
-    const { id } = await setupWireMockMapping(request, 'GET', updatedIssue, '/rest/api/2/issue/BTS-1');
+    const cleanupIssueMock = await setupIssueMock(request, { labels: [label] });
 
     await labelOption.click();
     await page.waitForTimeout(1000);
@@ -47,16 +38,7 @@ test('User can add and remove existing labels', async ({ page, request }) => {
     // Check the updated label field
     await expect(issueFrame.getByText(label, { exact: true })).toBeVisible();
 
-    const updatedIssueWithoutLabel = updateIssueField(issueJSON, {
-        labels: [],
-    });
-
-    const { id: removeId } = await setupWireMockMapping(
-        request,
-        'PUT',
-        updatedIssueWithoutLabel,
-        '/rest/api/2/issue/BTS-1',
-    );
+    const cleanupIssueMock2 = await setupIssueMock(request, { labels: [label] }, 'PUT');
 
     // Label remove button
     await issueFrame.locator('.ac-select__multi-value__remove').click();
@@ -65,6 +47,6 @@ test('User can add and remove existing labels', async ({ page, request }) => {
     // Check that the label was removed
     await expect(issueFrame.getByText(label, { exact: true })).not.toBeVisible();
 
-    await cleanupWireMockMapping(request, id);
-    await cleanupWireMockMapping(request, removeId);
+    await cleanupIssueMock();
+    await cleanupIssueMock2();
 });

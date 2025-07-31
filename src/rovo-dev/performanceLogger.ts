@@ -21,8 +21,8 @@ export class PerformanceLogger {
     public async promptFirstByteReceived(promptId: string) {
         const measure = Perf.measure(promptId);
         const evt = await performanceEvent('rovodev.response.timeToFirstByte', measure, {
-            sessionId: this.currentSessionId,
-            promptId,
+            rovoDevSessionId: this.currentSessionId,
+            rovoDevPromptId: promptId,
         });
 
         Logger.debug(`Event fired: rovodev.response.timeToFirstByte ${measure} ms`);
@@ -32,8 +32,8 @@ export class PerformanceLogger {
     public async promptFirstMessageReceived(promptId: string) {
         const measure = Perf.measure(promptId);
         const evt = await performanceEvent('rovodev.response.timeToFirstMessage', measure, {
-            sessionId: this.currentSessionId,
-            promptId,
+            rovoDevSessionId: this.currentSessionId,
+            rovoDevPromptId: promptId,
         });
 
         Logger.debug(`Event fired: rovodev.response.timeToFirstMessage ${measure} ms`);
@@ -43,8 +43,8 @@ export class PerformanceLogger {
     public async promptTechnicalPlanReceived(promptId: string) {
         const measure = Perf.measure(promptId);
         const evt = await performanceEvent('rovodev.response.timeToTechPlan', measure, {
-            sessionId: this.currentSessionId,
-            promptId,
+            rovoDevSessionId: this.currentSessionId,
+            rovoDevPromptId: promptId,
         });
 
         Logger.debug(`Event fired: rovodev.response.timeToTechPlan ${measure} ms`);
@@ -54,8 +54,8 @@ export class PerformanceLogger {
     public async promptLastMessageReceived(promptId: string) {
         const measure = Perf.measure(promptId);
         const evt = await performanceEvent('rovodev.response.timeToLastMessage', measure, {
-            sessionId: this.currentSessionId,
-            promptId,
+            rovoDevSessionId: this.currentSessionId,
+            rovoDevPromptId: promptId,
         });
 
         Perf.clear(promptId);

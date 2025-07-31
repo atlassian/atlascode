@@ -1,5 +1,4 @@
-import { Spacing } from '@atlaskit/button';
-import { ButtonAppearance } from '@atlaskit/button/dist/types/new-button/variants/types';
+import { ButtonProps } from '@atlaskit/button';
 import TextArea from '@atlaskit/textarea';
 import Toggle from '@atlaskit/toggle';
 import Tooltip from '@atlaskit/tooltip';
@@ -44,12 +43,12 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
 }) => {
     const inputTextAreaRef = React.useRef<HTMLTextAreaElement>(null);
     const [cursorPosition, setCursorPosition] = React.useState(value?.length || 0);
-    const buttonProps = {
-        spacing: 'compact' as Spacing,
-        appearance: 'subtle' as ButtonAppearance,
-    };
-
     const [rteEnabled, setRteEnabled] = React.useState(featureGateEnabled);
+
+    const buttonProps: Partial<ButtonProps> = {
+        spacing: 'compact',
+        appearance: 'subtle',
+    };
 
     const { viewHost, handleSave } = useEditor<User>({
         value,

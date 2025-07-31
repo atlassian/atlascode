@@ -1,5 +1,6 @@
 import { IssueType, MinimalORIssueLink, Project } from '@atlassianlabs/jira-pi-common-models';
 import { CreateMetaTransformerResult, FieldUI, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { FeatureFlagClient } from 'src/util/featureFlags';
 import { expansionCastTo } from 'testsutil';
 import { Position, Uri, window } from 'vscode';
 
@@ -80,11 +81,28 @@ jest.mock('form-data', () => ({
 jest.mock('../commands/jira/showIssue', () => ({
     showIssue: jest.fn(),
 }));
+// Added feature flag mock as with jiraIssueWebview.test.ts
+jest.mock('src/util/featureFlags', () => ({
+    FeatureFlagClient: {
+        checkExperimentValue: jest.fn(),
+    },
+    Experiments: {
+        AtlascodePerformanceExperiment: 'atlascode-performance-experiment',
+    },
+}));
 
 jest.mock('../views/jira/searchJiraHelper', () => ({
     SearchJiraHelper: {
         getAssignedIssuesPerSite: jest.fn().mockReturnValue([]),
     },
+}));
+
+jest.mock('../analytics', () => ({
+    authenticatedEvent: jest.fn(),
+    editedEvent: jest.fn(),
+    loggedOutEvent: jest.fn(),
+    issueCreatedEvent: jest.fn().mockResolvedValue({}),
+    jiraIssuePerformanceEvent: jest.fn().mockResolvedValue({}),
 }));
 
 const mockWindow = window as jest.Mocked<typeof window>;
@@ -144,6 +162,9 @@ describe('CreateIssueWebview', () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
+        // Mock FeatureFlagClient to return false by default (performance disabled)
+        (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(false);
+
         // Setup mocks
         Container.siteManager.getSiteForId = jest.fn().mockReturnValue(mockSiteDetails);
         Container.siteManager.getFirstSite = jest.fn().mockReturnValue(mockSiteDetails);
@@ -174,6 +195,47 @@ describe('CreateIssueWebview', () => {
             expect(webview.id).toBe(WebViewID.CreateJiraIssueWebview);
             expect(webview.siteOrUndefined).toEqual(emptySiteInfo);
             expect(webview.productOrUndefined).toEqual(ProductJira);
+        });
+    });
+
+    describe('onPanelDisposed', () => {
+        it('should reset data and call super onPanelDisposed', () => {
+            // Setup webview with some data
+            Object.defineProperty(webview, '_screenData', {
+                value: mockCreateMetaResult,
+                writable: true,
+            });
+            Object.defineProperty(webview, '_siteDetails', {
+                value: mockSiteDetails,
+                writable: true,
+            });
+
+            const superOnPanelDisposedSpy = jest.spyOn(
+                Object.getPrototypeOf(Object.getPrototypeOf(webview)),
+                'onPanelDisposed',
+            );
+
+            // Call onPanelDisposed
+            (webview as any).onPanelDisposed();
+
+            // Verify data was reset
+            expect((webview as any)._screenData).toEqual({
+                selectedIssueType: {
+                    id: 'empty',
+                    name: 'empty',
+                    iconUrl: '',
+                    avatarId: -1,
+                    description: 'empty',
+                    epic: false,
+                    self: '',
+                    subtask: false,
+                },
+                issueTypeUIs: {},
+                problems: {},
+                issueTypes: [],
+            });
+            expect((webview as any)._siteDetails).toEqual(emptySiteInfo);
+            expect(superOnPanelDisposedSpy).toHaveBeenCalled();
         });
     });
 
@@ -306,6 +368,82 @@ describe('CreateIssueWebview', () => {
                 }),
             );
         });
+
+        it('should use performance-enabled path when feature flag is enabled', async () => {
+            // Enable performance feature flag
+            (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
+
+            await webview.forceUpdateFields();
+
+            expect(Container.jiraProjectManager.filterProjectsByPermission).toHaveBeenCalledWith(
+                mockSiteDetails,
+                [mockProject],
+                'CREATE_ISSUES',
+            );
+            expect(fetchIssue.fetchCreateIssueUI).toHaveBeenCalledWith(mockSiteDetails, mockProject.key);
+            expect(webviewPostMessageMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'update',
+                }),
+            );
+        });
+
+        it('should handle project without permission in performance mode', async () => {
+            // Enable performance feature flag
+            (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
+
+            // Mock project without permission
+            const projectWithoutPermission = { ...mockProject, id: 'different-id' };
+            Object.defineProperty(webview, '_currentProject', {
+                value: projectWithoutPermission,
+                writable: true,
+            });
+
+            // Mock projects with permission (different from current)
+            const projectsWithPermission = [mockProject];
+            Container.jiraProjectManager.filterProjectsByPermission = jest
+                .fn()
+                .mockResolvedValue(projectsWithPermission);
+
+            await webview.forceUpdateFields();
+
+            // Should select first project with permission
+            expect(webviewPostMessageMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'update',
+                    fieldValues: expect.objectContaining({
+                        project: mockProject,
+                    }),
+                }),
+            );
+        });
+
+        it('should handle partial issue in performance mode', async () => {
+            // Enable performance feature flag
+            (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
+
+            const partialIssue: PartialIssue = {
+                summary: 'Partial Summary',
+                description: 'Partial Description',
+            };
+
+            Object.defineProperty(webview, '_partialIssue', {
+                value: partialIssue,
+                writable: true,
+            });
+
+            await webview.forceUpdateFields();
+
+            expect(webviewPostMessageMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'update',
+                    fieldValues: expect.objectContaining({
+                        summary: 'Partial Summary',
+                        description: 'Partial Description',
+                    }),
+                }),
+            );
+        });
     });
 
     describe('fireCallback', () => {
@@ -374,6 +512,58 @@ describe('CreateIssueWebview', () => {
                     }),
                     selectFieldOptions: expect.objectContaining({
                         [fieldKey]: [newValue],
+                    }),
+                    fieldKey,
+                    nonce,
+                }),
+            );
+        });
+
+        it('should handle Version field type with nested options', async () => {
+            const fieldKey = 'fixVersions';
+            const newValue = { id: 'version-1', name: 'Version 1.0' };
+            const nonce = '123456';
+
+            Object.defineProperty(webview, '_selectedIssueTypeId', {
+                value: 'issueType-1',
+                writable: true,
+            });
+
+            Object.defineProperty(webview, '_screenData', {
+                value: {
+                    issueTypeUIs: {
+                        'issueType-1': {
+                            fieldValues: { [fieldKey]: [] },
+                            selectFieldOptions: {
+                                [fieldKey]: [
+                                    {
+                                        options: [{ id: 'existing-version', name: 'Existing Version' }],
+                                    },
+                                ],
+                            },
+                            fields: {
+                                [fieldKey]: { valueType: ValueType.Version },
+                            },
+                        },
+                    },
+                },
+                writable: true,
+            });
+
+            await webview.handleSelectOptionCreated(fieldKey, newValue, nonce);
+
+            expect(webviewPostMessageMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'optionCreated',
+                    fieldValues: expect.objectContaining({
+                        [fieldKey]: [newValue],
+                    }),
+                    selectFieldOptions: expect.objectContaining({
+                        [fieldKey]: [
+                            {
+                                options: [{ id: 'existing-version', name: 'Existing Version' }, newValue],
+                            },
+                        ],
                     }),
                     fieldKey,
                     nonce,
@@ -800,6 +990,64 @@ describe('CreateIssueWebview', () => {
                 key: 'TEST-123',
                 siteDetails: mockSiteDetails,
             });
+        });
+
+        it('should handle refresh action', async () => {
+            const refreshMessage = { action: 'refresh' };
+            const forceUpdateSpy = jest.spyOn(webview, 'forceUpdateFields').mockImplementation(async () => {});
+
+            const result = await (webview as any).onMessageReceived(refreshMessage);
+
+            expect(forceUpdateSpy).toHaveBeenCalled();
+            expect(result).toBe(true);
+        });
+
+        it('should handle setIssueType action', async () => {
+            const validIssueType = {
+                ...mockIssueType,
+                self: 'https://test.atlassian.net/rest/api/2/issuetype/1',
+                description: 'Bug issue type',
+                avatarId: 1,
+                subtask: false,
+                epic: false,
+            };
+            const setIssueTypeMessage = {
+                action: 'setIssueType',
+                issueType: validIssueType,
+                fieldValues: { summary: 'Test' },
+            };
+            const updateIssueTypeSpy = jest.spyOn(webview, 'updateIssueType').mockImplementation(() => {});
+
+            const result = await (webview as any).onMessageReceived(setIssueTypeMessage);
+
+            expect(updateIssueTypeSpy).toHaveBeenCalledWith(validIssueType, { summary: 'Test' });
+            expect(result).toBe(true);
+        });
+
+        it('should handle refreshTreeViews action', async () => {
+            const refreshTreeViewsMessage = { action: 'refreshTreeViews' };
+            const executeCommandSpy = jest
+                .spyOn(require('vscode').commands, 'executeCommand')
+                .mockImplementation(() => Promise.resolve());
+
+            const result = await (webview as any).onMessageReceived(refreshTreeViewsMessage);
+
+            expect(executeCommandSpy).toHaveBeenCalledWith('atlascode.jira.refreshAssignedWorkItemsExplorer', 4000);
+            expect(executeCommandSpy).toHaveBeenCalledWith('atlascode.jira.refreshCustomJqlExplorer', 4000);
+            expect(result).toBe(true);
+        });
+
+        it('should handle openProblemReport action', async () => {
+            const openProblemMessage = { action: 'openProblemReport' };
+
+            const result = await (webview as any).onMessageReceived(openProblemMessage);
+
+            expect(Container.createIssueProblemsWebview.createOrShow).toHaveBeenCalledWith(
+                undefined,
+                mockSiteDetails,
+                mockProject,
+            );
+            expect(result).toBe(true);
         });
     });
 

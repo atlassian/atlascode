@@ -165,6 +165,7 @@ const IssueMainPanel: React.FC<Props> = ({
                         />
                     ) : (
                         <div
+                            data-testid="issue.description"
                             css={{
                                 ':hover': {
                                     backgroundColor: 'var(--vscode-editor-selectionHighlightBackground)!important',
@@ -188,7 +189,7 @@ const IssueMainPanel: React.FC<Props> = ({
                 </div>
             )}
             {attachments && attachments.length > 0 && (
-                <div>
+                <div data-testid="issue.attachments">
                     <label className="ac-field-label">Attachments</label>
                     <AttachmentList
                         attachments={attachments}

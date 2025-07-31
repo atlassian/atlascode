@@ -2,6 +2,19 @@ body {
     padding: 0 !important;
 }
 
+.rovoDevChat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    background-color: var(--vscode-editor-background);
+    font-size: var(--vscode-font-size);
+    font-family: var(--vscode-font-family);
+    height: 100vh;
+    margin: auto;
+    max-width: 800px;
+}
+
 .rovoDevChat button {
     cursor: pointer;
 }
@@ -158,8 +171,15 @@ body {
     color: var(--vscode-editor-foreground);
     width: fit-content;
     border-radius: 4px;
-    border: 1px solid var(--vscode-editorWidget-border);
     margin-bottom: 8px;
+}
+
+.tool-return-item {
+    border: 1px solid var(--vscode-editorWidget-border);
+}
+
+.tool-return-item:hover {
+    color: var(--vscode-editor-foreground)
 }
 
 .tool-return-item code {
@@ -167,7 +187,11 @@ body {
     word-break: break-all;
 }
 
-#tool-return-file-path:hover {
+.tool-call-item span {
+    color: var(--vscode-input-placeholderForeground)
+}
+
+.tool-return-file-path:hover {
     background-color: var(--vscode-list-hoverBackground);
     cursor: pointer;
 }
@@ -187,11 +211,6 @@ body {
             padding: 0 4px;
         }
     }
-}
-
-#deleted-file {
-    color: var(--vscode-list-errorForeground);
-    text-decoration: line-through;
 }
 
 .code-plan-button-container {
@@ -372,6 +391,10 @@ body {
     color: var(--vscode-input-foreground);
 }
 
+.pull-request-form-field input[type="text"]:focus {
+    outline: var(--vscode-focusBorder) solid 1px;
+}
+
 .pull-request-form-actions {
     display: flex;
     flex-direction: row;
@@ -413,4 +436,151 @@ body {
     flex-direction: row;
     align-items: center;
     gap: 8px;
+}
+
+/* Updated Files styles */
+.modified-files-list {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow-y: auto;
+    max-height: 100px;
+    padding: 4px 8px;
+    border-top: 1px solid var(--vscode-panel-border);
+}
+.modified-file-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 2px 8px;
+    width: 100%;
+}
+
+.modified-file-item:hover {
+    background-color: var(--vscode-list-hoverBackground);
+}
+
+.modified-file-actions {
+    display: none;
+    align-items: center;
+    flex-direction: row;
+    gap: 4px;
+}
+
+.modified-file-item:hover .modified-file-actions {
+    display: flex;
+}
+
+.modified-file-action {
+    background-color: transparent;
+    color: var(--vscode-editor-foreground);
+    padding: 0;
+    border: 0;
+}
+
+.modified-file-action:hover {
+    color: var(--vscode-textLink-foreground);
+}
+
+.modified-file-action:disabled {
+    cursor: not-allowed;
+}
+
+.modified-file-item-info {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.deleted-file {
+    color: var(--vscode-list-errorForeground);
+    text-decoration: line-through;
+}
+
+.created-file {
+    color: var(--vscode-gitDecoration-untrackedResourceForeground);
+}
+
+.updated-files-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+    background: var(--vscode-sideBar-background);
+    padding-bottom: 4px;
+}
+
+.updated-files-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 8px;
+}
+
+.updated-files-header div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+.updated-files-header div span {
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.updated-files-action {
+    cursor: pointer;
+    padding: 2px 6px;
+}
+
+.updated-files-action:disabled {
+    cursor: not-allowed;
+}
+
+
+.secondary {
+    color: var(--vscode-button-secondaryForeground);
+    background-color: var(--vscode-button-secondaryBackground);
+    border: 1px solid var(--vscode-button-secondaryBorder);
+}
+.secondary:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.primary {
+    color: var(--vscode-button-foreground);
+    background-color: var(--vscode-button-background);
+    border: 1px solid var(--vscode-button-border);
+}
+.primary:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+/* Input styles */
+.input-section-container {
+    width: 100%;
+    background-color: var(--vscode-sideBar-background);
+    padding: 16px;
+    border-radius: 12px 12px 0 0;
+}
+
+.prompt-container {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 2px;
+    border : 1px solid var(--vscode-input-border);
+    border-radius: 4px;
+    background-color: var(--vscode-input-background);
+    padding: 8px;
+}
+
+.prompt-container:focus-within {
+    outline: var(--vscode-focusBorder) solid 1px;
 }

@@ -11,8 +11,6 @@ export type PipelineSummaryMessage =
     | ReducerAction<PipelineSummaryMessageType.Update, PipelineSummaryUpdateMessage>
     | ReducerAction<PipelineSummaryMessageType.StepsUpdate, PipelineSummaryStepsUpdateMessage>;
 
-export type PipelineSummaryResponse = {};
-
 export interface PipelineSummaryInitMessage {
     pipeline: Pipeline;
 }

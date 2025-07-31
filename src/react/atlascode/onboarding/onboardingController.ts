@@ -11,7 +11,6 @@ import {
     OnboardingInitMessage,
     OnboardingMessage,
     OnboardingMessageType,
-    OnboardingResponse,
 } from '../../../lib/ipc/toUI/onboarding';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
 
@@ -187,7 +186,7 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
         }
     }, []);
 
-    const [postMessage] = useMessagingApi<OnboardingAction, OnboardingMessage, OnboardingResponse>(onMessageHandler);
+    const { postMessage } = useMessagingApi<OnboardingAction, OnboardingMessage, never>(onMessageHandler);
 
     const handleConfigChange = useCallback(
         (changes: ConfigChanges, removes?: string[]): void => {

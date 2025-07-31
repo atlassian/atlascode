@@ -158,7 +158,10 @@ const AddCommentComponent: React.FC<{
 }) => {
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-            <Box style={{ display: 'flex', flexDirection: 'row', alignItems: isEditing ? 'start' : 'center' }}>
+            <Box
+                data-testid="issue.new-comment"
+                style={{ display: 'flex', flexDirection: 'row', alignItems: isEditing ? 'start' : 'center' }}
+            >
                 <Box style={{ marginRight: '8px', marginTop: isEditing ? '4px' : '0px' }}>
                     <Avatar
                         src={user.avatarUrls['48x48']}
@@ -229,7 +232,10 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
     onEditingCommentChange,
 }) => {
     return (
-        <Box style={{ display: 'flex', flexDirection: 'column', paddingTop: '8px' }}>
+        <Box
+            data-testid="issue.comments-section"
+            style={{ display: 'flex', flexDirection: 'column', paddingTop: '8px' }}
+        >
             <AddCommentComponent
                 fetchUsers={fetchUsers}
                 user={currentUser}

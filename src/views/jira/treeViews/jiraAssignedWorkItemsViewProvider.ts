@@ -1,3 +1,4 @@
+import timer from 'src/util/perf';
 import {
     commands,
     ConfigurationChangeEvent,
@@ -10,6 +11,7 @@ import {
 } from 'vscode';
 
 import { viewScreenEvent } from '../../../analytics';
+import { performanceEvent } from '../../../analytics';
 import { ProductJira } from '../../../atlclients/authInfo';
 import { CommandContext, setCommandContext } from '../../../commandContext';
 import { configuration } from '../../../config/configuration';
@@ -24,6 +26,9 @@ import { SearchJiraHelper } from '../searchJiraHelper';
 import { executeJqlQuery, JiraIssueNode, loginToJiraMessageNode, TreeViewIssue } from './utils';
 
 const AssignedWorkItemsViewProviderId = AssignedJiraItemsViewId;
+
+const InitialCumulativeJqlFetchEventName = 'ui.cumulativeJqlFetch.render.lcp';
+const RefreshCumulativeJqlFetchEventName = 'ui.cumulativeJqlFetch.update.lcp';
 
 export class AssignedWorkItemsViewProvider extends Disposable implements TreeDataProvider<TreeItem> {
     private static readonly _treeItemConfigureJiraMessage = loginToJiraMessageNode;
@@ -57,6 +62,7 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
 
         const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
         if (jqlEntries.length) {
+            timer.mark(InitialCumulativeJqlFetchEventName);
             this._initPromises = new PromiseRacer(jqlEntries.map(executeJqlQuery));
         }
 
@@ -145,12 +151,18 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
             if (!this._initPromises.isEmpty()) {
                 // need to trigger a DidChangeTreeData after this method ends - 10ms as a small-enough timeout
                 setTimeout(() => this._onDidChangeTreeData.fire(), 10);
+            } else {
+                const jqlInitialDuration = timer.measureAndClear(InitialCumulativeJqlFetchEventName);
+                performanceEvent(InitialCumulativeJqlFetchEventName, jqlInitialDuration).then((event) => {
+                    Container.analyticsClient.sendTrackEvent(event);
+                });
             }
 
             return this._initChildren;
         }
         // this branch triggers when refresing an already rendered panel
         else {
+            timer.mark(RefreshCumulativeJqlFetchEventName);
             const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
             if (!jqlEntries.length) {
                 return [AssignedWorkItemsViewProvider._treeItemConfigureJiraMessage];
@@ -166,6 +178,10 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
             }
 
             SearchJiraHelper.setIssues(allIssues, AssignedWorkItemsViewProviderId);
+            const jqlRefreshDuration = timer.measureAndClear(RefreshCumulativeJqlFetchEventName);
+            performanceEvent(RefreshCumulativeJqlFetchEventName, jqlRefreshDuration).then((event) => {
+                Container.analyticsClient.sendTrackEvent(event);
+            });
 
             return this.buildTreeItemsFromIssues(allIssues);
         }

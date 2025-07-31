@@ -1,7 +1,7 @@
-import Button from '@atlaskit/button';
+import { IconButton } from '@atlaskit/button/new';
 import AddIcon from '@atlaskit/icon/glyph/add';
-import Select from '@atlaskit/select';
-import { AsyncSelect } from '@atlaskit/select';
+import { GlyphProps } from '@atlaskit/icon/types';
+import Select, { AsyncSelect } from '@atlaskit/select';
 import { IssuePickerIssue, MinimalIssueLink, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { Box } from '@material-ui/core';
@@ -27,6 +27,8 @@ type Props = {
     onDelete: (issueLink: any) => void;
     enableLinkedIssues: { enable: boolean; setEnableLinkedIssues: (enable: boolean) => void };
 };
+
+const SmallAddIcon = (iconProps: GlyphProps) => <AddIcon {...iconProps} size="small" />;
 
 export const LinkedIssuesComponent: React.FC<Props> = ({
     linkTypes,
@@ -79,12 +81,14 @@ export const LinkedIssuesComponent: React.FC<Props> = ({
                     <label className="ac-field-label">{label}</label>
                     {loading ? <p>Saving...</p> : null}
                 </div>
-                <Button
+                <IconButton
                     appearance="subtle"
-                    className="ac-button-secondary-new"
-                    iconBefore={<AddIcon size="small" label="Add" />}
+                    icon={SmallAddIcon}
+                    label="Add linked issue"
+                    spacing="compact"
                     onClick={() => setIsEditing(true)}
-                ></Button>
+                    isTooltipDisabled={false}
+                />
             </Box>
             {isEditing && (
                 <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

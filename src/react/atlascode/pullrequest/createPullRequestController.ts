@@ -16,9 +16,8 @@ import {
     CreatePullRequestInitMessage,
     CreatePullRequestMessage,
     CreatePullRequestMessageType,
+    CreatePullRequestResponse,
     emptyCreatePullRequestInitMessage,
-    FetchUsersResponseMessage,
-    SubmitResponseMessage,
 } from '../../../lib/ipc/toUI/createPullRequest';
 import { Branch } from '../../../typings/git';
 import { ConnectionTimeout } from '../../../util/time';
@@ -144,9 +143,11 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
         }
     }, []);
 
-    const [postMessage, postMessagePromise] = useMessagingApi<CreatePullRequestAction, CreatePullRequestMessage, {}>(
-        onMessageHandler,
-    );
+    const { postMessage, postMessagePromise } = useMessagingApi<
+        CreatePullRequestAction,
+        CreatePullRequestMessage,
+        CreatePullRequestResponse
+    >(onMessageHandler);
 
     const fetchUsers = useCallback(
         (site: BitbucketSite, query: string, abortSignal?: AbortSignal): Promise<User[]> => {
@@ -177,7 +178,7 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
                             CreatePullRequestMessageType.FetchUsersResponse,
                             ConnectionTimeout,
                         );
-                        resolve((response as FetchUsersResponseMessage).users);
+                        resolve(response.users);
                     } catch (e) {
                         reject(e);
                     }
@@ -223,7 +224,7 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
                             CreatePullRequestMessageType.SubmitResponse,
                             ConnectionTimeout,
                         );
-                        resolve((response as SubmitResponseMessage).pr);
+                        resolve(response.pr);
                     } catch (e) {
                         reject(e);
                     }

@@ -13,6 +13,7 @@ import { PullRequest, WorkspaceRepo } from './bitbucket/model';
 import { BitbucketCloudPullRequestLinkProvider } from './bitbucket/terminal-link/createPrLinkProvider';
 import { openPullRequest } from './commands/bitbucket/pullRequest';
 import { configuration, IConfig } from './config/configuration';
+import { Commands } from './constants';
 import { PmfStats } from './feedback/pmfStats';
 import { JQLManager } from './jira/jqlManager';
 import { JiraProjectManager } from './jira/projectManager';
@@ -60,6 +61,7 @@ import { VSCPullRequestDetailsActionApi } from './webview/pullrequest/vscPullReq
 import { VSCPullRequestDetailsWebviewControllerFactory } from './webview/pullrequest/vscPullRequestDetailsWebviewControllerFactory';
 import { SingleWebview } from './webview/singleViewFactory';
 import { VSCStartWorkActionApi } from './webview/startwork/vscStartWorkActionApi';
+import { VSCStartWorkV3WebviewControllerFactory } from './webview/startwork/vscStartWorkV3WebviewControllerFactory';
 import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscStartWorkWebviewControllerFactory';
 import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
@@ -143,6 +145,16 @@ export class Container {
             this._analyticsApi,
         );
 
+        const startWorkV3ViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
+            context.extensionPath,
+            new VSCStartWorkV3WebviewControllerFactory(
+                new VSCStartWorkActionApi(),
+                this._commonMessageHandler,
+                this._analyticsApi,
+            ),
+            this._analyticsApi,
+        );
+
         const createPullRequestV2ViewFactory = new SingleWebview<WorkspaceRepo, StartWorkAction>(
             context.extensionPath,
             new VSCCreatePullRequestWebviewControllerFactory(
@@ -156,6 +168,7 @@ export class Container {
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
         context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
+        context.subscriptions.push((this._startWorkV3WebviewFactory = startWorkV3ViewFactory));
         context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
 
         const pipelinesV2Webview = new MultiWebview<Pipeline, PipelineSummaryAction>(
@@ -208,9 +221,39 @@ export class Container {
             context.subscriptions.push(
                 (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context.extensionPath, context.globalState)),
             );
+            this.configureRovodevSettingsCommands(context);
         }
 
         this._onboardingProvider = new OnboardingProvider();
+    }
+
+    static configureRovodevSettingsCommands(context: ExtensionContext) {
+        async function openConfigFile(subPath: string, friendlyName: string) {
+            const home = process.env.HOME || process.env.USERPROFILE;
+            if (!home) {
+                vscode.window.showErrorMessage('Could not determine home directory.');
+                return;
+            }
+            const filePath = `${home}/${subPath}`;
+            try {
+                const doc = await workspace.openTextDocument(filePath);
+                await vscode.window.showTextDocument(doc);
+            } catch (err) {
+                vscode.window.showErrorMessage(`Could not open ${friendlyName} (${filePath}): ${err}`);
+            }
+        }
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand(Commands.OpenRovoDevConfig, async () => {
+                await openConfigFile('.rovodev/config.yml', 'Rovo Dev settings file');
+            }),
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand(Commands.OpenRovoDevMcpJson, async () => {
+                await openConfigFile('.rovodev/mcp.json', 'Rovo Dev MCP configuration');
+            }),
+        );
     }
 
     static focus() {
@@ -336,6 +379,11 @@ export class Container {
     private static _startWorkWebviewFactory: SingleWebview<StartWorkIssueMessage, StartWorkAction>;
     public static get startWorkWebviewFactory() {
         return this._startWorkWebviewFactory;
+    }
+
+    private static _startWorkV3WebviewFactory: SingleWebview<StartWorkIssueMessage, StartWorkAction>;
+    public static get startWorkV3WebviewFactory() {
+        return this._startWorkV3WebviewFactory;
     }
 
     private static _createPullRequestWebviewFactory: SingleWebview<WorkspaceRepo, StartWorkAction>;

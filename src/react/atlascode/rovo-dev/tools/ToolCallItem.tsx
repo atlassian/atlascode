@@ -6,7 +6,7 @@ export const ToolCallItem: React.FC<{ toolMessage: string }> = ({ toolMessage })
     return (
         <div className="tool-call-item-base tool-call-item">
             <i className="codicon codicon-loading codicon-modifier-spin" />
-            {toolMessage}
+            <span>{toolMessage}</span>
         </div>
     );
 };
