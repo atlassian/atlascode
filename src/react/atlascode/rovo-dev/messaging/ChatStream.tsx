@@ -63,11 +63,17 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     const [isFormVisible, setIsFormVisible] = React.useState(false);
     const [autoScrollEnabled, setAutoScrollEnabled] = React.useState(true);
     const lastUserScrollUpRef = React.useRef<number>(0);
+    const lastChatHistoryLengthRef = React.useRef<number>(0);
 
     // Helper to disable auto-scroll with timestamp
     const disableAutoScroll = React.useCallback(() => {
         lastUserScrollUpRef.current = Date.now();
         setAutoScrollEnabled(false);
+    }, []);
+
+    // Helper to enable auto-scroll (DRY principle)
+    const enableAutoScroll = React.useCallback(() => {
+        setAutoScrollEnabled(true);
     }, []);
 
     // Helper to perform auto-scroll when enabled
@@ -77,6 +83,24 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         }
     }, [autoScrollEnabled]);
 
+    // Detect new user messages and resume autoscroll
+    React.useEffect(() => {
+        const currentLength = chatHistory.length;
+        const previousLength = lastChatHistoryLengthRef.current;
+
+        // Check if a new message was added and if it's a user message
+        if (currentLength > previousLength && currentLength > 0) {
+            const lastMessage = chatHistory[currentLength - 1];
+            const isUserMessage = lastMessage && !Array.isArray(lastMessage) && lastMessage.source === 'User';
+
+            if (isUserMessage) {
+                enableAutoScroll();
+            }
+        }
+
+        lastChatHistoryLengthRef.current = currentLength;
+    }, [chatHistory, enableAutoScroll]);
+
     // Intersection observer to detect when user scrolls back to bottom
     React.useEffect(() => {
         const observer = new IntersectionObserver(
@@ -84,7 +108,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 if (entry.isIntersecting) {
                     const timeSinceLastUpScroll = Date.now() - lastUserScrollUpRef.current;
                     if (timeSinceLastUpScroll > 100) {
-                        setAutoScrollEnabled(true);
+                        enableAutoScroll();
                     }
                 }
             },
@@ -96,7 +120,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         }
 
         return () => observer.disconnect();
-    }, [autoScrollEnabled]);
+    }, [enableAutoScroll]);
 
     // Scroll event detection to pause auto-scroll when user scrolls upward
     React.useEffect(() => {
