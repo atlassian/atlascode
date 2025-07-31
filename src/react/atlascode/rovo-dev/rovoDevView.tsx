@@ -618,16 +618,9 @@ const RovoDevView: React.FC = () => {
                     actionsEnabled={currentState === State.WaitingForPrompt}
                 />
                 <div className="prompt-container">
-                    {' '}
                     <PromptContextCollection
                         content={promptContextCollection}
                         readonly={false}
-                        onAddContext={async () => {
-                            postMessage({
-                                type: RovoDevViewResponseType.AddContext,
-                                currentContext: promptContextCollection,
-                            });
-                        }}
                         onRemoveContext={(item: RovoDevContextItem) => {
                             setPromptContextCollection((prev) => ({
                                 ...prev,

@@ -12,7 +12,6 @@ const chipStyle: React.CSSProperties = {
     borderRadius: 5,
     fontWeight: 400,
     fontSize: 11,
-    marginBottom: 4,
     userSelect: 'none',
     boxShadow: 'none',
     marginRight: 2,
@@ -54,6 +53,7 @@ const removeButtonStyle: React.CSSProperties = {
 
 const addButtonStyle: React.CSSProperties = {
     ...chipStyle,
+    marginBottom: 4,
     padding: '1.5px 3px',
     cursor: 'pointer',
 };
