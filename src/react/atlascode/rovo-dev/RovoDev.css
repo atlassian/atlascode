@@ -2,6 +2,19 @@ body {
     padding: 0 !important;
 }
 
+.rovoDevChat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    background-color: var(--vscode-editor-background);
+    font-size: var(--vscode-font-size);
+    font-family: var(--vscode-font-family);
+    height: 100vh;
+    margin: auto;
+    max-width: 800px;
+}
+
 .rovoDevChat button {
     cursor: pointer;
 }

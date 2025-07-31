@@ -17,7 +17,6 @@ import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
 import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
-import * as styles from './rovoDevViewStyles';
 import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
     ChatMessage,
@@ -586,7 +585,7 @@ const RovoDevView: React.FC = () => {
     }, [postMessage]);
 
     return (
-        <div className="rovoDevChat" style={styles.rovoDevContainerStyles}>
+        <div className="rovoDevChat">
             <ChatStream
                 chatHistory={chatStream}
                 currentThinking={curThinkingMessages}
