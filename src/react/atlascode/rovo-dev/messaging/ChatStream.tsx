@@ -59,6 +59,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onCollapsiblePanelExpanded,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
+    const sentinelRef = React.useRef<HTMLDivElement>(null);
     const [canCreatePR, setCanCreatePR] = React.useState(false);
     const [hasChangesInGit, setHasChangesInGit] = React.useState(false);
     const [isFormVisible, setIsFormVisible] = React.useState(false);
@@ -72,11 +73,83 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         setHasChangesInGit(response.hasChanges);
     }, [messagingApi]);
 
+    const [autoScrollEnabled, setAutoScrollEnabled] = React.useState(true);
+    const lastUserScrollUpRef = React.useRef<number>(0);
+
+    // Intersection observer to detect when user scrolls back to bottom
     React.useEffect(() => {
-        if (chatEndRef.current) {
-            scrollToEnd(chatEndRef.current);
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    // Only re-enable auto-scroll if enough time has passed since last upward scroll
+                    const timeSinceLastUpScroll = Date.now() - lastUserScrollUpRef.current;
+                    if (timeSinceLastUpScroll > 100) {
+                        setAutoScrollEnabled(true);
+                    }
+                }
+            },
+            {
+                threshold: 0,
+                rootMargin: '0px',
+            },
+        );
+
+        if (sentinelRef.current) {
+            observer.observe(sentinelRef.current);
         }
 
+        return () => observer.disconnect();
+    }, [autoScrollEnabled]);
+
+    // Scroll event detection to pause auto-scroll when user scrolls upward
+    React.useEffect(() => {
+        let lastScrollTop = 0;
+
+        const handleUserScroll = (event: Event) => {
+            const container = event.target as HTMLElement;
+            const currentScrollTop = container.scrollTop;
+
+            // Only disable auto-scroll if user scrolled upward AND auto-scroll was enabled
+            if (currentScrollTop < lastScrollTop) {
+                lastUserScrollUpRef.current = Date.now();
+                setAutoScrollEnabled(false);
+            }
+
+            lastScrollTop = currentScrollTop;
+        };
+
+        const handleWheel = (event: WheelEvent) => {
+            // For wheel events, check deltaY to determine scroll direction
+            if (event.deltaY < 0) {
+                // Negative deltaY means scrolling up
+                lastUserScrollUpRef.current = Date.now();
+                setAutoScrollEnabled(false);
+            }
+        };
+
+        const container = chatEndRef.current;
+        if (container) {
+            container.addEventListener('scroll', handleUserScroll, { passive: true });
+            container.addEventListener('wheel', handleWheel, { passive: true });
+
+            return () => {
+                container.removeEventListener('scroll', handleUserScroll);
+                container.removeEventListener('wheel', handleWheel);
+            };
+        }
+
+        return () => {};
+    }, []);
+
+    // Auto-scroll effect - runs when content changes or auto-scroll is re-enabled
+    React.useEffect(() => {
+        if (autoScrollEnabled && chatEndRef.current) {
+            scrollToEnd(chatEndRef.current);
+        }
+    }, [chatHistory, currentThinking, currentMessage, isFormVisible, pendingToolCall, autoScrollEnabled]);
+
+    // Other state management effect
+    React.useEffect(() => {
         if (state === State.WaitingForPrompt) {
             setCanCreatePR(true);
             if (currentMessage) {
@@ -143,6 +216,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 />
             )}
             {currentMessage && <ChatMessageItem msg={currentMessage} />}
+
             {pendingToolCall && (
                 <div style={{ marginBottom: '16px' }}>
                     <ToolCallItem toolMessage={pendingToolCall} />
@@ -182,6 +256,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     )}
                 </FollowUpActionFooter>
             )}
+            <div id="sentinel" ref={sentinelRef} style={{ height: '10px', width: '100%', pointerEvents: 'none' }} />
         </div>
     );
 };
