@@ -178,18 +178,21 @@ export async function featureFlagClientInitializedEvent(
 
 // Perf events
 
+// perf events name are constructed in the format:
+// <ui|core|api> . <product> . <action> . <subAction> . <perf-marker>
+
 type RovoDevPerfEvents =
-    | 'rovodev.response.timeToFirstByte'
-    | 'rovodev.response.timeToFirstMessage'
-    | 'rovodev.response.timeToTechPlan'
-    | 'rovodev.response.timeToLastMessage';
+    | 'api.rovodev.chat.response.timeToFirstByte'
+    | 'api.rovodev.chat.response.timeToFirstMessage'
+    | 'api.rovodev.chat.response.timeToTechPlan'
+    | 'api.rovodev.chat.response.timeToLastMessage';
 
 type JiraPerfEvents =
-    | 'ui.cumulativeJqlFetch.render.lcp'
-    | 'ui.cumulativeJqlFetch.update.lcp'
-    | 'ui.createJiraIssue.render.lcp'
-    | 'ui.editJiraIssue.render.lcp'
-    | 'ui.editJiraIssue.update.lcp';
+    | 'ui.jira.jqlFetch.render.lcp'
+    | 'ui.jira.jqlFetch.update.lcp'
+    | 'ui.jira.createJiraIssue.render.lcp'
+    | 'ui.jira.editJiraIssue.render.lcp'
+    | 'ui.jira.editJiraIssue.update.lcp';
 
 interface RovoDevCommonParams {
     rovoDevSessionId: string;
