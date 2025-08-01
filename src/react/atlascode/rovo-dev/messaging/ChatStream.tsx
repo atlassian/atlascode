@@ -60,6 +60,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
+    const prevChatHistoryLengthRef = React.useRef(chatHistory.length);
     const [canCreatePR, setCanCreatePR] = React.useState(false);
     const [hasChangesInGit, setHasChangesInGit] = React.useState(false);
     const [isFormVisible, setIsFormVisible] = React.useState(false);
@@ -82,7 +83,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         }
     }, [autoScrollEnabled]);
 
-    // Combined scroll tracking and intersection observer
+    // Combined scroll tracking, intersection observer, and user message detection
     React.useEffect(() => {
         const container = chatEndRef.current;
         if (!container) {
@@ -110,7 +111,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         // Intersection observer to detect when user scrolls back to bottom
         const observer = new IntersectionObserver(
             ([entry]) => {
-                // Only re-enable auto-scroll if the user is scrolling down & sentinel is intersecting
+                // Only re-enable auto-scroll if the user is not scrolling up & sentinel is intersecting
                 if (entry.isIntersecting && getAccumulatedScrollDirection() >= 0) {
                     setAutoScrollEnabled(true);
                 }
@@ -139,16 +140,23 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
             // Add wheel event to our tracking array (deltaY positive = scrolling down, negative = scrolling up)
             scrollEvents.push({ timestamp: Date.now(), delta: event.deltaY });
 
-            // Get accumulated scroll direction over the last 500ms
-            const accumulatedDelta = getAccumulatedScrollDirection();
-
             // If overall direction is upward (negative delta), disable auto-scroll
-            if (accumulatedDelta < 0) {
+            if (getAccumulatedScrollDirection() < 0) {
                 setAutoScrollEnabled(false);
-                // clear out scroll events
-                scrollEvents = [];
             }
         };
+
+        // Check for NEW user messages and enable auto-scroll
+        if (chatHistory.length > prevChatHistoryLengthRef.current) {
+            const newMessage = chatHistory[chatHistory.length - 1];
+            // Check if the new message is a user message (not an array of thinking messages)
+            if (!Array.isArray(newMessage) && newMessage?.source === 'User') {
+                setAutoScrollEnabled(true);
+                // Clear scroll events to reset direction tracking when user sends a message
+                scrollEvents = [];
+            }
+        }
+        prevChatHistoryLengthRef.current = chatHistory.length;
 
         container.addEventListener('scroll', handleUserScroll, { passive: true });
         container.addEventListener('wheel', handleWheel, { passive: true });
@@ -158,19 +166,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
             container.removeEventListener('scroll', handleUserScroll);
             container.removeEventListener('wheel', handleWheel);
         };
-    }, [autoScrollEnabled]);
-
-    // Enable auto-scroll when a new user message is added
-    React.useEffect(() => {
-        if (chatHistory.length > 0) {
-            const lastMessage = chatHistory[chatHistory.length - 1];
-            // Check if the last message is a user message (not an array of thinking messages)
-            if (!Array.isArray(lastMessage) && lastMessage?.source === 'User') {
-                setAutoScrollEnabled(true);
-                // and clear the scroll events to reset the direction tracking
-            }
-        }
-    }, [chatHistory]);
+    }, [autoScrollEnabled, chatHistory]);
 
     // Auto-scroll when content changes or when re-enabled
     React.useEffect(performAutoScroll, [
