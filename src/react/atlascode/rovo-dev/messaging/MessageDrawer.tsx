@@ -11,7 +11,6 @@ interface MessageDrawerProps {
         openFile: OpenFileFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
-        getOriginalText: (fp: string, lr?: number[]) => Promise<string>;
     };
     opened: boolean;
     onCollapsiblePanelExpanded: () => void;
@@ -19,7 +18,7 @@ interface MessageDrawerProps {
 
 export const MessageDrawer: React.FC<MessageDrawerProps> = ({
     messages,
-    renderProps: { openFile, isRetryAfterErrorButtonEnabled, retryPromptAfterError, getOriginalText },
+    renderProps: { openFile, isRetryAfterErrorButtonEnabled, retryPromptAfterError },
     onCollapsiblePanelExpanded,
     opened,
 }) => {
@@ -52,14 +51,7 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
             </div>
             <div hidden={!isOpen} className="message-drawer-content">
                 {messages.map((msg, index) =>
-                    renderChatHistory(
-                        msg,
-                        index,
-                        openFile,
-                        isRetryAfterErrorButtonEnabled,
-                        retryPromptAfterError,
-                        getOriginalText,
-                    ),
+                    renderChatHistory(msg, index, openFile, isRetryAfterErrorButtonEnabled, retryPromptAfterError),
                 )}
             </div>
         </div>

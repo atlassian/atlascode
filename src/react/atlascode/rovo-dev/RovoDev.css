@@ -23,12 +23,9 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 8px;
-    border: 1px solid var(--vscode-editorWidget-border);
     border-radius: 8px;
     width: 100%;
     overflow: auto;
-    background-color: var(--vscode-editor-background);
 }
 
 .logical-change-header {
@@ -47,8 +44,9 @@ body {
 .logical-change-wrapper {
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
+    margin-bottom: 8px;
 }
 
 .logical-change-counter {
@@ -117,7 +115,6 @@ body {
     border: 1px solid var(--vscode-editorWidget-border);
     padding: 12px;
     margin-bottom: 8px;
-    background-color: var(--vscode-sideBar-background);
 }
 
 .file-lozenge {
@@ -223,24 +220,20 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--vscode-editorWidget-border);
+    border: 1px solid var(--vscode-button-border);
     max-width: 400px;
-    background-color: inherit;
-    border-radius: 8px;
-    padding: 12px;
+    background-color: var(--vscode-button-secondaryBackground);
+    padding: 6px 12px;
 }
 
 .code-plan-button:hover {
-    background-color: var(--vscode-list-hoverBackground);
+    background-color: var(--vscode-button-secondaryHoverBackground);
     cursor: pointer;
-    span {
-        color: var(--vscode-textLink-foreground);
-    }
 }
 
 .code-plan-button span {
     font-size: 14px;
-    color: var(--vscode-editor-foreground);
+    color: var(--vscode-button-secondaryForeground);
 }
 
 /* Messaging styles */
@@ -297,7 +290,8 @@ body {
     justify-content: center;
     align-items: center;
     border-radius: 50%;
-    background-color: var(--vscode-editorWidget-border);
+    background-color: var(--vscode-editorWidget-background);
+    border: 1px solid var(--vscode-editorWidget-border);
     font-size: 9px;
 }
 
@@ -584,3 +578,4 @@ body {
 .prompt-container:focus-within {
     outline: var(--vscode-focusBorder) solid 1px;
 }
+

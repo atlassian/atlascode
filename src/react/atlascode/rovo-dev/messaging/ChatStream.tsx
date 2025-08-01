@@ -2,12 +2,13 @@ import * as React from 'react';
 import { RovoDevProviderMessage } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { useMessagingApi } from '../../messagingApi';
-import { ErrorMessageItem, FollowUpActionFooter, OpenFileFunc, TechnicalPlanComponent } from '../common/common';
+import { ErrorMessageItem, FollowUpActionFooter, OpenFileFunc } from '../common/common';
 import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
 import { RovoDevLanding } from '../rovoDevLanding';
 import { State } from '../rovoDevView';
 import { RovoDevViewResponse } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
+import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import {
@@ -29,7 +30,6 @@ interface ChatStreamProps {
         openFile: OpenFileFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
-        getOriginalText: (fp: string, lr?: number[]) => Promise<string>;
     };
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
@@ -97,7 +97,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                         <TechnicalPlanComponent
                                             content={message.technicalPlan}
                                             openFile={renderProps.openFile}
-                                            getText={renderProps.getOriginalText}
                                         />
                                     );
                                 }
@@ -133,13 +132,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     <ToolCallItem toolMessage={pendingToolCall} />
                 </div>
             )}
-            {deepPlanCreated && (
-                <CodePlanButton execute={executeCodePlan} disabled={state !== State.WaitingForPrompt} />
-            )}
 
             {state === State.WaitingForPrompt && (
                 <FollowUpActionFooter>
-                    {canCreatePR && (
+                    {deepPlanCreated && (
+                        <CodePlanButton execute={executeCodePlan} disabled={state !== State.WaitingForPrompt} />
+                    )}
+                    {canCreatePR && !deepPlanCreated && (
                         <PullRequestForm
                             onCancel={() => {
                                 setCanCreatePR(false);
