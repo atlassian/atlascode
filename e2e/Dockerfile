@@ -17,12 +17,6 @@ RUN curl -fsSL https://code-server.dev/install.sh -o install-code-server.sh \
 # otherwise tsc might generate wrong paths for e2e tests
 WORKDIR /atlascode
 
-RUN mkdir /mock-repository && cd /mock-repository \
-    && git init \
-    && git remote add origin git@bitbucket.org/test-repository.git \
-    && touch test.json \
-    && cd ..
-
 # Where our vscode, chromedriver, images etc. will go
 ENV TEST_RESOURCES=/atlascode/e2e/.resources
 
@@ -32,6 +26,11 @@ ENV ATLASCODE_NO_EXP=1
 RUN cat <<EOF > /usr/bin/entrypoint.sh && chmod +x /usr/bin/entrypoint.sh
 #!/usr/bin/env bash
 set -ex
+
+#Setting up git configuration
+echo "Running git setup script..."
+chmod +x ./e2e/setup-mock-repository.sh
+./e2e/setup-mock-repository.sh
 
 echo "setting up trusted certificate authorities"
 cp ./e2e/sslcerts/rootCA.crt /usr/local/share/ca-certificates/atlascode_e2e_Root_CA.crt
