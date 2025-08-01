@@ -123,7 +123,7 @@ export class GitWorktreeManager {
             // Stop RovoDev process for this worktree
             stopWorkspaceProcess(worktreePath);
 
-            await shell.output('git', 'worktree', 'remove', worktreePath);
+            await shell.output('git', 'worktree', 'remove', worktreePath, '--force');
             return true;
         } catch (error) {
             Logger.error(new Error(`Failed to remove worktree: ${error}`));
