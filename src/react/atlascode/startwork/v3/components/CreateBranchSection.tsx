@@ -11,10 +11,12 @@ import {
 } from '@material-ui/core';
 import SettingsIcon from '@material-ui/icons/Settings';
 import { Autocomplete } from '@material-ui/lab';
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 
+import { ConfigSection, ConfigSubSection } from '../../../../../lib/ipc/models/config';
 import { VSCodeStyles, VSCodeStylesContext } from '../../../../vscode/theme/styles';
 import { CreateBranchSectionProps } from '../types';
+import { getAllBranches, getDefaultSourceBranch } from '../utils/branchUtils';
 
 const useStyles = makeStyles((theme: Theme) => ({
     settingsButton: (props: VSCodeStyles) => ({
@@ -29,6 +31,22 @@ const useStyles = makeStyles((theme: Theme) => ({
 export const CreateBranchSection: React.FC<CreateBranchSectionProps> = ({ state, controller }) => {
     const vscStyles = useContext(VSCodeStylesContext);
     const classes = useStyles(vscStyles);
+
+    const repoData = state.repoData[0];
+    const allBranches = getAllBranches(repoData);
+    const defaultSourceBranch = getDefaultSourceBranch(repoData);
+
+    // State for selected branch
+    const [selectedBranch, setSelectedBranch] = useState(defaultSourceBranch);
+
+    // Update selected branch when default changes
+    useEffect(() => {
+        setSelectedBranch(defaultSourceBranch);
+    }, [defaultSourceBranch]);
+
+    const handleSourceBranchChange = (event: React.ChangeEvent<{}>, value: string | null) => {
+        setSelectedBranch(value || '');
+    };
 
     return (
         <Box
@@ -57,7 +75,12 @@ export const CreateBranchSection: React.FC<CreateBranchSectionProps> = ({ state,
                             />
                         </Grid>
                         <Grid item>
-                            <IconButton size="small" color="default" className={classes.settingsButton}>
+                            <IconButton
+                                size="small"
+                                color="default"
+                                className={classes.settingsButton}
+                                onClick={() => controller.openSettings(ConfigSection.Jira, ConfigSubSection.StartWork)}
+                            >
                                 <SettingsIcon fontSize="small" />
                             </IconButton>
                         </Grid>
@@ -67,15 +90,12 @@ export const CreateBranchSection: React.FC<CreateBranchSectionProps> = ({ state,
                 <Grid item xs={9}>
                     <Typography variant="body2">Source branch</Typography>
                     <Autocomplete
-                        options={[
-                            'bb-pr-creation-integration-is-cool-yeah-yeah-lets-go',
-                            'main',
-                            'develop',
-                            'feature/new-branch',
-                        ]}
-                        value="bb-pr-creation-integration-is-cool-yeah-lets-go"
+                        options={allBranches.map((branch) => branch.name || '')}
+                        value={selectedBranch}
+                        onChange={handleSourceBranchChange}
                         renderInput={(params) => <TextField {...params} size="small" variant="outlined" fullWidth />}
                         size="small"
+                        disableClearable
                     />
                 </Grid>
 
