@@ -115,7 +115,7 @@ export async function activate(context: ExtensionContext) {
         }
     }
 
-    if (process.env.ROVODEV_BBY && !!process.env.ROVODEV_ENABLED) {
+    if (!!process.env.ROVODEV_BBY && !!process.env.ROVODEV_ENABLED) {
         commands.executeCommand('workbench.view.extension.atlascode-rovo-dev');
     }
 
