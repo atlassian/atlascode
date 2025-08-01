@@ -2,11 +2,12 @@ import { LoadingButton } from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
-import { CommentVisibility, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { CommentVisibility, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, SelectFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { Box } from '@material-ui/core';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
+import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
@@ -42,6 +43,8 @@ export interface ViewState extends CommonEditorViewState, EditIssueData {
     currentInlineDialog: string;
     commentText: string;
     isEditingComment: boolean;
+    hierarchyLoading: boolean;
+    hierarchy: MinimalIssue<DetailedSiteInfo>[];
 }
 
 const emptyState: ViewState = {
@@ -51,6 +54,8 @@ const emptyState: ViewState = {
     currentInlineDialog: '',
     commentText: '',
     isEditingComment: false,
+    hierarchyLoading: false,
+    hierarchy: [],
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -97,6 +102,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     });
                     break;
                 }
+
                 case 'epicChildrenUpdate': {
                     this.setState({ isSomethingLoading: false, loadingField: '', epicChildren: e.epicChildren });
                     break;
@@ -115,21 +121,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     }
                     break;
                 }
-                case 'hierarchyUpdate':
-                    this.setState({
-                        hierarchy: e.hierarchy,
-                        hierarchyLoading: false,
-                    });
+                case 'hierarchyUpdate': {
+                    this.setState({ hierarchy: e.hierarchy, hierarchyLoading: false });
                     break;
-                case 'hierarchyLoading':
-                    this.setState({
-                        hierarchy: e.hierarchy,
-                        hierarchyLoading: true,
-                    });
+                }
+                case 'hierarchyLoading': {
+                    this.setState({ hierarchyLoading: true });
                     break;
-                case 'error':
-                    this.setState({ errorDetails: e.reason });
-                    break;
+                }
             }
         }
         return handled;
@@ -487,6 +486,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     getMainPanelNavMarkup(): any {
         const itIconUrl = this.state.fieldValues['issuetype'] ? this.state.fieldValues['issuetype'].iconUrl : undefined;
+
         return (
             <div>
                 {this.state.showPMF && (
@@ -502,7 +502,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     <div className="ac-breadcrumbs">
                         {this.state.hierarchy && this.state.hierarchy.length > 0 && (
                             <>
-                                {this.state.hierarchyLoading && (
+                                {this.state.hierarchyLoading && this.state.hierarchy.length === 0 && (
                                     <>
                                         <span className="ac-breadcrumb-loading">
                                             {[...Array(3)].map((_, idx) => (
@@ -548,20 +548,21 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 })}
                             </>
                         )}
-                        {(!this.state.hierarchy || this.state.hierarchy.length === 0) && (
-                            <Tooltip
-                                content={`Created on ${
-                                    this.state.fieldValues['created.rendered'] || this.state.fieldValues['created']
-                                }`}
-                            >
-                                <NavItem
-                                    text={`${this.state.key}`}
-                                    href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`}
-                                    iconUrl={itIconUrl}
-                                    onCopy={this.handleCopyIssueLink}
-                                />
-                            </Tooltip>
-                        )}
+                        {!this.state.hierarchy ||
+                            (this.state.hierarchy.length === 0 && (
+                                <Tooltip
+                                    content={`Created on ${
+                                        this.state.fieldValues['created.rendered'] || this.state.fieldValues['created']
+                                    }`}
+                                >
+                                    <NavItem
+                                        text={`${this.state.key}`}
+                                        href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`}
+                                        iconUrl={itIconUrl}
+                                        onCopy={this.handleCopyIssueLink}
+                                    />
+                                </Tooltip>
+                            ))}
                     </div>
                 </div>
                 {this.state.isErrorBannerOpen && (
@@ -646,6 +647,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             </div>
         );
     }
+
     commonSidebar(): any {
         const commonItems: SidebarItem[] = ['assignee', 'reporter', 'labels', 'priority', 'components', 'fixVersions']
             .filter((field) => !!this.state.fields[field])
