@@ -566,7 +566,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     epicChildrenTypes={
                         this.state.siteDetails.isCloud
                             ? this.state.selectFieldOptions['issuetype']
-                            : this.state.selectFieldOptions['issuetype'].filter((type) => {
+                            : this.state.selectFieldOptions['issuetype']?.filter((type) => {
                                   return type.name !== 'Epic'; // The array is size 4 by default so no perf problems, filter reduces to 3
                               })
                     }
