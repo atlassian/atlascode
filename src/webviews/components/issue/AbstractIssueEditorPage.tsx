@@ -678,7 +678,7 @@ export abstract class AbstractIssueEditorPage<
                     let defaultParent: IssuePickerIssue | undefined;
                     if (this.state.fieldValues['parent']) {
                         defaultParent = {
-                            img: '',
+                            img: this.state.fieldValues['parent'].issuetype?.iconUrl || '',
                             key: this.state.fieldValues['parent'].key,
                             keyHtml: `<b>${this.state.fieldValues['parent'].key}</b>`,
                             summary: this.state.fieldValues['parent'].summary,
@@ -687,49 +687,39 @@ export abstract class AbstractIssueEditorPage<
                     } else {
                         defaultParent = undefined;
                     }
+                    const sameProjectQuery = `project = ${this.state.fieldValues['project'].key}`;
+
                     return (
-                        <Field
-                            isRequired={field.required}
-                            id={this.state.fieldValues['parent'].key}
-                            name={this.state.fieldValues['parent'].key}
-                        >
-                            {(fieldArgs: any) => {
-                                return (
-                                    <AsyncSelect
-                                        {...fieldArgs.fieldProps}
-                                        isClearable={!field.required}
-                                        isMulti={false}
-                                        defaultValue={defaultParent}
-                                        className="ac-select-container"
-                                        classNamePrefix="ac-select"
-                                        loadOptions={async (input: string) =>
-                                            await this.loadIssueOptions(
-                                                field as SelectFieldUI,
-                                                input,
-                                                currentIssueType.subtask
-                                                    ? 'issuetype in standardIssueTypes()'
-                                                    : 'issuetype = Epic',
-                                            )
-                                        }
-                                        getOptionLabel={(option: any) => option.key}
-                                        getOptionValue={(option: any) => option.key}
-                                        placeholder="Search for parent issue"
-                                        isLoading={this.state.loadingField === field.key}
-                                        isDisabled={this.state.isSomethingLoading}
-                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
-                                            this.handleInlineEdit(field, val);
-                                        })}
-                                        components={{
-                                            Option: SelectFieldHelper.IssueSuggestionOption,
-                                            SingleValue: SelectFieldHelper.IssueSuggestionValue,
-                                        }}
-                                    />
-                                );
+                        <AsyncSelect
+                            isClearable={!field.required && !currentIssueType.subtask}
+                            isMulti={false}
+                            defaultValue={defaultParent}
+                            className="ac-select-container"
+                            classNamePrefix="ac-select"
+                            loadOptions={async (input: string) =>
+                                await this.loadIssueOptions(
+                                    field as SelectFieldUI,
+                                    input,
+                                    currentIssueType.name === 'Subtask'
+                                        ? `${sameProjectQuery} AND issuetype in standardIssueTypes()`
+                                        : `${sameProjectQuery} AND issuetype = Epic`,
+                                )
+                            }
+                            getOptionLabel={(option: any) => option.key}
+                            getOptionValue={(option: any) => option.key}
+                            placeholder="Search for parent issue"
+                            isLoading={this.state.loadingField === field.key}
+                            isDisabled={this.state.isSomethingLoading}
+                            onChange={(val: any) => {
+                                this.handleSelectChange(field as SelectFieldUI, val);
                             }}
-                        </Field>
+                            components={{
+                                Option: SelectFieldHelper.IssueSuggestionOption,
+                                SingleValue: SelectFieldHelper.IssueSuggestionValue,
+                            }}
+                        />
                     );
-                }
-                if (currentIssueType.name !== 'Epic' && this.state.siteDetails.isCloud) {
+                } else if (currentIssueType.name !== 'Epic' && this.state.siteDetails.isCloud) {
                     return (
                         <Field
                             label={<span>{field.name}</span>}

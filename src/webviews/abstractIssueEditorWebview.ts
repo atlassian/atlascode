@@ -73,6 +73,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                         if (isFetchQueryAndSite(msg)) {
                             try {
                                 const client = await Container.clientManager.jiraClient(msg.site);
+                                const baseUrl = client.baseUrl.replace(/\/rest$/, '');
                                 let suggestions: IssuePickerIssue[] = [];
                                 if (
                                     msg.query &&
@@ -80,7 +81,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                     msg.currentJQL.trim() !== '' &&
                                     msg.query.trim() !== ''
                                 ) {
-                                    const apiUrl = `${client.baseUrl}/api/${client.apiVersion}/issue/picker?query=${encodeURIComponent(msg.query)}&currentJQL=${encodeURIComponent(msg.currentJQL)}`;
+                                    const apiUrl = `${baseUrl}/rest/api/${client.apiVersion}/issue/picker?query=${encodeURIComponent(msg.query)}&currentJQL=${encodeURIComponent(msg.currentJQL)}`;
                                     // We could do this via the pi-client but that would involve modifications to getIssuePickerSuggestions function to accept currentJQL
                                     const res = await client.getAutocompleteDataFromUrl(apiUrl);
                                     const result: IssuePickerResult = res as IssuePickerResult;
@@ -104,9 +105,14 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                     suggestions = await client.getIssuePickerSuggestions(encodeURIComponent(msg.query));
                                 }
 
+                                const updatedSuggestions = suggestions.map((suggestion) => ({
+                                    ...suggestion,
+                                    img: baseUrl + suggestion.img,
+                                }));
+
                                 this.postMessage({
                                     type: 'issueSuggestionsList',
-                                    issues: suggestions,
+                                    issues: updatedSuggestions,
                                     nonce: msg.nonce,
                                 });
                             } catch (e) {

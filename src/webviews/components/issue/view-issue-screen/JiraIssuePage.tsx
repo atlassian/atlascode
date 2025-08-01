@@ -265,14 +265,35 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 break;
             }
 
-            // case UIType.IssueLink: {
-            //     let newValueParent = {
-            //         ...newValue,
-            //         id: newValue.id.toString(),
-            //     };
-            //     await this.handleEditIssue(field.key, newValueParent);
-            //     break;
-            // }
+            case UIType.IssueLink: {
+                let newValueParent = newValue;
+                let completeParentData = null;
+                if (newValue && newValue.id) {
+                    completeParentData = {
+                        ...this.state.fieldValues.parent,
+                        key: newValue.key,
+                        summary: newValue.summaryText || newValue.summary,
+                        issuetype: {
+                            ...this.state.fieldValues.parent?.issuetype,
+                            iconUrl: newValue.img,
+                        },
+                    };
+                    newValueParent = {
+                        ...newValue,
+                        id: newValue.id.toString(),
+                    };
+                } else if (newValue === undefined) {
+                    newValueParent = null;
+                }
+                await this.handleEditIssue(field.key, newValueParent);
+                this.setState({
+                    fieldValues: {
+                        ...this.state.fieldValues,
+                        parent: completeParentData,
+                    },
+                }); // Added this because iconUrl would reset for some reason but the rest of the data stayed like 'key'
+                break;
+            }
 
             default: {
                 let typedVal = newValue;
@@ -495,8 +516,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         const parentIconUrl =
             this.state.fieldValues['parent'] && this.state.fieldValues['parent'].issuetype
                 ? this.state.fieldValues['parent'].issuetype.iconUrl
-                : undefined;
-        const itIconUrl = this.state.fieldValues['issuetype'] ? this.state.fieldValues['issuetype'].iconUrl : undefined;
+                : '';
+        const itIconUrl = this.state.fieldValues['issuetype'] ? this.state.fieldValues['issuetype'].iconUrl : '';
         return (
             <div>
                 {this.state.showPMF && (
