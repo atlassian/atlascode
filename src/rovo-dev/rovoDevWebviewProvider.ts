@@ -107,7 +107,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private get rovoDevApiClient() {
         if (!this._rovoDevApiClient) {
-            const rovoDevPort = this.getWorkspacePort();
+            const rovoDevPort = this.getActiveRovoDevPort();
             const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
             if (rovoDevPort) {
                 this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
@@ -115,6 +115,40 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
 
         return this._rovoDevApiClient;
+    }
+
+    // Force recreation of API client when server changes
+    public switchToServer(port: number) {
+        this._rovoDevApiClient = undefined; // Clear cached client
+        const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
+        this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, port);
+    }
+
+    private getActiveRovoDevPort(): number | undefined {
+        // Check if there's a selected server from ShipIt
+        const selectedPort = Container.context.globalState.get<number>('selectedRovoDevPort');
+        if (selectedPort) {
+            return selectedPort;
+        }
+
+        // Initialize with main workspace as default if no selection exists
+        const workspacePort = this.getWorkspacePort();
+        if (workspacePort) {
+            this.initializeDefaultSelection(workspacePort);
+            return workspacePort;
+        }
+
+        return undefined;
+    }
+
+    private initializeDefaultSelection(port: number) {
+        // Set main workspace as default selection
+        const workspaceFolders = workspace.workspaceFolders;
+        if (workspaceFolders && workspaceFolders.length > 0) {
+            const mainWorkspacePath = workspaceFolders[0].uri.fsPath;
+            Container.context.globalState.update('selectedRovoDevPort', port);
+            Container.context.globalState.update('selectedRovoDevPath', mainWorkspacePath);
+        }
     }
 
     constructor(extensionPath: string, globalState: Memento) {

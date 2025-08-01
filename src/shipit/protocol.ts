@@ -18,6 +18,11 @@ export type FromUI = {
     removeWorktree: {
         worktreePath: string;
     };
+    connectToWorktreeRovoDev: {
+        worktreePath: string;
+    };
+    getWorktreeRovoDevServers: {};
+    getSelectedRovoDevServer: {};
 };
 
 export type ToUI = {
@@ -49,6 +54,19 @@ export type ToUI = {
     worktreeRemoved: {
         status: 'success' | 'error';
         error?: string;
+    };
+    worktreeRovoDevConnected: {
+        status: 'success' | 'error';
+        port?: number;
+        worktreePath?: string;
+        error?: string;
+    };
+    worktreeRovoDevServers: {
+        servers: Array<{ path: string; port: number; type: 'workspace' | 'worktree'; healthy?: boolean }>;
+    };
+    selectedRovoDevServer: {
+        port?: number;
+        path?: string;
     };
 };
 

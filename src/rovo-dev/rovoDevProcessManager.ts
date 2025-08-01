@@ -10,6 +10,9 @@ import { rovodevInfo } from '../constants';
 // In-memory process map (not persisted, but safe for per-window usage)
 const workspaceProcessMap: { [workspacePath: string]: ChildProcess } = {};
 
+// Export workspaceProcessMap for external use
+export { workspaceProcessMap };
+
 let disposables: Disposable[] = [];
 
 export function initializeRovoDevProcessManager(context: ExtensionContext) {
@@ -45,8 +48,8 @@ export function deactivateRovoDevProcessManager() {
     showWorkspaceClosedMessage();
 }
 
-// Helper to get a unique port for a workspace
-function getOrAssignPortForWorkspace(context: ExtensionContext, workspacePath: string): number {
+// Helper to get a unique port for a workspace (exported for external use)
+export function getOrAssignPortForWorkspace(context: ExtensionContext, workspacePath: string): number {
     const mapping = context.globalState.get<{ [key: string]: number }>(rovodevInfo.mappingKey) || {};
     if (mapping[workspacePath]) {
         return mapping[workspacePath];
@@ -62,8 +65,8 @@ function getOrAssignPortForWorkspace(context: ExtensionContext, workspacePath: s
     return port;
 }
 
-// Helper to stop a process by terminal name
-function stopWorkspaceProcess(workspacePath: string) {
+// Helper to stop a process by terminal name (exported for external use)
+export function stopWorkspaceProcess(workspacePath: string) {
     const proc = workspaceProcessMap[workspacePath];
     if (proc) {
         proc.kill();
@@ -71,8 +74,8 @@ function stopWorkspaceProcess(workspacePath: string) {
     }
 }
 
-// Helper to start the background process
-function startWorkspaceProcess(context: ExtensionContext, workspacePath: string, port: number) {
+// Helper to start the background process (exported for external use)
+export function startWorkspaceProcess(context: ExtensionContext, workspacePath: string, port: number) {
     stopWorkspaceProcess(workspacePath);
 
     const rovoDevPath =
@@ -204,4 +207,32 @@ async function getCloudCredentials(): Promise<{ username: string; key: string; h
 
     const results = (await Promise.all(promises)).filter((result) => result !== undefined);
     return results.length > 0 ? results[0] : undefined;
+}
+
+// Get all running RovoDev servers with their ports
+export function getAllRovoDevServers(): Array<{ path: string; port: number; type: 'workspace' | 'worktree' }> {
+    const servers: Array<{ path: string; port: number; type: 'workspace' | 'worktree' }> = [];
+    const mapping = Container.context.globalState.get<{ [key: string]: number }>(rovodevInfo.mappingKey) || {};
+
+    // Add all servers that have processes running
+    for (const [path, process] of Object.entries(workspaceProcessMap)) {
+        const port = mapping[path];
+        if (port && !process.killed) {
+            // Determine if it's a main workspace or worktree
+            const isWorktree = path.includes('/.worktrees/') || path.includes('\\.worktrees\\');
+            servers.push({
+                path,
+                port,
+                type: isWorktree ? 'worktree' : 'workspace',
+            });
+        }
+    }
+
+    return servers;
+}
+
+// Get port for a specific workspace/worktree
+export function getPortForWorkspace(workspacePath: string): number | undefined {
+    const mapping = Container.context.globalState.get<{ [key: string]: number }>(rovodevInfo.mappingKey) || {};
+    return mapping[workspacePath];
 }

@@ -133,6 +133,70 @@ export class ShipitWebviewProvider extends Disposable implements WebviewViewProv
                 });
             }
         },
+        connectToWorktreeRovoDev: async (message) => {
+            try {
+                const port = this._worktreeManager.getWorktreeRovoDevPort(message.worktreePath);
+                if (port) {
+                    // Store the selected server info globally
+                    Container.context.globalState.update('selectedRovoDevPort', port);
+                    Container.context.globalState.update('selectedRovoDevPath', message.worktreePath);
+
+                    // Switch the main RovoDev chat to this server
+                    Container.rovodevWebviewProvider.switchToServer(port);
+
+                    this.postMessage({
+                        type: 'worktreeRovoDevConnected',
+                        status: 'success',
+                        port,
+                        worktreePath: message.worktreePath,
+                    });
+                } else {
+                    this.postMessage({
+                        type: 'worktreeRovoDevConnected',
+                        status: 'error',
+                        error: 'No RovoDev server found for this worktree',
+                    });
+                }
+            } catch (error) {
+                this.postMessage({
+                    type: 'worktreeRovoDevConnected',
+                    status: 'error',
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                });
+            }
+        },
+        getWorktreeRovoDevServers: async (message) => {
+            try {
+                const servers = this._worktreeManager.getAllRovoDevServers();
+                this.postMessage({
+                    type: 'worktreeRovoDevServers',
+                    servers,
+                });
+            } catch {
+                this.postMessage({
+                    type: 'worktreeRovoDevServers',
+                    servers: [],
+                });
+            }
+        },
+        getSelectedRovoDevServer: async (message) => {
+            try {
+                const selectedPort = Container.context.globalState.get<number>('selectedRovoDevPort');
+                const selectedPath = Container.context.globalState.get<string>('selectedRovoDevPath');
+
+                this.postMessage({
+                    type: 'selectedRovoDevServer',
+                    port: selectedPort,
+                    path: selectedPath,
+                });
+            } catch {
+                this.postMessage({
+                    type: 'selectedRovoDevServer',
+                    port: undefined,
+                    path: undefined,
+                });
+            }
+        },
     };
 
     constructor(extensionPath: string) {

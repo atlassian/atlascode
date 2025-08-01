@@ -1,6 +1,14 @@
 import { window, workspace } from 'vscode';
 
+import { Container } from '../container';
 import { Logger } from '../logger';
+import {
+    getAllRovoDevServers,
+    getOrAssignPortForWorkspace,
+    getPortForWorkspace,
+    startWorkspaceProcess,
+    stopWorkspaceProcess,
+} from '../rovo-dev/rovoDevProcessManager';
 import { Shell } from '../util/shell';
 
 export class GitWorktreeManager {
@@ -56,6 +64,12 @@ export class GitWorktreeManager {
             // Create the worktree
             try {
                 await shell.output('git', 'worktree', 'add', worktreePath);
+
+                // Start RovoDev for the new worktree using existing process manager
+                const port = getOrAssignPortForWorkspace(Container.context, worktreePath);
+                startWorkspaceProcess(Container.context, worktreePath, port);
+                Logger.info(`Started RovoDev for worktree ${worktreePath} on port ${port}`);
+
                 window.showInformationMessage(`Git worktree created successfully at: ${worktreePath}`);
             } catch (error) {
                 Logger.error(new Error(`Failed to create worktree: ${error}`));
@@ -106,6 +120,9 @@ export class GitWorktreeManager {
             const workspaceRoot = workspaceFolders[0].uri.fsPath;
             const shell = new Shell(workspaceRoot);
 
+            // Stop RovoDev process for this worktree
+            stopWorkspaceProcess(worktreePath);
+
             await shell.output('git', 'worktree', 'remove', worktreePath);
             return true;
         } catch (error) {
@@ -113,5 +130,13 @@ export class GitWorktreeManager {
             window.showErrorMessage(`Failed to remove Git worktree: ${error}`);
             return false;
         }
+    }
+
+    public getWorktreeRovoDevPort(worktreePath: string): number | undefined {
+        return getPortForWorkspace(worktreePath);
+    }
+
+    public getAllRovoDevServers(): Array<{ path: string; port: number; type: 'workspace' | 'worktree' }> {
+        return getAllRovoDevServers();
     }
 }
