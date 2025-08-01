@@ -1,4 +1,13 @@
-import { getAllBranches, getDefaultSourceBranch } from './branchUtils';
+jest.mock('mustache', () => ({
+    __esModule: true,
+    default: {
+        render: jest.fn().mockReturnValue('mocked template result'),
+    },
+}));
+
+const mockMustacheRender = require('mustache').default.render;
+
+import { generateBranchName, getAllBranches, getDefaultSourceBranch } from './branchUtils';
 
 describe('branchUtils', () => {
     const mockRepoData = {
@@ -69,6 +78,71 @@ describe('branchUtils', () => {
             };
             const result = getDefaultSourceBranch(repoDataWithoutLocalBranches);
             expect(result).toBe('');
+        });
+    });
+
+    describe('generateBranchName', () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+        });
+
+        const mockRepo = {
+            userEmail: 'test.user@example.com',
+        } as any;
+
+        const mockBranchType = {
+            kind: 'Bugfix',
+            prefix: 'bugfix/',
+        } as any;
+
+        const mockIssue = {
+            key: 'TEST-123',
+            summary: 'Test issue summary',
+        } as any;
+
+        const defaultTemplate = '{{prefix}}{{issueKey}}-{{summary}}';
+
+        it('should generate branch name with default template', () => {
+            mockMustacheRender.mockReturnValue('bugfix/TEST-123-Test-issue-summary');
+            const result = generateBranchName(mockRepo, mockBranchType, mockIssue, defaultTemplate);
+            expect(mockMustacheRender).toHaveBeenCalledWith(
+                defaultTemplate,
+                expect.objectContaining({
+                    prefix: 'bugfix/',
+                    issueKey: 'TEST-123',
+                    summary: 'test-issue-summary',
+                }),
+            );
+            expect(result).toBe('bugfix/TEST-123-Test-issue-summary');
+        });
+
+        it('should handle missing user email', () => {
+            mockMustacheRender.mockReturnValue('username/bugfix/TEST-123');
+            const repoWithoutEmail = {
+                userEmail: undefined,
+            } as any;
+            const template = '{{username}}/{{prefix}}{{issueKey}}';
+            const result = generateBranchName(repoWithoutEmail, mockBranchType, mockIssue, template);
+            expect(result).toBe('username/bugfix/TEST-123');
+        });
+
+        it('should handle spaces in branch type prefix', () => {
+            mockMustacheRender.mockReturnValue('feature-branch/TEST-123-Test-issue-summary');
+            const branchTypeWithSpaces = {
+                kind: 'Feature',
+                prefix: 'feature branch/',
+            };
+            const result = generateBranchName(mockRepo, branchTypeWithSpaces, mockIssue, defaultTemplate);
+            expect(result).toBe('feature-branch/TEST-123-Test-issue-summary');
+        });
+
+        it('should handle invalid template', () => {
+            mockMustacheRender.mockImplementation(() => {
+                throw new Error('Invalid template');
+            });
+            const invalidTemplate = '{{invalid}}';
+            const result = generateBranchName(mockRepo, mockBranchType, mockIssue, invalidTemplate);
+            expect(result).toBe('Invalid template: please follow the format described above');
         });
     });
 });

@@ -11,13 +11,12 @@ import {
 } from '@material-ui/core';
 import SettingsIcon from '@material-ui/icons/Settings';
 import { Autocomplete } from '@material-ui/lab';
-import Mustache from 'mustache';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { ConfigSection, ConfigSubSection } from '../../../../../lib/ipc/models/config';
 import { VSCodeStyles, VSCodeStylesContext } from '../../../../vscode/theme/styles';
 import { CreateBranchSectionProps } from '../types';
-import { getAllBranches, getDefaultSourceBranch } from '../utils/branchUtils';
+import { generateBranchName, getAllBranches, getDefaultSourceBranch } from '../utils/branchUtils';
 
 const useStyles = makeStyles((theme: Theme) => ({
     settingsButton: (props: VSCodeStyles) => ({
@@ -49,46 +48,10 @@ export const CreateBranchSection: React.FC<CreateBranchSectionProps> = ({ state,
     // Build branch name function
     const buildBranchName = useCallback(
         (repo: any, branchType: any) => {
-            const usernameBase = repo.userEmail
-                ? repo.userEmail
-                      .split('@')[0]
-                      .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
-                      .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
-                : 'username';
-            const prefixBase = branchType.prefix.replace(/ /g, '-');
-            const summaryBase = state.issue.summary
-                .substring(0, 50)
-                .trim()
-                .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
-                .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
-                .replace(/\W+/g, '-')
-                .replace(/-+/g, '-')
-                .replace(/^-|-$/g, '');
-
-            const view = {
-                username: usernameBase.toLowerCase(),
-                UserName: usernameBase,
-                USERNAME: usernameBase.toUpperCase(),
-                prefix: prefixBase.toLowerCase(),
-                Prefix: prefixBase,
-                PREFIX: prefixBase.toUpperCase(),
-                issuekey: state.issue.key.toLowerCase(),
-                IssueKey: state.issue.key,
-                issueKey: state.issue.key,
-                ISSUEKEY: state.issue.key.toUpperCase(),
-                summary: summaryBase.toLowerCase(),
-                Summary: summaryBase,
-                SUMMARY: summaryBase.toUpperCase(),
-            };
-
-            try {
-                const generatedBranchTitle = Mustache.render(state.customTemplate, view);
-                setLocalBranch(generatedBranchTitle);
-            } catch {
-                setLocalBranch('Invalid template: please follow the format described above');
-            }
+            const generatedBranchTitle = generateBranchName(repo, branchType, state.issue, state.customTemplate);
+            setLocalBranch(generatedBranchTitle);
         },
-        [state.issue.key, state.issue.summary, state.customTemplate],
+        [state.issue, state.customTemplate],
     );
 
     // Initialize branch name when component mounts
