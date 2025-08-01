@@ -122,6 +122,50 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._rovoDevApiClient = undefined; // Clear cached client
         const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
         this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, port);
+
+        // Send server switched message to clear chat
+        this.postMessage({
+            type: RovoDevProviderMessageType.ServerSwitched,
+            port: port,
+        });
+
+        // wait for Rovo Dev to be ready, for up to 10 seconds
+        this.waitFor(() => this.executeHealthcheck(), 100000, 500)
+            .then(async (result) => {
+                if (result) {
+                    this.beginNewSession();
+                    // if (this.isBBY) {
+                    // TODO: we should obtain the session id from the boysenberry environment
+                    await this.executeReplay();
+                } else {
+                    const errorMsg = this._rovoDevApiClient
+                        ? `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within 10000ms`
+                        : `Unable to initialize RovoDev's client within 10000ms`;
+
+                    throw new Error(errorMsg);
+                }
+
+                this._initialized = true;
+                // re-send the buffered prompt
+                if (this._pendingPrompt) {
+                    this.executeChat(this._pendingPrompt, true);
+                    this._pendingPrompt = undefined;
+                }
+            })
+            .catch((error) => {
+                this.processError(error, false);
+            })
+            .finally(() => {
+                this._initialized = true;
+
+                this._webView?.postMessage({
+                    type: RovoDevProviderMessageType.Initialized,
+                });
+            });
+    }
+
+    private postMessage(message: RovoDevProviderMessage): Thenable<boolean> | undefined {
+        return this._webView?.postMessage(message);
     }
 
     private getActiveRovoDevPort(): number | undefined {
@@ -309,10 +353,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     const version = ((await this.executeHealthcheckInfo()) ?? {}).version;
                     if (version && semver_gte(version, MIN_SUPPORTED_ROVODEV_VERSION)) {
                         this.beginNewSession();
-                        if (this.isBBY) {
-                            // TODO: we should obtain the session id from the boysenberry environment
-                            await this.executeReplay();
-                        }
+                        // if (this.isBBY) {
+                        // TODO: we should obtain the session id from the boysenberry environment
+                        await this.executeReplay();
+                        // }
                     } else {
                         throw new Error(
                             `Rovo Dev version (${version}) is out of date. Please update Rovo Dev and try again.\nMin version compatible: ${MIN_SUPPORTED_ROVODEV_VERSION}`,

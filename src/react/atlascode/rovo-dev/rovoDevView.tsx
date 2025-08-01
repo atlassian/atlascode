@@ -377,6 +377,13 @@ const RovoDevView: React.FC = () => {
                     setPendingToolCallMessage('');
                     break;
 
+                case RovoDevProviderMessageType.ServerSwitched:
+                    console.log('Server switched, clearing chat for new server context');
+                    clearChatHistory();
+                    setPendingToolCallMessage('');
+                    setCurrentState(State.GeneratingResponse);
+                    break;
+
                 case RovoDevProviderMessageType.Initialized:
                     break;
 
