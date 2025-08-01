@@ -11,7 +11,8 @@ import {
 } from '@material-ui/core';
 import SettingsIcon from '@material-ui/icons/Settings';
 import { Autocomplete } from '@material-ui/lab';
-import React, { useContext, useEffect, useState } from 'react';
+import Mustache from 'mustache';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { ConfigSection, ConfigSubSection } from '../../../../../lib/ipc/models/config';
 import { VSCodeStyles, VSCodeStylesContext } from '../../../../vscode/theme/styles';
@@ -38,15 +39,77 @@ export const CreateBranchSection: React.FC<CreateBranchSectionProps> = ({ state,
 
     // State for selected branch
     const [selectedBranch, setSelectedBranch] = useState(defaultSourceBranch);
+    const [localBranch, setLocalBranch] = useState('');
 
     // Update selected branch when default changes
     useEffect(() => {
         setSelectedBranch(defaultSourceBranch);
     }, [defaultSourceBranch]);
 
+    // Build branch name function
+    const buildBranchName = useCallback(
+        (repo: any, branchType: any) => {
+            const usernameBase = repo.userEmail
+                ? repo.userEmail
+                      .split('@')[0]
+                      .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
+                      .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
+                : 'username';
+            const prefixBase = branchType.prefix.replace(/ /g, '-');
+            const summaryBase = state.issue.summary
+                .substring(0, 50)
+                .trim()
+                .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
+                .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
+                .replace(/\W+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+
+            const view = {
+                username: usernameBase.toLowerCase(),
+                UserName: usernameBase,
+                USERNAME: usernameBase.toUpperCase(),
+                prefix: prefixBase.toLowerCase(),
+                Prefix: prefixBase,
+                PREFIX: prefixBase.toUpperCase(),
+                issuekey: state.issue.key.toLowerCase(),
+                IssueKey: state.issue.key,
+                issueKey: state.issue.key,
+                ISSUEKEY: state.issue.key.toUpperCase(),
+                summary: summaryBase.toLowerCase(),
+                Summary: summaryBase,
+                SUMMARY: summaryBase.toUpperCase(),
+            };
+
+            try {
+                const generatedBranchTitle = Mustache.render(state.customTemplate, view);
+                setLocalBranch(generatedBranchTitle);
+            } catch {
+                setLocalBranch('Invalid template: please follow the format described above');
+            }
+        },
+        [state.issue.key, state.issue.summary, state.customTemplate],
+    );
+
+    // Initialize branch name when component mounts
+    useEffect(() => {
+        if (repoData && repoData.branchTypes && repoData.branchTypes.length > 0) {
+            buildBranchName(repoData, repoData.branchTypes[0]);
+        }
+    }, [repoData, buildBranchName]);
+
     const handleSourceBranchChange = (event: React.ChangeEvent<{}>, value: string | null) => {
         setSelectedBranch(value || '');
     };
+
+    const handleLocalBranchChange = useCallback(
+        (event: React.ChangeEvent<{ name?: string | undefined; value: string }>) => {
+            // spaces are not allowed in branch names
+            event.target.value = event.target.value.replace(/ /g, '-');
+            setLocalBranch(event.target.value);
+        },
+        [setLocalBranch],
+    );
 
     return (
         <Box
@@ -70,8 +133,9 @@ export const CreateBranchSection: React.FC<CreateBranchSectionProps> = ({ state,
                             <TextField
                                 fullWidth
                                 size="small"
-                                value="ALT-1156-bb-pr-creation-integration-is-cool-yeah-lets-go"
+                                value={localBranch}
                                 variant="outlined"
+                                onChange={handleLocalBranchChange}
                             />
                         </Grid>
                         <Grid item>
