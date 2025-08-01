@@ -231,8 +231,6 @@ export const scrollToEnd = (() => {
 
         if (delay < 0) {
             lastScroll = doScrollNow(element);
-            // schedule one extra scroll to adjust for react rendering asynchronousness
-            // scrollTimeout = setTimeout(() => (lastScroll = doScrollNow(element)), EXTRA_SCROLL_DELAY);
         } else {
             scrollTimeout = setTimeout(() => (lastScroll = doScrollNow(element)), delay);
         }
