@@ -13,6 +13,7 @@ import {
     window,
 } from 'vscode';
 
+import { GitWorktreeManager } from './gitWorktreeManager';
 import { FromUIHandler, MessageFromUI, MessageToUI } from './protocol';
 
 const pingQuery = `
@@ -30,6 +31,7 @@ export class ShipitWebviewProvider extends Disposable implements WebviewViewProv
     private _extensionUri: Uri;
     private _webView?: WebviewView['webview'];
     private readonly viewType = 'shipitWebview';
+    private _worktreeManager: GitWorktreeManager;
 
     private handler: FromUIHandler = {
         isLifeOk: (message) => {
@@ -84,12 +86,60 @@ export class ShipitWebviewProvider extends Disposable implements WebviewViewProv
                 }
             });
         },
+        createWorktree: async (message) => {
+            try {
+                await this._worktreeManager.createWorktree(message.name, message.directory);
+                this.postMessage({
+                    type: 'worktreeCreated',
+                    status: 'success',
+                });
+            } catch (error) {
+                this.postMessage({
+                    type: 'worktreeCreated',
+                    status: 'error',
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                });
+            }
+        },
+        listWorktrees: async (message) => {
+            try {
+                const worktrees = await this._worktreeManager.listWorktrees();
+                this.postMessage({
+                    type: 'worktreesList',
+                    status: 'success',
+                    worktrees,
+                });
+            } catch (error) {
+                this.postMessage({
+                    type: 'worktreesList',
+                    status: 'error',
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                });
+            }
+        },
+        removeWorktree: async (message) => {
+            try {
+                const success = await this._worktreeManager.removeWorktree(message.worktreePath);
+                this.postMessage({
+                    type: 'worktreeRemoved',
+                    status: success ? 'success' : 'error',
+                    error: success ? undefined : 'Failed to remove worktree',
+                });
+            } catch (error) {
+                this.postMessage({
+                    type: 'worktreeRemoved',
+                    status: 'error',
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                });
+            }
+        },
     };
 
     constructor(extensionPath: string) {
         super(() => {});
         this._extensionPath = extensionPath;
         this._extensionUri = Uri.file(this._extensionPath);
+        this._worktreeManager = new GitWorktreeManager();
         // Register the webview view provider
         this._register();
     }

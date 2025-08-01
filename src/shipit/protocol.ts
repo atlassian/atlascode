@@ -10,6 +10,14 @@ export type FromUI = {
     someOtherMessage: {
         data: string;
     };
+    createWorktree: {
+        directory?: string;
+        name?: string;
+    };
+    listWorktrees: {};
+    removeWorktree: {
+        worktreePath: string;
+    };
 };
 
 export type ToUI = {
@@ -27,6 +35,20 @@ export type ToUI = {
         status: 'ok' | 'error';
         error?: string;
         response?: any;
+    };
+    worktreeCreated: {
+        status: 'success' | 'error';
+        path?: string;
+        error?: string;
+    };
+    worktreesList: {
+        status: 'success' | 'error';
+        worktrees?: string[];
+        error?: string;
+    };
+    worktreeRemoved: {
+        status: 'success' | 'error';
+        error?: string;
     };
 };
 
