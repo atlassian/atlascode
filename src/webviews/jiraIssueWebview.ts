@@ -1029,7 +1029,7 @@ export class JiraIssueWebview
 
         const hierarchy = [this._issue];
 
-        this.postMessage({ type: 'hierarchyLoading' });
+        this.postMessage({ type: 'hierarchyLoading', hierarchy });
 
         try {
             let currentParentKey: string | undefined = this._issue.parentKey;

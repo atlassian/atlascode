@@ -126,7 +126,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     break;
                 }
                 case 'hierarchyLoading': {
-                    this.setState({ hierarchyLoading: true });
+                    this.setState({ hierarchy: e.hierarchy, hierarchyLoading: true });
                     break;
                 }
             }
@@ -502,7 +502,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     <div className="ac-breadcrumbs">
                         {this.state.hierarchy && this.state.hierarchy.length > 0 && (
                             <>
-                                {this.state.hierarchyLoading && this.state.hierarchy.length === 0 && (
+                                {this.state.hierarchyLoading && this.state.hierarchy.length <= 1 && (
                                     <>
                                         <span className="ac-breadcrumb-loading">
                                             {[...Array(3)].map((_, idx) => (
