@@ -89,15 +89,37 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         }
     }, [autoScrollEnabled]);
 
-    // Intersection observer to detect when user scrolls back to bottom
+    // Combined scroll tracking and intersection observer
     React.useEffect(() => {
+        const container = chatEndRef.current;
+        if (!container) {
+            return;
+        }
+
+        let lastScrollTop = 0;
+        const scrollEvents: { timestamp: number; delta: number }[] = [];
+        const SCROLL_ACCUMULATION_WINDOW = 500; // 500ms window
+
+        const cleanupOldScrollEvents = () => {
+            const currentTime = Date.now();
+            const cutoffTime = currentTime - SCROLL_ACCUMULATION_WINDOW;
+            while (scrollEvents.length > 0 && scrollEvents[0].timestamp < cutoffTime) {
+                scrollEvents.shift();
+            }
+        };
+
+        const getAccumulatedScrollDirection = () => {
+            cleanupOldScrollEvents();
+            const totalDelta = scrollEvents.reduce((sum, event) => sum + event.delta, 0);
+            return totalDelta;
+        };
+
+        // Intersection observer to detect when user scrolls back to bottom
         const observer = new IntersectionObserver(
             ([entry]) => {
-                if (entry.isIntersecting) {
-                    const timeSinceLastUpScroll = Date.now() - lastUserScrollUpRef.current;
-                    if (timeSinceLastUpScroll > 100) {
-                        setAutoScrollEnabled(true);
-                    }
+                // Only re-enable auto-scroll if the user is scrolling down & sentinel is intersecting
+                if (entry.isIntersecting && getAccumulatedScrollDirection() >= 0) {
+                    setAutoScrollEnabled(true);
                 }
             },
             { threshold: 0, rootMargin: '0px' },
@@ -107,29 +129,28 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
             observer.observe(sentinelRef.current);
         }
 
-        return () => observer.disconnect();
-    }, [autoScrollEnabled]);
-
-    // Scroll event detection to pause auto-scroll when user scrolls upward
-    React.useEffect(() => {
-        const container = chatEndRef.current;
-        if (!container) {
-            return;
-        }
-
-        let lastScrollTop = 0;
-
         const handleUserScroll = (event: Event) => {
             const currentScrollTop = (event.target as HTMLElement).scrollTop;
-            if (currentScrollTop < lastScrollTop) {
+            // Add scroll event to our tracking array
+            scrollEvents.push({ timestamp: Date.now(), delta: currentScrollTop - lastScrollTop });
+
+            // If overall direction is upward (negative delta), disable auto-scroll
+            if (getAccumulatedScrollDirection() < 0) {
                 disableAutoScroll();
             }
+
             lastScrollTop = currentScrollTop;
         };
 
         const handleWheel = (event: WheelEvent) => {
-            if (event.deltaY < 0) {
-                // Scrolling up
+            // Add wheel event to our tracking array (deltaY positive = scrolling down, negative = scrolling up)
+            scrollEvents.push({ timestamp: Date.now(), delta: event.deltaY });
+
+            // Get accumulated scroll direction over the last 500ms
+            const accumulatedDelta = getAccumulatedScrollDirection();
+
+            // If overall direction is upward (negative delta), disable auto-scroll
+            if (accumulatedDelta < 0) {
                 disableAutoScroll();
             }
         };
@@ -138,6 +159,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         container.addEventListener('wheel', handleWheel, { passive: true });
 
         return () => {
+            observer.disconnect();
             container.removeEventListener('scroll', handleUserScroll);
             container.removeEventListener('wheel', handleWheel);
         };
