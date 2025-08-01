@@ -353,10 +353,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     const version = ((await this.executeHealthcheckInfo()) ?? {}).version;
                     if (version && semver_gte(version, MIN_SUPPORTED_ROVODEV_VERSION)) {
                         this.beginNewSession();
-                        // if (this.isBBY) {
-                        // TODO: we should obtain the session id from the boysenberry environment
-                        await this.executeReplay();
-                        // }
+                        if (this.isBBY) {
+                            // TODO: we should obtain the session id from the boysenberry environment
+                            await this.executeReplay();
+                        }
                     } else {
                         throw new Error(
                             `Rovo Dev version (${version}) is out of date. Please update Rovo Dev and try again.\nMin version compatible: ${MIN_SUPPORTED_ROVODEV_VERSION}`,
