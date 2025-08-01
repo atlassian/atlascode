@@ -16,6 +16,7 @@
 
 - Update logic of selecting the default project and site to the most relevant one for the user on the Creating a JIRA issue page
 - Added filtering for options and error message in projects field on Create Jira issue page.
+- Implemented full parent hierarchy display for Jira issues
 
 ### Bug Fixes
 

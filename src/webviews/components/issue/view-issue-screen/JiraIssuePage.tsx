@@ -2,11 +2,12 @@ import { LoadingButton } from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
-import { CommentVisibility, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { CommentVisibility, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, SelectFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { Box } from '@material-ui/core';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
+import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
@@ -42,6 +43,8 @@ export interface ViewState extends CommonEditorViewState, EditIssueData {
     currentInlineDialog: string;
     commentText: string;
     isEditingComment: boolean;
+    hierarchyLoading: boolean;
+    hierarchy: MinimalIssue<DetailedSiteInfo>[];
 }
 
 const emptyState: ViewState = {
@@ -51,6 +54,8 @@ const emptyState: ViewState = {
     currentInlineDialog: '',
     commentText: '',
     isEditingComment: false,
+    hierarchyLoading: false,
+    hierarchy: [],
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -114,6 +119,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     if (isIssueCreated(e)) {
                         this.setState({ isSomethingLoading: false, loadingField: '' });
                     }
+                    break;
+                }
+                case 'hierarchyUpdate': {
+                    this.setState({ hierarchy: e.hierarchy, hierarchyLoading: false });
+                    break;
+                }
+                case 'hierarchyLoading': {
+                    this.setState({ hierarchy: e.hierarchy, hierarchyLoading: true });
                     break;
                 }
             }
@@ -472,22 +485,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     getMainPanelNavMarkup(): any {
-        const epicLinkValue = this.state.fieldValues[this.state.epicFieldInfo.epicLink.id];
-        let epicLinkKey: string = '';
-
-        if (epicLinkValue) {
-            if (typeof epicLinkValue === 'object' && epicLinkValue.value) {
-                epicLinkKey = epicLinkValue.value;
-            } else if (typeof epicLinkValue === 'string') {
-                epicLinkKey = epicLinkValue;
-            }
-        }
-
-        const parentIconUrl =
-            this.state.fieldValues['parent'] && this.state.fieldValues['parent'].issuetype
-                ? this.state.fieldValues['parent'].issuetype.iconUrl
-                : undefined;
         const itIconUrl = this.state.fieldValues['issuetype'] ? this.state.fieldValues['issuetype'].iconUrl : undefined;
+
         return (
             <div>
                 {this.state.showPMF && (
@@ -501,45 +500,69 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 )}
                 <div className="ac-page-header">
                     <div className="ac-breadcrumbs">
-                        {epicLinkValue && epicLinkKey !== '' && (
-                            <React.Fragment>
-                                <NavItem
-                                    text={epicLinkKey}
-                                    onItemClick={() =>
-                                        this.handleOpenIssue({ siteDetails: this.state.siteDetails, key: epicLinkKey })
-                                    }
-                                />
-                                <span className="ac-breadcrumb-divider">/</span>
-                            </React.Fragment>
-                        )}
-                        {this.state.fieldValues['parent'] && (
-                            <React.Fragment>
-                                <NavItem
-                                    text={this.state.fieldValues['parent'].key}
-                                    iconUrl={parentIconUrl}
-                                    onItemClick={() =>
-                                        this.handleOpenIssue({
-                                            siteDetails: this.state.siteDetails,
-                                            key: this.state.fieldValues['parent'].key,
-                                        })
-                                    }
-                                />
-                                <span className="ac-breadcrumb-divider">/</span>
-                            </React.Fragment>
-                        )}
+                        {this.state.hierarchy && this.state.hierarchy.length > 0 && (
+                            <>
+                                {this.state.hierarchyLoading && this.state.hierarchy.length <= 1 && (
+                                    <>
+                                        <span className="ac-breadcrumb-loading">
+                                            {[...Array(3)].map((_, idx) => (
+                                                <span
+                                                    key={idx}
+                                                    className="animate-pulse"
+                                                    style={{ animationDelay: `${idx * 0.2}s` }}
+                                                >
+                                                    .
+                                                </span>
+                                            ))}
+                                        </span>
+                                        <span className="ac-breadcrumb-divider">/</span>
+                                    </>
+                                )}
+                                {this.state.hierarchy.map((issue, index) => {
+                                    const isLastItem = index === this.state.hierarchy.length - 1;
+                                    const shouldOpenInJira = issue.key === this.state.key;
+                                    const handleItemClick = !shouldOpenInJira
+                                        ? () =>
+                                              this.handleOpenIssue({
+                                                  siteDetails: this.state.siteDetails,
+                                                  key: issue.key,
+                                              })
+                                        : undefined;
 
-                        <Tooltip
-                            content={`Created on ${
-                                this.state.fieldValues['created.rendered'] || this.state.fieldValues['created']
-                            }`}
-                        >
-                            <NavItem
-                                text={`${this.state.key}`}
-                                href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`}
-                                iconUrl={itIconUrl}
-                                onCopy={this.handleCopyIssueLink}
-                            />
-                        </Tooltip>
+                                    return (
+                                        <React.Fragment key={issue.key}>
+                                            <NavItem
+                                                text={issue.key}
+                                                iconUrl={issue.issuetype?.iconUrl}
+                                                href={
+                                                    shouldOpenInJira
+                                                        ? `${this.state.siteDetails.baseLinkUrl}/browse/${issue.key}`
+                                                        : undefined
+                                                }
+                                                onItemClick={handleItemClick}
+                                                onCopy={isLastItem ? this.handleCopyIssueLink : undefined}
+                                            />
+                                            {!isLastItem && <span className="ac-breadcrumb-divider">/</span>}
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </>
+                        )}
+                        {!this.state.hierarchy ||
+                            (this.state.hierarchy.length === 0 && (
+                                <Tooltip
+                                    content={`Created on ${
+                                        this.state.fieldValues['created.rendered'] || this.state.fieldValues['created']
+                                    }`}
+                                >
+                                    <NavItem
+                                        text={`${this.state.key}`}
+                                        href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`}
+                                        iconUrl={itIconUrl}
+                                        onCopy={this.handleCopyIssueLink}
+                                    />
+                                </Tooltip>
+                            ))}
                     </div>
                 </div>
                 {this.state.isErrorBannerOpen && (
@@ -624,6 +647,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             </div>
         );
     }
+
     commonSidebar(): any {
         const commonItems: SidebarItem[] = ['assignee', 'reporter', 'labels', 'priority', 'components', 'fixVersions']
             .filter((field) => !!this.state.fields[field])
