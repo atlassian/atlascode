@@ -284,15 +284,15 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                 project: newValue,
                 fieldValues: this.state.fieldValues,
             });
-        }
-
-        if (field.valueType === ValueType.IssueType) {
+        } else if (field.valueType === ValueType.IssueType) {
             this.setState({ loadingField: field.key, isSomethingLoading: true });
             this.postMessage({
                 action: 'setIssueType',
                 issueType: newValue,
                 fieldValues: this.state.fieldValues,
             });
+        } else {
+            this.setState({ isSomethingLoading: false, loadingField: '' });
         }
     };
 
