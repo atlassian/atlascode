@@ -328,9 +328,15 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     }
 
     getAdvancedFieldMarkup(): any {
-        return this.advancedFields.map((field) =>
-            this.getInputMarkup(field, false, this.state.fieldValues['issuetype']),
-        ); // Here we add the extra argument for parent to include currentIssueType
+        if (this.state.siteDetails.isCloud) {
+            return this.advancedFields.map((field) =>
+                this.getInputMarkup(field, false, this.state.fieldValues['issuetype']),
+            ); // Here we add the extra argument for parent to include currentIssueType
+        } else {
+            return this.advancedFields
+                .filter((field) => field.key !== 'parent') //TODO: add parent functionality
+                .map((field) => this.getInputMarkup(field));
+        }
     }
 
     formHeader = () => {

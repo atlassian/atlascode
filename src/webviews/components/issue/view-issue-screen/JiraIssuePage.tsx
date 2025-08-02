@@ -655,27 +655,37 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         );
     }
     commonSidebar(): any {
-        const commonItems: SidebarItem[] = [
-            'assignee',
-            'reporter',
-            'labels',
-            'priority',
-            'components',
-            'fixVersions',
-            'parent',
-        ] // here we should add 'parent' for when we are ready to add parent to edit issue
-            .filter((field) => !!this.state.fields[field])
-            .map((field) => {
-                return {
-                    itemLabel: this.state.fields[field].name,
-                    itemComponent: this.getInputMarkup(
-                        this.state.fields[field],
-                        true,
-                        this.state.fieldValues['issuetype'],
-                        field,
-                    ),
-                };
-            });
+        let commonItems: SidebarItem[];
+
+        if (this.state.siteDetails.isCloud) {
+            commonItems = ['assignee', 'reporter', 'labels', 'priority', 'components', 'fixVersions', 'parent']
+                .filter((field) => !!this.state.fields[field])
+                .map((field) => {
+                    return {
+                        itemLabel: this.state.fields[field].name,
+                        itemComponent: this.getInputMarkup(
+                            this.state.fields[field],
+                            true,
+                            this.state.fieldValues['issuetype'],
+                            field,
+                        ),
+                    };
+                });
+        } else {
+            commonItems = ['assignee', 'reporter', 'labels', 'priority', 'components', 'fixVersions']
+                .filter((field) => !!this.state.fields[field])
+                .map((field) => {
+                    return {
+                        itemLabel: this.state.fields[field].name,
+                        itemComponent: this.getInputMarkup(
+                            this.state.fields[field],
+                            true,
+                            this.state.fieldValues['issuetype'],
+                            field,
+                        ),
+                    };
+                });
+        }
 
         const advancedItems: SidebarItem[] = this.advancedSidebarFields
             .map((field) => {

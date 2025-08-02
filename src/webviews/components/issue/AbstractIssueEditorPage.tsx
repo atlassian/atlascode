@@ -674,7 +674,7 @@ export abstract class AbstractIssueEditorPage<
                 return markup;
             }
             case UIType.IssueLink: {
-                if (editmode && currentIssueType.name !== 'Epic' && this.state.siteDetails.isCloud) {
+                if (editmode && currentIssueType.name !== 'Epic') {
                     let defaultParent: IssuePickerIssue | undefined;
                     if (this.state.fieldValues['parent']) {
                         defaultParent = {
@@ -719,7 +719,7 @@ export abstract class AbstractIssueEditorPage<
                             }}
                         />
                     );
-                } else if (currentIssueType.name !== 'Epic' && this.state.siteDetails.isCloud) {
+                } else if (currentIssueType.name !== 'Epic') {
                     return (
                         <Field
                             label={<span>{field.name}</span>}
