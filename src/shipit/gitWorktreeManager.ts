@@ -12,13 +12,13 @@ import {
 import { Shell } from '../util/shell';
 
 export class GitWorktreeManager {
-    public async createWorktree(customName?: string, customDirectory?: string): Promise<void> {
+    public async createWorktree(customName?: string, customDirectory?: string): Promise<string> {
         try {
             // Get the current workspace folder
             const workspaceFolders = workspace.workspaceFolders;
             if (!workspaceFolders || workspaceFolders.length === 0) {
                 window.showErrorMessage('No workspace folder is open. Please open a folder first.');
-                return;
+                throw new Error('No workspace folder is open');
             }
 
             const currentWorkspace = workspaceFolders[0];
@@ -30,7 +30,7 @@ export class GitWorktreeManager {
                 await shell.output('git', 'rev-parse', '--git-dir');
             } catch {
                 window.showErrorMessage('Current workspace is not a Git repository.');
-                return;
+                throw new Error('Current workspace is not a Git repository');
             }
 
             // Get worktree name from user or use custom name or generate timestamp
@@ -71,6 +71,7 @@ export class GitWorktreeManager {
                 Logger.info(`Started RovoDev for worktree ${worktreePath} on port ${port}`);
 
                 window.showInformationMessage(`Git worktree created successfully at: ${worktreePath}`);
+                return worktreePath; // Return the path of the created worktree
             } catch (error) {
                 Logger.error(new Error(`Failed to create worktree: ${error}`));
                 window.showErrorMessage(`Failed to create Git worktree: ${error}`);
@@ -79,6 +80,7 @@ export class GitWorktreeManager {
         } catch (error) {
             Logger.error(new Error(`Error in createGitWorktree: ${error}`));
             window.showErrorMessage(`An error occurred while creating the Git worktree: ${error}`);
+            throw error; // Re-throw to ensure function doesn't return undefined
         }
     }
 

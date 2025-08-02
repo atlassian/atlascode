@@ -88,11 +88,57 @@ export class ShipitWebviewProvider extends Disposable implements WebviewViewProv
         },
         createWorktree: async (message) => {
             try {
-                await this._worktreeManager.createWorktree(message.name, message.directory);
+                // Create worktree with default parameters (no custom name/directory)
+                const worktreePath = await this._worktreeManager.createWorktree();
+
                 this.postMessage({
                     type: 'worktreeCreated',
                     status: 'success',
+                    path: worktreePath,
                 });
+
+                // If there's a message, send it to the newly created worktree's RovoDev server
+                if (message.message && message.message.trim()) {
+                    // Wait 1000ms then poll health check and send the message
+                    setTimeout(async () => {
+                        try {
+                            const port = this._worktreeManager.getWorktreeRovoDevPort(worktreePath);
+
+                            if (port) {
+                                // Poll health check for up to 10 seconds before sending message
+                                const serverReady = await this.waitFor(() => this.checkServerHealth(port), 10000, 500);
+
+                                if (serverReady) {
+                                    const chatUrl = `http://localhost:${port}/v2/chat`;
+                                    const response = await fetch(chatUrl, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                            message: message.message?.trim(),
+                                            enable_deep_plan: false,
+                                        }),
+                                    });
+
+                                    if (!response.ok) {
+                                        console.error(
+                                            `Failed to send message to RovoDev server at port ${port}: ${response.status} ${response.statusText}`,
+                                        );
+                                    } else {
+                                        console.log(`Message sent successfully to RovoDev server at port ${port}`);
+                                    }
+                                } else {
+                                    console.error(`RovoDev server at port ${port} was not ready within 10 seconds`);
+                                }
+                            } else {
+                                console.error(`No RovoDev server found for worktree: ${worktreePath}`);
+                            }
+                        } catch (error) {
+                            console.error('Error sending message to RovoDev server:', error);
+                        }
+                    }, 1000);
+                }
             } catch (error) {
                 this.postMessage({
                     type: 'worktreeCreated',
@@ -257,6 +303,37 @@ export class ShipitWebviewProvider extends Disposable implements WebviewViewProv
             console.warn('Webview is not initialized');
         }
     };
+
+    private async waitFor(
+        condition: () => Promise<boolean>,
+        timeoutMs: number = 10000,
+        intervalMs: number = 500,
+    ): Promise<boolean> {
+        const startTime = Date.now();
+        while (Date.now() - startTime < timeoutMs) {
+            try {
+                if (await condition()) {
+                    return true;
+                }
+            } catch {
+                // Ignore errors during polling
+            }
+            await new Promise((resolve) => setTimeout(resolve, intervalMs));
+        }
+        return false;
+    }
+
+    private async checkServerHealth(port: number): Promise<boolean> {
+        try {
+            const response = await fetch(`http://localhost:${port}/healthcheck`, {
+                method: 'GET',
+                signal: AbortSignal.timeout(2000), // 2 second timeout
+            });
+            return response.ok;
+        } catch {
+            return false;
+        }
+    }
 
     // Literal copy-paste of our cloud credential lookup :)
     // Feel free to adjust as needed

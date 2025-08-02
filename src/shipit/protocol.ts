@@ -11,8 +11,7 @@ export type FromUI = {
         data: string;
     };
     createWorktree: {
-        directory?: string;
-        name?: string;
+        message?: string;
     };
     listWorktrees: {};
     removeWorktree: {

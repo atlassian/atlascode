@@ -10,8 +10,8 @@ const ShipitWebview = () => {
     const [worktrees, setWorktrees] = React.useState<string[]>([]);
     const [worktreeStatus, setWorktreeStatus] = React.useState<string | null>(null);
     const [worktreeError, setWorktreeError] = React.useState<string | undefined>(undefined);
-    const [customDirectory, setCustomDirectory] = React.useState<string>('');
-    const [customName, setCustomName] = React.useState<string>('');
+    const [chatMessage, setChatMessage] = React.useState<string>('');
+    const [isSendingMessage, setIsSendingMessage] = React.useState<boolean>(false);
     const [connectedRovoDevPort, setConnectedRovoDevPort] = React.useState<number | null>(null);
     const [connectedWorktreePath, setConnectedWorktreePath] = React.useState<string | null>(null);
     const [rovoDevServers, setRovoDevServers] = React.useState<
@@ -47,8 +47,10 @@ const ShipitWebview = () => {
         worktreeCreated: (message) => {
             console.log('Received worktreeCreated:', message);
             if (message.status === 'success') {
-                setWorktreeStatus('Worktree created successfully!');
+                setWorktreeStatus('Worktree created successfully! Message sent to RovoDev.');
                 setWorktreeError(undefined);
+                setChatMessage(''); // Clear the message input
+                setIsSendingMessage(false); // Reset sending state
                 // Automatically refresh the worktree list and RovoDev servers
                 postMessage({ type: 'listWorktrees' });
                 postMessage({ type: 'getWorktreeRovoDevServers' });
@@ -57,6 +59,7 @@ const ShipitWebview = () => {
             } else {
                 setWorktreeStatus(null);
                 setWorktreeError(message.error);
+                setIsSendingMessage(false); // Reset sending state on error
             }
         },
 
@@ -153,52 +156,49 @@ const ShipitWebview = () => {
                 <div style={{ marginBottom: '15px' }}>
                     <div style={{ marginBottom: '10px' }}>
                         <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                            Optional Parameters:
+                            Send Message to RovoDev:
                         </label>
-                        <div
-                            style={{
-                                display: 'grid',
-                                gridTemplateColumns: '1fr 1fr',
-                                gap: '10px',
-                                marginBottom: '10px',
-                            }}
-                        >
-                            <div>
-                                <label style={{ display: 'block', fontSize: '12px', marginBottom: '2px' }}>
-                                    Directory:
-                                </label>
-                                <input
-                                    type="text"
-                                    value={customDirectory}
-                                    onChange={(e) => setCustomDirectory(e.target.value)}
-                                    placeholder="e.g., /path/to/worktrees"
-                                    style={{ width: '100%', padding: '4px', fontSize: '12px' }}
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '12px', marginBottom: '2px' }}>Name:</label>
-                                <input
-                                    type="text"
-                                    value={customName}
-                                    onChange={(e) => setCustomName(e.target.value)}
-                                    placeholder="e.g., my-feature"
-                                    style={{ width: '100%', padding: '4px', fontSize: '12px' }}
-                                />
-                            </div>
+                        <div style={{ marginBottom: '10px' }}>
+                            <input
+                                type="text"
+                                value={chatMessage}
+                                onChange={(e) => setChatMessage(e.target.value)}
+                                placeholder="Type your message here..."
+                                disabled={isSendingMessage}
+                                style={{
+                                    width: '100%',
+                                    padding: '8px',
+                                    fontSize: '14px',
+                                    opacity: isSendingMessage ? 0.6 : 1,
+                                }}
+                                onKeyPress={(e) => {
+                                    if (e.key === 'Enter' && chatMessage.trim() && !isSendingMessage) {
+                                        // Create worktree and send message on Enter
+                                        setIsSendingMessage(true);
+                                        postMessage({
+                                            type: 'createWorktree',
+                                            message: chatMessage.trim(),
+                                        });
+                                    }
+                                }}
+                            />
                         </div>
                     </div>
 
                     <button
-                        onClick={() =>
-                            postMessage({
-                                type: 'createWorktree',
-                                directory: customDirectory.trim() || undefined,
-                                name: customName.trim() || undefined,
-                            })
-                        }
+                        onClick={() => {
+                            if (!isSendingMessage) {
+                                setIsSendingMessage(true);
+                                postMessage({
+                                    type: 'createWorktree',
+                                    message: chatMessage.trim() || undefined,
+                                });
+                            }
+                        }}
                         style={{ marginRight: '10px', padding: '8px 16px' }}
+                        disabled={isSendingMessage}
                     >
-                        Create Worktree
+                        {isSendingMessage ? 'Creating...' : 'Create Worktree & Send Message'}
                     </button>
                     <button onClick={() => postMessage({ type: 'listWorktrees' })} style={{ padding: '8px 16px' }}>
                         Refresh Worktree List
@@ -214,8 +214,7 @@ const ShipitWebview = () => {
                     </button>
                     <button
                         onClick={() => {
-                            setCustomDirectory('');
-                            setCustomName('');
+                            setChatMessage('');
                         }}
                         style={{ marginLeft: '10px', padding: '8px 16px', backgroundColor: '#f0f0f0' }}
                     >
