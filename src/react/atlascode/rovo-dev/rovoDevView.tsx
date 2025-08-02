@@ -378,10 +378,12 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ServerSwitched:
+                    // Set to generating state while server initializes and replays
+                    setCurrentState(State.GeneratingResponse);
+
                     console.log('Server switched, clearing chat for new server context');
                     clearChatHistory();
                     setPendingToolCallMessage('');
-                    setCurrentState(State.GeneratingResponse);
                     break;
 
                 case RovoDevProviderMessageType.Initialized:
