@@ -25,12 +25,14 @@ import { registerResources } from './resources';
 import { deactivateRovoDevProcessManager, initializeRovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { GitExtension } from './typings/git';
 import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
+import Performance from './util/perf';
 import { NotificationManagerImpl } from './views/notifications/notificationManager';
 
 const AnalyticDelay = 5000;
+const PerfStartMarker = 'extension.start';
 
 export async function activate(context: ExtensionContext) {
-    const start = process.hrtime();
+    Performance.mark(PerfStartMarker);
 
     registerErrorReporting();
 
@@ -107,23 +109,18 @@ export async function activate(context: ExtensionContext) {
         // icon to appear in the activity bar
         activateBitbucketFeatures();
         activateYamlFeatures(context);
-    }
 
-    if (!!process.env.ROVODEV_ENABLED) {
-        initializeRovoDevProcessManager(context);
-
-        if (process.env.ROVODEV_BBY) {
-            commands.executeCommand('workbench.view.extension.atlascode-rovo-dev');
+        if (!!process.env.ROVODEV_ENABLED) {
+            initializeRovoDevProcessManager(context);
         }
     }
 
-    const duration = process.hrtime(start);
+    if (!!process.env.ROVODEV_BBY && !!process.env.ROVODEV_ENABLED) {
+        commands.executeCommand('workbench.view.extension.atlascode-rovo-dev');
+    }
 
-    Logger.info(
-        `Atlassian for VS Code (v${atlascodeVersion}) activated in ${
-            duration[0] * 1000 + Math.floor(duration[1] / 1000000)
-        } ms`,
-    );
+    const duration = Performance.measureAndClear(PerfStartMarker);
+    Logger.info(`Atlassian for VS Code (v${atlascodeVersion}) activated in ${duration} ms`);
 }
 
 function activateErrorReporting(): void {
@@ -206,7 +203,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
     }
 
     launchedEvent(
-        env.remoteName ? env.remoteName : 'local',
+        env.remoteName || 'local',
         env.uriScheme,
         Container.siteManager.numberOfAuthedSites(ProductJira, true),
         Container.siteManager.numberOfAuthedSites(ProductJira, false),
@@ -219,11 +216,14 @@ async function sendAnalytics(version: string, globalState: Memento) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-    if (!!process.env.ROVODEV_ENABLED) {
-        deactivateRovoDevProcessManager();
+    if (!process.env.ROVODEV_BBY) {
+        if (!!process.env.ROVODEV_ENABLED) {
+            deactivateRovoDevProcessManager();
+        }
+
+        NotificationManagerImpl.getInstance().stopListening();
     }
 
     unregisterErrorReporting();
     FeatureFlagClient.dispose();
-    NotificationManagerImpl.getInstance().stopListening();
 }

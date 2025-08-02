@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 import PQueue from 'p-queue';
-import { cannotGetClientFor } from 'src/constants';
 import { Disposable, Event, EventEmitter, ExtensionContext, version, window } from 'vscode';
 
 import { loggedOutEvent } from '../analytics';
@@ -272,7 +271,9 @@ export class CredentialManager implements Disposable {
                 await Container.credentialManager.refreshAccessToken(site);
             } catch (e) {
                 Logger.error(e, 'error refreshing token');
-                return Promise.reject(`${cannotGetClientFor}: ${site.product.name} ... ${e}`);
+                return Promise.reject(
+                    `Your ${site.product.name} session has expired. Please sign in again to continue.`,
+                );
             }
         } else {
             Logger.debug(`This process isn't in charge of refreshing credentials.`);

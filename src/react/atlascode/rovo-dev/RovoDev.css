@@ -574,7 +574,7 @@ body {
     display: flex;
     width: 100%;
     flex-direction: column;
-    gap: 2px;
+    gap: 8px;
     border : 1px solid var(--vscode-input-border);
     border-radius: 4px;
     background-color: var(--vscode-input-background);

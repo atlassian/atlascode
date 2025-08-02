@@ -92,10 +92,14 @@ describe('PerformanceLogger', () => {
             await performanceLogger.promptFirstByteReceived(rovoDevPromptId);
 
             expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
-            expect(mockPerformanceEvent).toHaveBeenCalledWith('rovodev.response.timeToFirstByte', measureValue, {
-                rovoDevSessionId: 'test-session-123',
-                rovoDevPromptId,
-            });
+            expect(mockPerformanceEvent).toHaveBeenCalledWith(
+                'api.rovodev.chat.response.timeToFirstByte',
+                measureValue,
+                {
+                    rovoDevSessionId: 'test-session-123',
+                    rovoDevPromptId,
+                },
+            );
             expect(mockLogger.debug).toHaveBeenCalledWith(
                 `Event fired: rovodev.response.timeToFirstByte ${measureValue} ms`,
             );
@@ -126,10 +130,14 @@ describe('PerformanceLogger', () => {
             await performanceLogger.promptFirstMessageReceived(rovoDevPromptId);
 
             expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
-            expect(mockPerformanceEvent).toHaveBeenCalledWith('rovodev.response.timeToFirstMessage', measureValue, {
-                rovoDevSessionId: 'test-session-123',
-                rovoDevPromptId,
-            });
+            expect(mockPerformanceEvent).toHaveBeenCalledWith(
+                'api.rovodev.chat.response.timeToFirstMessage',
+                measureValue,
+                {
+                    rovoDevSessionId: 'test-session-123',
+                    rovoDevPromptId,
+                },
+            );
             expect(mockLogger.debug).toHaveBeenCalledWith(
                 `Event fired: rovodev.response.timeToFirstMessage ${measureValue} ms`,
             );
@@ -153,10 +161,14 @@ describe('PerformanceLogger', () => {
             await performanceLogger.promptTechnicalPlanReceived(rovoDevPromptId);
 
             expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
-            expect(mockPerformanceEvent).toHaveBeenCalledWith('rovodev.response.timeToTechPlan', measureValue, {
-                rovoDevSessionId: 'test-session-123',
-                rovoDevPromptId,
-            });
+            expect(mockPerformanceEvent).toHaveBeenCalledWith(
+                'api.rovodev.chat.response.timeToTechPlan',
+                measureValue,
+                {
+                    rovoDevSessionId: 'test-session-123',
+                    rovoDevPromptId,
+                },
+            );
             expect(mockLogger.debug).toHaveBeenCalledWith(
                 `Event fired: rovodev.response.timeToTechPlan ${measureValue} ms`,
             );
@@ -181,10 +193,14 @@ describe('PerformanceLogger', () => {
 
             expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
             expect(mockPerf.clear).toHaveBeenCalledWith(rovoDevPromptId);
-            expect(mockPerformanceEvent).toHaveBeenCalledWith('rovodev.response.timeToLastMessage', measureValue, {
-                rovoDevSessionId: 'test-session-123',
-                rovoDevPromptId,
-            });
+            expect(mockPerformanceEvent).toHaveBeenCalledWith(
+                'api.rovodev.chat.response.timeToLastMessage',
+                measureValue,
+                {
+                    rovoDevSessionId: 'test-session-123',
+                    rovoDevPromptId,
+                },
+            );
             expect(mockLogger.debug).toHaveBeenCalledWith(
                 `Event fired: rovodev.response.timeToLastMessage ${measureValue} ms`,
             );
@@ -266,12 +282,12 @@ describe('PerformanceLogger', () => {
 
             // Verify rovoDevSessionId was used in both calls
             expect(mockPerformanceEvent).toHaveBeenCalledWith(
-                'rovodev.response.timeToFirstByte',
+                'api.rovodev.chat.response.timeToFirstByte',
                 expect.any(Number),
                 expect.objectContaining({ rovoDevSessionId }),
             );
             expect(mockPerformanceEvent).toHaveBeenCalledWith(
-                'rovodev.response.timeToFirstMessage',
+                'api.rovodev.chat.response.timeToFirstMessage',
                 expect.any(Number),
                 expect.objectContaining({ rovoDevSessionId }),
             );
@@ -286,7 +302,7 @@ describe('PerformanceLogger', () => {
             await performanceLogger.promptFirstByteReceived('test-prompt');
 
             expect(mockPerformanceEvent).toHaveBeenCalledWith(
-                'rovodev.response.timeToFirstByte',
+                'api.rovodev.chat.response.timeToFirstByte',
                 NaN,
                 expect.any(Object),
             );
@@ -299,7 +315,7 @@ describe('PerformanceLogger', () => {
             await performanceLogger.promptFirstMessageReceived('test-prompt');
 
             expect(mockPerformanceEvent).toHaveBeenCalledWith(
-                'rovodev.response.timeToFirstMessage',
+                'api.rovodev.chat.response.timeToFirstMessage',
                 0,
                 expect.any(Object),
             );
@@ -313,7 +329,7 @@ describe('PerformanceLogger', () => {
 
             await performanceLogger.promptFirstByteReceived('');
             expect(mockPerformanceEvent).toHaveBeenCalledWith(
-                'rovodev.response.timeToFirstByte',
+                'api.rovodev.chat.response.timeToFirstByte',
                 expect.any(Number),
                 expect.objectContaining({ rovoDevSessionId: 'non-empty-session', rovoDevPromptId: '' }),
             );

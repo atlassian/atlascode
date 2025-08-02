@@ -4,7 +4,7 @@ import { RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderM
 import { forceCastTo } from 'testsutil/miscFunctions';
 
 import { RovoDevViewResponseType } from '../rovoDevViewMessages';
-import { DefaultMessage, ToolReturnParseResult } from '../utils';
+import { DefaultMessage } from '../utils';
 import { PullRequestChatItem, PullRequestForm } from './PullRequestForm';
 
 const mockPostMessage = jest.fn();
@@ -13,29 +13,9 @@ const mockOnCancel = jest.fn();
 const mockOnPullRequestCreated = jest.fn();
 const mockSetFormVisible = jest.fn();
 
-const mockModifiedFiles = forceCastTo<ToolReturnParseResult[]>([
-    {
-        content: 'file content',
-        filePath: 'src/file.ts',
-        type: 'modify',
-    },
-]);
-
 describe('PullRequestForm', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-    });
-
-    it('renders null when no modified files', () => {
-        const { container } = render(
-            <PullRequestForm
-                onCancel={mockOnCancel}
-                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
-                modifiedFiles={[]}
-                onPullRequestCreated={mockOnPullRequestCreated}
-            />,
-        );
-        expect(container.firstChild).toBeNull();
     });
 
     it('renders button when form is not visible', () => {
@@ -43,7 +23,6 @@ describe('PullRequestForm', () => {
             <PullRequestForm
                 onCancel={mockOnCancel}
                 messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
-                modifiedFiles={mockModifiedFiles}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={false}
                 setFormVisible={mockSetFormVisible}
@@ -58,7 +37,6 @@ describe('PullRequestForm', () => {
             <PullRequestForm
                 onCancel={mockOnCancel}
                 messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
-                modifiedFiles={mockModifiedFiles}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={true}
                 setFormVisible={mockSetFormVisible}
@@ -78,7 +56,6 @@ describe('PullRequestForm', () => {
             <PullRequestForm
                 onCancel={mockOnCancel}
                 messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
-                modifiedFiles={mockModifiedFiles}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={false}
                 setFormVisible={mockSetFormVisible}
@@ -102,7 +79,6 @@ describe('PullRequestForm', () => {
             <PullRequestForm
                 onCancel={mockOnCancel}
                 messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
-                modifiedFiles={mockModifiedFiles}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={true}
             />,
@@ -119,7 +95,6 @@ describe('PullRequestForm', () => {
             <PullRequestForm
                 onCancel={mockOnCancel}
                 messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
-                modifiedFiles={mockModifiedFiles}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={true}
             />,
@@ -152,7 +127,6 @@ describe('PullRequestForm', () => {
             <PullRequestForm
                 onCancel={mockOnCancel}
                 messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
-                modifiedFiles={mockModifiedFiles}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={true}
             />,

@@ -419,6 +419,7 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.ReturnText:
                 case RovoDevProviderMessageType.CreatePRComplete:
                 case RovoDevProviderMessageType.GetCurrentBranchNameComplete:
+                case RovoDevProviderMessageType.CheckGitChangesComplete:
                     break; // This is handled elsewhere
 
                 default:
@@ -617,16 +618,9 @@ const RovoDevView: React.FC = () => {
                     actionsEnabled={currentState === State.WaitingForPrompt}
                 />
                 <div className="prompt-container">
-                    {' '}
                     <PromptContextCollection
                         content={promptContextCollection}
                         readonly={false}
-                        onAddContext={async () => {
-                            postMessage({
-                                type: RovoDevViewResponseType.AddContext,
-                                currentContext: promptContextCollection,
-                            });
-                        }}
                         onRemoveContext={(item: RovoDevContextItem) => {
                             setPromptContextCollection((prev) => ({
                                 ...prev,

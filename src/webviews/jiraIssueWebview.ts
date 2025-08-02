@@ -55,8 +55,8 @@ import { NotificationManagerImpl } from '../views/notifications/notificationMana
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
 
-const EditJiraIssueUIRenderEventName = 'ui.editJiraIssue.render.lcp';
-const EditJiraIssueUpdatesEventName = 'ui.editJiraIssue.update.lcp';
+const EditJiraIssueUIRenderEventName = 'ui.jira.editJiraIssue.render.lcp';
+const EditJiraIssueUpdatesEventName = 'ui.jira.editJiraIssue.update.lcp';
 
 export class JiraIssueWebview
     extends AbstractIssueEditorWebview

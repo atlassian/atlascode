@@ -384,7 +384,9 @@ describe('ClientManager', () => {
 
             (window.showErrorMessage as jest.Mock).mockResolvedValue(undefined);
 
-            await expect(clientManager.jiraClient(mockCloudSite)).rejects.toThrow('cannot get client for: Jira');
+            await expect(clientManager.jiraClient(mockCloudSite)).rejects.toThrow(
+                'Unable to connect to Jira. Please sign in again to continue.',
+            );
 
             expect(window.showErrorMessage).toHaveBeenCalled();
             expect(Logger.error).toHaveBeenCalled();
@@ -487,7 +489,9 @@ describe('ClientManager', () => {
             (window.showErrorMessage as jest.Mock).mockResolvedValue('View Atlascode settings');
             (commands.executeCommand as jest.Mock).mockResolvedValue(undefined);
 
-            await expect(clientManager.jiraClient(mockCloudSite)).rejects.toThrow('cannot get client for: Jira');
+            await expect(clientManager.jiraClient(mockCloudSite)).rejects.toThrow(
+                'Unable to connect to Jira. Please sign in again to continue.',
+            );
 
             expect(commands.executeCommand).toHaveBeenCalledWith('atlascode.showConfigPage');
         });
@@ -496,7 +500,9 @@ describe('ClientManager', () => {
             mockCredentialManager.getAuthInfo.mockResolvedValue(null);
             mockCacheMap.getItem.mockReturnValue(null);
 
-            await expect(clientManager.jiraClient(mockCloudSite)).rejects.toThrow('cannot get client for: Jira');
+            await expect(clientManager.jiraClient(mockCloudSite)).rejects.toThrow(
+                'Unable to connect to Jira. Please sign in again to continue.',
+            );
         });
     });
 });
