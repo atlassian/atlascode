@@ -1345,7 +1345,7 @@
     "dependencies": {
         "@atlaskit/analytics-next": "^10.3.1",
         "@atlaskit/avatar": "^21.18.4",
-        "@atlaskit/avatar-group": "^11.2.0",
+        "@atlaskit/avatar-group": "^12.1.4",
         "@atlaskit/breadcrumbs": "^14.2.0",
         "@atlaskit/button": "^20.5.3",
         "@atlaskit/checkbox": "^15.4.0",
