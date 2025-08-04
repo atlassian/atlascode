@@ -12,6 +12,7 @@ export enum CommandContext {
     IsJiraAuthenticated = 'atlascode:isJiraAuthenticated',
     IsBBAuthenticated = 'atlascode:isBBAuthenticated',
     RovoDevEnabled = 'atlascode:rovoDevEnabled',
+    IsDebugging = 'atlascode:isDebugging',
     BbyEnvironmentActive = 'atlascode:bbyEnvironmentActive',
 }
 

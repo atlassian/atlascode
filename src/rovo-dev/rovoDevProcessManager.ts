@@ -1,14 +1,13 @@
-import { ChildProcess, spawn } from 'child_process';
 import { access, constants } from 'fs';
 import { isBasicAuthInfo, ProductJira } from 'src/atlclients/authInfo';
 import { Container } from 'src/container';
 import { Resources } from 'src/resources';
-import { Disposable, ExtensionContext, window, workspace } from 'vscode';
+import { Disposable, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
 
 import { rovodevInfo } from '../constants';
 
 // In-memory process map (not persisted, but safe for per-window usage)
-const workspaceProcessMap: { [workspacePath: string]: ChildProcess } = {};
+const workspaceProcessMap: { [workspacePath: string]: Terminal } = {};
 
 let disposables: Disposable[] = [];
 
@@ -45,6 +44,15 @@ export function deactivateRovoDevProcessManager() {
     showWorkspaceClosedMessage();
 }
 
+export function showTerminals() {
+    workspace.workspaceFolders?.forEach((folder) => {
+        const terminal = workspaceProcessMap[folder.uri.fsPath];
+        if (terminal) {
+            terminal.show();
+        }
+    });
+}
+
 // Helper to get a unique port for a workspace
 function getOrAssignPortForWorkspace(context: ExtensionContext, workspacePath: string): number {
     const mapping = context.globalState.get<{ [key: string]: number }>(rovodevInfo.mappingKey) || {};
@@ -64,15 +72,11 @@ function getOrAssignPortForWorkspace(context: ExtensionContext, workspacePath: s
 
 // Helper to stop a process by terminal name
 function stopWorkspaceProcess(workspacePath: string) {
-    const proc = workspaceProcessMap[workspacePath];
-    if (proc) {
-        proc.kill();
-        delete workspaceProcessMap[workspacePath];
-    }
+    delete workspaceProcessMap[workspacePath];
 }
 
 // Helper to start the background process
-function startWorkspaceProcess(context: ExtensionContext, workspacePath: string, port: number) {
+function startWorkspaceProcess(workspacePath: string, port: number) {
     stopWorkspaceProcess(workspacePath);
 
     const rovoDevPath =
@@ -88,6 +92,7 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
             window.showErrorMessage(`Rovo Dev: Executable not found at path: ${rovoDevPath}`);
             return;
         }
+
         getCloudCredentials().then((creds) => {
             const defaultUsername = 'cooluser@atlassian.com';
             const { username, key, host } = creds || {};
@@ -98,42 +103,35 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
                 window.showInformationMessage('Rovo Dev: No cloud credentials found. Using default authentication.');
             }
 
-            const env: NodeJS.ProcessEnv = {
-                USER: process.env.USER,
-                USER_EMAIL: username || defaultUsername,
-                ...(key ? { USER_API_TOKEN: key } : {}),
-            };
-            let stderrData = '';
-
-            const proc = spawn(rovoDevPath, [`serve`, `${port}`], {
+            const terminal = window.createTerminal({
+                name: 'Rovo Dev',
+                shellPath: rovoDevPath,
+                shellArgs: [`serve`, `${port}`],
                 cwd: workspacePath,
-                stdio: ['ignore', 'pipe', 'pipe'],
-                detached: true,
-                env,
-            }).on('exit', (code, signal) => {
-                if (code !== 0) {
-                    if (stderrData.includes('auth token')) {
-                        // internal credentials, no VPN connection
-                        window.showErrorMessage(`Rovo Dev: Is your VPN off? (internal credential error)`);
+                hideFromUser: true,
+                isTransient: true,
+                iconPath: Uri.parse('Users/mmura/Repos/atlascode/resources/rovodev-icon.svg'),
+                env: {
+                    USER: process.env.USER,
+                    USER_EMAIL: username || defaultUsername,
+                    ...(key ? { USER_API_TOKEN: key } : {}),
+                },
+            });
+
+            window.onDidCloseTerminal((event) => {
+                if (event === terminal) {
+                    const code = event.exitStatus?.code;
+                    if (!code) {
+                        window.showErrorMessage('Rovo Dev: Process exited');
                     } else {
-                        // default error message
                         window.showErrorMessage(`Rovo Dev: Process exited with code ${code}, see the log for details.`);
                     }
 
-                    console.error(
-                        `Rovo Dev: Process exited with code ${code} and signal ${signal}, stderr: ${stderrData}`,
-                    );
+                    Container.rovodevWebviewProvider.signalProcessTerminated();
                 }
-                delete workspaceProcessMap[workspacePath];
             });
 
-            if (proc.stderr) {
-                proc.stderr.on('data', (data) => {
-                    stderrData += data.toString();
-                });
-            }
-
-            workspaceProcessMap[workspacePath] = proc;
+            workspaceProcessMap[workspacePath] = terminal;
         });
     });
 }
@@ -157,7 +155,7 @@ function showWorkspaceLoadedMessageAndStartProcess(context: ExtensionContext) {
     for (const folder of folders) {
         const port = getOrAssignPortForWorkspace(context, folder.uri.fsPath);
         window.showInformationMessage(`Rovo Dev: Workspace loaded: ${folder.name} (port ${port})`);
-        startWorkspaceProcess(context, folder.uri.fsPath, port);
+        startWorkspaceProcess(folder.uri.fsPath, port);
     }
 }
 

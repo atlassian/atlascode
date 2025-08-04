@@ -486,16 +486,21 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private processError(error: Error & { gitErrorCode?: GitErrorCodes }, isRetriable: boolean) {
+    private processError(
+        error: Error & { gitErrorCode?: GitErrorCodes },
+        isRetriable: boolean,
+        isProcessTerminated?: boolean,
+    ) {
         Logger.error('RovoDev', error);
 
         const webview = this._webView!;
         return webview.postMessage({
             type: RovoDevProviderMessageType.ErrorMessage,
             message: {
-                text: `Error: ${error.message}${error.gitErrorCode ? `\n ${error.gitErrorCode}` : ''}`,
+                text: `${error.message}${error.gitErrorCode ? `\n ${error.gitErrorCode}` : ''}`,
                 source: 'RovoDevError',
                 isRetriable,
+                isProcessTerminated,
                 uid: v4(),
             },
         });
@@ -953,13 +958,13 @@ ${message}`;
             await this.processError(e, false);
 
             const errorMessage = e.message;
-            const errorCode = e.gitErrorCode;
+            const gitErrorCode = e.gitErrorCode;
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CreatePRComplete,
                 data: {
                     error: e.message
-                        ? `${errorMessage}${errorCode ? ` (Error code: ${errorCode})` : ''}`
+                        ? `${errorMessage}${gitErrorCode ? ` (Error code: ${gitErrorCode})` : ''}`
                         : 'Unknown error occurred while creating PR',
                 },
             });
@@ -1053,6 +1058,11 @@ ${message}`;
             type: RovoDevProviderMessageType.ContextAdded,
             context: contextItem,
         });
+    }
+
+    signalProcessTerminated() {
+        const error = new Error('Agent process terminated.\nPlease, start a new chat session to continue.');
+        return this.processError(error, false, true);
     }
 
     private async waitFor(

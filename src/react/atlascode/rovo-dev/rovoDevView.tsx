@@ -60,6 +60,7 @@ export const enum State {
     GeneratingResponse,
     CancellingResponse,
     ExecutingPlan,
+    ProcessTerminated,
 }
 
 const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
@@ -370,11 +371,15 @@ const RovoDevView: React.FC = () => {
                     if (currentState !== State.WaitingForPrompt) {
                         finalizeResponse();
                     }
+                    if (event.message.isProcessTerminated) {
+                        setCurrentState(State.ProcessTerminated);
+                    }
                     break;
 
                 case RovoDevProviderMessageType.NewSession:
                     clearChatHistory();
                     setPendingToolCallMessage('');
+                    setCurrentState(State.WaitingForPrompt);
                     break;
 
                 case RovoDevProviderMessageType.Initialized:

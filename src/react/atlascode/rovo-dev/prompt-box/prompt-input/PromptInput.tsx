@@ -37,6 +37,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         [State.GeneratingResponse]: 'Generating response...',
         [State.CancellingResponse]: 'Cancelling the response...',
         [State.ExecutingPlan]: 'Executing the code plan...',
+        [State.ProcessTerminated]: 'Start a new session to chat',
     };
 
     const handleKeyDown = React.useCallback(
