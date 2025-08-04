@@ -72,7 +72,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         return this.state.fieldValues['project'].key;
     }
 
-    protected getApiVersion(): string {
+    protected override getApiVersion(): string {
         return String(this.state.apiVersion);
     }
 

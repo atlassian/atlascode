@@ -11,6 +11,7 @@
 ### Bug Fixes
 
 - Fixed a bug where issues would not render due to malformed epic fields (#665)
+- Fixed a bug where we could not assign people to a Jira issue as DC users
 
 ## What's new in 3.8.7
 

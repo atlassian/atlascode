@@ -83,7 +83,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         return this.state.key.substring(0, this.state.key.indexOf('-'));
     };
 
-    protected getApiVersion(): string {
+    protected override getApiVersion(): string {
         return String(this.state.apiVersion);
     }
 
