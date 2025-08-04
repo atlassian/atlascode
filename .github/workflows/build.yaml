@@ -1,4 +1,6 @@
 name: Build
+permissions:
+  contents: read
 
 on:
   push:
@@ -24,6 +26,7 @@ jobs:
         with:
           name: node-modules
           path: node_modules/
+          retention-days: 1
 
   lint:
     needs: install-dependencies
