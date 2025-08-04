@@ -72,7 +72,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
         this.handleClose();
     };
 
-    render() {
+    override render() {
         const defaultDate = this.state.started.trim() !== '' ? this.state.started : format(Date.now(), formatString);
         return (
             <div>

@@ -21,7 +21,7 @@ export class HelpExplorer extends Explorer implements Disposable {
         return emptyProduct;
     }
 
-    dispose() {
+    override dispose() {
         super.dispose();
     }
 

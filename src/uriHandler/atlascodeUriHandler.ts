@@ -70,7 +70,7 @@ export class AtlascodeUriHandler extends Disposable implements UriHandler {
         }
     }
 
-    dispose(): void {
+    override dispose(): void {
         this.disposables.dispose();
     }
 }

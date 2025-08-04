@@ -196,7 +196,7 @@ export abstract class AbstractIssueEditorPage<
         return handled;
     }
 
-    postMessage<T extends CommonEditorPageEmit>(e: T) {
+    override postMessage<T extends CommonEditorPageEmit>(e: T) {
         this._api.postMessage(e);
     }
 

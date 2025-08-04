@@ -35,7 +35,7 @@ export class Configuration extends Disposable {
         super(() => this.dispose());
     }
 
-    dispose() {
+    override dispose() {
         this._onDidChange.dispose();
     }
 
