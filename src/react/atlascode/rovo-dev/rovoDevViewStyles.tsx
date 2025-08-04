@@ -7,6 +7,8 @@ export const rovoDevTextareaStyles: React.CSSProperties = {
     resize: 'none',
     outline: 'none',
     border: 'none',
+    fontFamily: 'var(--vscode-font-family)',
+    fontSize: 'var(--vscode-font-size)',
 };
 
 export const rovoDevPromptButtonStyles: React.CSSProperties = {

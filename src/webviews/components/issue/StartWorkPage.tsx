@@ -295,7 +295,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
         });
     }
 
-    render() {
+    override render() {
         if (this.state.data.issue.key === '' && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refreshIssue' });
             return <AtlLoader />;

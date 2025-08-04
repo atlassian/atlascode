@@ -2,7 +2,7 @@ import { exec } from 'child_process';
 import { Logger } from 'src/logger';
 import { GitExtension, Repository } from 'src/typings/git';
 import { promisify } from 'util';
-import { env, extensions, Uri, window } from 'vscode';
+import { env, extensions, Uri } from 'vscode';
 
 export class RovoDevPullRequestHandler {
     private async getGitExtension(): Promise<GitExtension> {
@@ -13,9 +13,6 @@ export class RovoDevPullRequestHandler {
             }
             return await gitExtension.activate();
         } catch (e) {
-            window.showErrorMessage(
-                'Git extension not found or failed to activate. Please ensure Git is installed and the extension is enabled.',
-            );
             console.error('Error activating git extension:', e);
             throw e;
         }
@@ -25,7 +22,6 @@ export class RovoDevPullRequestHandler {
         const gitApi = gitExt.getAPI(1);
 
         if (gitApi.repositories.length === 0) {
-            window.showErrorMessage('No Git repositories found in the workspace.');
             throw new Error('No Git repositories found');
         }
 
@@ -96,5 +92,22 @@ export class RovoDevPullRequestHandler {
         const repo = await this.getGitRepository(gitExt);
 
         return repo.state.HEAD?.name;
+    }
+
+    public async isGitStateClean(): Promise<boolean> {
+        try {
+            const gitExt = await this.getGitExtension();
+            const repo = await this.getGitRepository(gitExt);
+
+            // A repo is clean if there are no unstaged, staged, or merge changes
+            return (
+                repo.state.workingTreeChanges.length === 0 &&
+                repo.state.indexChanges.length === 0 &&
+                repo.state.mergeChanges.length === 0
+            );
+        } catch (error) {
+            Logger.error(error, 'Error checking git state');
+            return true; // If we can't determine the state, assume it's clean
+        }
     }
 }

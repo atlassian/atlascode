@@ -62,7 +62,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
         return suggestions;
     }
 
-    protected async onMessageReceived(msg: any): Promise<boolean> {
+    protected override async onMessageReceived(msg: any): Promise<boolean> {
         let handled = await super.onMessageReceived(msg);
 
         if (!handled) {

@@ -27,7 +27,7 @@ export default class PullRequests extends React.Component<
         }
     }
 
-    render() {
+    override render() {
         return this.props.pullRequests.map((pr: PullRequestData) => {
             const title = `${pr.destination!.repo!.displayName} - Pull request #${pr.id}`;
             return (

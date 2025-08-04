@@ -196,7 +196,7 @@ export abstract class AbstractIssueEditorPage<
         return handled;
     }
 
-    postMessage<T extends CommonEditorPageEmit>(e: T) {
+    override postMessage<T extends CommonEditorPageEmit>(e: T) {
         this._api.postMessage(e);
     }
 
@@ -1543,6 +1543,7 @@ export abstract class AbstractIssueEditorPage<
                 );
             }
             case UIType.Participants: {
+                // seems unused, but keeping it for now
                 return <ParticipantList users={this.state.fieldValues[field.key]} />;
             }
             case UIType.NonEditable: {
