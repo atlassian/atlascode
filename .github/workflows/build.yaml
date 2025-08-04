@@ -8,7 +8,9 @@ on:
       - '**'
 
 jobs:
-  install-dependencies:
+
+
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,29 +22,6 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci --no-audit
-
-      - name: Upload node_modules
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-modules
-          path: node_modules/
-          retention-days: 1
-
-  lint:
-    needs: install-dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node-modules
-          path: node_modules/
       
       - name: Run linter
         run: npm run lint
@@ -57,11 +36,9 @@ jobs:
           node-version: 20
           cache: 'npm'
       
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node-modules
-          path: node_modules/
+      - name: Install dependencies
+        run: |
+          npm ci --no-audit
       
       - name: Run unit tests
         run: npm run test
@@ -80,11 +57,11 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node-modules
-          path: node_modules/
+      
+      - name: Install dependencies
+        run: |
+          npm ci --no-audit
+          npm audit
 
       - name: Generate SSL certs for E2E test
         run: npm run test:e2e:sslcerts
