@@ -687,7 +687,15 @@ export abstract class AbstractIssueEditorPage<
                     } else {
                         defaultParent = undefined;
                     }
-                    const sameProjectQuery = `project = ${this.state.fieldValues['project'].key}`;
+                    const sameProjectQuery = `project = "${this.state.fieldValues['project'].key}"`;
+                    let jqlQuery: string = '';
+                    if (currentIssueType.subtask && !this.state.siteDetails.isCloud) {
+                        jqlQuery = `issuetype not in (Epic, subTaskIssueTypes()) AND ${sameProjectQuery}`;
+                    } else if (currentIssueType.subtask && this.state.siteDetails.isCloud) {
+                        jqlQuery = `${sameProjectQuery} AND issuetype in standardIssueTypes()`;
+                    } else {
+                        jqlQuery = `${sameProjectQuery} AND issuetype = Epic`;
+                    }
 
                     return (
                         <AsyncSelect
@@ -697,13 +705,7 @@ export abstract class AbstractIssueEditorPage<
                             className="ac-select-container"
                             classNamePrefix="ac-select"
                             loadOptions={async (input: string) =>
-                                await this.loadIssueOptions(
-                                    field as SelectFieldUI,
-                                    input,
-                                    currentIssueType.name === 'Subtask'
-                                        ? `${sameProjectQuery} AND issuetype in standardIssueTypes()`
-                                        : `${sameProjectQuery} AND issuetype = Epic`,
-                                )
+                                await this.loadIssueOptions(field as SelectFieldUI, input, jqlQuery)
                             }
                             getOptionLabel={(option: any) => option.key}
                             getOptionValue={(option: any) => option.key}

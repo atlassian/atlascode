@@ -657,7 +657,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     commonSidebar(): any {
         let commonItems: SidebarItem[];
 
-        if (this.state.siteDetails.isCloud) {
+        if (this.state.siteDetails.isCloud || this.state.fieldValues['issuetype'].subtask) {
             commonItems = ['assignee', 'reporter', 'labels', 'priority', 'components', 'fixVersions', 'parent']
                 .filter((field) => !!this.state.fields[field])
                 .map((field) => {
@@ -672,6 +672,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     };
                 });
         } else {
+            // Cloud supports parent-child relation only for all issues. DC supports parent-child for standard-issues and subtasks
             commonItems = ['assignee', 'reporter', 'labels', 'priority', 'components', 'fixVersions']
                 .filter((field) => !!this.state.fields[field])
                 .map((field) => {

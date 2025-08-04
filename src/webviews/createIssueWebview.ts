@@ -599,7 +599,7 @@ export class CreateIssueWebview
                             const [payload, worklog, issuelinks, attachments] = this.formatCreatePayload(msg);
 
                             // Handle parent payload
-                            if (payload.parent) {
+                            if (this._siteDetails.isCloud && payload.parent) {
                                 payload.parent = {
                                     id: payload.parent.id.toString(),
                                     key: payload.parent.key,

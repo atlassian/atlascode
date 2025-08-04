@@ -328,13 +328,14 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     }
 
     getAdvancedFieldMarkup(): any {
+        // Cloud supports parent-child relation only for all issues. DC supports parent-child for standard-issues and subtasks
         if (this.state.siteDetails.isCloud) {
             return this.advancedFields.map((field) =>
                 this.getInputMarkup(field, false, this.state.fieldValues['issuetype']),
-            ); // Here we add the extra argument for parent to include currentIssueType
+            );
         } else {
             return this.advancedFields
-                .filter((field) => field.key !== 'parent') //TODO: add parent functionality
+                .filter((field) => field.key !== 'parent') //
                 .map((field) => this.getInputMarkup(field));
         }
     }
