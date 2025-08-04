@@ -6,6 +6,8 @@
 
 ### Features
 
+- Implemented full parent hierarchy display for Jira issues
+
 ### Bug Fixes
 
 - Fixed a bug where issues would not render due to malformed epic fields (#665)
@@ -16,7 +18,6 @@
 
 - Update logic of selecting the default project and site to the most relevant one for the user on the Creating a JIRA issue page
 - Added filtering for options and error message in projects field on Create Jira issue page.
-- Implemented full parent hierarchy display for Jira issues
 
 ### Bug Fixes
 
