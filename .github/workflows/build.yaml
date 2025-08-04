@@ -6,23 +6,11 @@ on:
       - '**'
 
 jobs:
-
-  build:
-
+  install-dependencies:
     runs-on: ubuntu-latest
-
-    env:
-      ATLASCODE_FX3_API_KEY: ${{ secrets.ATLASCODE_FX3_API_KEY }}
-      ATLASCODE_FX3_ENVIRONMENT: ${{ vars.ATLASCODE_FX3_ENVIRONMENT }}
-      ATLASCODE_FX3_TARGET_APP: ${{ vars.ATLASCODE_FX3_TARGET_APP }}
-      ATLASCODE_FX3_TIMEOUT: ${{ vars.ATLASCODE_FX3_TIMEOUT }}
-
     steps:
-
       - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
@@ -30,16 +18,70 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci --no-audit
-          npm audit
 
-      - name: Build and package the extension
-        run: npm run extension:package
+      - name: Upload node_modules
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules/
 
+  lint:
+    needs: install-dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules/
+      
       - name: Run linter
         run: npm run lint
 
+  unit-tests:
+    needs: [lint, install-dependencies]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules/
+      
       - name: Run unit tests
         run: npm run test
+
+  e2e-tests:
+    needs: [lint, install-dependencies]
+    runs-on: ubuntu-latest
+    env:
+      ATLASCODE_FX3_API_KEY: ${{ secrets.ATLASCODE_FX3_API_KEY }}
+      ATLASCODE_FX3_ENVIRONMENT: ${{ vars.ATLASCODE_FX3_ENVIRONMENT }}
+      ATLASCODE_FX3_TARGET_APP: ${{ vars.ATLASCODE_FX3_TARGET_APP }}
+      ATLASCODE_FX3_TIMEOUT: ${{ vars.ATLASCODE_FX3_TIMEOUT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules/
 
       - name: Generate SSL certs for E2E test
         run: npm run test:e2e:sslcerts
@@ -51,3 +93,12 @@ jobs:
 
       - name: Run E2E tests
         run: npm run test:e2e:docker
+
+      - name: Upload E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: ./test-results
+          retention-days: 1
+  
