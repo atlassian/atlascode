@@ -30,6 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     
     strategy:
+      fail-fast: true
       matrix:
         test-type: [unit, e2e]
     
