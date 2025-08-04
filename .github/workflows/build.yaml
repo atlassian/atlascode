@@ -52,7 +52,9 @@ jobs:
       ATLASCODE_FX3_TIMEOUT: ${{ vars.ATLASCODE_FX3_TIMEOUT }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
@@ -60,7 +62,9 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci --no-audit
-          npm audit
+
+      - name: Build and package the extension
+        run: npm run extension:package
 
       - name: Generate SSL certs for E2E test
         run: npm run test:e2e:sslcerts
