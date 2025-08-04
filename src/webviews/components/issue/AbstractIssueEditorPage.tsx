@@ -1554,6 +1554,7 @@ export abstract class AbstractIssueEditorPage<
                 );
             }
             case UIType.Participants: {
+                // seems unused, but keeping it for now
                 return <ParticipantList users={this.state.fieldValues[field.key]} />;
             }
             case UIType.NonEditable: {

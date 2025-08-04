@@ -1,7 +1,7 @@
 import { Uri } from 'vscode';
 
 import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/types';
-import { CreatePrTerminalSelection, UIErrorInfo } from './analyticsTypes';
+import { CreatePrTerminalSelection, ErrorProductArea, UIErrorInfo } from './analyticsTypes';
 import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira, SiteInfo } from './atlclients/authInfo';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
@@ -123,19 +123,24 @@ function sanitizeStackTrace(stack?: string): string | undefined {
     return stack || undefined;
 }
 
+interface ErrorEventPayload {
+    productArea: ErrorProductArea;
+    name: string;
+    message?: string;
+    capturedBy?: string;
+    stack?: string;
+    additionalParams?: string;
+}
+
 export async function errorEvent(
+    productArea: ErrorProductArea,
     errorMessage: string,
     error?: Error,
     capturedBy?: string,
     additionalParams?: string,
 ): Promise<TrackEvent> {
-    const attributes: {
-        name: string;
-        message?: string;
-        capturedBy?: string;
-        stack?: string;
-        additionalParams?: string;
-    } = {
+    const attributes: ErrorEventPayload = {
+        productArea,
         message: sanitazeErrorMessage(errorMessage),
         name: error?.name || 'Error',
         capturedBy,
@@ -168,6 +173,128 @@ export async function featureFlagClientInitializedEvent(
 ): Promise<TrackEvent> {
     return trackEvent('initialized', 'featureFlagClient', {
         attributes: { success, errorType: errorType ?? 0, reason },
+    });
+}
+
+// Perf events
+
+// perf events name are constructed in the format:
+// <ui|core|api> . <product> . <action> . <subAction> . <perf-marker>
+
+type RovoDevPerfEvents =
+    | 'api.rovodev.chat.response.timeToFirstByte'
+    | 'api.rovodev.chat.response.timeToFirstMessage'
+    | 'api.rovodev.chat.response.timeToTechPlan'
+    | 'api.rovodev.chat.response.timeToLastMessage';
+
+type JiraPerfEvents =
+    | 'ui.jira.jqlFetch.render.lcp'
+    | 'ui.jira.jqlFetch.update.lcp'
+    | 'ui.jira.createJiraIssue.render.lcp'
+    | 'ui.jira.editJiraIssue.render.lcp'
+    | 'ui.jira.editJiraIssue.update.lcp';
+
+interface RovoDevCommonParams {
+    rovoDevSessionId: string;
+    rovoDevPromptId: string;
+}
+interface JiraIssueTypeParams {
+    isEpic: boolean;
+}
+
+export function performanceEvent(
+    tag: RovoDevPerfEvents,
+    measure: number,
+    params: RovoDevCommonParams,
+): Promise<TrackEvent>;
+export async function performanceEvent(
+    tag: JiraPerfEvents,
+    measure: number,
+    params?: JiraIssueTypeParams,
+): Promise<TrackEvent>;
+export function performanceEvent(tag: string, measure: number, params?: Record<string, any>): Promise<TrackEvent> {
+    return trackEvent('performanceEvent', 'atlascode', {
+        attributes: { tag, measure, ...(params || {}) },
+    });
+}
+
+// Rovo Dev events
+
+export type RovoDevEnv = 'IDE' | 'Boysenberry';
+
+export function rovoDevNewSessionActionEvent(rovoDevEnv: RovoDevEnv, sessionId: string, isManuallyCreated: boolean) {
+    return trackEvent('rovoDevNewSessionAction', 'atlascode', {
+        attributes: { rovoDevEnv, sessionId, isManuallyCreated },
+    });
+}
+
+export function rovoDevPromptSentEvent(
+    rovoDevEnv: RovoDevEnv,
+    sessionId: string,
+    promptId: string,
+    deepPlanEnabled: boolean,
+) {
+    return trackEvent('rovoDevPromptSent', 'atlascode', {
+        attributes: { rovoDevEnv, sessionId, promptId, deepPlanEnabled },
+    });
+}
+
+export function rovoDevTechnicalPlanningShownEvent(
+    rovoDevEnv: RovoDevEnv,
+    sessionId: string,
+    promptId: string,
+    stepsCount: number,
+    filesCount: number,
+    questionsCount: number,
+) {
+    return trackEvent('rovoDevTechnicalPlanningShown', 'atlascode', {
+        attributes: { rovoDevEnv, sessionId, promptId, stepsCount, filesCount, questionsCount },
+    });
+}
+
+export function rovoDevFilesSummaryShownEvent(
+    rovoDevEnv: RovoDevEnv,
+    sessionId: string,
+    promptId: string,
+    filesCount: number,
+) {
+    return trackEvent('rovoDevFilesSummaryShown', 'atlascode', {
+        attributes: { rovoDevEnv, sessionId, promptId, filesCount },
+    });
+}
+
+export function rovoDevFileChangedActionEvent(
+    rovoDevEnv: RovoDevEnv,
+    sessionId: string,
+    promptId: string,
+    action: 'undo' | 'keep',
+    filesCount: number,
+) {
+    return trackEvent('rovoDevFileChangedAction', 'atlascode', {
+        attributes: { rovoDevEnv, sessionId, promptId, action, filesCount },
+    });
+}
+
+export function rovoDevStopActionEvent(rovoDevEnv: RovoDevEnv, sessionId: string, promptId: string, failed?: boolean) {
+    return trackEvent('rovoDevStopAction', 'atlascode', {
+        attributes: { rovoDevEnv, sessionId, promptId, failed },
+    });
+}
+
+export function rovoDevGitPushActionEvent(
+    rovoDevEnv: RovoDevEnv,
+    sessionId: string,
+    promptId: string,
+    prCreated: boolean,
+) {
+    return trackEvent('rovoDevGitPushAction', 'atlascode', {
+        attributes: { rovoDevEnv, sessionId, promptId, prCreated },
+    });
+}
+
+export function rovoDevDetailsExpandedEvent(rovoDevEnv: RovoDevEnv, sessionId: string, promptId: string) {
+    return trackEvent('rovoDevDetailsExpanded', 'atlascode', {
+        attributes: { rovoDevEnv, sessionId, promptId },
     });
 }
 

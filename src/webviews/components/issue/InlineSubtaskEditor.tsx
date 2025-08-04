@@ -147,7 +147,7 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
                             placeholder: 'What needs to be done?',
                             style: { width: '100%' },
                         }}
-                        mainContainerClassName="ac-inline-edit-main_container-left-margin"
+                        containerProps={{ className: 'ac-inline-edit-main_container-left-margin' }}
                         editButtonClassName="ac-hidden"
                         cancelButtonClassName="ac-inline-cancel-button"
                         saveButtonClassName="ac-inline-save-button"

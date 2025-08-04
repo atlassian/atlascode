@@ -13,9 +13,12 @@ import {
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
+import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
+import timer from 'src/util/perf';
 import { commands, env } from 'vscode';
 
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
+import { performanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
 import { PullRequestData } from '../bitbucket/model';
@@ -51,6 +54,9 @@ import { getJiraIssueUri } from '../views/jira/treeViews/utils';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
+
+const EditJiraIssueUIRenderEventName = 'ui.jira.editJiraIssue.render.lcp';
+const EditJiraIssueUpdatesEventName = 'ui.jira.editJiraIssue.update.lcp';
 
 export class JiraIssueWebview
     extends AbstractIssueEditorWebview
@@ -121,28 +127,53 @@ export class JiraIssueWebview
             if (refetchMinimalIssue) {
                 this._issue = await fetchMinimalIssue(this._issue.key, this._issue.siteDetails);
             }
-            const editUI: EditIssueUI<DetailedSiteInfo> = await fetchEditIssueUI(this._issue);
+            // First Request begins here for issue rendering
+            const renderPerfMarker = `${EditJiraIssueUIRenderEventName}_${this._issue.id}`;
+            timer.mark(renderPerfMarker);
 
+            const editUI: EditIssueUI<DetailedSiteInfo> = await fetchEditIssueUI(this._issue);
             if (this._panel) {
                 this._panel.title = `${this._issue.key}`;
             }
 
             this._editUIData = editUI as EditIssueData;
-
+            if (this._issue.issuetype.name === 'Epic') {
+                this._issue.isEpic = true;
+                this._editUIData.isEpic = true;
+            } else {
+                this._issue.isEpic = false;
+                this._editUIData.isEpic = false;
+            }
             this._editUIData.recentPullRequests = [];
 
             const msg = this._editUIData;
 
             msg.type = 'update';
 
-            this.postMessage(msg);
+            this.postMessage(msg); // Issue has rendered
+            const uiDuration = timer.measureAndClear(renderPerfMarker);
+            const epicFlag = { isEpic: this._issue.isEpic };
+            performanceEvent(EditJiraIssueUIRenderEventName, uiDuration, epicFlag).then((event) => {
+                Container.analyticsClient.sendTrackEvent(event);
+            });
 
+            // UI component updates
+            const updatePerfMarker = `${EditJiraIssueUpdatesEventName}_${this._issue.id}`;
+            timer.mark(updatePerfMarker);
             // call async-able update functions here
-            this.updateEpicChildren();
-            this.updateCurrentUser();
-            this.updateWatchers();
-            this.updateVoters();
-            this.updateRelatedPullRequests();
+            await Promise.allSettled([
+                this.updateEpicChildren(),
+                this.updateCurrentUser(),
+                this.updateWatchers(),
+                this.updateVoters(),
+                this.updateRelatedPullRequests(),
+                this.fetchFullHierarchy(),
+            ]);
+
+            const updatesDuration = timer.measureAndClear(updatePerfMarker);
+            performanceEvent(EditJiraIssueUpdatesEventName, updatesDuration, epicFlag).then((event) => {
+                Container.analyticsClient.sendTrackEvent(event);
+            });
         } catch (e) {
             Logger.error(e, 'Error updating issue');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -154,15 +185,39 @@ export class JiraIssueWebview
     async updateEpicChildren() {
         if (this._issue.isEpic) {
             const site = this._issue.siteDetails;
-            const client = await Container.clientManager.jiraClient(site);
-            const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
-            const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
-            const res = await client.searchForIssuesUsingJqlGet(
-                `${epicInfo.epicLink.id} = "${this._issue.key}" order by lastViewed DESC`,
-                fields,
+            const performanceEnabled = FeatureFlagClient.checkExperimentValue(
+                Experiments.AtlascodePerformanceExperiment,
             );
-            const searchResults = await readSearchResults(res, site, epicInfo);
-            this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
+            if (performanceEnabled) {
+                const [client, fields, epicInfo] = await Promise.all([
+                    Container.clientManager.jiraClient(site),
+                    Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site),
+                    Container.jiraSettingsManager.getEpicFieldsForSite(site),
+                ]);
+                let jqlQuery: string = '';
+                if (site.isCloud) {
+                    jqlQuery = `parent = "${this._issue.key}" order by lastViewed DESC`;
+                } else {
+                    jqlQuery = `"Epic Link" = ${this._issue.key} order by lastViewed DESC`;
+                }
+                const res = await client.searchForIssuesUsingJqlGet(jqlQuery, fields);
+                const searchResults = await readSearchResults(res, site, epicInfo);
+                this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
+            } else {
+                const client = await Container.clientManager.jiraClient(site);
+                const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
+                const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
+
+                let jqlQuery: string = '';
+                if (site.isCloud) {
+                    jqlQuery = `parent = "${this._issue.key}" order by lastViewed DESC`;
+                } else {
+                    jqlQuery = `"Epic Link" = ${this._issue.key} order by lastViewed DESC`;
+                }
+                const res = await client.searchForIssuesUsingJqlGet(jqlQuery, fields);
+                const searchResults = await readSearchResults(res, site, epicInfo);
+                this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
+            }
         }
     }
 
@@ -881,7 +936,7 @@ export class JiraIssueWebview
                     break;
                 }
                 case 'invokeRovodev': {
-                    Container.rovodevWebviewProvder.invokeRovoDevAskCommand((msg as any).prompt);
+                    Container.rovodevWebviewProvider.invokeRovoDevAskCommand((msg as any).prompt);
                     break;
                 }
                 case 'openPullRequest': {
@@ -965,6 +1020,31 @@ export class JiraIssueWebview
         }
 
         return handled;
+    }
+
+    private async fetchFullHierarchy() {
+        if (!this._issue.parentKey) {
+            return;
+        }
+
+        const hierarchy = [this._issue];
+
+        this.postMessage({ type: 'hierarchyLoading', hierarchy });
+
+        try {
+            let currentParentKey: string | undefined = this._issue.parentKey;
+            while (currentParentKey) {
+                const parent = await fetchMinimalIssue(currentParentKey, this._issue.siteDetails);
+                hierarchy.unshift(parent);
+                currentParentKey = parent.parentKey;
+            }
+        } catch (e) {
+            Logger.error(e, 'Error fetching issue hierarchy');
+        } finally {
+            this.postMessage({ type: 'hierarchyUpdate', hierarchy });
+        }
+
+        return hierarchy;
     }
 
     private async recentPullRequests(): Promise<PullRequestData[]> {

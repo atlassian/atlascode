@@ -95,7 +95,10 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                     </LoadingButton>
                 </Tooltip>
                 {fields['status'] && (
-                    <Box style={{ display: 'inline-flex', alignItems: 'center', flexGrow: 0 }}>
+                    <Box
+                        data-testid="issue.status-transition-menu"
+                        style={{ display: 'inline-flex', alignItems: 'center', flexGrow: 0 }}
+                    >
                         <StatusTransitionMenu
                             transitions={transitions}
                             currentStatus={fieldValues['status']}

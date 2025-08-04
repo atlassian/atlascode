@@ -2,7 +2,7 @@ import { exec } from 'child_process';
 import { Logger } from 'src/logger';
 import { GitExtension, Repository } from 'src/typings/git';
 import { promisify } from 'util';
-import { env, extensions, Uri, window } from 'vscode';
+import { env, extensions, Uri } from 'vscode';
 
 export class RovoDevPullRequestHandler {
     private async getGitExtension(): Promise<GitExtension> {
@@ -13,9 +13,6 @@ export class RovoDevPullRequestHandler {
             }
             return await gitExtension.activate();
         } catch (e) {
-            window.showErrorMessage(
-                'Git extension not found or failed to activate. Please ensure Git is installed and the extension is enabled.',
-            );
             console.error('Error activating git extension:', e);
             throw e;
         }
@@ -25,30 +22,11 @@ export class RovoDevPullRequestHandler {
         const gitApi = gitExt.getAPI(1);
 
         if (gitApi.repositories.length === 0) {
-            window.showErrorMessage('No Git repositories found in the workspace.');
             throw new Error('No Git repositories found');
         }
 
         // TODO: what do we want to do in case of multiple repositories?
         return gitApi.repositories[0];
-    }
-
-    private async getBranchAndCommitInfo(repo: Repository): Promise<{ branchName: string; commitMessage: string }> {
-        const branchName = await window.showInputBox({
-            prompt: 'Enter a branch name for the PR',
-            value: 'my-branch',
-        });
-
-        const commitMessage = await window.showInputBox({
-            prompt: 'Enter a commit message for the PR',
-            value: 'My awesome work!',
-        });
-
-        if (!branchName || !commitMessage) {
-            throw new Error('Branch name and commit message are required');
-        }
-
-        return { branchName, commitMessage };
     }
 
     public findPRLink(output: string): string | undefined {
@@ -82,13 +60,15 @@ export class RovoDevPullRequestHandler {
 
     // This is the happy path for single small repository
     // There would probably need to be a lot of logic in monorepos/multiple repos etc.
-    public async createPR(): Promise<void> {
+    public async createPR(branchName: string, commitMessage: string): Promise<string | undefined> {
         const gitExt = await this.getGitExtension();
         const repo = await this.getGitRepository(gitExt);
-        const { branchName, commitMessage } = await this.getBranchAndCommitInfo(repo);
 
         await repo.fetch();
-        await repo.createBranch(branchName, true);
+        const curBranch = repo.state.HEAD?.name;
+        if (curBranch !== branchName) {
+            await repo.createBranch(branchName, true);
+        }
         await repo.commit(commitMessage, {
             all: true,
         });
@@ -102,6 +82,32 @@ export class RovoDevPullRequestHandler {
         const prLink = this.findPRLink(stderr);
         if (prLink) {
             env.openExternal(Uri.parse(prLink));
+        }
+
+        return prLink;
+    }
+
+    public async getCurrentBranchName(): Promise<string | undefined> {
+        const gitExt = await this.getGitExtension();
+        const repo = await this.getGitRepository(gitExt);
+
+        return repo.state.HEAD?.name;
+    }
+
+    public async isGitStateClean(): Promise<boolean> {
+        try {
+            const gitExt = await this.getGitExtension();
+            const repo = await this.getGitRepository(gitExt);
+
+            // A repo is clean if there are no unstaged, staged, or merge changes
+            return (
+                repo.state.workingTreeChanges.length === 0 &&
+                repo.state.indexChanges.length === 0 &&
+                repo.state.mergeChanges.length === 0
+            );
+        } catch (error) {
+            Logger.error(error, 'Error checking git state');
+            return true; // If we can't determine the state, assume it's clean
         }
     }
 }

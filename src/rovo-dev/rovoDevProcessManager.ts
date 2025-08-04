@@ -141,7 +141,6 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
 function showWorkspaceLoadedMessageAndStartProcess(context: ExtensionContext) {
     const folders = workspace.workspaceFolders;
     if (!folders || folders.length === 0) {
-        window.showInformationMessage('Rovo Dev: No workspace folders loaded.');
         return;
     }
 

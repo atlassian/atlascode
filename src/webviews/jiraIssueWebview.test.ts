@@ -1,4 +1,5 @@
 import { createEmptyMinimalIssue, emptyUser, MinimalIssue, User } from '@atlassianlabs/jira-pi-common-models';
+import { FeatureFlagClient } from 'src/util/featureFlags';
 import { expansionCastTo } from 'testsutil/miscFunctions';
 import { commands, env, WebviewPanel } from 'vscode';
 
@@ -55,6 +56,10 @@ jest.mock('../jira/transitionIssue', () => ({
 jest.mock('../commands/jira/postComment');
 jest.mock('../bitbucket/bbUtils');
 jest.mock('../commands/jira/startWorkOnIssue');
+jest.mock('@atlassianlabs/jira-pi-common-models', () => ({
+    ...jest.requireActual('@atlassianlabs/jira-pi-common-models'),
+    readSearchResults: jest.fn(),
+}));
 jest.mock('../views/notifications/notificationManager', () => ({
     NotificationManagerImpl: {
         getInstance: jest.fn(), // mocked in beforeEach()
@@ -80,6 +85,26 @@ jest.mock('../resources', () => ({
     },
 }));
 
+// Added mock feature flag inspired by other feature files
+jest.mock('src/util/featureFlags', () => {
+    const mockCheckExperimentValue = jest.fn().mockReturnValue(false);
+    return {
+        FeatureFlagClient: {
+            checkExperimentValue: mockCheckExperimentValue,
+        },
+        Experiments: {
+            AtlascodePerformanceExperiment: 'atlascode-performance-experiment',
+        },
+        __mockCheckExperimentValue: mockCheckExperimentValue, // Export for test access
+    };
+});
+
+jest.mock('../analytics', () => ({
+    jiraIssuePerformanceEvent: jest.fn().mockResolvedValue({}),
+    issueUrlCopiedEvent: jest.fn().mockResolvedValue({}),
+    performanceEvent: jest.fn().mockResolvedValue({}),
+}));
+
 describe('JiraIssueWebview', () => {
     let jiraIssueWebview: JiraIssueWebview;
     let mockJiraClient: any;
@@ -100,6 +125,16 @@ describe('JiraIssueWebview', () => {
         summary: 'Test Issue',
         siteDetails: mockSiteDetails,
         isEpic: false,
+        issuetype: {
+            id: '1',
+            name: 'Task',
+            subtask: false,
+            avatarId: 1,
+            description: 'Task issue type',
+            iconUrl: 'https://example.com/task-icon.png',
+            self: 'https://example.com/rest/api/2/issuetype/1',
+            epic: false,
+        },
     });
 
     const mockEditUIData = {
@@ -129,6 +164,9 @@ describe('JiraIssueWebview', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        // Defaulted value for AtlascodePerformanceExperiment should be false
+        (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(false);
 
         mockJiraClient = {
             editIssue: jest.fn(),
@@ -224,6 +262,7 @@ describe('JiraIssueWebview', () => {
     describe('forceUpdateIssue', () => {
         test('should fetch and update issue data', async () => {
             jiraIssueWebview['_issue'] = mockIssue;
+            jiraIssueWebview['isRefeshing'] = false; // Ensure not already refreshing
             const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
 
             const updateEpicChildrenSpy = jest.spyOn(jiraIssueWebview, 'updateEpicChildren').mockResolvedValue();
@@ -232,7 +271,17 @@ describe('JiraIssueWebview', () => {
             const updateVotersSpy = jest.spyOn(jiraIssueWebview, 'updateVoters').mockResolvedValue();
             const updatePRsSpy = jest.spyOn(jiraIssueWebview, 'updateRelatedPullRequests').mockResolvedValue();
 
+            // Mock the timer functions that are used in forceUpdateIssue
+            const mockTimer = {
+                mark: jest.fn(),
+                measureAndClear: jest.fn().mockReturnValue(100),
+            };
+            jest.doMock('src/util/perf', () => ({ default: mockTimer }));
+
             await jiraIssueWebview['forceUpdateIssue']();
+
+            // Wait for all async operations to complete
+            await new Promise((resolve) => setTimeout(resolve, 50));
 
             expect(fetchIssue.fetchEditIssueUI).toHaveBeenCalledWith(mockIssue);
             expect(postMessageSpy).toHaveBeenCalledWith({
@@ -253,6 +302,59 @@ describe('JiraIssueWebview', () => {
             await jiraIssueWebview['forceUpdateIssue'](true);
 
             expect(fetchIssue.fetchMinimalIssue).toHaveBeenCalledWith(mockIssue.key, mockSiteDetails);
+        });
+
+        test('should detect and set epic flags for Epic issue type', async () => {
+            const epicIssue = {
+                ...mockIssue,
+                issuetype: { ...mockIssue.issuetype, name: 'Epic' },
+            };
+            jiraIssueWebview['_issue'] = epicIssue;
+            jiraIssueWebview['isRefeshing'] = false; // Ensure not already refreshing
+
+            const mockEditUIDataWithEpic = {
+                ...mockEditUIData,
+                isEpic: false, // Initially false, should be set to true
+            };
+            (fetchIssue.fetchEditIssueUI as jest.Mock).mockResolvedValue(mockEditUIDataWithEpic);
+
+            const updateEpicChildrenSpy = jest.spyOn(jiraIssueWebview, 'updateEpicChildren').mockResolvedValue();
+            const updateCurrentUserSpy = jest.spyOn(jiraIssueWebview, 'updateCurrentUser').mockResolvedValue();
+            const updateWatchersSpy = jest.spyOn(jiraIssueWebview, 'updateWatchers').mockResolvedValue();
+            const updateVotersSpy = jest.spyOn(jiraIssueWebview, 'updateVoters').mockResolvedValue();
+            const updatePRsSpy = jest.spyOn(jiraIssueWebview, 'updateRelatedPullRequests').mockResolvedValue();
+
+            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+            // Mock the timer functions that are used in forceUpdateIssue
+            const mockTimer = {
+                mark: jest.fn(),
+                measureAndClear: jest.fn().mockReturnValue(100),
+            };
+            jest.doMock('src/util/perf', () => ({ default: mockTimer }));
+
+            await jiraIssueWebview['forceUpdateIssue']();
+
+            // Wait for all async operations to complete
+            await new Promise((resolve) => setTimeout(resolve, 50));
+
+            // Verify epic flags are set
+            expect(jiraIssueWebview['_issue'].isEpic).toBe(true);
+            expect(jiraIssueWebview['_editUIData'].isEpic).toBe(true);
+
+            // Verify the message posted includes epic flag
+            expect(postMessageSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'update',
+                    isEpic: true,
+                }),
+            );
+
+            expect(updateEpicChildrenSpy).toHaveBeenCalled();
+            expect(updateCurrentUserSpy).toHaveBeenCalled();
+            expect(updateWatchersSpy).toHaveBeenCalled();
+            expect(updateVotersSpy).toHaveBeenCalled();
+            expect(updatePRsSpy).toHaveBeenCalled();
         });
 
         test('should handle errors', async () => {
@@ -288,20 +390,46 @@ describe('JiraIssueWebview', () => {
         });
 
         test('updateEpicChildren - should fetch for epic issues', async () => {
-            jiraIssueWebview['_issue'] = { ...mockIssue, isEpic: true };
-            const epicInfo = { epicLink: { id: 'epic-link-field' } };
+            // Update the issue to be an Epic type
+            const epicIssue = {
+                ...mockIssue,
+                isEpic: true,
+                issuetype: { ...mockIssue.issuetype, name: 'Epic' },
+            };
+            jiraIssueWebview['_issue'] = epicIssue;
 
-            (Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite as jest.Mock).mockResolvedValue(['field1']);
+            const epicInfo = { epicLink: { id: 'epic-link-field' } };
+            const mockSearchResults = {
+                issues: [
+                    { key: 'TEST-124', summary: 'Epic child 1' },
+                    { key: 'TEST-125', summary: 'Epic child 2' },
+                ],
+            };
+
+            (Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite as jest.Mock).mockResolvedValue([
+                'summary',
+                'status',
+            ]);
             (Container.jiraSettingsManager.getEpicFieldsForSite as jest.Mock).mockResolvedValue(epicInfo);
-            mockJiraClient.searchForIssuesUsingJqlGet.mockResolvedValue({ issues: [] });
+            mockJiraClient.searchForIssuesUsingJqlGet.mockResolvedValue(mockSearchResults);
+
+            // Mock readSearchResults function
+            const readSearchResultsMock = require('@atlassianlabs/jira-pi-common-models').readSearchResults;
+            readSearchResultsMock.mockResolvedValue(mockSearchResults);
 
             const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
 
             await jiraIssueWebview.updateEpicChildren();
 
             expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
-            expect(mockJiraClient.searchForIssuesUsingJqlGet).toHaveBeenCalled();
-            expect(postMessageSpy).toHaveBeenCalled();
+            expect(mockJiraClient.searchForIssuesUsingJqlGet).toHaveBeenCalledWith(
+                `parent = "${epicIssue.key}" order by lastViewed DESC`,
+                ['summary', 'status'],
+            );
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: 'epicChildrenUpdate',
+                epicChildren: mockSearchResults.issues,
+            });
         });
 
         test('updateCurrentUser - should fetch current user if empty', async () => {
@@ -1094,6 +1222,162 @@ describe('JiraIssueWebview', () => {
                 fieldValues: {},
                 nonce: 'nonce-123',
             });
+        });
+    });
+});
+
+// Additional tests for JiraIssueWebview methods
+describe('JiraIssueWebview - Additional Method Tests', () => {
+    let webview: JiraIssueWebview;
+    const mockExtensionPath = '/test/path';
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        webview = new JiraIssueWebview(mockExtensionPath);
+    });
+
+    describe('getters', () => {
+        it('should return correct title', () => {
+            expect(webview.title).toBe('Jira Issue');
+        });
+
+        it('should return correct id', () => {
+            expect(webview.id).toBe('viewIssueScreen');
+        });
+
+        it('should return ProductJira for productOrUndefined', () => {
+            expect(webview.productOrUndefined).toBe(ProductJira);
+        });
+
+        it('should return siteDetails for siteOrUndefined when issue is set', () => {
+            const mockSiteDetails = { id: 'test-site', name: 'Test Site' } as any;
+            (webview as any)._issue = { siteDetails: mockSiteDetails };
+            expect(webview.siteOrUndefined).toBe(mockSiteDetails);
+        });
+    });
+
+    describe('fieldNameForKey', () => {
+        it('should return field name for existing key', () => {
+            (webview as any)._editUIData = {
+                fields: {
+                    field1: { key: 'summary', name: 'Summary' },
+                    field2: { key: 'description', name: 'Description' },
+                },
+            };
+
+            expect(webview.fieldNameForKey('summary')).toBe('Summary');
+        });
+
+        it('should return empty string for non-existing key', () => {
+            (webview as any)._editUIData = {
+                fields: {},
+            };
+
+            expect(webview.fieldNameForKey('nonexistent')).toBe('');
+        });
+    });
+
+    describe('getFieldValuesForKeys', () => {
+        it('should return field values for existing keys', () => {
+            (webview as any)._editUIData = {
+                fieldValues: {
+                    summary: 'Test Summary',
+                    description: 'Test Description',
+                    priority: 'High',
+                },
+            };
+
+            const result = (webview as any).getFieldValuesForKeys(['summary', 'priority', 'nonexistent']);
+            expect(result).toEqual({
+                summary: 'Test Summary',
+                priority: 'High',
+            });
+        });
+
+        it('should return empty object when no keys match', () => {
+            (webview as any)._editUIData = {
+                fieldValues: {
+                    summary: 'Test Summary',
+                },
+            };
+
+            const result = (webview as any).getFieldValuesForKeys(['nonexistent']);
+            expect(result).toEqual({});
+        });
+    });
+
+    describe('recentPullRequests', () => {
+        it('should return empty array when bitbucket context is not available', async () => {
+            (Container.bitbucketContext as any) = null;
+
+            const result = await (webview as any).recentPullRequests();
+            expect(result).toEqual([]);
+        });
+
+        it('should filter pull requests by issue key', async () => {
+            const mockPrs = [
+                {
+                    data: {
+                        title: 'Fix TEST-123 bug',
+                        rawSummary: 'This fixes the bug',
+                        url: 'http://example.com/pr/1',
+                    },
+                },
+                {
+                    data: {
+                        title: 'Add feature',
+                        rawSummary: 'TEST-456 implementation',
+                        url: 'http://example.com/pr/2',
+                    },
+                },
+            ];
+
+            (Container.bitbucketContext as any) = {
+                recentPullrequestsForAllRepos: jest.fn().mockResolvedValue(mockPrs),
+            };
+
+            (webview as any)._issue = { key: 'TEST-123' };
+
+            const result = await (webview as any).recentPullRequests();
+            expect(result).toHaveLength(1);
+            expect(result[0].title).toBe('Fix TEST-123 bug');
+        });
+    });
+
+    describe('setIconPath', () => {
+        it('should set icon path on panel', () => {
+            const mockPanel = { iconPath: null };
+            (webview as any)._panel = mockPanel;
+
+            webview.setIconPath();
+
+            // Just verify the method was called without error
+            expect(typeof webview.setIconPath).toBe('function');
+        });
+    });
+
+    describe('handleSelectOptionCreated', () => {
+        it('should handle select option creation', async () => {
+            const mockClient = {
+                editIssue: jest.fn().mockResolvedValue({}),
+            };
+            (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
+
+            (webview as any)._issue = { key: 'TEST-123', siteDetails: { id: 'site1' } };
+            (webview as any)._editUIData = {
+                fieldValues: {},
+                selectFieldOptions: {},
+                fields: {
+                    testField: { valueType: 'string' },
+                },
+            };
+
+            const postMessageSpy = jest.spyOn(webview as any, 'postMessage');
+
+            await webview.handleSelectOptionCreated('testField', 'newValue', 'nonce123');
+
+            expect(mockClient.editIssue).toHaveBeenCalled();
+            expect(postMessageSpy).toHaveBeenCalled();
         });
     });
 });

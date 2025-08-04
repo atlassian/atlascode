@@ -109,7 +109,7 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
         }
     }, []);
 
-    const [postMessage, postMessagePromise] = useMessagingApi<StartWorkAction, StartWorkMessage, StartWorkResponse>(
+    const { postMessage, postMessagePromise } = useMessagingApi<StartWorkAction, StartWorkMessage, StartWorkResponse>(
         onMessageHandler,
     );
 
@@ -142,7 +142,7 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
                             StartWorkMessageType.StartWorkResponse,
                             ConnectionTimeout,
                         );
-                        resolve(response as StartWorkResponseMessage);
+                        resolve(response);
                     } catch (e) {
                         reject(e);
                     }

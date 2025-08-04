@@ -14,7 +14,6 @@ export const GlobalStateVersionKey = 'atlascodeVersion';
 export const AxiosUserAgent = 'atlascode/2.x axios/0.19.2';
 
 export const bbAPIConnectivityError = new Error('cannot connect to bitbucket api');
-export const cannotGetClientFor = 'cannot get client for';
 
 export const enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -83,10 +82,14 @@ export const enum Commands {
     CreateNewJql = 'atlascode.jira.createNewJql',
     ToDoIssue = 'atlascode.jira.todoIssue',
     RovodevAsk = 'atlascode.rovodev.askRovoDev',
+    RovodevAskInteractive = 'atlascode.rovodev.askInteractive',
+    RovodevAddToContext = 'atlascode.rovodev.addToContext',
     RovodevNewSession = 'atlascode.rovodev.newChatSession',
     InProgressIssue = 'atlascode.jira.inProgressIssue',
     DoneIssue = 'atlascode.jira.doneIssue',
     ShowOnboardingFlow = 'atlascode.showOnboardingFlow',
+    OpenRovoDevConfig = 'atlascode.openRovoDevConfig',
+    OpenRovoDevMcpJson = 'atlascode.openRovoDevMcpJson',
 }
 
 // Rovodev port mapping settings

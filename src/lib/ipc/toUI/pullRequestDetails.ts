@@ -58,6 +58,7 @@ export type PullRequestDetailsMessage =
     | ReducerAction<PullRequestDetailsMessageType.UpdateRelatedJiraIssues, PullRequestDetailsRelatedJiraIssuesMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateTasks, PullRequestDetailsTasksMessage>;
 export type PullRequestDetailsResponse =
+    | ReducerAction<PullRequestDetailsMessageType.CheckoutBranch, PullRequestDetailsCheckoutBranchMessage>
     | ReducerAction<PullRequestDetailsMessageType.FetchUsersResponse, FetchUsersResponseMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateFileDiffs, PullRequestDetailsFileDiffsMessage>
     | ReducerAction<PullRequestDetailsMessageType.PostCommentResponse, VoidResponseMessage>

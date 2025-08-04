@@ -24,6 +24,7 @@ export const AddContentDropdown: React.FC<{
             }}
         >
             <DropdownMenu<HTMLButtonElement>
+                testId="issue.add-content-dropdown"
                 css={{
                     backgroundColor: 'var(--vscode-settings-textInputBackground)!important',
                     ':hover': {

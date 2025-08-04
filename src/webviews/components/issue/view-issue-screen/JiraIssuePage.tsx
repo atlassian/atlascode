@@ -2,11 +2,12 @@ import { LoadingButton } from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
-import { CommentVisibility, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { CommentVisibility, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, SelectFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { Box } from '@material-ui/core';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
+import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
@@ -40,6 +41,10 @@ type Accept = CommonEditorPageAccept | EditIssueData;
 export interface ViewState extends CommonEditorViewState, EditIssueData {
     showMore: boolean;
     currentInlineDialog: string;
+    commentText: string;
+    isEditingComment: boolean;
+    hierarchyLoading: boolean;
+    hierarchy: MinimalIssue<DetailedSiteInfo>[];
 }
 
 const emptyState: ViewState = {
@@ -47,6 +52,10 @@ const emptyState: ViewState = {
     ...emptyEditIssueData,
     showMore: false,
     currentInlineDialog: '',
+    commentText: '',
+    isEditingComment: false,
+    hierarchyLoading: false,
+    hierarchy: [],
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -114,6 +123,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     if (isIssueCreated(e)) {
                         this.setState({ isSomethingLoading: false, loadingField: '' });
                     }
+                    break;
+                }
+                case 'hierarchyUpdate': {
+                    this.setState({ hierarchy: e.hierarchy, hierarchyLoading: false });
+                    break;
+                }
+                case 'hierarchyLoading': {
+                    this.setState({ hierarchy: e.hierarchy, hierarchyLoading: true });
                     break;
                 }
             }
@@ -201,7 +218,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 this.setState({ isSomethingLoading: true, loadingField: field.key });
                 const payload: any = newValue;
                 payload.project = { key: this.getProjectKey() };
-                payload.parent = { key: this.state.key };
+                if (this.state.siteDetails.isCloud) {
+                    payload.parent = { key: this.state.key }; // Cloud instances have parent-child relationships for epics and non-epics
+                } else {
+                    if (this.state.isEpic) {
+                        payload[this.state.epicFieldInfo.epicLink.id] = this.state.key; // Epic children
+                    } else {
+                        payload.parent = { key: this.state.key }; // Regular subtasks
+                    }
+                }
                 this.postMessage({
                     action: 'createIssue',
                     site: this.state.siteDetails,
@@ -295,7 +320,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     protected handleCreateComment = (commentBody: string, restriction?: CommentVisibility) => {
-        this.setState({ isSomethingLoading: true, loadingField: 'comment' });
+        this.setState({ isSomethingLoading: true, loadingField: 'comment', commentText: '', isEditingComment: false });
         const commentAction: IssueCommentAction = {
             action: 'comment',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
@@ -304,6 +329,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         };
 
         this.postMessage(commentAction);
+    };
+
+    private handleCommentTextChange = (text: string) => {
+        this.setState({ commentText: text });
+    };
+
+    private handleCommentEditingChange = (editing: boolean) => {
+        this.setState({ isEditingComment: editing });
     };
 
     protected handleUpdateComment = (commentBody: string, commentId: string, restriction?: CommentVisibility) => {
@@ -456,22 +489,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     getMainPanelNavMarkup(): any {
-        const epicLinkValue = this.state.fieldValues[this.state.epicFieldInfo.epicLink.id];
-        let epicLinkKey: string = '';
-
-        if (epicLinkValue) {
-            if (typeof epicLinkValue === 'object' && epicLinkValue.value) {
-                epicLinkKey = epicLinkValue.value;
-            } else if (typeof epicLinkValue === 'string') {
-                epicLinkKey = epicLinkValue;
-            }
-        }
-
-        const parentIconUrl =
-            this.state.fieldValues['parent'] && this.state.fieldValues['parent'].issuetype
-                ? this.state.fieldValues['parent'].issuetype.iconUrl
-                : undefined;
         const itIconUrl = this.state.fieldValues['issuetype'] ? this.state.fieldValues['issuetype'].iconUrl : undefined;
+
         return (
             <div>
                 {this.state.showPMF && (
@@ -485,45 +504,69 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 )}
                 <div className="ac-page-header">
                     <div className="ac-breadcrumbs">
-                        {epicLinkValue && epicLinkKey !== '' && (
-                            <React.Fragment>
-                                <NavItem
-                                    text={epicLinkKey}
-                                    onItemClick={() =>
-                                        this.handleOpenIssue({ siteDetails: this.state.siteDetails, key: epicLinkKey })
-                                    }
-                                />
-                                <span className="ac-breadcrumb-divider">/</span>
-                            </React.Fragment>
-                        )}
-                        {this.state.fieldValues['parent'] && (
-                            <React.Fragment>
-                                <NavItem
-                                    text={this.state.fieldValues['parent'].key}
-                                    iconUrl={parentIconUrl}
-                                    onItemClick={() =>
-                                        this.handleOpenIssue({
-                                            siteDetails: this.state.siteDetails,
-                                            key: this.state.fieldValues['parent'].key,
-                                        })
-                                    }
-                                />
-                                <span className="ac-breadcrumb-divider">/</span>
-                            </React.Fragment>
-                        )}
+                        {this.state.hierarchy && this.state.hierarchy.length > 0 && (
+                            <>
+                                {this.state.hierarchyLoading && this.state.hierarchy.length <= 1 && (
+                                    <>
+                                        <span className="ac-breadcrumb-loading">
+                                            {[...Array(3)].map((_, idx) => (
+                                                <span
+                                                    key={idx}
+                                                    className="animate-pulse"
+                                                    style={{ animationDelay: `${idx * 0.2}s` }}
+                                                >
+                                                    .
+                                                </span>
+                                            ))}
+                                        </span>
+                                        <span className="ac-breadcrumb-divider">/</span>
+                                    </>
+                                )}
+                                {this.state.hierarchy.map((issue, index) => {
+                                    const isLastItem = index === this.state.hierarchy.length - 1;
+                                    const shouldOpenInJira = issue.key === this.state.key;
+                                    const handleItemClick = !shouldOpenInJira
+                                        ? () =>
+                                              this.handleOpenIssue({
+                                                  siteDetails: this.state.siteDetails,
+                                                  key: issue.key,
+                                              })
+                                        : undefined;
 
-                        <Tooltip
-                            content={`Created on ${
-                                this.state.fieldValues['created.rendered'] || this.state.fieldValues['created']
-                            }`}
-                        >
-                            <NavItem
-                                text={`${this.state.key}`}
-                                href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`}
-                                iconUrl={itIconUrl}
-                                onCopy={this.handleCopyIssueLink}
-                            />
-                        </Tooltip>
+                                    return (
+                                        <React.Fragment key={issue.key}>
+                                            <NavItem
+                                                text={issue.key}
+                                                iconUrl={issue.issuetype?.iconUrl}
+                                                href={
+                                                    shouldOpenInJira
+                                                        ? `${this.state.siteDetails.baseLinkUrl}/browse/${issue.key}`
+                                                        : undefined
+                                                }
+                                                onItemClick={handleItemClick}
+                                                onCopy={isLastItem ? this.handleCopyIssueLink : undefined}
+                                            />
+                                            {!isLastItem && <span className="ac-breadcrumb-divider">/</span>}
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </>
+                        )}
+                        {!this.state.hierarchy ||
+                            (this.state.hierarchy.length === 0 && (
+                                <Tooltip
+                                    content={`Created on ${
+                                        this.state.fieldValues['created.rendered'] || this.state.fieldValues['created']
+                                    }`}
+                                >
+                                    <NavItem
+                                        text={`${this.state.key}`}
+                                        href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`}
+                                        iconUrl={itIconUrl}
+                                        onCopy={this.handleCopyIssueLink}
+                                    />
+                                </Tooltip>
+                            ))}
                     </div>
                 </div>
                 {this.state.isErrorBannerOpen && (
@@ -546,6 +589,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     subtaskTypes={this.state.selectFieldOptions['subtasks']}
                     linkTypes={this.state.selectFieldOptions['issuelinks']}
                     isEpic={this.state.isEpic}
+                    epicChildren={this.state.epicChildren}
+                    epicChildrenTypes={
+                        this.state.siteDetails.isCloud
+                            ? this.state.selectFieldOptions['issuetype']
+                            : this.state.selectFieldOptions['issuetype']?.filter((type) => {
+                                  return type.name !== 'Epic'; // The array is size 4 by default so no perf problems, filter reduces to 3
+                              })
+                    }
                     handleInlineEdit={this.handleInlineEdit}
                     handleOpenIssue={this.handleOpenIssue}
                     onFetchIssues={async (input: string) =>
@@ -590,12 +641,17 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 this.state.fieldValues['project'].projectTypeKey === 'service_desk'
                             }
                             isRteEnabled={this.state.isRteEnabled}
+                            commentText={this.state.commentText}
+                            onCommentTextChange={this.handleCommentTextChange}
+                            isEditingComment={this.state.isEditingComment}
+                            onEditingCommentChange={this.handleCommentEditingChange}
                         />
                     </div>
                 )}
             </div>
         );
     }
+
     commonSidebar(): any {
         const commonItems: SidebarItem[] = ['assignee', 'reporter', 'labels', 'priority', 'components', 'fixVersions']
             .filter((field) => !!this.state.fields[field])
@@ -743,7 +799,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                             <div style={{ paddingTop: '8px' }}>
                                                 <Grid layout="fluid">
                                                     <GridColumn medium={8}>
-                                                        <h1>
+                                                        <h1 data-testid="issue.title">
                                                             {this.getInputMarkup(
                                                                 this.state.fields['summary'],
                                                                 true,

@@ -25,6 +25,8 @@ type Props = {
     onDeleteAttachment: (attachment: any) => void;
     loadingField?: string;
     isEpic: boolean;
+    epicChildren?: any[];
+    epicChildrenTypes?: IssueType[];
     handleInlineEdit: (field: FieldUI, edit: any) => void;
     subtaskTypes: IssueType[];
     linkTypes: IssueLinkTypeSelectOption[];
@@ -44,6 +46,8 @@ const IssueMainPanel: React.FC<Props> = ({
     onDeleteAttachment,
     loadingField,
     isEpic,
+    epicChildren,
+    epicChildrenTypes,
     handleInlineEdit,
     subtaskTypes,
     linkTypes,
@@ -161,6 +165,7 @@ const IssueMainPanel: React.FC<Props> = ({
                         />
                     ) : (
                         <div
+                            data-testid="issue.description"
                             css={{
                                 ':hover': {
                                     backgroundColor: 'var(--vscode-editor-selectionHighlightBackground)!important',
@@ -184,7 +189,7 @@ const IssueMainPanel: React.FC<Props> = ({
                 </div>
             )}
             {attachments && attachments.length > 0 && (
-                <div>
+                <div data-testid="issue.attachments">
                     <label className="ac-field-label">Attachments</label>
                     <AttachmentList
                         attachments={attachments}
@@ -204,6 +209,19 @@ const IssueMainPanel: React.FC<Props> = ({
                         enableSubtasks={{ enable: enableSubtasks, setEnableSubtasks }}
                         handleOpenIssue={handleOpenIssue}
                         issues={subtasks}
+                    />
+                </div>
+            )}
+            {isEpic && epicChildren && epicChildren.length > 0 && (
+                <div>
+                    <ChildIssuesComponent
+                        subtaskTypes={!epicChildrenTypes ? [] : epicChildrenTypes} // This are not "subtasks" for epics but full issues
+                        label="Epic Child issues"
+                        loading={loadingField === 'subtasks'}
+                        onSave={(e: any) => handleInlineEdit(fields['subtasks'], e)}
+                        enableSubtasks={{ enable: enableSubtasks, setEnableSubtasks }} // Change this for epics
+                        handleOpenIssue={handleOpenIssue}
+                        issues={epicChildren}
                     />
                 </div>
             )}

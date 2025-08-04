@@ -1,5 +1,5 @@
 import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import { commands, env, ExtensionContext, Uri, window } from 'vscode';
+import { commands, env, ExtensionContext, TextEditor, Uri, window } from 'vscode';
 
 import {
     cloneRepositoryButtonEvent,
@@ -23,6 +23,7 @@ import { transitionIssue } from './jira/transitionIssue';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
 import { Logger } from './logger';
+import { RovoDevContext } from './rovo-dev/rovoDevTypes';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
@@ -207,22 +208,67 @@ export function registerCommands(vscodeContext: ExtensionContext) {
     );
 }
 
+const buildContext = (editor?: TextEditor, vscodeContext?: ExtensionContext): RovoDevContext | undefined => {
+    if (!editor || !vscodeContext) {
+        return undefined;
+    }
+
+    const document = editor.document;
+    const workspaceFolder =
+        vscodeContext.workspaceState.get('workspaceFolder') || (vscodeContext as any).workspaceFolder || undefined;
+    const baseName = document.fileName.split(require('path').sep).pop() || '';
+    const fileInfo = {
+        name: baseName,
+        absolutePath: document.uri.fsPath,
+        relativePath: workspaceFolder
+            ? require('path').relative(workspaceFolder.uri.fsPath, document.uri.fsPath)
+            : document.fileName,
+    };
+    const selections = editor.selections && editor.selections.length > 0 ? editor.selections : [editor.selection];
+    return {
+        contextItems: selections.map((selection) => ({
+            file: fileInfo,
+            selection: selection ? { start: selection.start.line, end: selection.end.line } : undefined,
+            enabled: true,
+        })),
+    };
+};
+
 export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
     vscodeContext.subscriptions.push(
-        commands.registerCommand(Commands.RovodevAsk, () => {
-            window
-                .showInputBox({
-                    placeHolder: 'Edit files in your workspace with Rovo Dev Agent',
-                    prompt: 'Type your command here',
-                })
-                .then((text) => {
-                    if (text?.trim()) {
-                        Container.rovodevWebviewProvder.invokeRovoDevAskCommand(text);
-                    }
-                });
+        commands.registerCommand(Commands.RovodevAskInteractive, async () => {
+            const context = buildContext(window.activeTextEditor, vscodeContext);
+
+            const prompt = await window.showInputBox({
+                placeHolder: 'Type your RovoDev command',
+                prompt: 'Send a command to RovoDev for the selected code',
+            });
+
+            if (!prompt?.trim()) {
+                return;
+            }
+            Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
+        }),
+    );
+    vscodeContext.subscriptions.push(
+        commands.registerCommand(Commands.RovodevAsk, (prompt: string, context?: RovoDevContext) => {
+            Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
         commands.registerCommand(Commands.RovodevNewSession, () => {
-            Container.rovodevWebviewProvder.executeReset();
+            Container.rovodevWebviewProvider.executeReset();
+        }),
+    );
+    vscodeContext.subscriptions.push(
+        commands.registerCommand(Commands.RovodevAddToContext, async () => {
+            const context = buildContext(window.activeTextEditor, vscodeContext);
+            if (!context || !context.contextItems || context.contextItems.length === 0) {
+                // Do nothing, this should only have effect in editor context
+                return;
+            }
+            commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+            context.contextItems.forEach((item) => {
+                Container.rovodevWebviewProvider.addToContext(item);
+            });
         }),
     );
 }

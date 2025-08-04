@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { createSearchResponse } from 'e2e/fixtures/search';
 import { authenticateWithJira, cleanupWireMockMapping, getIssueFrame, setupWireMockMapping } from 'e2e/helpers';
+import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
 test('Assigning Jira issue to myself works', async ({ page, request }) => {
     // This test is large and may run longer on slower machines,
@@ -8,13 +9,11 @@ test('Assigning Jira issue to myself works', async ({ page, request }) => {
     // See: https://playwright.dev/docs/test-timeouts#set-timeout-for-a-single-test
     test.setTimeout(50_000);
 
-    // Authenticate and open BTS-1 issue
     await authenticateWithJira(page);
-    await page.getByRole('treeitem', { name: 'BTS-1 - User Interface Bugs' }).click();
-    await page.waitForTimeout(1000);
 
-    // Close settings tab to focus on the issue
-    await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
+    await new AtlassianSettings(page).closeSettingsPage();
+    await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');
+
     const issueFrame = await getIssueFrame(page);
 
     // Step 1: Verify and clear current assignee (Mocked McMock)

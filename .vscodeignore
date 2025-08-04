@@ -47,6 +47,7 @@ bitbucket-pipelines.yml
 *.vsix
 *.orig
 node_modules/
+!node_modules/@vscode/codicons/dist/**
 webpack.*
 build/**/*.map
 .readme/

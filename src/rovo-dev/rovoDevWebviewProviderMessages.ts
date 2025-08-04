@@ -2,6 +2,7 @@ import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 
 import { ChatMessage, ErrorMessage } from '../react/atlascode/rovo-dev/utils';
 import { RovoDevResponse } from './responseParser';
+import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
 export const enum RovoDevProviderMessageType {
     PromptSent = 'promptSent',
@@ -16,6 +17,10 @@ export const enum RovoDevProviderMessageType {
     CancelFailed = 'cancelFailed',
     ReturnText = 'returnText',
     CreatePRComplete = 'createPRComplete',
+    GetCurrentBranchNameComplete = 'getCurrentBranchNameComplete',
+    UserFocusUpdated = 'userFocusUpdated',
+    ContextAdded = 'contextAdded',
+    CheckGitChangesComplete = 'checkGitChangesComplete',
 }
 
 export interface RovoDevObjectResponse {
@@ -23,10 +28,10 @@ export interface RovoDevObjectResponse {
 }
 
 export type RovoDevProviderMessage =
-    | ReducerAction<RovoDevProviderMessageType.PromptSent, { enable_deep_plan: boolean }>
+    | ReducerAction<RovoDevProviderMessageType.PromptSent, RovoDevPrompt>
     | ReducerAction<RovoDevProviderMessageType.Response, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.UserChatMessage, { message: ChatMessage }>
-    | ReducerAction<RovoDevProviderMessageType.CompleteMessage>
+    | ReducerAction<RovoDevProviderMessageType.CompleteMessage, { isReplay?: boolean }>
     | ReducerAction<RovoDevProviderMessageType.ToolCall, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ToolReturn, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ErrorMessage, { message: ErrorMessage }>
@@ -34,4 +39,8 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.Initialized>
     | ReducerAction<RovoDevProviderMessageType.CancelFailed>
     | ReducerAction<RovoDevProviderMessageType.ReturnText, { text: string }>
-    | ReducerAction<RovoDevProviderMessageType.CreatePRComplete>;
+    | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string; error?: string } }>
+    | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>
+    | ReducerAction<RovoDevProviderMessageType.UserFocusUpdated, { userFocus: RovoDevContextItem }>
+    | ReducerAction<RovoDevProviderMessageType.ContextAdded, { context: RovoDevContextItem }>
+    | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>;

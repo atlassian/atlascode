@@ -96,6 +96,8 @@ const mockOnCreate = jest.fn();
 const mockFetchUsers = jest.fn();
 const mockFetchImage = jest.fn();
 const mockOnDelete = jest.fn();
+const mockOnCommentTextChange = jest.fn();
+const mockOnEditingCommentChange = jest.fn();
 
 describe('IssueCommentComponent', () => {
     beforeAll(() => {
@@ -114,6 +116,10 @@ describe('IssueCommentComponent', () => {
                 fetchUsers={mockFetchUsers}
                 fetchImage={mockFetchImage}
                 onDelete={mockOnDelete}
+                commentText=""
+                onCommentTextChange={mockOnCommentTextChange}
+                isEditingComment={false}
+                onEditingCommentChange={mockOnEditingCommentChange}
             />,
         );
 
@@ -132,6 +138,10 @@ describe('IssueCommentComponent', () => {
                 fetchUsers={mockFetchUsers}
                 fetchImage={mockFetchImage}
                 onDelete={mockOnDelete}
+                commentText=""
+                onCommentTextChange={mockOnCommentTextChange}
+                isEditingComment={false}
+                onEditingCommentChange={mockOnEditingCommentChange}
             />,
         );
 
@@ -152,6 +162,10 @@ describe('IssueCommentComponent', () => {
                 fetchImage={mockFetchImage}
                 onDelete={mockOnDelete}
                 isRteEnabled={true}
+                commentText=""
+                onCommentTextChange={mockOnCommentTextChange}
+                isEditingComment={false}
+                onEditingCommentChange={mockOnEditingCommentChange}
             />,
         );
 
@@ -176,6 +190,10 @@ describe('IssueCommentComponent', () => {
                 fetchUsers={mockFetchUsers}
                 fetchImage={mockFetchImage}
                 onDelete={mockOnDelete}
+                commentText=""
+                onCommentTextChange={mockOnCommentTextChange}
+                isEditingComment={false}
+                onEditingCommentChange={mockOnEditingCommentChange}
             />,
         );
 
@@ -184,24 +202,35 @@ describe('IssueCommentComponent', () => {
         expect(mockOnDelete).toHaveBeenCalledWith('comment-1');
     });
 
-    it('allows adding a new comment', () => {
-        render(
-            <IssueCommentComponent
-                siteDetails={mockSiteDetails}
-                currentUser={mockCurrentUser}
-                comments={[]}
-                isServiceDeskProject={false}
-                onSave={mockOnSave}
-                onCreate={mockOnCreate}
-                fetchUsers={mockFetchUsers}
-                fetchImage={mockFetchImage}
-                onDelete={mockOnDelete}
-                isRteEnabled={true}
-            />,
-        );
+    it('allows adding a new comment', async () => {
+        const IssueCommentComponentWrapper = () => {
+            const [isEditingComment, setIsEditingComment] = React.useState(false);
+            const [commentText, setCommentText] = React.useState('');
+
+            return (
+                <IssueCommentComponent
+                    siteDetails={mockSiteDetails}
+                    currentUser={mockCurrentUser}
+                    comments={[]}
+                    isServiceDeskProject={false}
+                    onSave={mockOnSave}
+                    onCreate={mockOnCreate}
+                    fetchUsers={mockFetchUsers}
+                    fetchImage={mockFetchImage}
+                    onDelete={mockOnDelete}
+                    isRteEnabled={true}
+                    commentText={commentText}
+                    onCommentTextChange={setCommentText}
+                    isEditingComment={isEditingComment}
+                    onEditingCommentChange={setIsEditingComment}
+                />
+            );
+        };
+
+        render(<IssueCommentComponentWrapper />);
 
         fireEvent.click(screen.getByPlaceholderText('Add a comment...'));
-        fireEvent.click(screen.getByLabelText('rte toggle'));
+        fireEvent.click(await screen.findByLabelText('rte toggle'));
         fireEvent.focus(screen.getByRole('textbox'));
         fireEvent.input(screen.getByRole('textbox'), { target: { value: 'New comment' } });
         fireEvent.click(screen.getByText('Save'));
