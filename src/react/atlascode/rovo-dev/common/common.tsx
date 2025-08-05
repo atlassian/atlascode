@@ -29,7 +29,6 @@ import { ChatMessage, DefaultMessage, ErrorMessage, parseToolReturnMessage } fro
 export const mdParser = new MarkdownIt({
     html: true,
     breaks: true,
-    linkify: true,
     typographer: true,
 });
 
