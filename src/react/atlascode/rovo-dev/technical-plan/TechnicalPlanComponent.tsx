@@ -55,6 +55,7 @@ export const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, 
                         >
                             <QuestionCircleIcon
                                 primaryColor="var(--vscode-charts-green)"
+                                secondaryColor="var(--vscode-editor-background)"
                                 size="small"
                                 label="Clarifying Question"
                             />
