@@ -44,9 +44,18 @@ const emptyState: ViewState = {
     formKey: v4(),
 };
 
+const getFaviconUrl = (siteData: any): string | null => {
+    if (siteData?.baseLinkUrl) {
+        return `${siteData.baseLinkUrl}/favicon.ico`;
+    } else if (siteData?.host) {
+        return `https://${siteData.host}/favicon.ico`;
+    }
+    return null;
+};
+
 const IconOption = (props: any) => {
     const fallbackImg = 'images/jira-icon.svg';
-    const avatarUrl = props.data?.avatarUrl && props.data.avatarUrl.length > 0 ? props.data.avatarUrl : fallbackImg;
+    const avatarUrl = getFaviconUrl(props.data) || fallbackImg;
 
     return (
         <components.Option {...props}>
@@ -70,7 +79,7 @@ const IconOption = (props: any) => {
 
 const IconValue = (props: any) => {
     const fallbackImg = 'images/jira-icon.svg';
-    const avatarUrl = props.data?.avatarUrl && props.data.avatarUrl.length > 0 ? props.data.avatarUrl : fallbackImg;
+    const avatarUrl = getFaviconUrl(props.data) || fallbackImg;
 
     return (
         <components.SingleValue {...props}>
