@@ -58,7 +58,7 @@ export default class PMFBBanner extends React.Component<
         return val;
     };
 
-    render() {
+    override render() {
         const { isOpen } = this.state;
 
         const radioItems = [

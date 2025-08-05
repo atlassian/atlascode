@@ -24,7 +24,7 @@ export class CommitSectionNode extends AbstractBaseNode {
         return item;
     }
 
-    async getChildren(element?: IssueNode): Promise<CommitNode[] | SimpleNode[]> {
+    override async getChildren(element?: IssueNode): Promise<CommitNode[] | SimpleNode[]> {
         if (this.commits.length === 0 && this.loading) {
             return [new SimpleNode('Loading...')];
         }

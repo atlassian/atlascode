@@ -9,7 +9,7 @@ describe('CodePlanButton', () => {
         const { container, getByText } = render(<CodePlanButton execute={mockExecute} />);
 
         expect(container.querySelector('.code-plan-button-container')).toBeTruthy();
-        expect(getByText('Code plan')).toBeTruthy();
+        expect(getByText('Start plan')).toBeTruthy();
     });
 
     it('calls execute function when clicked', () => {
@@ -17,7 +17,7 @@ describe('CodePlanButton', () => {
 
         const { getByText } = render(<CodePlanButton execute={mockExecute} />);
 
-        const button = getByText('Code plan');
+        const button = getByText('Start plan');
         fireEvent.click(button);
 
         expect(mockExecute).toHaveBeenCalledTimes(1);
@@ -38,7 +38,7 @@ describe('CodePlanButton', () => {
         const mockExecute = jest.fn();
         const { getByText } = render(<CodePlanButton execute={mockExecute} disabled={true} />);
 
-        const button = getByText('Code plan');
+        const button = getByText('Start plan');
 
         fireEvent.click(button);
         expect(mockExecute).toHaveBeenCalledTimes(0);

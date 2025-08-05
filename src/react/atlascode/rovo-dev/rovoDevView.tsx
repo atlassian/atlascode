@@ -416,7 +416,6 @@ const RovoDevView: React.FC = () => {
                     });
                     break;
 
-                case RovoDevProviderMessageType.ReturnText:
                 case RovoDevProviderMessageType.CreatePRComplete:
                 case RovoDevProviderMessageType.GetCurrentBranchNameComplete:
                 case RovoDevProviderMessageType.CheckGitChangesComplete:
@@ -537,27 +536,6 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
-    // Function to get the original text of a file for planning diff
-    const getOriginalText = useCallback(
-        async (filePath: string, range?: number[]) => {
-            const uniqueNonce = `${Math.random()}-${Date.now()}`; // Unique identifier for the request
-            const res = await postMessagePromise(
-                {
-                    type: RovoDevViewResponseType.GetOriginalText,
-                    filePath,
-                    range: range && range.length === 2 ? range : undefined,
-                    requestId: uniqueNonce, // Unique identifier for the request
-                },
-                RovoDevProviderMessageType.ReturnText,
-                1500,
-                uniqueNonce,
-            );
-
-            return res.text || '';
-        },
-        [postMessagePromise],
-    );
-
     const isRetryAfterErrorButtonEnabled = useCallback(
         (uid: string) => retryAfterErrorEnabled === uid,
         [retryAfterErrorEnabled],
@@ -595,7 +573,6 @@ const RovoDevView: React.FC = () => {
                     openFile,
                     isRetryAfterErrorButtonEnabled,
                     retryPromptAfterError,
-                    getOriginalText,
                 }}
                 messagingApi={{
                     postMessage,

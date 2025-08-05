@@ -88,7 +88,7 @@ export class JiraIssueWebview
         return ProductJira;
     }
 
-    setIconPath() {
+    override setIconPath() {
         this._panel!.iconPath = Resources.icons.get(iconSet.JIRAICON);
     }
 
@@ -306,7 +306,7 @@ export class JiraIssueWebview
         return '';
     }
 
-    protected async onMessageReceived(msg: Action): Promise<boolean> {
+    protected override async onMessageReceived(msg: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(msg);
 
         if (!handled) {

@@ -55,7 +55,7 @@ export abstract class Explorer extends Disposable {
         }
     }
 
-    dispose() {
+    override dispose() {
         console.log('explorer disposed');
         if (this.treeDataProvider) {
             this.treeDataProvider.dispose();

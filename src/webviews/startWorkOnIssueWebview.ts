@@ -39,7 +39,7 @@ export class StartWorkOnIssueWebview
         return 'startWorkOnIssueScreen';
     }
 
-    setIconPath() {
+    override setIconPath() {
         this._panel!.iconPath = Resources.icons.get(iconSet.JIRAICON);
     }
 
@@ -71,7 +71,7 @@ export class StartWorkOnIssueWebview
         await this.forceUpdateIssue();
     }
 
-    protected async onMessageReceived(e: Action): Promise<boolean> {
+    protected override async onMessageReceived(e: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(e);
 
         if (!handled) {
