@@ -1,5 +1,7 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { authenticateWithBitbucketCloud, connectRepository } from 'e2e/helpers';
+
+import { test } from '../../fixtures/repository-disconnection';
 
 test.skip('Adding Bitbucket repository works', async ({ page, context }) => {
     await authenticateWithBitbucketCloud(page, context);
