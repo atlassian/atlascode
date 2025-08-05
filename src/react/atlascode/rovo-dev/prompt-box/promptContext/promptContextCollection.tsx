@@ -11,7 +11,8 @@ export const PromptContextCollection: React.FC<{
     onToggleActiveItem?: (enabled: boolean) => void;
     readonly?: boolean;
     onRemoveContext?: (item: RovoDevContextItem) => void;
-}> = ({ content, direction = 'row', align = 'left', onToggleActiveItem, readonly = true, onRemoveContext }) => {
+    inChat?: boolean;
+}> = ({ content, direction = 'row', align = 'left', onToggleActiveItem, readonly = true, onRemoveContext, inChat }) => {
     if (content.focusInfo?.invalid && !content.contextItems?.length) {
         return null;
     }
@@ -31,6 +32,7 @@ export const PromptContextCollection: React.FC<{
                 gap: direction === 'column' ? 1 : 4,
                 width: '100%',
                 boxSizing: 'border-box',
+                marginBottom: inChat ? '8px' : 0,
             }}
         >
             {/* Disabled for now in favor of the larger button outside the collection */}

@@ -18,7 +18,6 @@ const chipStyle: React.CSSProperties = {
     opacity: 0.85,
     lineHeight: 1.1,
     maxWidth: 220,
-    marginBottom: '8px',
 };
 
 const iconStyle: React.CSSProperties = {
