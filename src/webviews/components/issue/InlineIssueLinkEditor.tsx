@@ -48,7 +48,7 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
         };
     }
 
-    componentWillReceiveProps(nextProps: any) {
+    override componentWillReceiveProps(nextProps: any) {
         const newState: any = {};
 
         if (nextProps.linkTypes && nextProps.linkTypes !== this.state.linkTypes) {
@@ -111,7 +111,7 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
         });
     };
 
-    render() {
+    override render() {
         return (
             <React.Fragment>
                 <div className="label-and-button">

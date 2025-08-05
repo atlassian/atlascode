@@ -20,7 +20,7 @@ export class PerformanceLogger {
 
     public async promptFirstByteReceived(promptId: string) {
         const measure = Perf.measure(promptId);
-        const evt = await performanceEvent('rovodev.response.timeToFirstByte', measure, {
+        const evt = await performanceEvent('api.rovodev.chat.response.timeToFirstByte', measure, {
             rovoDevSessionId: this.currentSessionId,
             rovoDevPromptId: promptId,
         });
@@ -31,7 +31,7 @@ export class PerformanceLogger {
 
     public async promptFirstMessageReceived(promptId: string) {
         const measure = Perf.measure(promptId);
-        const evt = await performanceEvent('rovodev.response.timeToFirstMessage', measure, {
+        const evt = await performanceEvent('api.rovodev.chat.response.timeToFirstMessage', measure, {
             rovoDevSessionId: this.currentSessionId,
             rovoDevPromptId: promptId,
         });
@@ -42,7 +42,7 @@ export class PerformanceLogger {
 
     public async promptTechnicalPlanReceived(promptId: string) {
         const measure = Perf.measure(promptId);
-        const evt = await performanceEvent('rovodev.response.timeToTechPlan', measure, {
+        const evt = await performanceEvent('api.rovodev.chat.response.timeToTechPlan', measure, {
             rovoDevSessionId: this.currentSessionId,
             rovoDevPromptId: promptId,
         });
@@ -53,7 +53,7 @@ export class PerformanceLogger {
 
     public async promptLastMessageReceived(promptId: string) {
         const measure = Perf.measure(promptId);
-        const evt = await performanceEvent('rovodev.response.timeToLastMessage', measure, {
+        const evt = await performanceEvent('api.rovodev.chat.response.timeToLastMessage', measure, {
             rovoDevSessionId: this.currentSessionId,
             rovoDevPromptId: promptId,
         });

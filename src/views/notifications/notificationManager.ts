@@ -101,7 +101,7 @@ export class NotificationManagerImpl extends Disposable {
         }
     }
 
-    public dispose() {
+    public override dispose() {
         this._disposable.forEach((e) => e.dispose());
     }
 

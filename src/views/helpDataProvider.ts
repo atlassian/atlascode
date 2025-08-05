@@ -12,7 +12,7 @@ export class HelpDataProvider extends BaseTreeDataProvider {
         super();
     }
 
-    getTreeItem(element: AbstractBaseNode) {
+    override getTreeItem(element: AbstractBaseNode) {
         return element.getTreeItem();
     }
 

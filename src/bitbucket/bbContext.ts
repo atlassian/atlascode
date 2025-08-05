@@ -173,7 +173,7 @@ export class BitbucketContext extends Disposable {
         return this._mirrorsCache.getItem<string[]>(hostname) || [];
     }
 
-    dispose() {
+    override dispose() {
         this.disposeForNow();
         this._disposable.dispose();
     }

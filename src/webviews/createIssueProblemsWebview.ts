@@ -29,7 +29,7 @@ export class CreateIssueProblemsWebview extends AbstractReactWebview {
         return ProductJira;
     }
 
-    async createOrShow(column?: ViewColumn, site?: DetailedSiteInfo, project?: Project): Promise<void> {
+    override async createOrShow(column?: ViewColumn, site?: DetailedSiteInfo, project?: Project): Promise<void> {
         await super.createOrShow(column);
         this._site = site;
         this._project = project;

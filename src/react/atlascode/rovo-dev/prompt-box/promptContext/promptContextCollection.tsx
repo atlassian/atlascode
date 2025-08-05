@@ -10,17 +10,13 @@ export const PromptContextCollection: React.FC<{
     align?: 'left' | 'right';
     onToggleActiveItem?: (enabled: boolean) => void;
     readonly?: boolean;
-    onAddContext?: () => void;
     onRemoveContext?: (item: RovoDevContextItem) => void;
-}> = ({
-    content,
-    direction = 'row',
-    align = 'left',
-    onToggleActiveItem,
-    readonly = true,
-    onAddContext,
-    onRemoveContext,
-}) => {
+    inChat?: boolean;
+}> = ({ content, direction = 'row', align = 'left', onToggleActiveItem, readonly = true, onRemoveContext, inChat }) => {
+    if (content.focusInfo?.invalid && !content.contextItems?.length) {
+        return null;
+    }
+
     const flexDirection = direction === 'column' ? 'column' : 'row';
     const justifyContent = align === 'right' ? 'flex-end' : 'flex-start';
     const showFocusInfo = onToggleActiveItem !== undefined || content.focusInfo?.enabled;
@@ -28,7 +24,6 @@ export const PromptContextCollection: React.FC<{
     return (
         <div
             style={{
-                marginBottom: 4,
                 display: 'flex',
                 flexDirection,
                 flexWrap: 'wrap',
@@ -37,6 +32,7 @@ export const PromptContextCollection: React.FC<{
                 gap: direction === 'column' ? 1 : 4,
                 width: '100%',
                 boxSizing: 'border-box',
+                marginBottom: inChat ? '8px' : 0,
             }}
         >
             {/* Disabled for now in favor of the larger button outside the collection */}

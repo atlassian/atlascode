@@ -109,7 +109,8 @@ export default class VotesForm extends React.Component<MyProps, MyState> {
             </div>
         );
     };
-    render() {
+
+    override render() {
         return (
             <div className="ac-inline-items-container">
                 {this.props.allowVoting && <div className="ac-inline-item">{this.getStartStop()}</div>}

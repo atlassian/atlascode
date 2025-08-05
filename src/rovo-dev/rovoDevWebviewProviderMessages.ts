@@ -15,11 +15,11 @@ export const enum RovoDevProviderMessageType {
     NewSession = 'newSession',
     Initialized = 'initialized',
     CancelFailed = 'cancelFailed',
-    ReturnText = 'returnText',
     CreatePRComplete = 'createPRComplete',
     GetCurrentBranchNameComplete = 'getCurrentBranchNameComplete',
     UserFocusUpdated = 'userFocusUpdated',
     ContextAdded = 'contextAdded',
+    CheckGitChangesComplete = 'checkGitChangesComplete',
 }
 
 export interface RovoDevObjectResponse {
@@ -37,8 +37,8 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.NewSession>
     | ReducerAction<RovoDevProviderMessageType.Initialized>
     | ReducerAction<RovoDevProviderMessageType.CancelFailed>
-    | ReducerAction<RovoDevProviderMessageType.ReturnText, { text: string }>
     | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string; error?: string } }>
     | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>
     | ReducerAction<RovoDevProviderMessageType.UserFocusUpdated, { userFocus: RovoDevContextItem }>
-    | ReducerAction<RovoDevProviderMessageType.ContextAdded, { context: RovoDevContextItem }>;
+    | ReducerAction<RovoDevProviderMessageType.ContextAdded, { context: RovoDevContextItem }>
+    | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>;

@@ -55,8 +55,8 @@ import { NotificationManagerImpl } from '../views/notifications/notificationMana
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
 
-const EditJiraIssueUIRenderEventName = 'ui.editJiraIssue.render.lcp';
-const EditJiraIssueUpdatesEventName = 'ui.editJiraIssue.update.lcp';
+const EditJiraIssueUIRenderEventName = 'ui.jira.editJiraIssue.render.lcp';
+const EditJiraIssueUpdatesEventName = 'ui.jira.editJiraIssue.update.lcp';
 
 export class JiraIssueWebview
     extends AbstractIssueEditorWebview
@@ -88,7 +88,7 @@ export class JiraIssueWebview
         return ProductJira;
     }
 
-    setIconPath() {
+    override setIconPath() {
         this._panel!.iconPath = Resources.icons.get(iconSet.JIRAICON);
     }
 
@@ -167,6 +167,7 @@ export class JiraIssueWebview
                 this.updateWatchers(),
                 this.updateVoters(),
                 this.updateRelatedPullRequests(),
+                this.fetchFullHierarchy(),
             ]);
 
             const updatesDuration = timer.measureAndClear(updatePerfMarker);
@@ -180,6 +181,7 @@ export class JiraIssueWebview
             this.isRefeshing = false;
         }
     }
+
     async updateEpicChildren() {
         if (this._issue.isEpic) {
             const site = this._issue.siteDetails;
@@ -304,7 +306,7 @@ export class JiraIssueWebview
         return '';
     }
 
-    protected async onMessageReceived(msg: Action): Promise<boolean> {
+    protected override async onMessageReceived(msg: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(msg);
 
         if (!handled) {
@@ -1018,6 +1020,31 @@ export class JiraIssueWebview
         }
 
         return handled;
+    }
+
+    private async fetchFullHierarchy() {
+        if (!this._issue.parentKey) {
+            return;
+        }
+
+        const hierarchy = [this._issue];
+
+        this.postMessage({ type: 'hierarchyLoading', hierarchy });
+
+        try {
+            let currentParentKey: string | undefined = this._issue.parentKey;
+            while (currentParentKey) {
+                const parent = await fetchMinimalIssue(currentParentKey, this._issue.siteDetails);
+                hierarchy.unshift(parent);
+                currentParentKey = parent.parentKey;
+            }
+        } catch (e) {
+            Logger.error(e, 'Error fetching issue hierarchy');
+        } finally {
+            this.postMessage({ type: 'hierarchyUpdate', hierarchy });
+        }
+
+        return hierarchy;
     }
 
     private async recentPullRequests(): Promise<PullRequestData[]> {

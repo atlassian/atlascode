@@ -51,7 +51,7 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     };
 
-    public render() {
+    public override render() {
         const issueTypeProblems: any[] = [];
         Object.keys(this.state.problems).forEach((problemKey) => {
             const problem = this.state.problems[problemKey];

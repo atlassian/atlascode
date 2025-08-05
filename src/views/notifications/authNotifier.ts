@@ -29,7 +29,7 @@ export class AuthNotifier extends Disposable implements NotificationNotifier {
         this._jiraEnabled = Container.config.jira.enabled;
     }
 
-    public dispose() {
+    public override dispose() {
         this._disposable.forEach((d) => d.dispose());
     }
 

@@ -212,7 +212,7 @@ export const CODE_PLAN_EXECUTE_PROMPT = 'Execute the code plan that you have cre
 // this function scrolls the element to the end, but it prevents scrolling too frequently to avoid the UI to get overloaded.
 // the delay is implemented globally, not per element. which is fine for now, because we only scroll 1 element.
 export const scrollToEnd = (() => {
-    const SCROLL_DELAY = 250;
+    const SCROLL_DELAY = 50;
     let lastScroll: number = 0;
     let scrollTimeout: NodeJS.Timeout | number = 0;
 
@@ -227,12 +227,10 @@ export const scrollToEnd = (() => {
             scrollTimeout = 0;
         }
 
-        const delay = lastScroll - performance.now() + SCROLL_DELAY;
+        const delay = lastScroll + SCROLL_DELAY - performance.now();
 
         if (delay < 0) {
             lastScroll = doScrollNow(element);
-            // schedule one extra scroll to adjust for react rendering asynchronousness
-            scrollTimeout = setTimeout(() => (lastScroll = doScrollNow(element)), SCROLL_DELAY);
         } else {
             scrollTimeout = setTimeout(() => (lastScroll = doScrollNow(element)), delay);
         }

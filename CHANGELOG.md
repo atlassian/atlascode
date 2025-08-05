@@ -2,6 +2,16 @@
 
 ---
 
+## What's new in 3.8.8
+
+### Features
+
+- Implemented full parent hierarchy display for Jira issues
+
+### Bug Fixes
+
+- Fixed a bug where issues would not render due to malformed epic fields (#665)
+
 ## What's new in 3.8.7
 
 ### Features
