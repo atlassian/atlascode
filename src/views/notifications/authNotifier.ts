@@ -41,6 +41,9 @@ export class AuthNotifier extends Disposable implements NotificationNotifier {
     }
 
     public fetchNotifications(): void {
+        if (process.env.ROVODEV_BBY) {
+            return;
+        }
         this.checkJiraAuth();
         // we explicitly are not checking for bitbucket auth here: https://www.loom.com/share/0e96dcef1e524166929057074fc25e40?sid=6edcc48e-7ee8-46cb-a700-14fbd779b6de
     }
