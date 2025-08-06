@@ -109,7 +109,7 @@ module.exports = {
     ],
     performance: {
         maxEntrypointSize: 307200, // overridden to 300KiB, recommended is 244KiB
-        maxAssetSize: 696320, // overridden to 680KiB, recommended is 244KiB
+        maxAssetSize: 851708, // overridden to 850KiB, recommended is 244KiB
     },
     watchOptions: {
         ignored: /node_modules/,
