@@ -6,7 +6,7 @@ export default class Offline extends React.Component<{}, {}> {
         super(props);
     }
 
-    render() {
+    override render() {
         return (
             <ModalTransition>
                 <Modal

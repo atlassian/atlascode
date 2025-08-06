@@ -16,7 +16,7 @@ export class DirectoryNode extends AbstractBaseNode {
         return item;
     }
 
-    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
+    override async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         const directoryNodes: DirectoryNode[] = Array.from(
             this.directoryData.subdirs.values(),
             (subdir) => new DirectoryNode(subdir),

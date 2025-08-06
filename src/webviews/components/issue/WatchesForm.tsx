@@ -116,7 +116,8 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
             </div>
         );
     };
-    render() {
+
+    override render() {
         const commonSelectProps: any = {
             isMulti: false,
             className: 'ac-select-container',

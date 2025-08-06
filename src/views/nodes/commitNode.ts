@@ -48,7 +48,7 @@ export class CommitNode extends AbstractBaseNode {
         }
     }
 
-    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
+    override async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (!element) {
             return await this.fetchDataAndProcessChildren();
         }

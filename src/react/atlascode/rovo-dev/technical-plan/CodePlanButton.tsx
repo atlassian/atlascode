@@ -9,7 +9,7 @@ export const CodePlanButton: React.FC<CodePlanButtonProps> = ({ execute, disable
     return (
         <div className="code-plan-button-container">
             <button disabled={disabled} className="code-plan-button" onClick={() => execute()}>
-                <span>Code plan</span>
+                <span>Start plan</span>
             </button>
         </div>
     );

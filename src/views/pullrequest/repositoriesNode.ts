@@ -145,7 +145,7 @@ export class RepositoriesNode extends AbstractBaseNode {
         return this.treeItem;
     }
 
-    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
+    override async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (element) {
             return element.getChildren();
         }

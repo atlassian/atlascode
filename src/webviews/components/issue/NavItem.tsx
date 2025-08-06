@@ -13,7 +13,7 @@ export default class NavItem extends React.Component<
     },
     {}
 > {
-    render() {
+    override render() {
         return (
             <div className="ac-icon-with-text">
                 {this.props.iconUrl && <img style={{ paddingRight: '5px' }} src={this.props.iconUrl} />}

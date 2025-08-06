@@ -26,7 +26,7 @@ export class JiraProjectManager extends Disposable {
         super(() => this.dispose());
     }
 
-    dispose() {}
+    override dispose() {}
 
     public async getProjectForKey(site: DetailedSiteInfo, projectKey: string): Promise<Project | undefined> {
         if (projectKey.trim() === '') {

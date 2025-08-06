@@ -30,7 +30,7 @@ export const ChatMessageItem: React.FC<{
             </div>
             {msg.source === 'User' && msg.context && (
                 <div className="message-context">
-                    <PromptContextCollection content={msg.context} direction="column" align="right" />
+                    <PromptContextCollection content={msg.context} direction="column" align="right" inChat={true} />
                 </div>
             )}
         </>

@@ -64,7 +64,7 @@ export default class IssueList extends React.Component<
         super(props);
     }
 
-    render() {
+    override render() {
         return (
             <TableTree
                 columns={[IssueKey, Summary, Priority, StatusColumn]}

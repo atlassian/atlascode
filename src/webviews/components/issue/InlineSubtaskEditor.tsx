@@ -62,7 +62,7 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
         };
     }
 
-    componentWillReceiveProps(nextProps: any) {
+    override componentWillReceiveProps(nextProps: any) {
         const newState: any = {};
 
         if (nextProps.subtaskTypes && nextProps.subtaskTypes !== this.state.subtaskTypes) {
@@ -105,7 +105,7 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
         });
     };
 
-    render() {
+    override render() {
         return (
             <React.Fragment>
                 <div className="label-and-button">

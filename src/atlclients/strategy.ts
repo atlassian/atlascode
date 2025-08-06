@@ -118,7 +118,7 @@ class JiraStrategy extends Strategy {
 }
 
 class JiraDevStrategy extends JiraStrategy {
-    public tokenAuthorizationData(code: string): string {
+    public override tokenAuthorizationData(code: string): string {
         const data = JSON.stringify({
             grant_type: 'authorization_code',
             code: code,
@@ -130,7 +130,7 @@ class JiraDevStrategy extends JiraStrategy {
         return data;
     }
 
-    public authorizeUrl(state: string): string {
+    public override authorizeUrl(state: string): string {
         if (!this.data.scope || !this.data.authParams) {
             throw new Error('No scope or authParams for this strategy');
         }
