@@ -7,7 +7,6 @@ test.skip('Adding Bitbucket repository works', async ({ page, context }) => {
 
     await connectRepository(page);
 
-    // const createPullRequestButton = page.getByRole('treeitem', { name: 'Create pull request' });
     const createPullRequestButton = page.getByRole('treeitem', { name: 'Create pull request' });
     await createPullRequestButton.waitFor({ state: 'visible' });
 
