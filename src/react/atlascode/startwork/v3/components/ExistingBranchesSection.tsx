@@ -45,7 +45,6 @@ export const ExistingBranchesSection: React.FC<ExistingBranchesSectionProps> = (
         ];
     }, [selectedRepository, issueKey]);
 
-    // Don't render if no existing branches
     if (existingBranches.length === 0) {
         return null;
     }

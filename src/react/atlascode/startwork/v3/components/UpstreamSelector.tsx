@@ -18,7 +18,6 @@ export const UpstreamSelector: React.FC<UpstreamSelectorProps> = ({
         onUpstreamChange(event.target.value as string);
     };
 
-    // Don't render if there's only one remote or no repository
     if (!selectedRepository || selectedRepository.workspaceRepo.siteRemotes.length <= 1) {
         return null;
     }
