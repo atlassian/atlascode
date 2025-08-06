@@ -36,6 +36,22 @@ services:
         expose:
             - 443
 
+    wiremock-jira-dc:
+        image: wiremock/wiremock
+        command: >
+            --https-port 443
+            --verbose
+            --https-keystore /home/wiremock_ssl_certs/wiremock-jira-dc.p12
+        volumes:
+            - ./wiremock-mappings/jira-dc:/home/wiremock/mappings
+            - ./sslcerts:/home/wiremock_ssl_certs
+        networks:
+            e2e:
+                aliases:
+                    - jira.mockeddomain.com
+        expose:
+            - 443
+
     wiremock-bitbucket:
         image: wiremock/wiremock
         command: >
@@ -64,6 +80,7 @@ services:
         depends_on:
             - wiremock-mockedteams
             - wiremock-bitbucket
+            - wiremock-jira-dc
         networks:
             - e2e
         ports:
