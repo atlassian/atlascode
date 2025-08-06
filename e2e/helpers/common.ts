@@ -9,8 +9,6 @@ export const openAtlassianSettings = async (page: Page, itemName: string) => {
     await page.getByRole('tab', { name: 'Atlassian' }).click();
     await page.waitForTimeout(250);
 
-    await page.getByRole('tab', { name: 'Getting Started' }).getByLabel(/close/i).click();
-
     await page.getByRole('treeitem', { name: itemName }).click();
     await page.waitForTimeout(250);
 
