@@ -80,7 +80,6 @@ services:
         depends_on:
             - wiremock-mockedteams
             - wiremock-bitbucket
-            - wiremock-jira-dc
         networks:
             - e2e
         ports:
