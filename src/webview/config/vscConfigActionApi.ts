@@ -49,7 +49,7 @@ export class VSCConfigActionApi implements ConfigActionApi {
 
     public async clearAuth(site: DetailedSiteInfo): Promise<void> {
         await Container.clientManager.removeClient(site);
-        Container.siteManager.removeSite(site);
+        await Container.siteManager.removeSite(site);
     }
 
     public async fetchJqlOptions(site: DetailedSiteInfo): Promise<JQLAutocompleteData> {

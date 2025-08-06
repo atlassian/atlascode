@@ -9,6 +9,7 @@
 ### Bug Fixes
 
 - Fixed a bug where Jira site icon is broken in create Jira issue page
+- Fixed a bug with getting the error when deleting multiple instances
 
 ## What's new in 3.8.8
 
