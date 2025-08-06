@@ -579,3 +579,11 @@ body {
     outline: var(--vscode-focusBorder) solid 1px;
 }
 
+.ai-disclaimer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground);
+    margin-top: 8px;
+    opacity: 0.7;
+}
+
