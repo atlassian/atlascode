@@ -24,7 +24,6 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
         [onRepositoryChange, repoData],
     );
 
-    // Don't render if only one repository
     if (repoData.length <= 1) {
         return null;
     }

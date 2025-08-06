@@ -45,10 +45,11 @@ const StartWorkPageV3: React.FunctionComponent = () => {
                 setSelectedBranchType(defaultRepo.branchTypes[0]);
             }
 
-            // Set default upstream
-            setUpstream(defaultRepo.workspaceRepo.mainSiteRemote.remote.name);
+            if (!upstream) {
+                setUpstream(defaultRepo.workspaceRepo.mainSiteRemote.remote.name);
+            }
         }
-    }, [state.repoData]);
+    }, [state.repoData, upstream]);
 
     // Generate branch name when dependencies change
     useEffect(() => {
@@ -63,19 +64,22 @@ const StartWorkPageV3: React.FunctionComponent = () => {
         }
     }, [selectedRepository, selectedBranchType, state.issue, state.customTemplate]);
 
-    const handleRepositoryChange = useCallback((repository: RepoData) => {
-        setSelectedRepository(repository);
-        const defaultSourceBranch = getDefaultSourceBranch(repository);
-        setSourceBranch(defaultSourceBranch);
+    const handleRepositoryChange = useCallback(
+        (repository: RepoData) => {
+            setSelectedRepository(repository);
+            const defaultSourceBranch = getDefaultSourceBranch(repository);
+            setSourceBranch(defaultSourceBranch);
 
-        // Set default branch type for new repository
-        if (repository.branchTypes && repository.branchTypes.length > 0) {
-            setSelectedBranchType(repository.branchTypes[0]);
-        }
+            if (repository.branchTypes && repository.branchTypes.length > 0) {
+                setSelectedBranchType(repository.branchTypes[0]);
+            }
 
-        // Set default upstream for new repository
-        setUpstream(repository.workspaceRepo.mainSiteRemote.remote.name);
-    }, []);
+            if (!upstream) {
+                setUpstream(repository.workspaceRepo.mainSiteRemote.remote.name);
+            }
+        },
+        [upstream],
+    );
 
     const handleBranchTypeChange = useCallback((branchType: { kind: string; prefix: string }) => {
         setSelectedBranchType(branchType);

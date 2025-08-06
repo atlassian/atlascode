@@ -34,7 +34,6 @@ export const BranchPrefixSelector: React.FC<BranchPrefixSelectorProps> = ({
 
     const hasOptions = (selectedRepository?.branchTypes?.length || 0) > 0 || convertedCustomPrefixes.length > 0;
 
-    // Don't render if no options available
     if (!hasOptions) {
         return null;
     }
