@@ -85,8 +85,5 @@ generate_service_cert "wiremock-mockedteams" "mockedteams.atlassian.net" "jira.m
 # # Generates a certificate for bitbucket.mockeddomain.com
 generate_service_cert "wiremock-bitbucket" "bitbucket.mockeddomain.com"
 
-# Generates a certificate for jira.mockeddomain.com
-generate_service_cert "wiremock-jira-dc" "jira.mockeddomain.com"
-
 rm rootCA.key
 rm rootCA.srl
