@@ -56,9 +56,6 @@ export const BitbucketPanel: React.FunctionComponent<BitbucketPanelProps> = ({
                                 relatedJiraIssues={
                                     config[`${ConfigSection.Bitbucket}.explorer.relatedJiraIssues.enabled`]
                                 }
-                                relatedBitbucketIssues={
-                                    config[`${ConfigSection.Bitbucket}.explorer.relatedBitbucketIssues.enabled`]
-                                }
                                 pullRequestCreated={
                                     config[`${ConfigSection.Bitbucket}.explorer.notifications.pullRequestCreated`]
                                 }

@@ -987,18 +987,6 @@
                     "description": "Enables showing the welcome screen when a new version is installed",
                     "scope": "window"
                 },
-                "atlascode.onlineCheckerUrls": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "default": [
-                        "https://www.atlassian.com",
-                        "https://bitbucket.org"
-                    ],
-                    "description": "Online Checker will ping these URLs to determine online status",
-                    "scope": "window"
-                },
                 "atlascode.jira.enabled": {
                     "type": "boolean",
                     "default": true,
