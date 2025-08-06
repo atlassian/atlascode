@@ -2,6 +2,14 @@
 
 ---
 
+## What's new in 3.8.9
+
+### Features
+
+- Added the possibility to remove a reviewer from a PR
+
+### Bug Fixes
+
 ## What's new in 3.8.8
 
 ### Features
@@ -18,7 +26,6 @@
 
 - Update logic of selecting the default project and site to the most relevant one for the user on the Creating a JIRA issue page
 - Added filtering for options and error message in projects field on Create Jira issue page.
-- Added the possibility to remove a reviewer from a PR
 
 ### Bug Fixes
 
