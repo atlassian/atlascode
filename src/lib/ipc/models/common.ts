@@ -11,7 +11,6 @@ export enum WebViewID {
     BitbucketIssueWebview = 'bitbucketIssueScreen',
     CreateBitbucketIssueWebview = 'createBitbucketIssueScreen',
     ConfigWebview = 'atlascodeSettings',
-    OnboardingWebview = 'atlascodeOnboardingScreen',
     WelcomeWebview = 'atlascodeWelcomeScreen',
     StartWork = 'startWorkOnIssueScreen',
     PullRequestDetailsWebview = 'pullRequestDetailsScreen',

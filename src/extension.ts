@@ -28,7 +28,7 @@ import {
 import { registerResources } from './resources';
 import { deactivateRovoDevProcessManager, initializeRovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { GitExtension } from './typings/git';
-import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
+import { FeatureFlagClient, Features } from './util/featureFlags';
 import Performance from './util/perf';
 import { NotificationManagerImpl } from './views/notifications/notificationManager';
 
@@ -42,7 +42,7 @@ export async function activate(context: ExtensionContext) {
 
     const atlascode = extensions.getExtension(ExtensionId)!;
     const atlascodeVersion = atlascode.packageJSON.version;
-    const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
+    const previousVersion = undefined;
 
     registerResources(context);
 
@@ -87,14 +87,8 @@ export async function activate(context: ExtensionContext) {
     });
 
     if (!process.env.ROVODEV_BBY) {
-        // new user for auth exp
         if (previousVersion === undefined) {
-            const expVal = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeOnboardingExperiment);
-            if (expVal) {
-                commands.executeCommand(Commands.ShowOnboardingFlow);
-            } else {
-                commands.executeCommand(Commands.ShowOnboardingPage);
-            }
+            commands.executeCommand(Commands.ShowOnboardingFlow);
         } else {
             showWelcomePage(atlascodeVersion, previousVersion);
         }

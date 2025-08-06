@@ -20,7 +20,6 @@ import { JiraProjectManager } from './jira/projectManager';
 import { JiraSettingsManager } from './jira/settingsManager';
 import { CancellationManager } from './lib/cancellation';
 import { ConfigAction } from './lib/ipc/fromUI/config';
-import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
 import { PipelineSummaryAction } from './lib/ipc/fromUI/pipelineSummary';
 import { PullRequestDetailsAction } from './lib/ipc/fromUI/pullRequestDetails';
 import { StartWorkAction } from './lib/ipc/fromUI/startWork';
@@ -35,7 +34,7 @@ import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider'
 import { RovoDevDecorator } from './rovo-dev/rovoDevDecorator';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
-import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
+import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
 import { FeatureFlagClient, FeatureFlagClientInitError } from './util/featureFlags';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
@@ -51,8 +50,6 @@ import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
 import { ExplorerFocusManager } from './webview/ExplorerFocusManager';
 import { MultiWebview } from './webview/multiViewFactory';
-import { VSCOnboardingActionApi } from './webview/onboarding/vscOnboardingActionApi';
-import { VSCOnboardingWebviewControllerFactory } from './webview/onboarding/vscOnboardingWebviewControllerFactory';
 import { PipelineSummaryActionImplementation } from './webview/pipelines/pipelineSummaryActionImplementation';
 import { PipelineSummaryWebviewControllerFactory } from './webview/pipelines/pipelineSummaryWebviewControllerFactory';
 import { VSCCreatePullRequestActionApi } from './webview/pullrequest/vscCreatePullRequestActionImpl';
@@ -124,17 +121,6 @@ export class Container {
             this._analyticsApi,
         );
 
-        const onboardingV2ViewFactory = new SingleWebview<any, OnboardingAction>(
-            context.extensionPath,
-            new VSCOnboardingWebviewControllerFactory(
-                new VSCOnboardingActionApi(this._analyticsApi),
-                this._commonMessageHandler,
-                this._analyticsApi,
-                ONBOARDING_URL,
-            ),
-            this.analyticsApi,
-        );
-
         const startWorkV2ViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
             context.extensionPath,
             new VSCStartWorkWebviewControllerFactory(
@@ -166,7 +152,6 @@ export class Container {
         );
 
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
-        context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
         context.subscriptions.push((this._startWorkV3WebviewFactory = startWorkV3ViewFactory));
         context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
@@ -359,11 +344,6 @@ export class Container {
     private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;
     public static get settingsWebviewFactory() {
         return this._settingsWebviewFactory;
-    }
-
-    private static _onboardingWebviewFactory: SingleWebview<any, OnboardingAction>;
-    public static get onboardingWebviewFactory() {
-        return this._onboardingWebviewFactory;
     }
 
     private static _pullRequestDetailsWebviewFactory: MultiWebview<any, PullRequestDetailsAction>;
