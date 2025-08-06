@@ -15,6 +15,7 @@ import {
 import { CredentialManager } from './atlclients/authStore';
 import { configuration } from './config/configuration';
 import { Container } from './container';
+import { Logger } from './logger';
 
 export type SitesAvailableUpdateEvent = {
     sites: DetailedSiteInfo[];
@@ -111,26 +112,31 @@ export class SiteManager extends Disposable {
         }
     }
 
-    async onDidAuthChange(e: AuthInfoEvent) {
+    onDidAuthChange(e: AuthInfoEvent) {
         if (isRemoveAuthEvent(e)) {
             const deadSites = this.getSitesAvailable(e.product).filter((site) => site.credentialId === e.credentialId);
 
-            // Remove all sites sharing the same credentials in parallel
-            // Don't remove credentials again (false) and don't fire individual events (false)
-            const removalPromises = deadSites.map(async (s) => await this.removeSite(s, false, false));
-            await Promise.all(removalPromises);
-
             if (deadSites.length > 0) {
-                this._onDidSitesAvailableChange.fire({
-                    sites: this.getSitesAvailable(e.product),
-                    product: e.product,
-                });
+                this.handleSiteRemoval(deadSites, e.product);
             }
         } else if (isUpdateAuthEvent(e)) {
             this._onDidSitesAvailableChange.fire({
                 sites: this.getSitesAvailable(e.site.product),
                 product: e.site.product,
             });
+        }
+    }
+
+    private async handleSiteRemoval(deadSites: DetailedSiteInfo[], product: Product): Promise<void> {
+        try {
+            const removalPromises = deadSites.map(async (s) => await this.removeSite(s, false, false));
+            await Promise.all(removalPromises);
+            this._onDidSitesAvailableChange.fire({
+                sites: this.getSitesAvailable(product),
+                product,
+            });
+        } catch (error) {
+            Logger.error(error, 'Error during async site removal');
         }
     }
 
