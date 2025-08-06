@@ -4,8 +4,6 @@
 
 ## What's new in 3.8.9
 
-### Features
-
 ### Bug Fixes
 
 - Removed setting options that had no practical or business logic use.
