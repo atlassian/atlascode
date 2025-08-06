@@ -475,7 +475,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     handleRefresh = () => {
-        this.setState({ isSomethingLoading: true, loadingField: 'refresh' });
         this.postMessage({ action: 'refreshIssue' });
     };
 
