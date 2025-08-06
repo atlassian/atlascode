@@ -45,7 +45,7 @@ export class SiteManager extends Disposable {
         this._disposable = Disposable.from(Container.credentialManager.onDidAuthChange(this.onDidAuthChange, this));
     }
 
-    dispose() {
+    override dispose() {
         this._disposable.dispose();
         this._onDidSitesAvailableChange.dispose();
     }

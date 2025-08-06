@@ -62,7 +62,8 @@ export class AuthStatusBar extends Disposable {
             await this.generateStatusbarItem(ProductBitbucket);
         }
     }
-    dispose() {
+
+    override dispose() {
         this._authenticationStatusBarItems.forEach((item) => {
             item.dispose();
         });

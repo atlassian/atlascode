@@ -34,7 +34,7 @@ export class ParticipantList extends React.Component<Props, State> {
         return result;
     }
 
-    render() {
+    override render() {
         return <React.Fragment>{this.userList()}</React.Fragment>;
     }
 }

@@ -83,7 +83,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         return this.state.key.substring(0, this.state.key.indexOf('-'));
     };
 
-    onMessageReceived(e: any): boolean {
+    override onMessageReceived(e: any): boolean {
         const handled = super.onMessageReceived(e);
 
         if (!handled) {
@@ -208,7 +208,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         );
     };
 
-    protected handleInlineEdit = async (field: FieldUI, newValue: any) => {
+    protected override handleInlineEdit = async (field: FieldUI, newValue: any) => {
         switch (field.uiType) {
             case UIType.Subtasks: {
                 this.setState({ isSomethingLoading: true, loadingField: field.key });
@@ -315,7 +315,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         );
     };
 
-    protected handleCreateComment = (commentBody: string, restriction?: CommentVisibility) => {
+    protected override handleCreateComment = (commentBody: string, restriction?: CommentVisibility) => {
         this.setState({ isSomethingLoading: true, loadingField: 'comment', commentText: '', isEditingComment: false });
         const commentAction: IssueCommentAction = {
             action: 'comment',
@@ -752,7 +752,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         );
     }
 
-    public render() {
+    public override render() {
         if (
             (Object.keys(this.state.fields).length < 1 || Object.keys(this.state.fieldValues).length < 1) &&
             !this.state.isErrorBannerOpen &&

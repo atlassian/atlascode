@@ -39,7 +39,7 @@ export class ExplorerFocusManager extends Disposable {
         return this._onFocusEvent.event;
     }
 
-    dispose() {
+    override dispose() {
         this._onFocusEvent.dispose();
         this._disposable.dispose();
     }

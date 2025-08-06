@@ -31,7 +31,7 @@ export class IssueNode extends AbstractBaseNode {
         return treeItem;
     }
 
-    async getChildren(element?: IssueNode): Promise<IssueNode[]> {
+    override async getChildren(element?: IssueNode): Promise<IssueNode[]> {
         if (element) {
             return element.getChildren();
         }

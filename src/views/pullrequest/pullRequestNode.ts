@@ -179,7 +179,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         this.refresh();
     }
 
-    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
+    override async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (element) {
             return element.getChildren();
         }
@@ -228,7 +228,7 @@ export class DescriptionNode extends AbstractBaseNode {
         return item;
     }
 
-    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
+    override async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         return [];
     }
 }
@@ -251,7 +251,7 @@ export class NextPageNode extends AbstractBaseNode {
         return item;
     }
 
-    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
+    override async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         return [];
     }
 }

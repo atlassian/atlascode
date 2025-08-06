@@ -77,7 +77,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         this.state = emptyState;
     }
 
-    onMessageReceived(e: any): boolean {
+    override onMessageReceived(e: any): boolean {
         let handled = super.onMessageReceived(e);
 
         if (!handled) {
@@ -242,7 +242,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         }
     };
 
-    protected handleInlineEdit = async (field: FieldUI, newValue: any) => {
+    protected override handleInlineEdit = async (field: FieldUI, newValue: any) => {
         let typedVal = newValue;
         let fieldkey = field.key;
 
@@ -284,15 +284,15 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                 project: newValue,
                 fieldValues: this.state.fieldValues,
             });
-        }
-
-        if (field.valueType === ValueType.IssueType) {
+        } else if (field.valueType === ValueType.IssueType) {
             this.setState({ loadingField: field.key, isSomethingLoading: true });
             this.postMessage({
                 action: 'setIssueType',
                 issueType: newValue,
                 fieldValues: this.state.fieldValues,
             });
+        } else {
+            this.setState({ isSomethingLoading: false, loadingField: '' });
         }
     };
 
@@ -346,7 +346,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         );
     };
 
-    public render() {
+    public override render() {
         if (!this.state.fieldValues['issuetype']?.id && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refresh' });
             return <AtlLoader />;

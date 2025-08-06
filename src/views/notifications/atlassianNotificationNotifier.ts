@@ -38,7 +38,7 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
         this._disposable.push(Disposable.from(Container.credentialManager.onDidAuthChange(this.onDidAuthChange, this)));
     }
 
-    public dispose() {
+    public override dispose() {
         this._disposable.forEach((e) => e.dispose());
     }
 
