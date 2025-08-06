@@ -101,19 +101,6 @@ const StartWorkPageV3: React.FunctionComponent = () => {
         setSubmitState('submitting');
 
         try {
-            console.log('Form data:', {
-                transitionIssueEnabled,
-                selectedTransition,
-                branchSetupEnabled,
-                pushBranchEnabled,
-                localBranch,
-                sourceBranch,
-                selectedRepository,
-                selectedBranchType,
-                upstream,
-            });
-
-            // TODO: Replace with actual API call
             if (!selectedRepository) {
                 throw new Error('No repository selected');
             }
@@ -149,7 +136,6 @@ const StartWorkPageV3: React.FunctionComponent = () => {
         localBranch,
         sourceBranch,
         selectedRepository,
-        selectedBranchType,
         upstream,
     ]);
 
