@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/rest/api/2/mypermissions",
+     "queryParameters": {
+      "projectKey": {
+        "matches": ".*"
+      },
+      "permissions": {
+        "equalTo": "CREATE_ISSUES"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": "{\"permissions\":{\"CREATE_ISSUES\":{\"id\":\"11\",\"key\":\"CREATE_ISSUES\",\"name\":\"Create Issues\",\"type\":\"PROJECT\",\"description\":\"Ability to create issues.\",\"havePermission\":true}}}",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
