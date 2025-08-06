@@ -8,14 +8,18 @@ import { FeatureFlagClient, Features } from '../../util/featureFlags';
 export async function startWorkOnIssue(issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) {
     let issue: MinimalIssue<DetailedSiteInfo>;
 
-    if (isMinimalIssue(issueOrKeyAndSite)) {
-        issue = issueOrKeyAndSite;
-    } else {
+    if (FeatureFlagClient.checkGate(Features.StartWorkV3)) {
         issue = await fetchMinimalIssue(issueOrKeyAndSite.key, issueOrKeyAndSite.siteDetails);
-
-        if (!issue) {
-            throw new Error(`Jira issue ${issueOrKeyAndSite.key} not found in site ${issueOrKeyAndSite.siteDetails}`);
+    } else {
+        if (isMinimalIssue(issueOrKeyAndSite)) {
+            issue = issueOrKeyAndSite;
+        } else {
+            issue = await fetchMinimalIssue(issueOrKeyAndSite.key, issueOrKeyAndSite.siteDetails);
         }
+    }
+
+    if (!issue) {
+        throw new Error(`Jira issue ${issueOrKeyAndSite.key} not found in site ${issueOrKeyAndSite.siteDetails}`);
     }
 
     const { startWorkV3WebviewFactory, startWorkWebviewFactory } = Container;
