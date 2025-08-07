@@ -11,7 +11,8 @@
 ### Bug Fixes
 
 - Fixed a bug where issues would not render due to malformed epic fields (#665)
-
+- Fixed status button in smaller screen size
+- 
 ## What's new in 3.8.7
 
 ### Features
