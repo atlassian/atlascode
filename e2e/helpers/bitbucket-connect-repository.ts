@@ -10,6 +10,7 @@ const goToExtensionTab = async (page: Page) => {
 
 const addRepo = async (page: Page) => {
     await page.getByRole('treeitem', { name: 'Add a repository to this workspace' }).click();
+    await page.waitForTimeout(250);
 
     const pathInput = page.getByRole('textbox', { name: 'Type to narrow down results. - Add Folder to Workspace' });
     await pathInput.waitFor({ state: 'visible' });
