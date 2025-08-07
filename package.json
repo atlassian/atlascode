@@ -987,18 +987,6 @@
                     "description": "Enables showing the welcome screen when a new version is installed",
                     "scope": "window"
                 },
-                "atlascode.onlineCheckerUrls": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "default": [
-                        "https://www.atlassian.com",
-                        "https://bitbucket.org"
-                    ],
-                    "description": "Online Checker will ping these URLs to determine online status",
-                    "scope": "window"
-                },
                 "atlascode.jira.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -1471,7 +1459,7 @@
         "@types/uuid": "^10.0.0",
         "@types/vscode": ">=1.77.0 <=1.96.0",
         "@types/websocket": "^1.0.0",
-        "@vscode/vsce": "^3.4.2",
+        "@vscode/vsce": "^3.6.0",
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
         "autoprefixer": "^10.4.20",
@@ -1494,7 +1482,7 @@
         "jest-mock-vscode": "^4.4.0",
         "mini-css-extract-plugin": "^2.9.1",
         "nyc": "^17.1.0",
-        "ovsx": "^0.10.1",
+        "ovsx": "^0.10.5",
         "path-browserify": "^1.0.1",
         "playwright": "1.53.0",
         "postcss-flexbugs-fixes": "^5.0.2",
