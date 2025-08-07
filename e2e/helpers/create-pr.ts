@@ -17,7 +17,6 @@ export const createPullrequest = async (page: Page) => {
         .first()
         .click();
 
-    const createPRButton = createPRFrame.getByRole('button', { name: 'Create pull request' });
-    await createPRButton.click();
+    await createPRFrame.getByRole('button', { name: 'Create pull request' }).click();
     await page.waitForTimeout(250);
 };
