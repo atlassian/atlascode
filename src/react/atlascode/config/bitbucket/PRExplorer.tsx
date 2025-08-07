@@ -9,7 +9,6 @@ import { ConfigControllerContext } from '../configController';
 type PRExplorerProps = {
     enabled: boolean;
     relatedJiraIssues: boolean;
-    relatedBitbucketIssues: boolean;
     pullRequestCreated: boolean;
     nestFiles: boolean;
     refreshInterval: number;
@@ -25,7 +24,7 @@ const useStyles = makeStyles(
 );
 
 export const PRExplorer: React.FunctionComponent<PRExplorerProps> = memo(
-    ({ enabled, relatedJiraIssues, relatedBitbucketIssues, pullRequestCreated, nestFiles, refreshInterval }) => {
+    ({ enabled, relatedJiraIssues, pullRequestCreated, nestFiles, refreshInterval }) => {
         const classes = useStyles();
         const controller = useContext(ConfigControllerContext);
 
@@ -84,25 +83,6 @@ export const PRExplorer: React.FunctionComponent<PRExplorerProps> = memo(
                             />
                         }
                         label="Show related Jira issues for Bitbucket pull requests"
-                        spacing={1}
-                        variant="body1"
-                    />
-                </Grid>
-                <Grid item>
-                    <ToggleWithLabel
-                        control={
-                            <Switch
-                                className={classes.indent}
-                                size="small"
-                                color="primary"
-                                id="bbRelatedBitbucketIssues"
-                                value="explorer.relatedBitbucketIssues.enabled"
-                                checked={relatedBitbucketIssues}
-                                disabled={!enabled}
-                                onChange={handleChange}
-                            />
-                        }
-                        label="Show related Bitbucket issues for pull requests"
                         spacing={1}
                         variant="body1"
                     />

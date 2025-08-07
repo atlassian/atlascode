@@ -12,6 +12,13 @@ const workspaceProcessMap: { [workspacePath: string]: ChildProcess } = {};
 
 let disposables: Disposable[] = [];
 
+// Reference to the RovoDev webview provider for sending errors to chat
+let rovoDevWebviewProvider: any = null;
+
+export function setRovoDevWebviewProvider(provider: any) {
+    rovoDevWebviewProvider = provider;
+}
+
 export function initializeRovoDevProcessManager(context: ExtensionContext) {
     // Listen for workspace folder changes
     const listener = workspace.onDidChangeWorkspaceFolders((event) => {
@@ -85,7 +92,12 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
 
     access(rovoDevPath, constants.X_OK, (err) => {
         if (err) {
-            window.showErrorMessage(`Rovo Dev: Executable not found at path: ${rovoDevPath}`);
+            const errorMsg = `Rovo Dev: Executable not found at path: ${rovoDevPath}`;
+            if (rovoDevWebviewProvider) {
+                rovoDevWebviewProvider.sendErrorToChat(errorMsg);
+            } else {
+                window.showErrorMessage(errorMsg);
+            }
             return;
         }
         getCloudCredentials().then((creds) => {
@@ -93,9 +105,9 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
             const { username, key, host } = creds || {};
 
             if (host) {
-                window.showInformationMessage(`Rovo Dev: using cloud credentials for ${username} on ${host}`);
+                console.log(`Rovo Dev: using cloud credentials for ${username} on ${host}`);
             } else {
-                window.showInformationMessage('Rovo Dev: No cloud credentials found. Using default authentication.');
+                console.log('Rovo Dev: No cloud credentials found. Using default authentication.');
             }
 
             const env: NodeJS.ProcessEnv = {
@@ -112,12 +124,18 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
                 env,
             }).on('exit', (code, signal) => {
                 if (code !== 0) {
+                    let errorMsg: string;
                     if (stderrData.includes('auth token')) {
-                        // internal credentials, no VPN connection
-                        window.showErrorMessage(`Rovo Dev: Is your VPN off? (internal credential error)`);
+                        errorMsg = `Rovo Dev: Please login by providing an API Token. You can do this via Atlassian: Open Settings -> Authentication -> Other Options`;
                     } else {
                         // default error message
-                        window.showErrorMessage(`Rovo Dev: Process exited with code ${code}, see the log for details.`);
+                        errorMsg = `Rovo Dev: Process exited with code ${code}, see the log for details.`;
+                    }
+
+                    if (rovoDevWebviewProvider) {
+                        rovoDevWebviewProvider.sendErrorToChat(errorMsg);
+                    } else {
+                        window.showErrorMessage(errorMsg);
                     }
 
                     console.error(
@@ -147,16 +165,14 @@ function showWorkspaceLoadedMessageAndStartProcess(context: ExtensionContext) {
     const globalPort = process.env[rovodevInfo.envVars.port];
     if (globalPort) {
         if (!process.env.ROVODEV_BBY) {
-            window.showInformationMessage(
-                `Rovo Dev: Expecting Rovo Dev on port ${globalPort}. No new process started.`,
-            );
+            console.log(`Rovo Dev: Expecting Rovo Dev on port ${globalPort}. No new process started.`);
         }
         return;
     }
 
     for (const folder of folders) {
         const port = getOrAssignPortForWorkspace(context, folder.uri.fsPath);
-        window.showInformationMessage(`Rovo Dev: Workspace loaded: ${folder.name} (port ${port})`);
+        console.log(`Rovo Dev: Workspace loaded: ${folder.name} (port ${port})`);
         startWorkspaceProcess(context, folder.uri.fsPath, port);
     }
 }
@@ -166,12 +182,12 @@ function showWorkspaceClosedMessageAndStopProcess(
 ) {
     for (const folder of removedFolders) {
         stopWorkspaceProcess(folder.uri.fsPath);
-        window.showInformationMessage(`Rovo Dev: Workspace closed: ${folder.name}`);
+        console.log(`Rovo Dev: Workspace closed: ${folder.name}`);
     }
 }
 
 function showWorkspaceClosedMessage() {
-    window.showInformationMessage('Rovo Dev: Workspace closed or extension deactivated.');
+    console.log('Rovo Dev: Workspace closed or extension deactivated.');
 }
 
 /**

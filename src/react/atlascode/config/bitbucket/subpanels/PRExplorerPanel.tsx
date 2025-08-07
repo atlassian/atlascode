@@ -11,7 +11,6 @@ import { PRExplorer } from '../PRExplorer';
 type PRExplorerPanelProps = CommonSubpanelProps & {
     enabled: boolean;
     relatedJiraIssues: boolean;
-    relatedBitbucketIssues: boolean;
     pullRequestCreated: boolean;
     nestFiles: boolean;
     refreshInterval: number;
@@ -24,7 +23,6 @@ export const PRExplorerPanel: React.FunctionComponent<PRExplorerPanelProps> = me
         onSubsectionChange,
         enabled,
         relatedJiraIssues,
-        relatedBitbucketIssues,
         pullRequestCreated,
         nestFiles,
         refreshInterval,
@@ -62,7 +60,6 @@ export const PRExplorerPanel: React.FunctionComponent<PRExplorerPanelProps> = me
                     <PRExplorer
                         enabled={enabled}
                         relatedJiraIssues={relatedJiraIssues}
-                        relatedBitbucketIssues={relatedBitbucketIssues}
                         pullRequestCreated={pullRequestCreated}
                         nestFiles={nestFiles}
                         refreshInterval={refreshInterval}
