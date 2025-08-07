@@ -601,7 +601,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (context.focusInfo && context.focusInfo.enabled && !context.focusInfo.invalid) {
             extra += `
             <context>
-                Consider that the user has the following open in the editor:
+                I have this open in editor:
                     <name>${context.focusInfo.file.name}</name>
                         <absolute_path>${context.focusInfo.file.absolutePath}</absolute_path>
                         <relative_path>${context.focusInfo.file.relativePath}</relative_path>
@@ -617,7 +617,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (context.contextItems && context.contextItems.length > 0) {
             extra += `
                 <context>
-                    The user has the following additional context items:
+                    I have these additional context items:
                     ${context.contextItems
                         .map(
                             (item) => `
