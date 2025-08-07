@@ -1,12 +1,14 @@
 import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { Box, Button, CircularProgress, Typography } from '@material-ui/core';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
 
 import { StartWorkActionType } from '../../../../lib/ipc/fromUI/startWork';
 import { RepoData } from '../../../../lib/ipc/toUI/startWork';
 import { Branch } from '../../../../typings/git';
 import { AtlascodeErrorBoundary } from '../../common/ErrorBoundary';
+import { ErrorControllerContext } from '../../common/errorController';
+import { ErrorDisplay } from '../../common/ErrorDisplay';
 import { StartWorkControllerContext, useStartWorkController } from '../startWorkController';
 import {
     CreateBranchSection,
@@ -19,6 +21,7 @@ import { generateBranchName, getDefaultSourceBranch } from './utils/branchUtils'
 
 const StartWorkPageV3: React.FunctionComponent = () => {
     const [state, controller] = useStartWorkController();
+    const errorController = useContext(ErrorControllerContext);
     const [pushBranchEnabled, setPushBranchEnabled] = useState(true);
     const [localBranch, setLocalBranch] = useState('');
     const [sourceBranch, setSourceBranch] = useState<Branch>({ type: 0, name: '' });
@@ -141,18 +144,20 @@ const StartWorkPageV3: React.FunctionComponent = () => {
             setSnackbarOpen(true);
         } catch (error) {
             console.error('Error creating branch:', error);
+            errorController.showError(error);
             setSubmitState('initial');
         }
     }, [
+        selectedRepository,
         controller,
         transitionIssueEnabled,
         selectedTransition,
         branchSetupEnabled,
-        pushBranchEnabled,
-        localBranch,
         sourceBranch,
-        selectedRepository,
+        localBranch,
         upstream,
+        pushBranchEnabled,
+        errorController,
     ]);
 
     const formState = {
@@ -199,6 +204,10 @@ const StartWorkPageV3: React.FunctionComponent = () => {
                     </Box>
 
                     {submitState === 'submit-success' && <SuccessAlert submitResponse={submitResponse} />}
+
+                    <Box marginBottom={2}>
+                        <ErrorDisplay />
+                    </Box>
 
                     <TaskInfoSection state={state} controller={controller} />
                     <CreateBranchSection
