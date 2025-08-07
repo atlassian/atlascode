@@ -74,7 +74,7 @@ export const connectRepository = async (page: Page) => {
 
         await addRepo(page); // attempt #2
 
-        // after second attemp vs code doesn't open Explorer tab, so we just wait for bitbucket explorer refresh
+        // after attemp #2 vs code doesn't open Explorer tab, so we just wait for bitbucket explorer refresh
         await createPRButton.waitFor({ state: 'visible' });
     }
 };
