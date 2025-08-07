@@ -53,6 +53,7 @@ export const connectRepository = async (page: Page) => {
     await addRepoButton.or(createPRButton).waitFor({ state: 'visible' });
 
     if (isRepoAddFailed) {
+        await page.waitForTimeout(500);
         await waitForExplorerLoading(page);
         await addRepo(page);
         await createPRButton.waitFor({ state: 'visible' });
