@@ -45,6 +45,7 @@ import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
+import { setRovoDevWebviewProvider } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevContext, RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
@@ -135,6 +136,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         // Register editor listeners
         this._registerEditorListeners();
+
+        // Register this provider with the process manager for error handling
+        setRovoDevWebviewProvider(this);
     }
 
     private getWorkspacePort(): number | undefined {
@@ -725,7 +729,7 @@ ${message}`;
         // Get all workspace files
         const files = await workspace.findFiles('**/*', '**/node_modules/**');
         if (!files.length) {
-            window.showWarningMessage('No files found in workspace.');
+            console.log('No files found in workspace.'); // bwieger, look at this more
             return;
         }
 
@@ -1054,6 +1058,28 @@ ${message}`;
             } catch (error) {
                 reject(error);
             }
+        });
+    }
+
+    /**
+     * Sends an error message to the chat history instead of showing a VS Code notification
+     * @param errorMessage The error message to display in chat
+     */
+    public sendErrorToChat(errorMessage: string): void {
+        if (!this._webView) {
+            // Fallback to console if webview is not available
+            console.error(errorMessage);
+            return;
+        }
+
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.ErrorMessage,
+            message: {
+                text: errorMessage,
+                source: 'RovoDevError',
+                isRetriable: false,
+                uid: v4(),
+            },
         });
     }
 }
