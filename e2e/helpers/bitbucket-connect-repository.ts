@@ -9,8 +9,17 @@ const goToExtensionTab = async (page: Page) => {
 };
 
 const addRepo = async (page: Page) => {
-    await page.getByRole('treeitem', { name: 'Add a repository to this workspace' }).click();
+    const addRepoButton = page.getByRole('treeitem', { name: 'Add a repository to this workspace' });
+    await addRepoButton.click();
     await page.waitForTimeout(250);
+
+    // sometimes vs code can go to Explorer tab if we click 'Add a repo...' for the second time, so we make sure to return to extension
+    const noFolderButton = page.getByRole('button', { name: 'No Folder Opened Section' });
+    if (await noFolderButton.isVisible()) {
+        await goToExtensionTab(page);
+        await addRepoButton.click();
+        await page.waitForTimeout(250);
+    }
 
     const pathInput = page.getByRole('textbox', { name: 'Type to narrow down results. - Add Folder to Workspace' });
     await pathInput.waitFor({ state: 'visible' });
@@ -35,27 +44,37 @@ const waitForExplorerLoading = async (page: Page) => {
  * Helper function to connect Bitbucket repository
  */
 export const connectRepository = async (page: Page) => {
+    // waiting for loading
     await waitForExplorerLoading(page);
 
+    // trying to add mock-repository
     await addRepo(page);
 
+    // after first adding repo vs code automatically opens Explorer tab
     const mockRepo = page.getByRole('treeitem', { name: 'mock-repository' });
     const noFolderButton = page.getByRole('button', { name: 'No Folder Opened Section' });
     await mockRepo.or(noFolderButton).waitFor({ state: 'visible' });
 
+    // if first try was unsuccessfull we can see 'No folder opened' section name
     const isRepoAddFailed = await noFolderButton.isVisible();
 
+    // return to extension
     await goToExtensionTab(page);
 
     const addRepoButton = page.getByRole('treeitem', { name: 'Add a repository to this workspace' });
     const createPRButton = page.getByRole('treeitem', { name: 'Create pull request' });
 
+    // waiting for extension load
     await addRepoButton.or(createPRButton).waitFor({ state: 'visible' });
 
+    // if repo wasn't added trying again
     if (isRepoAddFailed) {
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(500); // timeout to get bitbucket explorer time to refresh state
         await waitForExplorerLoading(page);
-        await addRepo(page);
+
+        await addRepo(page); // attempt #2
+
+        // after second attemp vs code doesn't open Explorer tab, so we just wait for bitbucket explorer refresh
         await createPRButton.waitFor({ state: 'visible' });
     }
 };
