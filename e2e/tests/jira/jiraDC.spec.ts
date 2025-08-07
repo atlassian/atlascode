@@ -1,5 +1,5 @@
 import { test } from '@playwright/test';
-import { authenticateWithJira, authenticateWithJiraDC } from 'e2e/helpers';
+import { authenticateWithJiraDC } from 'e2e/helpers';
 import {
     addComment,
     assigningFlow,
@@ -14,11 +14,6 @@ import {
     // checkImageInDescription,
 } from 'e2e/scenarios/jira';
 
-const authTypes = [
-    { name: 'Jira Cloud', authFunc: authenticateWithJira },
-    { name: 'Jira DC', authFunc: authenticateWithJiraDC },
-];
-
 export const jiraScenarios = [
     { name: 'Authenticate with Jira', run: authFlowJira },
     { name: 'Create issue', run: createIssue },
@@ -30,17 +25,15 @@ export const jiraScenarios = [
     { name: 'Attach file to issue', run: attachFile },
     { name: 'Assigning issue to myself', run: assigningFlow },
     { name: 'Add and remove existing labels', run: updateLabelsFlow },
-    // Skipped for now, because it's not working in Jira DC
+    // Skipped for now, because it's not working in Jira DC (separate issue)
     // { name: 'Check image in description', run: checkImageInDescription },
 ];
 
-for (const authType of authTypes) {
-    test.describe(authType.name, () => {
-        for (const scenario of jiraScenarios) {
-            test(scenario.name, async ({ page, request }) => {
-                await authType.authFunc(page);
-                await scenario.run(page, request);
-            });
-        }
-    });
-}
+test.describe('Jira DC', () => {
+    for (const scenario of jiraScenarios) {
+        test(scenario.name, async ({ page, request }) => {
+            await authenticateWithJiraDC(page);
+            await scenario.run(page, request);
+        });
+    }
+});
