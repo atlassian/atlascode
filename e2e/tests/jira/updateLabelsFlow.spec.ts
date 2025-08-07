@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
+import { closeOnboardingQuickPick } from 'e2e/helpers/common';
 import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
 test('User can add and remove existing labels', async ({ page, request }) => {
@@ -7,6 +8,8 @@ test('User can add and remove existing labels', async ({ page, request }) => {
     const label = 'testing';
 
     await authenticateWithJira(page);
+    await closeOnboardingQuickPick(page);
+
     await new AtlassianSettings(page).closeSettingsPage();
 
     await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');

@@ -1,5 +1,6 @@
 import { test } from '@playwright/test';
 import { authenticateWithJira } from 'e2e/helpers';
+import { closeOnboardingQuickPick } from 'e2e/helpers/common';
 import { AppNotifications, AtlascodeDrawer, AtlassianSettings, CreateIssuePage } from 'e2e/page-objects';
 
 const NEW_ISSUE_SUMMARY = 'Test Issue Created via E2E Test';
@@ -10,6 +11,7 @@ test('Create an issue via side panel flow', async ({ page }) => {
 
     const atlascodeDrawer = new AtlascodeDrawer(page);
     await atlascodeDrawer.openCreateIssuePage();
+    await closeOnboardingQuickPick(page);
 
     await new AtlassianSettings(page).closeSettingsPage();
 

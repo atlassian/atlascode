@@ -69,3 +69,11 @@ export const closeAllNotifications = async (page: Page) => {
         await page.waitForTimeout(100);
     }
 };
+
+export const closeOnboardingQuickPick = async (page: Page) => {
+    const onboardingDismissButton = page.getByRole('button', { name: 'Dismiss' });
+    if (await onboardingDismissButton.isVisible()) {
+        await onboardingDismissButton.click();
+    }
+    await page.waitForTimeout(500);
+};
