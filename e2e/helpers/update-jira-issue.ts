@@ -1,4 +1,4 @@
-import { defaultComment } from '../fixtures/comments';
+import { defaultComment } from '../mock-data/comments';
 import type { FieldUpdater } from './types';
 
 const updateAttachment: FieldUpdater = (issue, value) => {

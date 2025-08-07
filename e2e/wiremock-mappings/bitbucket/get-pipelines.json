@@ -1,0 +1,23 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/2.0/repositories/mockuser/test-repository/pipelines/",
+        "queryParameters": {
+            "fields": {
+                "matches": ".*"
+            }
+        }
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "page": 1,
+            "values": [],
+            "size": 0,
+            "pagelen": 0
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

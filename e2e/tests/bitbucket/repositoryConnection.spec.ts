@@ -1,7 +1,9 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { authenticateWithBitbucketCloud, connectRepository } from 'e2e/helpers';
 
-test.skip('Adding Bitbucket repository works', async ({ page, context }) => {
+import { test } from '../../fixtures/repository-disconnection';
+
+test('Adding Bitbucket repository works', async ({ page, context }) => {
     await authenticateWithBitbucketCloud(page, context);
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 

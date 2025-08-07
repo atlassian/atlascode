@@ -1,0 +1,194 @@
+{
+    "priority": 2,
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/2.0/repositories/mockuser/test-repository/pullrequests/123"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "type": "pullrequest",
+            "id": 123,
+            "title": "New Feature Implementation",
+            "description": "This pull request implements a new feature with comprehensive tests and documentation.",
+            "state": "OPEN",
+            "created_on": "2025-07-03T14:17:40+00:00",
+            "updated_on": "2025-07-03T14:17:40+00:00",
+            "destination": {
+                "branch": {
+                    "name": "main"
+                },
+                "commit": {
+                    "hash": "35c37c0bb16c21ef943fb16890a2209253bfcc83",
+                    "type": "commit",
+                    "links": {
+                        "self": {
+                            "href": "https://api.bitbucket.org/2.0/repositories/mockuser/test-repository/commit/35c37c0bb16c21ef943fb16890a2209253bfcc83"
+                        }
+                    }
+                },
+                "repository": {
+                    "type": "repository",
+                    "name": "test-repository",
+                    "full_name": "mockuser/test-repository",
+                    "uuid": "{mock-uuid}",
+                    "links": {
+                        "self": {
+                            "href": "https://api.bitbucket.org/2.0/repositories/mockuser/test-repository"
+                        },
+                        "html": {
+                            "href": "https://bitbucket.org/mockuser/test-repository"
+                        },
+                        "avatar": {
+                            "href": "https://example.com/avatar.png"
+                        }
+                    },
+                    "is_private": true,
+                    "owner": {
+                        "type": "user",
+                        "display_name": "Mock User",
+                        "uuid": "{mock-uuid}",
+                        "username": "mockuser",
+                        "links": {
+                            "self": {
+                                "href": "https://api.bitbucket.org/2.0/users/%7Bmock-uuid%7D"
+                            },
+                            "html": {
+                                "href": "https://bitbucket.org/%7Bmock-uuid%7D/"
+                            },
+                            "avatar": {
+                                "href": "https://example.com/avatar.png"
+                            }
+                        }
+                    }
+                }
+            },
+            "source": {
+                "branch": {
+                    "name": "feature/new-feature"
+                },
+                "commit": {
+                    "hash": "def456abc789012345678901234567890123456",
+                    "type": "commit",
+                    "links": {
+                        "self": {
+                            "href": "https://api.bitbucket.org/2.0/repositories/mockuser/test-repository/commit/def456abc789012345678901234567890123456"
+                        }
+                    }
+                },
+                "repository": {
+                    "type": "repository",
+                    "name": "test-repository",
+                    "full_name": "mockuser/test-repository",
+                    "uuid": "{mock-uuid}",
+                    "links": {
+                        "self": {
+                            "href": "https://api.bitbucket.org/2.0/repositories/mockuser/test-repository"
+                        },
+                        "html": {
+                            "href": "https://bitbucket.org/mockuser/test-repository"
+                        },
+                        "avatar": {
+                            "href": "https://example.com/avatar.png"
+                        }
+                    },
+                    "is_private": true,
+                    "owner": {
+                        "type": "user",
+                        "display_name": "Mock User",
+                        "uuid": "{mock-uuid}",
+                        "username": "mockuser",
+                        "links": {
+                            "self": {
+                                "href": "https://api.bitbucket.org/2.0/users/%7Bmock-uuid%7D"
+                            },
+                            "html": {
+                                "href": "https://bitbucket.org/%7Bmock-uuid%7D/"
+                            },
+                            "avatar": {
+                                "href": "https://example.com/avatar.png"
+                            }
+                        }
+                    }
+                }
+            },
+            "author": {
+                "type": "user",
+                "display_name": "Mock User",
+                "uuid": "{mock-uuid}",
+                "account_id": "123",
+                "username": "mockuser",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/users/%7Bmock-uuid%7D"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/%7Bmock-uuid%7D/"
+                    },
+                    "avatar": {
+                        "href": "https://example.com/avatar.png"
+                    }
+                }
+            },
+            "reviewers": [
+                {
+                    "type": "user",
+                    "display_name": "Mock User",
+                    "uuid": "{mock-uuid}",
+                    "account_id": "123",
+                    "username": "mockuser",
+                    "links": {
+                        "self": {
+                            "href": "https://api.bitbucket.org/2.0/users/%7Bmock-uuid%7D"
+                        },
+                        "html": {
+                            "href": "https://bitbucket.org/%7Bmock-uuid%7D/"
+                        },
+                        "avatar": {
+                            "href": "https://example.com/avatar.png"
+                        }
+                    }
+                }
+            ],
+            "participants": [],
+            "close_source_branch": false,
+            "closed_by": null,
+            "reason": "",
+            "merge_commit": null,
+            "comment_count": 0,
+            "task_count": 0,
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/mockuser/test-repository/pullrequests/123"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/mockuser/test-repository/pull-requests/123"
+                },
+                "commits": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/mockuser/test-repository/pullrequests/123/commits"
+                },
+                "comments": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/mockuser/test-repository/pullrequests/123/comments"
+                },
+                "merge": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/mockuser/test-repository/pullrequests/123/merge"
+                },
+                "decline": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/mockuser/test-repository/pullrequests/123/decline"
+                },
+                "diffstat": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/mockuser/test-repository/pullrequests/123/diffstat"
+                },
+                "diff": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/mockuser/test-repository/pullrequests/123/diff"
+                }
+            },
+            "summary": {
+                "type": "rendered",
+                "raw": "This pull request implements a new feature with comprehensive tests and documentation.",
+                "markup": "markdown",
+                "html": "<p>This pull request implements a new feature with comprehensive tests and documentation.</p>"
+            }
+        }
+    }
+}

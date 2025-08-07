@@ -1,0 +1,45 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/2.0/repositories/mockuser/test-repository/branching-model"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+        "type": "branching_model",
+        "links": {
+            "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/mockuser/test-repository/branching-model"
+            }
+        },
+        "branch_types": [{
+            "kind": "bugfix",
+            "prefix": "bugfix/"
+        }, {
+            "kind": "feature",
+            "prefix": "feature/"
+        }, {
+            "kind": "hotfix",
+            "prefix": "hotfix/"
+        }, {
+            "kind": "release",
+            "prefix": "release/"
+        }],
+        "development": {
+            "name": "main",
+            "use_mainbranch": true,
+            "branch": {
+                "name": "main",
+                "target": {
+                    "hash": "123abc"
+                },
+                "type": "branch"
+            }
+        }
+    },
+    "headers": {
+      "Content-Type": "application/json",
+      "x-ausername": "mockedUser"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/2.0/workspaces/mockuser/members",
+        "queryParameters": {
+            "pagelen": {
+                "matches": ".*"
+            }
+        }
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "values": [{
+                "user": {
+                    "display_name": "Mock User",
+                    "links": {
+                        "avatar": {
+                            "href": "https://example.com/avatar.png"
+                        },
+                        "html": {
+                            "href": "https://example.com"
+                        }
+                    },
+                    "account_id": "123"
+                }
+            }],
+            "size": 1,
+	        "next": ""
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

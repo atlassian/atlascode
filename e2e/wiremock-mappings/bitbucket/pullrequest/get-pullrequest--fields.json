@@ -1,0 +1,26 @@
+{
+    "priority": 1,
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/2.0/repositories/mockuser/test-repository/pullrequests/123",
+        "queryParameters": {
+            "fields": {
+                "matches": "destination\\.branch\\.merge_strategies(%2C|,)destination\\.branch\\.default_merge_strategy"
+            }
+        }
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "destination": {
+                "branch": {
+                    "merge_strategies": ["merge_commit", "squash", "fast_forward", "squash_fast_forward", "rebase_fast_forward", "rebase_merge"],
+                    "default_merge_strategy": "merge_commit"
+                }
+            }
+        },
+        "headers": {
+        "Content-Type": "application/json"
+        }
+    }
+}
