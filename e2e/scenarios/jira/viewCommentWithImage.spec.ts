@@ -1,12 +1,11 @@
-import { expect, test } from '@playwright/test';
-import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
+import { APIRequestContext, expect, Page } from '@playwright/test';
+import { getIssueFrame, setupIssueMock } from 'e2e/helpers';
 import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
 const IMAGE_SRC = 'https://mockedteams.atlassian.net/secure/attachment/10001/test-image.jpg';
 const COMMENT_CONTENT = `<p><span class="image-wrap" style=""><img src="${IMAGE_SRC}" alt="test-image.jpg" height="360" width="540" style="border: 0px solid black" /></span></p>`;
 
-test('View image in Jira comment', async ({ page, request }) => {
-    await authenticateWithJira(page);
+export async function viewCommentWithImage(page: Page, request: APIRequestContext) {
     await new AtlassianSettings(page).closeSettingsPage();
 
     const cleanupIssueMock = await setupIssueMock(request, { comment: COMMENT_CONTENT });
@@ -19,4 +18,4 @@ test('View image in Jira comment', async ({ page, request }) => {
     await expect(issueFrame.locator('.image-wrap img')).toHaveAttribute('atlascode-original-src', IMAGE_SRC);
 
     await cleanupIssueMock();
-});
+}
