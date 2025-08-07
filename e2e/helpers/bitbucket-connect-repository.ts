@@ -11,8 +11,9 @@ const goToExtensionTab = async (page: Page) => {
 const addRepo = async (page: Page) => {
     await page.getByRole('treeitem', { name: 'Add a repository to this workspace' }).click();
 
-    const pathInput = page.getByRole('textbox', { name: '' });
+    const pathInput = page.getByRole('textbox', { name: 'Type to narrow down results. - Add Folder to Workspace' });
     await pathInput.waitFor({ state: 'visible' });
+    await page.waitForTimeout(250);
 
     await pathInput.fill('/mock-repository/');
     await page.waitForTimeout(250);
@@ -22,14 +23,26 @@ const addRepo = async (page: Page) => {
     await page.getByRole('button', { name: 'Add' }).click();
 };
 
+const waitForExplorerLoading = async (page: Page) => {
+    await page
+        .locator('.pane:has([aria-label="Bitbucket pull requests Section"])')
+        .getByRole('progressbar')
+        .waitFor({ state: 'hidden' });
+};
+
 /**
  * Helper function to connect Bitbucket repository
  */
 export const connectRepository = async (page: Page) => {
+    await waitForExplorerLoading(page);
+
     await addRepo(page);
+
     const mockRepo = page.getByRole('treeitem', { name: 'mock-repository' });
     const noFolderButton = page.getByRole('button', { name: 'No Folder Opened Section' });
     await mockRepo.or(noFolderButton).waitFor({ state: 'visible' });
+
+    const isRepoAddFailed = await noFolderButton.isVisible();
 
     await goToExtensionTab(page);
 
@@ -38,8 +51,8 @@ export const connectRepository = async (page: Page) => {
 
     await addRepoButton.or(createPRButton).waitFor({ state: 'visible' });
 
-    const isRepoAddFailed = await addRepoButton.isVisible();
     if (isRepoAddFailed) {
+        await waitForExplorerLoading(page);
         await addRepo(page);
         await createPRButton.waitFor({ state: 'visible' });
     }

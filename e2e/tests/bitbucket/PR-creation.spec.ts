@@ -10,6 +10,7 @@ test('PR creation works', async ({ page, context }) => {
     await connectRepository(page);
 
     await page.getByRole('treeitem', { name: 'Create pull request' }).click();
+    await page.waitForTimeout(250);
 
     await createPullrequest(page);
     await page.waitForTimeout(250);
