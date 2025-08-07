@@ -5,13 +5,13 @@ import {
     assigningFlow,
     attachFile,
     authFlowJira,
-    checkImageInDescription,
     createIssue,
     renameIssue,
     updateDescription,
     updateIssueStatus,
     updateLabelsFlow,
     viewCommentWithImage,
+    // checkImageInDescription,
 } from 'e2e/scenarios/jira';
 
 const authTypes = [
@@ -29,8 +29,9 @@ export const jiraScenarios = [
     { name: 'View comment with image in issue', run: viewCommentWithImage },
     { name: 'Attach file to issue', run: attachFile },
     { name: 'Assigning issue to myself', run: assigningFlow },
-    { name: 'Check image in description', run: checkImageInDescription },
     { name: 'Add and remove existing labels', run: updateLabelsFlow },
+    // Skipped for now, because it's not working in Jira DC
+    // { name: 'Check image in description', run: checkImageInDescription },
 ];
 
 for (const authType of authTypes) {
