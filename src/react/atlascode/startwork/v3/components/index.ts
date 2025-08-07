@@ -2,6 +2,7 @@ export { CreateBranchSection } from './CreateBranchSection';
 export { TaskInfoSection } from './TaskInfoSection';
 export { UpdateStatusSection } from './UpdateStatusSection';
 export { SuccessAlert } from './SuccessAlert';
+export { SnackbarNotification } from './SnackbarNotification';
 export { RepositorySelector } from './RepositorySelector';
 export { BranchPrefixSelector } from './BranchPrefixSelector';
 export { LocalBranchInput } from './LocalBranchInput';

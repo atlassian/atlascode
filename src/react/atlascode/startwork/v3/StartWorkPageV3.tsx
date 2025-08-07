@@ -8,7 +8,13 @@ import { RepoData } from '../../../../lib/ipc/toUI/startWork';
 import { Branch } from '../../../../typings/git';
 import { AtlascodeErrorBoundary } from '../../common/ErrorBoundary';
 import { StartWorkControllerContext, useStartWorkController } from '../startWorkController';
-import { CreateBranchSection, SuccessAlert, TaskInfoSection, UpdateStatusSection } from './components';
+import {
+    CreateBranchSection,
+    SnackbarNotification,
+    SuccessAlert,
+    TaskInfoSection,
+    UpdateStatusSection,
+} from './components';
 import { generateBranchName, getDefaultSourceBranch } from './utils/branchUtils';
 
 const StartWorkPageV3: React.FunctionComponent = () => {
@@ -31,6 +37,7 @@ const StartWorkPageV3: React.FunctionComponent = () => {
         branch?: string;
         upstream?: string;
     }>({});
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
 
     // Initialize form with default values
     useEffect(() => {
@@ -101,6 +108,10 @@ const StartWorkPageV3: React.FunctionComponent = () => {
         setBranchSetupEnabled(enabled);
     }, []);
 
+    const handleSnackbarClose = useCallback(() => {
+        setSnackbarOpen(false);
+    }, []);
+
     const handleCreateBranch = useCallback(async () => {
         setSubmitState('submitting');
 
@@ -127,6 +138,7 @@ const StartWorkPageV3: React.FunctionComponent = () => {
 
             setSubmitResponse(response);
             setSubmitState('submit-success');
+            setSnackbarOpen(true);
         } catch (error) {
             console.error('Error creating branch:', error);
             setSubmitState('initial');
@@ -222,6 +234,16 @@ const StartWorkPageV3: React.FunctionComponent = () => {
                         </Button>
                     )}
                 </Box>
+
+                {submitState === 'submit-success' && (
+                    <SnackbarNotification
+                        open={snackbarOpen}
+                        onClose={handleSnackbarClose}
+                        title="Success!"
+                        message="See details at the top of this page"
+                        severity="success"
+                    />
+                )}
             </AtlascodeErrorBoundary>
         </StartWorkControllerContext.Provider>
     );
