@@ -2,6 +2,14 @@
 
 ---
 
+## What's new in 3.8.9
+
+### Features
+
+### Bug Fixes
+
+- Fixed a bug where Jira site icon is broken in create Jira issue page
+
 ## What's new in 3.8.8
 
 ### Features
