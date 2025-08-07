@@ -1,0 +1,11 @@
+export { addComment } from './addComment.spec';
+export { attachFile } from './attachFile.spec';
+export { createIssue } from './createIssue.spec';
+export { updateDescription } from './updateDescription.spec';
+export { updateIssueStatus } from './updateIssueStatus.spec';
+export { viewCommentWithImage } from './viewCommentWithImage.spec';
+export { renameIssue } from './renameIssue.spec';
+export { assigningFlow } from './assigningFlow.spec';
+export { checkImageInDescription } from './checkImageInDescription.spec';
+export { updateLabelsFlow } from './updateLabelsFlow.spec';
+export { authFlowJira } from './authFlow.spec';
