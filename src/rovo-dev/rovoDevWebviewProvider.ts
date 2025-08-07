@@ -567,17 +567,29 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             case 'user-prompt':
                 // receiving a user-prompt pre-initialized means we are in the 'replay' response
                 if (!this._initialized) {
+                    const cleanedText = this.stripContextTags(response.content);
                     this._currentPrompt = {
-                        text: response.content,
+                        text: cleanedText,
                         // TODO: content is not restored here at the moment, so we'll just render all prompts as they were submitted
                     };
-                    return this.sendUserPromptToView({ text: response.content });
+                    return this.sendUserPromptToView({ text: cleanedText });
                 }
                 return Promise.resolve(false);
 
             default:
                 return Promise.resolve(false);
         }
+    }
+
+    private stripContextTags(text: string): string {
+        // Remove content between <context> and </context> tags (including the tags themselves)
+        // This regex handles multiline content and nested tags
+        let cleanedText = text.replace(/<context>[\s\S]*?<\/context>/gi, '');
+
+        // Clean up excessive whitespace that might be left behind
+        cleanedText = cleanedText.replace(/\n\s*\n\s*\n/g, '\n\n'); // Replace 3+ newlines with 2
+
+        return cleanedText.trim();
     }
 
     private addContextToPrompt(message: string, context?: RovoDevContext): string {
