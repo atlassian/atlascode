@@ -13,15 +13,11 @@ const addRepo = async (page: Page) => {
 
     const pathInput = page.getByRole('textbox', { name: '' });
     await pathInput.waitFor({ state: 'visible' });
-    await page.waitForTimeout(250);
-
-    await page.waitForTimeout(250);
 
     await pathInput.fill('/mock-repository/');
     await page.waitForTimeout(250);
 
     await page.getByRole('option', { name: '.git' }).waitFor({ state: 'visible' });
-    await page.waitForTimeout(250);
 
     await page.getByRole('button', { name: 'Add' }).click();
 };
@@ -31,14 +27,20 @@ const addRepo = async (page: Page) => {
  */
 export const connectRepository = async (page: Page) => {
     await addRepo(page);
-    await page.waitForTimeout(1000);
+    const mockRepo = page.getByRole('treeitem', { name: 'mock-repository' });
+    const noFolderButton = page.getByRole('button', { name: 'No Folder Opened Section' });
+    await mockRepo.or(noFolderButton).waitFor({ state: 'visible' });
 
     await goToExtensionTab(page);
-    await page.waitForTimeout(1000);
 
-    const addRepoButtonCount = await page.getByRole('treeitem', { name: 'Add a repository to this workspace' }).count();
-    if (addRepoButtonCount !== 0) {
+    const addRepoButton = page.getByRole('treeitem', { name: 'Add a repository to this workspace' });
+    const createPRButton = page.getByRole('treeitem', { name: 'Create pull request' });
+
+    await addRepoButton.or(createPRButton).waitFor({ state: 'visible' });
+
+    const isRepoAddFailed = await addRepoButton.isVisible();
+    if (isRepoAddFailed) {
         await addRepo(page);
-        await page.waitForTimeout(1000);
+        await createPRButton.waitFor({ state: 'visible' });
     }
 };
