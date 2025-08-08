@@ -108,7 +108,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private get rovoDevApiClient() {
         if (!this._rovoDevApiClient) {
-            const rovoDevPort = this.getWorkspacePort();
+            const rovoDevPort = true ? 9999 : this.getWorkspacePort();
             const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
             if (rovoDevPort) {
                 this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
@@ -281,6 +281,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         this.beginNewSession();
                         if (this.isBBY) {
                             // TODO: we should obtain the session id from the boysenberry environment
+                            await this.sendPromptSentToView({ text: '', enable_deep_plan: false, context: undefined });
                             await this.executeReplay();
                         }
                     } else {
@@ -499,7 +500,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private async sendUserPromptToView({ text, enable_deep_plan, context }: RovoDevPrompt) {
         const webview = this._webView!;
 
-        await webview.postMessage({
+        return await webview.postMessage({
             type: RovoDevProviderMessageType.UserChatMessage,
             message: {
                 text: text,
@@ -507,6 +508,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 context: context,
             },
         });
+    }
+
+    private async sendPromptSentToView({ text, enable_deep_plan, context }: RovoDevPrompt) {
+        const webview = this._webView!;
 
         return await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
@@ -674,6 +679,10 @@ ${message}`;
             enable_deep_plan,
             context,
         };
+
+        if (text) {
+            await this.sendPromptSentToView({ text, enable_deep_plan, context });
+        }
 
         let payloadToSend = this.addUndoContextToPrompt(text);
         payloadToSend = this.addContextToPrompt(payloadToSend, context);

@@ -69,9 +69,7 @@ const RovoDevView: React.FC = () => {
     const [currentMessage, setCurrentMessage] = useState<DefaultMessage | null>(null);
     const [curThinkingMessages, setCurThinkingMessages] = useState<ChatMessage[]>([]);
 
-    const [currentState, setCurrentState] = useState(
-        process.env.ROVODEV_BBY ? State.GeneratingResponse : State.WaitingForPrompt,
-    );
+    const [currentState, setCurrentState] = useState(State.WaitingForPrompt);
 
     const [promptText, setPromptText] = useState('');
     const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
