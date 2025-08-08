@@ -27,7 +27,6 @@ export enum AnalyticsView {
 
     // v2
 
-    OnboardingPage = 'page:v2:onboarding',
     SettingsPage = 'page:v2:settings',
 
     BitbucketIssuePage = 'page:v2:bitbucket:issue',

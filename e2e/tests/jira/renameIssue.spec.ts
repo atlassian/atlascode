@@ -1,5 +1,6 @@
 import { test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
+import { closeOnboardingQuickPick } from 'e2e/helpers/common';
 import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
 
 const OLD_TITLE = '(Sample) User Interface Bugs';
@@ -7,6 +8,7 @@ const NEW_TITLE = 'Check if renaming works';
 
 test('Rename Jira issue', async ({ page, request }) => {
     await authenticateWithJira(page);
+    await closeOnboardingQuickPick(page);
 
     await new AtlassianSettings(page).closeSettingsPage();
     await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');

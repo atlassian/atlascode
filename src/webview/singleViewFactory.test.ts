@@ -232,10 +232,8 @@ describe('SingleWebview', () => {
 
         it('should fire feature gates and experiment gates', async () => {
             const requiredFeatures = [Features.EnableErrorTelemetry];
-            const requiredExperiments = [Experiments.AtlascodeOnboardingExperiment];
 
             mockController.requiredFeatureFlags = requiredFeatures;
-            mockController.requiredExperiments = requiredExperiments;
 
             (FeatureFlagClient.checkGate as jest.Mock).mockReturnValue(true);
             (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue('test-value');
@@ -243,9 +241,6 @@ describe('SingleWebview', () => {
             await singleWebview.createOrShow();
 
             expect(FeatureFlagClient.checkGate).toHaveBeenCalledWith(Features.EnableErrorTelemetry);
-            expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
-                Experiments.AtlascodeOnboardingExperiment,
-            );
         });
     });
 
@@ -407,7 +402,7 @@ describe('SingleWebview', () => {
         });
 
         it('should fire multiple experiment gates', async () => {
-            const experiments = [Experiments.AtlascodeOnboardingExperiment];
+            const experiments = ['very-long-experiment-name'] as unknown as Experiments[];
             mockController.requiredExperiments = experiments;
 
             (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue('test-value');
@@ -418,7 +413,7 @@ describe('SingleWebview', () => {
             expect(mockWebviewPanel.webview.postMessage).toHaveBeenCalledWith({
                 command: CommonMessageType.UpdateExperimentValues,
                 experimentValues: {
-                    [Experiments.AtlascodeOnboardingExperiment]: 'test-value',
+                    ['very-long-experiment-name']: 'test-value',
                 },
             });
         });

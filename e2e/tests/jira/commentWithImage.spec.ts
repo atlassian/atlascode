@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
+import { closeOnboardingQuickPick } from 'e2e/helpers/common';
 import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
 const IMAGE_SRC = 'https://mockedteams.atlassian.net/secure/attachment/10001/test-image.jpg';
@@ -7,6 +8,8 @@ const COMMENT_CONTENT = `<p><span class="image-wrap" style=""><img src="${IMAGE_
 
 test('View image in Jira comment', async ({ page, request }) => {
     await authenticateWithJira(page);
+    await closeOnboardingQuickPick(page);
+
     await new AtlassianSettings(page).closeSettingsPage();
 
     const cleanupIssueMock = await setupIssueMock(request, { comment: COMMENT_CONTENT });

@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { createSearchResponse } from 'e2e/fixtures/search';
 import { authenticateWithJira, cleanupWireMockMapping, getIssueFrame, setupWireMockMapping } from 'e2e/helpers';
+import { closeOnboardingQuickPick } from 'e2e/helpers/common';
 import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
 test('Assigning Jira issue to myself works', async ({ page, request }) => {
@@ -10,6 +11,7 @@ test('Assigning Jira issue to myself works', async ({ page, request }) => {
     test.setTimeout(50_000);
 
     await authenticateWithJira(page);
+    await closeOnboardingQuickPick(page);
 
     await new AtlassianSettings(page).closeSettingsPage();
     await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');

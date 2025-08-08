@@ -1,5 +1,6 @@
 import { test } from '@playwright/test';
 import { authenticateWithJira, getIssueFrame, setupIssueMock, setupSearchMock } from 'e2e/helpers';
+import { closeOnboardingQuickPick } from 'e2e/helpers/common';
 import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
 
 const ISSUE_NAME = 'BTS-1 - User Interface Bugs';
@@ -8,6 +9,8 @@ const NEXT_STATUS = 'In Progress';
 
 test('I can transition a Jira', async ({ page, request }) => {
     await authenticateWithJira(page);
+    await closeOnboardingQuickPick(page);
+
     await new AtlassianSettings(page).closeSettingsPage();
 
     const atlascodeDrawer = new AtlascodeDrawer(page);
