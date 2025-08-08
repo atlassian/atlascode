@@ -257,6 +257,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                             ? `${state.repoData.href}/pull-requests/new`
                                             : `${state.repoData.href}/pull-requests?create`
                                     }
+                                    size="large"
                                 >
                                     <LaunchIcon />
                                 </IconButton>
@@ -306,7 +307,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                         <Autocomplete
                                                             options={state.repoData.localBranches}
                                                             getOptionLabel={(option: Branch) => option.name!}
-                                                            getOptionSelected={(option: Branch, value: Branch) =>
+                                                            isOptionEqualToValue={(option: Branch, value: Branch) =>
                                                                 option.name === value.name
                                                             }
                                                             value={sourceBranch}
@@ -331,7 +332,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                         <Autocomplete
                                                             options={state.repoData.remoteBranches}
                                                             getOptionLabel={(option: Branch) => option.name!}
-                                                            getOptionSelected={(option: Branch, value: Branch) =>
+                                                            isOptionEqualToValue={(option: Branch, value: Branch) =>
                                                                 option.name === value.name
                                                             }
                                                             groupBy={(option) => option.remote!}
@@ -387,7 +388,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                 fullWidth
                                                 multiline
                                                 rows={4}
-                                                rowsMax={20}
+                                                maxRows={20}
                                                 label="Summary"
                                                 name="summary"
                                                 value={summary}

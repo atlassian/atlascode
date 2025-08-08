@@ -130,7 +130,7 @@ const useStyles = makeStyles(
             editor: {
                 borderWidth: 1,
                 borderStyle: 'solid',
-                borderColor: theme.palette.type === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)',
+                borderColor: theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)',
                 borderRadius: theme.shape.borderRadius,
                 '&:hover': {
                     borderColor: theme.palette.text.primary,
@@ -288,7 +288,7 @@ export const MarkdownEditor: React.FC<PropsType> = (props: PropsType) => {
                         multiline
                         fullWidth
                         rows={4}
-                        rowsMax={20}
+                        maxRows={20}
                         value={content}
                         onChange={handlePlainTextChange}
                     />

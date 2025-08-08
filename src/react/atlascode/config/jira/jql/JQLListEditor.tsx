@@ -34,7 +34,7 @@ const useStyles = makeStyles(
             },
             paper: {
                 backgroundColor:
-                    theme.palette.type === 'dark'
+                    theme.palette.mode === 'dark'
                         ? lighten(theme.palette.background.paper, 0.05)
                         : darken(theme.palette.background.paper, 0.05),
             },

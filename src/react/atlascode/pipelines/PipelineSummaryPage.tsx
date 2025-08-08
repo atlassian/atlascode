@@ -55,24 +55,30 @@ const useStyles = makeStyles(
                 flexGrow: 0,
                 marginRight: theme.spacing(3),
             },
+
             targetSelectLabel: {
                 marginRight: theme.spacing(1),
             },
+
             floatLeft: {
                 float: 'left',
             },
+
             floatRight: {
                 float: 'right',
             },
+
             loadingIndicator: {
                 marginTop: '20px',
             },
+
             logs: {
                 whiteSpace: 'pre-wrap',
                 fontFamily: 'Monaco, Courier New, Courier, monospace',
                 fontSize: '1.2em',
                 width: '100%',
             },
+
             logHeader: {
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -80,67 +86,83 @@ const useStyles = makeStyles(
                 fontFamily: 'Monaco, Courier New, Courier, monospace',
                 fontSize: '1.2em',
             },
+
             paper100: {
                 overflow: 'hidden',
                 height: '100%',
             },
+
             hiddenOverflow: {
                 overflow: 'hidden',
             },
+
             greenHeader: {
                 backgroundColor: successGreen,
                 color: 'rgb(255,255,255)',
             },
+
             greenHeaderButton: {
                 backgroundColor: 'rgba(9, 30, 66, 0.08)',
                 color: 'rgb(255,255,255)',
             },
+
             blueHeader: {
                 backgroundColor: suspenseBlue,
                 color: 'rgb(255,255,255)',
             },
+
             blueHeaderButton: {
                 backgroundColor: 'rgba(9, 30, 66, 0.133)',
                 color: 'rgb(255,255,255)',
             },
+
             orangeHeader: {
                 backgroundColor: otherOrange,
                 color: 'rgb(0,0,0)',
             },
+
             orangeHeaderButton: {
                 backgroundColor: 'rgba(9, 30, 66, 0.176)',
                 color: 'rgb(0,0,0)',
             },
+
             redHeader: {
                 backgroundColor: failureRed,
                 color: 'rgb(255, 255, 255)',
             },
+
             redHeaderButton: {
                 backgroundColor: 'rgba(9, 30, 66, 0.08)',
                 color: 'rgb(255, 255, 255)',
             },
+
             grayHeader: {
                 backgroundColor: ambiguousGray,
                 color: 'rgb(0, 0, 0)',
             },
+
             grayHeaderButton: {
                 backgroundColor: 'rgba(9, 30, 66, 0.133)',
                 color: 'rgb(0, 0, 0)',
             },
+
             pipelineHeader: {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 width: '100%',
             },
+
             pipelineHeaderText: {
                 display: 'flex',
                 alignItems: 'center',
             },
+
             pipelineHeaderStatusIcon: {
                 marginRight: '5px',
                 display: 'flex',
             },
+
             stepHeader: {
                 paddingRight: '24px',
                 paddingLeft: '24px',
@@ -150,6 +172,7 @@ const useStyles = makeStyles(
                 border: '1px solid black',
                 borderRadius: '5px 5px 0 0',
             },
+
             loglessStepHeader: {
                 paddingRight: '24px',
                 paddingLeft: '24px',
@@ -159,20 +182,24 @@ const useStyles = makeStyles(
                 border: '1px solid black',
                 borderRadius: '5px 5px 5px 5px',
             },
+
             stepHeaderContent: {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
             },
+
             small: {
                 width: theme.spacing(3),
                 height: theme.spacing(3),
             },
+
             icon: {
                 marginLeft: '15px',
                 marginRight: '5px',
                 verticalAlign: 'text-bottom',
             },
+
             stepStatusIcon: {
                 marginRight: '5px',
                 height: '23px',
@@ -181,16 +208,19 @@ const useStyles = makeStyles(
                 borderRadius: '50%',
                 backgroundColor: 'White',
             },
+
             statusIcon: {
                 marginRight: '5px',
                 verticalAlign: 'text-bottom',
             },
+
             avatar: {
                 marginRight: '12px',
                 width: '32px',
                 height: '32px',
                 border: '2px solid White',
             },
+
             flex: {
                 display: 'flex',
                 alignItems: 'center',
@@ -298,7 +328,7 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
                 {logs ? (
                     <pre className={classes.logs}>{logs}</pre>
                 ) : (
-                    <Grid container justify="center">
+                    <Grid container justifyContent="center">
                         <CircularProgress />
                     </Grid>
                 )}
@@ -489,7 +519,7 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
         return state.steps ? (
             state.steps.map((step, index) => renderPipelineStep(step, index))
         ) : (
-            <Grid container justify="center">
+            <Grid container justifyContent="center">
                 <CircularProgress className={classes.loadingIndicator} />
             </Grid>
         );

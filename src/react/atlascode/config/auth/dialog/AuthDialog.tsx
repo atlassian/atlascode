@@ -171,7 +171,14 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
         const registerRequiredString = useCallback(register(validateRequiredString), []); // eslint-disable-line react-hooks/exhaustive-deps
 
         return (
-            <Dialog fullWidth maxWidth="md" open={open} onExited={onExited}>
+            <Dialog
+                fullWidth
+                maxWidth="md"
+                open={open}
+                TransitionProps={{
+                    onExited,
+                }}
+            >
                 <DialogTitle>
                     <Typography variant="h4">Authenticate</Typography>
                 </DialogTitle>

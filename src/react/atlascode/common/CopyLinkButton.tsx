@@ -13,7 +13,7 @@ export const CopyLinkButton: React.FC<Props> = (props: Props) => {
 
     return (
         <Tooltip title={props.tooltip}>
-            <IconButton aria-label="copy link" onClick={handleClick}>
+            <IconButton aria-label="copy link" onClick={handleClick} size="large">
                 <FileCopyOutlinedIcon />
             </IconButton>
         </Tooltip>

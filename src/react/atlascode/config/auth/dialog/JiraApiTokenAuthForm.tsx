@@ -77,6 +77,7 @@ export const JiraBasicAuthForm = ({
                                     })
                                 }
                                 onMouseDown={preventClickDefault}
+                                size="large"
                             >
                                 {authFormState.showPassword ? (
                                     <Visibility fontSize="small" />

@@ -15,7 +15,7 @@ export const TaskInfoSection: React.FC<TaskInfoSectionProps> = ({ state, control
                         <Grid item>
                             <Box
                                 border={1}
-                                borderRadius={3}
+                                borderRadius="3px"
                                 padding={0.5}
                                 borderColor={'var(--vscode-list-inactiveSelectionBackground)'}
                             >

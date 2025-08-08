@@ -26,7 +26,7 @@ export const AtlLoader: React.FunctionComponent = () => {
 
     return (
         <Container maxWidth="xl">
-            <Grid container direction="column" justify="center" alignItems="center">
+            <Grid container direction="column" justifyContent="center" alignItems="center">
                 <Grid item>
                     <img className={classes.root} src={'images/atlassian-icon.svg'} />
                 </Grid>
