@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { createSearchResponse } from 'e2e/fixtures/search';
 import { authenticateWithJira, cleanupWireMockMapping, getIssueFrame, setupWireMockMapping } from 'e2e/helpers';
+import { createSearchResponse } from 'e2e/mock-data/search';
 import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
 test('Assigning Jira issue to myself works', async ({ page, request }) => {

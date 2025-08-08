@@ -1,0 +1,136 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/2.0/repositories/mockuser/test-repository"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+	"type": "repository",
+	"full_name": "test-repository",
+	"links": {
+		"self": {
+			"href": "https://api.bitbucket.org/2.0/repositories/test-repository"
+		},
+		"html": {
+			"href": "https://bitbucket.org/test-repository"
+		},
+		"avatar": {
+			"href": "https://example.com/avatar.png"
+		},
+		"pullrequests": {
+			"href": "https://api.bitbucket.org/2.0/repositories/test-repository/pullrequests"
+		},
+		"commits": {
+			"href": "https://api.bitbucket.org/2.0/repositories/test-repository/commits"
+		},
+		"forks": {
+			"href": "https://api.bitbucket.org/2.0/repositories/test-repository/forks"
+		},
+		"watchers": {
+			"href": "https://api.bitbucket.org/2.0/repositories/test-repository/watchers"
+		},
+		"branches": {
+			"href": "https://api.bitbucket.org/2.0/repositories/test-repository/refs/branches"
+		},
+		"tags": {
+			"href": "https://api.bitbucket.org/2.0/repositories/test-repository/refs/tags"
+		},
+		"downloads": {
+			"href": "https://api.bitbucket.org/2.0/repositories/test-repository/downloads"
+		},
+		"source": {
+			"href": "https://api.bitbucket.org/2.0/repositories/test-repository/src"
+		},
+		"clone": [{
+			"name": "https",
+			"href": "https://mockuser@bitbucket.org/test-repository.git"
+		}, {
+			"name": "ssh",
+			"href": "git@bitbucket.org:test-repository.git"
+		}],
+		"hooks": {
+			"href": "https://api.bitbucket.org/2.0/repositories/test-repository/hooks"
+		}
+	},
+	"name": "test-repository",
+	"slug": "test-repository",
+	"description": "",
+	"scm": "git",
+	"website": null,
+	"owner": {
+		"display_name": "Test",
+		"links": {
+			"self": {
+				"href": "https://api.bitbucket.org/2.0/workspaces/%7Bmock-uuid%7D"
+			},
+			"avatar": {
+				"href": "https://bitbucket.org/account/avatar/"
+			},
+			"html": {
+				"href": "https://bitbucket.org/%7Bmock-uuid%7D/"
+			}
+		},
+		"type": "team",
+		"uuid": "{mock-uuid}",
+		"username": "mockuser"
+	},
+	"workspace": {
+		"type": "workspace",
+		"uuid": "{mock-uuid}",
+		"name": "Test",
+		"slug": "test",
+		"links": {
+			"avatar": {
+				"href": "https://bitbucket.org/workspaces/avatar/?ts=1753146453"
+			},
+			"html": {
+				"href": "https://bitbucket.org/"
+			},
+			"self": {
+				"href": "https://api.bitbucket.org/2.0/workspaces/test"
+			}
+		}
+	},
+	"is_private": true,
+	"project": {
+		"type": "project",
+		"key": "PLAYGROUND",
+		"uuid": "{mock-uuid}",
+		"name": "Test Playground",
+		"links": {
+			"self": {
+				"href": "https://api.bitbucket.org/2.0/workspaces/projects/PLAYGROUND"
+			},
+			"html": {
+				"href": "https://bitbucket.org/workspace/projects/PLAYGROUND"
+			},
+			"avatar": {
+				"href": "https://example.com/avatar.png"
+			}
+		}
+	},
+	"fork_policy": "no_public_forks",
+	"created_on": "2025-07-03T12:44:56.298134+00:00",
+	"updated_on": "2025-07-21T13:14:31.013771+00:00",
+	"size": 90450,
+	"language": "",
+	"uuid": "{mock-uuid}",
+	"mainbranch": {
+		"name": "main",
+		"type": "branch"
+	},
+	"override_settings": {
+		"default_merge_strategy": true,
+		"branching_model": true
+	},
+	"parent": null,
+	"enforced_signed_commits": null,
+	"has_issues": false,
+	"has_wiki": false
+},
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

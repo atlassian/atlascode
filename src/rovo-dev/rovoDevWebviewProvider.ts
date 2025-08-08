@@ -499,7 +499,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private async sendUserPromptToView({ text, enable_deep_plan, context }: RovoDevPrompt) {
         const webview = this._webView!;
 
-        await webview.postMessage({
+        return await webview.postMessage({
             type: RovoDevProviderMessageType.UserChatMessage,
             message: {
                 text: text,
@@ -507,6 +507,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 context: context,
             },
         });
+    }
+
+    private async sendPromptSentToView({ text, enable_deep_plan, context }: RovoDevPrompt) {
+        const webview = this._webView!;
 
         return await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
@@ -675,6 +679,8 @@ ${message}`;
             context,
         };
 
+        await this.sendPromptSentToView({ text, enable_deep_plan, context });
+
         let payloadToSend = this.addUndoContextToPrompt(text);
         payloadToSend = this.addContextToPrompt(payloadToSend, context);
 
@@ -842,6 +848,7 @@ ${message}`;
 
     private async executeReplay(): Promise<void> {
         this.beginNewPrompt('replay');
+        await this.sendPromptSentToView({ text: '', enable_deep_plan: false, context: undefined });
 
         await this.executeApiWithErrorHandling(async (client) => {
             return this.processChatResponse('replay', client.replay());
