@@ -19,6 +19,9 @@ export class RovoDevProcessManager {
         this.rovoDevWebviewProvider = provider;
     }
 
+    private constructor() {
+        // Private constructor to enforce singleton pattern
+    }
     public static getInstance(): RovoDevProcessManager {
         if (!RovoDevProcessManager.instance) {
             RovoDevProcessManager.instance = new RovoDevProcessManager();
