@@ -360,10 +360,11 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ErrorMessage:
-                    handleAppendError(event.message);
                     if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
                         finalizeResponse();
                     }
+                    handleAppendError(event.message);
+
                     break;
 
                 case RovoDevProviderMessageType.NewSession:
