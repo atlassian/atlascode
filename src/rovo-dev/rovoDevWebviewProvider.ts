@@ -45,7 +45,7 @@ import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
-import { setRovoDevWebviewProvider } from './rovoDevProcessManager';
+import { RovoDevProcessManager } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevContext, RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
@@ -138,7 +138,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._registerEditorListeners();
 
         // Register this provider with the process manager for error handling
-        setRovoDevWebviewProvider(this);
+        RovoDevProcessManager.getInstance().setRovoDevWebviewProvider(this);
     }
 
     private getWorkspacePort(): number | undefined {
