@@ -12,7 +12,10 @@ export const PrepareCommitTip: React.FC<PrepareCommitTipProps> = memo(({ classNa
                 Tip:{' '}
             </Box>{' '}
             You can have issue keys auto-added to your commit messages using{' '}
-            <Link href="https://github.com/atlassian/atlascode/blob/main/scripts/prepare-commit-jira.sh">
+            <Link
+                href="https://github.com/atlassian/atlascode/blob/main/scripts/prepare-commit-jira.sh"
+                underline="hover"
+            >
                 our prepare-commit-msg hook
             </Link>
         </Typography>

@@ -179,7 +179,10 @@ export const Debug: React.FunctionComponent<DebugProps> = memo(
                                 <Grid item>
                                     <Typography variant="body1">
                                         When using Charles, you must{' '}
-                                        <Link href="https://www.charlesproxy.com/documentation/using-charles/ssl-certificates/">
+                                        <Link
+                                            href="https://www.charlesproxy.com/documentation/using-charles/ssl-certificates/"
+                                            underline="hover"
+                                        >
                                             save the Charles Root Certificate
                                         </Link>{' '}
                                         and provide the absolute path to it here
@@ -197,7 +200,10 @@ export const Debug: React.FunctionComponent<DebugProps> = memo(
                                 <Grid item>
                                     <Typography variant="body1">
                                         You also need to{' '}
-                                        <Link href="https://www.charlesproxy.com/documentation/proxying/ssl-proxying/">
+                                        <Link
+                                            href="https://www.charlesproxy.com/documentation/proxying/ssl-proxying/"
+                                            underline="hover"
+                                        >
                                             specify the following hosts in Charles
                                         </Link>{' '}
                                         to have SSL proxying enabled for them.

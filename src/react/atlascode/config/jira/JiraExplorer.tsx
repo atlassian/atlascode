@@ -170,7 +170,10 @@ export const JiraExplorer: React.FunctionComponent<JiraExplorerProps> = memo(
                                 Filters and Custom JQL
                             </Box>
                             <Box display="inline" marginLeft={3}>
-                                <Link href="https://www.atlassian.com/blog/jira-software/jql-the-most-flexible-way-to-search-jira-14">
+                                <Link
+                                    href="https://www.atlassian.com/blog/jira-software/jql-the-most-flexible-way-to-search-jira-14"
+                                    underline="hover"
+                                >
                                     What is JQL?
                                 </Link>
                             </Box>

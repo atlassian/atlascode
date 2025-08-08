@@ -15,7 +15,7 @@ export const PullRequestHeader: React.FC<PullRequestHeaderProps> = ({ state, con
             <Toolbar>
                 <Box flexGrow={1}>
                     <Typography variant={'h3'}>
-                        <Link color="textPrimary" href={state.pr.data.url}>
+                        <Link color="textPrimary" href={state.pr.data.url} underline="hover">
                             {`${state.pr.data.destination!.repo.displayName}: Pull request #${state.pr.data.id}`}
                         </Link>
                     </Typography>

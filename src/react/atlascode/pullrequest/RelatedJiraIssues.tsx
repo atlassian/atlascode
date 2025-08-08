@@ -50,7 +50,7 @@ export const RelatedJiraIssues: React.FunctionComponent<RelatedJiraIssuesProps> 
                                 </Box>
                             </TableCell>
                             <TableCell align={'left'} className={classes.tableCell}>
-                                <Link href="#" onClick={() => openJiraIssue(issue)}>
+                                <Link href="#" onClick={() => openJiraIssue(issue)} underline="hover">
                                     <Typography>{issue.key}</Typography>
                                 </Link>
                             </TableCell>
