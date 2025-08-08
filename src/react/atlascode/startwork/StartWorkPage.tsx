@@ -560,7 +560,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                         <Grid
                                                             container
                                                             spacing={2}
-                                                            justify={'center'}
+                                                            justifyContent={'center'}
                                                             alignItems={'center'}
                                                         >
                                                             <Grid item xs={10}>
@@ -770,7 +770,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                             <PrepareCommitTip />
                                         </Grid>
                                         <Grid item hidden={submitState !== 'submit-success'}>
-                                            <Button variant="contained" color="default" onClick={controller.closePage}>
+                                            <Button variant="contained" onClick={controller.closePage}>
                                                 Close
                                             </Button>
                                         </Grid>

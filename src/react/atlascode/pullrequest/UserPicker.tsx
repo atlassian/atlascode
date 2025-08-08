@@ -59,7 +59,7 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
             onClose={() => setOpen(false)}
             options={fetchUsers.result || props.defaultUsers}
             getOptionLabel={(option) => option?.displayName || ''}
-            getOptionSelected={(option, value) => option.accountId === value.accountId}
+            isOptionEqualToValue={(option, value) => option.accountId === value.accountId}
             value={props.users}
             onInputChange={handleInputChange}
             onChange={handleChange}

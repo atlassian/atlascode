@@ -87,17 +87,17 @@ function generateListItems(
                     <ListItemSecondaryAction>
                         {swa.auth.state === AuthInfoState.Invalid && (
                             <Tooltip title="Credential Error">
-                                <IconButton edge="end" aria-label="error" onClick={() => edit(swa)}>
+                                <IconButton edge="end" aria-label="error" onClick={() => edit(swa)} size="large">
                                     <ErrorIcon fontSize="small" color="inherit" />
                                 </IconButton>
                             </Tooltip>
                         )}
                         {!swa.site.isCloud && (
-                            <IconButton edge="end" aria-label="edit" onClick={() => edit(swa)}>
+                            <IconButton edge="end" aria-label="edit" onClick={() => edit(swa)} size="large">
                                 <EditIcon fontSize="small" color="inherit" />
                             </IconButton>
                         )}
-                        <IconButton edge="end" aria-label="delete" onClick={() => logout(swa.site)}>
+                        <IconButton edge="end" aria-label="delete" onClick={() => logout(swa.site)} size="large">
                             <DeleteIcon fontSize="small" color="inherit" />
                         </IconButton>
                     </ListItemSecondaryAction>

@@ -25,7 +25,7 @@ export const BranchInfo: React.FunctionComponent<BranchInfoProps> = ({ source, d
     return isLoading ? (
         <CircularProgress />
     ) : (
-        <Grid container spacing={1} direction={'row'} justify="flex-start" alignItems="center" wrap={'wrap'}>
+        <Grid container spacing={1} direction={'row'} justifyContent="flex-start" alignItems="center" wrap={'wrap'}>
             <Grid item>
                 <Tooltip title={sourceBranch}>
                     <Chip clickable color="primary" label={sourceBranch} size={'small'} />

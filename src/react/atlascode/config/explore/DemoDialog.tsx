@@ -68,7 +68,7 @@ export const DemoDialog: React.FunctionComponent<DemoDialogProps> = ({
                     <DialogContentText>{modalDescription}</DialogContentText>
                 </Box>
                 <Box hidden={imageLoaded}>
-                    <Skeleton variant="rect" width="100%" height="400px" />
+                    <Skeleton variant="rectangular" width="100%" height="400px" />
                 </Box>
                 <Box hidden={!imageLoaded}>
                     <img

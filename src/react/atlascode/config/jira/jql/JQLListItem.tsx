@@ -46,13 +46,13 @@ export const JQLListItem: React.FunctionComponent<JQLListItemProps> = memo(
                     <ListItemSecondaryAction>
                         {!filterId && (
                             <Tooltip title={`Edit ${name}`}>
-                                <IconButton id={id} edge="end" aria-label="edit" onClick={handleEdit}>
+                                <IconButton id={id} edge="end" aria-label="edit" onClick={handleEdit} size="large">
                                     <EditIcon fontSize="small" color="inherit" />
                                 </IconButton>
                             </Tooltip>
                         )}
                         <Tooltip title={`Delete ${name}`}>
-                            <IconButton id={id} edge="end" aria-label="delete" onClick={handleDelete}>
+                            <IconButton id={id} edge="end" aria-label="delete" onClick={handleDelete} size="large">
                                 <DeleteIcon fontSize="small" color="inherit" />
                             </IconButton>
                         </Tooltip>

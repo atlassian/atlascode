@@ -99,7 +99,7 @@ export const Debug: React.FunctionComponent<DebugProps> = memo(
                     <input className={classes.hidden} id="cert-path-button" type="file" onChange={handleFileChange} />
                     <label htmlFor="cert-path-button">
                         <Tooltip title="Choose Certificate File">
-                            <IconButton component="span">
+                            <IconButton component="span" size="large">
                                 <InsertDriveFileIcon fontSize="small" color="inherit" />
                             </IconButton>
                         </Tooltip>

@@ -23,7 +23,7 @@ const useStyles = makeStyles(
                 display: 'flex',
                 'align-items': 'center',
                 'background-color':
-                    theme.palette.type === 'dark'
+                    theme.palette.mode === 'dark'
                         ? lighten(theme.palette.background.default, 0.15)
                         : darken(theme.palette.background.default, 0.15),
             },

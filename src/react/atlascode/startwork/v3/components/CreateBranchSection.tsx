@@ -33,7 +33,7 @@ export const CreateBranchSection: React.FC<CreateBranchSectionProps> = ({ state,
     return (
         <Box
             border={1}
-            borderRadius={3}
+            borderRadius="3px"
             borderColor="var(--vscode-list-inactiveSelectionBackground)"
             padding={3}
             marginBottom={2}
@@ -43,7 +43,6 @@ export const CreateBranchSection: React.FC<CreateBranchSectionProps> = ({ state,
                     Create branch
                 </Typography>
             </Box>
-
             <Grid container spacing={2} direction="column">
                 <Grid item>
                     <Typography variant="body2">New local branch</Typography>

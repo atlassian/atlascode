@@ -139,6 +139,7 @@ export const CustomSiteAuthForm = ({
                                         })
                                     }
                                     onMouseDown={preventClickDefault}
+                                    size="large"
                                 >
                                     {authFormState.showPassword ? (
                                         <Visibility fontSize="small" />
@@ -195,7 +196,6 @@ export const CustomSiteAuthForm = ({
                     label="Use Custom SSL Settings"
                 />
             </Grid>
-
             {watches.customSSLEnabled && (
                 <Box marginLeft={3}>
                     <Grid item>
@@ -246,7 +246,6 @@ export const CustomSiteAuthForm = ({
                     </Grid>
                 </Box>
             )}
-
             {watches.customSSLEnabled && watches.customSSLType === 'customServerSSL' && (
                 <Box marginLeft={3}>
                     <Grid item>
@@ -269,7 +268,6 @@ export const CustomSiteAuthForm = ({
                     </Grid>
                 </Box>
             )}
-
             {watches.customSSLEnabled && watches.customSSLType === 'customClientSSL' && (
                 <Box marginLeft={3}>
                     <Grid item>
@@ -309,6 +307,7 @@ export const CustomSiteAuthForm = ({
                                             })
                                         }
                                         onMouseDown={preventClickDefault}
+                                        size="large"
                                     >
                                         {authFormState.showPFXPassphrase ? (
                                             <Visibility fontSize="small" />

@@ -75,7 +75,7 @@ const PullRequestTitleSection: React.FC<PullRequestTitleSectionProps> = ({ state
                     <InlineTextEditor fullWidth defaultValue={state.pr.data.title} onSave={controller.updateTitle} />
                 </Grid>
                 <Grid item>
-                    <Grid container direction="row" spacing={2} justify={'space-between'}>
+                    <Grid container direction="row" spacing={2} justifyContent={'space-between'}>
                         <Grid item>
                             <Box marginLeft={2}>
                                 <BranchInfo

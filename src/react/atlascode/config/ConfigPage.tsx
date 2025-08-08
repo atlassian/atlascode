@@ -187,7 +187,8 @@ const ConfigPage: React.FunctionComponent = () => {
                                     aria-label="simple tabs example"
                                     indicatorColor="primary"
                                     variant="scrollable"
-                                    scrollButtons="on"
+                                    scrollButtons
+                                    allowScrollButtonsMobile
                                 >
                                     <Tab
                                         id="simple-tab-0"
