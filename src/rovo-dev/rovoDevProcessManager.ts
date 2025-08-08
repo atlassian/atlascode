@@ -1,9 +1,9 @@
 import { ChildProcess, spawn } from 'child_process';
 import { access, constants } from 'fs';
-import { isBasicAuthInfo, ProductJira } from 'src/atlclients/authInfo';
+import { AuthInfoEvent, isBasicAuthInfo, isUpdateAuthEvent, ProductJira } from 'src/atlclients/authInfo';
 import { Container } from 'src/container';
 import { Resources } from 'src/resources';
-import { Disposable, ExtensionContext, window, workspace } from 'vscode';
+import { Disposable, window, workspace } from 'vscode';
 
 import { rovodevInfo } from '../constants';
 
@@ -21,6 +21,7 @@ export class RovoDevProcessManager {
 
     private constructor() {
         // Private constructor to enforce singleton pattern
+        this.disposables.push(Disposable.from(Container.credentialManager.onDidAuthChange(this.onDidAuthChange, this)));
     }
     public static getInstance(): RovoDevProcessManager {
         if (!RovoDevProcessManager.instance) {
@@ -29,21 +30,28 @@ export class RovoDevProcessManager {
         return RovoDevProcessManager.instance;
     }
 
-    public initializeRovoDevProcessManager(context: ExtensionContext) {
+    private onDidAuthChange(e: AuthInfoEvent) {
+        if (isUpdateAuthEvent(e)) {
+            this.deactivateRovoDevProcessManager();
+            this.initializeRovoDevProcessManager();
+        }
+    }
+
+    public initializeRovoDevProcessManager() {
         // Listen for workspace folder changes
         const listener = workspace.onDidChangeWorkspaceFolders((event) => {
             if (event.added.length > 0) {
-                this.showWorkspaceLoadedMessageAndStartProcess(context);
+                this.showWorkspaceLoadedMessageAndStartProcess();
             }
             if (event.removed.length > 0) {
                 this.showWorkspaceClosedMessageAndStopProcess(event.removed);
             }
         });
 
-        context.subscriptions.push(listener);
+        Container.context.subscriptions.push(listener);
         this.disposables.push(listener);
 
-        this.showWorkspaceLoadedMessageAndStartProcess(context);
+        this.showWorkspaceLoadedMessageAndStartProcess();
     }
 
     public deactivateRovoDevProcessManager() {
@@ -63,8 +71,8 @@ export class RovoDevProcessManager {
     }
 
     // Helper to get a unique port for a workspace
-    private getOrAssignPortForWorkspace(context: ExtensionContext, workspacePath: string): number {
-        const mapping = context.globalState.get<{ [key: string]: number }>(rovodevInfo.mappingKey) || {};
+    private getOrAssignPortForWorkspace(workspacePath: string): number {
+        const mapping = Container.context.globalState.get<{ [key: string]: number }>(rovodevInfo.mappingKey) || {};
         if (mapping[workspacePath]) {
             return mapping[workspacePath];
         }
@@ -75,7 +83,7 @@ export class RovoDevProcessManager {
             port++;
         }
         mapping[workspacePath] = port;
-        context.globalState.update(rovodevInfo.mappingKey, mapping);
+        Container.context.globalState.update(rovodevInfo.mappingKey, mapping);
         return port;
     }
 
@@ -89,7 +97,7 @@ export class RovoDevProcessManager {
     }
 
     // Helper to start the background process
-    private startWorkspaceProcess(context: ExtensionContext, workspacePath: string, port: number) {
+    private startWorkspaceProcess(workspacePath: string, port: number) {
         this.stopWorkspaceProcess(workspacePath);
 
         const rovoDevPath =
@@ -166,7 +174,7 @@ export class RovoDevProcessManager {
         });
     }
 
-    private showWorkspaceLoadedMessageAndStartProcess(context: ExtensionContext) {
+    private showWorkspaceLoadedMessageAndStartProcess() {
         const folders = workspace.workspaceFolders;
         if (!folders || folders.length === 0) {
             return;
@@ -181,9 +189,9 @@ export class RovoDevProcessManager {
         }
 
         for (const folder of folders) {
-            const port = this.getOrAssignPortForWorkspace(context, folder.uri.fsPath);
+            const port = this.getOrAssignPortForWorkspace(folder.uri.fsPath);
             console.log(`Rovo Dev: Workspace loaded: ${folder.name} (port ${port})`);
-            this.startWorkspaceProcess(context, folder.uri.fsPath, port);
+            this.startWorkspaceProcess(folder.uri.fsPath, port);
         }
     }
 

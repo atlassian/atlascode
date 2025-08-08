@@ -115,7 +115,7 @@ export async function activate(context: ExtensionContext) {
         activateYamlFeatures(context);
 
         if (!!process.env.ROVODEV_ENABLED) {
-            RovoDevProcessManager.getInstance().initializeRovoDevProcessManager(context);
+            RovoDevProcessManager.getInstance().initializeRovoDevProcessManager();
         }
     }
 
