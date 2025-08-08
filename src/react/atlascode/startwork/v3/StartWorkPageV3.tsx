@@ -1,8 +1,9 @@
 import { Box, Button, CircularProgress, Typography } from '@material-ui/core';
-import React from 'react';
+import React, { useContext } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
 
 import { AtlascodeErrorBoundary } from '../../common/ErrorBoundary';
+import { ErrorStateContext } from '../../common/errorController';
 import { ErrorDisplay } from '../../common/ErrorDisplay';
 import { StartWorkControllerContext, useStartWorkController } from '../startWorkController';
 import {
@@ -16,6 +17,7 @@ import { useStartWorkFormState } from './hooks/useStartWorkFormState';
 
 const StartWorkPageV3: React.FunctionComponent = () => {
     const [state, controller] = useStartWorkController();
+    const errorState = useContext(ErrorStateContext);
 
     const {
         formState,
@@ -44,9 +46,11 @@ const StartWorkPageV3: React.FunctionComponent = () => {
 
                     {submitState === 'submit-success' && <SuccessAlert submitResponse={submitResponse} />}
 
-                    <Box marginBottom={2}>
-                        <ErrorDisplay />
-                    </Box>
+                    {errorState.isErrorBannerOpen && (
+                        <Box marginBottom={2}>
+                            <ErrorDisplay />
+                        </Box>
+                    )}
 
                     <TaskInfoSection state={state} controller={controller} />
                     <CreateBranchSection
