@@ -493,7 +493,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private async sendUserPromptToView({ text, enable_deep_plan, context }: RovoDevPrompt) {
         const webview = this._webView!;
 
-        await webview.postMessage({
+        return await webview.postMessage({
             type: RovoDevProviderMessageType.UserChatMessage,
             message: {
                 text: text,
@@ -501,6 +501,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 context: context,
             },
         });
+    }
+
+    private async sendPromptSentToView({ text, enable_deep_plan, context }: RovoDevPrompt) {
+        const webview = this._webView!;
 
         return await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
@@ -561,17 +565,29 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             case 'user-prompt':
                 // receiving a user-prompt pre-initialized means we are in the 'replay' response
                 if (!this._initialized) {
+                    const cleanedText = this.stripContextTags(response.content);
                     this._currentPrompt = {
-                        text: response.content,
+                        text: cleanedText,
                         // TODO: content is not restored here at the moment, so we'll just render all prompts as they were submitted
                     };
-                    return this.sendUserPromptToView({ text: response.content });
+                    return this.sendUserPromptToView({ text: cleanedText });
                 }
                 return Promise.resolve(false);
 
             default:
                 return Promise.resolve(false);
         }
+    }
+
+    private stripContextTags(text: string): string {
+        // Remove content between <context> and </context> tags (including the tags themselves)
+        // This regex handles multiline content and nested tags
+        let cleanedText = text.replace(/<context>[\s\S]*?<\/context>/gi, '');
+
+        // Clean up excessive whitespace that might be left behind
+        cleanedText = cleanedText.replace(/\n\s*\n\s*\n/g, '\n\n'); // Replace 3+ newlines with 2
+
+        return cleanedText.trim();
     }
 
     private addContextToPrompt(message: string, context?: RovoDevContext): string {
@@ -583,7 +599,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (context.focusInfo && context.focusInfo.enabled && !context.focusInfo.invalid) {
             extra += `
             <context>
-                Consider that the user has the following open in the editor:
+                I have this open in editor:
                     <name>${context.focusInfo.file.name}</name>
                         <absolute_path>${context.focusInfo.file.absolutePath}</absolute_path>
                         <relative_path>${context.focusInfo.file.relativePath}</relative_path>
@@ -599,7 +615,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (context.contextItems && context.contextItems.length > 0) {
             extra += `
                 <context>
-                    The user has the following additional context items:
+                    I have these additional context items:
                     ${context.contextItems
                         .map(
                             (item) => `
@@ -656,6 +672,8 @@ ${message}`;
             enable_deep_plan,
             context,
         };
+
+        await this.sendPromptSentToView({ text, enable_deep_plan, context });
 
         let payloadToSend = this.addUndoContextToPrompt(text);
         payloadToSend = this.addContextToPrompt(payloadToSend, context);
@@ -829,6 +847,7 @@ ${message}`;
 
     private async executeReplay(): Promise<void> {
         this.beginNewPrompt('replay');
+        await this.sendPromptSentToView({ text: '', enable_deep_plan: false, context: undefined });
 
         await this.executeApiWithErrorHandling(async (client) => {
             return this.processChatResponse('replay', client.replay());

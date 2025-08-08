@@ -15,6 +15,7 @@ import {
 import { CredentialManager } from './atlclients/authStore';
 import { configuration } from './config/configuration';
 import { Container } from './container';
+import { Logger } from './logger';
 
 export type SitesAvailableUpdateEvent = {
     sites: DetailedSiteInfo[];
@@ -114,18 +115,28 @@ export class SiteManager extends Disposable {
     onDidAuthChange(e: AuthInfoEvent) {
         if (isRemoveAuthEvent(e)) {
             const deadSites = this.getSitesAvailable(e.product).filter((site) => site.credentialId === e.credentialId);
-            deadSites.forEach((s) => this.removeSite(s));
+
             if (deadSites.length > 0) {
-                this._onDidSitesAvailableChange.fire({
-                    sites: this.getSitesAvailable(e.product),
-                    product: e.product,
-                });
+                this.handleSiteRemoval(deadSites, e.product);
             }
         } else if (isUpdateAuthEvent(e)) {
             this._onDidSitesAvailableChange.fire({
                 sites: this.getSitesAvailable(e.site.product),
                 product: e.site.product,
             });
+        }
+    }
+
+    private async handleSiteRemoval(deadSites: DetailedSiteInfo[], product: Product): Promise<void> {
+        try {
+            const removalPromises = deadSites.map(async (s) => await this.removeSite(s, false, false));
+            await Promise.all(removalPromises);
+            this._onDidSitesAvailableChange.fire({
+                sites: this.getSitesAvailable(product),
+                product,
+            });
+        } catch (error) {
+            Logger.error(error, 'Error during async site removal');
         }
     }
 
@@ -247,7 +258,7 @@ export class SiteManager extends Disposable {
         return this.getSitesAvailable(product).find((site) => site.id === id);
     }
 
-    public removeSite(site: SiteInfo): boolean {
+    public async removeSite(site: SiteInfo, removeCredentials = true, fireEvent = true): Promise<boolean> {
         const sites = this.readSitesFromGlobalStore(site.product.key);
         if (sites && sites.length > 0) {
             const foundIndex = sites.findIndex((availableSite) => availableSite.host === site.host);
@@ -256,8 +267,13 @@ export class SiteManager extends Disposable {
                 sites.splice(foundIndex, 1);
                 this._globalStore.update(`${site.product.key}${SitesSuffix}`, sites);
                 this._sitesAvailable.set(site.product.key, sites);
-                this._onDidSitesAvailableChange.fire({ sites: sites, product: site.product });
-                Container.credentialManager.removeAuthInfo(deletedSite);
+
+                if (removeCredentials) {
+                    await Container.credentialManager.removeAuthInfo(deletedSite);
+                }
+                if (fireEvent) {
+                    this._onDidSitesAvailableChange.fire({ sites: sites, product: site.product });
+                }
 
                 if (deletedSite.id === Container.config.jira.lastCreateSiteAndProject.siteId) {
                     configuration.setLastCreateSiteAndProject(undefined);

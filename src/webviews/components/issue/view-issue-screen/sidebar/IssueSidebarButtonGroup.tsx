@@ -79,8 +79,10 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
+                flexWrap: 'wrap-reverse',
                 width: '100%',
                 justifyContent: 'space-between',
+                gap: '4px 0',
             }}
         >
             <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>

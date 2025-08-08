@@ -1,0 +1,98 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/2.0/repositories/mockuser/test-repository/commits"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "values": [{
+                "type": "commit",
+                "hash": "35c37c0bb16c21ef943fb16890a2209253bfcc83",
+                "date": "2025-07-03T14:17:40+00:00",
+                "author": {
+                    "type": "author",
+                    "raw": "Mock User <mockuser@atlassian.code>",
+                    "user": {
+                        "display_name": "Mock User",
+                        "type": "user",
+                        "uuid": "{mock-uuid}",
+                        "links": {
+                            "avatar": {
+                                "href": "https://example.com/avatar.png"
+                            }
+                        }
+                    }
+                },
+                "message": "added example.json\n",
+                "summary": {
+                    "type": "rendered",
+                    "raw": "added example.json\n",
+                    "markup": "markdown",
+                    "html": "<p>added example.json</p>"
+                },
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/test-repository/commit/35c37c0bb16c21ef943fb16890a2209253bfcc83"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/test-repository/commits/35c37c0bb16c21ef943fb16890a2209253bfcc83"
+                    },
+                    "diff": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/test-repository/diff/35c37c0bb16c21ef943fb16890a2209253bfcc83"
+                    },
+                    "approve": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/test-repository/commit/35c37c0bb16c21ef943fb16890a2209253bfcc83/approve"
+                    },
+                    "comments": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/test-repository/commit/35c37c0bb16c21ef943fb16890a2209253bfcc83/comments"
+                    },
+                    "statuses": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/test-repository/commit/35c37c0bb16c21ef943fb16890a2209253bfcc83/statuses"
+                    },
+                    "patch": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/test-repository/patch/35c37c0bb16c21ef943fb16890a2209253bfcc83"
+                    }
+                },
+                "parents": [{
+                    "hash": "942a952c0ce64c16705032fb9ba7aed63a72442d",
+                    "links": {
+                        "self": {
+                            "href": "https://api.bitbucket.org/2.0/repositories/test-repository/commit/942a952c0ce64c16705032fb9ba7aed63a72442d"
+                        },
+                        "html": {
+                            "href": "https://bitbucket.org/test-repository/commits/942a952c0ce64c16705032fb9ba7aed63a72442d"
+                        }
+                    },
+                    "type": "commit"
+                }],
+                "rendered": {
+                    "message": {
+                        "type": "rendered",
+                        "raw": "added example.json\n",
+                        "markup": "markdown",
+                        "html": "<p>added example.json</p>"
+                    }
+                },
+                "repository": {
+                    "type": "repository",
+                    "full_name": "test-repository",
+                    "links": {
+                        "self": {
+                            "href": "https://api.bitbucket.org/2.0/repositories/test-repository"
+                        },
+                        "html": {
+                            "href": "https://bitbucket.org/test-repository"
+                        }
+                    },
+                    "name": "test-repository",
+                    "uuid": "{mock-uuid}"
+                }
+            }],
+            "pagelen": 100
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

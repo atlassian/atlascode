@@ -2,8 +2,8 @@
 set -e
 
 echo "Setting up global git configuration..."
-git config --global user.name "Test User"
-git config --global user.email "test@example.com"
+git config --global user.name "Mock User"
+git config --global user.email "mockuser@atlassian.code"
 git config --global init.defaultBranch main
 
 echo "Creating mock repository that simulates a Bitbucket clone..."
@@ -14,7 +14,7 @@ cd /mock-repository
 git init
 
 # Add remote and configure it properly (like git clone does)
-git remote add origin git@bitbucket.org/test-repository.git
+git remote add origin git@bitbucket.org:mockuser/test-repository.git
 git config branch.main.remote origin
 git config branch.main.merge refs/heads/main
 git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
