@@ -281,7 +281,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         this.beginNewSession();
                         if (this.isBBY) {
                             // TODO: we should obtain the session id from the boysenberry environment
-                            await this.sendPromptSentToView({ text: '', enable_deep_plan: false, context: undefined });
                             await this.executeReplay();
                         }
                     } else {
@@ -849,6 +848,7 @@ ${message}`;
 
     private async executeReplay(): Promise<void> {
         this.beginNewPrompt('replay');
+        await this.sendPromptSentToView({ text: '', enable_deep_plan: false, context: undefined });
 
         await this.executeApiWithErrorHandling(async (client) => {
             return this.processChatResponse('replay', client.replay());
