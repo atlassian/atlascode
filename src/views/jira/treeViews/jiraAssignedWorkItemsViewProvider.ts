@@ -167,7 +167,7 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
             if (!jqlEntries.length) {
                 return [AssignedWorkItemsViewProvider._treeItemConfigureJiraMessage];
             }
-            const allIssues = (await Promise.all(jqlEntries.map((entry) => executeJqlQuery(entry)))).flat();
+            const allIssues = (await Promise.all(jqlEntries.map(executeJqlQuery))).flat();
 
             if (this._skipNotificationForNextFetch) {
                 this._skipNotificationForNextFetch = false;
