@@ -26,7 +26,7 @@ import {
     BB_PIPELINES_FILENAME,
 } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
-import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
+import { deactivateRovoDevProcessManager, initializeRovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { GitExtension } from './typings/git';
 import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
 import Performance from './util/perf';
@@ -115,7 +115,7 @@ export async function activate(context: ExtensionContext) {
         activateYamlFeatures(context);
 
         if (!!process.env.ROVODEV_ENABLED) {
-            RovoDevProcessManager.getInstance().initializeRovoDevProcessManager(context);
+            initializeRovoDevProcessManager(context);
         }
     }
 
@@ -222,7 +222,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
 export function deactivate() {
     if (!process.env.ROVODEV_BBY) {
         if (!!process.env.ROVODEV_ENABLED) {
-            RovoDevProcessManager.getInstance().deactivateRovoDevProcessManager();
+            deactivateRovoDevProcessManager();
         }
 
         NotificationManagerImpl.getInstance().stopListening();
