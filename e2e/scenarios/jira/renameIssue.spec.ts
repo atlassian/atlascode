@@ -18,7 +18,7 @@ export async function renameIssue(page: Page, request: APIRequestContext) {
     const cleanupIssueMock = await setupIssueMock(request, { summary: NEW_TITLE });
 
     await issuePage.title.changeTo(NEW_TITLE);
-    await page.waitForTimeout(1_000);
+    await page.waitForTimeout(2_000);
     await issuePage.title.expectEqual(NEW_TITLE);
 
     await cleanupIssueMock();
