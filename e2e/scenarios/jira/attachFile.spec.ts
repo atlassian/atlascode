@@ -1,6 +1,6 @@
 import { APIRequestContext, Page } from '@playwright/test';
-import { attachment } from 'e2e/fixtures/attachment';
 import { getIssueFrame, setupIssueMock } from 'e2e/helpers';
+import { attachment } from 'e2e/mock-data/attachment';
 import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
 
 const FILE_NAME = 'test.jpg';

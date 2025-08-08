@@ -1,6 +1,6 @@
 import { APIRequestContext, expect, Page, test } from '@playwright/test';
-import { createSearchResponse } from 'e2e/mock-data/search';
 import { cleanupWireMockMapping, getIssueFrame, setupWireMockMapping } from 'e2e/helpers';
+import { createSearchResponse } from 'e2e/mock-data/search';
 import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
 export async function assigningFlow(page: Page, request: APIRequestContext) {
