@@ -111,6 +111,10 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         return this.state.fieldValues['project'].key;
     }
 
+    protected override getApiVersion(): string {
+        return String(this.state.apiVersion);
+    }
+
     constructor(props: any) {
         super(props);
         this.state = emptyState;
@@ -336,12 +340,12 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     };
 
     fetchUsers = (input: string) => {
-        return this.loadSelectOptions(
-            input,
-            `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?${
-                this.state.siteDetails.isCloud ? 'query' : 'username'
-            }=`,
-        );
+        const apiVersion = this.getApiVersion();
+        const userSearchUrl = this.state.siteDetails.isCloud
+            ? `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?query=`
+            : `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?username=`;
+
+        return this.loadSelectOptions(input, userSearchUrl);
     };
 
     private getFieldError(fieldKey: string): string | undefined {
