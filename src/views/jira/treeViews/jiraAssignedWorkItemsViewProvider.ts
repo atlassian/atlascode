@@ -27,6 +27,7 @@ import { executeJqlQuery, JiraIssueNode, loginToJiraMessageNode, TreeViewIssue }
 
 const AssignedWorkItemsViewProviderId = AssignedJiraItemsViewId;
 const RefreshCumulativeJqlFetchEventName = 'ui.jira.jqlFetch.update.lcp';
+const InitialCumulativeJqlFetchEventName = 'ui.jira.jqlFetch.render.lcp';
 
 export class AssignedWorkItemsViewProvider extends Disposable implements TreeDataProvider<TreeItem> {
     private static readonly _treeItemConfigureJiraMessage = loginToJiraMessageNode;
@@ -60,7 +61,15 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
 
         const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
         if (jqlEntries.length) {
-            this._initPromises = new PromiseRacer(jqlEntries.map((entry) => executeJqlQuery(entry, true)));
+            timer.mark(InitialCumulativeJqlFetchEventName);
+            const promises = jqlEntries.map(executeJqlQuery);
+            this._initPromises = new PromiseRacer(promises);
+            Promise.all(promises).then(() => {
+                const jqlInitialDuration = timer.measureAndClear(InitialCumulativeJqlFetchEventName);
+                performanceEvent(InitialCumulativeJqlFetchEventName, jqlInitialDuration).then((event) => {
+                    Container.analyticsClient.sendTrackEvent(event);
+                });
+            });
         }
 
         Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
@@ -153,13 +162,12 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
         }
         // this branch triggers when refresing an already rendered panel
         else {
+            timer.mark(RefreshCumulativeJqlFetchEventName);
             const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
             if (!jqlEntries.length) {
                 return [AssignedWorkItemsViewProvider._treeItemConfigureJiraMessage];
             }
-            timer.mark(RefreshCumulativeJqlFetchEventName);
             const allIssues = (await Promise.all(jqlEntries.map((entry) => executeJqlQuery(entry)))).flat();
-            const jqlRefreshDuration = timer.measureAndClear(RefreshCumulativeJqlFetchEventName);
 
             if (this._skipNotificationForNextFetch) {
                 this._skipNotificationForNextFetch = false;
@@ -169,6 +177,7 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
             }
 
             SearchJiraHelper.setIssues(allIssues, AssignedWorkItemsViewProviderId);
+            const jqlRefreshDuration = timer.measureAndClear(RefreshCumulativeJqlFetchEventName);
             performanceEvent(RefreshCumulativeJqlFetchEventName, jqlRefreshDuration).then((event) => {
                 Container.analyticsClient.sendTrackEvent(event);
             });
