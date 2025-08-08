@@ -1,5 +1,5 @@
-import { Chip, CircularProgress, Grid, Tooltip } from '@material-ui/core';
-import ArrowRightAltIcon from '@material-ui/icons/ArrowRightAlt';
+import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
+import { Chip, CircularProgress, Grid, Tooltip } from '@mui/material';
 import * as React from 'react';
 
 import { Repo, User } from '../../../bitbucket/model';

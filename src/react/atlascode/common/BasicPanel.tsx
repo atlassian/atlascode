@@ -1,3 +1,4 @@
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
     Box,
     CircularProgress,
@@ -5,8 +6,7 @@ import {
     ExpansionPanelDetails,
     ExpansionPanelSummary,
     makeStyles,
-} from '@material-ui/core';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+} from '@mui/material';
 import React, { memo, useCallback, useState } from 'react';
 
 import { PanelTitle } from '../common/PanelTitle';

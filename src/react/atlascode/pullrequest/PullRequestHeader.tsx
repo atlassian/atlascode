@@ -1,4 +1,4 @@
-import { AppBar, Box, Link, Toolbar, Typography } from '@material-ui/core';
+import { AppBar, Box, Link, Toolbar, Typography } from '@mui/material';
 import React from 'react';
 
 import { PullRequestDetailsControllerApi, PullRequestDetailsState } from './pullRequestDetailsController';

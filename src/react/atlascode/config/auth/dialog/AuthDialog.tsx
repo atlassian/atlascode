@@ -9,7 +9,7 @@ import {
     Grid,
     TextField,
     Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import React, { memo, useCallback, useState } from 'react';
 import { AuthFormType } from 'src/react/atlascode/constants';
 import { isCustomUrl } from 'src/react/atlascode/util/authFormUtils';

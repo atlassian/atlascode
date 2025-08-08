@@ -1,5 +1,5 @@
-import { Box, Button, darken, Divider, Grid, lighten, makeStyles, Theme, Typography } from '@material-ui/core';
-import Skeleton from '@material-ui/lab/Skeleton';
+import Skeleton from '@mui/lab/Skeleton';
+import { Box, Button, darken, Divider, Grid, lighten, makeStyles, Theme, Typography } from '@mui/material';
 import React, { useCallback, useState } from 'react';
 
 const useStyles = makeStyles((theme: Theme) => ({

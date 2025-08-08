@@ -1,3 +1,5 @@
+import SettingsIcon from '@mui/icons-material/Settings';
+import { Autocomplete } from '@mui/lab';
 import {
     Box,
     Checkbox,
@@ -8,9 +10,7 @@ import {
     TextField,
     Theme,
     Typography,
-} from '@material-ui/core';
-import SettingsIcon from '@material-ui/icons/Settings';
-import { Autocomplete } from '@material-ui/lab';
+} from '@mui/material';
 import React, { useContext } from 'react';
 
 import { VSCodeStyles, VSCodeStylesContext } from '../../../../vscode/theme/styles';

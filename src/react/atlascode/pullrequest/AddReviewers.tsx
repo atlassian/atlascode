@@ -1,6 +1,6 @@
-import { Avatar, Grid, makeStyles, TextField, Typography } from '@material-ui/core';
-import AddIcon from '@material-ui/icons/Add';
-import { Autocomplete } from '@material-ui/lab';
+import AddIcon from '@mui/icons-material/Add';
+import { Autocomplete } from '@mui/lab';
+import { Avatar, Grid, makeStyles, TextField, Typography } from '@mui/material';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useContext, useState } from 'react';
 import { useAsyncAbortable } from 'react-async-hook';

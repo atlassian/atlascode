@@ -14,7 +14,7 @@ import {
     RadioGroup,
     TextField,
     Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import React, { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 

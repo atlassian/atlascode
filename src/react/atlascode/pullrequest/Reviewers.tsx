@@ -1,7 +1,7 @@
-import { Avatar, Badge, Box, CircularProgress, Grid, IconButton, Tooltip, Typography } from '@material-ui/core';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import CloseIcon from '@material-ui/icons/Close';
-import { AvatarGroup } from '@material-ui/lab';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CloseIcon from '@mui/icons-material/Close';
+import { AvatarGroup } from '@mui/lab';
+import { Avatar, Badge, Box, CircularProgress, Grid, Tooltip, Typography } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { BitbucketSite, Reviewer, User } from '../../../bitbucket/model';

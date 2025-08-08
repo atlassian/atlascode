@@ -1,5 +1,5 @@
-import { Box, darken, Grid, lighten, makeStyles, Theme, Tooltip, Typography } from '@material-ui/core';
-import EditIcon from '@material-ui/icons/Edit';
+import EditIcon from '@mui/icons-material/Edit';
+import { Box, darken, Grid, lighten, makeStyles, Theme, Tooltip, Typography } from '@mui/material';
 import React, { useCallback, useState } from 'react';
 
 import { User } from '../../../bitbucket/model';

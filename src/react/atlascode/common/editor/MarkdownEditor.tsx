@@ -1,5 +1,5 @@
 import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Box, Button, CircularProgress, Grid, makeStyles, Switch, TextField, Theme, useTheme } from '@material-ui/core';
+import { Box, Button, CircularProgress, Grid, makeStyles, Switch, TextField, Theme, useTheme } from '@mui/material';
 import { baseKeymap } from 'prosemirror-commands';
 import { dropCursor } from 'prosemirror-dropcursor';
 import { buildKeymap, buildMenuItems } from 'prosemirror-example-setup';

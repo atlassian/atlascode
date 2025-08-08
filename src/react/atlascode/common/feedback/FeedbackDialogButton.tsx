@@ -10,7 +10,7 @@ import {
     MenuItem,
     Switch,
     TextField,
-} from '@material-ui/core';
+} from '@mui/material';
 import React, { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 

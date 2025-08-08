@@ -1,4 +1,4 @@
-import { Grid, Input, makeStyles, Slider, Theme, Typography } from '@material-ui/core';
+import { Grid, Input, makeStyles, Slider, Theme, Typography } from '@mui/material';
 import clsx from 'clsx';
 import React, { memo, useCallback, useEffect, useMemo } from 'react';
 

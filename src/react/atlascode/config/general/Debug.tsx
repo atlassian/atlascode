@@ -1,4 +1,5 @@
 import { InlineTextEditor, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import {
     Divider,
     Fade,
@@ -13,8 +14,7 @@ import {
     Theme,
     Tooltip,
     Typography,
-} from '@material-ui/core';
-import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
+} from '@mui/material';
 import clsx from 'clsx';
 import React, { memo, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 

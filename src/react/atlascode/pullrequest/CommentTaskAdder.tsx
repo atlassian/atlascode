@@ -1,4 +1,4 @@
-import { Button, Checkbox, Grid, TextField } from '@material-ui/core';
+import { Button, Checkbox, Grid, TextField } from '@mui/material';
 import React, { useCallback, useState } from 'react';
 
 type TaskAdderProps = {
