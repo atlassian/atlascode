@@ -9,12 +9,12 @@ import {
     List,
     ListItem,
     ListItemText,
-    makeStyles,
     Switch,
     Theme,
     Tooltip,
     Typography,
 } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import clsx from 'clsx';
 import React, { memo, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 

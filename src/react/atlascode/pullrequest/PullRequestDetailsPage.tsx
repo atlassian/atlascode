@@ -5,13 +5,13 @@ import {
     Container,
     Divider,
     Grid,
-    makeStyles,
     Paper,
     Theme,
     Typography,
     useMediaQuery,
     useTheme,
 } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';

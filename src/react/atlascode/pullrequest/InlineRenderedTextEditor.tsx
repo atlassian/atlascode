@@ -1,5 +1,6 @@
 import EditIcon from '@mui/icons-material/Edit';
-import { Box, darken, Grid, lighten, makeStyles, Theme, Tooltip, Typography } from '@mui/material';
+import { Box, darken, Grid, lighten, Theme, Tooltip, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useCallback, useState } from 'react';
 
 import { User } from '../../../bitbucket/model';

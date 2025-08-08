@@ -5,7 +5,6 @@ import StarBorderIcon from '@mui/icons-material/StarBorder';
 import {
     Checkbox,
     CircularProgress,
-    makeStyles,
     Paper,
     Table,
     TableBody,
@@ -18,6 +17,7 @@ import {
     Toolbar,
     Typography,
 } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import clsx from 'clsx';
 import React, { useContext, useEffect, useState } from 'react';
 

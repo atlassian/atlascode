@@ -9,7 +9,6 @@ import {
     Box,
     Container,
     Grid,
-    makeStyles,
     Paper,
     Tab,
     Tabs,
@@ -18,6 +17,7 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import equal from 'fast-deep-equal/es6';
 import React, { useCallback, useEffect, useState } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';

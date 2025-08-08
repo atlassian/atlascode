@@ -9,7 +9,6 @@ import {
     DialogContent,
     DialogTitle,
     Grid,
-    makeStyles,
     MenuItem,
     Switch,
     Table,
@@ -19,6 +18,7 @@ import {
     Theme,
     Typography,
 } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';

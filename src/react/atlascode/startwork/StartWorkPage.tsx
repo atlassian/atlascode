@@ -20,7 +20,6 @@ import {
     Link,
     List,
     ListItem,
-    makeStyles,
     MenuItem,
     Paper,
     Snackbar,
@@ -32,6 +31,7 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import Mustache from 'mustache';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
