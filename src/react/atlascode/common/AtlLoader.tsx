@@ -1,4 +1,5 @@
-import { Container, Grid, makeStyles, Typography } from '@mui/material';
+import { Container, Grid, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React from 'react';
 
 const styles = {

@@ -1,7 +1,8 @@
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import ScheduleIcon from '@mui/icons-material/Schedule';
-import { Box, Grid, makeStyles, Typography } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import * as React from 'react';
 
 import { BuildStatus } from '../../../bitbucket/model';

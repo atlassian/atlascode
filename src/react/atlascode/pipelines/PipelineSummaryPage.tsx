@@ -2,20 +2,11 @@ import { RefreshButton } from '@atlassianlabs/guipi-core-components';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import {
-    Avatar,
-    Button,
-    CircularProgress,
-    Container,
-    Grid,
-    makeStyles,
-    Theme,
-    Toolbar,
-    Typography,
-} from '@mui/material';
+import { Avatar, Button, CircularProgress, Container, Grid, Theme, Toolbar, Typography } from '@mui/material';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
+import { makeStyles } from '@mui/styles';
 import { format, parseISO } from 'date-fns';
 import React, { useCallback, useMemo } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';

@@ -15,11 +15,11 @@ import {
     ListItemIcon,
     ListItemSecondaryAction,
     ListItemText,
-    makeStyles,
     Theme,
     Tooltip,
     Typography,
 } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import clsx from 'clsx';
 import React, { useContext } from 'react';
 import { uid } from 'react-uid';

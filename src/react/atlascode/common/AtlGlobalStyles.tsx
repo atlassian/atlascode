@@ -1,4 +1,5 @@
-import { darken, lighten, makeStyles, Theme } from '@mui/material';
+import { darken, lighten, Theme } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useContext } from 'react';
 
 import { VSCodeStyles, VSCodeStylesContext } from '../../vscode/theme/styles';

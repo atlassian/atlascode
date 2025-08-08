@@ -1,8 +1,9 @@
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Box, CircularProgress, makeStyles } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
+import { makeStyles } from '@mui/styles';
 import React, { memo, useCallback, useState } from 'react';
 
 import { PanelTitle } from '../common/PanelTitle';

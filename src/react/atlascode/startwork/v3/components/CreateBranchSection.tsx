@@ -1,16 +1,7 @@
 import SettingsIcon from '@mui/icons-material/Settings';
 import { Autocomplete } from '@mui/lab';
-import {
-    Box,
-    Checkbox,
-    FormControlLabel,
-    Grid,
-    IconButton,
-    makeStyles,
-    TextField,
-    Theme,
-    Typography,
-} from '@mui/material';
+import { Box, Checkbox, FormControlLabel, Grid, IconButton, TextField, Theme, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useContext } from 'react';
 
 import { VSCodeStyles, VSCodeStylesContext } from '../../../../vscode/theme/styles';

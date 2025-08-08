@@ -1,4 +1,5 @@
-import { Grid, makeStyles } from '@mui/material';
+import { Grid } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React from 'react';
 
 import { Comment, User } from '../../../bitbucket/model';

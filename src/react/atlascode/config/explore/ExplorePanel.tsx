@@ -1,5 +1,6 @@
 import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
-import { Fade, Grid, makeStyles, Theme } from '@mui/material';
+import { Fade, Grid, Theme } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useCallback, useContext, useState } from 'react';
 
 import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';

@@ -1,5 +1,10 @@
 import { adaptV4Theme, createTheme, Theme } from '@mui/material';
 
+declare module '@mui/styles/defaultTheme' {
+    // eslint-disable-next-line no-unused-vars
+    interface DefaultTheme extends Theme {}
+}
+
 export const atlascodeTheme = (baseTheme: Theme, usedefault?: boolean): Theme => {
     if (usedefault) {
         return createTheme();
