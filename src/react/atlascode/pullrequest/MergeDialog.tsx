@@ -18,7 +18,7 @@ import {
     TextField,
     Theme,
     Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';

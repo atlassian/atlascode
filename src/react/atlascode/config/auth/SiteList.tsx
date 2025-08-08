@@ -1,4 +1,9 @@
 import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
+import CloudIcon from '@mui/icons-material/Cloud';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DomainIcon from '@mui/icons-material/Domain';
+import EditIcon from '@mui/icons-material/Edit';
+import ErrorIcon from '@mui/icons-material/Error';
 import {
     Avatar,
     Box,
@@ -14,12 +19,7 @@ import {
     Theme,
     Tooltip,
     Typography,
-} from '@material-ui/core';
-import CloudIcon from '@material-ui/icons/Cloud';
-import DeleteIcon from '@material-ui/icons/Delete';
-import DomainIcon from '@material-ui/icons/Domain';
-import EditIcon from '@material-ui/icons/Edit';
-import ErrorIcon from '@material-ui/icons/Error';
+} from '@mui/material';
 import clsx from 'clsx';
 import React, { useContext } from 'react';
 import { uid } from 'react-uid';

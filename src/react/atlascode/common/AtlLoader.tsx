@@ -1,4 +1,4 @@
-import { Container, Grid, makeStyles, Typography } from '@material-ui/core';
+import { Container, Grid, makeStyles, Typography } from '@mui/material';
 import React from 'react';
 
 const styles = {

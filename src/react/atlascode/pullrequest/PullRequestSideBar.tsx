@@ -1,4 +1,4 @@
-import { Avatar, Box, CircularProgress, Grid, Tooltip, Typography } from '@material-ui/core';
+import { Avatar, Box, CircularProgress, Grid, Tooltip, Typography } from '@mui/material';
 import React, { useMemo } from 'react';
 
 import { BasicPanel } from '../common/BasicPanel';

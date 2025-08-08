@@ -1,15 +1,5 @@
 import { emptyTransition, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
-import {
-    Box,
-    Checkbox,
-    makeStyles,
-    MenuItem,
-    TableCell,
-    TableRow,
-    TextField,
-    Theme,
-    Typography,
-} from '@material-ui/core';
+import { Box, Checkbox, makeStyles, MenuItem, TableCell, TableRow, TextField, Theme, Typography } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';

@@ -1,4 +1,4 @@
-import { Grid, Switch, Tooltip } from '@material-ui/core';
+import { Grid, Switch, Tooltip } from '@mui/material';
 import React, { useCallback } from 'react';
 
 export type ProductEnablerProps = {

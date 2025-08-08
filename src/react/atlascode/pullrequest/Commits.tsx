@@ -9,7 +9,7 @@ import {
     Theme,
     Tooltip,
     Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import { differenceInWeeks, format, formatDistanceToNow } from 'date-fns';
 import React, { useMemo } from 'react';
 

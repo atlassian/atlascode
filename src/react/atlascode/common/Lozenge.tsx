@@ -1,4 +1,4 @@
-import { Chip, makeStyles, Theme } from '@material-ui/core';
+import { Chip, makeStyles, Theme } from '@mui/material';
 import React from 'react';
 
 type LozengeProps = {

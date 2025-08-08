@@ -11,7 +11,7 @@ import {
     Typography,
     useMediaQuery,
     useTheme,
-} from '@material-ui/core';
+} from '@mui/material';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';

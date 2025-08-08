@@ -1,4 +1,7 @@
 import { RefreshButton } from '@atlassianlabs/guipi-core-components';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
     Avatar,
     Button,
@@ -12,10 +15,7 @@ import {
     Theme,
     Toolbar,
     Typography,
-} from '@material-ui/core';
-import AccessTimeIcon from '@material-ui/icons/AccessTime';
-import CalendarTodayIcon from '@material-ui/icons/CalendarToday';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+} from '@mui/material';
 import { format, parseISO } from 'date-fns';
 import React, { useCallback, useMemo } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';

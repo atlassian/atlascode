@@ -1,4 +1,4 @@
-import { makeStyles, Theme, Typography } from '@material-ui/core';
+import { makeStyles, Theme, Typography } from '@mui/material';
 import clsx from 'clsx';
 import React, { memo } from 'react';
 

@@ -1,3 +1,4 @@
+import Skeleton from '@mui/lab/Skeleton';
 import {
     Box,
     Button,
@@ -9,8 +10,7 @@ import {
     makeStyles,
     Tooltip,
     Typography,
-} from '@material-ui/core';
-import Skeleton from '@material-ui/lab/Skeleton';
+} from '@mui/material';
 import React, { useCallback, useState } from 'react';
 
 const useStyles = makeStyles((theme) => ({

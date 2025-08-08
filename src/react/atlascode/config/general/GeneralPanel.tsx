@@ -1,4 +1,4 @@
-import { Box, Fade, Grid, makeStyles, Theme, Typography } from '@material-ui/core';
+import { Box, Fade, Grid, makeStyles, Theme, Typography } from '@mui/material';
 import React from 'react';
 
 import { ConfigSubSection } from '../../../../lib/ipc/models/config';

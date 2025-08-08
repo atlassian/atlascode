@@ -1,5 +1,5 @@
 import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Box, Grid, makeStyles, Switch, Theme, Tooltip, Typography } from '@material-ui/core';
+import { Box, Grid, makeStyles, Switch, Theme, Tooltip, Typography } from '@mui/material';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 
 import { ConfigSection } from '../../../../../lib/ipc/models/config';

@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from '@material-ui/core';
+import { Box, Button, Typography } from '@mui/material';
 import React from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
 

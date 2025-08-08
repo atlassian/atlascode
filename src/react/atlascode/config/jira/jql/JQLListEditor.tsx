@@ -1,6 +1,6 @@
 import { DragReorderList } from '@atlassianlabs/guipi-core-components';
-import { Box, darken, Grid, lighten, makeStyles, Paper, Theme, Typography } from '@material-ui/core';
-import DragIndicatorIcon from '@material-ui/icons/DragIndicator';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import { Box, darken, Grid, lighten, makeStyles, Paper, Theme, Typography } from '@mui/material';
 import equal from 'fast-deep-equal/es6';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { unstable_trace as trace } from 'scheduler/tracing';

@@ -1,5 +1,9 @@
 import { RefreshButton } from '@atlassianlabs/guipi-core-components';
 import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
+import CloseIcon from '@mui/icons-material/Close';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import SettingsIcon from '@mui/icons-material/Settings';
+import { Alert, AlertTitle, Autocomplete } from '@mui/lab';
 import {
     AppBar,
     Box,
@@ -27,11 +31,7 @@ import {
     Tooltip,
     Typography,
     useTheme,
-} from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
-import SettingsIcon from '@material-ui/icons/Settings';
-import { Alert, AlertTitle, Autocomplete } from '@material-ui/lab';
+} from '@mui/material';
 import Mustache from 'mustache';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';

@@ -1,5 +1,8 @@
 import { RefreshButton, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import LaunchIcon from '@mui/icons-material/Launch';
+import { Autocomplete } from '@mui/lab';
 import {
     AppBar,
     Box,
@@ -20,11 +23,8 @@ import {
     Tooltip,
     Typography,
     useTheme,
-} from '@material-ui/core';
-import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
-import LaunchIcon from '@material-ui/icons/Launch';
-import { Autocomplete } from '@material-ui/lab';
-import { makeStyles } from '@material-ui/styles';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import path from 'path';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';

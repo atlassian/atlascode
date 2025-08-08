@@ -1,5 +1,5 @@
-import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@mui/material';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 
 import { Product } from '../../../../atlclients/authInfo';

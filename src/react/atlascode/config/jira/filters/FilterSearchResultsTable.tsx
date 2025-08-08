@@ -1,4 +1,7 @@
 import { FilterSearchResult, FilterSearchResults } from '@atlassianlabs/jira-pi-common-models';
+import SearchIcon from '@mui/icons-material/Search';
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
 import {
     Checkbox,
     CircularProgress,
@@ -14,10 +17,7 @@ import {
     TextField,
     Toolbar,
     Typography,
-} from '@material-ui/core';
-import SearchIcon from '@material-ui/icons/Search';
-import StarIcon from '@material-ui/icons/Star';
-import StarBorderIcon from '@material-ui/icons/StarBorder';
+} from '@mui/material';
 import clsx from 'clsx';
 import React, { useContext, useEffect, useState } from 'react';
 

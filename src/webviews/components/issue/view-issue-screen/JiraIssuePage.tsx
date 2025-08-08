@@ -4,7 +4,7 @@ import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
 import { CommentVisibility, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, SelectFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
-import { Box } from '@material-ui/core';
+import { Box } from '@mui/material';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';

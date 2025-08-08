@@ -4,7 +4,7 @@ import { GlyphProps } from '@atlaskit/icon/types';
 import Select, { AsyncSelect } from '@atlaskit/select';
 import { IssuePickerIssue, MinimalIssueLink, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models';
-import { Box } from '@material-ui/core';
+import { Box } from '@mui/material';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';

@@ -1,5 +1,5 @@
-import { makeStyles } from '@material-ui/core';
-import AddIcon from '@material-ui/icons/Add';
+import AddIcon from '@mui/icons-material/Add';
+import { makeStyles } from '@mui/material';
 import React, { useContext } from 'react';
 
 import { EditableTextComponent } from './EditableTextComponent';

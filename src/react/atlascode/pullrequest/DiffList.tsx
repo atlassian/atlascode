@@ -11,7 +11,7 @@ import {
     Theme,
     Tooltip,
     Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import clsx from 'clsx';
 import React from 'react';
 

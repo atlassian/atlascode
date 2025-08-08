@@ -1,7 +1,7 @@
 import Lozenge from '@atlaskit/lozenge';
 import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
-import { Box, Checkbox, FormControlLabel, Grid, MenuItem, TextField, Typography } from '@material-ui/core';
-import ArrowRightAltIcon from '@material-ui/icons/ArrowRightAlt';
+import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
+import { Box, Checkbox, FormControlLabel, Grid, MenuItem, TextField, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { colorToLozengeAppearanceMap } from '../../../../vscode/theme/colors';
