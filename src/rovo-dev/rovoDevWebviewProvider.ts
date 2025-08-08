@@ -151,10 +151,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Register this provider with the process manager for error handling
         setRovoDevWebviewProvider(this);
 
-        // Register the initialization of the process when the webview is ready, and only if we are not in BBY
-        if (!!process.env.ROVODEV_ENABLED && !process.env.ROVODEV_BBY) {
-            this.onWebviewResolved(() => initializeRovoDevProcessManager(context));
-        }
+        // Register the initialization of the process when the webview is ready
+        this.onWebviewResolved(() => {
+            if (!!process.env.ROVODEV_ENABLED && !process.env.ROVODEV_BBY) {
+                initializeRovoDevProcessManager(context);
+            } else {
+                this.signalProcessStarted();
+            }
+        });
     }
 
     private getWorkspacePort(): number | undefined {
