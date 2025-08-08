@@ -1,4 +1,6 @@
 import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { performanceEvent } from 'src/analytics';
+import timer from 'src/util/perf';
 import { Command, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
@@ -8,6 +10,8 @@ import { Container } from '../../../container';
 import { issuesForJQL } from '../../../jira/issuesForJql';
 import { Logger } from '../../../logger';
 import { AbstractBaseNode } from '../../../views/nodes/abstractBaseNode';
+
+const InitialCumulativeJqlFetchEventName = 'ui.jira.jqlFetch.render.lcp';
 
 export function createLabelItem(label: string, command?: Command): TreeItem {
     const item = new TreeItem(label);
@@ -22,18 +26,28 @@ export interface TreeViewIssue extends MinimalIssue<DetailedSiteInfo> {
 }
 
 /** This function returns a Promise that never rejects. */
-export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<TreeViewIssue[]> {
+export async function executeJqlQuery(jqlEntry: JQLEntry, isInitialLoad: boolean = false): Promise<TreeViewIssue[]> {
     try {
         if (jqlEntry) {
             const jqlSite = Container.siteManager.getSiteForId(ProductJira, jqlEntry.siteId);
             if (jqlSite) {
+                if (isInitialLoad) {
+                    timer.mark(`${InitialCumulativeJqlFetchEventName}_${jqlSite.id}`);
+                }
                 const issues = (await issuesForJQL(jqlEntry.query, jqlSite)) as TreeViewIssue[];
 
                 issues.forEach((i) => {
                     i.source = jqlEntry;
                     i.children = [];
                 });
-
+                if (isInitialLoad) {
+                    const jqlInitialDuration = timer.measureAndClear(
+                        `${InitialCumulativeJqlFetchEventName}_${jqlSite.id}`,
+                    );
+                    performanceEvent(InitialCumulativeJqlFetchEventName, jqlInitialDuration).then((event) => {
+                        Container.analyticsClient.sendTrackEvent(event);
+                    });
+                }
                 return issues;
             }
         }
