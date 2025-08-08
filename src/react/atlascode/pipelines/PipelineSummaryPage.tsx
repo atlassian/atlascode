@@ -7,15 +7,15 @@ import {
     Button,
     CircularProgress,
     Container,
-    ExpansionPanel,
-    ExpansionPanelDetails,
-    ExpansionPanelSummary,
     Grid,
     makeStyles,
     Theme,
     Toolbar,
     Typography,
 } from '@mui/material';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
 import { format, parseISO } from 'date-fns';
 import React, { useCallback, useMemo } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
@@ -294,7 +294,7 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
 
     function logsExpansionPanelDetails(logs?: string): any {
         return (
-            <ExpansionPanelDetails>
+            <AccordionDetails>
                 {logs ? (
                     <pre className={classes.logs}>{logs}</pre>
                 ) : (
@@ -302,23 +302,23 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
                         <CircularProgress />
                     </Grid>
                 )}
-            </ExpansionPanelDetails>
+            </AccordionDetails>
         );
     }
 
     function LogSection({ aKey, name, logs, logRange, onChange }: LogSectionProps): any {
         return (
-            <ExpansionPanel
+            <Accordion
                 key={aKey}
                 square={false}
                 onChange={onChange}
                 disabled={logRange === undefined || logRange.lastByte < 0}
             >
-                <ExpansionPanelSummary className={classes.hiddenOverflow} expandIcon={<ExpandMoreIcon />} id={aKey}>
+                <AccordionSummary className={classes.hiddenOverflow} expandIcon={<ExpandMoreIcon />} id={aKey}>
                     <div className={classes.logHeader}>{name}</div>
-                </ExpansionPanelSummary>
+                </AccordionSummary>
                 {logsExpansionPanelDetails(logs)}
-            </ExpansionPanel>
+            </Accordion>
         );
     }
 
