@@ -108,7 +108,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private get rovoDevApiClient() {
         if (!this._rovoDevApiClient) {
-            const rovoDevPort = true ? 9999 : this.getWorkspacePort();
+            const rovoDevPort = this.getWorkspacePort();
             const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
             if (rovoDevPort) {
                 this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
@@ -680,9 +680,7 @@ ${message}`;
             context,
         };
 
-        if (text) {
-            await this.sendPromptSentToView({ text, enable_deep_plan, context });
-        }
+        await this.sendPromptSentToView({ text, enable_deep_plan, context });
 
         let payloadToSend = this.addUndoContextToPrompt(text);
         payloadToSend = this.addContextToPrompt(payloadToSend, context);
