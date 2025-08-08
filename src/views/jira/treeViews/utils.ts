@@ -33,6 +33,7 @@ export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<TreeViewIssue
                     i.source = jqlEntry;
                     i.children = [];
                 });
+
                 return issues;
             }
         }

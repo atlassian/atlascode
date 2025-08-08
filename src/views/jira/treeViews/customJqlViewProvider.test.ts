@@ -99,11 +99,7 @@ const mockedTreeView = expansionCastTo<vscode.TreeView<vscode.TreeItem>>({
 });
 
 describe('CustomJqlViewProvider', () => {
-    let executeJqlQueryMock: jest.SpyInstance<
-        Promise<TreeViewIssue[]>,
-        [jqlEntry: JQLEntry, isInitialLoad?: boolean],
-        any
-    >;
+    let executeJqlQueryMock: jest.SpyInstance<Promise<TreeViewIssue[]>, [jqlEntry: JQLEntry], any>;
     let createTreeViewMock: jest.SpyInstance<
         vscode.TreeView<unknown>,
         [viewId: string, options: vscode.TreeViewOptions<unknown>],
