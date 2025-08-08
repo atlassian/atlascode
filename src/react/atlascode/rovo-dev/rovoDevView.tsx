@@ -6,7 +6,7 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import { RovoDevContext, RovoDevContextItem } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevContext, RovoDevContextItem, RovoDevInitState, State } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
@@ -17,7 +17,7 @@ import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
 import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
-import { parseToolCallMessage } from './tools/ToolCallItem';
+import { DEFAULT_LOADING_MESSAGE, parseToolCallMessage } from './tools/ToolCallItem';
 import {
     ChatMessage,
     CODE_PLAN_EXECUTE_PROMPT,
@@ -55,15 +55,6 @@ export const CloseIconDeepPlan: React.FC<{}> = () => {
     );
 };
 
-export const enum State {
-    WaitingForPrompt,
-    GeneratingResponse,
-    CancellingResponse,
-    ExecutingPlan,
-}
-
-const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
-
 const RovoDevView: React.FC = () => {
     const [chatStream, setChatStream] = useState<MessageBlockDetails[]>([]);
     const [currentMessage, setCurrentMessage] = useState<DefaultMessage | null>(null);
@@ -72,13 +63,18 @@ const RovoDevView: React.FC = () => {
     const [currentState, setCurrentState] = useState(
         process.env.ROVODEV_BBY ? State.GeneratingResponse : State.WaitingForPrompt,
     );
+    const [initState, setInitState] = useState(
+        process.env.ROVODEV_BBY ? RovoDevInitState.Initialized : RovoDevInitState.NotInitialized,
+    );
 
+    const [downloadProgress, setDownloadProgress] = useState<[number, number]>([0, 0]);
     const [promptText, setPromptText] = useState('');
     const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
     const [retryAfterErrorEnabled, setRetryAfterErrorEnabled] = useState('');
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
     const [isDeepPlanCreated, setIsDeepPlanCreated] = useState(false);
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
+    const [workspaceCount, setWorkspaceCount] = useState(0);
 
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
 
@@ -367,7 +363,7 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.ErrorMessage:
                     handleAppendError(event.message);
-                    if (currentState !== State.WaitingForPrompt) {
+                    if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
                         finalizeResponse();
                     }
                     break;
@@ -377,13 +373,27 @@ const RovoDevView: React.FC = () => {
                     setPendingToolCallMessage('');
                     break;
 
-                case RovoDevProviderMessageType.Initialized:
+                case RovoDevProviderMessageType.SetInitState:
+                    setInitState(event.newState);
+                    break;
+
+                case RovoDevProviderMessageType.WorkspaceChanged:
+                    setWorkspaceCount(event.workspaceCount);
+                    setCurrentState(event.workspaceCount ? State.WaitingForPrompt : State.NoWorkspaceOpen);
+                    break;
+
+                case RovoDevProviderMessageType.SetDownloadProgress:
+                    setDownloadProgress([event.downloadedBytes, event.totalBytes]);
                     break;
 
                 case RovoDevProviderMessageType.CancelFailed:
                     if (currentState === State.CancellingResponse) {
                         setCurrentState(State.GeneratingResponse);
                     }
+                    break;
+
+                case RovoDevProviderMessageType.RovoDevDisabled:
+                    setCurrentState(State.Disabled);
                     break;
 
                 case RovoDevProviderMessageType.UserFocusUpdated:
@@ -439,8 +449,9 @@ const RovoDevView: React.FC = () => {
             finalizeResponse,
             validateResponseFinalized,
             clearChatHistory,
-            currentState,
             handleAppendError,
+            setInitState,
+            currentState,
         ],
     );
 
@@ -582,7 +593,8 @@ const RovoDevView: React.FC = () => {
                 deepPlanCreated={isDeepPlanCreated}
                 executeCodePlan={executeCodePlan}
                 state={currentState}
-                modifiedFiles={totalModifiedFiles}
+                initState={initState}
+                downloadProgress={downloadProgress}
                 onChangesGitPushed={onChangesGitPushed}
                 onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
             />
@@ -625,6 +637,7 @@ const RovoDevView: React.FC = () => {
                         }}
                     />
                     <PromptInputBox
+                        disabled={workspaceCount === 0 || currentState === State.Disabled}
                         state={currentState}
                         promptText={promptText}
                         onPromptTextChange={(element) => setPromptText(element)}

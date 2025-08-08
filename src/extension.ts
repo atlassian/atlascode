@@ -26,7 +26,7 @@ import {
     BB_PIPELINES_FILENAME,
 } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
-import { deactivateRovoDevProcessManager, initializeRovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
+import { deactivateRovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { GitExtension } from './typings/git';
 import { Experiments, FeatureFlagClient, Features } from './util/featureFlags';
 import Performance from './util/perf';
@@ -113,13 +113,7 @@ export async function activate(context: ExtensionContext) {
         // icon to appear in the activity bar
         activateBitbucketFeatures();
         activateYamlFeatures(context);
-
-        if (!!process.env.ROVODEV_ENABLED) {
-            initializeRovoDevProcessManager(context);
-        }
-    }
-
-    if (!!process.env.ROVODEV_BBY && !!process.env.ROVODEV_ENABLED) {
+    } else if (!!process.env.ROVODEV_ENABLED) {
         commands.executeCommand('workbench.view.extension.atlascode-rovo-dev');
     }
 
