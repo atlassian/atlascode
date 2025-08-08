@@ -38,7 +38,7 @@ export const Commits: React.FunctionComponent<{ commits: Commit[] }> = (props) =
                 .map((row) => (
                     <TableRow key={row.hash}>
                         <TableCell>
-                            <Link href={row.href}>
+                            <Link href={row.href} underline="hover">
                                 <Typography className={classes.monospace}>{row.hash.substring(0, 8)}</Typography>
                             </Link>
                         </TableCell>

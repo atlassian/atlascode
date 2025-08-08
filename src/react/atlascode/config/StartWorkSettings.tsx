@@ -122,7 +122,10 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
                         <Typography variant="body2">
                             <b>Bitbucket Users:</b> Prefixes are part of your branching model and can be configured on
                             the{' '}
-                            <Link href="https://bitbucket.org/blog/introducing-bitbucket-branching-model-support">
+                            <Link
+                                href="https://bitbucket.org/blog/introducing-bitbucket-branching-model-support"
+                                underline="hover"
+                            >
                                 Bitbucket Website
                             </Link>
                         </Typography>

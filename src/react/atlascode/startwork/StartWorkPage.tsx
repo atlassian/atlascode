@@ -420,7 +420,11 @@ const StartWorkPage: React.FunctionComponent = () => {
                                         <Grid item>
                                             <Grid container spacing={1}>
                                                 <Grid item>
-                                                    <Link component="button" onClick={controller.openJiraIssue}>
+                                                    <Link
+                                                        component="button"
+                                                        onClick={controller.openJiraIssue}
+                                                        underline="hover"
+                                                    >
                                                         <Typography variant="h4">
                                                             <Box fontWeight="fontWeightBold">{state.issue.key}</Box>
                                                         </Typography>
@@ -660,6 +664,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                                                 href="#"
                                                                                 data-branch-name={b.name}
                                                                                 onClick={handleExistingBranchClick}
+                                                                                underline="hover"
                                                                             >
                                                                                 {b.type === 0
                                                                                     ? b.name
