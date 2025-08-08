@@ -11,7 +11,6 @@ import {
     updateIssueStatus,
     updateLabelsFlow,
     viewCommentWithImage,
-    // checkImageInDescription,
 } from 'e2e/scenarios/jira';
 
 export const jiraScenarios = [
@@ -25,8 +24,7 @@ export const jiraScenarios = [
     { name: 'Attach file to issue', run: attachFile },
     { name: 'Assigning issue to myself', run: assigningFlow },
     { name: 'Add and remove existing labels', run: updateLabelsFlow },
-    // Skipped for now, because it's not working in Jira DC (separate issue)
-    // { name: 'Check image in description', run: checkImageInDescription },
+    // TODO: Add checkImageInDescription scenario after AXON-814 is fixed
 ];
 
 test.describe('Jira DC', () => {
