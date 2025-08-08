@@ -364,10 +364,11 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ErrorMessage:
-                    handleAppendError(event.message);
                     if (currentState !== State.WaitingForPrompt) {
                         finalizeResponse();
                     }
+                    handleAppendError(event.message);
+
                     break;
 
                 case RovoDevProviderMessageType.NewSession:
