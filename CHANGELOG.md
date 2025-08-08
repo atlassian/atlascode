@@ -9,6 +9,7 @@
 - Removed setting options that had no practical or business logic use.
 
 - Fixed a bug where Jira site icon is broken in create Jira issue page
+- Added loading indicator to Refresh button for Jira issue auto-refreshes
 
 ## What's new in 3.8.8
 
@@ -20,7 +21,7 @@
 
 - Fixed a bug where issues would not render due to malformed epic fields (#665)
 - Fixed status button in smaller screen size
-- 
+
 ## What's new in 3.8.7
 
 ### Features
