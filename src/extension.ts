@@ -51,8 +51,6 @@ export async function activate(context: ExtensionContext) {
 
     // this disables the main Atlassian activity bar when we are in BBY
     setCommandContext(CommandContext.BbyEnvironmentActive, !!process.env.ROVODEV_BBY);
-    // this disables the Rovo Dev activity bar unless it's explicitely enabled
-    setCommandContext(CommandContext.RovoDevEnabled, !!process.env.ROVODEV_ENABLED);
 
     // Mark ourselves as the PID in charge of refreshing credentials and start listening for pings.
     context.globalState.update('rulingPid', pid);
@@ -113,7 +111,7 @@ export async function activate(context: ExtensionContext) {
         // icon to appear in the activity bar
         activateBitbucketFeatures();
         activateYamlFeatures(context);
-    } else if (!!process.env.ROVODEV_ENABLED) {
+    } else {
         commands.executeCommand('workbench.view.extension.atlascode-rovo-dev');
     }
 
@@ -215,7 +213,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
 // this method is called when your extension is deactivated
 export function deactivate() {
     if (!process.env.ROVODEV_BBY) {
-        if (!!process.env.ROVODEV_ENABLED) {
+        if (Container.isRovoDevEnabled) {
             deactivateRovoDevProcessManager();
         }
 
