@@ -1,19 +1,18 @@
-import { expect, test } from '@playwright/test';
-import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
+import { APIRequestContext, expect, Page } from '@playwright/test';
+import { getIssueFrame, setupIssueMock } from 'e2e/helpers';
 import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
-test('User can add and remove existing labels', async ({ page, request }) => {
-    const labelsFieldPlaceholder = 'Type to search';
-    const label = 'testing';
+const LABELS_FIELD_PLACEHOLDER = 'Type to search';
+const LABEL = 'testing';
 
-    await authenticateWithJira(page);
+export async function updateLabelsFlow(page: Page, request: APIRequestContext) {
     await new AtlassianSettings(page).closeSettingsPage();
 
     await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');
 
     const issueFrame = await getIssueFrame(page);
 
-    await expect(issueFrame.getByText(labelsFieldPlaceholder)).toBeVisible();
+    await expect(issueFrame.getByText(LABELS_FIELD_PLACEHOLDER)).toBeVisible();
 
     const labelsInput = issueFrame.locator('#labels input[type="text"]');
     await issueFrame.locator('#labels .ac-select__control').click();
@@ -25,28 +24,28 @@ test('User can add and remove existing labels', async ({ page, request }) => {
     const menu = issueFrame.locator('.ac-select__menu');
     await expect(menu).toBeVisible();
 
-    const labelOption = menu.getByText(label, { exact: true });
+    const labelOption = menu.getByText(LABEL, { exact: true });
 
     // Check the label option is visible and contains the label
     await expect(labelOption).toBeVisible();
 
-    const cleanupIssueMock = await setupIssueMock(request, { labels: [label] });
+    const cleanupIssueMock = await setupIssueMock(request, { labels: [LABEL] });
 
     await labelOption.click();
     await page.waitForTimeout(1000);
 
     // Check the updated label field
-    await expect(issueFrame.getByText(label, { exact: true })).toBeVisible();
+    await expect(issueFrame.getByText(LABEL, { exact: true })).toBeVisible();
 
-    const cleanupIssueMock2 = await setupIssueMock(request, { labels: [label] }, 'PUT');
+    const cleanupIssueMock2 = await setupIssueMock(request, { labels: [LABEL] }, 'PUT');
 
     // Label remove button
     await issueFrame.locator('.ac-select__multi-value__remove').click();
     await page.waitForTimeout(1000);
 
     // Check that the label was removed
-    await expect(issueFrame.getByText(label, { exact: true })).not.toBeVisible();
+    await expect(issueFrame.getByText(LABEL, { exact: true })).not.toBeVisible();
 
     await cleanupIssueMock();
     await cleanupIssueMock2();
-});
+}

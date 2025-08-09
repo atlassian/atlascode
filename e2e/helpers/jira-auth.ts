@@ -3,14 +3,18 @@ import { expect } from '@playwright/test';
 
 import { closeAllNotifications, openAtlassianSettings } from './common';
 
+const BASE_URL: string = 'https://mockedteams.atlassian.net';
+const USERNAME: string = 'mock@atlassian.code';
+const PASSWORD: string = '12345';
+
 /**
  * Helper function to authenticate with Jira using the provided credentials
  */
 export const authenticateWithJira = async (
     page: Page,
-    baseUrl: string = 'https://mockedteams.atlassian.net',
-    username: string = 'mock@atlassian.code',
-    password: string = '12345',
+    baseUrl: string = BASE_URL,
+    username: string = USERNAME,
+    password: string = PASSWORD,
 ) => {
     const settingsFrame = await openAtlassianSettings(page, 'Please login to Jira');
 
@@ -52,9 +56,9 @@ export const authenticateWithJira = async (
  */
 export const authenticateWithJiraDC = async (
     page: Page,
-    baseUrl: string = 'https://jira.mockeddomain.com',
-    username: string = 'dcUser',
-    password: string = '12345',
+    baseUrl: string = BASE_URL,
+    username: string = USERNAME,
+    password: string = PASSWORD,
 ) => {
     const settingsFrame = await openAtlassianSettings(page, 'Please login to Jira');
 
