@@ -123,6 +123,7 @@ export class JiraIssueWebview
             return;
         }
         this.isRefeshing = true;
+        this.postMessage({ type: 'loadingStart', loadingField: 'refresh' });
         try {
             if (refetchMinimalIssue) {
                 this._issue = await fetchMinimalIssue(this._issue.key, this._issue.siteDetails);
@@ -179,6 +180,7 @@ export class JiraIssueWebview
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
+            this.postMessage({ type: 'loadingEnd' });
         }
     }
 
