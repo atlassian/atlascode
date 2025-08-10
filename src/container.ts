@@ -79,14 +79,19 @@ export class Container {
     private static _assignedWorkItemsView: AssignedWorkItemsViewProvider;
 
     static async initialize(context: ExtensionContext, version: string) {
-        canFetchInternalUrl().then((success) => {
-            this._isInternalUser = success;
-            this._isRovoDevEnabled = success;
+        if (process.env.ROVODEV_BBY) {
+            this._isRovoDevEnabled = true;
+            this.enableRovoDev(context);
+        } else {
+            canFetchInternalUrl().then((success) => {
+                this._isInternalUser = success;
+                this._isRovoDevEnabled = success;
 
-            if (success) {
-                this.enableRovoDev(context);
-            }
-        });
+                if (success) {
+                    this.enableRovoDev(context);
+                }
+            });
+        }
 
         const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
 
