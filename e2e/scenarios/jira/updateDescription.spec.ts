@@ -1,15 +1,13 @@
-import { test } from '@playwright/test';
-import { authenticateWithJira, getIssueFrame, setupIssueMock } from 'e2e/helpers';
+import { APIRequestContext, Page } from '@playwright/test';
+import { getIssueFrame, setupIssueMock } from 'e2e/helpers';
 import { closeOnboardingQuickPick } from 'e2e/helpers/common';
 import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
 
 const OLD_DESCRIPTION = 'Track and resolve bugs related to the user interface.';
 const NEW_DESCRIPTION = 'Add e2e test for this functionality';
 
-test('Update description flow', async ({ page, request }) => {
-    await authenticateWithJira(page);
+export async function updateDescription(page: Page, request: APIRequestContext) {
     await closeOnboardingQuickPick(page);
-
     await new AtlassianSettings(page).closeSettingsPage();
     await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');
 
@@ -28,4 +26,4 @@ test('Update description flow', async ({ page, request }) => {
     await issuePage.description.expectEqual(NEW_DESCRIPTION);
 
     await cleanupIssueMock();
-});
+}

@@ -1,11 +1,48 @@
 import { ChildProcess, spawn } from 'child_process';
 import { access, constants } from 'fs';
-import { isBasicAuthInfo, ProductJira } from 'src/atlclients/authInfo';
-import { Container } from 'src/container';
-import { Resources } from 'src/resources';
-import { Disposable, ExtensionContext, window, workspace } from 'vscode';
+import fs from 'fs';
+import path from 'path';
+import { downloadAndUnzip } from 'src/util/downloadFile';
+import { getFsPromise } from 'src/util/fsPromises';
+import { Disposable, ExtensionContext, Uri, workspace, WorkspaceFolder } from 'vscode';
 
+import { isBasicAuthInfo, ProductJira } from '../atlclients/authInfo';
 import { rovodevInfo } from '../constants';
+import { Container } from '../container';
+import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
+
+export const MIN_SUPPORTED_ROVODEV_VERSION = '0.9.3';
+
+function GetRovoDevURIs(context: ExtensionContext) {
+    const extensionPath = context.storageUri!.fsPath;
+    const rovoDevBaseDir = path.join(extensionPath, 'atlascode-rovodev-bin');
+    const rovoDevVersionDir = path.join(rovoDevBaseDir, MIN_SUPPORTED_ROVODEV_VERSION);
+    const rovoDevBinPath = path.join(rovoDevVersionDir, 'atlassian_cli_rovodev');
+
+    const platform = process.platform;
+    const arch = process.arch;
+    let rovoDevZipUrl = undefined;
+
+    if (platform === 'win32' || platform === 'linux' || platform === 'darwin') {
+        const platformDir = platform === 'win32' ? 'windows' : platform;
+        if (arch === 'x64' || arch === 'arm64') {
+            const archDir = arch === 'x64' ? 'amd64' : arch;
+            const version = MIN_SUPPORTED_ROVODEV_VERSION;
+            rovoDevZipUrl = Uri.parse(
+                `https://acli.atlassian.com/plugins/rovodev/${platformDir}/${archDir}/${version}/rovodev.zip`,
+            );
+        }
+    }
+
+    return {
+        RovoDevBaseDir: rovoDevBaseDir,
+        RovoDevVersionDir: rovoDevVersionDir,
+        RovoDevBinPath: rovoDevBinPath,
+        RovoDevZipUrl: rovoDevZipUrl,
+    };
+}
+
+type RovoDevURIs = ReturnType<typeof GetRovoDevURIs>;
 
 // In-memory process map (not persisted, but safe for per-window usage)
 const workspaceProcessMap: { [workspacePath: string]: ChildProcess } = {};
@@ -13,17 +50,65 @@ const workspaceProcessMap: { [workspacePath: string]: ChildProcess } = {};
 let disposables: Disposable[] = [];
 
 // Reference to the RovoDev webview provider for sending errors to chat
-let rovoDevWebviewProvider: any = null;
+// This is ensured to be initialized before the entrypoint `initializeRovoDevProcessManager` is invoked.
+let rovoDevWebviewProvider: RovoDevWebviewProvider;
 
 export function setRovoDevWebviewProvider(provider: any) {
     rovoDevWebviewProvider = provider;
 }
 
+async function downloadBinaryThenInitialize(context: ExtensionContext, rovoDevURIs: RovoDevURIs) {
+    const baseDir = rovoDevURIs.RovoDevBaseDir;
+    const versionDir = rovoDevURIs.RovoDevVersionDir;
+    const zipUrl = rovoDevURIs.RovoDevZipUrl;
+
+    if (!zipUrl) {
+        rovoDevWebviewProvider.signalRovoDevDisabled();
+        rovoDevWebviewProvider.sendErrorToChat(
+            `Rovo Dev is not supported for the following platform/architecture: ${process.platform}/${process.arch}`,
+        );
+        return;
+    }
+
+    try {
+        if (fs.existsSync(baseDir)) {
+            await getFsPromise((callback) => fs.rm(baseDir, { recursive: true, force: true }, callback));
+        }
+
+        const onProgressChange = (downloadedBytes: number, totalBytes: number | undefined) => {
+            if (totalBytes) {
+                rovoDevWebviewProvider.signalDownloadProgress(downloadedBytes, totalBytes);
+            }
+        };
+
+        await downloadAndUnzip(zipUrl, baseDir, versionDir, true, onProgressChange);
+
+        await getFsPromise((callback) => fs.mkdir(versionDir, { recursive: true }, callback));
+    } catch (error) {
+        const message = `Unable to update Rovo Dev:\n${error.message}\n\nTo try again, please close VS Code and reopen it.`;
+        rovoDevWebviewProvider.signalRovoDevDisabled();
+        rovoDevWebviewProvider.sendErrorToChat(message);
+        throw error;
+    }
+
+    rovoDevWebviewProvider.signalBinaryDownloadEnded();
+
+    initializeRovoDevProcessManager(context);
+}
+
 export function initializeRovoDevProcessManager(context: ExtensionContext) {
+    const rovoDevURIs = GetRovoDevURIs(context);
+
+    if (!fs.existsSync(rovoDevURIs.RovoDevBinPath)) {
+        rovoDevWebviewProvider.signalBinaryDownloadStarted();
+        downloadBinaryThenInitialize(context, rovoDevURIs);
+        return;
+    }
+
     // Listen for workspace folder changes
     const listener = workspace.onDidChangeWorkspaceFolders((event) => {
         if (event.added.length > 0) {
-            showWorkspaceLoadedMessageAndStartProcess(context);
+            showWorkspaceLoadedMessageAndStartProcess(event.added, context, rovoDevURIs);
         }
         if (event.removed.length > 0) {
             showWorkspaceClosedMessageAndStopProcess(event.removed);
@@ -33,7 +118,9 @@ export function initializeRovoDevProcessManager(context: ExtensionContext) {
     context.subscriptions.push(listener);
     disposables.push(listener);
 
-    showWorkspaceLoadedMessageAndStartProcess(context);
+    if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
+        showWorkspaceLoadedMessageAndStartProcess(workspace.workspaceFolders, context, rovoDevURIs);
+    }
 }
 
 export function deactivateRovoDevProcessManager() {
@@ -79,27 +166,15 @@ function stopWorkspaceProcess(workspacePath: string) {
 }
 
 // Helper to start the background process
-function startWorkspaceProcess(context: ExtensionContext, workspacePath: string, port: number) {
+function startWorkspaceProcess(workspacePath: string, port: number, rovoDevURIs: RovoDevURIs) {
     stopWorkspaceProcess(workspacePath);
 
-    const rovoDevPath =
-        workspace.getConfiguration('atlascode.rovodev').get<string>('executablePath') || Resources.rovoDevPath;
-
-    if (!rovoDevPath) {
-        window.showWarningMessage('Rovo Dev: Executable path is not set, please configure it in settings.');
-        return;
-    }
-
-    access(rovoDevPath, constants.X_OK, (err) => {
+    access(rovoDevURIs.RovoDevBinPath, constants.X_OK, (err) => {
         if (err) {
-            const errorMsg = `Rovo Dev: Executable not found at path: ${rovoDevPath}`;
-            if (rovoDevWebviewProvider) {
-                rovoDevWebviewProvider.sendErrorToChat(errorMsg);
-            } else {
-                window.showErrorMessage(errorMsg);
-            }
+            rovoDevWebviewProvider.sendErrorToChat(`Executable not found at path: ${rovoDevURIs.RovoDevBinPath}`);
             return;
         }
+
         getCloudCredentials().then((creds) => {
             const defaultUsername = 'cooluser@atlassian.com';
             const { username, key, host } = creds || {};
@@ -117,33 +192,29 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
             };
             let stderrData = '';
 
-            const proc = spawn(rovoDevPath, [`serve`, `${port}`], {
+            const proc = spawn(rovoDevURIs.RovoDevBinPath, [`serve`, `${port}`], {
                 cwd: workspacePath,
                 stdio: ['ignore', 'pipe', 'pipe'],
                 detached: true,
                 env,
-            }).on('exit', (code, signal) => {
-                if (code !== 0) {
-                    let errorMsg: string;
-                    if (stderrData.includes('auth token')) {
-                        errorMsg = `Rovo Dev: Please login by providing an API Token. You can do this via Atlassian: Open Settings -> Authentication -> Other Options`;
-                    } else {
-                        // default error message
-                        errorMsg = `Rovo Dev: Process exited with code ${code}, see the log for details.`;
-                    }
+            })
+                .on('spawn', () => rovoDevWebviewProvider.signalProcessStarted())
+                .on('exit', (code, signal) => {
+                    if (code !== 0) {
+                        let errorMsg: string;
+                        if (stderrData.includes('auth token')) {
+                            errorMsg = `Please login by providing an API Token. You can do this via Atlassian: Open Settings -> Authentication -> Other Options`;
+                        } else {
+                            // default error message
+                            errorMsg = `Process exited with code ${code}, see the log for details.`;
+                        }
 
-                    if (rovoDevWebviewProvider) {
                         rovoDevWebviewProvider.sendErrorToChat(errorMsg);
-                    } else {
-                        window.showErrorMessage(errorMsg);
-                    }
 
-                    console.error(
-                        `Rovo Dev: Process exited with code ${code} and signal ${signal}, stderr: ${stderrData}`,
-                    );
-                }
-                delete workspaceProcessMap[workspacePath];
-            });
+                        console.error(`Process exited with code ${code} and signal ${signal}, stderr: ${stderrData}`);
+                    }
+                    delete workspaceProcessMap[workspacePath];
+                });
 
             if (proc.stderr) {
                 proc.stderr.on('data', (data) => {
@@ -156,12 +227,11 @@ function startWorkspaceProcess(context: ExtensionContext, workspacePath: string,
     });
 }
 
-function showWorkspaceLoadedMessageAndStartProcess(context: ExtensionContext) {
-    const folders = workspace.workspaceFolders;
-    if (!folders || folders.length === 0) {
-        return;
-    }
-
+function showWorkspaceLoadedMessageAndStartProcess(
+    folders: readonly WorkspaceFolder[],
+    context: ExtensionContext,
+    rovoDevURIs: RovoDevURIs,
+) {
     const globalPort = process.env[rovodevInfo.envVars.port];
     if (globalPort) {
         if (!process.env.ROVODEV_BBY) {
@@ -173,7 +243,7 @@ function showWorkspaceLoadedMessageAndStartProcess(context: ExtensionContext) {
     for (const folder of folders) {
         const port = getOrAssignPortForWorkspace(context, folder.uri.fsPath);
         console.log(`Rovo Dev: Workspace loaded: ${folder.name} (port ${port})`);
-        startWorkspaceProcess(context, folder.uri.fsPath, port);
+        startWorkspaceProcess(folder.uri.fsPath, port, rovoDevURIs);
     }
 }
 

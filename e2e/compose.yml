@@ -16,6 +16,7 @@ services:
             e2e:
                 aliases:
                     - mockedteams.atlassian.net
+                    - jira.mockeddomain.com
         expose:
             - 443
 

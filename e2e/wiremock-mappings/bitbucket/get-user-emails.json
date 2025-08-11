@@ -1,0 +1,30 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/2.0/user/emails"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "values": [
+                {
+                    "type": "email",
+                    "links": {
+                        "self": {
+                            "href": "https:\/\/bitbucket.org\/!api\/2.0\/user\/emails\/mock@atlassian.code"
+                        }
+                    },
+                    "email": "mock@atlassian.code",
+                    "is_primary": true,
+                    "is_confirmed": true
+                }
+            ],
+            "pagelen": 10,
+            "size": 1,
+            "page": 1
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

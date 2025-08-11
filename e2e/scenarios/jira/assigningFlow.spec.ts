@@ -1,16 +1,15 @@
-import { expect, test } from '@playwright/test';
-import { createSearchResponse } from 'e2e/fixtures/search';
-import { authenticateWithJira, cleanupWireMockMapping, getIssueFrame, setupWireMockMapping } from 'e2e/helpers';
+import { APIRequestContext, expect, Page, test } from '@playwright/test';
+import { cleanupWireMockMapping, getIssueFrame, setupWireMockMapping } from 'e2e/helpers';
 import { closeOnboardingQuickPick } from 'e2e/helpers/common';
+import { createSearchResponse } from 'e2e/mock-data/search';
 import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
-test('Assigning Jira issue to myself works', async ({ page, request }) => {
+export async function assigningFlow(page: Page, request: APIRequestContext) {
     // This test is large and may run longer on slower machines,
     // so we extend the timeout to 50 seconds (default is 30s).
     // See: https://playwright.dev/docs/test-timeouts#set-timeout-for-a-single-test
     test.setTimeout(50_000);
 
-    await authenticateWithJira(page);
     await closeOnboardingQuickPick(page);
 
     await new AtlassianSettings(page).closeSettingsPage();
@@ -87,4 +86,4 @@ test('Assigning Jira issue to myself works', async ({ page, request }) => {
 
     await cleanupWireMockMapping(request, searchMappingId);
     await cleanupWireMockMapping(request, searchWithBts1MappingId);
-});
+}

@@ -189,7 +189,7 @@ describe('CredentialManager', () => {
             await credentialManager.getAuthInfo(mockJiraSite);
 
             expect(Container.clientManager.removeClient).toHaveBeenCalledWith(mockJiraSite);
-            expect(Container.siteManager.removeSite).toHaveBeenCalledWith(mockJiraSite);
+            expect(Container.siteManager.removeSite).toHaveBeenCalledWith(mockJiraSite, false, false);
         });
 
         it('should return non-OAuth auth info without token refresh', async () => {

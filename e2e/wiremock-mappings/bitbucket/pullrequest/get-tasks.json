@@ -1,0 +1,18 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/2.0/repositories/mockuser/test-repository/pullrequests/123/tasks"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "values": [],
+            "pagelen": 100,
+            "size": 0,
+            "page": 1
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}
