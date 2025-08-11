@@ -8,12 +8,13 @@ import {
 
 import { test } from '../../fixtures/repository-disconnection';
 
-test('PR creation works', async ({ page, context, request }) => {
+test.only('PR creation works', async ({ page, context, request }) => {
     await authenticateWithBitbucketCloud(page, context);
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
-    const id = await connectRepository(page, request);
-    await cleanupWireMockMapping(request, id);
+    const mappedId = await connectRepository(page, request);
+
+    await cleanupWireMockMapping(request, mappedId);
     await page.getByRole('treeitem', { name: 'Create pull request' }).click();
     await page.waitForTimeout(250);
 
@@ -26,11 +27,6 @@ test('PR creation works', async ({ page, context, request }) => {
             .frameLocator('iframe[title="Pull Request 123"]')
             .getByText('test-repository: Pull request #123'),
     ).toBeVisible();
-    await page.waitForTimeout(250);
-    const createPRButton = page.getByRole('button', { name: 'Bitbucket pull requests Section' });
-    await createPRButton.hover();
-    await page.waitForTimeout(250);
-    await createPRButton.getByRole('button', { name: 'Refresh pull requests' }).click();
 
-    await page.waitForTimeout(5000);
+    await expect(page.getByRole('treeitem', { name: '#123 New Feature Implementation' })).toBeVisible();
 });

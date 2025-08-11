@@ -1,5 +1,5 @@
 import type { APIRequestContext, Page } from '@playwright/test';
-import { setupWireMockMapping } from 'e2e/helpers/setup-mock';
+import { setupPullrequests } from 'e2e/helpers/setup-mock';
 
 const goToExtensionTab = async (page: Page) => {
     // sometimes page is redirected to Explorer tab and this is workaround so we sure extension tab will be opened
@@ -48,15 +48,9 @@ export const connectRepository = async (page: Page, request: APIRequestContext) 
     // waiting for loading
     await waitForExplorerLoading(page);
 
-    const { id } = await setupWireMockMapping(
-        request,
-        'GET',
-        { values: [], pagelen: 25, size: 0, page: 1 },
-        '/2.0/repositories/mockuser/test-repository/pullrequests',
-        {
-            pagelen: 25,
-        },
-    );
+    // setting request for pullrequests which is used in Bitbucket explorer
+    const id = await setupPullrequests(request, []);
+
     // trying to add mock-repository
     await addRepo(page);
 
