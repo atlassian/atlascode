@@ -1,5 +1,5 @@
-import { Autocomplete } from '@mui/lab';
 import { Avatar, Grid, TextField, Typography } from '@mui/material';
+import Autocomplete from '@mui/material/Autocomplete';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useContext, useState } from 'react';
 import { useAsyncAbortable } from 'react-async-hook';
@@ -65,7 +65,7 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
             onChange={handleChange}
             loading={fetchUsers.loading}
             renderInput={(params) => <TextField {...params} label="Reviewers" />}
-            renderOption={(option) => (
+            renderOption={(props, option) => (
                 <Grid container spacing={1} direction="row" alignItems="center">
                     <Grid item>
                         <Avatar src={option?.avatarUrl} />

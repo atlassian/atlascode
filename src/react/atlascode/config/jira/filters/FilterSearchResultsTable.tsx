@@ -162,7 +162,7 @@ const FilterTableHead: React.FunctionComponent<FilterTableHeadProps> = ({
                     <TableCell
                         key={headCell.id}
                         align={headCell.align}
-                        padding={headCell.disablePadding ? 'none' : 'default'}
+                        padding={headCell.disablePadding ? 'none' : 'normal'}
                     >
                         {headCell.label}
                     </TableCell>

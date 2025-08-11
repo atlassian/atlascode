@@ -249,12 +249,8 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
                                     size="small"
                                     label="Merge Strategy"
                                 >
-                                    <MenuItem
-                                        key={emptyMergeStrategy.label}
-                                        //@ts-ignore
-                                        value={emptyMergeStrategy}
-                                        disabled
-                                    >
+                                    {/*@ts-ignore*/}
+                                    <MenuItem key={emptyMergeStrategy.label} value={emptyMergeStrategy} disabled>
                                         Select a merge strategy
                                     </MenuItem>
                                     {mergeStrategies.map((strategy) => (

@@ -1,4 +1,5 @@
-import { adaptV4Theme, createTheme, Theme } from '@mui/material';
+import { createTheme, Theme } from '@mui/material';
+import { deepmerge } from '@mui/utils';
 
 declare module '@mui/styles/defaultTheme' {
     // eslint-disable-next-line no-unused-vars
@@ -10,12 +11,10 @@ export const atlascodeTheme = (baseTheme: Theme, usedefault?: boolean): Theme =>
         return createTheme();
     }
 
-    return createTheme(
-        adaptV4Theme({
-            ...baseTheme,
+    const newTheme = createTheme(
+        deepmerge(baseTheme, {
             spacing: 6,
             typography: {
-                ...baseTheme.typography,
                 h1: {
                     fontSize: baseTheme.typography.pxToRem(52),
                     fontWeight: 400,
@@ -47,61 +46,86 @@ export const atlascodeTheme = (baseTheme: Theme, usedefault?: boolean): Theme =>
                     minHeight: 50,
                 },
             },
-            overrides: {
-                ...baseTheme.overrides,
+            components: {
+                ...baseTheme.components,
                 MuiDialog: {
-                    container: {
-                        alignItems: 'flex-start',
-                        paddingTop: baseTheme.spacing(10),
+                    styleOverrides: {
+                        container: {
+                            alignItems: 'flex-start',
+                            paddingTop: baseTheme.spacing(10),
+                        },
                     },
                 },
-            },
-            props: {
-                ...baseTheme.props,
                 MuiTextField: {
-                    variant: 'outlined',
-                    margin: 'dense',
+                    defaultProps: {
+                        variant: 'outlined',
+                        margin: 'dense',
+                    },
                 },
                 MuiButton: {
-                    size: 'small',
+                    defaultProps: {
+                        size: 'small',
+                    },
                 },
                 MuiFilledInput: {
-                    margin: 'dense',
+                    defaultProps: {
+                        margin: 'dense',
+                    },
                 },
                 MuiFormControl: {
-                    margin: 'dense',
+                    defaultProps: {
+                        margin: 'dense',
+                    },
                 },
                 MuiFormHelperText: {
-                    margin: 'dense',
+                    defaultProps: {
+                        margin: 'dense',
+                    },
                 },
                 MuiIconButton: {
-                    size: 'small',
+                    defaultProps: {
+                        size: 'small',
+                    },
                 },
                 MuiInputBase: {
-                    margin: 'dense',
+                    defaultProps: {
+                        margin: 'dense',
+                    },
                 },
                 MuiInputLabel: {
-                    margin: 'dense',
+                    defaultProps: {
+                        margin: 'dense',
+                    },
                 },
                 MuiListItem: {
-                    dense: true,
+                    defaultProps: {
+                        dense: true,
+                    },
                 },
                 MuiOutlinedInput: {
-                    margin: 'dense',
+                    defaultProps: {
+                        margin: 'dense',
+                    },
                 },
                 MuiFab: {
-                    size: 'small',
+                    defaultProps: {
+                        size: 'small',
+                    },
                 },
                 MuiTable: {
-                    size: 'small',
+                    defaultProps: {
+                        size: 'small',
+                    },
                 },
                 MuiToolbar: {
-                    variant: 'dense',
+                    defaultProps: {
+                        variant: 'dense',
+                    },
                 },
                 MuiDialogTitle: {
-                    // It renders as h6 by default which is too small
-                    // https://github.com/mui-org/material-ui/issues/16569
-                    disableTypography: true,
+                    defaultProps: {
+                        variant: 'h2',
+                    },
                 },
             },
             zIndex: {
@@ -110,4 +134,5 @@ export const atlascodeTheme = (baseTheme: Theme, usedefault?: boolean): Theme =>
             },
         }),
     );
+    return newTheme;
 };
