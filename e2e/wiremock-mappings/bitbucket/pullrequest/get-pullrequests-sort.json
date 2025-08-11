@@ -1,0 +1,26 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/2.0/repositories/mockuser/test-repository/pullrequests",
+        "queryParameters": {
+            "pagelen": {
+                "equalTo": "2"
+            },
+            "sort": {
+                "equalTo": "-created_on"
+            }
+        }
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "values": [],
+            "pagelen": 2,
+            "size": 0,
+            "page": 1
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

@@ -152,7 +152,11 @@ export class BitbucketContext extends Disposable {
     }
 
     public getBitbucketRepositories(): WorkspaceRepo[] {
-        return this.getAllRepositories().filter((wsRepo) => wsRepo.mainSiteRemote.site !== undefined);
+        console.log('getBitbucketRepositories allRepos', this.getAllRepositories());
+        const filtered = this.getAllRepositories().filter((wsRepo) => wsRepo.mainSiteRemote.site !== undefined);
+        console.log('getBitbucketRepositories filtered', filtered);
+        // return this.getAllRepositories().filter((wsRepo) => wsRepo.mainSiteRemote.site !== undefined);
+        return filtered;
     }
 
     public getBitbucketCloudRepositories(): WorkspaceRepo[] {

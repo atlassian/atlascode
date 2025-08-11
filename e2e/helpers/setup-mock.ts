@@ -8,12 +8,19 @@ import { updateIssueField } from './update-jira-issue';
 /**
  * Helper function to set up WireMock mapping
  */
-export const setupWireMockMapping = async (request: APIRequestContext, method: string, body: any, urlPath: string) => {
+export const setupWireMockMapping = async (
+    request: APIRequestContext,
+    method: string,
+    body: any,
+    urlPath: string,
+    queryParams?: any,
+) => {
     const response = await request.post('http://wiremock-mockedteams:8080/__admin/mappings', {
         data: {
             request: {
                 method,
                 urlPath,
+                queryParams,
             },
             response: {
                 status: 200,

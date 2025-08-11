@@ -1,4 +1,5 @@
-import type { Page } from '@playwright/test';
+import type { APIRequestContext, Page } from '@playwright/test';
+import { setupWireMockMapping } from 'e2e/helpers/setup-mock';
 
 const goToExtensionTab = async (page: Page) => {
     // sometimes page is redirected to Explorer tab and this is workaround so we sure extension tab will be opened
@@ -43,10 +44,19 @@ const waitForExplorerLoading = async (page: Page) => {
 /**
  * Helper function to connect Bitbucket repository
  */
-export const connectRepository = async (page: Page) => {
+export const connectRepository = async (page: Page, request: APIRequestContext) => {
     // waiting for loading
     await waitForExplorerLoading(page);
 
+    const { id } = await setupWireMockMapping(
+        request,
+        'GET',
+        { values: [], pagelen: 25, size: 0, page: 1 },
+        '/2.0/repositories/mockuser/test-repository/pullrequests',
+        {
+            pagelen: 25,
+        },
+    );
     // trying to add mock-repository
     await addRepo(page);
 
@@ -77,4 +87,6 @@ export const connectRepository = async (page: Page) => {
         // after attemp #2 vs code doesn't open Explorer tab, so we just wait for bitbucket explorer refresh
         await createPRButton.waitFor({ state: 'visible' });
     }
+
+    return id;
 };

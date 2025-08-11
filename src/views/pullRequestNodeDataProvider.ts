@@ -127,6 +127,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         // see https://splunk.paas-inf.net/en-US/app/search/atlascode_bitbucket_user_analysis for repo number distributions for our users
         for (const wsRepo of workspaceRepos) {
             const repoUri = wsRepo.rootUri;
+            console.log('PullRequestNodeDataProvider.updateChildren', repoUri);
             this._childrenMap!.has(repoUri)
                 ? this._childrenMap!.get(repoUri)!.markDirty(workspaceRepos.length <= MAX_WORKSPACE_REPOS_TO_PRELOAD)
                 : this._childrenMap!.set(
@@ -138,6 +139,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                           expand,
                       ),
                   );
+            console.log('PullRequestNodeDataProvider.updateChildren after', this._childrenMap);
         }
     }
 
@@ -194,7 +196,9 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
 
     async getCreatePullRequestNode(forceFocus: boolean): Promise<CreatePullRequestNode | SimpleNode | undefined> {
         const children = await this.getChildren(undefined);
+        console.log('getCreatePullRequestNode children', children); // no
         const createPRNode = children.find((node) => node instanceof CreatePullRequestNode);
+        console.log('getCreatePullRequestNode createPRNode', createPRNode); //no
         if (createPRNode instanceof CreatePullRequestNode) {
             return createPRNode;
         } else if (forceFocus) {
