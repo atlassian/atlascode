@@ -1,3 +1,3 @@
-import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './atlascodeUriHandler';
+import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL, SETTINGS_URL_V3 } from './atlascodeUriHandler';
 
-export { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL };
+export { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL, SETTINGS_URL_V3 };

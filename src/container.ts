@@ -35,7 +35,7 @@ import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider'
 import { RovoDevDecorator } from './rovo-dev/rovoDevDecorator';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
-import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
+import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL, SETTINGS_URL_V3 } from './uriHandler';
 import { FeatureFlagClient, FeatureFlagClientInitError } from './util/featureFlags';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
@@ -48,6 +48,7 @@ import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
 import { VSCAnalyticsApi } from './vscAnalyticsApi';
 import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
 import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
+import { VSCConfigV3WebviewControllerFactory } from './webview/config/vscConfigV3WebviewControllerFactory';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
 import { ExplorerFocusManager } from './webview/ExplorerFocusManager';
 import { MultiWebview } from './webview/multiViewFactory';
@@ -124,6 +125,17 @@ export class Container {
             this._analyticsApi,
         );
 
+        const settingsV3ViewFactory = new SingleWebview<SectionChangeMessage, ConfigAction>(
+            context.extensionPath,
+            new VSCConfigV3WebviewControllerFactory(
+                new VSCConfigActionApi(this._analyticsApi, this._cancellationManager),
+                this._commonMessageHandler,
+                this._analyticsApi,
+                SETTINGS_URL_V3,
+            ),
+            this._analyticsApi,
+        );
+
         const onboardingV2ViewFactory = new SingleWebview<any, OnboardingAction>(
             context.extensionPath,
             new VSCOnboardingWebviewControllerFactory(
@@ -166,6 +178,7 @@ export class Container {
         );
 
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
+        context.subscriptions.push((this._settingsV3WebviewFactory = settingsV3ViewFactory));
         context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
         context.subscriptions.push((this._startWorkV3WebviewFactory = startWorkV3ViewFactory));
@@ -363,6 +376,11 @@ export class Container {
     private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;
     public static get settingsWebviewFactory() {
         return this._settingsWebviewFactory;
+    }
+
+    private static _settingsV3WebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;
+    public static get settingsV3WebviewFactory() {
+        return this._settingsV3WebviewFactory;
     }
 
     private static _onboardingWebviewFactory: SingleWebview<any, OnboardingAction>;

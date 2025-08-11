@@ -48,6 +48,12 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 subSection: ConfigSubSection.Auth,
             }),
         ),
+        commands.registerCommand(Commands.ShowConfigPageV3, () =>
+            Container.settingsV3WebviewFactory.createOrShow({
+                section: ConfigSection.Jira,
+                subSection: ConfigSubSection.Auth,
+            }),
+        ),
         commands.registerCommand(Commands.ShowConfigPageFromExtensionContext, () => {
             Container.analyticsApi.fireOpenSettingsButtonEvent('extensionContext');
             Container.settingsWebviewFactory.createOrShow({

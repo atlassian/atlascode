@@ -23,6 +23,9 @@ const routes: Record<string, any> = {
     atlascodeSettingsV2: React.lazy(
         () => import(/* webpackChunkName: "atlascodeSettingsV2" */ './atlascode/config/ConfigPage'),
     ),
+    atlascodeSettingsV3: React.lazy(
+        () => import(/* webpackChunkName: "atlascodeSettingsV3" */ './atlascode/config/v3/ConfigPageV3'),
+    ),
     atlascodeOnboardingV2: React.lazy(
         () => import(/* webpackChunkName: "atlascodeOnboardingV2" */ './atlascode/onboarding/OnboardingPage'),
     ),
