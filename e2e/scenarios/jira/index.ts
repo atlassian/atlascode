@@ -5,6 +5,7 @@ import { authFlowJira } from './authFlow.spec';
 import { checkImageInDescription } from './checkImageInDescription.spec';
 import { createIssue } from './createIssue.spec';
 import { renameIssue } from './renameIssue.spec';
+import { startWorkFlow } from './startWorkFlow.spec';
 import { updateDescription } from './updateDescription.spec';
 import { updateIssueStatus } from './updateIssueStatus.spec';
 import { updateLabelsFlow } from './updateLabelsFlow.spec';
@@ -22,4 +23,5 @@ export const jiraScenarios = [
     { name: 'Assigning issue to myself', run: assigningFlow },
     { name: 'Add and remove existing labels', run: updateLabelsFlow },
     { name: 'Check image in description', run: checkImageInDescription },
+    { name: 'Start work on Jira issue', run: startWorkFlow },
 ];
