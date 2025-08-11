@@ -1,7 +1,7 @@
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CloseIcon from '@mui/icons-material/Close';
 import { AvatarGroup } from '@mui/lab';
-import { Avatar, Badge, Box, CircularProgress, Grid, Tooltip, Typography } from '@mui/material';
+import { Avatar, Badge, Box, CircularProgress, Grid, IconButton, Tooltip, Typography } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { BitbucketSite, Reviewer, User } from '../../../bitbucket/model';
@@ -25,7 +25,7 @@ const RemovableReviewerAvatar: React.FunctionComponent<RemovableReviewerAvatarPr
         <Box position="relative" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
             <Badge
                 style={{ borderWidth: '0px' }}
-                overlap="circle"
+                overlap="circular"
                 anchorOrigin={{
                     vertical: 'top',
                     horizontal: 'right',
