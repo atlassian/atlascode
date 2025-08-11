@@ -13,7 +13,7 @@ export class IssueTitle {
         this.title = this.frame.getByTestId(TITLE_TEST_ID);
     }
 
-    getTitle() {
+    async getTitle() {
         return this.title.textContent();
     }
 
