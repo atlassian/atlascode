@@ -1,4 +1,4 @@
-import { adaptV4Theme, createTheme } from '@mui/material';
+import { createTheme } from '@mui/material';
 
 import { darken, lighten } from './colors';
 import { VSCodeStyles } from './styles';
@@ -16,31 +16,31 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
     const listActiveSelectionBackground = isHighContrast ? '#000000' : vscStyles.listActiveSelectionBackground;
 
     // Icons don't always have a useful color in high-contrast
-    const muiSvg = isHighContrast ? { root: { color: '#ffffff' } } : undefined;
+    const muiSvg = isHighContrast ? { styleOverrides: { root: { color: '#ffffff' } } } : { styleOverrides: undefined };
 
-    return createTheme(
-        adaptV4Theme({
-            palette: {
-                mode: isDark ? 'dark' : 'light',
-                primary: {
-                    contrastText: vscStyles.buttonForeground,
-                    main: buttonBackground,
-                },
-                text: {
-                    primary: vscStyles.foreground,
-                },
-                background: {
-                    default: vscStyles.editorBackground,
-                    paper: isDark ? lighten(vscStyles.editorBackground, 3) : darken(vscStyles.editorBackground, 3),
-                },
+    return createTheme({
+        palette: {
+            mode: isDark ? 'dark' : 'light',
+            primary: {
+                contrastText: vscStyles.buttonForeground,
+                main: buttonBackground,
             },
-            typography: {
-                htmlFontSize: 14,
-                fontSize: 11,
-                fontFamily: vscStyles.fontFamily,
+            text: {
+                primary: vscStyles.foreground,
             },
-            overrides: {
-                MuiIconButton: {
+            background: {
+                default: vscStyles.editorBackground,
+                paper: isDark ? lighten(vscStyles.editorBackground, 3) : darken(vscStyles.editorBackground, 3),
+            },
+        },
+        typography: {
+            htmlFontSize: 14,
+            fontSize: 11,
+            fontFamily: vscStyles.fontFamily,
+        },
+        components: {
+            MuiIconButton: {
+                styleOverrides: {
                     sizeSmall: {
                         // Adjust spacing to reach minimal touch target hitbox
                         marginLeft: 4,
@@ -48,7 +48,9 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                         padding: 12,
                     },
                 },
-                MuiChip: {
+            },
+            MuiChip: {
+                styleOverrides: {
                     root: {
                         backgroundColor: isDark
                             ? lighten(vscStyles.editorBackground, 20)
@@ -56,7 +58,9 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                         color: vscStyles.editorForeground,
                     },
                 },
-                MuiButton: {
+            },
+            MuiButton: {
+                styleOverrides: {
                     root: {},
                     contained: {
                         '&:hover': {
@@ -71,7 +75,9 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                         },
                     },
                 },
-                MuiAppBar: {
+            },
+            MuiAppBar: {
+                styleOverrides: {
                     root: {
                         marginTop: 4,
                     },
@@ -84,25 +90,33 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                         color: sideBarTitleForeground,
                     },
                 },
-                MuiAccordionSummary: {
+            },
+            MuiAccordionSummary: {
+                styleOverrides: {
                     root: {
                         backgroundColor: sideBarSectionHeaderBackground,
                         color: sideBarTitleForeground,
                     },
                 },
-                MuiFilledInput: {
+            },
+            MuiFilledInput: {
+                styleOverrides: {
                     root: {
                         backgroundColor: vscStyles.dropdownBackground,
                         color: vscStyles.dropdownForeground,
                     },
                 },
-                MuiFormLabel: {
+            },
+            MuiFormLabel: {
+                styleOverrides: {
                     root: {
                         color: vscStyles.inputPlaceholderForeground,
                         marginBottom: 4,
                     },
                 },
-                MuiFormGroup: {
+            },
+            MuiFormGroup: {
+                styleOverrides: {
                     root: {
                         marginTop: 4,
                         paddingTop: 4,
@@ -114,37 +128,49 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                         borderStyle: 'solid',
                     },
                 },
-                MuiCheckbox: {
+            },
+            MuiCheckbox: {
+                styleOverrides: {
                     colorSecondary: {
                         '&$checked': {
                             color: vscStyles.buttonBackground,
                         },
                     },
                 },
-                MuiFormControl: {
+            },
+            MuiFormControl: {
+                styleOverrides: {
                     root: {
                         marginLeft: 2,
                     },
                 },
-                MuiRadio: {
+            },
+            MuiRadio: {
+                styleOverrides: {
                     colorSecondary: {
                         '&$checked': {
                             color: vscStyles.buttonBackground,
                         },
                     },
                 },
-                MuiOutlinedInput: {
+            },
+            MuiOutlinedInput: {
+                styleOverrides: {
                     notchedOutline: {
                         borderColor: vscStyles.editorWidgetBorder,
                     },
                 },
-                MuiLink: {
+            },
+            MuiLink: {
+                styleOverrides: {
                     root: {
                         color: vscStyles.textLinkForeground,
                     },
                 },
-                MuiSvgIcon: muiSvg,
-                MuiTableRow: {
+            },
+            MuiSvgIcon: muiSvg,
+            MuiTableRow: {
+                styleOverrides: {
                     root: {
                         '&$selected, &$selected:hover': {
                             backgroundColor: listActiveSelectionBackground,
@@ -152,6 +178,6 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                     },
                 },
             },
-        }),
-    );
+        },
+    });
 };

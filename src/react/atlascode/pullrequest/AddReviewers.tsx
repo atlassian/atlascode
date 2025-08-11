@@ -1,6 +1,6 @@
 import AddIcon from '@mui/icons-material/Add';
-import { Autocomplete } from '@mui/lab';
 import { Avatar, Grid, TextField, Typography } from '@mui/material';
+import Autocomplete from '@mui/material/Autocomplete';
 import { makeStyles } from '@mui/styles';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useContext, useState } from 'react';
@@ -157,7 +157,7 @@ export const AddReviewers: React.FunctionComponent<AddReviewersProps> = ({ site,
                         }}
                     />
                 )}
-                renderOption={(option) => (
+                renderOption={(props, option) => (
                     <div className={classes.optionContainer}>
                         <Grid container alignItems="center">
                             <Grid item className={classes.avatarContainer}>
