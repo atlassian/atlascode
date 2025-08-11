@@ -25,7 +25,7 @@ import { PipelineSummaryAction } from './lib/ipc/fromUI/pipelineSummary';
 import { PullRequestDetailsAction } from './lib/ipc/fromUI/pullRequestDetails';
 import { StartWorkAction } from './lib/ipc/fromUI/startWork';
 import { ConfigTarget } from './lib/ipc/models/config';
-import { SectionChangeMessage } from './lib/ipc/toUI/config';
+import { SectionChangeMessage, SectionV3ChangeMessage } from './lib/ipc/toUI/config';
 import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { Logger } from './logger';
@@ -125,7 +125,7 @@ export class Container {
             this._analyticsApi,
         );
 
-        const settingsV3ViewFactory = new SingleWebview<SectionChangeMessage, ConfigAction>(
+        const settingsV3ViewFactory = new SingleWebview<SectionV3ChangeMessage, ConfigAction>(
             context.extensionPath,
             new VSCConfigV3WebviewControllerFactory(
                 new VSCConfigActionApi(this._analyticsApi, this._cancellationManager),
@@ -378,7 +378,7 @@ export class Container {
         return this._settingsWebviewFactory;
     }
 
-    private static _settingsV3WebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;
+    private static _settingsV3WebviewFactory: SingleWebview<SectionV3ChangeMessage, ConfigAction>;
     public static get settingsV3WebviewFactory() {
         return this._settingsV3WebviewFactory;
     }

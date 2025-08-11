@@ -22,18 +22,16 @@ import equal from 'fast-deep-equal/es6';
 import React, { useCallback, useEffect, useState } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
 
-import { ConfigSection, ConfigSubSection, ConfigTarget, ConfigV3Section } from '../../../../lib/ipc/models/config'; // ConfigV3SubSection
+import { ConfigTarget, ConfigV3Section, ConfigV3SubSection } from '../../../../lib/ipc/models/config'; // ConfigV3SubSection
 import { AtlascodeErrorBoundary } from '../../common/ErrorBoundary';
 import { ErrorDisplay } from '../../common/ErrorDisplay';
 import { PMFDisplay } from '../../common/pmf/PMFDisplay';
 import { AuthDialog } from './../auth/dialog/AuthDialog';
 import { AuthDialogControllerContext, useAuthDialog } from './../auth/useAuthDialog';
-import { BitbucketPanel } from './../bitbucket/BitbucketPanel';
-import { ConfigControllerContext, useConfigController } from './../configController';
-import { ExplorePanel } from './../explore/ExplorePanel';
-import { GeneralPanel } from './../general/GeneralPanel';
-import { JiraPanel } from './../jira/JiraPanel';
 import { SidebarButtons } from './../SidebarButtons';
+// import { ExplorePanel } from './../explore/ExplorePanel';
+import { AuthenicationPanel } from './auth/AuthenicationPanel';
+import { ConfigControllerContext, useConfigController } from './configControllerV3';
 
 const useStyles = makeStyles(
     (theme: Theme) =>
@@ -62,13 +60,12 @@ const useStyles = makeStyles(
 );
 
 type SectionWithSubsections = {
-    [key: string]: ConfigSubSection[];
+    [key: string]: ConfigV3SubSection[];
 };
 
 const emptySubsections: SectionWithSubsections = {
-    [ConfigSection.Jira]: [],
-    [ConfigSection.Bitbucket]: [],
-    [ConfigSection.General]: [],
+    [ConfigV3Section.Auth]: [],
+    [ConfigV3Section.AdvancedConfig]: [],
 };
 
 const ConfigPageV3: React.FunctionComponent = () => {
@@ -76,18 +73,19 @@ const ConfigPageV3: React.FunctionComponent = () => {
     const [state, controller] = useConfigController();
     const [changes, setChanges] = useState<{ [key: string]: any }>({});
     const [internalTarget, setInternalTarget] = useState<ConfigTarget>(state.target);
-    const [openSection, setOpenSection] = useState<ConfigSection>(() => state.openSection);
+    const [openSection, setOpenSection] = useState<ConfigV3Section>(() => state.openSection);
+    console.log(openSection);
     const [openSubsections, setOpenSubsections] = useState<SectionWithSubsections>(() => {
         return { ...emptySubsections, [state.openSection]: state.openSubSections };
     });
 
     const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry } = useAuthDialog();
-    const handleTabChange = useCallback((event: React.ChangeEvent<{}>, section: ConfigSection) => {
+    const handleTabChange = useCallback((event: React.ChangeEvent<{}>, section: ConfigV3Section) => {
         setOpenSection(section);
     }, []);
 
     const handleSubsectionChange = useCallback(
-        (subSection: ConfigSubSection, expanded: boolean) => {
+        (subSection: ConfigV3SubSection, expanded: boolean) => {
             setOpenSubsections((oldSections) => {
                 const newSections = { ...oldSections };
 
@@ -109,14 +107,14 @@ const ConfigPageV3: React.FunctionComponent = () => {
         [openSection],
     );
 
-    const handleCompleteSectionChange = useCallback((section: ConfigSection, subSection: ConfigSubSection) => {
-        setOpenSection(section);
-        setOpenSubsections((oldSections) => {
-            const newSections = { ...oldSections };
-            newSections[section] = [...oldSections[section], subSection];
-            return newSections;
-        });
-    }, []);
+    // const handleCompleteSectionChange = useCallback((section: ConfigV3Section, subSection: ConfigV3SubSection) => {
+    //     setOpenSection(section);
+    //     setOpenSubsections((oldSections) => {
+    //         const newSections = { ...oldSections };
+    //         newSections[section] = [...oldSections[section], subSection];
+    //         return newSections;
+    //     });
+    // }, []);
 
     const handleTargetChange = useCallback((event: React.MouseEvent<HTMLElement>, newTarget: ConfigTarget) => {
         if (newTarget) {
@@ -191,7 +189,7 @@ const ConfigPageV3: React.FunctionComponent = () => {
                                     <Tab
                                         id="simple-tab-3"
                                         aria-controls="simple-tabpanel-3"
-                                        value={ConfigSection.Explore}
+                                        value={ConfigV3Section.Explore}
                                         label="Explore"
                                     />
                                 </Tabs>
@@ -248,33 +246,20 @@ const ConfigPageV3: React.FunctionComponent = () => {
                                     <ErrorDisplay />
                                     <PMFDisplay postMessageFunc={controller.postMessage} />
                                     <Box margin={2}>
-                                        <JiraPanel
-                                            visible={openSection === ConfigSection.Jira}
-                                            selectedSubSections={openSubsections[ConfigSection.Jira]}
+                                        <AuthenicationPanel
+                                            visible={openSection === ConfigV3Section.Auth}
+                                            selectedSubSections={openSubsections[ConfigV3Section.Auth]}
                                             onSubsectionChange={handleSubsectionChange}
                                             config={state.config!}
-                                            sites={state.jiraSites}
+                                            jiraSites={state.jiraSites}
+                                            bitbucketSites={state.bitbucketSites}
                                             isRemote={state.isRemote}
                                         />
-                                        <BitbucketPanel
-                                            visible={openSection === ConfigSection.Bitbucket}
-                                            selectedSubSections={openSubsections[ConfigSection.Bitbucket]}
-                                            onSubsectionChange={handleSubsectionChange}
-                                            config={state.config!}
-                                            sites={state.bitbucketSites}
-                                            isRemote={state.isRemote}
-                                        />
-                                        <GeneralPanel
-                                            visible={openSection === ConfigSection.General}
-                                            selectedSubSections={openSubsections[ConfigSection.General]}
-                                            onSubsectionChange={handleSubsectionChange}
-                                            config={state.config!}
-                                        />
-                                        <ExplorePanel
-                                            visible={openSection === ConfigSection.Explore}
+                                        {/* <ExplorePanel
+                                            visible={openSection === ConfigV3Section.Explore}
                                             config={state.config!}
                                             sectionChanger={handleCompleteSectionChange}
-                                        />
+                                        /> */}
                                     </Box>
                                 </Paper>
                             </Grid>

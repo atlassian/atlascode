@@ -3,16 +3,16 @@ import { Disposable, Uri } from 'vscode';
 import { Container } from '../../container';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { UIWSPort } from '../../lib/ipc/models/ports';
-import { SectionChangeMessage } from '../../lib/ipc/toUI/config';
+import { SectionV3ChangeMessage } from '../../lib/ipc/toUI/config';
 import { CommonActionMessageHandler } from '../../lib/webview/controller/common/commonActionMessageHandler';
 import { ConfigActionApi } from '../../lib/webview/controller/config/configActionApi';
-import { ConfigWebviewController, id_v3 } from '../../lib/webview/controller/config/configWebviewController';
+import { ConfigV3WebviewController, id } from '../../lib/webview/controller/config/configV3WebviewController';
 import { Logger } from '../../logger';
 import { iconSet, Resources } from '../../resources';
 import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
 
-export class VSCConfigV3WebviewControllerFactory implements VSCWebviewControllerFactory<SectionChangeMessage> {
+export class VSCConfigV3WebviewControllerFactory implements VSCWebviewControllerFactory<SectionV3ChangeMessage> {
     private _api: ConfigActionApi;
     private _commonHandler: CommonActionMessageHandler;
     private _analytics: AnalyticsApi;
@@ -40,16 +40,19 @@ export class VSCConfigV3WebviewControllerFactory implements VSCWebviewController
 
     public createController(
         postMessage: PostMessageFunc,
-        factoryData?: SectionChangeMessage,
-    ): [ConfigWebviewController, Disposable | undefined];
-
-    public createController(postMessage: PostMessageFunc, factoryData?: SectionChangeMessage): ConfigWebviewController;
+        factoryData?: SectionV3ChangeMessage,
+    ): [ConfigV3WebviewController, Disposable | undefined];
 
     public createController(
         postMessage: PostMessageFunc,
-        factoryData?: SectionChangeMessage,
-    ): ConfigWebviewController | [ConfigWebviewController, Disposable | undefined] {
-        const controller = new ConfigWebviewController(
+        factoryData?: SectionV3ChangeMessage,
+    ): ConfigV3WebviewController;
+
+    public createController(
+        postMessage: PostMessageFunc,
+        factoryData?: SectionV3ChangeMessage,
+    ): ConfigV3WebviewController | [ConfigV3WebviewController, Disposable | undefined] {
+        const controller = new ConfigV3WebviewController(
             postMessage,
             this._api,
             this._commonHandler,
@@ -67,6 +70,6 @@ export class VSCConfigV3WebviewControllerFactory implements VSCWebviewController
     }
 
     public webviewHtml(extensionPath: string, baseUri: Uri, cspSource: string): string {
-        return getHtmlForView(extensionPath, baseUri, cspSource, id_v3);
+        return getHtmlForView(extensionPath, baseUri, cspSource, id);
     }
 }
