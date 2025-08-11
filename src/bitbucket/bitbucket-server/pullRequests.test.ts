@@ -1734,6 +1734,98 @@ describe('ServerPullRequestApi', () => {
             );
             expect(result.data.title).toBe('Updated Title');
         });
+
+        it('should remove all reviewers when empty array is provided', async () => {
+            const mockUpdateResponse = {
+                data: {
+                    ...getPullRequestData,
+                    title: 'Test PR',
+                    description: 'Test description',
+                    version: 2,
+                },
+            };
+
+            mockPut.mockResolvedValue(mockUpdateResponse);
+
+            const result = await api.update(mockPullRequest, 'Test PR', 'Test description', []);
+
+            expect(mockPut).toHaveBeenCalledWith(
+                '/rest/api/1.0/projects/testproject/repos/testrepo/pull-requests/123',
+                {
+                    version: 1,
+                    title: 'Test PR',
+                    description: 'Test description',
+                    reviewers: [],
+                },
+                {
+                    markup: true,
+                    avatarSize: 64,
+                },
+            );
+            expect(result.data.title).toBe('Test PR');
+        });
+
+        it('should remove specific reviewers by providing filtered reviewer list', async () => {
+            const mockUpdateResponse = {
+                data: {
+                    ...getPullRequestData,
+                    title: 'Test PR',
+                    description: 'Test description',
+                    version: 2,
+                },
+            };
+
+            mockPut.mockResolvedValue(mockUpdateResponse);
+
+            const remainingReviewers = ['reviewer1', 'reviewer3'];
+            const result = await api.update(mockPullRequest, 'Test PR', 'Test description', remainingReviewers);
+
+            expect(mockPut).toHaveBeenCalledWith(
+                '/rest/api/1.0/projects/testproject/repos/testrepo/pull-requests/123',
+                {
+                    version: 1,
+                    title: 'Test PR',
+                    description: 'Test description',
+                    reviewers: [{ user: { name: 'reviewer1' } }, { user: { name: 'reviewer3' } }],
+                },
+                {
+                    markup: true,
+                    avatarSize: 64,
+                },
+            );
+            expect(result.data.title).toBe('Test PR');
+        });
+
+        it('should handle reviewer removal when only one reviewer remains', async () => {
+            const mockUpdateResponse = {
+                data: {
+                    ...getPullRequestData,
+                    title: 'Test PR',
+                    description: 'Test description',
+                    version: 2,
+                },
+            };
+
+            mockPut.mockResolvedValue(mockUpdateResponse);
+
+            const remainingReviewers = ['reviewer1'];
+            const result = await api.update(mockPullRequest, 'Test PR', 'Test description', remainingReviewers);
+
+            expect(mockPut).toHaveBeenCalledWith(
+                '/rest/api/1.0/projects/testproject/repos/testrepo/pull-requests/123',
+                {
+                    version: 1,
+                    title: 'Test PR',
+                    description: 'Test description',
+                    reviewers: [{ user: { name: 'reviewer1' } }],
+                },
+                {
+                    markup: true,
+                    avatarSize: 64,
+                },
+            );
+            expect(result.data.title).toBe('Test PR');
+        });
     });
 
     describe('getComments', () => {

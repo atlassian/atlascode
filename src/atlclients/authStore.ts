@@ -214,7 +214,7 @@ export class CredentialManager implements Disposable {
                                 `Removing dead site for product ${site.product.key}: auth info not found in keychain`,
                             );
                             await Container.clientManager.removeClient(site);
-                            Container.siteManager.removeSite(site);
+                            await Container.siteManager.removeSite(site, false, false);
                         }
                     } else {
                         // else if keychain does not exist, we check if the current site has been saved, if yes then we should remove it
@@ -226,7 +226,7 @@ export class CredentialManager implements Disposable {
                                 `Removing dead site for product ${site.product.key}: keychain not found`,
                             );
                             await Container.clientManager.removeClient(site);
-                            Container.siteManager.removeSite(site);
+                            await Container.siteManager.removeSite(site, false, false);
                         }
                     }
                 }

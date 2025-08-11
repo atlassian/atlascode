@@ -26,9 +26,8 @@ import { SearchJiraHelper } from '../searchJiraHelper';
 import { executeJqlQuery, JiraIssueNode, loginToJiraMessageNode, TreeViewIssue } from './utils';
 
 const AssignedWorkItemsViewProviderId = AssignedJiraItemsViewId;
-
-const InitialCumulativeJqlFetchEventName = 'ui.jira.jqlFetch.render.lcp';
 const RefreshCumulativeJqlFetchEventName = 'ui.jira.jqlFetch.update.lcp';
+const InitialCumulativeJqlFetchEventName = 'ui.jira.jqlFetch.render.lcp';
 
 export class AssignedWorkItemsViewProvider extends Disposable implements TreeDataProvider<TreeItem> {
     private static readonly _treeItemConfigureJiraMessage = loginToJiraMessageNode;
@@ -63,7 +62,14 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
         const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
         if (jqlEntries.length) {
             timer.mark(InitialCumulativeJqlFetchEventName);
-            this._initPromises = new PromiseRacer(jqlEntries.map(executeJqlQuery));
+            const promises = jqlEntries.map(executeJqlQuery);
+            this._initPromises = new PromiseRacer(promises);
+            Promise.all(promises).then(() => {
+                const jqlInitialDuration = timer.measureAndClear(InitialCumulativeJqlFetchEventName);
+                performanceEvent(InitialCumulativeJqlFetchEventName, jqlInitialDuration).then((event) => {
+                    Container.analyticsClient.sendTrackEvent(event);
+                });
+            });
         }
 
         Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
@@ -134,7 +140,6 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
             // - append the data to `this._children` and resolve this promise returning it
             // - if there are still JQL promises in PromiseRacer, trigger another DidChangeTreeData immediately
             //   which will stay pending until the next JQL promise with data resolves, or until all JQL promises are done
-
             while (!this._initPromises.isEmpty()) {
                 const issues = await this._initPromises.next();
                 if (!issues.length) {
@@ -151,11 +156,6 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
             if (!this._initPromises.isEmpty()) {
                 // need to trigger a DidChangeTreeData after this method ends - 10ms as a small-enough timeout
                 setTimeout(() => this._onDidChangeTreeData.fire(), 10);
-            } else {
-                const jqlInitialDuration = timer.measureAndClear(InitialCumulativeJqlFetchEventName);
-                performanceEvent(InitialCumulativeJqlFetchEventName, jqlInitialDuration).then((event) => {
-                    Container.analyticsClient.sendTrackEvent(event);
-                });
             }
 
             return this._initChildren;
@@ -167,7 +167,6 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
             if (!jqlEntries.length) {
                 return [AssignedWorkItemsViewProvider._treeItemConfigureJiraMessage];
             }
-
             const allIssues = (await Promise.all(jqlEntries.map(executeJqlQuery))).flat();
 
             if (this._skipNotificationForNextFetch) {

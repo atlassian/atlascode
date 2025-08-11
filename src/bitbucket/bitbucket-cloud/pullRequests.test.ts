@@ -1112,6 +1112,107 @@ describe('CloudPullRequestApi', () => {
             });
             expect(result.data.id).toBe('123');
         });
+
+        it('should remove all reviewers when empty array is provided', async () => {
+            const mockApiResponse = {
+                data: {
+                    ...mockPullRequest.data,
+                    id: '123',
+                    author: { account_id: 'author-id', display_name: 'Author' },
+                    participants: [],
+                    source: {
+                        repository: { full_name: 'test-owner/test-repo' },
+                        branch: { name: 'feature' },
+                        commit: { hash: 'abc123' },
+                    },
+                    destination: {
+                        repository: { full_name: 'test-owner/test-repo' },
+                        branch: { name: 'main' },
+                        commit: { hash: 'def456' },
+                    },
+                    links: { html: { href: 'https://pr.url' } },
+                },
+            };
+            mockHttpClient.put.mockResolvedValue(mockApiResponse);
+
+            const result = await api.update(mockPullRequest, 'Test PR', 'Test summary', []);
+
+            expect(mockHttpClient.put).toHaveBeenCalledWith('/repositories/test-owner/test-repo/pullrequests/123', {
+                title: 'Test PR',
+                summary: { raw: 'Test summary' },
+                reviewers: [],
+            });
+            expect(result.data.id).toBe('123');
+        });
+
+        it('should remove specific reviewers by providing filtered reviewer list', async () => {
+            const mockApiResponse = {
+                data: {
+                    ...mockPullRequest.data,
+                    id: '123',
+                    author: { account_id: 'author-id', display_name: 'Author' },
+                    participants: [],
+                    source: {
+                        repository: { full_name: 'test-owner/test-repo' },
+                        branch: { name: 'feature' },
+                        commit: { hash: 'abc123' },
+                    },
+                    destination: {
+                        repository: { full_name: 'test-owner/test-repo' },
+                        branch: { name: 'main' },
+                        commit: { hash: 'def456' },
+                    },
+                    links: { html: { href: 'https://pr.url' } },
+                },
+            };
+            mockHttpClient.put.mockResolvedValue(mockApiResponse);
+
+            const remainingReviewers = ['reviewer1', 'reviewer3'];
+            const result = await api.update(mockPullRequest, 'Test PR', 'Test summary', remainingReviewers);
+
+            expect(mockHttpClient.put).toHaveBeenCalledWith('/repositories/test-owner/test-repo/pullrequests/123', {
+                title: 'Test PR',
+                summary: { raw: 'Test summary' },
+                reviewers: [
+                    { type: 'user', account_id: 'reviewer1' },
+                    { type: 'user', account_id: 'reviewer3' },
+                ],
+            });
+            expect(result.data.id).toBe('123');
+        });
+
+        it('should handle reviewer removal when only one reviewer remains', async () => {
+            const mockApiResponse = {
+                data: {
+                    ...mockPullRequest.data,
+                    id: '123',
+                    author: { account_id: 'author-id', display_name: 'Author' },
+                    participants: [],
+                    source: {
+                        repository: { full_name: 'test-owner/test-repo' },
+                        branch: { name: 'feature' },
+                        commit: { hash: 'abc123' },
+                    },
+                    destination: {
+                        repository: { full_name: 'test-owner/test-repo' },
+                        branch: { name: 'main' },
+                        commit: { hash: 'def456' },
+                    },
+                    links: { html: { href: 'https://pr.url' } },
+                },
+            };
+            mockHttpClient.put.mockResolvedValue(mockApiResponse);
+
+            const remainingReviewers = ['reviewer1'];
+            const result = await api.update(mockPullRequest, 'Test PR', 'Test summary', remainingReviewers);
+
+            expect(mockHttpClient.put).toHaveBeenCalledWith('/repositories/test-owner/test-repo/pullrequests/123', {
+                title: 'Test PR',
+                summary: { raw: 'Test summary' },
+                reviewers: [{ type: 'user', account_id: 'reviewer1' }],
+            });
+            expect(result.data.id).toBe('123');
+        });
     });
 
     describe('getReviewers', () => {

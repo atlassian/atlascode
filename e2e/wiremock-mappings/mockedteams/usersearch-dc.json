@@ -1,0 +1,47 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPath": "/rest/api/2/user/search",
+        "queryParameters": {
+            "username": {
+                "matches": ".*"
+            }
+        }
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": [
+            {
+                "accountId": "712020:13354d79-beaa-49d6-a55f-b9510892e3f4",
+                "emailAddress": "mock@atlassian.code",
+                "displayName": "Mocked McMock",
+                "active": true,
+                "avatarUrls": {
+                    "48x48": "https://secure.gravatar.com/avatar/3c1286d428ff8f7167844ee661f0aef0?d=https%3A%2F%2Favatar-management--avatars.us-west-2.staging.public.atl-paas.net%2Finitials%2FMM-3.png",
+                    "24x24": "https://secure.gravatar.com/avatar/3c1286d428ff8f7167844ee661f0aef0?d=https%3A%2F%2Favatar-management--avatars.us-west-2.staging.public.atl-paas.net%2Finitials%2FMM-3.png",
+                    "16x16": "https://secure.gravatar.com/avatar/3c1286d428ff8f7167844ee661f0aef0?d=https%3A%2F%2Favatar-management--avatars.us-west-2.staging.public.atl-paas.net%2Finitials%2FMM-3.png",
+                    "32x32": "https://secure.gravatar.com/avatar/3c1286d428ff8f7167844ee661f0aef0?d=https%3A%2F%2Favatar-management--avatars.us-west-2.staging.public.atl-paas.net%2Finitials%2FMM-3.png"
+                },
+                "timeZone": "America/Los_Angeles",
+                "accountType": "atlassian"
+            },
+            {
+                "accountId": "712020:another-user",
+                "emailAddress": "another@atlassian.code",
+                "displayName": "Another User",
+                "active": true,
+                "avatarUrls": {
+                    "48x48": "https://secure.gravatar.com/avatar/placeholder?d=https%3A%2F%2Favatar-management--avatars.us-west-2.staging.public.atl-paas.net%2Finitials%2FAU-3.png",
+                    "24x24": "https://secure.gravatar.com/avatar/placeholder?d=https%3A%2F%2Favatar-management--avatars.us-west-2.staging.public.atl-paas.net%2Finitials%2FAU-3.png",
+                    "16x16": "https://secure.gravatar.com/avatar/placeholder?d=https%3A%2F%2Favatar-management--avatars.us-west-2.staging.public.atl-paas.net%2Finitials%2FAU-3.png",
+                    "32x32": "https://secure.gravatar.com/avatar/placeholder?d=https%3A%2F%2Favatar-management--avatars.us-west-2.staging.public.atl-paas.net%2Finitials%2FAU-3.png"
+                },
+                "timeZone": "America/Los_Angeles",
+                "accountType": "atlassian"
+            }
+        ],
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+} 

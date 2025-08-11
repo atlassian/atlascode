@@ -79,14 +79,17 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
+                flexWrap: 'wrap-reverse',
                 width: '100%',
                 justifyContent: 'space-between',
+                gap: '4px 0',
             }}
         >
             <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
                 <Tooltip content="Create a branch and transition this issue">
                     <LoadingButton
                         className="ac-button"
+                        testId="issue.start-work-button"
                         onClick={handleStartWork}
                         iconBefore={<AssetsSchemaIcon label="Start work" />}
                         isLoading={false}
