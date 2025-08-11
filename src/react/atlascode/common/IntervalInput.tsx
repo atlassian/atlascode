@@ -92,7 +92,7 @@ export const IntervalInput: React.FunctionComponent<IntervalInputProps> = memo(
                                     disabled={!enabled}
                                     className={classes.input}
                                     value={value}
-                                    margin="dense"
+                                    size="small"
                                     onChange={(e) =>
                                         setValueAndInterval(e.target.value === '' ? 0 : Number(e.target.value))
                                     }

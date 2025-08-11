@@ -387,7 +387,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                             <TextField
                                                 fullWidth
                                                 multiline
-                                                rows={4}
+                                                minRows={4}
                                                 maxRows={20}
                                                 label="Summary"
                                                 name="summary"

@@ -192,7 +192,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                 required
                                 autoFocus
                                 autoComplete="off"
-                                margin="dense"
+                                size="small"
                                 id="baseUrl"
                                 label="Base URL"
                                 helperText={errors.baseUrl ? errors.baseUrl : helperText}

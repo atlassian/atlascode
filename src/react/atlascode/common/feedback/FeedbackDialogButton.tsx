@@ -76,7 +76,7 @@ export const FeedbackDialogButton: React.FunctionComponent<FeedbackDialogButtonP
                                 required
                                 autoFocus
                                 autoComplete="off"
-                                margin="dense"
+                                size="small"
                                 id="type"
                                 label="Type of Feedback"
                                 helperText={errors.type ? errors.type.message : undefined}
@@ -121,7 +121,7 @@ export const FeedbackDialogButton: React.FunctionComponent<FeedbackDialogButtonP
                                 defaultValue={user.userName}
                                 required
                                 autoComplete="off"
-                                margin="dense"
+                                size="small"
                                 id="userName"
                                 label="Your name"
                                 helperText={errors.userName ? errors.userName.message : undefined}
@@ -154,7 +154,7 @@ export const FeedbackDialogButton: React.FunctionComponent<FeedbackDialogButtonP
                                     required
                                     defaultValue={user.emailAddress}
                                     autoComplete="off"
-                                    margin="dense"
+                                    size="small"
                                     id="emailAddress"
                                     label="Your contact email"
                                     helperText={errors.emailAddress ? errors.emailAddress.message : undefined}

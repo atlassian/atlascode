@@ -59,7 +59,7 @@ export const atlascodeTheme = (baseTheme: Theme, usedefault?: boolean): Theme =>
                 MuiTextField: {
                     defaultProps: {
                         variant: 'outlined',
-                        margin: 'dense',
+                        size: 'small',
                     },
                 },
                 MuiButton: {
