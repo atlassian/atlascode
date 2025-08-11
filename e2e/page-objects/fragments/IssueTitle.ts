@@ -14,10 +14,12 @@ export class IssueTitle {
     }
 
     async getTitle() {
-        return this.title.textContent();
+        await expect(this.title).toBeVisible();
+        return await this.title.textContent();
     }
 
     async changeTo(newTitle: string) {
+        await expect(this.title).toBeVisible();
         await this.title.click();
 
         const input = this.title.locator('input');
@@ -26,11 +28,15 @@ export class IssueTitle {
         await input.fill(newTitle);
         await expect(input).toHaveValue(newTitle);
 
-        await this.title.locator('.ac-inline-save-button').click();
-        await this.frame.waitForTimeout(500);
+        const saveButton = this.title.locator('.ac-inline-save-button');
+        await expect(saveButton).toBeVisible();
+        await saveButton.click();
+        await this.frame.waitForTimeout(1000); // Increased timeout to allow UI to update
     }
 
     async expectEqual(title: string) {
+        // Wait a bit for potential UI updates before checking
+        await this.frame.waitForTimeout(200);
         const currentTitle = await this.getTitle();
         expect(currentTitle).toEqual(title);
     }

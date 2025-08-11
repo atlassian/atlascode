@@ -24,5 +24,4 @@ export const jiraScenarios = [
     { name: 'Check image in description', run: checkImageInDescription },
     { name: 'Start work on Jira issue', run: startWorkFlow },
     { name: 'Rename Issue', run: renameIssue },
-    // TODO: add 'Rename issue' scenario after AXON-833 is merged
 ];
