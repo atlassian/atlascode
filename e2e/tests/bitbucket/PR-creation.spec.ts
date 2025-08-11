@@ -8,7 +8,7 @@ import {
 
 import { test } from '../../fixtures/repository-disconnection';
 
-test.only('PR creation works', async ({ page, context, request }) => {
+test('PR creation works', async ({ page, context, request }) => {
     await authenticateWithBitbucketCloud(page, context);
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
