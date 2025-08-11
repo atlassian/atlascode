@@ -15,6 +15,7 @@
 - Fixed a bug where Jira site icon is broken in create Jira issue page
 - Fixed a bug with getting the error when deleting multiple instances
 - Fixed a bug where we could not assign people to a Jira issue as DC users
+- Fixed race condition issue when connecting multiple instances
 
 ## What's new in 3.8.8
 
