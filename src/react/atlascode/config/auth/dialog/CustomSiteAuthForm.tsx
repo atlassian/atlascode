@@ -75,7 +75,7 @@ export const CustomSiteAuthForm = ({
                         <TextField
                             required
                             autoFocus
-                            margin="dense"
+                            size="small"
                             id="contextPath"
                             name="contextPath"
                             label="Context path"
@@ -105,7 +105,7 @@ export const CustomSiteAuthForm = ({
                 <Grid item>
                     <TextField
                         required
-                        margin="dense"
+                        size="small"
                         id="username"
                         name="username"
                         label="Username"
@@ -119,7 +119,7 @@ export const CustomSiteAuthForm = ({
                 <Grid item>
                     <TextField
                         required
-                        margin="dense"
+                        size="small"
                         id="password"
                         name="password"
                         label="Password"
@@ -157,7 +157,7 @@ export const CustomSiteAuthForm = ({
                     <TextField
                         required
                         type="password"
-                        margin="dense"
+                        size="small"
                         id="personalAccessToken"
                         name="personalAccessToken"
                         label="Personal Access Token"
@@ -251,7 +251,7 @@ export const CustomSiteAuthForm = ({
                     <Grid item>
                         <TextField
                             required
-                            margin="dense"
+                            size="small"
                             id="sslCertPaths"
                             name="sslCertPaths"
                             label="sslCertPaths"
@@ -273,7 +273,7 @@ export const CustomSiteAuthForm = ({
                     <Grid item>
                         <TextField
                             required
-                            margin="dense"
+                            size="small"
                             id="pfxPath"
                             name="pfxPath"
                             label="pfxPath"
@@ -288,7 +288,7 @@ export const CustomSiteAuthForm = ({
                     </Grid>
                     <Grid item>
                         <TextField
-                            margin="dense"
+                            size="small"
                             id="pfxPassphrase"
                             name="pfxPassphrase"
                             label="PFX passphrase"

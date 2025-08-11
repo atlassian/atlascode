@@ -48,7 +48,7 @@ export const JiraBasicAuthForm = ({
             <Grid item>
                 <TextField
                     required
-                    margin="dense"
+                    size="small"
                     id="username"
                     name="username"
                     label="Username"
@@ -62,7 +62,7 @@ export const JiraBasicAuthForm = ({
             <Grid item>
                 <TextField
                     required
-                    margin="dense"
+                    size="small"
                     id="password"
                     name="password"
                     label="Password (API token)"

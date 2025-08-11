@@ -288,7 +288,7 @@ export const MarkdownEditor: React.FC<PropsType> = (props: PropsType) => {
                     <TextField
                         multiline
                         fullWidth
-                        rows={4}
+                        minRows={4}
                         maxRows={20}
                         value={content}
                         onChange={handlePlainTextChange}
