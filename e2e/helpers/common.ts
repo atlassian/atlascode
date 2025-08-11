@@ -74,6 +74,7 @@ export const closeOnboardingQuickPick = async (page: Page) => {
     const onboardingDismissButton = page.getByRole('button', { name: 'Dismiss' });
     if (await onboardingDismissButton.isVisible()) {
         await onboardingDismissButton.click();
+        await page.mouse.move(0, 0); // Move mouse to avoid hover effects
     }
     await page.waitForTimeout(500);
 };
