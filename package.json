@@ -127,6 +127,12 @@
                 "description": "Opens the ~/.rovodev/mcp.json file in the editor."
             },
             {
+                "command": "atlascode.openRovoDevGlobalMemory",
+                "title": "Open Rovo Dev Global Memory file",
+                "category": "Atlascode",
+                "description": "Opens the ~/.rovodev/.agent.md file in the editor."
+            },
+            {
                 "command": "atlascode.jira.todoIssue",
                 "title": "TO DO"
             },
@@ -774,6 +780,10 @@
                 },
                 {
                     "command": "atlascode.openRovoDevMcpJson",
+                    "when": "atlascode:rovoDevEnabled"
+                },
+                {
+                    "command": "atlascode.openRovoDevGlobalMemory",
                     "when": "atlascode:rovoDevEnabled"
                 },
                 {

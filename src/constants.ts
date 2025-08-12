@@ -90,6 +90,7 @@ export const enum Commands {
     ShowOnboardingFlow = 'atlascode.showOnboardingFlow',
     OpenRovoDevConfig = 'atlascode.openRovoDevConfig',
     OpenRovoDevMcpJson = 'atlascode.openRovoDevMcpJson',
+    OpenRovoDevGlobalMemory = 'atlascode.openRovoDevGlobalMemory',
 }
 
 // Rovodev port mapping settings
