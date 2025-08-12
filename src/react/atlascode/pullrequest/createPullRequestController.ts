@@ -213,7 +213,6 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
 
     const submit = useCallback(
         (data: SubmitCreateRequestAction): Promise<PullRequest> => {
-            console.log('CPRController submit data', data);
             return new Promise<PullRequest>((resolve, reject) => {
                 (async () => {
                     try {
@@ -225,7 +224,6 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
                             CreatePullRequestMessageType.SubmitResponse,
                             ConnectionTimeout,
                         );
-                        console.log('CPRController submit response', response);
                         resolve(response.pr);
                     } catch (e) {
                         reject(e);

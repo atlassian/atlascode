@@ -21,7 +21,6 @@ export const createPullrequest = async (page: Page, request: APIRequestContext) 
         .first()
         .click();
 
-    // await setupPullrequests(request, { values: [pullrequest], pagelen: 25, size: 1, page: 1 });
     await createPRFrame.getByRole('button', { name: 'Create pull request' }).click();
     await page.waitForTimeout(250);
 };

@@ -60,7 +60,6 @@ export function siteDetailsForRemote(remote: Remote): DetailedSiteInfo | undefin
 export function bitbucketSiteForRemote(remote: Remote): BitbucketSite | undefined {
     const parsed = parseGitUrl(urlForRemote(remote));
     const site = Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.resource);
-    console.log('+++++ site: ', site);
     if (site) {
         return {
             details: site,
@@ -76,7 +75,6 @@ export function bitbucketSiteForRemote(remote: Remote): BitbucketSite | undefine
         hostname.includes('bitbucket-org')
     ) {
         const site = Container.siteManager.getSiteForHostname(ProductBitbucket, 'bitbucket.org');
-        console.log('+++++ site2: ', site);
         if (site) {
             return {
                 details: site,

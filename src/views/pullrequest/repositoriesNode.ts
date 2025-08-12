@@ -64,9 +64,7 @@ export class RepositoriesNode extends AbstractBaseNode {
             .filter((child) => child instanceof PullRequestTitlesNode)
             .map((child) => (child as PullRequestTitlesNode).prHref);
 
-        console.log('RepositoriesNode refresh workspaceRepo', this.workspaceRepo);
         const prs = await this.fetcher(this.workspaceRepo);
-        console.log('RepositoriesNode refresh prs', prs);
         this.children = this.createChildNodes(prs.data, this.children);
         if (prs.next) {
             this.children!.push(new NextPageNode(prs));
@@ -111,7 +109,6 @@ export class RepositoriesNode extends AbstractBaseNode {
         pullRequests: PullRequest[],
         currentChildren?: (PullRequestTitlesNode | NextPageNode)[],
     ): PullRequestTitlesNode[] {
-        console.log('createChildNodes pullRequests: ', pullRequests);
         const prMap = new Map<string, { pr: PullRequest; node: PullRequestTitlesNode }>();
         let numPRs = pullRequests.length;
         if (currentChildren) {
@@ -149,18 +146,15 @@ export class RepositoriesNode extends AbstractBaseNode {
     }
 
     override async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
-        console.log('RepositoriesNode getChildren element: ', element);
         if (element) {
             return element.getChildren();
         }
         if (!this.children || this.dirty) {
-            console.log('RepositoriesNode getChildren refresh');
             await this.refresh();
         }
         if (this.children!.length === 0) {
             return [new SimpleNode('No pull requests found for this repository')];
         }
-        console.log('RepositoriesNode getChildren children', this.children);
         return this.children!;
     }
 }

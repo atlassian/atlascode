@@ -83,7 +83,6 @@ export class CloudPullRequestApi implements PullRequestApi {
         queryParams?: { pagelen?: number; sort?: string; q?: string },
     ): Promise<PaginatedPullRequests> {
         const site = workspaceRepo.mainSiteRemote.site;
-        console.log('pullRequests getList site', site);
         if (!site) {
             return { workspaceRepo, site: site!, data: [] };
         }
@@ -94,7 +93,6 @@ export class CloudPullRequestApi implements PullRequestApi {
             fields: '+values.participants,+values.rendered.*',
             ...queryParams,
         });
-        console.log('pullRequests getList data', data);
 
         const prs: PullRequest[] = data.values!.map((pr: any) =>
             CloudPullRequestApi.toPullRequestData(pr, site, workspaceRepo),

@@ -142,7 +142,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
     const handleSubmit = useCallback(async () => {
         try {
             setSubmitState('submitting');
-            const obj = {
+            await controller.submit({
                 workspaceRepo: state.repoData.workspaceRepo,
                 sourceSiteRemote: state.repoData.workspaceRepo.mainSiteRemote,
                 sourceBranch: sourceBranch,
@@ -155,23 +155,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                 closeSourceBranch,
                 issue: transitionIssueEnabled ? state.issue : undefined,
                 transition,
-            };
-            // await controller.submit({
-            //     workspaceRepo: state.repoData.workspaceRepo,
-            //     sourceSiteRemote: state.repoData.workspaceRepo.mainSiteRemote,
-            //     sourceBranch: sourceBranch,
-            //     sourceRemoteName: sourceRemoteName,
-            //     destinationBranch: destinationBranch,
-            //     title: title,
-            //     summary: summary,
-            //     reviewers: reviewers,
-            //     pushLocalChanges,
-            //     closeSourceBranch,
-            //     issue: transitionIssueEnabled ? state.issue : undefined,
-            //     transition,
-            // });
-            await controller.submit(obj);
-            console.log('Create PR Submit data ', obj);
+            });
         } finally {
             // Resetting back to inital state both in error and success case
             // (ok to do for success case as the webview is hidden automatically if the request succeeds)
