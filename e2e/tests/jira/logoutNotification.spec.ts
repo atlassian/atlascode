@@ -1,8 +1,8 @@
-import { test } from '@playwright/test';
+import { Page } from '@playwright/test';
 import { authenticateWithJira } from 'e2e/helpers';
 import { AppNotifications, AtlascodeDrawer } from 'e2e/page-objects';
 
-test('When user logs out, they see a badge notification about being logged out', async ({ page }) => {
+export async function logoutNotification(page: Page) {
     await authenticateWithJira(page);
 
     // Verify logout functionality: ensure notification dialog and sidebar login prompt appear after logout
@@ -12,4 +12,4 @@ test('When user logs out, they see a badge notification about being logged out',
 
     await new AtlascodeDrawer(page).jira.expectLoginToJiraItemExists();
     await new AppNotifications(page).expectNotification(/You have been logged out of Jira/);
-});
+}

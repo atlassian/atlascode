@@ -81,7 +81,7 @@ export class SiteManager extends Disposable {
             if (newSites.length === 0) {
                 notify = false;
             }
-            allSites = allSites.concat(newSites);
+            allSites.push(...newSites);
         } else {
             allSites = newSites;
         }
