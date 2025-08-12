@@ -4,9 +4,9 @@ import React, { memo, useCallback, useContext } from 'react';
 import { Product } from '../../../../../atlclients/authInfo';
 import { SiteWithAuthInfo } from '../../../../../lib/ipc/toUI/config';
 import { ConfigControllerContext } from '../configControllerV3';
-import { CloudAuthButton } from './../../auth/CloudAuthButton';
-import { SiteList } from './../../auth/SiteList';
 import { AuthDialogControllerContext } from './../../auth/useAuthDialog';
+import { CloudAuthButton } from './CloudAuthButton';
+import { SiteList } from './SiteList';
 
 type SiteAuthenticatorProps = {
     product: Product;

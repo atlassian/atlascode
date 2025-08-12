@@ -29,9 +29,9 @@ import { PMFDisplay } from '../../common/pmf/PMFDisplay';
 import { AuthDialog } from './../auth/dialog/AuthDialog';
 import { AuthDialogControllerContext, useAuthDialog } from './../auth/useAuthDialog';
 import { SidebarButtons } from './../SidebarButtons';
-// import { ExplorePanel } from './../explore/ExplorePanel';
 import { AuthenicationPanel } from './auth/AuthenicationPanel';
 import { ConfigControllerContext, useConfigController } from './configControllerV3';
+import { ExplorePanel } from './explore/ExplorePanel';
 
 const useStyles = makeStyles(
     (theme: Theme) =>
@@ -107,14 +107,14 @@ const ConfigPageV3: React.FunctionComponent = () => {
         [openSection],
     );
 
-    // const handleCompleteSectionChange = useCallback((section: ConfigV3Section, subSection: ConfigV3SubSection) => {
-    //     setOpenSection(section);
-    //     setOpenSubsections((oldSections) => {
-    //         const newSections = { ...oldSections };
-    //         newSections[section] = [...oldSections[section], subSection];
-    //         return newSections;
-    //     });
-    // }, []);
+    const handleCompleteSectionChange = useCallback((section: ConfigV3Section, subSection: ConfigV3SubSection) => {
+        setOpenSection(section);
+        setOpenSubsections((oldSections) => {
+            const newSections = { ...oldSections };
+            newSections[section] = [...oldSections[section], subSection];
+            return newSections;
+        });
+    }, []);
 
     const handleTargetChange = useCallback((event: React.MouseEvent<HTMLElement>, newTarget: ConfigTarget) => {
         if (newTarget) {
@@ -255,11 +255,11 @@ const ConfigPageV3: React.FunctionComponent = () => {
                                             bitbucketSites={state.bitbucketSites}
                                             isRemote={state.isRemote}
                                         />
-                                        {/* <ExplorePanel
+                                        <ExplorePanel
                                             visible={openSection === ConfigV3Section.Explore}
                                             config={state.config!}
                                             sectionChanger={handleCompleteSectionChange}
-                                        /> */}
+                                        />
                                     </Box>
                                 </Paper>
                             </Grid>
