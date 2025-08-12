@@ -14,7 +14,6 @@ const useStyles = makeStyles(
         ({
             code: {
                 backgroundColor: 'rgb(220, 220, 220)', //bright shade of gray
-                color: 'rgb(208, 66, 103)', //Slack inline code text color (red)
                 borderRadius: 5,
                 margin: theme.spacing(0, 1),
                 padding: theme.spacing(0, 1),

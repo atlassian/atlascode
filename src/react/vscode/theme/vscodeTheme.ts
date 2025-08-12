@@ -4,13 +4,14 @@ import { darken, lighten } from './colors';
 import { VSCodeStyles } from './styles';
 
 const body = document.body;
-const isDark: boolean = body.getAttribute('class') === 'vscode-dark';
-const isHighContrast: boolean = body.getAttribute('class') === 'vscode-high-contrast';
 
 export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
+    const isDark: boolean = body.getAttribute('class') === 'vscode-dark';
+    const isHighContrast: boolean = body.getAttribute('class') === 'vscode-high-contrast';
+
     // Colors that don't appear in vscode-high-contrast
     const buttonBackground = isHighContrast ? '#0088ff' : vscStyles.buttonBackground;
-    const buttonHoverBackground = isHighContrast ? '#000000' : vscStyles.buttonHoverBackground;
+    // const buttonHoverBackground = isHighContrast ? '#000000' : vscStyles.buttonHoverBackground;
     const sideBarTitleForeground = isHighContrast ? '#ffffff' : vscStyles.sideBarTitleForeground;
     const sideBarSectionHeaderBackground = isHighContrast ? '#000000' : vscStyles.tabInactiveBackground;
     const listActiveSelectionBackground = isHighContrast ? '#000000' : vscStyles.listActiveSelectionBackground;
@@ -63,16 +64,18 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                 styleOverrides: {
                     root: {},
                     contained: {
-                        '&:hover': {
-                            color: vscStyles.buttonForeground,
-                            backgroundColor: buttonHoverBackground,
-                        },
+                        // this one didn't work previously but started working after the update to MUI5
+                        // '&:hover': {
+                        //     color: vscStyles.buttonForeground,
+                        //     backgroundColor: buttonHoverBackground,
+                        // },
                     },
                     text: {
                         color: buttonBackground,
-                        '&:hover': {
-                            backgroundColor: buttonHoverBackground,
-                        },
+                        // this one didn't work previously but started working after the update to MUI5
+                        // '&:hover': {
+                        //     backgroundColor: buttonHoverBackground,
+                        // },
                     },
                 },
             },
@@ -180,6 +183,23 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                         },
                     },
                 },
+            },
+            // MUI v5 overrides
+            MuiTab: {
+                // MUI 5 default color for tabs titles is invisible
+                styleOverrides: {
+                    root: {
+                        color: vscStyles.tabInactiveForeground,
+                        '&.Mui-selected': {
+                            // change from blue to theme color
+                            color: vscStyles.tabActiveForeground,
+                        },
+                    },
+                },
+            },
+            MuiPaper: {
+                // MUI 5 changed background color for paper https://v5.mui.com/material-ui/migration/v5-component-changes/#change-dark-mode-background-opacity
+                styleOverrides: { root: { backgroundImage: 'unset' } },
             },
         },
     });
