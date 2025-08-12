@@ -29,6 +29,7 @@ import { PMFDisplay } from '../../common/pmf/PMFDisplay';
 import { AuthDialog } from './../auth/dialog/AuthDialog';
 import { AuthDialogControllerContext, useAuthDialog } from './../auth/useAuthDialog';
 import { SidebarButtons } from './../SidebarButtons';
+import { AdvancedConfigsPanel } from './advancedConfigs/advancedConfigsPanel';
 import { AuthenicationPanel } from './auth/AuthenicationPanel';
 import { ConfigControllerContext, useConfigController } from './configControllerV3';
 import { ExplorePanel } from './explore/ExplorePanel';
@@ -181,14 +182,14 @@ const ConfigPageV3: React.FunctionComponent = () => {
                                         label="Authenications"
                                     />
                                     <Tab
-                                        id="simple-tab-2"
-                                        aria-controls="simple-tabpanel-2"
+                                        id="simple-tab-1"
+                                        aria-controls="simple-tabpanel-1"
                                         value={ConfigV3Section.AdvancedConfig}
                                         label="Advanced Configurations"
                                     />
                                     <Tab
-                                        id="simple-tab-3"
-                                        aria-controls="simple-tabpanel-3"
+                                        id="simple-tab-2"
+                                        aria-controls="simple-tabpanel-2"
                                         value={ConfigV3Section.Explore}
                                         label="Explore"
                                     />
@@ -253,6 +254,14 @@ const ConfigPageV3: React.FunctionComponent = () => {
                                             config={state.config!}
                                             jiraSites={state.jiraSites}
                                             bitbucketSites={state.bitbucketSites}
+                                            isRemote={state.isRemote}
+                                        />
+                                        <AdvancedConfigsPanel
+                                            visible={openSection === ConfigV3Section.AdvancedConfig}
+                                            selectedSubSections={openSubsections[ConfigV3Section.AdvancedConfig]}
+                                            onSubsectionChange={handleSubsectionChange}
+                                            config={state.config!}
+                                            sites={state.jiraSites}
                                             isRemote={state.isRemote}
                                         />
                                         <ExplorePanel
