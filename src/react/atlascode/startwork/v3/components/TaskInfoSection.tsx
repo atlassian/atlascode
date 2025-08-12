@@ -33,11 +33,7 @@ export const TaskInfoSection: React.FC<TaskInfoSectionProps> = ({ state, control
                                     </Grid>
                                     <Grid item>
                                         <Typography variant="h5">
-                                            <Link
-                                                onClick={controller.openJiraIssue}
-                                                style={{ cursor: 'pointer' }}
-                                                underline="hover"
-                                            >
+                                            <Link onClick={controller.openJiraIssue} style={{ cursor: 'pointer' }}>
                                                 {state.issue.key}
                                             </Link>
                                         </Typography>

@@ -162,6 +162,9 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                 },
             },
             MuiLink: {
+                defaultProps: {
+                    underline: 'hover',
+                },
                 styleOverrides: {
                     root: {
                         color: vscStyles.textLinkForeground,

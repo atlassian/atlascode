@@ -31,14 +31,9 @@ export const JiraBasicAuthForm = ({
                     <Box fontWeight="fontWeightBold">This looks like a Jira Cloud site ☁</Box>
                     <Box fontSize="small">
                         You can use an{' '}
-                        <Link href="https://id.atlassian.com/manage-profile/security/api-tokens" underline="hover">
-                            API Token
-                        </Link>
+                        <Link href="https://id.atlassian.com/manage-profile/security/api-tokens">API Token</Link>
                         to connect to this site. Read more about Atlassian API tokens{' '}
-                        <Link
-                            href="https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/"
-                            underline="hover"
-                        >
+                        <Link href="https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/">
                             here
                         </Link>
                         .
