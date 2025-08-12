@@ -29,7 +29,7 @@ import {
 } from './authInfo';
 import { Negotiator } from './negotiate';
 import { OAuthRefesher } from './oauthRefresher';
-import { Tokens } from './tokens';
+
 const keychainServiceNameV3 = version.endsWith('-insider') ? 'atlascode-insiders-authinfoV3' : 'atlascode-authinfoV3';
 
 enum Priority {
@@ -397,7 +397,7 @@ export class CredentialManager implements Disposable {
     /**
      * Calls the OAuth provider and updates the access token.
      */
-    private async refreshAccessToken(site: DetailedSiteInfo): Promise<Tokens | undefined> {
+    private async refreshAccessToken(site: DetailedSiteInfo): Promise<void> {
         const credentials = await this.getAuthInfoForProductAndCredentialId(site, false);
         if (!isOAuthInfo(credentials)) {
             return undefined;
@@ -405,7 +405,7 @@ export class CredentialManager implements Disposable {
         Logger.debug(`refreshingAccessToken for ${site.baseApiUrl} credentialID: ${site.credentialId}`);
 
         const provider: OAuthProvider | undefined = oauthProviderForSite(site);
-        const newTokens = undefined;
+
         if (provider && credentials) {
             const tokenResponse = await this._refresher.getNewTokens(provider, credentials.refresh);
             if (tokenResponse.tokens) {
@@ -424,7 +424,6 @@ export class CredentialManager implements Disposable {
                 this.saveAuthInfo(site, credentials);
             }
         }
-        return newTokens;
     }
 
     /**
