@@ -1,9 +1,8 @@
-import { expect, test } from '@playwright/test';
-import { authenticateWithJira, getIssueFrame } from 'e2e/helpers';
+import { APIRequestContext, expect, Page } from '@playwright/test';
+import { getIssueFrame } from 'e2e/helpers';
 import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
-test('Test image display in ticket description', async ({ page }) => {
-    await authenticateWithJira(page);
+export async function checkImageInDescription(page: Page, request: APIRequestContext) {
     await new AtlassianSettings(page).closeSettingsPage();
     await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');
 
@@ -25,4 +24,4 @@ test('Test image display in ticket description', async ({ page }) => {
     // Verify image is either the direct URL or base64 data
     const finalSrc = await testImage.getAttribute('src');
     expect(finalSrc).toMatch(/test\.jpg|data:image/);
-});
+}

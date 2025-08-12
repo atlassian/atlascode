@@ -105,12 +105,14 @@ export class LoginManager {
             await Promise.all(
                 siteDetails.map(async (siteInfo) => {
                     await this._credentialManager.saveAuthInfo(siteInfo, oauthInfo);
-                    this._siteManager.addSites([siteInfo]);
                     authenticatedEvent(siteInfo, isOnboarding, source).then((e) => {
                         this._analyticsClient.sendTrackEvent(e);
                     });
                 }),
             );
+
+            // Add all sites at once to prevent race condition
+            this._siteManager.addSites(siteDetails);
         } catch (e) {
             Logger.error(e, `Error authenticating with provider '${provider}'`);
             vscode.window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
