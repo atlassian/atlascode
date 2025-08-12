@@ -76,9 +76,9 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
         (event: React.MouseEvent<HTMLElement>) => {
             event.stopPropagation();
             setModalVisibility(false);
-            // sectionChanger(ConfigSection.Jira, ConfigSubSection.Issues); // Have to change it to advanced config -> custom jql
+            sectionChanger(ConfigV3Section.AdvancedConfig, ConfigV3SubSection.Issues);
         },
-        [], // add back sectionChanger
+        [sectionChanger],
     );
 
     return (

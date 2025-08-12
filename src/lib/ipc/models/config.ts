@@ -43,6 +43,8 @@ export enum ConfigV3SubSection {
     JiraAuth = 'jiraAuth',
     StartWork = 'startWork',
     Issues = 'issues',
+    Misc = 'misc',
+    Debug = 'debug',
 }
 
 export type FlattenedConfig = { [key: string]: any };
