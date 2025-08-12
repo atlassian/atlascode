@@ -8,7 +8,7 @@ cd resources/rovo-dev || true
 
 rm -rf rovodev.zip lib ripgrep 
 rm atlassian_cli_rovodev
-curl https://statlas.prod.atl-paas.net/rovodev-cli/releases/atlassian_cli_rovodev-latest-darwin-amd64.zip --output rovodev.zip
+curl https://acli.atlassian.com/plugins/rovodev/darwin/amd64/0.10.4/rovodev.zip --output rovodev.zip
 
 unzip rovodev.zip
 

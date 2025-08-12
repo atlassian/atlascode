@@ -11,7 +11,7 @@ import { rovodevInfo } from '../constants';
 import { Container } from '../container';
 import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
 
-export const MIN_SUPPORTED_ROVODEV_VERSION = '0.9.3';
+export const MIN_SUPPORTED_ROVODEV_VERSION = '0.10.4';
 
 function GetRovoDevURIs(context: ExtensionContext) {
     const extensionPath = context.storageUri!.fsPath;
@@ -192,7 +192,7 @@ function startWorkspaceProcess(workspacePath: string, port: number, rovoDevURIs:
             };
             let stderrData = '';
 
-            const proc = spawn(rovoDevURIs.RovoDevBinPath, [`serve`, `${port}`], {
+            const proc = spawn(rovoDevURIs.RovoDevBinPath, [`serve`, `${port}`, `--application-id`, `vscode`], {
                 cwd: workspacePath,
                 stdio: ['ignore', 'pipe', 'pipe'],
                 detached: true,
