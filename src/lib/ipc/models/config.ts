@@ -42,6 +42,7 @@ export enum ConfigV3SubSection {
     BbAuth = 'bitbucketAuth',
     JiraAuth = 'jiraAuth',
     StartWork = 'startWork',
+    Issues = 'issues',
 }
 
 export type FlattenedConfig = { [key: string]: any };

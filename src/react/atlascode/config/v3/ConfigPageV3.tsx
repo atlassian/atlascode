@@ -22,7 +22,7 @@ import equal from 'fast-deep-equal/es6';
 import React, { useCallback, useEffect, useState } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
 
-import { ConfigTarget, ConfigV3Section, ConfigV3SubSection } from '../../../../lib/ipc/models/config'; // ConfigV3SubSection
+import { ConfigTarget, ConfigV3Section, ConfigV3SubSection } from '../../../../lib/ipc/models/config';
 import { AtlascodeErrorBoundary } from '../../common/ErrorBoundary';
 import { ErrorDisplay } from '../../common/ErrorDisplay';
 import { PMFDisplay } from '../../common/pmf/PMFDisplay';

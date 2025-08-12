@@ -27,30 +27,32 @@ export const AuthenicationPanel: React.FunctionComponent<AuthenicationPanelProps
     return (
         <>
             <Fade in={visible}>
-                <Grid container spacing={3} direction="column">
-                    <Grid item>
-                        <AuthPanel
-                            visible={visible}
-                            expanded={selectedSubSections.includes(ConfigV3SubSection.JiraAuth)}
-                            onSubsectionChange={onSubsectionChange}
-                            isRemote={isRemote}
-                            sites={jiraSites}
-                            product={ProductJira}
-                            section={ConfigV3Section.Auth}
-                        />
+                <div hidden={!visible} role="tabpanel">
+                    <Grid container spacing={3} direction="column">
+                        <Grid item>
+                            <AuthPanel
+                                visible={visible}
+                                expanded={selectedSubSections.includes(ConfigV3SubSection.JiraAuth)}
+                                onSubsectionChange={onSubsectionChange}
+                                isRemote={isRemote}
+                                sites={jiraSites}
+                                product={ProductJira}
+                                section={ConfigV3Section.Auth}
+                            />
+                        </Grid>
+                        <Grid item>
+                            <AuthPanel
+                                visible={visible}
+                                expanded={selectedSubSections.includes(ConfigV3SubSection.BbAuth)}
+                                onSubsectionChange={onSubsectionChange}
+                                isRemote={isRemote}
+                                sites={bitbucketSites}
+                                product={ProductBitbucket}
+                                section={ConfigV3Section.Auth}
+                            />
+                        </Grid>
                     </Grid>
-                    <Grid item>
-                        <AuthPanel
-                            visible={visible}
-                            expanded={selectedSubSections.includes(ConfigV3SubSection.BbAuth)}
-                            onSubsectionChange={onSubsectionChange}
-                            isRemote={isRemote}
-                            sites={bitbucketSites}
-                            product={ProductBitbucket}
-                            section={ConfigV3Section.Auth}
-                        />
-                    </Grid>
-                </Grid>
+                </div>
             </Fade>
         </>
     );

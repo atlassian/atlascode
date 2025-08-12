@@ -4,7 +4,7 @@ import Mustache from 'mustache';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { useBorderBoxStyles } from '../../../../../common/useBorderBoxStyles';
-import { ConfigControllerContext } from './../../../configControllerV3';
+import { ConfigControllerContext } from '../../../configControllerV3';
 
 type StartWorkSettings = {
     customTemplate: string;
