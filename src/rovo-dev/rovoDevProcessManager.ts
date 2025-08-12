@@ -192,12 +192,16 @@ function startWorkspaceProcess(workspacePath: string, port: number, rovoDevURIs:
             };
             let stderrData = '';
 
-            const proc = spawn(rovoDevURIs.RovoDevBinPath, [`serve`, `${port}`, `--application-id`, `vscode`], {
-                cwd: workspacePath,
-                stdio: ['ignore', 'pipe', 'pipe'],
-                detached: true,
-                env,
-            })
+            const proc = spawn(
+                rovoDevURIs.RovoDevBinPath,
+                [`serve`, `${port}`, `--application-id`, `com.atlassian.vscode`],
+                {
+                    cwd: workspacePath,
+                    stdio: ['ignore', 'pipe', 'pipe'],
+                    detached: true,
+                    env,
+                },
+            )
                 .on('spawn', () => rovoDevWebviewProvider.signalProcessStarted())
                 .on('exit', (code, signal) => {
                     if (code !== 0) {
