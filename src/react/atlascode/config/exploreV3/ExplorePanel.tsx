@@ -5,7 +5,7 @@ import React, { useCallback, useContext, useState } from 'react';
 import { ConfigV3Section, ConfigV3SubSection } from '../../../../lib/ipc/models/config';
 import BitbucketIcon from '../../icons/BitbucketIcon';
 import { DemoDialog } from '../../onboarding/DemoDialog';
-import { ConfigControllerContext } from '../configControllerV3';
+import { ConfigControllerContext } from '../configController';
 import AltDemoButton from './../explore/AltDemoButton';
 
 const useStyles = makeStyles(

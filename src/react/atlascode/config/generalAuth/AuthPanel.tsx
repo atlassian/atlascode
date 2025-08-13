@@ -8,7 +8,7 @@ import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { CommonSubpanelV3Props } from '../../common/commonPanelProps';
 import { PanelSubtitle } from '../../common/PanelSubtitle';
 import { PanelTitle } from '../../common/PanelTitle';
-import { SiteAuthenticator } from './SiteAuthenticator';
+import { SiteAuthenticator } from './../auth/SiteAuthenticator';
 
 type AuthPanelProps = CommonSubpanelV3Props & {
     isRemote: boolean;

@@ -6,7 +6,7 @@ import { PanelSubtitle } from 'src/react/atlascode/common/PanelSubtitle';
 import { PanelTitle } from 'src/react/atlascode/common/PanelTitle';
 
 import { ConfigSection, ConfigV3SubSection } from '../../../../../../lib/ipc/models/config';
-import { StartWorkSettings } from './StartWorkSettings';
+import { StartWorkSettings } from './../../../StartWorkSettings';
 
 type StartWorkPanelProps = CommonSubpanelV3Props & {
     customPrefixes: string[];

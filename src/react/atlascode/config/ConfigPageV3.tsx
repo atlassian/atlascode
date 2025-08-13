@@ -29,7 +29,7 @@ import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { AdvancedConfigsPanel } from './advancedConfigs/advancedConfigsPanel';
 import { AuthDialog } from './auth/dialog/AuthDialog';
 import { AuthDialogControllerContext, useAuthDialog } from './auth/useAuthDialog';
-import { ConfigControllerContext, useConfigController } from './configControllerV3';
+import { ConfigControllerContext, useConfigControllerV3 } from './configController';
 import { ExplorePanel } from './exploreV3/ExplorePanel';
 import { AuthenicationPanel } from './generalAuth/AuthenicationPanel';
 import { SidebarButtons } from './SidebarButtons';
@@ -71,7 +71,7 @@ const emptySubsections: SectionWithSubsections = {
 
 const ConfigPageV3: React.FunctionComponent = () => {
     const classes = useStyles();
-    const [state, controller] = useConfigController();
+    const [state, controller] = useConfigControllerV3();
     const [changes, setChanges] = useState<{ [key: string]: any }>({});
     const [internalTarget, setInternalTarget] = useState<ConfigTarget>(state.target);
     const [openSection, setOpenSection] = useState<ConfigV3Section>(() => state.openSection);

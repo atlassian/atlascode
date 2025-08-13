@@ -1,7 +1,7 @@
 import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import React, { memo, useCallback, useEffect, useState } from 'react';
-import { ConfigSection, ConfigV3SubSection } from 'src/lib/ipc/models/config';
+import { ConfigV3SubSection } from 'src/lib/ipc/models/config';
 import { CommonSubpanelV3Props } from 'src/react/atlascode/common/commonPanelProps';
 import { PanelSubtitle } from 'src/react/atlascode/common/PanelSubtitle';
 import { PanelTitle } from 'src/react/atlascode/common/PanelTitle';
@@ -39,8 +39,8 @@ export const DebuggingPanel: React.FunctionComponent<DebuggingPanelProps> = memo
             <ExpansionPanel hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
                 <ExpansionPanelSummary
                     expandIcon={<ExpandMoreIcon />}
-                    aria-controls={`${ConfigSection.General}-${ConfigV3SubSection.Debug}-content`}
-                    id={`${ConfigSection.General}-${ConfigV3SubSection.Debug}-header`}
+                    aria-controls={`charles-${ConfigV3SubSection.Debug}-content`}
+                    id={`charles-${ConfigV3SubSection.Debug}-header`}
                 >
                     <PanelTitle>Debugging with Charles Web Proxy</PanelTitle>
                     <PanelSubtitle>configure debugging tools</PanelSubtitle>
