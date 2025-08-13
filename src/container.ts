@@ -80,7 +80,7 @@ export class Container {
 
     static async initialize(context: ExtensionContext, version: string) {
         canFetchInternalUrl().then((success) => {
-            this._isInternalUser = success;
+            this._isInAtlassianNetwork = success;
         });
 
         const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
@@ -350,9 +350,9 @@ export class Container {
         this._context.globalState.update(ConfigTargetKey, target);
     }
 
-    private static _isInternalUser: boolean;
-    public static get isInternalUser() {
-        return this._isInternalUser;
+    private static _isInAtlassianNetwork: boolean | undefined = undefined;
+    public static get isInAtlassianNetwork() {
+        return this._isInAtlassianNetwork;
     }
 
     private static _isRovoDevEnabled: boolean;
