@@ -16,8 +16,10 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
     const sideBarSectionHeaderBackground = isHighContrast ? '#000000' : vscStyles.tabInactiveBackground;
     const listActiveSelectionBackground = isHighContrast ? '#000000' : vscStyles.listActiveSelectionBackground;
 
-    // Icons don't always have a useful color in high-contrast
-    const muiSvg = isHighContrast ? { styleOverrides: { root: { color: '#ffffff' } } } : { styleOverrides: undefined };
+    // Icons should use VSCode theme colors consistently
+    const muiSvg = isHighContrast
+        ? { styleOverrides: { root: { color: '#ffffff' } } }
+        : { styleOverrides: { root: { color: vscStyles.foreground } } };
 
     return createTheme({
         palette: {
