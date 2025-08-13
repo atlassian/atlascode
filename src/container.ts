@@ -37,7 +37,7 @@ import { RovoDevDecorator } from './rovo-dev/rovoDevDecorator';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
-import { FeatureFlagClient, FeatureFlagClientInitError } from './util/featureFlags';
+import { FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -79,19 +79,9 @@ export class Container {
     private static _assignedWorkItemsView: AssignedWorkItemsViewProvider;
 
     static async initialize(context: ExtensionContext, version: string) {
-        if (process.env.ROVODEV_BBY) {
-            this._isRovoDevEnabled = true;
-            this.enableRovoDev(context);
-        } else {
-            canFetchInternalUrl().then((success) => {
-                this._isInternalUser = success;
-                this._isRovoDevEnabled = success;
-
-                if (success) {
-                    this.enableRovoDev(context);
-                }
-            });
-        }
+        canFetchInternalUrl().then((success) => {
+            this._isInternalUser = success;
+        });
 
         const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
 
@@ -227,6 +217,11 @@ export class Container {
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
 
         this._onboardingProvider = new OnboardingProvider();
+
+        if (process.env.ROVODEV_BBY || FeatureFlagClient.checkGate(Features.RovoDevEnabled)) {
+            this._isRovoDevEnabled = true;
+            this.enableRovoDev(context);
+        }
     }
 
     static enableRovoDev(context: ExtensionContext) {
