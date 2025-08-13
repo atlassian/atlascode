@@ -13,11 +13,6 @@ export class IssueTitle {
         this.title = this.frame.getByTestId(TITLE_TEST_ID);
     }
 
-    // async getTitle() {
-    //     await expect(this.title).toBeVisible();
-    //     return await this.title.textContent();
-    // }
-
     async changeTo(newTitle: string) {
         await expect(this.title).toBeVisible();
         await this.title.click();
@@ -31,16 +26,11 @@ export class IssueTitle {
         const saveButton = this.title.locator('.ac-inline-save-button');
         await expect(saveButton).toBeVisible();
         await saveButton.click();
-        await this.frame.waitForTimeout(1000); // Increased timeout to allow UI to update
+        await this.frame.waitForTimeout(1_000); // Increased timeout to allow UI to update
     }
 
     async expectEqual(title: string) {
-        try {
-            const currentTitle = await this.title.textContent();
-            expect(currentTitle).toEqual(title);
-        } catch (error) {
-            console.error('Error getting title:', error);
-            throw error;
-        }
+        const currentTitle = await this.title.textContent();
+        expect(currentTitle).toEqual(title);
     }
 }

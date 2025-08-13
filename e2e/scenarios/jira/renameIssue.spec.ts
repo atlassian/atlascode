@@ -11,18 +11,6 @@ export async function renameIssue(page: Page, request: APIRequestContext) {
 
     const issueFrame = await getIssueFrame(page);
     const issuePage = new JiraIssuePage(issueFrame);
-
-    // try {
-    //     await issuePage.title.expectEqual(OLD_TITLE);
-    // } catch (error) {
-    //     await test
-    //         .info()
-    //         .attach('fullpage.png', { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' });
-    //     await test
-    //         .info()
-    //         .attach('fullpage.html', { body: Buffer.from(await page.content()), contentType: 'text/html' });
-    //     throw error;
-    // }
     await issuePage.title.expectEqual(OLD_TITLE);
 
     // Add the updated mock
