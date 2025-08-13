@@ -11,6 +11,7 @@ export async function renameIssue(page: Page, request: APIRequestContext) {
 
     const issueFrame = await getIssueFrame(page);
     const issuePage = new JiraIssuePage(issueFrame);
+    await page.waitForTimeout(1_000);
     await issuePage.title.expectEqual(OLD_TITLE);
 
     // Add the updated mock
