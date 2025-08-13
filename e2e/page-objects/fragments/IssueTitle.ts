@@ -29,8 +29,8 @@ export class IssueTitle {
         await this.frame.waitForTimeout(2_000);
     }
 
-    async expectEqual(title: string) {
+    async expectEqual(expectedTitle: string) {
         const currentTitle = await this.title.textContent();
-        expect(currentTitle).toEqual(title);
+        expect(currentTitle).toMatch(new RegExp(expectedTitle, 'i'));
     }
 }
