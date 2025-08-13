@@ -47,7 +47,6 @@ export const atlascodeTheme = (baseTheme: Theme, usedefault?: boolean): Theme =>
                 },
             },
             components: {
-                ...baseTheme.components,
                 MuiDialog: {
                     styleOverrides: {
                         container: {
