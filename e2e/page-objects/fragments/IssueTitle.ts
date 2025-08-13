@@ -13,10 +13,10 @@ export class IssueTitle {
         this.title = this.frame.getByTestId(TITLE_TEST_ID);
     }
 
-    async getTitle() {
-        await expect(this.title).toBeVisible();
-        return await this.title.textContent();
-    }
+    // async getTitle() {
+    //     await expect(this.title).toBeVisible();
+    //     return await this.title.textContent();
+    // }
 
     async changeTo(newTitle: string) {
         await expect(this.title).toBeVisible();
@@ -35,9 +35,12 @@ export class IssueTitle {
     }
 
     async expectEqual(title: string) {
-        // Wait a bit for potential UI updates before checking
-        await this.frame.waitForTimeout(200);
-        const currentTitle = await this.getTitle();
-        expect(currentTitle).toEqual(title);
+        try {
+            const currentTitle = await this.title.textContent();
+            expect(currentTitle).toEqual(title);
+        } catch (error) {
+            console.error('Error getting title:', error);
+            throw error;
+        }
     }
 }

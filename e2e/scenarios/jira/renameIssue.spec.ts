@@ -1,4 +1,4 @@
-import { APIRequestContext, Page } from '@playwright/test';
+import { APIRequestContext, Page, test } from '@playwright/test';
 import { getIssueFrame, setupIssueMock } from 'e2e/helpers';
 import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
 
@@ -12,7 +12,17 @@ export async function renameIssue(page: Page, request: APIRequestContext) {
     const issueFrame = await getIssueFrame(page);
     const issuePage = new JiraIssuePage(issueFrame);
 
-    await issuePage.title.expectEqual(OLD_TITLE);
+    try {
+        await issuePage.title.expectEqual(OLD_TITLE);
+    } catch (error) {
+        await test
+            .info()
+            .attach('fullpage.png', { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' });
+        await test
+            .info()
+            .attach('fullpage.html', { body: Buffer.from(await page.content()), contentType: 'text/html' });
+        throw error;
+    }
 
     // Add the updated mock
     const cleanupIssueMock = await setupIssueMock(request, { summary: NEW_TITLE });
