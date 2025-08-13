@@ -229,7 +229,7 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                             width: 32,
                             height: 32,
                             borderRadius: '50% 50% 50% 0',
-                            backgroundColor: vscStyles.buttonBackground,
+                            backgroundColor: buttonBackground,
                             transformOrigin: 'bottom left',
                             transform: 'translate(50%, -100%) rotate(-45deg) scale(0)',
                             '&::before': { display: 'none' },
