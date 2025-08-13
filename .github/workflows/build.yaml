@@ -9,32 +9,31 @@ on:
 
 jobs:
 
-  lint:
-    if: false
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20
+  #         cache: 'npm'
 
-      - name: Install dependencies
-        run: |
-          npm ci --no-audit
-          npm audit
+  #     - name: Install dependencies
+  #       run: |
+  #         npm ci --no-audit
+  #         npm audit
       
-      - name: Run linter
-        run: npm run lint
+  #     - name: Run linter
+  #       run: npm run lint
 
   tests:
-    needs: [lint]
+    # needs: [lint]
     runs-on: ubuntu-latest
     
-    strategy:
-      fail-fast: true
-      matrix:
-        test-type: [unit, e2e]
+    # strategy:
+    #   fail-fast: true
+      # matrix:
+      #   test-type: [unit, e2e]
     
     env:
       ATLASCODE_FX3_API_KEY: ${{ secrets.ATLASCODE_FX3_API_KEY }}
@@ -53,29 +52,29 @@ jobs:
         run: npm ci --no-audit
 
       - name: Build and package the extension
-        if: matrix.test-type == 'e2e'
+        # if: matrix.test-type == 'e2e'
         run: npm run extension:package
 
       - name: Generate SSL certs for E2E test
-        if: matrix.test-type == 'e2e'
+        # if: matrix.test-type == 'e2e'
         run: npm run test:e2e:sslcerts
 
       - name: Fetch E2E image
-        if: matrix.test-type == 'e2e'
+        # if: matrix.test-type == 'e2e'
         run: |
           docker pull ghcr.io/atlassian/atlascode-e2e:latest
           docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e
 
-      - name: Run unit tests
-        if: false && matrix.test-type == 'unit'
-        run: npm run test
+      # - name: Run unit tests
+      #   if: matrix.test-type == 'unit'
+      #   run: npm run test
 
       - name: Run E2E tests
-        if: matrix.test-type == 'e2e'
+        # if: matrix.test-type == 'e2e'
         run: npm run test:e2e:docker
 
       - name: Upload E2E artifacts
-        if: matrix.test-type == 'e2e' && always() && hashFiles('./test-results/**') != ''
+        # if: matrix.test-type == 'e2e' && always() && hashFiles('./test-results/**') != ''
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
