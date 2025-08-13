@@ -16,6 +16,7 @@ import {
     DetailedSiteInfo,
     emptyAuthInfo,
     emptyBasicAuthInfo,
+    Product,
     ProductBitbucket,
     ProductJira,
     SiteInfo,
@@ -119,28 +120,35 @@ export class VSCConfigActionApi implements ConfigActionApi {
     }
 
     public async getSitesWithAuth(): Promise<[SiteWithAuthInfo[], SiteWithAuthInfo[]]> {
-        const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
-        const bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);
+        const processSites = async (
+            product: Product,
+            defaultCloudAuth: AuthInfo,
+            defaultServerAuth: AuthInfo,
+        ): Promise<SiteWithAuthInfo[]> => {
+            const availableSites = Container.siteManager.getSitesAvailable(product);
+            const uniqueSites = Array.from(new Map(availableSites.map((site) => [site.credentialId, site])).values());
 
-        const jiraSites = await Promise.all(
-            jiraSitesAvailable.map(async (jiraSite: DetailedSiteInfo): Promise<SiteWithAuthInfo> => {
-                const jiraAuth = await Container.credentialManager.getAuthInfo(jiraSite, false);
-                return {
-                    site: jiraSite,
-                    auth: jiraAuth ? jiraAuth : jiraSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo,
-                };
-            }),
-        );
+            const authResults = await Promise.allSettled(
+                uniqueSites.map((site) => Container.credentialManager.getAuthInfo(site)),
+            );
 
-        const bitbucketSites = await Promise.all(
-            bitbucketSitesAvailable.map(async (bitbucketSite: DetailedSiteInfo): Promise<SiteWithAuthInfo> => {
-                const bitbucketAuth = await Container.credentialManager.getAuthInfo(bitbucketSite);
-                return {
-                    site: bitbucketSite,
-                    auth: bitbucketAuth ? bitbucketAuth : bitbucketSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo,
-                };
-            }),
-        );
+            const authMap = new Map<string, AuthInfo>();
+
+            uniqueSites.forEach((site, i) => {
+                const result = authResults[i];
+                if (result.status === 'fulfilled' && result.value) {
+                    authMap.set(site.credentialId, result.value);
+                }
+            });
+
+            return availableSites.map((site) => ({
+                site,
+                auth: authMap.get(site.credentialId) ?? (site.isCloud ? defaultCloudAuth : defaultServerAuth),
+            }));
+        };
+
+        const jiraSites = await processSites(ProductJira, emptyAuthInfo, emptyBasicAuthInfo);
+        const bitbucketSites = await processSites(ProductBitbucket, emptyAuthInfo, emptyBasicAuthInfo);
 
         return [jiraSites, bitbucketSites];
     }

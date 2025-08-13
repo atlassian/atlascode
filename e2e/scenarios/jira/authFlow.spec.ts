@@ -1,5 +1,4 @@
-import { test } from '@playwright/test';
-import { authenticateWithJira } from 'e2e/helpers';
+import { Page } from '@playwright/test';
 import { AtlascodeDrawer } from 'e2e/page-objects';
 
 const EXPECTED_ISSUES = [
@@ -9,11 +8,10 @@ const EXPECTED_ISSUES = [
     'BTS-6 - Fix Button Alignment Issue',
 ];
 
-test('Authenticating with Jira works, and assigned items are displayed', async ({ page }) => {
-    await authenticateWithJira(page);
+export async function authFlowJira(page: Page) {
     const atlascodeDrawer = new AtlascodeDrawer(page);
 
     for (const issueName of EXPECTED_ISSUES) {
         await atlascodeDrawer.jira.expectIssueExists(issueName);
     }
-});
+}

@@ -50,8 +50,8 @@
         "vscode:prepublish": "npm run compile",
         "clean": "rm -rf ./build",
         "format": "prettier --write --log-level warn src e2e",
-        "lint": "eslint ./src ./e2e --ext .js,.jsx,.ts,.tsx",
-        "lint:fix": "eslint --fix ./src ./e2e --ext .js,.jsx,.ts,.tsx",
+        "lint": "eslint ./src ./e2e --ext .js,.jsx,.ts,.tsx --cache",
+        "lint:fix": "eslint --fix ./src ./e2e --ext .js,.jsx,.ts,.tsx --cache",
         "compile": "npm run clean && npm run compile:react && npm run compile:extension",
         "compile:extension": "NODE_OPTIONS=--openssl-legacy-provider webpack --mode production --config webpack.extension.prod.js --fail-on-warnings",
         "compile:react": "NODE_OPTIONS=--openssl-legacy-provider webpack --mode production --config webpack.react.prod.js --fail-on-warnings",
@@ -125,6 +125,12 @@
                 "title": "Open Rovo Dev MCP configuration",
                 "category": "Atlascode",
                 "description": "Opens the ~/.rovodev/mcp.json file in the editor."
+            },
+            {
+                "command": "atlascode.openRovoDevGlobalMemory",
+                "title": "Open Rovo Dev Global Memory file",
+                "category": "Atlascode",
+                "description": "Opens the ~/.rovodev/.agent.md file in the editor."
             },
             {
                 "command": "atlascode.jira.todoIssue",
@@ -774,6 +780,10 @@
                 },
                 {
                     "command": "atlascode.openRovoDevMcpJson",
+                    "when": "atlascode:rovoDevEnabled"
+                },
+                {
+                    "command": "atlascode.openRovoDevGlobalMemory",
                     "when": "atlascode:rovoDevEnabled"
                 },
                 {

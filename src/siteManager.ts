@@ -81,7 +81,7 @@ export class SiteManager extends Disposable {
             if (newSites.length === 0) {
                 notify = false;
             }
-            allSites = allSites.concat(newSites);
+            allSites.push(...newSites);
         } else {
             allSites = newSites;
         }
@@ -185,6 +185,9 @@ export class SiteManager extends Disposable {
     }
 
     public getFirstAAID(productKey?: string): string | undefined {
+        if (process.env.ROVODEV_BBY && process.env.BBY_USERID) {
+            return process.env.BBY_USERID;
+        }
         if (productKey) {
             return this.getFirstAAIDForProduct(productKey);
         }

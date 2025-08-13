@@ -13,6 +13,7 @@ import { commands, ConfigurationTarget, env, Uri, window, workspace, WorkspaceEd
 import {
     AuthInfo,
     DetailedSiteInfo,
+    emptyAuthInfo,
     emptyBasicAuthInfo,
     ProductBitbucket,
     ProductJira,
@@ -373,6 +374,119 @@ describe('VSCConfigActionApi', () => {
             expect(bitbucketSites).toHaveLength(1);
             expect(bitbucketSites[0].site).toBe(mockBitbucketSites[0]);
             expect(bitbucketSites[0].auth).toBe(emptyBasicAuthInfo);
+        });
+
+        it('should deduplicate sites with same credentialId and reuse auth info', async () => {
+            const mockJiraSites = [
+                { id: 'jira-site-1', credentialId: 'shared-cred', name: 'Company Jira', isCloud: true },
+                { id: 'jira-site-2', credentialId: 'shared-cred', name: 'Team Jira', isCloud: true },
+                { id: 'jira-site-3', credentialId: 'shared-cred', name: 'Project Jira', isCloud: true },
+            ] as DetailedSiteInfo[];
+            const mockBitbucketSites = [] as DetailedSiteInfo[];
+            const mockSharedAuthInfo = { username: 'oauth-user', state: 'Valid' } as unknown as AuthInfo;
+
+            mockSiteManager.getSitesAvailable
+                .mockReturnValueOnce(mockJiraSites)
+                .mockReturnValueOnce(mockBitbucketSites);
+
+            mockCredentialManager.getAuthInfo.mockResolvedValueOnce(mockSharedAuthInfo);
+
+            const [jiraSites, bitbucketSites] = await vscConfigActionApi.getSitesWithAuth();
+
+            expect(jiraSites).toHaveLength(3);
+            expect(bitbucketSites).toHaveLength(0);
+
+            jiraSites.forEach((siteWithAuth, index) => {
+                expect(siteWithAuth.site).toBe(mockJiraSites[index]);
+                expect(siteWithAuth.auth).toBe(mockSharedAuthInfo);
+            });
+
+            expect(mockCredentialManager.getAuthInfo).toHaveBeenCalledTimes(1);
+
+            expect(mockCredentialManager.getAuthInfo).toHaveBeenCalledWith(mockJiraSites[2]);
+        });
+
+        it('should handle mixed unique and duplicate credentialIds', async () => {
+            const mockJiraSites = [
+                { id: 'jira-site-1', credentialId: 'cred-1', name: 'Unique Site', isCloud: true },
+                { id: 'jira-site-2', credentialId: 'shared-cred', name: 'Shared Site 1', isCloud: true },
+                { id: 'jira-site-3', credentialId: 'shared-cred', name: 'Shared Site 2', isCloud: true },
+                { id: 'jira-site-4', credentialId: 'cred-2', name: 'Another Unique', isCloud: false },
+            ] as unknown as DetailedSiteInfo[];
+            const mockBitbucketSites = [] as DetailedSiteInfo[];
+
+            const mockAuth1 = { username: 'user1', state: 'Valid' } as unknown as AuthInfo;
+            const mockAuth2 = { username: 'user2', state: 'Valid' } as unknown as AuthInfo;
+            const mockAuth3 = { username: 'user3', state: 'Valid' } as unknown as AuthInfo;
+
+            mockSiteManager.getSitesAvailable
+                .mockReturnValueOnce(mockJiraSites)
+                .mockReturnValueOnce(mockBitbucketSites);
+
+            mockCredentialManager.getAuthInfo
+                .mockResolvedValueOnce(mockAuth1)
+                .mockResolvedValueOnce(mockAuth2)
+                .mockResolvedValueOnce(mockAuth3);
+
+            const [jiraSites, bitbucketSites] = await vscConfigActionApi.getSitesWithAuth();
+
+            expect(jiraSites).toHaveLength(4);
+            expect(bitbucketSites).toHaveLength(0);
+
+            expect(jiraSites[0].auth).toBe(mockAuth1);
+            expect(jiraSites[1].auth).toBe(mockAuth2);
+            expect(jiraSites[2].auth).toBe(mockAuth2);
+            expect(jiraSites[3].auth).toBe(mockAuth3);
+
+            // Should only call getAuthInfo for unique credentials (3 times, not 4)
+            expect(mockCredentialManager.getAuthInfo).toHaveBeenCalledTimes(3);
+        });
+
+        it('should use correct default auth for cloud vs server sites', async () => {
+            const mockJiraSites = [
+                { id: 'jira-cloud', credentialId: 'cred-1', isCloud: true },
+                { id: 'jira-server', credentialId: 'cred-2', isCloud: false },
+            ] as unknown as DetailedSiteInfo[];
+            const mockBitbucketSites = [
+                { id: 'bb-cloud', credentialId: 'cred-3', isCloud: true },
+                { id: 'bb-server', credentialId: 'cred-4', isCloud: false },
+            ] as unknown as DetailedSiteInfo[];
+
+            mockSiteManager.getSitesAvailable
+                .mockReturnValueOnce(mockJiraSites)
+                .mockReturnValueOnce(mockBitbucketSites);
+
+            // All auth retrievals fail
+            mockCredentialManager.getAuthInfo
+                .mockResolvedValue(null)
+                .mockResolvedValue(null)
+                .mockResolvedValue(null)
+                .mockResolvedValue(null);
+
+            const [jiraSites, bitbucketSites] = await vscConfigActionApi.getSitesWithAuth();
+
+            // Cloud sites should get emptyAuthInfo
+            expect(jiraSites[0].auth).toBe(emptyAuthInfo);
+            expect(bitbucketSites[0].auth).toBe(emptyAuthInfo);
+
+            // Server sites should get emptyBasicAuthInfo
+            expect(jiraSites[1].auth).toBe(emptyBasicAuthInfo);
+            expect(bitbucketSites[1].auth).toBe(emptyBasicAuthInfo);
+        });
+
+        it('should handle empty site lists', async () => {
+            const mockJiraSites = [] as DetailedSiteInfo[];
+            const mockBitbucketSites = [] as DetailedSiteInfo[];
+
+            mockSiteManager.getSitesAvailable
+                .mockReturnValueOnce(mockJiraSites)
+                .mockReturnValueOnce(mockBitbucketSites);
+
+            const [jiraSites, bitbucketSites] = await vscConfigActionApi.getSitesWithAuth();
+
+            expect(jiraSites).toHaveLength(0);
+            expect(bitbucketSites).toHaveLength(0);
+            expect(mockCredentialManager.getAuthInfo).not.toHaveBeenCalled();
         });
     });
 
