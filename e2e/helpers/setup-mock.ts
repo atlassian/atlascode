@@ -28,6 +28,35 @@ export const setupWireMockMapping = async (request: APIRequestContext, method: s
 };
 
 /**
+ * Helper function to set up WireMock mapping for Bitbucket
+ */
+export const setupWireMockMappingBitbucket = async (
+    request: APIRequestContext,
+    method: string,
+    body: any,
+    urlPath: string,
+    queryParameters?: any,
+) => {
+    const response = await request.post('http://wiremock-bitbucket:8080/__admin/mappings', {
+        data: {
+            request: {
+                method,
+                urlPathPattern: urlPath,
+                queryParameters,
+            },
+            response: {
+                status: 200,
+                jsonBody: body,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            },
+        },
+    });
+    return await response.json();
+};
+
+/**
  * Helper function to clean up WireMock mapping
  */
 export const cleanupWireMockMapping = async (request: APIRequestContext, mappingId: string) => {
@@ -62,4 +91,20 @@ export async function setupIssueMock(
         '/rest/api/2/issue/BTS-1',
     );
     return () => cleanupWireMockMapping(request, id);
+}
+
+export async function setupPullrequests(request: APIRequestContext, values: Array<any>) {
+    const { id } = await setupWireMockMappingBitbucket(
+        request,
+        'GET',
+        { values, pagelen: 25, size: 0, page: 1 },
+        '/2.0/repositories/mockuser/test-repository/pullrequests',
+        {
+            pagelen: {
+                equalTo: '25',
+            },
+        },
+    );
+
+    return id;
 }

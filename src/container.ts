@@ -271,6 +271,12 @@ export class Container {
                 await openConfigFile('.rovodev/mcp.json', 'Rovo Dev MCP configuration');
             }),
         );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand(Commands.OpenRovoDevGlobalMemory, async () => {
+                await openConfigFile('.rovodev/.agent.md', 'Rovo Dev Global Memory file');
+            }),
+        );
     }
 
     static focus() {

@@ -143,7 +143,15 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                         });
                     }
                 } else {
-                    this._api.authenticateCloud(msg.siteInfo, this._settingsUrl);
+                    try {
+                        await this._api.authenticateCloud(msg.siteInfo, this._settingsUrl);
+                    } catch (e) {
+                        this._logger.error(e, 'Cloud authentication error');
+                        this.postMessage({
+                            type: CommonMessageType.Error,
+                            reason: formatError(e, 'Cloud authentication error'),
+                        });
+                    }
                 }
                 this._analytics.fireAuthenticateButtonEvent(id, msg.siteInfo, isCloud);
                 break;
