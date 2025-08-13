@@ -26,7 +26,7 @@ export class IssueTitle {
         const saveButton = this.title.locator('.ac-inline-save-button');
         await expect(saveButton).toBeVisible();
         await saveButton.click();
-        await this.frame.waitForTimeout(1_000); // Increased timeout to allow UI to update
+        await this.frame.waitForTimeout(2_000);
     }
 
     async expectEqual(title: string) {

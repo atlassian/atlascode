@@ -21,8 +21,10 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci --no-audit
-          npm audit
-      
+
+      - name: Run vulnerability audit
+        run: npm audit
+
       - name: Run linter
         run: npm run lint
 
