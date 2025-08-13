@@ -4,17 +4,19 @@
         "urlPathPattern": "/2.0/repositories/mockuser/test-repository/pullrequests",
         "queryParameters": {
             "pagelen": {
-                "matches": ".*"
+                "matches": "50"
+            },
+            "fields": {
+                "equalTo": "values.participants"
             }
         }
     },
     "response": {
         "status": 200,
         "jsonBody": {
-            "values": [],
-            "pagelen": 2,
-            "size": 0,
-            "page": 1
+            "values": [{
+                "participants": []
+            }]
         },
         "headers": {
             "Content-Type": "application/json"
