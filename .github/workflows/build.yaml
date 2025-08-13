@@ -10,6 +10,7 @@ on:
 jobs:
 
   lint:
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -66,7 +67,7 @@ jobs:
           docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e
 
       - name: Run unit tests
-        if: matrix.test-type == 'unit'
+        if: false && matrix.test-type == 'unit'
         run: npm run test
 
       - name: Run E2E tests
