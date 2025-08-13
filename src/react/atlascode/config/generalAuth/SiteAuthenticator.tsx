@@ -1,10 +1,10 @@
 import { Box, Button, Grid } from '@material-ui/core';
 import React, { memo, useCallback, useContext } from 'react';
 
-import { Product } from '../../../../../atlclients/authInfo';
-import { SiteWithAuthInfo } from '../../../../../lib/ipc/toUI/config';
+import { Product } from '../../../../atlclients/authInfo';
+import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
+import { AuthDialogControllerContext } from '../auth/useAuthDialog';
 import { ConfigControllerContext } from '../configControllerV3';
-import { AuthDialogControllerContext } from './../../auth/useAuthDialog';
 import { CloudAuthButton } from './CloudAuthButton';
 import { SiteList } from './SiteList';
 

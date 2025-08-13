@@ -2,12 +2,12 @@ import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@m
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 
-import { Product } from '../../../../../atlclients/authInfo';
-import { ConfigV3Section, ConfigV3SubSection } from '../../../../../lib/ipc/models/config';
-import { SiteWithAuthInfo } from '../../../../../lib/ipc/toUI/config';
-import { CommonSubpanelV3Props } from '../../../common/commonPanelProps';
-import { PanelSubtitle } from '../../../common/PanelSubtitle';
-import { PanelTitle } from '../../../common/PanelTitle';
+import { Product } from '../../../../atlclients/authInfo';
+import { ConfigV3Section, ConfigV3SubSection } from '../../../../lib/ipc/models/config';
+import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
+import { CommonSubpanelV3Props } from '../../common/commonPanelProps';
+import { PanelSubtitle } from '../../common/PanelSubtitle';
+import { PanelTitle } from '../../common/PanelTitle';
 import { SiteAuthenticator } from './SiteAuthenticator';
 
 type AuthPanelProps = CommonSubpanelV3Props & {

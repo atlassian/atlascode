@@ -14,10 +14,7 @@ export enum ConfigSection {
 export enum ConfigV3Section {
     Auth = 'generalAuth', // For UI
     AdvancedConfig = 'advancedConfigs', // For UI
-    Explore = 'explore',
-    Jira = 'jira',
-    Bitbucket = 'bitbucket',
-    General = 'general',
+    Explore = 'explore', // UI and functionality
 }
 
 export enum ConfigSubSection {

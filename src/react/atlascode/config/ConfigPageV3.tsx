@@ -22,17 +22,17 @@ import equal from 'fast-deep-equal/es6';
 import React, { useCallback, useEffect, useState } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
 
-import { ConfigTarget, ConfigV3Section, ConfigV3SubSection } from '../../../../lib/ipc/models/config';
-import { AtlascodeErrorBoundary } from '../../common/ErrorBoundary';
-import { ErrorDisplay } from '../../common/ErrorDisplay';
-import { PMFDisplay } from '../../common/pmf/PMFDisplay';
-import { AuthDialog } from './../auth/dialog/AuthDialog';
-import { AuthDialogControllerContext, useAuthDialog } from './../auth/useAuthDialog';
-import { SidebarButtons } from './../SidebarButtons';
+import { ConfigTarget, ConfigV3Section, ConfigV3SubSection } from '../../../lib/ipc/models/config';
+import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
+import { ErrorDisplay } from '../common/ErrorDisplay';
+import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { AdvancedConfigsPanel } from './advancedConfigs/advancedConfigsPanel';
-import { AuthenicationPanel } from './auth/AuthenicationPanel';
+import { AuthDialog } from './auth/dialog/AuthDialog';
+import { AuthDialogControllerContext, useAuthDialog } from './auth/useAuthDialog';
 import { ConfigControllerContext, useConfigController } from './configControllerV3';
-import { ExplorePanel } from './explore/ExplorePanel';
+import { ExplorePanel } from './exploreV3/ExplorePanel';
+import { AuthenicationPanel } from './generalAuth/AuthenicationPanel';
+import { SidebarButtons } from './SidebarButtons';
 
 const useStyles = makeStyles(
     (theme: Theme) =>
@@ -75,7 +75,6 @@ const ConfigPageV3: React.FunctionComponent = () => {
     const [changes, setChanges] = useState<{ [key: string]: any }>({});
     const [internalTarget, setInternalTarget] = useState<ConfigTarget>(state.target);
     const [openSection, setOpenSection] = useState<ConfigV3Section>(() => state.openSection);
-    console.log(openSection);
     const [openSubsections, setOpenSubsections] = useState<SectionWithSubsections>(() => {
         return { ...emptySubsections, [state.openSection]: state.openSubSections };
     });

@@ -18,7 +18,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { JQLEntry } from 'src/config/model';
 import { v4 } from 'uuid';
 
-import { DetailedSiteInfo, emptySiteInfo } from '../../../../../../../../atlclients/authInfo';
+import { DetailedSiteInfo, emptySiteInfo } from '../../../../../../../atlclients/authInfo';
 import { ConfigControllerContext } from '../../../../configControllerV3';
 import { useJqlValidator } from './useJqlValidator';
 

@@ -24,15 +24,9 @@ import clsx from 'clsx';
 import React, { useContext } from 'react';
 import { uid } from 'react-uid';
 
-import {
-    AuthInfoState,
-    DetailedSiteInfo,
-    emptyUserInfo,
-    Product,
-    ProductJira,
-} from '../../../../../atlclients/authInfo';
-import { SiteWithAuthInfo } from '../../../../../lib/ipc/toUI/config';
-import { useBorderBoxStyles } from '../../../common/useBorderBoxStyles';
+import { AuthInfoState, DetailedSiteInfo, emptyUserInfo, Product, ProductJira } from '../../../../atlclients/authInfo';
+import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
+import { useBorderBoxStyles } from '../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../configControllerV3';
 
 type SiteListProps = {

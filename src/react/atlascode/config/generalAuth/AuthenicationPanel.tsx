@@ -1,10 +1,10 @@
 import { Fade, Grid } from '@material-ui/core';
 import React from 'react';
 
-import { ProductBitbucket, ProductJira } from '../../../../../atlclients/authInfo';
-import { ConfigV3Section, ConfigV3SubSection } from '../../../../../lib/ipc/models/config';
-import { SiteWithAuthInfo } from '../../../../../lib/ipc/toUI/config';
-import { CommonPanelProps } from '../../../common/commonPanelProps';
+import { ProductBitbucket, ProductJira } from '../../../../atlclients/authInfo';
+import { ConfigV3Section, ConfigV3SubSection } from '../../../../lib/ipc/models/config';
+import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
+import { CommonPanelProps } from '../../common/commonPanelProps';
 import { AuthPanel } from './AuthPanel';
 
 type AuthenicationPanelProps = CommonPanelProps & {

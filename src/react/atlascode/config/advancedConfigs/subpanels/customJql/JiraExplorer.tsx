@@ -1,10 +1,10 @@
 import { Box, Grid, Link, Typography } from '@material-ui/core';
 import React, { memo } from 'react';
 
-import { DetailedSiteInfo } from '../../../../../../../atlclients/authInfo';
-import { JQLEntry } from '../../../../../../../config/model';
-import { PrepareCommitTip } from '../../../../../common/PrepareCommitTip';
-import { useBorderBoxStyles } from '../../../../../common/useBorderBoxStyles';
+import { DetailedSiteInfo } from '../../../../../../atlclients/authInfo';
+import { JQLEntry } from '../../../../../../config/model';
+import { PrepareCommitTip } from '../../../../common/PrepareCommitTip';
+import { useBorderBoxStyles } from '../../../../common/useBorderBoxStyles';
 import { JQLListEditor } from './jql/JQLListEditor';
 
 type JiraExplorerProps = {

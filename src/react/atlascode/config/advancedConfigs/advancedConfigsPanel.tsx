@@ -1,9 +1,9 @@
 import { Box, Fade, Grid, makeStyles, Theme, Typography } from '@material-ui/core';
 import React from 'react';
 
-import { ConfigV3Section, ConfigV3SubSection } from '../../../../../lib/ipc/models/config';
-import { SiteWithAuthInfo } from '../../../../../lib/ipc/toUI/config';
-import { CommonPanelProps } from '../../../common/commonPanelProps';
+import { ConfigSection, ConfigV3SubSection } from '../../../../lib/ipc/models/config';
+import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
+import { CommonPanelProps } from '../../common/commonPanelProps';
 import { DebuggingPanel } from './subpanels/charlesDebug/DebuggingPanel';
 import { JiraExplorerJqlPanel } from './subpanels/customJql/JiraExplorerJqlPanel';
 import { StartWorkPanel } from './subpanels/startWork/StartWorkPanel';
@@ -52,8 +52,8 @@ export const AdvancedConfigsPanel: React.FunctionComponent<AdvancedConfigsProps>
                                 expanded={selectedSubSections.includes(ConfigV3SubSection.Issues)}
                                 onSubsectionChange={onSubsectionChange}
                                 sites={siteInfos}
-                                jqlList={config[`${ConfigV3Section.Jira}.jqlList`]}
-                                enabled={config[`${ConfigV3Section.Jira}.explorer.enabled`]}
+                                jqlList={config[`${ConfigSection.Jira}.jqlList`]}
+                                enabled={config[`${ConfigSection.Jira}.explorer.enabled`]}
                             />
                         </Grid>
                         <Grid item>
@@ -61,12 +61,8 @@ export const AdvancedConfigsPanel: React.FunctionComponent<AdvancedConfigsProps>
                                 visible={visible}
                                 expanded={selectedSubSections.includes(ConfigV3SubSection.StartWork)}
                                 onSubsectionChange={onSubsectionChange}
-                                customPrefixes={
-                                    config[`${ConfigV3Section.Jira}.startWorkBranchTemplate.customPrefixes`]
-                                }
-                                customTemplate={
-                                    config[`${ConfigV3Section.Jira}.startWorkBranchTemplate.customTemplate`]
-                                }
+                                customPrefixes={config[`${ConfigSection.Jira}.startWorkBranchTemplate.customPrefixes`]}
+                                customTemplate={config[`${ConfigSection.Jira}.startWorkBranchTemplate.customTemplate`]}
                             />
                         </Grid>
                         <Grid item>

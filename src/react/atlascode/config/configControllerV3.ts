@@ -5,11 +5,11 @@ import React, { useCallback, useMemo, useReducer } from 'react';
 import { UIErrorInfo } from 'src/analyticsTypes';
 import { v4 } from 'uuid';
 
-import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../../atlclients/authInfo';
-import { CommonActionType } from '../../../../lib/ipc/fromUI/common';
-import { ConfigAction, ConfigActionType } from '../../../../lib/ipc/fromUI/config';
-import { KnownLinkID, WebViewID } from '../../../../lib/ipc/models/common';
-import { ConfigTarget, ConfigV3Section, ConfigV3SubSection, FlattenedConfig } from '../../../../lib/ipc/models/config';
+import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../atlclients/authInfo';
+import { CommonActionType } from '../../../lib/ipc/fromUI/common';
+import { ConfigAction, ConfigActionType } from '../../../lib/ipc/fromUI/config';
+import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
+import { ConfigTarget, ConfigV3Section, ConfigV3SubSection, FlattenedConfig } from '../../../lib/ipc/models/config';
 import {
     ConfigMessageType,
     ConfigResponse,
@@ -18,9 +18,9 @@ import {
     emptyConfigV3InitMessage,
     SectionV3ChangeMessage,
     SiteWithAuthInfo,
-} from '../../../../lib/ipc/toUI/config';
-import { ConnectionTimeout } from '../../../../util/time';
-import { PostMessageFunc, useMessagingApi } from '../../messagingApi';
+} from '../../../lib/ipc/toUI/config';
+import { ConnectionTimeout } from '../../../util/time';
+import { PostMessageFunc, useMessagingApi } from '../messagingApi';
 
 export interface ConfigControllerApi {
     postMessage: PostMessageFunc<ConfigAction>;

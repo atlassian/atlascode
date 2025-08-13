@@ -6,8 +6,8 @@ import React, { memo, useCallback, useContext, useEffect, useState } from 'react
 import { unstable_trace as trace } from 'scheduler/tracing';
 import { useFilterDialog } from 'src/react/atlascode/config/jira/filters/useFilterDialog';
 
-import { DetailedSiteInfo } from '../../../../../../../../atlclients/authInfo';
-import { JQLEntry } from '../../../../../../../../config/model';
+import { DetailedSiteInfo } from '../../../../../../../atlclients/authInfo';
+import { JQLEntry } from '../../../../../../../config/model';
 import { ConfigControllerContext } from '../../../../configControllerV3';
 import { JQLListItem } from './JQLListItem';
 import { JQLSpeedDial } from './JQLSpeedDial';

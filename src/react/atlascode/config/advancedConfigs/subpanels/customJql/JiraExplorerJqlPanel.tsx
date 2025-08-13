@@ -3,12 +3,12 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import equal from 'fast-deep-equal/es6';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 
-import { DetailedSiteInfo } from '../../../../../../../atlclients/authInfo';
-import { JQLEntry } from '../../../../../../../config/model';
-import { ConfigV3Section, ConfigV3SubSection } from '../../../../../../../lib/ipc/models/config';
-import { CommonSubpanelV3Props } from '../../../../../common/commonPanelProps';
-import { PanelSubtitle } from '../../../../../common/PanelSubtitle';
-import { PanelTitle } from '../../../../../common/PanelTitle';
+import { DetailedSiteInfo } from '../../../../../../atlclients/authInfo';
+import { JQLEntry } from '../../../../../../config/model';
+import { ConfigSection, ConfigV3SubSection } from '../../../../../../lib/ipc/models/config';
+import { CommonSubpanelV3Props } from '../../../../common/commonPanelProps';
+import { PanelSubtitle } from '../../../../common/PanelSubtitle';
+import { PanelTitle } from '../../../../common/PanelTitle';
 import { JiraExplorer } from './JiraExplorer';
 
 type JiraExplorerJqlPanelProps = CommonSubpanelV3Props & {
@@ -62,8 +62,8 @@ export const JiraExplorerJqlPanel: React.FunctionComponent<JiraExplorerJqlPanelP
             <ExpansionPanel hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
                 <ExpansionPanelSummary
                     expandIcon={<ExpandMoreIcon />}
-                    aria-controls={`${ConfigV3Section.Jira}-${ConfigV3SubSection.Issues}-content`}
-                    id={`${ConfigV3Section.Jira}-${ConfigV3SubSection.Issues}-header`}
+                    aria-controls={`${ConfigSection.Jira}-${ConfigV3SubSection.Issues}-content`}
+                    id={`${ConfigSection.Jira}-${ConfigV3SubSection.Issues}-header`}
                 >
                     <PanelTitle>Jira Work Items Explorer</PanelTitle>
                     <PanelSubtitle>configure custom JQL and filters</PanelSubtitle>

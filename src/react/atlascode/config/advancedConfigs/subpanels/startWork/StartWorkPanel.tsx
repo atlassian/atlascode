@@ -1,27 +1,26 @@
 import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import React, { memo, useCallback, useEffect, useState } from 'react';
-import { ConfigV3Section, ConfigV3SubSection } from 'src/lib/ipc/models/config';
 import { CommonSubpanelV3Props } from 'src/react/atlascode/common/commonPanelProps';
 import { PanelSubtitle } from 'src/react/atlascode/common/PanelSubtitle';
 import { PanelTitle } from 'src/react/atlascode/common/PanelTitle';
 
-import { Debug } from './Debug';
+import { ConfigSection, ConfigV3SubSection } from '../../../../../../lib/ipc/models/config';
+import { StartWorkSettings } from './StartWorkSettings';
 
-type DebuggingPanelProps = CommonSubpanelV3Props & {
-    enableCharles: boolean;
-    charlesCertPath: string;
-    charlesDebugOnly: boolean;
+type StartWorkPanelProps = CommonSubpanelV3Props & {
+    customPrefixes: string[];
+    customTemplate: string;
 };
 
-export const DebuggingPanel: React.FunctionComponent<DebuggingPanelProps> = memo(
-    ({ visible, expanded, onSubsectionChange, enableCharles, charlesCertPath, charlesDebugOnly }) => {
-        const [internalExpanded, setInternalExpanded] = useState(expanded);
+export const StartWorkPanel: React.FunctionComponent<StartWorkPanelProps> = memo(
+    ({ visible, expanded, customPrefixes, customTemplate, onSubsectionChange }) => {
+        const [internalExpanded, setInternalExpanded] = useState<boolean>(expanded);
 
         const expansionHandler = useCallback(
             (event: React.ChangeEvent<{}>, expanded: boolean) => {
                 setInternalExpanded(expanded);
-                onSubsectionChange(ConfigV3SubSection.Debug, expanded);
+                onSubsectionChange(ConfigV3SubSection.StartWork, expanded);
             },
             [onSubsectionChange],
         );
@@ -39,18 +38,14 @@ export const DebuggingPanel: React.FunctionComponent<DebuggingPanelProps> = memo
             <ExpansionPanel hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
                 <ExpansionPanelSummary
                     expandIcon={<ExpandMoreIcon />}
-                    aria-controls={`${ConfigV3Section.General}-${ConfigV3SubSection.Debug}-content`}
-                    id={`${ConfigV3Section.General}-${ConfigV3SubSection.Debug}-header`}
+                    aria-controls={`${ConfigSection.Jira}-${ConfigV3SubSection.StartWork}-content`}
+                    id={`${ConfigSection.Jira}-${ConfigV3SubSection.StartWork}-header`}
                 >
-                    <PanelTitle>Debugging with Charles Web Proxy</PanelTitle>
-                    <PanelSubtitle>configure debugging tools</PanelSubtitle>
+                    <PanelTitle>Start Work</PanelTitle>
+                    <PanelSubtitle>configure the start work screen</PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
-                    <Debug
-                        enableCharles={enableCharles}
-                        charlesCertPath={charlesCertPath}
-                        charlesDebugOnly={charlesDebugOnly}
-                    />
+                    <StartWorkSettings customPrefixes={customPrefixes} customTemplate={customTemplate} />
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );

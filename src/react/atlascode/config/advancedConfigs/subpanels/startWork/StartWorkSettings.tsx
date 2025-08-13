@@ -3,7 +3,7 @@ import { Box, FormHelperText, Grid, Link, Typography } from '@material-ui/core';
 import Mustache from 'mustache';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
-import { useBorderBoxStyles } from '../../../../../common/useBorderBoxStyles';
+import { useBorderBoxStyles } from '../../../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../../../configControllerV3';
 
 type StartWorkSettings = {
