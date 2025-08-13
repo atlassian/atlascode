@@ -1,10 +1,10 @@
 import type { APIRequestContext, Page } from '@playwright/test';
-import { setupPullrequests } from 'e2e/helpers/setup-mock';
+// import { setupPullrequests } from 'e2e/helpers/setup-mock';
 
 const goToExtensionTab = async (page: Page) => {
     // sometimes page is redirected to Explorer tab and this is workaround so we sure extension tab will be opened
-    await page.getByRole('tab', { name: 'Explorer' }).click();
-    await page.waitForTimeout(250);
+    // await page.getByRole('tab', { name: 'Explorer' }).click();
+    // await page.waitForTimeout(250);
     await page.getByRole('tab', { name: 'Atlassian' }).click();
     await page.waitForTimeout(250);
 };
@@ -49,7 +49,7 @@ export const connectRepository = async (page: Page, request: APIRequestContext) 
     await waitForExplorerLoading(page);
 
     // setting request for pullrequests which is used in Bitbucket explorer
-    const id = await setupPullrequests(request, []);
+    // const id = await setupPullrequests(request, []);
 
     // trying to add mock-repository
     await addRepo(page);
@@ -82,5 +82,5 @@ export const connectRepository = async (page: Page, request: APIRequestContext) 
         await createPRButton.waitFor({ state: 'visible' });
     }
 
-    return id;
+    // return id;
 };
