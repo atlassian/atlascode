@@ -92,7 +92,7 @@ export class CreateIssueWebview
         return ProductJira;
     }
 
-    protected onPanelDisposed() {
+    protected override onPanelDisposed() {
         this.reset();
         super.onPanelDisposed();
     }
@@ -102,7 +102,7 @@ export class CreateIssueWebview
         this._siteDetails = emptySiteInfo;
     }
 
-    async createOrShow(column?: ViewColumn, data?: PartialIssue): Promise<void> {
+    override async createOrShow(column?: ViewColumn, data?: PartialIssue): Promise<void> {
         await super.createOrShow(column);
 
         this.initialize(data);
@@ -549,7 +549,7 @@ export class CreateIssueWebview
         return [payload, worklog, issuelinks, attachments];
     }
 
-    protected async onMessageReceived(msg: Action): Promise<boolean> {
+    protected override async onMessageReceived(msg: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(msg);
 
         if (!handled) {

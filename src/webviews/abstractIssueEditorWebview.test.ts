@@ -61,8 +61,8 @@ class TestIssueEditorWebview extends AbstractIssueEditorWebview {
     }
 
     // Add mock methods for abstract webview functionality
-    postMessage = jest.fn();
-    formatErrorReason = jest.fn((error: any, defaultMessage: string) => defaultMessage);
+    override postMessage = jest.fn();
+    override formatErrorReason = jest.fn((error: any, defaultMessage: string) => defaultMessage);
 
     // Expose protected methods for testing
     public testFormatSelectOptions(msg: FetchQueryAction, result: any, valueType?: ValueType): any[] {

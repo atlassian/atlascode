@@ -158,7 +158,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         }
     }
 
-    async refresh() {
+    override async refresh() {
         await this.updateChildren();
         this._onDidChangeTreeData.fire(null);
     }
@@ -217,7 +217,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         this._onDidChangeTreeData.fire(null);
     }
 
-    async getTreeItem(element: AbstractBaseNode): Promise<TreeItem> {
+    override async getTreeItem(element: AbstractBaseNode): Promise<TreeItem> {
         return element.getTreeItem();
     }
 
@@ -247,7 +247,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         return [createPRNode, this._headerNode, ...Array.from(this._childrenMap!.values())];
     }
 
-    dispose() {
+    override dispose() {
         if (this._childrenMap) {
             this._childrenMap.forEach((node) => node.dispose());
         }

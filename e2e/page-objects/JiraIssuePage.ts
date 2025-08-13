@@ -24,4 +24,9 @@ export class JiraIssuePage {
     async saveChanges() {
         await this.frame.getByRole('button', { name: 'Save' }).click();
     }
+
+    startWork() {
+        const startWorkButton = this.frame.getByTestId('issue.start-work-button');
+        return startWorkButton.click();
+    }
 }

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
+import { State } from 'src/rovo-dev/rovoDevTypes';
 
-import { State } from '../../rovoDevView';
 import { PromptInputBox } from './PromptInput';
 
 describe('PromptInputBox', () => {

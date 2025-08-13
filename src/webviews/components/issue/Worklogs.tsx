@@ -29,7 +29,7 @@ export default class Worklogs extends React.Component<{ worklogs: WorklogContain
         super(props);
     }
 
-    render() {
+    override render() {
         return (
             <TableTree
                 columns={[Author, Comment, TimeSpent, Created]}

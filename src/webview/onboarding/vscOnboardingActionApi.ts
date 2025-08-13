@@ -36,7 +36,7 @@ export class VSCOnboardingActionApi implements OnboardingActionApi {
 
     public async clearAuth(site: DetailedSiteInfo): Promise<void> {
         await Container.clientManager.removeClient(site);
-        Container.siteManager.removeSite(site);
+        await Container.siteManager.removeSite(site);
     }
 
     public getSitesAvailable(): [DetailedSiteInfo[], DetailedSiteInfo[]] {

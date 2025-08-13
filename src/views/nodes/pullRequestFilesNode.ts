@@ -55,7 +55,7 @@ export class PullRequestFilesNode extends AbstractBaseNode {
         return item;
     }
 
-    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
+    override async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         return [];
     }
 }

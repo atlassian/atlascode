@@ -95,7 +95,7 @@ export class CustomJQLViewProvider extends Disposable implements TreeDataProvide
         }
     }
 
-    public dispose() {
+    public override dispose() {
         this._disposable.dispose();
     }
 

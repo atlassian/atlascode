@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import path from 'path';
 import { gte as semver_gte } from 'semver';
+import { getFsPromise } from 'src/util/fsPromises';
 import { setTimeout } from 'timers/promises';
 import { v4 } from 'uuid';
 import {
@@ -8,6 +9,7 @@ import {
     commands,
     Disposable,
     Event,
+    ExtensionContext,
     Memento,
     Position,
     Range,
@@ -45,8 +47,13 @@ import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
+import {
+    initializeRovoDevProcessManager,
+    MIN_SUPPORTED_ROVODEV_VERSION,
+    setRovoDevWebviewProvider,
+} from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
-import { RovoDevContext, RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
+import { RovoDevContext, RovoDevContextItem, RovoDevInitState, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 type ParametersSkip2<T extends (...args: any) => any> =
@@ -58,8 +65,6 @@ type TelemetryFunction = keyof typeof rovoDevTelemetryEvents;
 type TelemetryRecord<T> = {
     [x in TelemetryFunction]?: T;
 };
-
-const MIN_SUPPORTED_ROVODEV_VERSION = '0.9.3';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;
@@ -85,6 +90,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _perfLogger = new PerformanceLogger();
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _rovoDevApiClient?: RovoDevApiClient;
+    private _disabled = false;
     private _initialized = false;
 
     private _chatSessionId: string = '';
@@ -105,6 +111,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _extensionPath: string;
     private _extensionUri: Uri;
 
+    private _context: ExtensionContext;
+
     private get rovoDevApiClient() {
         if (!this._rovoDevApiClient) {
             const rovoDevPort = this.getWorkspacePort();
@@ -117,7 +125,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return this._rovoDevApiClient;
     }
 
-    constructor(extensionPath: string, globalState: Memento) {
+    constructor(context: ExtensionContext, extensionPath: string, globalState: Memento) {
         super(() => {
             this._dispose();
         });
@@ -125,7 +133,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._extensionPath = extensionPath;
         this._extensionUri = Uri.file(this._extensionPath);
         this._globalState = globalState;
-
+        this._context = context;
         // Register the webview view provider
         this._disposables.push(
             window.registerWebviewViewProvider('atlascode.views.rovoDev.webView', this, {
@@ -135,6 +143,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         // Register editor listeners
         this._registerEditorListeners();
+
+        // Register this provider with the process manager for error handling
+        setRovoDevWebviewProvider(this);
     }
 
     private getWorkspacePort(): number | undefined {
@@ -217,15 +228,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await this.executeKeepFiles(e.files);
                         break;
 
-                    case RovoDevViewResponseType.GetOriginalText:
-                        const text = await this.executeGetText(e.filePath, e.range);
-                        await webviewView.webview.postMessage({
-                            type: RovoDevProviderMessageType.ReturnText,
-                            text: text || '',
-                            nonce: e.requestId, // Use the requestId as nonce
-                        });
-                        break;
-
                     case RovoDevViewResponseType.CreatePR:
                         await this.createPR(e.payload.commitMessage, e.payload.branchName);
                         break;
@@ -271,53 +273,36 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     case RovoDevViewResponseType.ReportThinkingDrawerExpanded:
                         this.fireTelemetryEvent('rovoDevDetailsExpandedEvent', this._currentPromptId);
                         break;
+
+                    case RovoDevViewResponseType.WebviewReady:
+                        if (!!process.env.ROVODEV_ENABLED && !process.env.ROVODEV_BBY) {
+                            initializeRovoDevProcessManager(this._context);
+                        } else {
+                            this.signalProcessStarted();
+                        }
                 }
             } catch (error) {
                 this.processError(error, false);
             }
         });
 
-        // wait for Rovo Dev to be ready, for up to 10 seconds
-        this.waitFor(() => this.executeHealthcheck(), 100000, 500)
-            .then(async (result) => {
-                if (result) {
-                    const version = ((await this.executeHealthcheckInfo()) ?? {}).version;
-                    if (version && semver_gte(version, MIN_SUPPORTED_ROVODEV_VERSION)) {
-                        this.beginNewSession();
-                        if (this.isBBY) {
-                            // TODO: we should obtain the session id from the boysenberry environment
-                            await this.executeReplay();
-                        }
-                    } else {
-                        throw new Error(
-                            `Rovo Dev version (${version}) is out of date. Please update Rovo Dev and try again.\nMin version compatible: ${MIN_SUPPORTED_ROVODEV_VERSION}`,
-                        );
-                    }
-                } else {
-                    const errorMsg = this._rovoDevApiClient
-                        ? `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within 10000ms`
-                        : `Unable to initialize RovoDev's client within 10000ms`;
-
-                    throw new Error(errorMsg);
+        if (!!process.env.ROVODEV_ENABLED && !process.env.ROVODEV_BBY) {
+            workspace.onDidChangeWorkspaceFolders(() => {
+                if (!this._disabled) {
+                    webview.postMessage({
+                        type: RovoDevProviderMessageType.WorkspaceChanged,
+                        workspaceCount: workspace.workspaceFolders?.length || 0,
+                    });
                 }
-
-                this._initialized = true;
-                // re-send the buffered prompt
-                if (this._pendingPrompt) {
-                    this.executeChat(this._pendingPrompt, true);
-                    this._pendingPrompt = undefined;
-                }
-            })
-            .catch((error) => {
-                this.processError(error, false);
-            })
-            .finally(() => {
-                this._initialized = true;
-
-                webviewView.webview.postMessage({
-                    type: RovoDevProviderMessageType.Initialized,
-                });
             });
+
+            if (!this._disabled) {
+                webview.postMessage({
+                    type: RovoDevProviderMessageType.WorkspaceChanged,
+                    workspaceCount: workspace.workspaceFolders?.length || 0,
+                });
+            }
+        }
     }
 
     private beginNewSession(): void {
@@ -504,7 +489,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private async sendUserPromptToView({ text, enable_deep_plan, context }: RovoDevPrompt) {
         const webview = this._webView!;
 
-        await webview.postMessage({
+        return await webview.postMessage({
             type: RovoDevProviderMessageType.UserChatMessage,
             message: {
                 text: text,
@@ -512,6 +497,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 context: context,
             },
         });
+    }
+
+    private async sendPromptSentToView({ text, enable_deep_plan, context }: RovoDevPrompt) {
+        const webview = this._webView!;
 
         return await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
@@ -572,17 +561,29 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             case 'user-prompt':
                 // receiving a user-prompt pre-initialized means we are in the 'replay' response
                 if (!this._initialized) {
+                    const cleanedText = this.stripContextTags(response.content);
                     this._currentPrompt = {
-                        text: response.content,
+                        text: cleanedText,
                         // TODO: content is not restored here at the moment, so we'll just render all prompts as they were submitted
                     };
-                    return this.sendUserPromptToView({ text: response.content });
+                    return this.sendUserPromptToView({ text: cleanedText });
                 }
                 return Promise.resolve(false);
 
             default:
                 return Promise.resolve(false);
         }
+    }
+
+    private stripContextTags(text: string): string {
+        // Remove content between <context> and </context> tags (including the tags themselves)
+        // This regex handles multiline content and nested tags
+        let cleanedText = text.replace(/<context>[\s\S]*?<\/context>/gi, '');
+
+        // Clean up excessive whitespace that might be left behind
+        cleanedText = cleanedText.replace(/\n\s*\n\s*\n/g, '\n\n'); // Replace 3+ newlines with 2
+
+        return cleanedText.trim();
     }
 
     private addContextToPrompt(message: string, context?: RovoDevContext): string {
@@ -594,7 +595,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (context.focusInfo && context.focusInfo.enabled && !context.focusInfo.invalid) {
             extra += `
             <context>
-                Consider that the user has the following open in the editor:
+                I have this open in editor:
                     <name>${context.focusInfo.file.name}</name>
                         <absolute_path>${context.focusInfo.file.absolutePath}</absolute_path>
                         <relative_path>${context.focusInfo.file.relativePath}</relative_path>
@@ -610,7 +611,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (context.contextItems && context.contextItems.length > 0) {
             extra += `
                 <context>
-                    The user has the following additional context items:
+                    I have these additional context items:
                     ${context.contextItems
                         .map(
                             (item) => `
@@ -668,6 +669,8 @@ ${message}`;
             context,
         };
 
+        await this.sendPromptSentToView({ text, enable_deep_plan, context });
+
         let payloadToSend = this.addUndoContextToPrompt(text);
         payloadToSend = this.addContextToPrompt(payloadToSend, context);
 
@@ -722,7 +725,7 @@ ${message}`;
         await this.executeApiWithErrorHandling(fetchOp, true);
     }
 
-    public async addContextItem(contextItem: RovoDevContextItem): Promise<void> {
+    private async addContextItem(contextItem: RovoDevContextItem): Promise<void> {
         const webview = this._webView!;
         await webview.postMessage({
             type: RovoDevProviderMessageType.ContextAdded,
@@ -730,11 +733,11 @@ ${message}`;
         });
     }
 
-    public async selectContextItem(): Promise<RovoDevContextItem | undefined> {
+    private async selectContextItem(): Promise<RovoDevContextItem | undefined> {
         // Get all workspace files
         const files = await workspace.findFiles('**/*', '**/node_modules/**');
         if (!files.length) {
-            window.showWarningMessage('No files found in workspace.');
+            console.log('No files found in workspace.'); // bwieger, look at this more
             return;
         }
 
@@ -772,7 +775,7 @@ ${message}`;
         };
     }
 
-    async executeAddContext(currentContext?: RovoDevContext): Promise<void> {
+    private async executeAddContext(currentContext?: RovoDevContext): Promise<void> {
         // Get all workspace files
         const picked = await this.selectContextItem();
         if (!picked) {
@@ -790,7 +793,12 @@ ${message}`;
         return await this.addContextItem(picked);
     }
 
-    async executeReset(): Promise<void> {
+    public async executeReset(): Promise<void> {
+        // reset is a no-op if there are no folders opened
+        if (this._disabled || !workspace.workspaceFolders?.length) {
+            return;
+        }
+
         const webview = this._webView!;
         const success = await this.executeApiWithErrorHandling(async (client) => {
             await client.reset();
@@ -835,6 +843,7 @@ ${message}`;
 
     private async executeReplay(): Promise<void> {
         this.beginNewPrompt('replay');
+        await this.sendPromptSentToView({ text: '', enable_deep_plan: false, context: undefined });
 
         await this.executeApiWithErrorHandling(async (client) => {
             return this.processChatResponse('replay', client.replay());
@@ -906,12 +915,12 @@ ${message}`;
     private async executeUndoFiles(files: ModifiedFile[]) {
         const promises = files.map(async (file) => {
             const resolvedPath = this.makeRelativePathAbsolute(file.filePath);
-            await this.getPromise((callback) => fs.rm(resolvedPath, { force: true }, callback));
+            await getFsPromise((callback) => fs.rm(resolvedPath, { force: true }, callback));
 
             if (file.type !== 'create') {
                 const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(file.filePath);
-                await this.getPromise((callback) => fs.copyFile(cachedFilePath, resolvedPath, callback));
-                await this.getPromise((callback) => fs.rm(cachedFilePath, callback));
+                await getFsPromise((callback) => fs.copyFile(cachedFilePath, resolvedPath, callback));
+                await getFsPromise((callback) => fs.rm(cachedFilePath, callback));
             }
         });
 
@@ -926,7 +935,7 @@ ${message}`;
     private async executeKeepFiles(files: ModifiedFile[]) {
         const promises = files.map(async (file) => {
             const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(file.filePath);
-            await this.getPromise((callback) => fs.rm(cachedFilePath, callback));
+            await getFsPromise((callback) => fs.rm(cachedFilePath, callback));
         });
 
         await Promise.all(promises);
@@ -1001,29 +1010,11 @@ ${message}`;
         }
     }
 
-    private async executeGetText(filePath: string, range?: number[]): Promise<string | undefined> {
-        const resolvedPath = this.makeRelativePathAbsolute(filePath);
-        if (!fs.existsSync(resolvedPath)) {
-            console.warn(`File not found: ${resolvedPath}`);
-            return undefined;
+    public async invokeRovoDevAskCommand(prompt: string, context?: RovoDevContext): Promise<void> {
+        if (this._disabled) {
+            return;
         }
 
-        const document = await workspace.openTextDocument(Uri.file(resolvedPath));
-
-        if (!document) {
-            console.warn(`Unable to open document for file: ${resolvedPath}`);
-            return undefined;
-        }
-
-        const lineRange =
-            range && Array.isArray(range) ? new Range(new Position(range[0], 0), new Position(range[1], 0)) : undefined;
-
-        const text = document.getText(document.validateRange(lineRange || new Range(0, 0, document.lineCount, 0)));
-
-        return text;
-    }
-
-    async invokeRovoDevAskCommand(prompt: string, context?: RovoDevContext): Promise<void> {
         // focus on the specific vscode view
         commands.executeCommand('atlascode.views.rovoDev.webView.focus');
 
@@ -1043,13 +1034,13 @@ ${message}`;
      * @param contextItem The context item to add.
      * @returns A promise that resolves when the context item has been added.
      */
-    async addToContext(contextItem: RovoDevContextItem): Promise<void> {
-        if (!this._webView) {
-            console.error('Webview is not initialized.');
+    public async addToContext(contextItem: RovoDevContextItem): Promise<void> {
+        if (!this._disabled) {
             return;
         }
 
-        this._webView.postMessage({
+        const webView = this._webView!;
+        webView.postMessage({
             type: RovoDevProviderMessageType.ContextAdded,
             context: contextItem,
         });
@@ -1077,14 +1068,107 @@ ${message}`;
         }
     }
 
-    private getPromise(code: (callback: fs.NoParamCallback) => void): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            const callback: fs.NoParamCallback = (err) => (err ? reject(err) : resolve());
-            try {
-                code(callback);
-            } catch (error) {
-                reject(error);
+    /**
+     * Sends an error message to the chat history instead of showing a VS Code notification
+     * @param errorMessage The error message to display in chat
+     */
+    public sendErrorToChat(errorMessage: string): void {
+        const webView = this._webView!;
+        webView.postMessage({
+            type: RovoDevProviderMessageType.ErrorMessage,
+            message: {
+                text: errorMessage,
+                source: 'RovoDevError',
+                isRetriable: false,
+                uid: v4(),
+            },
+        });
+    }
+
+    public signalBinaryDownloadStarted() {
+        const webView = this._webView!;
+        webView.postMessage({
+            type: RovoDevProviderMessageType.SetInitState,
+            newState: RovoDevInitState.UpdatingBinaries,
+        });
+    }
+
+    public signalBinaryDownloadEnded() {
+        const webView = this._webView!;
+        webView.postMessage({
+            type: RovoDevProviderMessageType.SetInitState,
+            newState: RovoDevInitState.NotInitialized,
+        });
+    }
+
+    public async signalProcessStarted() {
+        const webView = this._webView!;
+
+        // wait for Rovo Dev to be ready, for up to 10 seconds
+        const result = await this.waitFor(() => this.executeHealthcheck(), 100000, 500);
+
+        let thrownError: Error | undefined = undefined;
+
+        try {
+            if (result) {
+                const version = ((await this.executeHealthcheckInfo()) ?? {}).version;
+                if (version && semver_gte(version, MIN_SUPPORTED_ROVODEV_VERSION)) {
+                    this.beginNewSession();
+                    if (this.isBBY) {
+                        // TODO: we should obtain the session id from the boysenberry environment
+                        await this.executeReplay();
+                    }
+                } else {
+                    throw new Error(
+                        `Rovo Dev version (${version}) is out of date. Please update Rovo Dev and try again.\nMin version compatible: ${MIN_SUPPORTED_ROVODEV_VERSION}`,
+                    );
+                }
+            } else {
+                const errorMsg = this._rovoDevApiClient
+                    ? `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within 10000ms`
+                    : `Unable to initialize RovoDev's client within 10000ms`;
+
+                throw new Error(errorMsg);
             }
+        } catch (error) {
+            thrownError = error;
+        }
+
+        this._initialized = true;
+
+        webView.postMessage({
+            type: RovoDevProviderMessageType.SetInitState,
+            newState: RovoDevInitState.Initialized,
+        });
+
+        if (thrownError) {
+            await this.processError(thrownError, false);
+        } else {
+            // re-send the buffered prompt
+            if (this._pendingPrompt) {
+                const pendingPrompt = this._pendingPrompt;
+                this._pendingPrompt = undefined;
+
+                await this.executeChat(pendingPrompt, true);
+            }
+        }
+    }
+
+    public signalRovoDevDisabled() {
+        this._disabled = true;
+
+        const webView = this._webView!;
+        webView.postMessage({
+            type: RovoDevProviderMessageType.RovoDevDisabled,
+        });
+    }
+
+    public signalDownloadProgress(downloadedBytes: number, totalBytes: number) {
+        const webView = this._webView!;
+        webView.postMessage({
+            type: RovoDevProviderMessageType.SetDownloadProgress,
+            downloadedBytes,
+            totalBytes,
         });
     }
 }

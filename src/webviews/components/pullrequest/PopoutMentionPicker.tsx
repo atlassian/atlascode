@@ -48,7 +48,7 @@ export default class PopoutMentionPicker extends React.Component<
         this.props.onUserMentioned(value);
     };
 
-    render() {
+    override render() {
         const { isOpen } = this.state;
         return (
             <Dropdown

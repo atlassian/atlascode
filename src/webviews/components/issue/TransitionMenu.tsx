@@ -54,7 +54,7 @@ export class TransitionMenu extends React.Component<Props, State> {
         };
     }
 
-    componentWillReceiveProps(nextProps: any) {
+    override componentWillReceiveProps(nextProps: any) {
         const selectedTransition = this.getCurrentTransition(nextProps.currentStatus, nextProps.transitions);
         this.setState({
             selectedTransition: selectedTransition,
@@ -81,7 +81,7 @@ export class TransitionMenu extends React.Component<Props, State> {
         this.props.onStatusChange(item);
     };
 
-    render() {
+    override render() {
         if (!Array.isArray(this.props.transitions) || this.props.transitions.length < 1) {
             return <div />;
         }

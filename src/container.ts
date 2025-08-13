@@ -219,7 +219,11 @@ export class Container {
                 }),
             );
             context.subscriptions.push(
-                (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context.extensionPath, context.globalState)),
+                (this._rovodevWebviewProvider = new RovoDevWebviewProvider(
+                    context,
+                    context.extensionPath,
+                    context.globalState,
+                )),
             );
             this.configureRovodevSettingsCommands(context);
         }
@@ -252,6 +256,12 @@ export class Container {
         context.subscriptions.push(
             vscode.commands.registerCommand(Commands.OpenRovoDevMcpJson, async () => {
                 await openConfigFile('.rovodev/mcp.json', 'Rovo Dev MCP configuration');
+            }),
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand(Commands.OpenRovoDevGlobalMemory, async () => {
+                await openConfigFile('.rovodev/.agent.md', 'Rovo Dev Global Memory file');
             }),
         );
     }

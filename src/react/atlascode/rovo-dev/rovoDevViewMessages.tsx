@@ -7,7 +7,6 @@ export const enum RovoDevViewResponseType {
     OpenFile = 'openFile',
     UndoFileChanges = 'undoFileChanges',
     KeepFileChanges = 'keepFileChanges',
-    GetOriginalText = 'getOriginalText',
     CreatePR = 'createPR',
     RetryPromptAfterError = 'retryPromptAfterError',
     GetCurrentBranchName = 'getCurrentBranchName',
@@ -17,6 +16,7 @@ export const enum RovoDevViewResponseType {
     ReportChangesGitPushed = 'reportChangesGitPushed',
     ReportThinkingDrawerExpanded = 'reportThinkingDrawerExpanded',
     CheckGitChanges = 'checkGitChanges',
+    WebviewReady = 'webviewReady',
 }
 
 export interface ModifiedFile {
@@ -30,7 +30,6 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.OpenFile, { filePath: string; tryShowDiff: boolean; range?: number[] }>
     | ReducerAction<RovoDevViewResponseType.UndoFileChanges, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.KeepFileChanges, { files: ModifiedFile[] }>
-    | ReducerAction<RovoDevViewResponseType.GetOriginalText, { filePath: string; range?: number[]; requestId: string }>
     | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage: string } }>
     | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>
     | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>
@@ -39,4 +38,5 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.ReportChangedFilesPanelShown, { filesCount: number }>
     | ReducerAction<RovoDevViewResponseType.ReportChangesGitPushed, { pullRequestCreated: boolean }>
     | ReducerAction<RovoDevViewResponseType.ReportThinkingDrawerExpanded>
-    | ReducerAction<RovoDevViewResponseType.CheckGitChanges>;
+    | ReducerAction<RovoDevViewResponseType.CheckGitChanges>
+    | ReducerAction<RovoDevViewResponseType.WebviewReady>;
