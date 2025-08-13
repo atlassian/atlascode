@@ -74,7 +74,8 @@ jobs:
         run: npm run test:e2e:docker
 
       - name: Upload E2E artifacts
-        if: matrix.test-type == 'e2e' && failure()
+        # if: matrix.test-type == 'e2e' && failure()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
