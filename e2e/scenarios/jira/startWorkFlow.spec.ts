@@ -1,6 +1,5 @@
 import { APIRequestContext, expect, Page } from '@playwright/test';
 import { getIssueFrame, setupIssueMock, setupSearchMock } from 'e2e/helpers';
-import { closeOnboardingQuickPick } from 'e2e/helpers/common';
 import { AtlascodeDrawer, JiraIssuePage, StartWorkPage } from 'e2e/page-objects';
 
 const ISSUE_NAME = 'BTS-1 - User Interface Bugs';
@@ -8,8 +7,6 @@ const CURRENT_STATUS = 'To Do';
 const NEXT_STATUS = 'In Progress';
 
 export const startWorkFlow = async (page: Page, request: APIRequestContext) => {
-    await closeOnboardingQuickPick(page);
-
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
     const atlascodeDrawer = new AtlascodeDrawer(page);

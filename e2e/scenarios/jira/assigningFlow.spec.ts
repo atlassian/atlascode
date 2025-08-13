@@ -1,6 +1,5 @@
 import { APIRequestContext, expect, Page, test } from '@playwright/test';
 import { cleanupWireMockMapping, getIssueFrame, setupWireMockMapping } from 'e2e/helpers';
-import { closeOnboardingQuickPick } from 'e2e/helpers/common';
 import { createSearchResponse } from 'e2e/mock-data/search';
 import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
@@ -9,8 +8,6 @@ export async function assigningFlow(page: Page, request: APIRequestContext) {
     // so we extend the timeout to 50 seconds (default is 30s).
     // See: https://playwright.dev/docs/test-timeouts#set-timeout-for-a-single-test
     test.setTimeout(50_000);
-
-    await closeOnboardingQuickPick(page);
 
     await new AtlassianSettings(page).closeSettingsPage();
     await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');

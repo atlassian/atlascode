@@ -1,13 +1,11 @@
 import { APIRequestContext, expect, Page } from '@playwright/test';
 import { getIssueFrame, setupIssueMock } from 'e2e/helpers';
-import { closeOnboardingQuickPick } from 'e2e/helpers/common';
 import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
 const LABELS_FIELD_PLACEHOLDER = 'Type to search';
 const LABEL = 'testing';
 
 export async function updateLabelsFlow(page: Page, request: APIRequestContext) {
-    await closeOnboardingQuickPick(page);
     await new AtlassianSettings(page).closeSettingsPage();
 
     await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');

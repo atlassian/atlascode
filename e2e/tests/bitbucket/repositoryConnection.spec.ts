@@ -1,10 +1,17 @@
 import { expect } from '@playwright/test';
-import { authenticateWithBitbucketCloud, cleanupWireMockMapping, connectRepository } from 'e2e/helpers';
+import {
+    authenticateWithBitbucketCloud,
+    cleanupWireMockMapping,
+    closeOnboardingQuickPick,
+    connectRepository,
+} from 'e2e/helpers';
 
 import { test } from '../../fixtures/repository-disconnection';
 
 test('Adding Bitbucket repository works', async ({ page, context, request }) => {
     await authenticateWithBitbucketCloud(page, context);
+
+    await closeOnboardingQuickPick(page);
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
     const id = await connectRepository(page, request);

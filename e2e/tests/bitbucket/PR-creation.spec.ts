@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 import {
     authenticateWithBitbucketCloud,
     cleanupWireMockMapping,
+    closeOnboardingQuickPick,
     connectRepository,
     createPullrequest,
 } from 'e2e/helpers';
@@ -10,6 +11,7 @@ import { test } from '../../fixtures/repository-disconnection';
 
 test('PR creation works', async ({ page, context, request }) => {
     await authenticateWithBitbucketCloud(page, context);
+    await closeOnboardingQuickPick(page);
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
     const mappedId = await connectRepository(page, request);

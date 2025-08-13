@@ -1,5 +1,4 @@
 import { Page } from '@playwright/test';
-import { closeOnboardingQuickPick } from 'e2e/helpers/common';
 import { AppNotifications, AtlascodeDrawer, AtlassianSettings, CreateIssuePage } from 'e2e/page-objects';
 
 const NEW_ISSUE_SUMMARY = 'Test Issue Created via E2E Test';
@@ -8,7 +7,6 @@ const NEW_ISSUE_KEY = 'BTS-7';
 export async function createIssue(page: Page) {
     const atlascodeDrawer = new AtlascodeDrawer(page);
     await atlascodeDrawer.openCreateIssuePage();
-    await closeOnboardingQuickPick(page);
 
     await new AtlassianSettings(page).closeSettingsPage();
 

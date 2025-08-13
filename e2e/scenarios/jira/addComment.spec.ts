@@ -1,13 +1,11 @@
 import { Page } from '@playwright/test';
 import { getIssueFrame } from 'e2e/helpers';
-import { closeOnboardingQuickPick } from 'e2e/helpers/common';
 import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
 
 const COMMENT_TEXT = 'This is a test comment added via e2e test';
 
 export async function addComment(page: Page) {
     await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');
-    await closeOnboardingQuickPick(page);
     await new AtlassianSettings(page).closeSettingsPage();
 
     const issueFrame = await getIssueFrame(page);

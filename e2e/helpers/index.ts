@@ -3,5 +3,5 @@ export { authenticateWithBitbucketDC, authenticateWithBitbucketCloud } from './b
 export { connectRepository } from './bitbucket-connect-repository';
 export { createPullrequest } from './create-pr';
 export { authenticateWithJira, authenticateWithJiraDC } from './jira-auth';
-export { getIssueFrame, openAtlassianSettings } from './common';
+export { getIssueFrame, openAtlassianSettings, closeOnboardingQuickPick } from './common';
 export { cleanupWireMockMapping, setupWireMockMapping, setupSearchMock, setupIssueMock } from './setup-mock';
