@@ -9,7 +9,6 @@ import {
     commands,
     Disposable,
     Event,
-    EventEmitter,
     ExtensionContext,
     Memento,
     Position,
@@ -112,10 +111,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _extensionPath: string;
     private _extensionUri: Uri;
 
-    private _onWebviewResolved = new EventEmitter<Webview>();
-    public get onWebviewResolved(): Event<Webview> {
-        return this._onWebviewResolved.event;
-    }
+    private _context: ExtensionContext;
 
     private get rovoDevApiClient() {
         if (!this._rovoDevApiClient) {
@@ -137,7 +133,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._extensionPath = extensionPath;
         this._extensionUri = Uri.file(this._extensionPath);
         this._globalState = globalState;
-
+        this._context = context;
         // Register the webview view provider
         this._disposables.push(
             window.registerWebviewViewProvider('atlascode.views.rovoDev.webView', this, {
@@ -150,15 +146,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         // Register this provider with the process manager for error handling
         setRovoDevWebviewProvider(this);
-
-        // Register the initialization of the process when the webview is ready
-        this.onWebviewResolved(() => {
-            if (!!process.env.ROVODEV_ENABLED && !process.env.ROVODEV_BBY) {
-                initializeRovoDevProcessManager(context);
-            } else {
-                this.signalProcessStarted();
-            }
-        });
     }
 
     private getWorkspacePort(): number | undefined {
@@ -286,6 +273,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     case RovoDevViewResponseType.ReportThinkingDrawerExpanded:
                         this.fireTelemetryEvent('rovoDevDetailsExpandedEvent', this._currentPromptId);
                         break;
+
+                    case RovoDevViewResponseType.WebviewReady:
+                        if (!!process.env.ROVODEV_ENABLED && !process.env.ROVODEV_BBY) {
+                            initializeRovoDevProcessManager(this._context);
+                        } else {
+                            this.signalProcessStarted();
+                        }
                 }
             } catch (error) {
                 this.processError(error, false);
@@ -309,8 +303,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 });
             }
         }
-
-        this._onWebviewResolved.fire(webview);
     }
 
     private beginNewSession(): void {
