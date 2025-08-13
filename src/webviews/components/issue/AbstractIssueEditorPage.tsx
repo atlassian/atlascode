@@ -193,6 +193,14 @@ export abstract class AbstractIssueEditorPage<
                 this.setState({ isRteEnabled: e.featureFlags.rteEnabled });
                 break;
             }
+            case 'loadingStart': {
+                this.setState({ isSomethingLoading: true, loadingField: e.loadingField });
+                break;
+            }
+            case 'loadingEnd': {
+                this.setState({ isSomethingLoading: false, loadingField: '' });
+                break;
+            }
         }
 
         return handled;
