@@ -6,7 +6,7 @@ import { ConfigV3Section, ConfigV3SubSection } from '../../../../lib/ipc/models/
 import BitbucketIcon from '../../icons/BitbucketIcon';
 import { DemoDialog } from '../../onboarding/DemoDialog';
 import { ConfigControllerContext } from '../configControllerV3';
-import AltDemoButton from './AltDemoButton';
+import AltDemoButton from './../explore/AltDemoButton';
 
 const useStyles = makeStyles(
     (theme: Theme) =>
