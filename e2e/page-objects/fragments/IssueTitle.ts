@@ -30,7 +30,12 @@ export class IssueTitle {
     }
 
     async expectEqual(expectedTitle: string) {
-        const currentTitle = await this.title.textContent();
+        await this.title.scrollIntoViewIfNeeded();
+        await this.title.waitFor({ state: 'visible', timeout: 5_000 });
+        await expect(this.title).toHaveCount(1);
+        await expect(this.title).toHaveText(/.+/, { timeout: 5_000 });
+
+        const currentTitle = (await this.title.innerText()).trim();
         expect(currentTitle).toMatch(new RegExp(expectedTitle, 'i'));
     }
 }
