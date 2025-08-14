@@ -1,6 +1,6 @@
 import { APIRequestContext, expect, Page } from '@playwright/test';
 import { setupPullrequests } from 'e2e/helpers/setup-mock';
-import { AtlascodeDrawer, ExplorerDrawer } from 'e2e/page-objects';
+import { AtlascodeDrawer, AtlassianSettings, ExplorerDrawer } from 'e2e/page-objects';
 
 const addRepo = async (page: Page) => {
     await new AtlascodeDrawer(page).pullRequests.addRepository();
@@ -24,6 +24,8 @@ export async function connectRepository(page: Page, request: APIRequestContext) 
     const atlascodeDrawer = new AtlascodeDrawer(page);
 
     const cleanupSetupPullrequests = await setupPullrequests(request, []);
+
+    await new AtlassianSettings(page).closeSettingsPage();
 
     await addRepo(page);
 

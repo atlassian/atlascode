@@ -1,4 +1,4 @@
-import { expect, Locator, Page } from 'playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 
 const EXPECTED_TREE_ITEMS = [
     'No Bitbucket repositories found in this workspace',

@@ -1,5 +1,5 @@
+import { expect, FrameLocator, Page } from '@playwright/test';
 import { PRHeader } from 'e2e/page-objects/fragments';
-import { expect, FrameLocator, Page } from 'playwright/test';
 
 export class PullRequestPage {
     readonly page: Page;

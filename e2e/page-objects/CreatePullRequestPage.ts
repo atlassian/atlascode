@@ -1,4 +1,4 @@
-import { FrameLocator, Locator, Page } from 'playwright/test';
+import { FrameLocator, Locator, Page } from '@playwright/test';
 
 export class CreatePullRequestPage {
     readonly page: Page;

@@ -1,4 +1,4 @@
-import { FrameLocator, Locator } from 'playwright/test';
+import { FrameLocator, Locator } from '@playwright/test';
 
 export class PRHeader {
     readonly frame: FrameLocator;

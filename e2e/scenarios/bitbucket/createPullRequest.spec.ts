@@ -1,10 +1,11 @@
+import { APIRequestContext, Page } from '@playwright/test';
 import { setupPullrequests } from 'e2e/helpers/setup-mock';
 import { pullrequest } from 'e2e/mock-data/pullrequest';
-import { AtlascodeDrawer, CreatePullRequestPage, PullRequestPage } from 'e2e/page-objects';
-import { APIRequestContext, Page } from 'playwright/test';
+import { AtlascodeDrawer, AtlassianSettings, CreatePullRequestPage, PullRequestPage } from 'e2e/page-objects';
 
 export async function createPullRequest(page: Page, request: APIRequestContext) {
     await setupPullrequests(request, [pullrequest]);
+    await new AtlassianSettings(page).closeSettingsPage();
 
     const atlascodeDrawer = new AtlascodeDrawer(page);
 
@@ -15,6 +16,10 @@ export async function createPullRequest(page: Page, request: APIRequestContext) 
 
     await createPullRequestPage.sourceBranchPicker.waitFor({ state: 'visible' });
     await createPullRequestPage.sourceBranchPicker.click();
+    await page.waitForTimeout(250);
+
+    await createPullRequestPage.testBranchOption.waitFor({ state: 'visible' });
+    await createPullRequestPage.testBranchOption.click();
     await page.waitForTimeout(250);
 
     await createPullRequestPage.pushCheckbox.click();
