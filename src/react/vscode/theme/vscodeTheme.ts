@@ -206,6 +206,17 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                     },
                 },
             },
+            MuiTypography: {
+                styleOverrides: {
+                    root: {
+                        color: isHighContrast
+                            ? '#ffffff' // Dark high contrast: white text
+                            : body.getAttribute('class') === 'vscode-high-contrast-light'
+                              ? '#000000' // Light high contrast: black text
+                              : vscStyles.foreground, // Normal: inherit from theme
+                    },
+                },
+            },
             // MUI v5 overrides
             MuiTab: {
                 // MUI 5 default color for tabs titles is invisible
