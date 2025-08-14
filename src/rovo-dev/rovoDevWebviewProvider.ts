@@ -423,7 +423,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        const parser = new RovoDevResponseParser();
+        const parser =
+            sourceApi === 'replay' ? new RovoDevResponseParser({ mergeAllChunks: true }) : new RovoDevResponseParser();
 
         let isFirstByte = true;
         let isFirstMessage = true;
