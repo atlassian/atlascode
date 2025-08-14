@@ -15,7 +15,6 @@ export const CloudAuthButton: React.FunctionComponent<CloudAuthButtonProps> = ({
 
     const handleCloudProd = () => {
         const hostname = product.key === ProductJira.key ? 'atlassian.net' : 'bitbucket.org';
-        console.log('This cloud login was pressed');
         controller.login({ host: hostname, product: product }, { user: emptyUserInfo, state: AuthInfoState.Valid });
     };
 
