@@ -46,11 +46,7 @@ import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
-import {
-    initializeRovoDevProcessManager,
-    MIN_SUPPORTED_ROVODEV_VERSION,
-    setRovoDevWebviewProvider,
-} from './rovoDevProcessManager';
+import { MIN_SUPPORTED_ROVODEV_VERSION, RovoDevProcessManager } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevContext, RovoDevContextItem, RovoDevInitState, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
@@ -134,7 +130,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._registerEditorListeners();
 
         // Register this provider with the process manager for error handling
-        setRovoDevWebviewProvider(this);
+        RovoDevProcessManager.setRovoDevWebviewProvider(this);
     }
 
     public resolveWebviewView(
@@ -244,14 +240,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.WebviewReady:
-                        if (process.env.ROVODEV_BBY) {
-                            const port = parseInt(process.env[rovodevInfo.envVars.port] || '0');
-                            if (!port) {
-                                throw new Error('Rovo Dev port not set');
-                            }
+                        const port = parseInt(process.env[rovodevInfo.envVars.port] || '0');
+                        if (port) {
                             this.signalProcessStarted(port);
+                        } else if (process.env.ROVODEV_BBY) {
+                            this.signalRovoDevDisabled();
+                            throw new Error('Rovo Dev port not set');
                         } else {
-                            initializeRovoDevProcessManager(this._context);
+                            RovoDevProcessManager.initializeRovoDevProcessManager(this._context);
                         }
                 }
             } catch (error) {
