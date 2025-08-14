@@ -168,8 +168,8 @@ async function getOrAssignPortForWorkspace(): Promise<number> {
     const portEnd = rovodevInfo.portRange.end;
 
     for (let port = portStart; port <= portEnd; ++port) {
-        if (await isPortAvailable(8899)) {
-            return 8899;
+        if (await isPortAvailable(port)) {
+            return port;
         }
     }
 
