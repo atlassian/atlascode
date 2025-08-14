@@ -56,7 +56,8 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                         backgroundColor: isDark
                             ? lighten(vscStyles.editorBackground, 20)
                             : darken(vscStyles.editorBackground, 3),
-                        color: vscStyles.editorForeground,
+                        // this one didn't work previously but started working after the update to MUI5
+                        // color: vscStyles.editorForeground,
                     },
                 },
             },
