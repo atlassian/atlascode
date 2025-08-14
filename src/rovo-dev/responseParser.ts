@@ -240,8 +240,9 @@ export class RovoDevResponseParser {
     private previousChunk: RovoDevResponse | undefined;
 
     // this map stores the tool-call messages, so they can be attached to the tool-return messages
-    private toolCalls: Record<string, RovoDevToolCallResponse> = {};
+    private readonly toolCalls: Record<string, RovoDevToolCallResponse> = {};
 
+    // options passed in constructor
     private readonly mergeAllChunks: boolean;
 
     constructor(options?: RovoDevResponseParserOptions) {
