@@ -335,6 +335,9 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.Response:
+                    if (currentState === State.WaitingForPrompt) {
+                        setCurrentState(State.GeneratingResponse);
+                    }
                     handleResponse(event.dataObject);
                     break;
 
@@ -352,10 +355,16 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ToolCall:
+                    if (currentState === State.WaitingForPrompt) {
+                        setCurrentState(State.GeneratingResponse);
+                    }
                     handleResponse(event.dataObject);
                     break;
 
                 case RovoDevProviderMessageType.ToolReturn:
+                    if (currentState === State.WaitingForPrompt) {
+                        setCurrentState(State.GeneratingResponse);
+                    }
                     handleResponse(event.dataObject);
                     break;
 
