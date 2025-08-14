@@ -10,7 +10,6 @@ import {
     Disposable,
     Event,
     ExtensionContext,
-    Memento,
     Position,
     Range,
     TextEditor,
@@ -107,32 +106,22 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private _disposables: Disposable[] = [];
 
-    private _globalState: Memento;
     private _extensionPath: string;
     private _extensionUri: Uri;
 
     private _context: ExtensionContext;
 
     private get rovoDevApiClient() {
-        if (!this._rovoDevApiClient) {
-            const rovoDevPort = this.getWorkspacePort();
-            const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
-            if (rovoDevPort) {
-                this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
-            }
-        }
-
         return this._rovoDevApiClient;
     }
 
-    constructor(context: ExtensionContext, extensionPath: string, globalState: Memento) {
+    constructor(context: ExtensionContext, extensionPath: string) {
         super(() => {
             this._dispose();
         });
 
         this._extensionPath = extensionPath;
         this._extensionUri = Uri.file(this._extensionPath);
-        this._globalState = globalState;
         this._context = context;
         // Register the webview view provider
         this._disposables.push(
@@ -146,26 +135,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         // Register this provider with the process manager for error handling
         setRovoDevWebviewProvider(this);
-    }
-
-    private getWorkspacePort(): number | undefined {
-        const workspaceFolders = workspace.workspaceFolders;
-        if (!workspaceFolders || workspaceFolders.length === 0) {
-            return undefined;
-        }
-
-        const globalPort = process.env[rovodevInfo.envVars.port];
-        if (globalPort) {
-            return parseInt(globalPort);
-        }
-
-        const wsPath = workspaceFolders[0].uri.fsPath;
-        const mapping = this._globalState.get<{ [key: string]: number }>(rovodevInfo.mappingKey);
-        if (mapping && mapping[wsPath]) {
-            return mapping[wsPath];
-        }
-
-        return undefined;
     }
 
     public resolveWebviewView(
@@ -275,10 +244,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.WebviewReady:
-                        if (!process.env.ROVODEV_BBY) {
-                            initializeRovoDevProcessManager(this._context);
+                        if (process.env.ROVODEV_BBY) {
+                            const port = parseInt(process.env[rovodevInfo.envVars.port] || '0');
+                            if (!port) {
+                                throw new Error('Rovo Dev port not set');
+                            }
+                            this.signalProcessStarted(port);
                         } else {
-                            this.signalProcessStarted();
+                            initializeRovoDevProcessManager(this._context);
                         }
                 }
             } catch (error) {
@@ -1102,7 +1075,11 @@ ${message}`;
         });
     }
 
-    public async signalProcessStarted() {
+    public async signalProcessStarted(rovoDevPort: number) {
+        // initialize the API client
+        const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
+        this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
+
         const webView = this._webView!;
 
         // wait for Rovo Dev to be ready, for up to 10 seconds

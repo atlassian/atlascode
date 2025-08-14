@@ -220,11 +220,7 @@ export class Container {
             }),
         );
         context.subscriptions.push(
-            (this._rovodevWebviewProvider = new RovoDevWebviewProvider(
-                context,
-                context.extensionPath,
-                context.globalState,
-            )),
+            (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context, context.extensionPath)),
         );
 
         this.configureRovodevSettingsCommands(context);
