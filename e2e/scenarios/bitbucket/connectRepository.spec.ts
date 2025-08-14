@@ -1,5 +1,5 @@
 import { APIRequestContext, expect, Page } from '@playwright/test';
-import { setupPullrequests } from 'e2e/helpers/setup-mock';
+import { closeOnboardingQuickPick, setupPullrequests } from 'e2e/helpers';
 import { AtlascodeDrawer, AtlassianSettings, ExplorerDrawer } from 'e2e/page-objects';
 
 const addRepo = async (page: Page) => {
@@ -20,7 +20,8 @@ const addRepo = async (page: Page) => {
 };
 
 export async function connectRepository(page: Page, request: APIRequestContext) {
-    // wait for navigation progressbar ?
+    await closeOnboardingQuickPick(page);
+
     const atlascodeDrawer = new AtlascodeDrawer(page);
 
     const cleanupSetupPullrequests = await setupPullrequests(request, []);

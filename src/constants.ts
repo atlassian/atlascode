@@ -59,7 +59,6 @@ export const enum Commands {
     ShowConfigPageFromExtensionContext = 'atlascode.extensionContext.showConfigPage',
     ShowJiraAuth = 'atlascode.showJiraAuth',
     ShowBitbucketAuth = 'atlascode.showBitbucketAuth',
-    ShowOnboardingPage = 'atlascode.showOnboardingPage',
     ShowPullRequestDetailsPage = 'atlascode.showPullRequestDetailsPage',
     AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
     TransitionIssue = 'atlascode.jira.transitionIssue',
@@ -90,6 +89,7 @@ export const enum Commands {
     ShowOnboardingFlow = 'atlascode.showOnboardingFlow',
     OpenRovoDevConfig = 'atlascode.openRovoDevConfig',
     OpenRovoDevMcpJson = 'atlascode.openRovoDevMcpJson',
+    OpenRovoDevGlobalMemory = 'atlascode.openRovoDevGlobalMemory',
 }
 
 // Rovodev port mapping settings

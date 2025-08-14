@@ -1,9 +1,11 @@
 import { APIRequestContext, Page } from '@playwright/test';
-import { setupPullrequests } from 'e2e/helpers/setup-mock';
+import { closeOnboardingQuickPick, setupPullrequests } from 'e2e/helpers';
 import { pullrequest } from 'e2e/mock-data/pullrequest';
 import { AtlascodeDrawer, AtlassianSettings, CreatePullRequestPage, PullRequestPage } from 'e2e/page-objects';
 
 export async function createPullRequest(page: Page, request: APIRequestContext) {
+    await closeOnboardingQuickPick(page);
+
     await setupPullrequests(request, [pullrequest]);
     await new AtlassianSettings(page).closeSettingsPage();
 

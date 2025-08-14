@@ -504,6 +504,15 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
+    // Notify the backend that the webview is ready
+    // This is used to initialize the process manager if needed
+    // and to signal that the webview is ready to receive messages
+    React.useEffect(() => {
+        postMessage?.({
+            type: RovoDevViewResponseType.WebviewReady,
+        });
+    }, [postMessage]);
+
     const executeCodePlan = useCallback(() => {
         if (currentState !== State.WaitingForPrompt) {
             return;

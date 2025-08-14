@@ -13,7 +13,7 @@ import {
 import { Container } from '../container';
 import { AnalyticsApi } from '../lib/analyticsApi';
 import { CommonActionType } from '../lib/ipc/fromUI/common';
-import { CommonMessageType } from '../lib/ipc/toUI/common';
+import { AdditionalSettings, CommonMessageType } from '../lib/ipc/toUI/common';
 import { WebviewController } from '../lib/webview/controller/webviewController';
 import { FeatureFlagClient } from '../util/featureFlags';
 import { ExperimentGateValues, Experiments, FeatureGateValues, Features } from '../util/featureFlags/features';
@@ -140,6 +140,9 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
             // Send feature gates to the panel in a message
             this.fireFeatureGates(this._controller.requiredFeatureFlags);
             this.fireExperimentGates(this._controller.requiredExperiments);
+            this.fireAdditionalSettings({
+                rovoDevEnabled: Container.isRovoDevEnabled,
+            });
         }
     }
 
@@ -157,6 +160,10 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
             experiments.forEach((x) => (experimentValues[x] = FeatureFlagClient.checkExperimentValue(x)));
             this.postMessage({ command: CommonMessageType.UpdateExperimentValues, experimentValues });
         }
+    }
+
+    private fireAdditionalSettings(settings: AdditionalSettings) {
+        this.postMessage({ type: CommonMessageType.AdditionalSettings, settings });
     }
 
     private onViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {

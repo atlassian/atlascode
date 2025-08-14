@@ -19,7 +19,7 @@ import { Container } from '../container';
 import { submitLegacyJSDPMF } from '../feedback/pmfJSDSubmitter';
 import { isAction, isAlertable, isPMFSubmitAction } from '../ipc/messaging';
 import { CommonActionType } from '../lib/ipc/fromUI/common';
-import { CommonMessageType } from '../lib/ipc/toUI/common';
+import { AdditionalSettings, CommonMessageType } from '../lib/ipc/toUI/common';
 import { iconSet, Resources } from '../resources';
 import { Experiments, FeatureFlagClient, Features } from '../util/featureFlags';
 import { ExperimentGateValues, FeatureGateValues } from '../util/featureFlags/features';
@@ -141,6 +141,9 @@ export abstract class AbstractReactWebview implements ReactWebview {
 
         this.fireFeatureGates([Features.JiraRichText]);
         this.fireExperimentGates([]);
+        this.fireAdditionalSettings({
+            rovoDevEnabled: Container.isRovoDevEnabled,
+        });
     }
 
     private fireFeatureGates(features: Features[]) {
@@ -157,6 +160,10 @@ export abstract class AbstractReactWebview implements ReactWebview {
             experiments.forEach((x) => (experimentValues[x] = FeatureFlagClient.checkExperimentValue(x)));
             this.postMessage({ type: CommonMessageType.UpdateExperimentValues, experimentValues });
         }
+    }
+
+    private fireAdditionalSettings(settings: AdditionalSettings) {
+        this.postMessage({ type: CommonMessageType.AdditionalSettings, settings });
     }
 
     private onViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
