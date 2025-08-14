@@ -706,7 +706,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     handleStatusChange={this.handleStatusChange}
                     handleStartWork={this.handleStartWorkOnIssue}
                 />
-                {process.env.ROVODEV_ENABLED === 'true' && (
+                {this.state.isRovoDevEnabled && (
                     <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
                         <Tooltip content="Rovo Dev is an AI assistant that will take the issue details and generate code on it">
                             <LoadingButton className="ac-button" onClick={this.handleInvokeRovodev} isLoading={false}>

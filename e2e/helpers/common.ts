@@ -9,8 +9,6 @@ export const openAtlassianSettings = async (page: Page, itemName: string) => {
     await page.getByRole('tab', { name: 'Atlassian' }).click();
     await page.waitForTimeout(250);
 
-    await page.getByRole('tab', { name: 'Getting Started' }).getByLabel(/close/i).click();
-
     await page.getByRole('treeitem', { name: itemName }).click();
     await page.waitForTimeout(250);
 
@@ -70,4 +68,13 @@ export const closeAllNotifications = async (page: Page) => {
         await closeButton.click().catch(() => {}); // Ignore errors if toast is already closed
         await page.waitForTimeout(100);
     }
+};
+
+export const closeOnboardingQuickPick = async (page: Page) => {
+    const onboardingDismissButton = page.getByRole('button', { name: 'Dismiss' });
+    if (await onboardingDismissButton.isVisible()) {
+        await onboardingDismissButton.click();
+        await page.mouse.move(0, 0); // Move mouse to avoid hover effects
+    }
+    await page.waitForTimeout(500);
 };

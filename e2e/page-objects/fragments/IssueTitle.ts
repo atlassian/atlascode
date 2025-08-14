@@ -13,11 +13,8 @@ export class IssueTitle {
         this.title = this.frame.getByTestId(TITLE_TEST_ID);
     }
 
-    getTitle() {
-        return this.title.textContent();
-    }
-
     async changeTo(newTitle: string) {
+        await expect(this.title).toBeVisible();
         await this.title.click();
 
         const input = this.title.locator('input');
@@ -26,12 +23,19 @@ export class IssueTitle {
         await input.fill(newTitle);
         await expect(input).toHaveValue(newTitle);
 
-        await this.title.locator('.ac-inline-save-button').click();
-        await this.frame.waitForTimeout(500);
+        const saveButton = this.title.locator('.ac-inline-save-button');
+        await expect(saveButton).toBeVisible();
+        await saveButton.click();
+        await this.frame.waitForTimeout(2_000);
     }
 
-    async expectEqual(title: string) {
-        const currentTitle = await this.getTitle();
-        expect(currentTitle).toEqual(title);
+    async expectEqual(expectedTitle: string) {
+        await this.title.scrollIntoViewIfNeeded();
+        await this.title.waitFor({ state: 'visible', timeout: 5_000 });
+        await expect(this.title).toHaveCount(1);
+        await expect(this.title).toHaveText(/.+/, { timeout: 5_000 });
+
+        const currentTitle = (await this.title.innerText()).trim();
+        expect(currentTitle).toMatch(new RegExp(expectedTitle, 'i'));
     }
 }

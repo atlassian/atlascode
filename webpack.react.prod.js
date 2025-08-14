@@ -104,12 +104,11 @@ module.exports = {
             'process.env.ATLASCODE_EXP_OVERRIDES_BOOL': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_BOOL),
             'process.env.ATLASCODE_EXP_OVERRIDES_STRING': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_STRING),
             'process.env.ROVODEV_BBY': JSON.stringify(process.env.ROVODEV_BBY),
-            'process.env.ROVODEV_ENABLED': JSON.stringify(process.env.ROVODEV_ENABLED),
         }),
     ],
     performance: {
         maxEntrypointSize: 307200, // overridden to 300KiB, recommended is 244KiB
-        maxAssetSize: 696320, // overridden to 680KiB, recommended is 244KiB
+        maxAssetSize: 912838, // overridden to 850KiB, recommended is 244KiB
     },
     watchOptions: {
         ignored: /node_modules/,

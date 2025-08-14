@@ -66,7 +66,6 @@ module.exports = {
             'process.env.ATLASCODE_EXP_OVERRIDES_BOOL': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_BOOL),
             'process.env.ATLASCODE_EXP_OVERRIDES_STRING': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_STRING),
             'process.env.ROVODEV_BBY': JSON.stringify(process.env.ROVODEV_BBY),
-            'process.env.ROVODEV_ENABLED': JSON.stringify(process.env.ROVODEV_ENABLED),
         }),
     ],
     module: {

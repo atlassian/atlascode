@@ -4,18 +4,14 @@ export const enum Features {
     AtlassianNotifications = 'atlascode-atlassian-notifications-v2',
     StartWorkV3 = 'atlascode-start-work-v3',
     ConfigPageV3 = 'atlascode-config-page-v3',
+    RovoDevEnabled = 'rovo_dev_ff',
 }
 
 export const enum Experiments {
-    AtlascodeOnboardingExperiment = 'atlascode_quick_pick_onboarding_experiment',
     AtlascodePerformanceExperiment = 'atlascode_performance_experiment',
 }
 
 export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
-    [Experiments.AtlascodeOnboardingExperiment]: {
-        parameter: 'enableQuickPickOnboarding',
-        defaultValue: false,
-    },
     [Experiments.AtlascodePerformanceExperiment]: {
         parameter: 'enabled',
         defaultValue: true,
