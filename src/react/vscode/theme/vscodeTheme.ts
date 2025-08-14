@@ -16,10 +16,8 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
     const sideBarSectionHeaderBackground = isHighContrast ? '#000000' : vscStyles.tabInactiveBackground;
     const listActiveSelectionBackground = isHighContrast ? '#000000' : vscStyles.listActiveSelectionBackground;
 
-    // Icons should use VSCode theme colors consistently
-    const muiSvg = isHighContrast
-        ? { styleOverrides: { root: { color: '#ffffff' } } }
-        : { styleOverrides: { root: { color: vscStyles.foreground } } };
+    // Icons don't always have a useful color in high-contrast
+    const muiSvg = isHighContrast ? { styleOverrides: { root: { color: '#ffffff' } } } : { styleOverrides: undefined };
 
     return createTheme({
         palette: {
@@ -182,6 +180,28 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                     root: {
                         '&$selected, &$selected:hover': {
                             backgroundColor: listActiveSelectionBackground,
+                        },
+                    },
+                },
+            },
+            MuiToggleButton: {
+                styleOverrides: {
+                    root: {
+                        // SVG icons within toggle buttons
+                        '& .MuiSvgIcon-root': {
+                            color: isHighContrast
+                                ? '#ffffff' // Dark high contrast: white
+                                : body.getAttribute('class') === 'vscode-high-contrast-light'
+                                  ? '#000000' // Light high contrast: black
+                                  : vscStyles.foreground, // Normal: VSCode theme color
+                        },
+                        // Selected state (when Mui-selected class is present)
+                        '&.Mui-selected .MuiSvgIcon-root': {
+                            color: isHighContrast
+                                ? '#ffffff'
+                                : body.getAttribute('class') === 'vscode-high-contrast-light'
+                                  ? '#000000'
+                                  : vscStyles.foreground,
                         },
                     },
                 },
