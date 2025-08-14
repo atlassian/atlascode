@@ -106,5 +106,5 @@ export async function setupPullrequests(request: APIRequestContext, values: Arra
         },
     );
 
-    return id;
+    return () => cleanupWireMockMapping(request, id);
 }

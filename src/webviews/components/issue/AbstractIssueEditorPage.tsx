@@ -76,6 +76,7 @@ export interface CommonEditorViewState extends Message {
     errorDetails: any;
     commentInputValue: string;
     isRteEnabled: boolean;
+    isRovoDevEnabled: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -92,6 +93,7 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     errorDetails: undefined,
     commentInputValue: '',
     isRteEnabled: false,
+    isRovoDevEnabled: false,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -201,6 +203,10 @@ export abstract class AbstractIssueEditorPage<
             }
             case 'loadingEnd': {
                 this.setState({ isSomethingLoading: false, loadingField: '' });
+                break;
+            }
+            case 'additionalSettings': {
+                this.setState({ isRovoDevEnabled: e.rovoDevEnabled });
                 break;
             }
         }
