@@ -21,7 +21,9 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci --no-audit
-          npm audit
+      
+      - name: Run vulnerability audit
+        run: npm audit
       
       - name: Run linter
         run: npm run lint
@@ -74,9 +76,10 @@ jobs:
         run: npm run test:e2e:docker
 
       - name: Upload E2E artifacts
-        if: matrix.test-type == 'e2e' && always() && hashFiles('./test-results/**') != ''
+        if: matrix.test-type == 'e2e' && failure()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
           path: ./test-results
           retention-days: 1
+          if-no-files-found: ignore

@@ -4,6 +4,7 @@ import { attachFile } from './attachFile.spec';
 import { authFlowJira } from './authFlow.spec';
 import { checkImageInDescription } from './checkImageInDescription.spec';
 import { createIssue } from './createIssue.spec';
+import { renameIssue } from './renameIssue.spec';
 import { startWorkFlow } from './startWorkFlow.spec';
 import { updateDescription } from './updateDescription.spec';
 import { updateIssueStatus } from './updateIssueStatus.spec';
@@ -22,5 +23,5 @@ export const jiraScenarios = [
     { name: 'Add and remove existing labels', run: updateLabelsFlow },
     { name: 'Check image in description', run: checkImageInDescription },
     { name: 'Start work on Jira issue', run: startWorkFlow },
-    // TODO: add 'Rename issue' scenario after AXON-833 is merged
+    { name: 'Rename Issue', run: renameIssue },
 ];
