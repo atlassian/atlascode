@@ -81,6 +81,11 @@ const useStyles = makeStyles((theme: Theme) => ({
         borderLeftStyle: 'solid',
         borderLeftColor: props.settingsModifiedItemIndicator,
     }),
+    branchSetupCollapseWidth: {
+        '& .MuiCollapse-wrapperInner': {
+            width: 'auto',
+        },
+    },
 }));
 
 const emptyPrefix: BranchType = { kind: '', prefix: '' };
@@ -512,7 +517,10 @@ const StartWorkPage: React.FunctionComponent = () => {
                                             </Grid>
                                         </Grid>
                                         <Grid item>
-                                            <Collapse in={branchSetupEnabled}>
+                                            <Collapse
+                                                in={branchSetupEnabled}
+                                                className={classes.branchSetupCollapseWidth}
+                                            >
                                                 <Grid
                                                     container
                                                     spacing={2}
