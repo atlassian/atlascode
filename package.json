@@ -1466,6 +1466,7 @@
         "@types/uuid": "^10.0.0",
         "@types/vscode": ">=1.77.0 <=1.96.0",
         "@types/websocket": "^1.0.0",
+        "@types/ws": "^8.18.1",
         "@vscode/vsce": "^3.6.0",
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
