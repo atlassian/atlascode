@@ -4,8 +4,8 @@ import React, { useCallback, useContext, useState } from 'react';
 
 import { ConfigV3Section, ConfigV3SubSection } from '../../../../lib/ipc/models/config';
 import BitbucketIcon from '../../icons/BitbucketIcon';
-import { DemoDialog } from '../../onboarding/DemoDialog';
 import { ConfigControllerContext } from '../configController';
+import { DemoDialog } from '../explore/DemoDialog';
 import AltDemoButton from './../explore/AltDemoButton';
 
 const useStyles = makeStyles(
@@ -63,15 +63,6 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
         modalAction();
     }, [modalAction]);
 
-    const openTriggersSection = useCallback(
-        (event: React.MouseEvent<HTMLElement>) => {
-            event.stopPropagation();
-            setModalVisibility(false);
-            // sectionChanger(ConfigSection.Jira, ConfigSubSection.Triggers); // VSCode native settings triggers list
-        },
-        [], // add back sectionChanger
-    );
-
     const openFiltersAndJQLSection = useCallback(
         (event: React.MouseEvent<HTMLElement>) => {
             event.stopPropagation();
@@ -106,11 +97,9 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                         Pressing this button brings up an issue creation screen with the description
                                         already filled in with the contents of the comment. These triggers are
                                         configurable in the extension settings under{' '}
-                                        <code
-                                            className={[classes.code, classes.linkified].join(' ')}
-                                            onClick={openTriggersSection}
-                                        >
-                                            Jira &gt; Create Jira Issue Triggers &gt; Comment Triggers
+                                        <code className={[classes.code, classes.linkified].join(' ')}>
+                                            Command Palette &gt; Open Settings &gt; Extensions: Atlassian &gt; Comment
+                                            Triggers
                                         </code>
                                     </>
                                 }
