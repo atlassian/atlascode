@@ -75,7 +75,6 @@ const useStyles = makeStyles(
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 fontFamily: 'Monaco, Courier New, Courier, monospace',
-                fontSize: '1.2em',
             },
 
             paper100: {
