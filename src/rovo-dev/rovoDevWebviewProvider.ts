@@ -275,7 +275,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.WebviewReady:
-                        if (!!process.env.ROVODEV_ENABLED && !process.env.ROVODEV_BBY) {
+                        if (!process.env.ROVODEV_BBY) {
                             initializeRovoDevProcessManager(this._context);
                         } else {
                             this.signalProcessStarted();
@@ -286,7 +286,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             }
         });
 
-        if (!!process.env.ROVODEV_ENABLED && !process.env.ROVODEV_BBY) {
+        if (!process.env.ROVODEV_BBY) {
             workspace.onDidChangeWorkspaceFolders(() => {
                 if (!this._disabled) {
                     webview.postMessage({

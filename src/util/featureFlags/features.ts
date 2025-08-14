@@ -3,6 +3,7 @@ export const enum Features {
     JiraRichText = 'atlascode-jira-rte',
     AtlassianNotifications = 'atlascode-atlassian-notifications-v2',
     StartWorkV3 = 'atlascode-start-work-v3',
+    RovoDevEnabled = 'rovo_dev_ff',
 }
 
 export const enum Experiments {
