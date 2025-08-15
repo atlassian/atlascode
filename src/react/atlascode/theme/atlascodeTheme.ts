@@ -1,6 +1,7 @@
 import { createTheme, Theme } from '@mui/material';
 import { deepmerge } from '@mui/utils';
 
+// https://v5.mui.com/material-ui/migration/troubleshooting/#types-property-quot-palette-quot-quot-spacing-quot-does-not-exist-on-type-defaulttheme
 declare module '@mui/styles/defaultTheme' {
     // eslint-disable-next-line no-unused-vars
     interface DefaultTheme extends Theme {}

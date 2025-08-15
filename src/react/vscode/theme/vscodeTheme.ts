@@ -165,6 +165,7 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
             },
             MuiLink: {
                 defaultProps: {
+                    // https://v5.mui.com/material-ui/migration/v5-component-changes/#%E2%9C%85-update-default-underline-prop
                     underline: 'hover',
                 },
                 styleOverrides: {
