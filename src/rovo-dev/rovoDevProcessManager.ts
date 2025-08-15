@@ -101,7 +101,7 @@ async function getCloudCredentials(): Promise<{ username: string; key: string; h
     return results.length > 0 ? results[0] : undefined;
 }
 
-export class RovoDevProcessManager extends Disposable {
+export class RovoDevProcessManager {
     private static disposables: Disposable[] = [];
 
     // Reference to the RovoDev webview provider for sending errors to chat

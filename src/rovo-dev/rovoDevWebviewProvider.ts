@@ -383,12 +383,18 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Listen for active editor changes
         this._disposables.push(
             window.onDidChangeActiveTextEditor((editor) => {
+                if (!Container.isRovoDevEnabled) {
+                    return;
+                }
                 this.forceUserFocusUpdate(editor);
             }),
         );
         // Listen for selection changes
         this._disposables.push(
             window.onDidChangeTextEditorSelection((event) => {
+                if (!Container.isRovoDevEnabled) {
+                    return;
+                }
                 this.forceUserFocusUpdate(event.textEditor);
             }),
         );

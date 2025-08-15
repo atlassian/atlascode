@@ -34,6 +34,7 @@ import OnboardingProvider from './onboarding/onboardingProvider';
 import { Pipeline } from './pipelines/model';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
 import { RovoDevDecorator } from './rovo-dev/rovoDevDecorator';
+import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
@@ -228,24 +229,36 @@ export class Container {
     }
 
     static enableRovoDev(context: ExtensionContext) {
+        if (this._rovodevDisposable) {
+            // Already enabled
+            return;
+        }
+
         // this enables the Rovo Dev activity bar
         setCommandContext(CommandContext.RovoDevEnabled, true);
 
-        context.subscriptions.push(new RovoDevDecorator());
-        context.subscriptions.push(
+        this._rovodevDisposable = vscode.Disposable.from(
+            new RovoDevDecorator(),
             languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
                 providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
             }),
-        );
-        context.subscriptions.push(
             (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context, context.extensionPath)),
+            this.configureRovodevSettingsCommands(context),
         );
 
-        this.configureRovodevSettingsCommands(context);
+        context.subscriptions.push(this._rovodevDisposable);
     }
 
     static disableRovoDev(context: ExtensionContext) {
+        if (!this._rovodevDisposable) {
+            // Already disabled
+            return;
+        }
+
         setCommandContext(CommandContext.RovoDevEnabled, false);
+        this._rovodevDisposable.dispose();
+        this._rovodevDisposable = undefined;
+        RovoDevProcessManager.deactivateRovoDevProcessManager();
     }
 
     static configureRovodevSettingsCommands(context: ExtensionContext) {
@@ -264,23 +277,20 @@ export class Container {
             }
         }
 
-        context.subscriptions.push(
+        const disposable = vscode.Disposable.from(
             vscode.commands.registerCommand(Commands.OpenRovoDevConfig, async () => {
                 await openConfigFile('.rovodev/config.yml', 'Rovo Dev settings file');
             }),
-        );
-
-        context.subscriptions.push(
             vscode.commands.registerCommand(Commands.OpenRovoDevMcpJson, async () => {
                 await openConfigFile('.rovodev/mcp.json', 'Rovo Dev MCP configuration');
             }),
-        );
-
-        context.subscriptions.push(
             vscode.commands.registerCommand(Commands.OpenRovoDevGlobalMemory, async () => {
                 await openConfigFile('.rovodev/.agent.md', 'Rovo Dev Global Memory file');
             }),
         );
+        context.subscriptions.push(disposable);
+
+        return disposable;
     }
 
     static focus() {
@@ -344,6 +354,9 @@ export class Container {
 
         return this._isDebugging;
     }
+
+    // Container for all rovodev components that might get toggled by feature flags
+    private static _rovodevDisposable?: vscode.Disposable = undefined;
 
     public static get configTarget(): ConfigTarget {
         return this._context.globalState.get<ConfigTarget>(ConfigTargetKey, ConfigTarget.User);

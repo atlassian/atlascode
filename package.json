@@ -95,15 +95,18 @@
         "commands": [
             {
                 "command": "atlascode.rovodev.askInteractive",
-                "title": "Rovo Dev: Quick Ask"
+                "title": "Rovo Dev: Quick Ask",
+                "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.rovodev.askRovoDev",
-                "title": "Ask Rovo Dev"
+                "title": "Ask Rovo Dev",
+                "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.rovodev.addToContext",
-                "title": "Add selection to Rovo Dev context"
+                "title": "Add selection to Rovo Dev context",
+                "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.rovodev.newChatSession",
@@ -112,7 +115,8 @@
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
                 },
-                "category": "Atlassian"
+                "category": "Atlassian",
+                "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.rovodev.showTerminal",
@@ -124,19 +128,22 @@
                 "command": "atlascode.openRovoDevConfig",
                 "title": "Open Rovo Dev settings file",
                 "category": "Atlascode",
-                "description": "Opens the ~/.rovodev/config.yaml file in the editor."
+                "description": "Opens the ~/.rovodev/config.yaml file in the editor.",
+                "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.openRovoDevMcpJson",
                 "title": "Open Rovo Dev MCP configuration",
                 "category": "Atlascode",
-                "description": "Opens the ~/.rovodev/mcp.json file in the editor."
+                "description": "Opens the ~/.rovodev/mcp.json file in the editor.",
+                "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.openRovoDevGlobalMemory",
                 "title": "Open Rovo Dev Global Memory file",
                 "category": "Atlascode",
-                "description": "Opens the ~/.rovodev/.agent.md file in the editor."
+                "description": "Opens the ~/.rovodev/.agent.md file in the editor.",
+                "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.jira.todoIssue",
