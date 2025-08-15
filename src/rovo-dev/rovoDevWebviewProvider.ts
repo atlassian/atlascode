@@ -1190,8 +1190,8 @@ ${message}`;
         this._initialized = false;
 
         errorMessage = errorMessage
-            ? `Agent process terminated:\n${errorMessage}\n\nPlease, start a new chat session to continue.`
-            : 'Agent process terminated.\nPlease, start a new chat session to continue.';
+            ? `Agent process terminated:\n${errorMessage}\n\nPlease start a new chat session to continue.`
+            : 'Agent process terminated.\nPlease start a new chat session to continue.';
 
         const error = new Error(errorMessage);
         return this.processError(error, false, true);
