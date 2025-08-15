@@ -115,6 +115,12 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.rovodev.showTerminal",
+                "title": "Show in terminal",
+                "icon": "$(terminal)",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.openRovoDevConfig",
                 "title": "Open Rovo Dev settings file",
                 "category": "Atlascode",
@@ -578,6 +584,11 @@
                     "group": "navigation@1"
                 },
                 {
+                    "command": "atlascode.rovodev.showTerminal",
+                    "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView",
+                    "group": "navigation@2"
+                },
+                {
                     "command": "atlascode.jira.createIssue",
                     "when": "view =~ /(atlascode.views.jira.assignedWorkItemsTreeView)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation@1"
@@ -767,6 +778,10 @@
                 },
                 {
                     "command": "atlascode.rovodev.newChatSession",
+                    "when": "atlascode:rovoDevEnabled"
+                },
+                {
+                    "command": "atlascode.rovodev.showTerminal",
                     "when": "atlascode:rovoDevEnabled"
                 },
                 {
@@ -1466,6 +1481,7 @@
         "@types/uuid": "^10.0.0",
         "@types/vscode": ">=1.77.0 <=1.96.0",
         "@types/websocket": "^1.0.0",
+        "@types/ws": "^8.18.1",
         "@vscode/vsce": "^3.6.0",
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
