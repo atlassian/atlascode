@@ -1112,7 +1112,7 @@ ${message}`;
         this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
 
         // enable the 'show terminal' button only when in debugging
-        setCommandContext(CommandContext.RovoDevTerminalEnabled, Container.isDebugging && isTerminal);
+        setCommandContext(CommandContext.RovoDevTerminalEnabled, !!isTerminal);
 
         const webView = this._webView!;
 

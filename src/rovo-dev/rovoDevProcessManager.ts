@@ -1,3 +1,4 @@
+import { ChildProcess, spawn } from 'child_process';
 import { access, constants } from 'fs';
 import fs from 'fs';
 import net from 'net';
@@ -217,13 +218,23 @@ export class RovoDevProcessManager extends Disposable {
 
         try {
             const port = await this.getOrAssignPortForWorkspace();
-            this.rovoDevInstance = new RovoDevInstance(
-                this.rovoDevWebviewProvider,
-                folder.uri.fsPath,
-                port,
-                rovoDevURIs.RovoDevBinPath,
-                rovoDevURIs.RovoDevIconUri,
-            );
+
+            if (Container.isDebugging) {
+                this.rovoDevInstance = new RovoDevTerminalInstance(
+                    this.rovoDevWebviewProvider,
+                    folder.uri.fsPath,
+                    port,
+                    rovoDevURIs.RovoDevBinPath,
+                    rovoDevURIs.RovoDevIconUri,
+                );
+            } else {
+                this.rovoDevInstance = new RovoDevProcessInstance(
+                    this.rovoDevWebviewProvider,
+                    folder.uri.fsPath,
+                    port,
+                    rovoDevURIs.RovoDevBinPath,
+                );
+            }
         } catch (error) {
             this.rovoDevWebviewProvider.signalRovoDevDisabled();
             this.rovoDevWebviewProvider.sendErrorToChat(`Unable to start Rovo Dev:\n${error.message}`);
@@ -235,7 +246,92 @@ export class RovoDevProcessManager extends Disposable {
     }
 }
 
-class RovoDevInstance extends Disposable {
+interface RovoDevInstance extends Disposable {
+    stop(): void;
+    showTerminal(): void;
+}
+
+class RovoDevProcessInstance extends Disposable implements RovoDevInstance {
+    private rovoDevProcess: ChildProcess | undefined;
+
+    public get isRunning() {
+        return !!this.rovoDevProcess;
+    }
+
+    constructor(
+        rovoDevWebviewProvider: RovoDevWebviewProvider,
+        workspacePath: string,
+        port: number,
+        rovoDevBinPath: string,
+    ) {
+        super(() => this.stop());
+
+        this.stop();
+
+        access(rovoDevBinPath, constants.X_OK, (err) => {
+            if (err) {
+                throw new Error(`executable not found.`);
+            }
+
+            getCloudCredentials().then((creds) => {
+                const defaultUsername = 'cooluser@atlassian.com';
+                const { username, key } = creds || {};
+
+                const env: NodeJS.ProcessEnv = {
+                    USER: process.env.USER,
+                    USER_EMAIL: username || defaultUsername,
+                    ...(key ? { USER_API_TOKEN: key } : {}),
+                };
+                let stderrData = '';
+
+                this.rovoDevProcess = spawn(
+                    rovoDevBinPath,
+                    [`serve`, `${port}`, `--application-id`, `com.atlassian.vscode`],
+                    {
+                        cwd: workspacePath,
+                        stdio: ['ignore', 'pipe', 'pipe'],
+                        detached: true,
+                        env,
+                    },
+                )
+                    .on('spawn', () => rovoDevWebviewProvider.signalProcessStarted(port))
+                    .on('exit', (code) => {
+                        this.rovoDevProcess = undefined;
+
+                        if (code !== 0) {
+                            if (stderrData.includes('auth token')) {
+                                throw new Error(
+                                    `please login by providing an API Token. You can do this via Atlassian: Open Settings -> Authentication -> Other Options`,
+                                );
+                            } else {
+                                // default error message
+                                throw new Error(`process exited with code ${code}, see the log for details.`);
+                            }
+                        }
+                    });
+
+                if (this.rovoDevProcess.stderr) {
+                    this.rovoDevProcess.stderr.on('data', (data) => {
+                        stderrData += data.toString();
+                    });
+                }
+            });
+        });
+    }
+
+    public stop() {
+        if (this.rovoDevProcess) {
+            this.rovoDevProcess.kill();
+            this.rovoDevProcess = undefined;
+        }
+    }
+
+    public showTerminal() {
+        throw new Error('Method not implemented: showTerminal');
+    }
+}
+
+class RovoDevTerminalInstance extends Disposable implements RovoDevInstance {
     private rovoDevTerminal: Terminal | undefined;
 
     constructor(
