@@ -1,5 +1,7 @@
-import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 
 import { ConfigSection, ConfigSubSection } from '../../../../../lib/ipc/models/config';
@@ -47,16 +49,16 @@ export const PRExplorerPanel: React.FunctionComponent<PRExplorerPanelProps> = me
         }, [expanded]);
 
         return (
-            <ExpansionPanel hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
-                <ExpansionPanelSummary
+            <Accordion hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
+                <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     aria-controls={`${ConfigSection.Bitbucket}-${ConfigSubSection.PR}-content`}
                     id={`${ConfigSection.Bitbucket}-${ConfigSubSection.PR}-header`}
                 >
                     <PanelTitle>Pull Requests Explorer</PanelTitle>
                     <PanelSubtitle>configure the pull requests explorer and notifications</PanelSubtitle>
-                </ExpansionPanelSummary>
-                <ExpansionPanelDetails>
+                </AccordionSummary>
+                <AccordionDetails>
                     <PRExplorer
                         enabled={enabled}
                         relatedJiraIssues={relatedJiraIssues}
@@ -64,8 +66,8 @@ export const PRExplorerPanel: React.FunctionComponent<PRExplorerPanelProps> = me
                         nestFiles={nestFiles}
                         refreshInterval={refreshInterval}
                     />
-                </ExpansionPanelDetails>
-            </ExpansionPanel>
+                </AccordionDetails>
+            </Accordion>
         );
     },
 );

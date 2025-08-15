@@ -1,5 +1,5 @@
-import { Button } from '@material-ui/core';
-import CloudIcon from '@material-ui/icons/Cloud';
+import CloudIcon from '@mui/icons-material/Cloud';
+import { Button } from '@mui/material';
 import React, { useContext } from 'react';
 
 import { AuthInfoState, emptyUserInfo, Product, ProductJira } from '../../../../atlclients/authInfo';

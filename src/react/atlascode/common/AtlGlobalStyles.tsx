@@ -1,4 +1,5 @@
-import { darken, lighten, makeStyles, Theme } from '@material-ui/core';
+import { darken, lighten, Theme } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useContext } from 'react';
 
 import { VSCodeStyles, VSCodeStylesContext } from '../../vscode/theme/styles';
@@ -34,13 +35,13 @@ const useStyles = makeStyles(
                 },
                 '.ap-mention': {
                     'background-color':
-                        theme.palette.type === 'dark'
+                        theme.palette.mode === 'dark'
                             ? lighten(theme.palette.background.default, 0.15)
                             : darken(theme.palette.background.default, 0.15),
                 },
                 '.user-mention': {
                     'background-color':
-                        theme.palette.type === 'dark'
+                        theme.palette.mode === 'dark'
                             ? lighten(theme.palette.background.default, 0.15)
                             : darken(theme.palette.background.default, 0.15),
                 },
@@ -256,7 +257,7 @@ const useStyles = makeStyles(
                 '.suggestion-item-active': { background: '#08c', color: '#fff' },
                 '.prosemirror-mention-node': {
                     'background-color':
-                        theme.palette.type === 'dark'
+                        theme.palette.mode === 'dark'
                             ? lighten(theme.palette.background.default, 0.15)
                             : darken(theme.palette.background.default, 0.15),
                 },

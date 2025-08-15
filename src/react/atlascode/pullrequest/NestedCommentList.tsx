@@ -1,4 +1,5 @@
-import { Grid, makeStyles } from '@material-ui/core';
+import { Grid } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React from 'react';
 
 import { Comment, User } from '../../../bitbucket/model';
@@ -25,7 +26,7 @@ export const NestedCommentList: React.FunctionComponent<NestedCommentListProps> 
 }) => {
     const classes = useStyles();
     return (
-        <Grid container spacing={1} direction="column" justify="center">
+        <Grid container spacing={1} direction="column" justifyContent="center">
             {comments.map((comment) => (
                 <Grid item key={comment.id} className={classes.nestedComment}>
                     <NestedComment

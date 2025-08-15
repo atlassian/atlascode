@@ -1,5 +1,6 @@
 import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
-import { Fade, Grid, makeStyles, Theme } from '@material-ui/core';
+import { Fade, Grid, Theme } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useCallback, useContext, useState } from 'react';
 
 import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';
@@ -13,7 +14,6 @@ const useStyles = makeStyles(
         ({
             code: {
                 backgroundColor: 'rgb(220, 220, 220)', //bright shade of gray
-                color: 'rgb(208, 66, 103)', //Slack inline code text color (red)
                 borderRadius: 5,
                 margin: theme.spacing(0, 1),
                 padding: theme.spacing(0, 1),

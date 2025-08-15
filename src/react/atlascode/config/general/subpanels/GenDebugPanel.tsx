@@ -1,5 +1,7 @@
-import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 
 import { ConfigSection, ConfigSubSection } from '../../../../../lib/ipc/models/config';
@@ -47,16 +49,16 @@ export const GenDebugPanel: React.FunctionComponent<GenDebugPanelProps> = memo(
         }, [expanded]);
 
         return (
-            <ExpansionPanel hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
-                <ExpansionPanelSummary
+            <Accordion hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
+                <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     aria-controls={`${ConfigSection.General}-${ConfigSubSection.Debug}-content`}
                     id={`${ConfigSection.General}-${ConfigSubSection.Debug}-header`}
                 >
                     <PanelTitle>Debugging</PanelTitle>
                     <PanelSubtitle>configure debugging tools</PanelSubtitle>
-                </ExpansionPanelSummary>
-                <ExpansionPanelDetails>
+                </AccordionSummary>
+                <AccordionDetails>
                     <Debug
                         enableCurl={enableCurl}
                         enableCharles={enableCharles}
@@ -64,8 +66,8 @@ export const GenDebugPanel: React.FunctionComponent<GenDebugPanelProps> = memo(
                         charlesDebugOnly={charlesDebugOnly}
                         showCreateIssueProblems={showCreateIssueProblems}
                     />
-                </ExpansionPanelDetails>
-            </ExpansionPanel>
+                </AccordionDetails>
+            </Accordion>
         );
     },
 );

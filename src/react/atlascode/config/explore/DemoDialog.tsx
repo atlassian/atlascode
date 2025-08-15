@@ -1,3 +1,4 @@
+import Skeleton from '@mui/lab/Skeleton';
 import {
     Box,
     Button,
@@ -6,11 +7,10 @@ import {
     DialogContent,
     DialogContentText,
     DialogTitle,
-    makeStyles,
     Tooltip,
     Typography,
-} from '@material-ui/core';
-import Skeleton from '@material-ui/lab/Skeleton';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useCallback, useState } from 'react';
 
 const useStyles = makeStyles((theme) => ({
@@ -68,7 +68,7 @@ export const DemoDialog: React.FunctionComponent<DemoDialogProps> = ({
                     <DialogContentText>{modalDescription}</DialogContentText>
                 </Box>
                 <Box hidden={imageLoaded}>
-                    <Skeleton variant="rect" width="100%" height="400px" />
+                    <Skeleton variant="rectangular" width="100%" height="400px" />
                 </Box>
                 <Box hidden={!imageLoaded}>
                     <img

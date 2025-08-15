@@ -1,5 +1,9 @@
 import { RefreshButton } from '@atlassianlabs/guipi-core-components';
 import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
+import CloseIcon from '@mui/icons-material/Close';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import SettingsIcon from '@mui/icons-material/Settings';
+import { Alert, AlertTitle, Autocomplete } from '@mui/lab';
 import {
     AppBar,
     Box,
@@ -16,7 +20,6 @@ import {
     Link,
     List,
     ListItem,
-    makeStyles,
     MenuItem,
     Paper,
     Snackbar,
@@ -27,11 +30,8 @@ import {
     Tooltip,
     Typography,
     useTheme,
-} from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
-import SettingsIcon from '@material-ui/icons/Settings';
-import { Alert, AlertTitle, Autocomplete } from '@material-ui/lab';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import Mustache from 'mustache';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
@@ -81,6 +81,11 @@ const useStyles = makeStyles((theme: Theme) => ({
         borderLeftStyle: 'solid',
         borderLeftColor: props.settingsModifiedItemIndicator,
     }),
+    branchSetupCollapseWidth: {
+        '& .MuiCollapse-wrapperInner': {
+            width: 'auto',
+        },
+    },
 }));
 
 const emptyPrefix: BranchType = { kind: '', prefix: '' };
@@ -512,7 +517,10 @@ const StartWorkPage: React.FunctionComponent = () => {
                                             </Grid>
                                         </Grid>
                                         <Grid item>
-                                            <Collapse in={branchSetupEnabled}>
+                                            <Collapse
+                                                in={branchSetupEnabled}
+                                                className={classes.branchSetupCollapseWidth}
+                                            >
                                                 <Grid
                                                     container
                                                     spacing={2}
@@ -560,7 +568,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                         <Grid
                                                             container
                                                             spacing={2}
-                                                            justify={'center'}
+                                                            justifyContent={'center'}
                                                             alignItems={'center'}
                                                         >
                                                             <Grid item xs={10}>
@@ -770,7 +778,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                             <PrepareCommitTip />
                                         </Grid>
                                         <Grid item hidden={submitState !== 'submit-success'}>
-                                            <Button variant="contained" color="default" onClick={controller.closePage}>
+                                            <Button variant="contained" onClick={controller.closePage}>
                                                 Close
                                             </Button>
                                         </Grid>

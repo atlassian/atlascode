@@ -1,4 +1,4 @@
-import { Box, Grid } from '@material-ui/core';
+import { Box, Grid } from '@mui/material';
 import React from 'react';
 
 import { User } from '../../../bitbucket/model';
@@ -25,7 +25,7 @@ export const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
 }) => {
     return (
         <Box margin={2}>
-            <Grid container spacing={3} direction="column" justify="center">
+            <Grid container spacing={3} direction="column" justifyContent="center">
                 <ErrorDisplay />
 
                 <Grid item>

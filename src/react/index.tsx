@@ -1,4 +1,5 @@
-import { CssBaseline, ThemeProvider } from '@material-ui/core';
+import { CssBaseline } from '@mui/material';
+import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import React, { useCallback, useEffect, useState } from 'react';
 import * as ReactDOM from 'react-dom';
 import useConstant from 'use-constant';
@@ -80,9 +81,11 @@ const App = () => {
                         <ErrorStateContext.Provider value={errorState}>
                             <PMFControllerContext.Provider value={pmfController}>
                                 <PMFStateContext.Provider value={pmfState}>
-                                    <CssBaseline />
-                                    <AtlGlobalStyles />
-                                    <Page />
+                                    <StyledEngineProvider injectFirst>
+                                        <CssBaseline />
+                                        <AtlGlobalStyles />
+                                        <Page />
+                                    </StyledEngineProvider>
                                 </PMFStateContext.Provider>
                             </PMFControllerContext.Provider>
                         </ErrorStateContext.Provider>

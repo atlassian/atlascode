@@ -1,4 +1,5 @@
-import { Grid, Input, makeStyles, Slider, Theme, Typography } from '@material-ui/core';
+import { Grid, Input, Slider, Theme, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import clsx from 'clsx';
 import React, { memo, useCallback, useEffect, useMemo } from 'react';
 
@@ -91,7 +92,7 @@ export const IntervalInput: React.FunctionComponent<IntervalInputProps> = memo(
                                     disabled={!enabled}
                                     className={classes.input}
                                     value={value}
-                                    margin="dense"
+                                    size="small"
                                     onChange={(e) =>
                                         setValueAndInterval(e.target.value === '' ? 0 : Number(e.target.value))
                                     }

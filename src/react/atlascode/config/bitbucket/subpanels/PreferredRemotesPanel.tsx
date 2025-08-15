@@ -1,6 +1,9 @@
 import { InlineTextEditorList } from '@atlassianlabs/guipi-core-components';
-import { Box, ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary, Grid, Typography } from '@material-ui/core';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Box, Grid, Typography } from '@mui/material';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 
 import { ConfigSection, ConfigSubSection } from '../../../../../lib/ipc/models/config';
@@ -53,16 +56,16 @@ export const PreferredRemotesPanel: React.FunctionComponent<PreferredRemotesPane
         }, [changes, controller]);
 
         return (
-            <ExpansionPanel hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
-                <ExpansionPanelSummary
+            <Accordion hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
+                <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     aria-controls={`${ConfigSection.Bitbucket}-${ConfigSubSection.PreferredRemotes}-content`}
                     id={`${ConfigSection.Bitbucket}-${ConfigSubSection.PreferredRemotes}-header`}
                 >
                     <PanelTitle>Preferred Git Remotes</PanelTitle>
                     <PanelSubtitle>configure the preferred remotes</PanelSubtitle>
-                </ExpansionPanelSummary>
-                <ExpansionPanelDetails>
+                </AccordionSummary>
+                <AccordionDetails>
                     <Grid container direction="column">
                         <Typography>
                             The first remote that matches the list will be used to fetch pull requests, issues, and
@@ -86,8 +89,8 @@ export const PreferredRemotesPanel: React.FunctionComponent<PreferredRemotesPane
                             />
                         </Box>
                     </Grid>
-                </ExpansionPanelDetails>
-            </ExpansionPanel>
+                </AccordionDetails>
+            </Accordion>
         );
     },
 );

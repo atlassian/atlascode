@@ -1,4 +1,4 @@
-import { SvgIcon, SvgIconProps, Theme, useTheme } from '@material-ui/core';
+import { SvgIcon, SvgIconProps, Theme, useTheme } from '@mui/material';
 import React from 'react';
 import { uid } from 'react-uid';
 

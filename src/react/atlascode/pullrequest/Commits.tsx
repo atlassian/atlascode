@@ -1,15 +1,5 @@
-import {
-    Link,
-    makeStyles,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableRow,
-    Theme,
-    Tooltip,
-    Typography,
-} from '@material-ui/core';
+import { Link, Table, TableBody, TableCell, TableContainer, TableRow, Theme, Tooltip, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import { differenceInWeeks, format, formatDistanceToNow } from 'date-fns';
 import React, { useMemo } from 'react';
 

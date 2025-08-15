@@ -1,4 +1,4 @@
-import { Box, Button, Grid } from '@material-ui/core';
+import { Box, Button, Grid } from '@mui/material';
 import React, { memo, useCallback, useContext } from 'react';
 
 import { Product } from '../../../../atlclients/authInfo';

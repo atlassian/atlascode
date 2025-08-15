@@ -1,7 +1,8 @@
 import { isErrorCollection, isErrorWithMessages } from '@atlassianlabs/jira-pi-common-models';
-import { Collapse, IconButton, makeStyles, Snackbar, Theme } from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import { Alert, AlertTitle } from '@material-ui/lab';
+import CloseIcon from '@mui/icons-material/Close';
+import { Alert, AlertTitle } from '@mui/lab';
+import { Collapse, IconButton, Snackbar, Theme } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { v4 } from 'uuid';
 

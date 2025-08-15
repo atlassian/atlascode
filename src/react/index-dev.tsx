@@ -1,4 +1,6 @@
-import { CssBaseline, ThemeProvider } from '@material-ui/core';
+import { CssBaseline } from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
+import { StyledEngineProvider } from '@mui/material/styles';
 import React, { useCallback, useEffect, useState } from 'react';
 import * as ReactDOM from 'react-dom';
 import useConstant from 'use-constant';
@@ -10,7 +12,6 @@ import { ErrorControllerContext, ErrorStateContext, useErrorController } from '.
 import { atlascodeTheme } from './atlascode/theme/atlascodeTheme';
 import { computeStyles, VSCodeStylesContext } from './vscode/theme/styles';
 import { createVSCodeTheme } from './vscode/theme/vscodeTheme';
-
 declare global {
     // eslint-disable-next-line no-unused-vars
     interface Window {
@@ -115,9 +116,11 @@ const App = (): JSX.Element => {
                 <ThemeProvider theme={currentTheme}>
                     <ErrorControllerContext.Provider value={errorController}>
                         <ErrorStateContext.Provider value={errorState}>
-                            <CssBaseline />
-                            <AtlGlobalStyles />
-                            <Page />
+                            <StyledEngineProvider injectFirst>
+                                <CssBaseline />
+                                <AtlGlobalStyles />
+                                <Page />
+                            </StyledEngineProvider>
                         </ErrorStateContext.Provider>
                     </ErrorControllerContext.Provider>
                 </ThemeProvider>

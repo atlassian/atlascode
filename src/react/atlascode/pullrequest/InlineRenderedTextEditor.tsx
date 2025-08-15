@@ -1,5 +1,6 @@
-import { Box, darken, Grid, lighten, makeStyles, Theme, Tooltip, Typography } from '@material-ui/core';
-import EditIcon from '@material-ui/icons/Edit';
+import EditIcon from '@mui/icons-material/Edit';
+import { Box, darken, Grid, lighten, Theme, Tooltip, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useCallback, useState } from 'react';
 
 import { User } from '../../../bitbucket/model';
@@ -23,7 +24,7 @@ const useStyles = makeStyles(
                 display: 'flex',
                 'align-items': 'center',
                 'background-color':
-                    theme.palette.type === 'dark'
+                    theme.palette.mode === 'dark'
                         ? lighten(theme.palette.background.default, 0.15)
                         : darken(theme.palette.background.default, 0.15),
             },

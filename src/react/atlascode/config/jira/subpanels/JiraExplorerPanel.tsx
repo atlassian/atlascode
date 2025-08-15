@@ -1,5 +1,7 @@
-import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
 import equal from 'fast-deep-equal/es6';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 
@@ -74,16 +76,16 @@ export const JiraExplorerPanel: React.FunctionComponent<JiraExplorerPanelProps> 
         }, [expanded]);
 
         return (
-            <ExpansionPanel hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
-                <ExpansionPanelSummary
+            <Accordion hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
+                <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     aria-controls={`${ConfigSection.Jira}-${ConfigSubSection.Issues}-content`}
                     id={`${ConfigSection.Jira}-${ConfigSubSection.Issues}-header`}
                 >
                     <PanelTitle>Jira Issues Explorer</PanelTitle>
                     <PanelSubtitle>configure the Jira issue explorer, custom JQL and notifications</PanelSubtitle>
-                </ExpansionPanelSummary>
-                <ExpansionPanelDetails>
+                </AccordionSummary>
+                <AccordionDetails>
                     <JiraExplorer
                         sites={internalSites}
                         jqlList={internalJql}
@@ -93,8 +95,8 @@ export const JiraExplorerPanel: React.FunctionComponent<JiraExplorerPanelProps> 
                         monitorEnabled={monitorEnabled}
                         refreshInterval={refreshInterval}
                     />
-                </ExpansionPanelDetails>
-            </ExpansionPanel>
+                </AccordionDetails>
+            </Accordion>
         );
     },
 );

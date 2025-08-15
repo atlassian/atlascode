@@ -3,7 +3,7 @@ import DropdownMenu, { DropdownItem } from '@atlaskit/dropdown-menu';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import Lozenge from '@atlaskit/lozenge';
 import { Status, Transition } from '@atlassianlabs/jira-pi-common-models';
-import { Box } from '@material-ui/core';
+import { Box } from '@mui/material';
 import React from 'react';
 
 import { colorToLozengeAppearanceMap } from '../../../colors';

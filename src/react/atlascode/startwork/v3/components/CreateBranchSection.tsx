@@ -1,16 +1,7 @@
-import {
-    Box,
-    Checkbox,
-    FormControlLabel,
-    Grid,
-    IconButton,
-    makeStyles,
-    TextField,
-    Theme,
-    Typography,
-} from '@material-ui/core';
-import SettingsIcon from '@material-ui/icons/Settings';
-import { Autocomplete } from '@material-ui/lab';
+import SettingsIcon from '@mui/icons-material/Settings';
+import { Autocomplete } from '@mui/lab';
+import { Box, Checkbox, FormControlLabel, Grid, IconButton, TextField, Theme, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useContext } from 'react';
 
 import { VSCodeStyles, VSCodeStylesContext } from '../../../../vscode/theme/styles';
@@ -33,7 +24,7 @@ export const CreateBranchSection: React.FC<CreateBranchSectionProps> = ({ state,
     return (
         <Box
             border={1}
-            borderRadius={3}
+            borderRadius="3px"
             borderColor="var(--vscode-list-inactiveSelectionBackground)"
             padding={3}
             marginBottom={2}
@@ -43,7 +34,6 @@ export const CreateBranchSection: React.FC<CreateBranchSectionProps> = ({ state,
                     Create branch
                 </Typography>
             </Box>
-
             <Grid container spacing={2} direction="column">
                 <Grid item>
                     <Typography variant="body2">New local branch</Typography>

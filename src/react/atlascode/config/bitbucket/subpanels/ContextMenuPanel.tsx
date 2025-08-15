@@ -1,5 +1,7 @@
-import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 
 import { ConfigSection, ConfigSubSection } from '../../../../../lib/ipc/models/config';
@@ -34,19 +36,19 @@ export const ContextMenuPanel: React.FunctionComponent<ContextMenuPanelProps> = 
         }, [expanded]);
 
         return (
-            <ExpansionPanel hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
-                <ExpansionPanelSummary
+            <Accordion hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
+                <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     aria-controls={`${ConfigSection.Bitbucket}-${ConfigSubSection.ContextMenus}-content`}
                     id={`${ConfigSection.Bitbucket}-${ConfigSubSection.ContextMenus}-header`}
                 >
                     <PanelTitle>Bitbucket Context Menus</PanelTitle>
                     <PanelSubtitle>configure the context menus in editor</PanelSubtitle>
-                </ExpansionPanelSummary>
-                <ExpansionPanelDetails>
+                </AccordionSummary>
+                <AccordionDetails>
                     <ContextMenus enabled={enabled} />
-                </ExpansionPanelDetails>
-            </ExpansionPanel>
+                </AccordionDetails>
+            </Accordion>
         );
     },
 );

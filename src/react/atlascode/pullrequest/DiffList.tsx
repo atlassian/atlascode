@@ -2,7 +2,6 @@ import {
     Box,
     Chip,
     Link,
-    makeStyles,
     Table,
     TableBody,
     TableCell,
@@ -11,7 +10,8 @@ import {
     Theme,
     Tooltip,
     Typography,
-} from '@material-ui/core';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import clsx from 'clsx';
 import React from 'react';
 

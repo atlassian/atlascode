@@ -1,6 +1,6 @@
-import { Box, Grid, IconButton, Link, TextField, Typography } from '@material-ui/core';
-import Visibility from '@material-ui/icons/Visibility';
-import VisibilityOff from '@material-ui/icons/VisibilityOff';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { Box, Grid, IconButton, Link, TextField, Typography } from '@mui/material';
 import React from 'react';
 import { BasicAuthInfo } from 'src/atlclients/authInfo';
 import { SiteWithAuthInfo } from 'src/lib/ipc/toUI/config';
@@ -31,8 +31,8 @@ export const JiraBasicAuthForm = ({
                     <Box fontWeight="fontWeightBold">This looks like a Jira Cloud site ☁</Box>
                     <Box fontSize="small">
                         You can use an{' '}
-                        <Link href="https://id.atlassian.com/manage-profile/security/api-tokens">API Token</Link> to
-                        connect to this site. Read more about Atlassian API tokens{' '}
+                        <Link href="https://id.atlassian.com/manage-profile/security/api-tokens">API Token</Link>
+                        to connect to this site. Read more about Atlassian API tokens{' '}
                         <Link href="https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/">
                             here
                         </Link>
@@ -43,7 +43,7 @@ export const JiraBasicAuthForm = ({
             <Grid item>
                 <TextField
                     required
-                    margin="dense"
+                    size="small"
                     id="username"
                     name="username"
                     label="Username"
@@ -57,7 +57,7 @@ export const JiraBasicAuthForm = ({
             <Grid item>
                 <TextField
                     required
-                    margin="dense"
+                    size="small"
                     id="password"
                     name="password"
                     label="Password (API token)"
@@ -77,6 +77,7 @@ export const JiraBasicAuthForm = ({
                                     })
                                 }
                                 onMouseDown={preventClickDefault}
+                                size="large"
                             >
                                 {authFormState.showPassword ? (
                                     <Visibility fontSize="small" />

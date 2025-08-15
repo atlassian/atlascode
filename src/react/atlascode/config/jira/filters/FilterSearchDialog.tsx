@@ -10,7 +10,7 @@ import {
     DialogTitle,
     Grid,
     Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
 import { v4 } from 'uuid';
 

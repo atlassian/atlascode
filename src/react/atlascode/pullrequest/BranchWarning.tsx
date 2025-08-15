@@ -1,5 +1,6 @@
-import { Box, Card, CardContent, Collapse, Grid, makeStyles, Theme, Typography } from '@material-ui/core';
-import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { Box, Card, CardContent, Collapse, Grid, Theme, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useEffect, useState } from 'react';
 
 import { Branch } from '../../../typings/git';

@@ -1,10 +1,10 @@
-import { Grid, IconButton, ListItemSecondaryAction, Switch, Tooltip, Typography } from '@material-ui/core';
-import DeleteIcon from '@material-ui/icons/Delete';
-import EditIcon from '@material-ui/icons/Edit';
-import FilterListIcon from '@material-ui/icons/FilterList';
-import InputIcon from '@material-ui/icons/Input';
-import NotificationsActiveIcon from '@material-ui/icons/NotificationsActive';
-import NotificationsOffIcon from '@material-ui/icons/NotificationsOff';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import InputIcon from '@mui/icons-material/Input';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
+import { Grid, IconButton, ListItemSecondaryAction, Switch, Tooltip, Typography } from '@mui/material';
 import React, { memo } from 'react';
 
 type JQLListItemProps = {
@@ -46,13 +46,13 @@ export const JQLListItem: React.FunctionComponent<JQLListItemProps> = memo(
                     <ListItemSecondaryAction>
                         {!filterId && (
                             <Tooltip title={`Edit ${name}`}>
-                                <IconButton id={id} edge="end" aria-label="edit" onClick={handleEdit}>
+                                <IconButton id={id} edge="end" aria-label="edit" onClick={handleEdit} size="large">
                                     <EditIcon fontSize="small" color="inherit" />
                                 </IconButton>
                             </Tooltip>
                         )}
                         <Tooltip title={`Delete ${name}`}>
-                            <IconButton id={id} edge="end" aria-label="delete" onClick={handleDelete}>
+                            <IconButton id={id} edge="end" aria-label="delete" onClick={handleDelete} size="large">
                                 <DeleteIcon fontSize="small" color="inherit" />
                             </IconButton>
                         </Tooltip>

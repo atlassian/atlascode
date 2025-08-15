@@ -1,4 +1,4 @@
-import { Fade, Grid } from '@material-ui/core';
+import { Fade, Grid } from '@mui/material';
 import React from 'react';
 
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
