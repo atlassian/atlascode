@@ -115,6 +115,12 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.rovodev.showTerminal",
+                "title": "Show in terminal",
+                "icon": "$(terminal)",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.openRovoDevConfig",
                 "title": "Open Rovo Dev settings file",
                 "category": "Atlascode",
@@ -456,6 +462,21 @@
                 "command": "atlascode.showOnboardingFlow",
                 "title": "Show Onboarding Flow",
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.debug.quickCommand",
+                "title": "[DEBUG] Atlascode: Quick command",
+                "enablement": "atlascode:debugMode"
+            },
+            {
+                "command": "atlascode.debug.quickLogin",
+                "title": "[DEBUG] Atlascode: Quick login",
+                "enablement": "atlascode:debugMode"
+            },
+            {
+                "command": "atlascode.debug.quickLogout",
+                "title": "[DEBUG] Atlascode: Quick logout",
+                "enablement": "atlascode:debugMode"
             }
         ],
         "viewsContainers": {
@@ -576,6 +597,11 @@
                     "command": "atlascode.rovodev.newChatSession",
                     "when": "view == atlascode.views.rovoDev.webView",
                     "group": "navigation@1"
+                },
+                {
+                    "command": "atlascode.rovodev.showTerminal",
+                    "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView",
+                    "group": "navigation@2"
                 },
                 {
                     "command": "atlascode.jira.createIssue",
@@ -767,6 +793,10 @@
                 },
                 {
                     "command": "atlascode.rovodev.newChatSession",
+                    "when": "atlascode:rovoDevEnabled"
+                },
+                {
+                    "command": "atlascode.rovodev.showTerminal",
                     "when": "atlascode:rovoDevEnabled"
                 },
                 {

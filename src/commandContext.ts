@@ -12,7 +12,9 @@ export enum CommandContext {
     IsJiraAuthenticated = 'atlascode:isJiraAuthenticated',
     IsBBAuthenticated = 'atlascode:isBBAuthenticated',
     RovoDevEnabled = 'atlascode:rovoDevEnabled',
+    RovoDevTerminalEnabled = 'atlascode:rovoDevTerminalEnabled',
     BbyEnvironmentActive = 'atlascode:bbyEnvironmentActive',
+    DebugMode = 'atlascode:debugMode',
 }
 
 export function setCommandContext(key: CommandContext | string, value: any) {

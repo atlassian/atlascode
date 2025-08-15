@@ -23,6 +23,7 @@ export interface ErrorMessage {
     text: string;
     source: 'RovoDevError';
     isRetriable: boolean;
+    isProcessTerminated?: boolean;
     uid: string;
 }
 

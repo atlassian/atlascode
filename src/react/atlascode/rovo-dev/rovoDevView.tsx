@@ -375,13 +375,16 @@ const RovoDevView: React.FC = () => {
                     if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
                         finalizeResponse();
                     }
+                    if (event.message.isProcessTerminated) {
+                        setCurrentState(State.ProcessTerminated);
+                    }
                     handleAppendError(event.message);
-
                     break;
 
                 case RovoDevProviderMessageType.NewSession:
                     clearChatHistory();
                     setPendingToolCallMessage('');
+                    setCurrentState(State.WaitingForPrompt);
                     break;
 
                 case RovoDevProviderMessageType.SetInitState:
@@ -441,6 +444,13 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.GetCurrentBranchNameComplete:
                 case RovoDevProviderMessageType.CheckGitChangesComplete:
                     break; // This is handled elsewhere
+
+                case RovoDevProviderMessageType.ForceStop:
+                    // Signal user that Rovo Dev is stopping
+                    if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
+                        setCurrentState(State.CancellingResponse);
+                    }
+                    break;
 
                 default:
                     // this is never supposed to happen since there aren't other type of messages
@@ -657,7 +667,12 @@ const RovoDevView: React.FC = () => {
                         }}
                     />
                     <PromptInputBox
-                        disabled={workspaceCount === 0 || currentState === State.Disabled}
+                        disabled={
+                            workspaceCount === 0 ||
+                            currentState === State.Disabled ||
+                            currentState === State.ProcessTerminated
+                        }
+                        hideButtons={workspaceCount === 0 || currentState === State.Disabled}
                         state={currentState}
                         promptText={promptText}
                         onPromptTextChange={(element) => setPromptText(element)}
@@ -674,7 +689,7 @@ const RovoDevView: React.FC = () => {
                         }}
                     />
                 </div>
-                <div className="ai-disclaimer">Uses AI. Verify Results</div>
+                <div className="ai-disclaimer">Uses AI. Verify results.</div>
             </div>
         </div>
     );

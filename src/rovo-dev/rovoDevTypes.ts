@@ -58,6 +58,7 @@ export const enum State {
     GeneratingResponse,
     CancellingResponse,
     ExecutingPlan,
+    ProcessTerminated,
 }
 
 export const enum RovoDevInitState {

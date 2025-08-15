@@ -74,6 +74,11 @@ export class RovoDevApiClient {
         await this.fetchApi('/v2/reset', 'POST');
     }
 
+    /** Invokes the POST `/v2/sessions/create` API */
+    public async createSession(): Promise<void> {
+        await this.fetchApi('/v2/sessions/create', 'POST');
+    }
+
     /** Invokes the POST `/v2/chat` API.
      * @param {string} message The message (prompt) to send to Rovo Dev.
      * @param {boolean} [enable_deep_plan=false] [optional] A value indicating if the deep planner tool should be enabled when processing this prompt. Default value is `false`.

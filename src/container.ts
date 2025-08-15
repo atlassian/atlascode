@@ -12,6 +12,7 @@ import { CheckoutHelper } from './bitbucket/interfaces';
 import { PullRequest, WorkspaceRepo } from './bitbucket/model';
 import { BitbucketCloudPullRequestLinkProvider } from './bitbucket/terminal-link/createPrLinkProvider';
 import { CommandContext, setCommandContext } from './commandContext';
+import { registerDebugCommands } from './commands';
 import { openPullRequest } from './commands/bitbucket/pullRequest';
 import { configuration, IConfig } from './config/configuration';
 import { Commands } from './constants';
@@ -91,6 +92,11 @@ export class Container {
             deviceId: this.machineId,
             enable: this.getAnalyticsEnable(),
         });
+
+        if (this.isDebugging) {
+            setCommandContext(CommandContext.DebugMode, true);
+            registerDebugCommands(context);
+        }
 
         this._cancellationManager = new Map();
         this._analyticsApi = new VSCAnalyticsApi(this._analyticsClient, this.isRemote, this.isWebUI);

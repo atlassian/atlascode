@@ -23,6 +23,7 @@ export const enum RovoDevProviderMessageType {
     UserFocusUpdated = 'userFocusUpdated',
     ContextAdded = 'contextAdded',
     CheckGitChangesComplete = 'checkGitChangesComplete',
+    ForceStop = 'forceStop',
 }
 
 export interface RovoDevObjectResponse {
@@ -48,4 +49,5 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>
     | ReducerAction<RovoDevProviderMessageType.UserFocusUpdated, { userFocus: RovoDevContextItem }>
     | ReducerAction<RovoDevProviderMessageType.ContextAdded, { context: RovoDevContextItem }>
-    | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>;
+    | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
+    | ReducerAction<RovoDevProviderMessageType.ForceStop>;

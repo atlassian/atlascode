@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import path from 'path';
 import { gte as semver_gte } from 'semver';
+import { CommandContext, setCommandContext } from 'src/commandContext';
 import { getFsPromise } from 'src/util/fsPromises';
 import { setTimeout } from 'timers/promises';
 import { v4 } from 'uuid';
@@ -77,15 +78,23 @@ const rovoDevTelemetryEvents = {
     rovoDevDetailsExpandedEvent,
 };
 
+enum RovoDevProcessState {
+    NotStarted,
+    Starting,
+    Started,
+    Terminated,
+    Disabled,
+}
+
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
     private readonly viewType = 'atlascodeRovoDev';
-    private readonly isBBY = process.env.ROVODEV_BBY;
+    private readonly isBoysenberry = process.env.ROVODEV_BBY;
 
     private _prHandler = new RovoDevPullRequestHandler();
     private _perfLogger = new PerformanceLogger();
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _rovoDevApiClient?: RovoDevApiClient;
-    private _disabled = false;
+    private _processState = RovoDevProcessState.NotStarted;
     private _initialized = false;
 
     private _chatBusy = false;
@@ -110,6 +119,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private get rovoDevApiClient() {
         return this._rovoDevApiClient;
+    }
+
+    private get isDisabled() {
+        return this._processState === RovoDevProcessState.Disabled;
     }
 
     constructor(context: ExtensionContext, extensionPath: string) {
@@ -244,10 +257,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         const port = parseInt(process.env[rovodevInfo.envVars.port] || '0');
                         if (port) {
                             this.signalProcessStarted(port);
-                        } else if (process.env.ROVODEV_BBY) {
+                        } else if (this.isBoysenberry) {
                             this.signalRovoDevDisabled();
                             throw new Error('Rovo Dev port not set');
                         } else {
+                            this._processState = RovoDevProcessState.Starting;
                             RovoDevProcessManager.initializeRovoDevProcessManager(this._context);
                         }
                 }
@@ -256,9 +270,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             }
         });
 
-        if (!process.env.ROVODEV_BBY) {
+        if (!this.isBoysenberry) {
             workspace.onDidChangeWorkspaceFolders(() => {
-                if (!this._disabled) {
+                if (!this.isDisabled) {
                     webview.postMessage({
                         type: RovoDevProviderMessageType.WorkspaceChanged,
                         workspaceCount: workspace.workspaceFolders?.length || 0,
@@ -266,7 +280,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 }
             });
 
-            if (!this._disabled) {
+            if (!this.isDisabled) {
                 webview.postMessage({
                     type: RovoDevProviderMessageType.WorkspaceChanged,
                     workspaceCount: workspace.workspaceFolders?.length || 0,
@@ -306,7 +320,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this._firedTelemetryForCurrentPrompt[funcName] = true;
 
             // add `rovoDevEnv` and `sessionId` as the first two arguments
-            const rovoDevEnv: RovoDevEnv = this.isBBY ? 'Boysenberry' : 'IDE';
+            const rovoDevEnv: RovoDevEnv = this.isBoysenberry ? 'Boysenberry' : 'IDE';
             params.unshift(rovoDevEnv, this._chatSessionId);
 
             const ret: ReturnType<(typeof rovoDevTelemetryEvents)[T]> = rovoDevTelemetryEvents[funcName].apply(
@@ -443,16 +457,21 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private processError(error: Error & { gitErrorCode?: GitErrorCodes }, isRetriable: boolean) {
+    private processError(
+        error: Error & { gitErrorCode?: GitErrorCodes },
+        isRetriable: boolean,
+        isProcessTerminated?: boolean,
+    ) {
         Logger.error('RovoDev', error);
 
         const webview = this._webView!;
         return webview.postMessage({
             type: RovoDevProviderMessageType.ErrorMessage,
             message: {
-                text: `Error: ${error.message}${error.gitErrorCode ? `\n ${error.gitErrorCode}` : ''}`,
+                text: `${error.message}${error.gitErrorCode ? `\n ${error.gitErrorCode}` : ''}`,
                 source: 'RovoDevError',
                 isRetriable,
+                isProcessTerminated,
                 uid: v4(),
             },
         });
@@ -765,16 +784,39 @@ ${message}`;
         return await this.addContextItem(picked);
     }
 
-    public async executeReset(): Promise<void> {
-        // reset is a no-op if there are no folders opened
-        if (this._disabled || !workspace.workspaceFolders?.length) {
+    public async executeNewSession(): Promise<void> {
+        const webview = this._webView!;
+
+        if (this._processState === RovoDevProcessState.Terminated) {
+            this._processState = RovoDevProcessState.Starting;
+            RovoDevProcessManager.initializeRovoDevProcessManager(this._context);
+
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.NewSession,
+            });
+
             return;
         }
 
-        const webview = this._webView!;
-        const success = await this.executeApiWithErrorHandling(async (client) => {
-            await client.reset();
+        // new session is a no-op if there are no folders opened or if the process is not initialized
+        if (this.isDisabled || !workspace.workspaceFolders?.length || !this._initialized || this._pendingCancellation) {
+            return;
+        }
 
+        const success = await this.executeApiWithErrorHandling(async (client) => {
+            if (this._chatBusy) {
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.ForceStop,
+                });
+                this._pendingCancellation = true;
+                // wait for the cancel to complete, if it fails we will reset _pendingCancellation
+                if (!(await this.executeCancel())) {
+                    this._pendingCancellation = false;
+                    return false;
+                }
+            }
+
+            await client.createSession();
             this._revertedChanges = [];
 
             await webview.postMessage({
@@ -819,6 +861,7 @@ ${message}`;
         await this.sendPromptSentToView({ text: '', enable_deep_plan: false, context: undefined });
 
         await this.executeApiWithErrorHandling(async (client) => {
+            this._chatBusy = true;
             return this.processChatResponse('replay', client.replay());
         }, false);
     }
@@ -935,13 +978,13 @@ ${message}`;
             await this.processError(e, false);
 
             const errorMessage = e.message;
-            const errorCode = e.gitErrorCode;
+            const gitErrorCode = e.gitErrorCode;
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CreatePRComplete,
                 data: {
                     error: e.message
-                        ? `${errorMessage}${errorCode ? ` (Error code: ${errorCode})` : ''}`
+                        ? `${errorMessage}${gitErrorCode ? ` (Error code: ${gitErrorCode})` : ''}`
                         : 'Unknown error occurred while creating PR',
                 },
             });
@@ -985,7 +1028,7 @@ ${message}`;
     }
 
     public async invokeRovoDevAskCommand(prompt: string, context?: RovoDevContext): Promise<void> {
-        if (this._disabled) {
+        if (this.isDisabled) {
             return;
         }
 
@@ -1009,7 +1052,7 @@ ${message}`;
      * @returns A promise that resolves when the context item has been added.
      */
     public async addToContext(contextItem: RovoDevContextItem): Promise<void> {
-        if (!this._disabled) {
+        if (!this.isDisabled) {
             return;
         }
 
@@ -1075,10 +1118,13 @@ ${message}`;
         });
     }
 
-    public async signalProcessStarted(rovoDevPort: number) {
+    public async signalProcessStarted(rovoDevPort: number, isTerminal?: boolean) {
         // initialize the API client
         const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
         this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
+
+        // enable the 'show terminal' button only when in debugging
+        setCommandContext(CommandContext.RovoDevTerminalEnabled, !!isTerminal);
 
         const webView = this._webView!;
 
@@ -1092,7 +1138,7 @@ ${message}`;
                 const version = ((await this.executeHealthcheckInfo()) ?? {}).version;
                 if (version && semver_gte(version, MIN_SUPPORTED_ROVODEV_VERSION)) {
                     this.beginNewSession();
-                    if (this.isBBY) {
+                    if (this.isBoysenberry) {
                         // TODO: we should obtain the session id from the boysenberry environment
                         await this.executeReplay();
                     }
@@ -1113,6 +1159,7 @@ ${message}`;
         }
 
         this._initialized = true;
+        this._processState = RovoDevProcessState.Started;
 
         webView.postMessage({
             type: RovoDevProviderMessageType.SetInitState,
@@ -1133,7 +1180,7 @@ ${message}`;
     }
 
     public signalRovoDevDisabled() {
-        this._disabled = true;
+        this._processState = RovoDevProcessState.Disabled;
 
         const webView = this._webView!;
         webView.postMessage({
@@ -1148,5 +1195,17 @@ ${message}`;
             downloadedBytes,
             totalBytes,
         });
+    }
+
+    public signalProcessTerminated(errorMessage?: string) {
+        this._processState = RovoDevProcessState.Terminated;
+        this._initialized = false;
+
+        errorMessage = errorMessage
+            ? `Agent process terminated:\n${errorMessage}\n\nPlease start a new chat session to continue.`
+            : 'Agent process terminated.\nPlease start a new chat session to continue.';
+
+        const error = new Error(errorMessage);
+        return this.processError(error, false, true);
     }
 }
