@@ -247,6 +247,9 @@ export class Container {
         );
 
         context.subscriptions.push(this._rovodevDisposable);
+
+        // Refresh all issue views to show the secret button
+        this.jiraIssueViewManager.refreshAll();
     }
 
     static disableRovoDev(context: ExtensionContext) {
@@ -259,6 +262,9 @@ export class Container {
         this._rovodevDisposable.dispose();
         this._rovodevDisposable = undefined;
         RovoDevProcessManager.deactivateRovoDevProcessManager();
+
+        // Refresh all issue views to hide the secret button
+        this.jiraIssueViewManager.refreshAll();
     }
 
     static configureRovodevSettingsCommands(context: ExtensionContext) {
