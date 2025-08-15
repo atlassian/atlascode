@@ -270,7 +270,7 @@ const RovoDevView: React.FC = () => {
     }, []);
 
     const handleResponse = useCallback(
-        (data: RovoDevResponse) => {
+        (data: RovoDevResponse, isReplay?: boolean) => {
             switch (data.event_kind) {
                 case 'text':
                     if (!data.content) {
@@ -302,7 +302,9 @@ const RovoDevView: React.FC = () => {
 
                     setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE); // Clear pending tool call
                     handleAppendToolReturn(returnMessage);
-                    handleAppendModifiedFileToolReturns(returnMessage);
+                    if (!isReplay) {
+                        handleAppendModifiedFileToolReturns(returnMessage);
+                    }
                     break;
 
                 case 'retry-prompt':
@@ -335,6 +337,9 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.Response:
+                    if (currentState === State.WaitingForPrompt) {
+                        setCurrentState(State.GeneratingResponse);
+                    }
                     handleResponse(event.dataObject);
                     break;
 
@@ -352,11 +357,18 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ToolCall:
+                    if (currentState === State.WaitingForPrompt) {
+                        setCurrentState(State.GeneratingResponse);
+                    }
                     handleResponse(event.dataObject);
                     break;
 
                 case RovoDevProviderMessageType.ToolReturn:
-                    handleResponse(event.dataObject);
+                    if (currentState === State.WaitingForPrompt) {
+                        setCurrentState(State.GeneratingResponse);
+                    }
+                    const isReplay = event.isReplay || false;
+                    handleResponse(event.dataObject, isReplay);
                     break;
 
                 case RovoDevProviderMessageType.ErrorMessage:

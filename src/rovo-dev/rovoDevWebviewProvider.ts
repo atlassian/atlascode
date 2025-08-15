@@ -10,7 +10,6 @@ import {
     Disposable,
     Event,
     ExtensionContext,
-    Memento,
     Position,
     Range,
     TextEditor,
@@ -47,11 +46,7 @@ import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
-import {
-    initializeRovoDevProcessManager,
-    MIN_SUPPORTED_ROVODEV_VERSION,
-    setRovoDevWebviewProvider,
-} from './rovoDevProcessManager';
+import { MIN_SUPPORTED_ROVODEV_VERSION, RovoDevProcessManager } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevContext, RovoDevContextItem, RovoDevInitState, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
@@ -93,6 +88,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _disabled = false;
     private _initialized = false;
 
+    private _chatBusy = false;
     private _chatSessionId: string = '';
     private _currentPromptId: string = '';
     private _currentPrompt: RovoDevPrompt | undefined;
@@ -107,32 +103,22 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private _disposables: Disposable[] = [];
 
-    private _globalState: Memento;
     private _extensionPath: string;
     private _extensionUri: Uri;
 
     private _context: ExtensionContext;
 
     private get rovoDevApiClient() {
-        if (!this._rovoDevApiClient) {
-            const rovoDevPort = this.getWorkspacePort();
-            const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
-            if (rovoDevPort) {
-                this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
-            }
-        }
-
         return this._rovoDevApiClient;
     }
 
-    constructor(context: ExtensionContext, extensionPath: string, globalState: Memento) {
+    constructor(context: ExtensionContext, extensionPath: string) {
         super(() => {
             this._dispose();
         });
 
         this._extensionPath = extensionPath;
         this._extensionUri = Uri.file(this._extensionPath);
-        this._globalState = globalState;
         this._context = context;
         // Register the webview view provider
         this._disposables.push(
@@ -145,27 +131,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._registerEditorListeners();
 
         // Register this provider with the process manager for error handling
-        setRovoDevWebviewProvider(this);
-    }
-
-    private getWorkspacePort(): number | undefined {
-        const workspaceFolders = workspace.workspaceFolders;
-        if (!workspaceFolders || workspaceFolders.length === 0) {
-            return undefined;
-        }
-
-        const globalPort = process.env[rovodevInfo.envVars.port];
-        if (globalPort) {
-            return parseInt(globalPort);
-        }
-
-        const wsPath = workspaceFolders[0].uri.fsPath;
-        const mapping = this._globalState.get<{ [key: string]: number }>(rovodevInfo.mappingKey);
-        if (mapping && mapping[wsPath]) {
-            return mapping[wsPath];
-        }
-
-        return undefined;
+        RovoDevProcessManager.setRovoDevWebviewProvider(this);
     }
 
     public resolveWebviewView(
@@ -275,10 +241,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.WebviewReady:
-                        if (!process.env.ROVODEV_BBY) {
-                            initializeRovoDevProcessManager(this._context);
+                        const port = parseInt(process.env[rovodevInfo.envVars.port] || '0');
+                        if (port) {
+                            this.signalProcessStarted(port);
+                        } else if (process.env.ROVODEV_BBY) {
+                            this.signalRovoDevDisabled();
+                            throw new Error('Rovo Dev port not set');
                         } else {
-                            this.signalProcessStarted();
+                            RovoDevProcessManager.initializeRovoDevProcessManager(this._context);
                         }
                 }
             } catch (error) {
@@ -465,6 +435,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private completeChatResponse(sourceApi: 'replay' | 'chat' | 'error') {
+        this._chatBusy = false;
         const webview = this._webView!;
         return webview.postMessage({
             type: RovoDevProviderMessageType.CompleteMessage,
@@ -551,6 +522,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 return webview.postMessage({
                     type: RovoDevProviderMessageType.ToolReturn,
                     dataObject: response,
+                    isReplay: sourceApi === 'replay',
                 });
 
             case 'retry-prompt':
@@ -654,7 +626,7 @@ ${message}`;
     }
 
     private async executeChat({ text, enable_deep_plan, context }: RovoDevPrompt, suppressEcho?: boolean) {
-        if (!text) {
+        if (!text || this._chatBusy) {
             return;
         }
 
@@ -677,6 +649,7 @@ ${message}`;
 
         const currentPrompt = this._currentPrompt;
         const fetchOp = async (client: RovoDevApiClient) => {
+            this._chatBusy = true;
             const response = await client.chat(payloadToSend, enable_deep_plan);
 
             this.fireTelemetryEvent('rovoDevPromptSentEvent', this._currentPromptId, !!currentPrompt.enable_deep_plan);
@@ -696,9 +669,7 @@ ${message}`;
     }
 
     private async executeRetryPromptAfterError() {
-        const webview = this._webView!;
-
-        if (!this._initialized || !this._currentPrompt) {
+        if (!this._initialized || !this._currentPrompt || this._chatBusy) {
             return;
         }
 
@@ -708,14 +679,14 @@ ${message}`;
         const payloadToSend = this.addRetryAfterErrorContextToPrompt(currentPrompt.text);
 
         // we need to echo back the prompt to the View since it's not user submitted
-        await webview.postMessage({
-            type: RovoDevProviderMessageType.PromptSent,
+        await this.sendPromptSentToView({
             text: payloadToSend,
             enable_deep_plan: currentPrompt.enable_deep_plan,
             context: currentPrompt.context,
         });
 
         const fetchOp = async (client: RovoDevApiClient) => {
+            this._chatBusy = true;
             const response = await client.chat(payloadToSend, currentPrompt.enable_deep_plan);
 
             this.fireTelemetryEvent('rovoDevPromptSentEvent', this._currentPromptId, !!currentPrompt.enable_deep_plan);
@@ -832,6 +803,7 @@ ${message}`;
 
         if (success) {
             this.fireTelemetryEvent('rovoDevStopActionEvent', this._currentPromptId);
+            this._chatBusy = false;
             return true;
         } else {
             this.fireTelemetryEvent('rovoDevStopActionEvent', this._currentPromptId, true);
@@ -999,6 +971,7 @@ ${message}`;
             try {
                 return await func(this.rovoDevApiClient);
             } catch (error) {
+                this._chatBusy = false;
                 if (cancellationAware && this._pendingCancellation && error.cause?.code === 'UND_ERR_SOCKET') {
                     this._pendingCancellation = false;
                     this.completeChatResponse('error');
@@ -1102,7 +1075,11 @@ ${message}`;
         });
     }
 
-    public async signalProcessStarted() {
+    public async signalProcessStarted(rovoDevPort: number) {
+        // initialize the API client
+        const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
+        this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
+
         const webView = this._webView!;
 
         // wait for Rovo Dev to be ready, for up to 10 seconds

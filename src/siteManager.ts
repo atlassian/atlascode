@@ -21,6 +21,7 @@ export type SitesAvailableUpdateEvent = {
     sites: DetailedSiteInfo[];
     newSites?: DetailedSiteInfo[];
     product: Product;
+    primarySite?: DetailedSiteInfo;
 };
 
 const SitesSuffix: string = 'Sites';
@@ -29,10 +30,42 @@ export class SiteManager extends Disposable {
     private _disposable: Disposable;
     private _sitesAvailable: Map<string, DetailedSiteInfo[]>;
     private _globalStore: Memento;
+    private _primarySite: DetailedSiteInfo | undefined;
 
     private _onDidSitesAvailableChange = new EventEmitter<SitesAvailableUpdateEvent>();
     public get onDidSitesAvailableChange(): Event<SitesAvailableUpdateEvent> {
         return this._onDidSitesAvailableChange.event;
+    }
+
+    public get primarySite(): DetailedSiteInfo | undefined {
+        return this._primarySite;
+    }
+
+    /**
+     * Fallback logic to resolve a primary tenant for feature flag purposes
+     */
+    public resolvePrimarySite(): DetailedSiteInfo | undefined {
+        const allSites = this.readSitesFromGlobalStore(ProductJira.key);
+        const cloudSites = allSites?.filter((site) => site.isCloud);
+
+        if (!cloudSites || cloudSites.length === 0) {
+            // Only cloud sites can be set as primary
+            Logger.debug(`Primary site: ${this._primarySite?.name} -> undefined`);
+            this._primarySite = undefined;
+            return;
+        }
+
+        // Use the first available cloud site, sorted by name
+        const newValue = cloudSites.sort((a, b) => a.name.localeCompare(b.name))[0];
+        if (newValue.id === this._primarySite?.id) {
+            // no change
+            return this._primarySite;
+        }
+
+        Logger.debug(`Primary site: ${this._primarySite?.name} -> ${newValue?.name}`);
+        this._primarySite = newValue;
+
+        return newValue;
     }
 
     constructor(globalStore: Memento) {
@@ -42,6 +75,7 @@ export class SiteManager extends Disposable {
         this._sitesAvailable = new Map<string, DetailedSiteInfo[]>();
         this._sitesAvailable.set(ProductJira.key, []);
         this._sitesAvailable.set(ProductBitbucket.key, []);
+        this.resolvePrimarySite();
 
         this._disposable = Disposable.from(Container.credentialManager.onDidAuthChange(this.onDidAuthChange, this));
     }
@@ -88,12 +122,14 @@ export class SiteManager extends Disposable {
 
         this._globalStore.update(`${productKey}${SitesSuffix}`, allSites);
         this._sitesAvailable.set(productKey, allSites);
+        this.resolvePrimarySite();
 
         if (notify) {
             this._onDidSitesAvailableChange.fire({
                 sites: allSites,
                 newSites: newSites,
                 product: allSites[0].product,
+                primarySite: this._primarySite,
             });
         }
     }
@@ -107,7 +143,12 @@ export class SiteManager extends Disposable {
 
                 this._globalStore.update(`${newSite.product.key}${SitesSuffix}`, allSites);
                 this._sitesAvailable.set(newSite.product.key, allSites);
-                this._onDidSitesAvailableChange.fire({ sites: [newSite], product: newSite.product });
+                this.resolvePrimarySite();
+                this._onDidSitesAvailableChange.fire({
+                    sites: [newSite],
+                    product: newSite.product,
+                    primarySite: this._primarySite,
+                });
             }
         }
     }
@@ -123,6 +164,7 @@ export class SiteManager extends Disposable {
             this._onDidSitesAvailableChange.fire({
                 sites: this.getSitesAvailable(e.site.product),
                 product: e.site.product,
+                primarySite: this._primarySite,
             });
         }
     }
@@ -134,6 +176,7 @@ export class SiteManager extends Disposable {
             this._onDidSitesAvailableChange.fire({
                 sites: this.getSitesAvailable(product),
                 product,
+                primarySite: this._primarySite,
             });
         } catch (error) {
             Logger.error(error, 'Error during async site removal');
@@ -270,12 +313,17 @@ export class SiteManager extends Disposable {
                 sites.splice(foundIndex, 1);
                 this._globalStore.update(`${site.product.key}${SitesSuffix}`, sites);
                 this._sitesAvailable.set(site.product.key, sites);
+                this.resolvePrimarySite();
 
                 if (removeCredentials) {
                     await Container.credentialManager.removeAuthInfo(deletedSite);
                 }
                 if (fireEvent) {
-                    this._onDidSitesAvailableChange.fire({ sites: sites, product: site.product });
+                    this._onDidSitesAvailableChange.fire({
+                        sites: sites,
+                        product: site.product,
+                        primarySite: this._primarySite,
+                    });
                 }
 
                 if (deletedSite.id === Container.config.jira.lastCreateSiteAndProject.siteId) {

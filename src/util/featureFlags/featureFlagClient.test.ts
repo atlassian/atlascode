@@ -28,12 +28,14 @@ jest.mock('@atlaskit/feature-gate-js-client', () => {
             initializeCompleted: () => false,
             checkGate: () => false,
             getExperimentValue: (key: string) => MockExperimentGates[key].defaultValue,
+            updateUser: () => Promise.resolve(),
         },
     };
 });
 
 import FeatureGates from '@atlaskit/feature-gate-js-client';
 import { it } from '@jest/globals';
+import { Logger } from 'src/logger';
 import { forceCastTo } from 'testsutil';
 
 import { ClientInitializedErrorType } from '../../analytics';
@@ -252,6 +254,49 @@ describe('FeatureFlagClient', () => {
             ).toBeUndefined();
 
             expect(FeatureGates.getExperimentValue).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('updateUser', () => {
+        beforeEach(async () => {
+            await FeatureFlagClient.initialize(options);
+        });
+
+        it('should not update user if tenantId is unchanged', async () => {
+            const spy = jest.spyOn(FeatureGates, 'updateUser');
+            await FeatureFlagClient.updateUser({ tenantId: undefined });
+            expect(spy).not.toHaveBeenCalled();
+        });
+
+        it('should update user if tenantId is changed', async () => {
+            const spy = jest.spyOn(FeatureGates, 'updateUser').mockResolvedValue(undefined);
+            await FeatureFlagClient.updateUser({ tenantId: 'tenant-2' });
+            expect(spy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    apiKey: 'some-key',
+                    environment: 'Production',
+                    targetApp: 'some-app',
+                }),
+                expect.objectContaining({
+                    analyticsAnonymousId: 'some-id',
+                    tenantId: 'tenant-2',
+                }),
+            );
+        });
+
+        it('should log error if FeatureFlagClient is not initialized', async () => {
+            FeatureFlagClient['identifiers'] = undefined;
+            const loggerSpy = jest.spyOn(Logger, 'error').mockImplementation(() => {});
+            await FeatureFlagClient.updateUser({ tenantId: 'tenant-3' });
+            expect(loggerSpy).toHaveBeenCalledWith(expect.any(Error));
+        });
+
+        it('should log error if FeatureGates.updateUser throws', async () => {
+            const spy = jest.spyOn(FeatureGates, 'updateUser').mockRejectedValue('fail');
+            const loggerSpy = jest.spyOn(Logger, 'error').mockImplementation(() => {});
+            await FeatureFlagClient.updateUser({ tenantId: 'tenant-4' });
+            expect(spy).toHaveBeenCalled();
+            expect(loggerSpy).toHaveBeenCalledWith(expect.any(Error));
         });
     });
 });

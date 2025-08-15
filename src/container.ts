@@ -180,7 +180,19 @@ export class Container {
                 analyticsClient: this._analyticsClient,
                 identifiers: {
                     analyticsAnonymousId: this.machineId,
+                    tenantId: this._siteManager.primarySite?.id,
                 },
+            });
+
+            this._siteManager.onDidSitesAvailableChange(async () => {
+                await FeatureFlagClient.updateUser({ tenantId: this._siteManager.primarySite?.id });
+
+                this._isRovoDevEnabled = FeatureFlagClient.checkGate(Features.RovoDevEnabled);
+                if (process.env.ROVODEV_BBY || this._isRovoDevEnabled) {
+                    this.enableRovoDev(context);
+                } else {
+                    this.disableRovoDev(context);
+                }
             });
 
             Logger.debug(`FeatureFlagClient: Succesfully initialized the client.`);
@@ -220,14 +232,14 @@ export class Container {
             }),
         );
         context.subscriptions.push(
-            (this._rovodevWebviewProvider = new RovoDevWebviewProvider(
-                context,
-                context.extensionPath,
-                context.globalState,
-            )),
+            (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context, context.extensionPath)),
         );
 
         this.configureRovodevSettingsCommands(context);
+    }
+
+    static disableRovoDev(context: ExtensionContext) {
+        setCommandContext(CommandContext.RovoDevEnabled, false);
     }
 
     static configureRovodevSettingsCommands(context: ExtensionContext) {
