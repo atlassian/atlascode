@@ -456,6 +456,21 @@
                 "command": "atlascode.showOnboardingFlow",
                 "title": "Show Onboarding Flow",
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.debug.quickCommand",
+                "title": "[DEBUG] Atlascode: Quick command",
+                "enablement": "atlascode:debugMode"
+            },
+            {
+                "command": "atlascode.debug.quickLogin",
+                "title": "[DEBUG] Atlascode: Quick login",
+                "enablement": "atlascode:debugMode"
+            },
+            {
+                "command": "atlascode.debug.quickLogout",
+                "title": "[DEBUG] Atlascode: Quick logout",
+                "enablement": "atlascode:debugMode"
             }
         ],
         "viewsContainers": {

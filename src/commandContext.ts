@@ -13,6 +13,7 @@ export enum CommandContext {
     IsBBAuthenticated = 'atlascode:isBBAuthenticated',
     RovoDevEnabled = 'atlascode:rovoDevEnabled',
     BbyEnvironmentActive = 'atlascode:bbyEnvironmentActive',
+    DebugMode = 'atlascode:debugMode',
 }
 
 export function setCommandContext(key: CommandContext | string, value: any) {
