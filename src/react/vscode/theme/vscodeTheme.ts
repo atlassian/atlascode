@@ -88,11 +88,11 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                     },
                     colorDefault: {
                         backgroundColor: vscStyles.sideBarBackground,
-                        color: sideBarTitleForeground,
+                        color: vscStyles.foreground,
                     },
                     colorPrimary: {
                         backgroundColor: vscStyles.sideBarBackground,
-                        color: sideBarTitleForeground,
+                        color: vscStyles.foreground,
                     },
                 },
             },
@@ -205,17 +205,6 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                                   ? '#000000'
                                   : vscStyles.foreground,
                         },
-                    },
-                },
-            },
-            MuiTypography: {
-                styleOverrides: {
-                    root: {
-                        color: isHighContrast
-                            ? '#ffffff' // Dark high contrast: white text
-                            : body.getAttribute('class') === 'vscode-high-contrast-light'
-                              ? '#000000' // Light high contrast: black text
-                              : vscStyles.foreground, // Normal: inherit from theme
                     },
                 },
             },
