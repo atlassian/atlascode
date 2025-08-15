@@ -26,6 +26,7 @@ import {
     UIType,
     ValueType,
 } from '@atlassianlabs/jira-pi-meta-models';
+import { Tooltip } from '@material-ui/core';
 import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
 import * as React from 'react';
@@ -747,22 +748,26 @@ export abstract class AbstractIssueEditorPage<
                         );
                     } else {
                         return (
-                            <AsyncSelect
-                                isClearable={!field.required && !currentIssueType.subtask}
-                                isMulti={false}
-                                defaultValue={defaultParent}
-                                className="ac-select-container"
-                                classNamePrefix="ac-select"
-                                getOptionLabel={(option: any) => option.key}
-                                getOptionValue={(option: any) => option.key}
-                                placeholder="Can only configure in Jira Web"
-                                isLoading={this.state.loadingField === field.key}
-                                isDisabled={true}
-                                components={{
-                                    Option: SelectFieldHelper.IssueSuggestionOption,
-                                    SingleValue: SelectFieldHelper.IssueSuggestionValue,
-                                }}
-                            />
+                            <Tooltip title="Can only configure in Jira Web">
+                                <div style={{ display: 'inline-block', width: '100%' }}>
+                                    <AsyncSelect
+                                        isClearable={!field.required && !currentIssueType.subtask}
+                                        isMulti={false}
+                                        defaultValue={defaultParent}
+                                        className="ac-select-container"
+                                        classNamePrefix="ac-select"
+                                        getOptionLabel={(option: any) => option.key}
+                                        getOptionValue={(option: any) => option.key}
+                                        placeholder="Can only configure in Jira Web"
+                                        isLoading={this.state.loadingField === field.key}
+                                        isDisabled={true}
+                                        components={{
+                                            Option: SelectFieldHelper.IssueSuggestionOption,
+                                            SingleValue: SelectFieldHelper.IssueSuggestionValue,
+                                        }}
+                                    />
+                                </div>
+                            </Tooltip>
                         );
                     }
                 } else if (currentIssueType.name !== 'Epic') {
