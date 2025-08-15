@@ -797,7 +797,7 @@ ${message}`;
 
     public async executeNewSession(): Promise<void> {
         // new session is a no-op if there are no folders opened or if the process is not initialized
-        if (this._disabled || !workspace.workspaceFolders?.length || !this._initialized) {
+        if (this._disabled || !workspace.workspaceFolders?.length || !this._initialized || this._pendingCancellation) {
             return;
         }
 
@@ -807,8 +807,12 @@ ${message}`;
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.ForceStop,
                 });
-
-                await this.executeCancel();
+                this._pendingCancellation = true;
+                // wait for the cancel to complete, if it fails we will reset _pendingCancellation
+                if (!(await this.executeCancel())) {
+                    this._pendingCancellation = false;
+                    return false;
+                }
             }
 
             await client.createSession();
