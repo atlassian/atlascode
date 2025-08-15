@@ -27,6 +27,7 @@ export const enum RovoDevProviderMessageType {
 
 export interface RovoDevObjectResponse {
     dataObject: RovoDevResponse;
+    isReplay?: boolean;
 }
 
 export type RovoDevProviderMessage =

@@ -527,6 +527,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 return webview.postMessage({
                     type: RovoDevProviderMessageType.ToolReturn,
                     dataObject: response,
+                    isReplay: sourceApi === 'replay',
                 });
 
             case 'retry-prompt':
