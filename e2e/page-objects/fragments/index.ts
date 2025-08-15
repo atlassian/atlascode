@@ -5,3 +5,4 @@ export { IssueStatus } from './IssueStatus';
 export { IssueTitle } from './IssueTitle';
 export { JiraNavigation } from './JiraNavigation';
 export { PullRequestsNavigation } from './PullRequestsNavigation';
+export { PRHeader } from './PRHeader';

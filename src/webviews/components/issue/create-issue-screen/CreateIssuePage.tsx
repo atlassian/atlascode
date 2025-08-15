@@ -44,23 +44,62 @@ const emptyState: ViewState = {
     formKey: v4(),
 };
 
-const IconOption = (props: any) => (
-    <components.Option {...props}>
-        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', alignItems: 'center' }}>
-            <img src={props.data.avatarUrl} width="24" height="24" alt={props.data.name || 'Avatar'} />
-            <span style={{ marginLeft: '10px' }}>{props.data.name}</span>
-        </div>
-    </components.Option>
-);
+const getFaviconUrl = (siteData: any): string | null => {
+    if (siteData?.baseLinkUrl) {
+        return `${siteData.baseLinkUrl}/favicon.ico`;
+    } else if (siteData?.host) {
+        return `https://${siteData.host}/favicon.ico`;
+    }
+    return null;
+};
 
-const IconValue = (props: any) => (
-    <components.SingleValue {...props}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-            <img src={props.data.avatarUrl} width="16" height="16" alt={props.data.name || 'Avatar'} />
-            <span style={{ marginLeft: '10px' }}>{props.data.name}</span>
-        </div>
-    </components.SingleValue>
-);
+const IconOption = (props: any) => {
+    const fallbackImg = 'images/jira-icon.svg';
+    const avatarUrl = getFaviconUrl(props.data) || fallbackImg;
+
+    return (
+        <components.Option {...props}>
+            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', alignItems: 'center' }}>
+                <img
+                    src={avatarUrl}
+                    width="24"
+                    height="24"
+                    alt={props.data?.name || 'Avatar'}
+                    onError={(e) => {
+                        if (e.currentTarget.src !== fallbackImg) {
+                            e.currentTarget.src = fallbackImg;
+                        }
+                    }}
+                />
+                <span style={{ marginLeft: '10px' }}>{props.data?.name}</span>
+            </div>
+        </components.Option>
+    );
+};
+
+const IconValue = (props: any) => {
+    const fallbackImg = 'images/jira-icon.svg';
+    const avatarUrl = getFaviconUrl(props.data) || fallbackImg;
+
+    return (
+        <components.SingleValue {...props}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                <img
+                    src={avatarUrl}
+                    width="16"
+                    height="16"
+                    alt={props.data?.name || 'Avatar'}
+                    onError={(e) => {
+                        if (e.currentTarget.src !== fallbackImg) {
+                            e.currentTarget.src = fallbackImg;
+                        }
+                    }}
+                />
+                <span style={{ marginLeft: '10px' }}>{props.data?.name}</span>
+            </div>
+        </components.SingleValue>
+    );
+};
 
 export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
     private advancedFields: FieldUI[] = [];
@@ -70,6 +109,10 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
     getProjectKey(): string {
         return this.state.fieldValues['project'].key;
+    }
+
+    protected override getApiVersion(): string {
+        return String(this.state.apiVersion);
     }
 
     constructor(props: any) {
@@ -284,25 +327,25 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                 project: newValue,
                 fieldValues: this.state.fieldValues,
             });
-        }
-
-        if (field.valueType === ValueType.IssueType) {
+        } else if (field.valueType === ValueType.IssueType) {
             this.setState({ loadingField: field.key, isSomethingLoading: true });
             this.postMessage({
                 action: 'setIssueType',
                 issueType: newValue,
                 fieldValues: this.state.fieldValues,
             });
+        } else {
+            this.setState({ isSomethingLoading: false, loadingField: '' });
         }
     };
 
     fetchUsers = (input: string) => {
-        return this.loadSelectOptions(
-            input,
-            `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?${
-                this.state.siteDetails.isCloud ? 'query' : 'username'
-            }=`,
-        );
+        const apiVersion = this.getApiVersion();
+        const userSearchUrl = this.state.siteDetails.isCloud
+            ? `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?query=`
+            : `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?username=`;
+
+        return this.loadSelectOptions(input, userSearchUrl);
     };
 
     private getFieldError(fieldKey: string): string | undefined {

@@ -1,0 +1,25 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/2.0/repositories/mockuser/test-repository/pullrequests",
+        "queryParameters": {
+            "pagelen": {
+                "matches": "50"
+            },
+            "fields": {
+                "equalTo": "values.participants"
+            }
+        }
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "values": [{
+                "participants": []
+            }]
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

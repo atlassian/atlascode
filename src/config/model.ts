@@ -10,14 +10,12 @@ export interface IConfig {
     enableCharles: boolean;
     charlesCertPath: string;
     charlesDebugOnly: boolean;
-    offlineMode: boolean;
     showWelcomeOnInstall: boolean;
     jira: JiraConfig;
     bitbucket: BitbucketConfig;
     enableUIWS: boolean;
     enableCurlLogging: boolean;
     enableHttpsTunnel: boolean;
-    onlineCheckerUrls: string[];
     helpExplorerEnabled: boolean;
 }
 
@@ -115,7 +113,6 @@ export interface BitbucketExplorer {
     nestFilesEnabled: boolean;
     refreshInterval: number;
     relatedJiraIssues: BitbucketRelatedJiraIssues;
-    relatedBitbucketIssues: BitbucketRelatedBitbucketIssues;
     notifications: BitbucketNotifications;
 }
 
@@ -194,10 +191,6 @@ const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {
     enabled: true,
 };
 
-const emptyRelatedBitbucketIssues: BitbucketRelatedBitbucketIssues = {
-    enabled: true,
-};
-
 const emptyBitbucketNotfications: BitbucketNotifications = {
     refreshInterval: 10,
     pullRequestCreated: true,
@@ -208,7 +201,6 @@ const emptyBitbucketExplorer: BitbucketExplorer = {
     nestFilesEnabled: true,
     refreshInterval: 5,
     relatedJiraIssues: emptyRelatedJiraIssues,
-    relatedBitbucketIssues: emptyRelatedBitbucketIssues,
     notifications: emptyBitbucketNotfications,
 };
 
@@ -255,13 +247,11 @@ export const emptyConfig: IConfig = {
     enableCharles: false,
     charlesCertPath: '',
     charlesDebugOnly: false,
-    offlineMode: false,
     showWelcomeOnInstall: true,
     jira: emptyJiraConfig,
     bitbucket: emptyBitbucketConfig,
     enableUIWS: false,
     enableCurlLogging: false,
     enableHttpsTunnel: false,
-    onlineCheckerUrls: [],
     helpExplorerEnabled: true,
 };

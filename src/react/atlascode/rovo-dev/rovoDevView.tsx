@@ -6,7 +6,7 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import { RovoDevContext, RovoDevContextItem } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevContext, RovoDevContextItem, RovoDevInitState, State } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
@@ -17,7 +17,7 @@ import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
 import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
-import { parseToolCallMessage } from './tools/ToolCallItem';
+import { DEFAULT_LOADING_MESSAGE, parseToolCallMessage } from './tools/ToolCallItem';
 import {
     ChatMessage,
     CODE_PLAN_EXECUTE_PROMPT,
@@ -55,31 +55,24 @@ export const CloseIconDeepPlan: React.FC<{}> = () => {
     );
 };
 
-export const enum State {
-    WaitingForPrompt,
-    GeneratingResponse,
-    CancellingResponse,
-    ExecutingPlan,
-    ProcessTerminated,
-}
-
-const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
-
 const RovoDevView: React.FC = () => {
     const [chatStream, setChatStream] = useState<MessageBlockDetails[]>([]);
     const [currentMessage, setCurrentMessage] = useState<DefaultMessage | null>(null);
     const [curThinkingMessages, setCurThinkingMessages] = useState<ChatMessage[]>([]);
 
-    const [currentState, setCurrentState] = useState(
-        process.env.ROVODEV_BBY ? State.GeneratingResponse : State.WaitingForPrompt,
+    const [currentState, setCurrentState] = useState(State.WaitingForPrompt);
+    const [initState, setInitState] = useState(
+        process.env.ROVODEV_BBY ? RovoDevInitState.Initialized : RovoDevInitState.NotInitialized,
     );
 
+    const [downloadProgress, setDownloadProgress] = useState<[number, number]>([0, 0]);
     const [promptText, setPromptText] = useState('');
     const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
     const [retryAfterErrorEnabled, setRetryAfterErrorEnabled] = useState('');
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
     const [isDeepPlanCreated, setIsDeepPlanCreated] = useState(false);
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
+    const [workspaceCount, setWorkspaceCount] = useState(process.env.ROVODEV_BBY ? 1 : 0);
 
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
 
@@ -342,6 +335,9 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.Response:
+                    if (currentState === State.WaitingForPrompt) {
+                        setCurrentState(State.GeneratingResponse);
+                    }
                     handleResponse(event.dataObject);
                     break;
 
@@ -359,21 +355,27 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ToolCall:
+                    if (currentState === State.WaitingForPrompt) {
+                        setCurrentState(State.GeneratingResponse);
+                    }
                     handleResponse(event.dataObject);
                     break;
 
                 case RovoDevProviderMessageType.ToolReturn:
+                    if (currentState === State.WaitingForPrompt) {
+                        setCurrentState(State.GeneratingResponse);
+                    }
                     handleResponse(event.dataObject);
                     break;
 
                 case RovoDevProviderMessageType.ErrorMessage:
-                    handleAppendError(event.message);
-                    if (currentState !== State.WaitingForPrompt) {
+                    if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
                         finalizeResponse();
                     }
                     if (event.message.isProcessTerminated) {
                         setCurrentState(State.ProcessTerminated);
                     }
+                    handleAppendError(event.message);
                     break;
 
                 case RovoDevProviderMessageType.NewSession:
@@ -382,13 +384,27 @@ const RovoDevView: React.FC = () => {
                     setCurrentState(State.WaitingForPrompt);
                     break;
 
-                case RovoDevProviderMessageType.Initialized:
+                case RovoDevProviderMessageType.SetInitState:
+                    setInitState(event.newState);
+                    break;
+
+                case RovoDevProviderMessageType.WorkspaceChanged:
+                    setWorkspaceCount(event.workspaceCount);
+                    setCurrentState(event.workspaceCount ? State.WaitingForPrompt : State.NoWorkspaceOpen);
+                    break;
+
+                case RovoDevProviderMessageType.SetDownloadProgress:
+                    setDownloadProgress([event.downloadedBytes, event.totalBytes]);
                     break;
 
                 case RovoDevProviderMessageType.CancelFailed:
                     if (currentState === State.CancellingResponse) {
                         setCurrentState(State.GeneratingResponse);
                     }
+                    break;
+
+                case RovoDevProviderMessageType.RovoDevDisabled:
+                    setCurrentState(State.Disabled);
                     break;
 
                 case RovoDevProviderMessageType.UserFocusUpdated:
@@ -421,7 +437,6 @@ const RovoDevView: React.FC = () => {
                     });
                     break;
 
-                case RovoDevProviderMessageType.ReturnText:
                 case RovoDevProviderMessageType.CreatePRComplete:
                 case RovoDevProviderMessageType.GetCurrentBranchNameComplete:
                 case RovoDevProviderMessageType.CheckGitChangesComplete:
@@ -445,8 +460,9 @@ const RovoDevView: React.FC = () => {
             finalizeResponse,
             validateResponseFinalized,
             clearChatHistory,
-            currentState,
             handleAppendError,
+            setInitState,
+            currentState,
         ],
     );
 
@@ -500,6 +516,15 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
+    // Notify the backend that the webview is ready
+    // This is used to initialize the process manager if needed
+    // and to signal that the webview is ready to receive messages
+    React.useEffect(() => {
+        postMessage?.({
+            type: RovoDevViewResponseType.WebviewReady,
+        });
+    }, [postMessage]);
+
     const executeCodePlan = useCallback(() => {
         if (currentState !== State.WaitingForPrompt) {
             return;
@@ -542,27 +567,6 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
-    // Function to get the original text of a file for planning diff
-    const getOriginalText = useCallback(
-        async (filePath: string, range?: number[]) => {
-            const uniqueNonce = `${Math.random()}-${Date.now()}`; // Unique identifier for the request
-            const res = await postMessagePromise(
-                {
-                    type: RovoDevViewResponseType.GetOriginalText,
-                    filePath,
-                    range: range && range.length === 2 ? range : undefined,
-                    requestId: uniqueNonce, // Unique identifier for the request
-                },
-                RovoDevProviderMessageType.ReturnText,
-                1500,
-                uniqueNonce,
-            );
-
-            return res.text || '';
-        },
-        [postMessagePromise],
-    );
-
     const isRetryAfterErrorButtonEnabled = useCallback(
         (uid: string) => retryAfterErrorEnabled === uid,
         [retryAfterErrorEnabled],
@@ -600,7 +604,6 @@ const RovoDevView: React.FC = () => {
                     openFile,
                     isRetryAfterErrorButtonEnabled,
                     retryPromptAfterError,
-                    getOriginalText,
                 }}
                 messagingApi={{
                     postMessage,
@@ -610,7 +613,8 @@ const RovoDevView: React.FC = () => {
                 deepPlanCreated={isDeepPlanCreated}
                 executeCodePlan={executeCodePlan}
                 state={currentState}
-                modifiedFiles={totalModifiedFiles}
+                initState={initState}
+                downloadProgress={downloadProgress}
                 onChangesGitPushed={onChangesGitPushed}
                 onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
             />
@@ -653,6 +657,7 @@ const RovoDevView: React.FC = () => {
                         }}
                     />
                     <PromptInputBox
+                        disabled={workspaceCount === 0 || currentState === State.Disabled}
                         state={currentState}
                         promptText={promptText}
                         onPromptTextChange={(element) => setPromptText(element)}
@@ -669,6 +674,7 @@ const RovoDevView: React.FC = () => {
                         }}
                     />
                 </div>
+                <div className="ai-disclaimer">Uses AI. Verify Results</div>
             </div>
         </div>
     );

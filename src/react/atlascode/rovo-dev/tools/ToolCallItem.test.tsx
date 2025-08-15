@@ -1,5 +1,6 @@
 import { Matcher, render, SelectorMatcherOptions } from '@testing-library/react';
 import React from 'react';
+import { RovoDevInitState } from 'src/rovo-dev/rovoDevTypes';
 
 import { ToolCallMessage } from '../utils';
 import { parseToolCallMessage, ToolCallItem } from './ToolCallItem';
@@ -30,7 +31,7 @@ describe('ToolCallItem', () => {
         };
         const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} state={RovoDevInitState.Initialized} />);
 
         validateMessage('Expanding code', toolMessage, getByText);
     });
@@ -44,7 +45,7 @@ describe('ToolCallItem', () => {
         };
         const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} state={RovoDevInitState.Initialized} />);
 
         validateMessage('Finding and replacing code', toolMessage, getByText);
     });
@@ -58,7 +59,7 @@ describe('ToolCallItem', () => {
         };
         const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} state={RovoDevInitState.Initialized} />);
 
         validateMessage('Opening files', toolMessage, getByText);
     });
@@ -72,7 +73,7 @@ describe('ToolCallItem', () => {
         };
         const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} state={RovoDevInitState.Initialized} />);
 
         validateMessage('Creating file', toolMessage, getByText);
     });
@@ -86,7 +87,7 @@ describe('ToolCallItem', () => {
         };
         const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} state={RovoDevInitState.Initialized} />);
 
         validateMessage('Deleting file', toolMessage, getByText);
     });
@@ -100,7 +101,7 @@ describe('ToolCallItem', () => {
         };
         const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} state={RovoDevInitState.Initialized} />);
 
         validateMessage('Executing bash command', toolMessage, getByText);
     });
@@ -114,7 +115,7 @@ describe('ToolCallItem', () => {
         };
         const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} state={RovoDevInitState.Initialized} />);
 
         validateMessage('Creating technical plan', toolMessage, getByText);
     });
@@ -128,7 +129,7 @@ describe('ToolCallItem', () => {
         };
         const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} state={RovoDevInitState.Initialized} />);
 
         validateMessage('Grep file content with pattern', toolMessage, getByText);
     });
@@ -142,7 +143,7 @@ describe('ToolCallItem', () => {
         };
         const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} state={RovoDevInitState.Initialized} />);
 
         validateMessage('Grep file path', toolMessage, getByText);
     });
@@ -156,7 +157,7 @@ describe('ToolCallItem', () => {
         };
         const toolMessage = parseToolCallMessage(msg);
 
-        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} />);
+        const { getByText } = render(<ToolCallItem toolMessage={toolMessage} state={RovoDevInitState.Initialized} />);
 
         validateMessage('unknown_tool', toolMessage, getByText);
     });
@@ -170,7 +171,7 @@ describe('ToolCallItem', () => {
         };
         const toolMessage = parseToolCallMessage(msg);
 
-        render(<ToolCallItem toolMessage={toolMessage} />);
+        render(<ToolCallItem toolMessage={toolMessage} state={RovoDevInitState.Initialized} />);
 
         const loadingIcon = document.querySelector('.codicon.codicon-loading.codicon-modifier-spin');
         expect(loadingIcon).toBeTruthy();

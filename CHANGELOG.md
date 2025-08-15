@@ -2,6 +2,21 @@
 
 ---
 
+## What's new in 3.8.9
+
+### Features
+
+- Added the possibility to remove a reviewer from a PR
+
+### Bug Fixes
+
+- Removed setting options that had no practical or business logic use.
+- Added loading indicator to Refresh button for Jira issue auto-refreshes
+- Fixed a bug where Jira site icon is broken in create Jira issue page
+- Fixed a bug with getting the error when deleting multiple instances
+- Fixed a bug where we could not assign people to a Jira issue as DC users
+- Fixed race condition issue when connecting multiple instances
+
 ## What's new in 3.8.8
 
 ### Features
@@ -11,6 +26,7 @@
 ### Bug Fixes
 
 - Fixed a bug where issues would not render due to malformed epic fields (#665)
+- Fixed status button in smaller screen size
 
 ## What's new in 3.8.7
 

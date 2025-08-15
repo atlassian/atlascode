@@ -1,24 +1,18 @@
 import * as React from 'react';
+import { RovoDevInitState, State } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
 import { useMessagingApi } from '../../messagingApi';
-import { ErrorMessageItem, FollowUpActionFooter, OpenFileFunc, TechnicalPlanComponent } from '../common/common';
+import { ErrorMessageItem, FollowUpActionFooter, OpenFileFunc } from '../common/common';
 import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
 import { RovoDevLanding } from '../rovoDevLanding';
-import { State } from '../rovoDevView';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
+import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import {
-    ChatMessage,
-    DefaultMessage,
-    MessageBlockDetails,
-    parseToolReturnMessage,
-    scrollToEnd,
-    ToolReturnParseResult,
-} from '../utils';
+import { ChatMessage, DefaultMessage, MessageBlockDetails, parseToolReturnMessage, scrollToEnd } from '../utils';
 import { ChatMessageItem } from './ChatMessageItem';
 import { MessageDrawer } from './MessageDrawer';
 
@@ -30,16 +24,16 @@ interface ChatStreamProps {
         openFile: OpenFileFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
-        getOriginalText: (fp: string, lr?: number[]) => Promise<string>;
     };
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
     >;
-    modifiedFiles: ToolReturnParseResult[];
     pendingToolCall: string;
     deepPlanCreated: boolean;
     executeCodePlan: () => void;
     state: State;
+    initState: RovoDevInitState;
+    downloadProgress: [number, number];
     onChangesGitPushed: (msg: DefaultMessage, pullRequestCreated: boolean) => void;
     onCollapsiblePanelExpanded: () => void;
 }
@@ -53,8 +47,9 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     deepPlanCreated,
     executeCodePlan,
     state,
+    initState,
+    downloadProgress,
     messagingApi,
-    modifiedFiles,
     onChangesGitPushed,
     onCollapsiblePanelExpanded,
 }) => {
@@ -216,7 +211,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                         <TechnicalPlanComponent
                                             content={message.technicalPlan}
                                             openFile={renderProps.openFile}
-                                            getText={renderProps.getOriginalText}
                                         />
                                     );
                                 }
@@ -250,16 +244,16 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
             {pendingToolCall && (
                 <div style={{ marginBottom: '16px' }}>
-                    <ToolCallItem toolMessage={pendingToolCall} />
+                    <ToolCallItem toolMessage={pendingToolCall} state={initState} downloadProgress={downloadProgress} />
                 </div>
-            )}
-            {deepPlanCreated && (
-                <CodePlanButton execute={executeCodePlan} disabled={state !== State.WaitingForPrompt} />
             )}
 
             {state === State.WaitingForPrompt && (
                 <FollowUpActionFooter>
-                    {canCreatePR && hasChangesInGit && (
+                    {deepPlanCreated && (
+                        <CodePlanButton execute={executeCodePlan} disabled={state !== State.WaitingForPrompt} />
+                    )}
+                    {canCreatePR && !deepPlanCreated && hasChangesInGit && (
                         <PullRequestForm
                             onCancel={() => {
                                 setCanCreatePR(false);

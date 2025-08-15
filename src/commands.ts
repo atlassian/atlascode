@@ -93,7 +93,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 subSection: undefined,
             });
         }),
-        commands.registerCommand(Commands.ShowOnboardingPage, () => Container.onboardingWebviewFactory.createOrShow()),
         commands.registerCommand(
             Commands.ViewInWebBrowser,
             async (prNode: AbstractBaseNode, source?: string, linkId?: string) => {

@@ -29,9 +29,6 @@ const routes: Record<string, any> = {
     atlascodeSettingsV2: React.lazy(
         () => import(/* webpackChunkName: "atlascodeSettingsV2" */ './atlascode/config/ConfigPage'),
     ),
-    atlascodeOnboardingV2: React.lazy(
-        () => import(/* webpackChunkName: "atlascodeOnboardingV2" */ './atlascode/onboarding/OnboardingPage'),
-    ),
     startWorkPageV2: React.lazy(
         () => import(/* webpackChunkName: "startWorkPageV2" */ './atlascode/startwork/StartWorkPage'),
     ),
@@ -49,7 +46,6 @@ const routes: Record<string, any> = {
 
 const ports: Record<string, number> = {
     atlascodeSettingsV2: UIWSPort.Settings,
-    atlascodeOnboardingV2: UIWSPort.Onboarding,
     bitbucketIssuePageV2: UIWSPort.BitbucketIssuePage,
     startWorkPageV2: UIWSPort.StartWork,
     pipelineSummaryV2: UIWSPort.PipelineSummary,

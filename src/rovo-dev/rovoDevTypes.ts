@@ -50,3 +50,19 @@ export interface TechnicalPlanLogicalChange {
 export interface TechnicalPlan {
     logicalChanges: TechnicalPlanLogicalChange[];
 }
+
+export const enum State {
+    Disabled,
+    NoWorkspaceOpen,
+    WaitingForPrompt,
+    GeneratingResponse,
+    CancellingResponse,
+    ExecutingPlan,
+    ProcessTerminated,
+}
+
+export const enum RovoDevInitState {
+    NotInitialized,
+    UpdatingBinaries,
+    Initialized,
+}

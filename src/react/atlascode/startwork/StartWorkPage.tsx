@@ -497,6 +497,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                             <Grid container spacing={1} direction="row">
                                                 <Grid item>
                                                     <Switch
+                                                        data-testid="start-work.setup-git-branch-checkbox"
                                                         color="primary"
                                                         size="small"
                                                         checked={branchSetupEnabled}
@@ -748,6 +749,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                         </Grid>
                                         <Grid item hidden={submitState === 'submit-success'}>
                                             <Button
+                                                data-testid="start-work.start-button"
                                                 variant="contained"
                                                 color="primary"
                                                 disabled={submitState === 'submitting'}

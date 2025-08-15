@@ -27,7 +27,6 @@ export enum AnalyticsView {
 
     // v2
 
-    OnboardingPage = 'page:v2:onboarding',
     SettingsPage = 'page:v2:settings',
 
     BitbucketIssuePage = 'page:v2:bitbucket:issue',
@@ -38,6 +37,9 @@ export enum AnalyticsView {
     PipelineSummaryPage = 'page:v2:bitbucket:pipeline',
 
     StartWorkPage = 'page:v2:jira:startWork',
+
+    // v3
+    StartWorkPageV3 = 'page:v3:jira:startWork',
 
     // Reserved for future use
 

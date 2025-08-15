@@ -74,6 +74,7 @@ export interface CommonEditorViewState extends Message {
     errorDetails: any;
     commentInputValue: string;
     isRteEnabled: boolean;
+    isRovoDevEnabled: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -90,6 +91,7 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     errorDetails: undefined,
     commentInputValue: '',
     isRteEnabled: false,
+    isRovoDevEnabled: false,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -108,6 +110,8 @@ export abstract class AbstractIssueEditorPage<
 > extends WebviewComponent<EA, ER, EP, ES> {
     abstract getProjectKey(): string;
     abstract fetchUsers: (input: string) => Promise<any[]>;
+
+    protected abstract getApiVersion(): string;
 
     protected handleInlineEdit = (field: FieldUI, newValue: any): Promise<void> => {
         return Promise.resolve();
@@ -189,6 +193,18 @@ export abstract class AbstractIssueEditorPage<
             }
             case 'updateFeatureFlags': {
                 this.setState({ isRteEnabled: e.featureFlags.rteEnabled });
+                break;
+            }
+            case 'loadingStart': {
+                this.setState({ isSomethingLoading: true, loadingField: e.loadingField });
+                break;
+            }
+            case 'loadingEnd': {
+                this.setState({ isSomethingLoading: false, loadingField: '' });
+                break;
+            }
+            case 'additionalSettings': {
+                this.setState({ isRovoDevEnabled: e.rovoDevEnabled });
                 break;
             }
         }
@@ -313,6 +329,15 @@ export abstract class AbstractIssueEditorPage<
 
     protected loadSelectOptionsForField = (field: SelectFieldUI, input: string): Promise<any[]> => {
         this.setState({ isSomethingLoading: true, loadingField: field.key });
+
+        if (field.valueType === ValueType.User) {
+            const apiVersion = this.getApiVersion();
+            const userSearchUrl = this.state.siteDetails.isCloud
+                ? `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?query=`
+                : `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?username=`;
+            return this.loadSelectOptions(input, userSearchUrl);
+        }
+
         return this.loadSelectOptions(input, this.fixAutocompleteUrl(field.autoCompleteUrl));
     };
 
@@ -869,6 +894,11 @@ export abstract class AbstractIssueEditorPage<
                                     onChange={(selected: any) => {
                                         this.handleSelectChange(selectField, selected);
                                     }}
+                                    onMenuClose={() => {
+                                        if (this.state.loadingField === field.key) {
+                                            this.setState({ isSomethingLoading: false, loadingField: '' });
+                                        }
+                                    }}
                                 />
                             );
                         }
@@ -904,6 +934,11 @@ export abstract class AbstractIssueEditorPage<
                                                         this.handleSelectChange(selectField, selected);
                                                     },
                                                 )}
+                                                onMenuClose={() => {
+                                                    if (this.state.loadingField === field.key) {
+                                                        this.setState({ isSomethingLoading: false, loadingField: '' });
+                                                    }
+                                                }}
                                             />
                                             {errDiv}
                                         </React.Fragment>
@@ -934,6 +969,11 @@ export abstract class AbstractIssueEditorPage<
                                     }}
                                     onChange={(selected: any) => {
                                         this.handleSelectChange(selectField, selected);
+                                    }}
+                                    onMenuClose={() => {
+                                        if (this.state.loadingField === field.key) {
+                                            this.setState({ isSomethingLoading: false, loadingField: '' });
+                                        }
                                     }}
                                 />
                             );
@@ -978,6 +1018,11 @@ export abstract class AbstractIssueEditorPage<
                                                         this.handleSelectChange(selectField, selected);
                                                     },
                                                 )}
+                                                onMenuClose={() => {
+                                                    if (this.state.loadingField === field.key) {
+                                                        this.setState({ isSomethingLoading: false, loadingField: '' });
+                                                    }
+                                                }}
                                             />
                                             {errDiv}
                                         </React.Fragment>
@@ -1006,6 +1051,11 @@ export abstract class AbstractIssueEditorPage<
                                     loadOptions={async (input: any) =>
                                         await this.loadSelectOptionsForField(field as SelectFieldUI, input)
                                     }
+                                    onMenuClose={() => {
+                                        if (this.state.loadingField === field.key) {
+                                            this.setState({ isSomethingLoading: false, loadingField: '' });
+                                        }
+                                    }}
                                 />
                             );
                         }
@@ -1050,6 +1100,11 @@ export abstract class AbstractIssueEditorPage<
                                                 loadOptions={async (input: any) =>
                                                     await this.loadSelectOptionsForField(field as SelectFieldUI, input)
                                                 }
+                                                onMenuClose={() => {
+                                                    if (this.state.loadingField === field.key) {
+                                                        this.setState({ isSomethingLoading: false, loadingField: '' });
+                                                    }
+                                                }}
                                             />
                                             {errDiv}
                                         </React.Fragment>
@@ -1096,6 +1151,11 @@ export abstract class AbstractIssueEditorPage<
                                     loadOptions={async (input: any) =>
                                         await this.loadSelectOptionsForField(field as SelectFieldUI, input)
                                     }
+                                    onMenuClose={() => {
+                                        if (this.state.loadingField === field.key) {
+                                            this.setState({ isSomethingLoading: false, loadingField: '' });
+                                        }
+                                    }}
                                 ></AsyncCreatableSelect>
                             );
                         }
@@ -1144,6 +1204,11 @@ export abstract class AbstractIssueEditorPage<
                                                 loadOptions={async (input: any) =>
                                                     await this.loadSelectOptionsForField(field as SelectFieldUI, input)
                                                 }
+                                                onMenuClose={() => {
+                                                    if (this.state.loadingField === field.key) {
+                                                        this.setState({ isSomethingLoading: false, loadingField: '' });
+                                                    }
+                                                }}
                                             ></AsyncCreatableSelect>
                                             {errDiv}
                                         </React.Fragment>

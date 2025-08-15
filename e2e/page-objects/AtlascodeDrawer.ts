@@ -17,6 +17,10 @@ export class AtlascodeDrawer {
         this.helpFeedbackTree = page.getByRole('tree', { name: 'Help and Feedback' });
     }
 
+    async openAtlascodeDrawer() {
+        await this.page.getByRole('tab', { name: 'Atlassian' }).click();
+    }
+
     async openCreateIssuePage() {
         await this.page.getByRole('button', { name: 'Create Jira issue' }).click();
     }

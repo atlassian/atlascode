@@ -48,6 +48,7 @@ npm run extension:package
 1. Follow the first two steps from the [How do I use it?](#how-do-i-use-it) section above.
 
 2. Use the following command to start the testing environment
+
 ```sh
   npm test:e2e:docker:serve
 ```

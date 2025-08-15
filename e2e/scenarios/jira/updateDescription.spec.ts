@@ -1,0 +1,27 @@
+import { APIRequestContext, Page } from '@playwright/test';
+import { getIssueFrame, setupIssueMock } from 'e2e/helpers';
+import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
+
+const OLD_DESCRIPTION = 'Track and resolve bugs related to the user interface.';
+const NEW_DESCRIPTION = 'Add e2e test for this functionality';
+
+export async function updateDescription(page: Page, request: APIRequestContext) {
+    await new AtlassianSettings(page).closeSettingsPage();
+    await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');
+
+    const frame = await getIssueFrame(page);
+    const issuePage = new JiraIssuePage(frame);
+
+    await issuePage.description.expectEqual(OLD_DESCRIPTION);
+    await issuePage.description.changeTo(NEW_DESCRIPTION);
+    await page.waitForTimeout(500);
+
+    const cleanupIssueMock = await setupIssueMock(request, { description: NEW_DESCRIPTION });
+
+    await issuePage.saveChanges();
+    await page.waitForTimeout(1_000);
+
+    await issuePage.description.expectEqual(NEW_DESCRIPTION);
+
+    await cleanupIssueMock();
+}

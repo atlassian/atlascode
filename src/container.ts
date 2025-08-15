@@ -11,6 +11,7 @@ import { BitbucketCheckoutHelper } from './bitbucket/checkoutHelper';
 import { CheckoutHelper } from './bitbucket/interfaces';
 import { PullRequest, WorkspaceRepo } from './bitbucket/model';
 import { BitbucketCloudPullRequestLinkProvider } from './bitbucket/terminal-link/createPrLinkProvider';
+import { CommandContext, setCommandContext } from './commandContext';
 import { openPullRequest } from './commands/bitbucket/pullRequest';
 import { configuration, IConfig } from './config/configuration';
 import { Commands } from './constants';
@@ -20,7 +21,6 @@ import { JiraProjectManager } from './jira/projectManager';
 import { JiraSettingsManager } from './jira/settingsManager';
 import { CancellationManager } from './lib/cancellation';
 import { ConfigAction } from './lib/ipc/fromUI/config';
-import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
 import { PipelineSummaryAction } from './lib/ipc/fromUI/pipelineSummary';
 import { PullRequestDetailsAction } from './lib/ipc/fromUI/pullRequestDetails';
 import { StartWorkAction } from './lib/ipc/fromUI/startWork';
@@ -35,8 +35,8 @@ import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider'
 import { RovoDevDecorator } from './rovo-dev/rovoDevDecorator';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
-import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
-import { FeatureFlagClient, FeatureFlagClientInitError } from './util/featureFlags';
+import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
+import { FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -51,8 +51,6 @@ import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
 import { ExplorerFocusManager } from './webview/ExplorerFocusManager';
 import { MultiWebview } from './webview/multiViewFactory';
-import { VSCOnboardingActionApi } from './webview/onboarding/vscOnboardingActionApi';
-import { VSCOnboardingWebviewControllerFactory } from './webview/onboarding/vscOnboardingWebviewControllerFactory';
 import { PipelineSummaryActionImplementation } from './webview/pipelines/pipelineSummaryActionImplementation';
 import { PipelineSummaryWebviewControllerFactory } from './webview/pipelines/pipelineSummaryWebviewControllerFactory';
 import { VSCCreatePullRequestActionApi } from './webview/pullrequest/vscCreatePullRequestActionImpl';
@@ -78,6 +76,10 @@ export class Container {
     private static _assignedWorkItemsView: AssignedWorkItemsViewProvider;
 
     static async initialize(context: ExtensionContext, version: string) {
+        canFetchInternalUrl().then((success) => {
+            this._isInAtlassianNetwork = success;
+        });
+
         const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
 
         this._analyticsClient = analyticsClient({
@@ -124,17 +126,6 @@ export class Container {
             this._analyticsApi,
         );
 
-        const onboardingV2ViewFactory = new SingleWebview<any, OnboardingAction>(
-            context.extensionPath,
-            new VSCOnboardingWebviewControllerFactory(
-                new VSCOnboardingActionApi(this._analyticsApi),
-                this._commonMessageHandler,
-                this._analyticsApi,
-                ONBOARDING_URL,
-            ),
-            this.analyticsApi,
-        );
-
         const startWorkV2ViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
             context.extensionPath,
             new VSCStartWorkWebviewControllerFactory(
@@ -166,7 +157,6 @@ export class Container {
         );
 
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
-        context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
         context.subscriptions.push((this._startWorkV3WebviewFactory = startWorkV3ViewFactory));
         context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
@@ -211,20 +201,29 @@ export class Container {
         context.subscriptions.push(new CustomJQLViewProvider());
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
 
-        if (!!process.env.ROVODEV_ENABLED) {
-            context.subscriptions.push(new RovoDevDecorator());
-            context.subscriptions.push(
-                languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
-                    providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
-                }),
-            );
-            context.subscriptions.push(
-                (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context.extensionPath, context.globalState)),
-            );
-            this.configureRovodevSettingsCommands(context);
-        }
-
         this._onboardingProvider = new OnboardingProvider();
+
+        if (process.env.ROVODEV_BBY || FeatureFlagClient.checkGate(Features.RovoDevEnabled)) {
+            this._isRovoDevEnabled = true;
+            this.enableRovoDev(context);
+        }
+    }
+
+    static enableRovoDev(context: ExtensionContext) {
+        // this enables the Rovo Dev activity bar
+        setCommandContext(CommandContext.RovoDevEnabled, true);
+
+        context.subscriptions.push(new RovoDevDecorator());
+        context.subscriptions.push(
+            languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
+                providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
+            }),
+        );
+        context.subscriptions.push(
+            (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context, context.extensionPath)),
+        );
+
+        this.configureRovodevSettingsCommands(context);
     }
 
     static configureRovodevSettingsCommands(context: ExtensionContext) {
@@ -252,6 +251,12 @@ export class Container {
         context.subscriptions.push(
             vscode.commands.registerCommand(Commands.OpenRovoDevMcpJson, async () => {
                 await openConfigFile('.rovodev/mcp.json', 'Rovo Dev MCP configuration');
+            }),
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand(Commands.OpenRovoDevGlobalMemory, async () => {
+                await openConfigFile('.rovodev/.agent.md', 'Rovo Dev Global Memory file');
             }),
         );
     }
@@ -326,6 +331,16 @@ export class Container {
         this._context.globalState.update(ConfigTargetKey, target);
     }
 
+    private static _isInAtlassianNetwork: boolean | undefined = undefined;
+    public static get isInAtlassianNetwork() {
+        return this._isInAtlassianNetwork;
+    }
+
+    private static _isRovoDevEnabled: boolean;
+    public static get isRovoDevEnabled() {
+        return this._isRovoDevEnabled;
+    }
+
     private static _version: string;
     public static get version() {
         return this._version;
@@ -359,11 +374,6 @@ export class Container {
     private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;
     public static get settingsWebviewFactory() {
         return this._settingsWebviewFactory;
-    }
-
-    private static _onboardingWebviewFactory: SingleWebview<any, OnboardingAction>;
-    public static get onboardingWebviewFactory() {
-        return this._onboardingWebviewFactory;
     }
 
     private static _pullRequestDetailsWebviewFactory: MultiWebview<any, PullRequestDetailsAction>;
@@ -464,5 +474,19 @@ export class Container {
     private static _rovodevWebviewProvider: RovoDevWebviewProvider;
     public static get rovodevWebviewProvider() {
         return this._rovodevWebviewProvider;
+    }
+}
+
+async function canFetchInternalUrl(): Promise<boolean> {
+    try {
+        const result = await fetch('http://github.internal.atlassian.com/', {
+            method: 'GET',
+            signal: AbortSignal.timeout(5000),
+        });
+
+        const statusKind = Math.floor((result.status || 0) / 100);
+        return statusKind === 2 || statusKind === 3;
+    } catch {
+        return false;
     }
 }
