@@ -660,7 +660,12 @@ const RovoDevView: React.FC = () => {
                         }}
                     />
                     <PromptInputBox
-                        disabled={workspaceCount === 0 || currentState === State.Disabled}
+                        disabled={
+                            workspaceCount === 0 ||
+                            currentState === State.Disabled ||
+                            currentState === State.ProcessTerminated
+                        }
+                        hideButtons={workspaceCount === 0 || currentState === State.Disabled}
                         state={currentState}
                         promptText={promptText}
                         onPromptTextChange={(element) => setPromptText(element)}

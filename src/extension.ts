@@ -49,8 +49,6 @@ export async function activate(context: ExtensionContext) {
     Configuration.configure(context);
     Logger.configure(context);
 
-    setCommandContext(CommandContext.IsDebugging, !!Container.isDebugging);
-
     // this disables the main Atlassian activity bar when we are in BBY
     setCommandContext(CommandContext.BbyEnvironmentActive, !!process.env.ROVODEV_BBY);
 

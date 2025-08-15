@@ -585,7 +585,7 @@
                 },
                 {
                     "command": "atlascode.rovodev.showTerminal",
-                    "when": "atlascode:isDebugging && view == atlascode.views.rovoDev.webView",
+                    "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView",
                     "group": "navigation@2"
                 },
                 {

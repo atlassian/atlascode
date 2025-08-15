@@ -1,11 +1,10 @@
-import { ChildProcess, spawn } from 'child_process';
 import { access, constants } from 'fs';
 import fs from 'fs';
 import net from 'net';
 import path from 'path';
 import { downloadAndUnzip } from 'src/util/downloadFile';
 import { getFsPromise } from 'src/util/fsPromises';
-import { Disposable, ExtensionContext, Uri, workspace } from 'vscode';
+import { Disposable, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
 
 import { isBasicAuthInfo, ProductJira } from '../atlclients/authInfo';
 import { rovodevInfo } from '../constants';
@@ -19,6 +18,7 @@ function GetRovoDevURIs(context: ExtensionContext) {
     const rovoDevBaseDir = path.join(extensionPath, 'atlascode-rovodev-bin');
     const rovoDevVersionDir = path.join(rovoDevBaseDir, MIN_SUPPORTED_ROVODEV_VERSION);
     const rovoDevBinPath = path.join(rovoDevVersionDir, 'atlassian_cli_rovodev');
+    const rovoDevIconUri = Uri.file(context.asAbsolutePath(path.join('resources', 'rovodev-icon.svg')));
 
     const platform = process.platform;
     const arch = process.arch;
@@ -40,6 +40,7 @@ function GetRovoDevURIs(context: ExtensionContext) {
         RovoDevVersionDir: rovoDevVersionDir,
         RovoDevBinPath: rovoDevBinPath,
         RovoDevZipUrl: rovoDevZipUrl,
+        RovoDevIconUri: rovoDevIconUri,
     };
 }
 
@@ -159,6 +160,7 @@ export class RovoDevProcessManager extends Disposable {
     public static async initializeRovoDevProcessManager(context: ExtensionContext) {
         const rovoDevURIs = GetRovoDevURIs(context);
 
+        this.rovoDevInstance?.dispose();
         this.rovoDevInstance = undefined;
 
         if (!fs.existsSync(rovoDevURIs.RovoDevBinPath)) {
@@ -170,7 +172,7 @@ export class RovoDevProcessManager extends Disposable {
         // Listen for workspace folder changes
         const listener = workspace.onDidChangeWorkspaceFolders((event) => {
             if (!this.rovoDevInstance && event.added.length > 0) {
-                this.startRovoDev(rovoDevURIs.RovoDevBinPath);
+                this.startRovoDev(rovoDevURIs);
             } else if (event.removed.length === workspace.workspaceFolders?.length) {
                 this.stopRovoDevInstance();
             }
@@ -179,7 +181,7 @@ export class RovoDevProcessManager extends Disposable {
         context.subscriptions.push(listener);
         this.disposables.push(listener);
 
-        await this.startRovoDev(rovoDevURIs.RovoDevBinPath);
+        await this.startRovoDev(rovoDevURIs);
     }
 
     public static deactivateRovoDevProcessManager() {
@@ -205,7 +207,7 @@ export class RovoDevProcessManager extends Disposable {
         throw new Error('unable to find an available port.');
     }
 
-    private static async startRovoDev(rovoDevBinPath: string) {
+    private static async startRovoDev(rovoDevURIs: RovoDevURIs) {
         // skip there is no workspace folder open
         if (!workspace.workspaceFolders) {
             return;
@@ -219,31 +221,31 @@ export class RovoDevProcessManager extends Disposable {
                 this.rovoDevWebviewProvider,
                 folder.uri.fsPath,
                 port,
-                rovoDevBinPath,
+                rovoDevURIs.RovoDevBinPath,
+                rovoDevURIs.RovoDevIconUri,
             );
         } catch (error) {
             this.rovoDevWebviewProvider.signalRovoDevDisabled();
             this.rovoDevWebviewProvider.sendErrorToChat(`Unable to start Rovo Dev:\n${error.message}`);
         }
     }
+
+    public static showTerminal() {
+        this.rovoDevInstance?.showTerminal();
+    }
 }
 
 class RovoDevInstance extends Disposable {
-    private rovoDevProcess: ChildProcess | undefined;
-
-    public get isRunning() {
-        return !!this.rovoDevProcess;
-    }
+    private rovoDevTerminal: Terminal | undefined;
 
     constructor(
         rovoDevWebviewProvider: RovoDevWebviewProvider,
         workspacePath: string,
         port: number,
         rovoDevBinPath: string,
+        rovoDevIconUri: Uri,
     ) {
         super(() => this.stop());
-
-        this.stop();
 
         access(rovoDevBinPath, constants.X_OK, (err) => {
             if (err) {
@@ -254,52 +256,50 @@ class RovoDevInstance extends Disposable {
                 const defaultUsername = 'cooluser@atlassian.com';
                 const { username, key } = creds || {};
 
-                const env: NodeJS.ProcessEnv = {
-                    USER: process.env.USER,
-                    USER_EMAIL: username || defaultUsername,
-                    ...(key ? { USER_API_TOKEN: key } : {}),
-                };
-                let stderrData = '';
-
-                this.rovoDevProcess = spawn(
-                    rovoDevBinPath,
-                    [`serve`, `${port}`, `--application-id`, `com.atlassian.vscode`],
-                    {
-                        cwd: workspacePath,
-                        stdio: ['ignore', 'pipe', 'pipe'],
-                        detached: true,
-                        env,
+                this.rovoDevTerminal = window.createTerminal({
+                    name: 'Rovo Dev',
+                    shellPath: rovoDevBinPath,
+                    shellArgs: [`serve`, `${port}`, `--application-id`, `com.atlassian.vscode`],
+                    cwd: workspacePath,
+                    hideFromUser: true,
+                    isTransient: true,
+                    iconPath: rovoDevIconUri,
+                    env: {
+                        USER: process.env.USER,
+                        USER_EMAIL: username || defaultUsername,
+                        ...(key ? { USER_API_TOKEN: key } : {}),
                     },
-                )
-                    .on('spawn', () => rovoDevWebviewProvider.signalProcessStarted(port))
-                    .on('exit', (code) => {
-                        this.rovoDevProcess = undefined;
+                });
 
-                        if (code !== 0) {
-                            if (stderrData.includes('auth token')) {
-                                throw new Error(
-                                    `please login by providing an API Token. You can do this via Atlassian: Open Settings -> Authentication -> Other Options`,
-                                );
-                            } else {
-                                // default error message
-                                throw new Error(`process exited with code ${code}, see the log for details.`);
-                            }
+                window.onDidCloseTerminal((event) => {
+                    if (event === this.rovoDevTerminal) {
+                        const code = event.exitStatus?.code;
+                        if (code) {
+                            rovoDevWebviewProvider.signalRovoDevDisabled();
+                            rovoDevWebviewProvider.signalProcessTerminated(
+                                `Rovo Dev exited with code ${code}, see the log for details.`,
+                            );
+                        } else {
+                            rovoDevWebviewProvider.signalProcessTerminated();
                         }
-                    });
+                    }
+                });
 
-                if (this.rovoDevProcess.stderr) {
-                    this.rovoDevProcess.stderr.on('data', (data) => {
-                        stderrData += data.toString();
-                    });
-                }
+                rovoDevWebviewProvider.signalProcessStarted(port, true);
             });
         });
     }
 
     public stop() {
-        if (this.rovoDevProcess) {
-            this.rovoDevProcess.kill();
-            this.rovoDevProcess = undefined;
+        if (this.rovoDevTerminal) {
+            const terminal = this.rovoDevTerminal;
+            this.rovoDevTerminal = undefined;
+            // sends a CTRL+C to the terminal
+            terminal.sendText('\u0003', true);
         }
+    }
+
+    public showTerminal() {
+        this.rovoDevTerminal?.show();
     }
 }
