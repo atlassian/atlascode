@@ -714,39 +714,59 @@ export abstract class AbstractIssueEditorPage<
                     }
                     const sameProjectQuery = `project = "${this.state.fieldValues['project'].key}"`;
                     let jqlQuery: string = '';
-                    if (currentIssueType.subtask && !this.state.siteDetails.isCloud) {
-                        jqlQuery = `issuetype not in (Epic, subTaskIssueTypes()) AND ${sameProjectQuery}`;
-                    } else if (currentIssueType.subtask && this.state.siteDetails.isCloud) {
-                        jqlQuery = `${sameProjectQuery} AND issuetype in standardIssueTypes()`;
+                    if (currentIssueType.subtask) {
+                        jqlQuery = `${sameProjectQuery} AND issuetype in standardIssueTypes())`;
                     } else {
                         jqlQuery = `${sameProjectQuery} AND issuetype = Epic`;
                     }
 
-                    return (
-                        <AsyncSelect
-                            isClearable={!field.required && !currentIssueType.subtask}
-                            isMulti={false}
-                            defaultValue={defaultParent}
-                            className="ac-select-container"
-                            classNamePrefix="ac-select"
-                            loadOptions={async (input: string) =>
-                                await this.loadIssueOptions(field as SelectFieldUI, input, jqlQuery)
-                            }
-                            getOptionLabel={(option: any) => option.key}
-                            getOptionValue={(option: any) => option.key}
-                            placeholder="Search for parent issue"
-                            isLoading={this.state.loadingField === field.key}
-                            isDisabled={this.state.isSomethingLoading}
-                            onChange={(val: any) => {
-                                this.handleSelectChange(field as SelectFieldUI, val);
-                            }}
-                            components={{
-                                Option: SelectFieldHelper.IssueSuggestionOption,
-                                SingleValue: SelectFieldHelper.IssueSuggestionValue,
-                            }}
-                        />
-                    );
+                    if (this.state.siteDetails.isCloud) {
+                        return (
+                            <AsyncSelect
+                                isClearable={!field.required && !currentIssueType.subtask}
+                                isMulti={false}
+                                defaultValue={defaultParent}
+                                className="ac-select-container"
+                                classNamePrefix="ac-select"
+                                loadOptions={async (input: string) =>
+                                    await this.loadIssueOptions(field as SelectFieldUI, input, jqlQuery)
+                                }
+                                getOptionLabel={(option: any) => option.key}
+                                getOptionValue={(option: any) => option.key}
+                                placeholder="Search for parent issue"
+                                isLoading={this.state.loadingField === field.key}
+                                isDisabled={this.state.isSomethingLoading}
+                                onChange={(val: any) => {
+                                    this.handleSelectChange(field as SelectFieldUI, val);
+                                }}
+                                components={{
+                                    Option: SelectFieldHelper.IssueSuggestionOption,
+                                    SingleValue: SelectFieldHelper.IssueSuggestionValue,
+                                }}
+                            />
+                        );
+                    } else {
+                        return (
+                            <AsyncSelect
+                                isClearable={!field.required && !currentIssueType.subtask}
+                                isMulti={false}
+                                defaultValue={defaultParent}
+                                className="ac-select-container"
+                                classNamePrefix="ac-select"
+                                getOptionLabel={(option: any) => option.key}
+                                getOptionValue={(option: any) => option.key}
+                                placeholder="Can only configure in Jira Web"
+                                isLoading={this.state.loadingField === field.key}
+                                isDisabled={true}
+                                components={{
+                                    Option: SelectFieldHelper.IssueSuggestionOption,
+                                    SingleValue: SelectFieldHelper.IssueSuggestionValue,
+                                }}
+                            />
+                        );
+                    }
                 } else if (currentIssueType.name !== 'Epic') {
+                    // This will never run for DC because it does not have 'parent' field
                     return (
                         <Field
                             label={<span>{field.name}</span>}
