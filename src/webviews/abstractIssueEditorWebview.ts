@@ -82,7 +82,6 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                     msg.query.trim() !== ''
                                 ) {
                                     const apiUrl = `${baseUrl}/rest/api/${client.apiVersion}/issue/picker?query=${encodeURIComponent(msg.query)}&currentJQL=${encodeURIComponent(msg.currentJQL)}`;
-                                    // We could do this via the pi-client but that would involve modifications to getIssuePickerSuggestions function to accept currentJQL
                                     const res = await client.getAutocompleteDataFromUrl(apiUrl);
                                     const result: IssuePickerResult = res as IssuePickerResult;
                                     if (Array.isArray(result.sections)) {

@@ -699,7 +699,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     };
                 });
         } else {
-            // Cloud supports parent-child relation only for all issues. DC supports parent-child for standard-issues and subtasks
+            // only child-parent relationship in DC is between subtasks and StandardIssueTypes
+            // epic and standardIssue types do not hold this relationship nor is EpicLink passed in via the fields
             commonItems = ['assignee', 'reporter', 'labels', 'priority', 'components', 'fixVersions']
                 .filter((field) => !!this.state.fields[field])
                 .map((field) => {
