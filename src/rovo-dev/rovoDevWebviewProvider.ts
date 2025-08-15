@@ -795,16 +795,23 @@ ${message}`;
         return await this.addContextItem(picked);
     }
 
-    public async executeReset(): Promise<void> {
-        // reset is a no-op if there are no folders opened
-        if (this._disabled || !workspace.workspaceFolders?.length) {
+    public async executeNewSession(): Promise<void> {
+        // new session is a no-op if there are no folders opened or if the process is not initialized
+        if (this._disabled || !workspace.workspaceFolders?.length || !this._initialized) {
             return;
         }
 
         const webview = this._webView!;
         const success = await this.executeApiWithErrorHandling(async (client) => {
-            await client.reset();
+            if (this._chatBusy) {
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.ForceStop,
+                });
 
+                await this.executeCancel();
+            }
+
+            await client.createSession();
             this._revertedChanges = [];
 
             await webview.postMessage({
@@ -849,6 +856,7 @@ ${message}`;
         await this.sendPromptSentToView({ text: '', enable_deep_plan: false, context: undefined });
 
         await this.executeApiWithErrorHandling(async (client) => {
+            this._chatBusy = true;
             return this.processChatResponse('replay', client.replay());
         }, false);
     }

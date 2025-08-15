@@ -254,7 +254,7 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
         commands.registerCommand(Commands.RovodevNewSession, () => {
-            Container.rovodevWebviewProvider.executeReset();
+            Container.rovodevWebviewProvider.executeNewSession();
         }),
     );
     vscodeContext.subscriptions.push(

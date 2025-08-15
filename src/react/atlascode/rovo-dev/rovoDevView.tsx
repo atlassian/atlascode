@@ -439,6 +439,13 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.CheckGitChangesComplete:
                     break; // This is handled elsewhere
 
+                case RovoDevProviderMessageType.ForceStop:
+                    // Signal user that Rovo Dev is stopping
+                    if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
+                        setCurrentState(State.CancellingResponse);
+                    }
+                    break;
+
                 default:
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendError({
