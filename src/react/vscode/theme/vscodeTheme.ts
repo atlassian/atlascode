@@ -53,10 +53,10 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
             MuiChip: {
                 styleOverrides: {
                     root: {
-                        backgroundColor: isDark
-                            ? lighten(vscStyles.editorBackground, 20)
-                            : darken(vscStyles.editorBackground, 3),
                         // this one didn't work previously but started working after the update to MUI5
+                        // backgroundColor: isDark
+                        //     ? lighten(vscStyles.editorBackground, 20)
+                        //     : darken(vscStyles.editorBackground, 3),
                         // color: vscStyles.editorForeground,
                     },
                 },
