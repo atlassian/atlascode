@@ -11,7 +11,7 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
 
     // Colors that don't appear in vscode-high-contrast
     const buttonBackground = isHighContrast ? '#0088ff' : vscStyles.buttonBackground;
-    // const buttonHoverBackground = isHighContrast ? '#000000' : vscStyles.buttonHoverBackground;
+    const buttonHoverBackground = isHighContrast ? '#000000' : vscStyles.buttonHoverBackground;
     const sideBarTitleForeground = isHighContrast ? '#ffffff' : vscStyles.sideBarTitleForeground;
     const sideBarSectionHeaderBackground = isHighContrast ? '#000000' : vscStyles.tabInactiveBackground;
     const listActiveSelectionBackground = isHighContrast ? '#000000' : vscStyles.listActiveSelectionBackground;
@@ -64,19 +64,20 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
             MuiButton: {
                 styleOverrides: {
                     root: {},
-                    contained: {
-                        // this one didn't work previously but started working after the update to MUI5
-                        // '&:hover': {
-                        //     color: vscStyles.buttonForeground,
-                        //     backgroundColor: buttonHoverBackground,
-                        // },
-                    },
-                    text: {
+                    // MUI v5 Rewriting secondary button styles to match what we had in v4 for "default" color.
+                    containedSecondary: ({ theme }) => ({
+                        color: theme.palette.common.black,
+                        backgroundColor: theme.palette.grey[300],
+                        '&:hover': {
+                            color: vscStyles.buttonForeground,
+                            backgroundColor: buttonHoverBackground,
+                        },
+                    }),
+                    textSecondary: {
                         color: buttonBackground,
-                        // this one didn't work previously but started working after the update to MUI5
-                        // '&:hover': {
-                        //     backgroundColor: buttonHoverBackground,
-                        // },
+                        '&:hover': {
+                            backgroundColor: buttonHoverBackground,
+                        },
                     },
                 },
             },
@@ -236,6 +237,7 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                 styleOverrides: { root: { backgroundImage: 'unset' } },
             },
             MuiSlider: {
+                // MUI 5 changed default shape and color for sliders labels.
                 styleOverrides: {
                     root: {
                         '& .MuiSlider-track': {

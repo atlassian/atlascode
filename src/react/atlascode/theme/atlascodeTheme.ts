@@ -64,6 +64,9 @@ export const atlascodeTheme = (baseTheme: Theme, usedefault?: boolean): Theme =>
                 MuiButton: {
                     defaultProps: {
                         size: 'small',
+                        // MUI 5 removed "default" color, and all buttons are now "primary".
+                        // Setting color "secondary" for all buttons without attr color to differentiate them from the primary buttons.
+                        color: 'secondary',
                     },
                 },
                 MuiFilledInput: {
@@ -133,5 +136,6 @@ export const atlascodeTheme = (baseTheme: Theme, usedefault?: boolean): Theme =>
             },
         }),
     );
+    console.debug('Created new theme', newTheme);
     return newTheme;
 };
