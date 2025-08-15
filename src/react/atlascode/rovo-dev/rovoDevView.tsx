@@ -682,7 +682,7 @@ const RovoDevView: React.FC = () => {
                         }}
                     />
                 </div>
-                <div className="ai-disclaimer">Uses AI. Verify Results</div>
+                <div className="ai-disclaimer">Uses AI. Verify results.</div>
             </div>
         </div>
     );
