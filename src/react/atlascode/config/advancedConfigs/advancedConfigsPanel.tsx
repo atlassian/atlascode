@@ -47,6 +47,16 @@ export const AdvancedConfigsPanel: React.FunctionComponent<AdvancedConfigsProps>
                 <div hidden={!visible} role="tabpanel">
                     <Grid container spacing={3} direction="column">
                         <Grid item>
+                            <Box>
+                                <Typography variant="subtitle1" className={classes.root}>
+                                    Note: We have simplified our settings to help our users quickly interact with they
+                                    need. To find the different configurations you can customize, please refer to the
+                                    VSCode Native settings of our Extension.
+                                </Typography>
+                                {/* Add the link to the User Settings UI here */}
+                            </Box>
+                        </Grid>
+                        <Grid item>
                             <JiraExplorerJqlPanel
                                 visible={visible}
                                 expanded={selectedSubSections.includes(ConfigV3SubSection.Issues)}
