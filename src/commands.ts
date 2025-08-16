@@ -21,7 +21,7 @@ import { Commands, HelpTreeViewId } from './constants';
 import { Container } from './container';
 import { transitionIssue } from './jira/transitionIssue';
 import { knownLinkIdMap } from './lib/ipc/models/common';
-import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
+import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from './lib/ipc/models/config';
 import { Logger } from './logger';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevContext } from './rovo-dev/rovoDevTypes';
@@ -47,6 +47,12 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Jira,
                 subSection: ConfigSubSection.Auth,
+            }),
+        ),
+        commands.registerCommand(Commands.ShowConfigPageV3, () =>
+            Container.settingsV3WebviewFactory.createOrShow({
+                section: ConfigV3Section.Auth,
+                subSection: ConfigV3SubSection.JiraAuth,
             }),
         ),
         commands.registerCommand(Commands.ShowConfigPageFromExtensionContext, () => {

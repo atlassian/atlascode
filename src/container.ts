@@ -26,7 +26,7 @@ import { PipelineSummaryAction } from './lib/ipc/fromUI/pipelineSummary';
 import { PullRequestDetailsAction } from './lib/ipc/fromUI/pullRequestDetails';
 import { StartWorkAction } from './lib/ipc/fromUI/startWork';
 import { ConfigTarget } from './lib/ipc/models/config';
-import { SectionChangeMessage } from './lib/ipc/toUI/config';
+import { SectionChangeMessage, SectionV3ChangeMessage } from './lib/ipc/toUI/config';
 import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { Logger } from './logger';
@@ -37,7 +37,7 @@ import { RovoDevDecorator } from './rovo-dev/rovoDevDecorator';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
-import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
+import { AtlascodeUriHandler, SETTINGS_URL, SETTINGS_URL_V3 } from './uriHandler';
 import { FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
@@ -50,6 +50,7 @@ import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
 import { VSCAnalyticsApi } from './vscAnalyticsApi';
 import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
 import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
+import { VSCConfigV3WebviewControllerFactory } from './webview/config/vscConfigV3WebviewControllerFactory';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
 import { ExplorerFocusManager } from './webview/ExplorerFocusManager';
 import { MultiWebview } from './webview/multiViewFactory';
@@ -133,6 +134,17 @@ export class Container {
             this._analyticsApi,
         );
 
+        const settingsV3ViewFactory = new SingleWebview<SectionV3ChangeMessage, ConfigAction>(
+            context.extensionPath,
+            new VSCConfigV3WebviewControllerFactory(
+                new VSCConfigActionApi(this._analyticsApi, this._cancellationManager),
+                this._commonMessageHandler,
+                this._analyticsApi,
+                SETTINGS_URL_V3,
+            ),
+            this._analyticsApi,
+        );
+
         const startWorkV2ViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
             context.extensionPath,
             new VSCStartWorkWebviewControllerFactory(
@@ -164,6 +176,7 @@ export class Container {
         );
 
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
+        context.subscriptions.push((this._settingsV3WebviewFactory = settingsV3ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
         context.subscriptions.push((this._startWorkV3WebviewFactory = startWorkV3ViewFactory));
         context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
@@ -416,6 +429,11 @@ export class Container {
     private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;
     public static get settingsWebviewFactory() {
         return this._settingsWebviewFactory;
+    }
+
+    private static _settingsV3WebviewFactory: SingleWebview<SectionV3ChangeMessage, ConfigAction>;
+    public static get settingsV3WebviewFactory() {
+        return this._settingsV3WebviewFactory;
     }
 
     private static _pullRequestDetailsWebviewFactory: MultiWebview<any, PullRequestDetailsAction>;
