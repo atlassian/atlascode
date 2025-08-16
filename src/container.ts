@@ -191,16 +191,17 @@ export class Container {
                 },
             });
 
-            this._siteManager.onDidSitesAvailableChange(async () => {
-                await FeatureFlagClient.updateUser({ tenantId: this._siteManager.primarySite?.id });
+            if (!process.env.ROVODEV_BBY) {
+                this._siteManager.onDidSitesAvailableChange(async () => {
+                    await FeatureFlagClient.updateUser({ tenantId: this._siteManager.primarySite?.id });
 
-                this._isRovoDevEnabled = FeatureFlagClient.checkGate(Features.RovoDevEnabled);
-                if (process.env.ROVODEV_BBY || this._isRovoDevEnabled) {
-                    this.enableRovoDev(context);
-                } else {
-                    this.disableRovoDev(context);
-                }
-            });
+                    if (FeatureFlagClient.checkGate(Features.RovoDevEnabled)) {
+                        this.enableRovoDev(context);
+                    } else {
+                        this.disableRovoDev(context);
+                    }
+                });
+            }
 
             Logger.debug(`FeatureFlagClient: Succesfully initialized the client.`);
             featureFlagClientInitializedEvent(true).then((e) => {

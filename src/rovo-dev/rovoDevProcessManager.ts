@@ -85,7 +85,7 @@ async function getCloudCredentials(): Promise<{ username: string; key: string; h
             return undefined;
         }
 
-        const authInfo = await Container.credentialManager.getAuthInfo(sites[0]);
+        const authInfo = await Container.credentialManager.getAuthInfo(site);
         if (!isBasicAuthInfo(authInfo)) {
             return undefined;
         }
@@ -274,12 +274,19 @@ class RovoDevProcessInstance extends Disposable implements RovoDevInstance {
             }
 
             getCloudCredentials().then((creds) => {
-                const defaultUsername = 'cooluser@atlassian.com';
-                const { username, key } = creds || {};
+                if (!creds) {
+                    rovoDevWebviewProvider.signalRovoDevDisabled();
+                    rovoDevWebviewProvider.signalProcessTerminated(
+                        'Please authenticate with an API token to enable Rovo Dev',
+                    );
+                    return;
+                }
+
+                const { username, key } = creds;
 
                 const env: NodeJS.ProcessEnv = {
                     USER: process.env.USER,
-                    USER_EMAIL: username || defaultUsername,
+                    USER_EMAIL: username,
                     ...(key ? { USER_API_TOKEN: key } : {}),
                 };
                 let stderrData = '';
@@ -299,14 +306,16 @@ class RovoDevProcessInstance extends Disposable implements RovoDevInstance {
                         this.rovoDevProcess = undefined;
 
                         if (code !== 0) {
+                            let error: string;
                             if (stderrData.includes('auth token')) {
-                                throw new Error(
-                                    `please login by providing an API Token. You can do this via Atlassian: Open Settings -> Authentication -> Other Options`,
-                                );
+                                error = `please login by providing an API Token. You can do this via Atlassian: Open Settings -> Authentication -> Other Options`;
                             } else {
                                 // default error message
-                                throw new Error(`process exited with code ${code}, see the log for details.`);
+                                error = `process exited with code ${code}, see the log for details.`;
                             }
+
+                            rovoDevWebviewProvider.signalRovoDevDisabled();
+                            rovoDevWebviewProvider.signalProcessTerminated(error);
                         }
                     });
 
@@ -349,7 +358,14 @@ class RovoDevTerminalInstance extends Disposable implements RovoDevInstance {
             }
 
             getCloudCredentials().then((creds) => {
-                const defaultUsername = 'cooluser@atlassian.com';
+                if (!creds) {
+                    rovoDevWebviewProvider.signalRovoDevDisabled();
+                    rovoDevWebviewProvider.signalProcessTerminated(
+                        'Please authenticate with an API token to enable Rovo Dev',
+                    );
+                    return;
+                }
+
                 const { username, key } = creds || {};
 
                 this.rovoDevTerminal = window.createTerminal({
@@ -362,7 +378,7 @@ class RovoDevTerminalInstance extends Disposable implements RovoDevInstance {
                     iconPath: rovoDevIconUri,
                     env: {
                         USER: process.env.USER,
-                        USER_EMAIL: username || defaultUsername,
+                        USER_EMAIL: username,
                         ...(key ? { USER_API_TOKEN: key } : {}),
                     },
                 });
