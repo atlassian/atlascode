@@ -55,8 +55,11 @@ export class SiteManager extends Disposable {
             return;
         }
 
+        // let's force using hello if present in the list
+        const helloSite = cloudSites.find((x) => x.name === 'hello');
+
         // Use the first available cloud site, sorted by name
-        const newValue = cloudSites.sort((a, b) => a.name.localeCompare(b.name))[0];
+        const newValue = helloSite || cloudSites.sort((a, b) => a.name.localeCompare(b.name))[0];
         if (newValue.id === this._primarySite?.id) {
             // no change
             return this._primarySite;

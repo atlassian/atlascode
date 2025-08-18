@@ -95,15 +95,18 @@
         "commands": [
             {
                 "command": "atlascode.rovodev.askInteractive",
-                "title": "Rovo Dev: Quick Ask"
+                "title": "Rovo Dev: Quick Ask",
+                "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.rovodev.askRovoDev",
-                "title": "Ask Rovo Dev"
+                "title": "Ask Rovo Dev",
+                "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.rovodev.addToContext",
-                "title": "Add selection to Rovo Dev context"
+                "title": "Add selection to Rovo Dev context",
+                "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.rovodev.newChatSession",
@@ -112,7 +115,8 @@
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
                 },
-                "category": "Atlassian"
+                "category": "Atlassian",
+                "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.rovodev.showTerminal",
@@ -124,19 +128,22 @@
                 "command": "atlascode.openRovoDevConfig",
                 "title": "Open Rovo Dev settings file",
                 "category": "Atlascode",
-                "description": "Opens the ~/.rovodev/config.yaml file in the editor."
+                "description": "Opens the ~/.rovodev/config.yaml file in the editor.",
+                "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.openRovoDevMcpJson",
                 "title": "Open Rovo Dev MCP configuration",
                 "category": "Atlascode",
-                "description": "Opens the ~/.rovodev/mcp.json file in the editor."
+                "description": "Opens the ~/.rovodev/mcp.json file in the editor.",
+                "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.openRovoDevGlobalMemory",
                 "title": "Open Rovo Dev Global Memory file",
                 "category": "Atlascode",
-                "description": "Opens the ~/.rovodev/.agent.md file in the editor."
+                "description": "Opens the ~/.rovodev/.agent.md file in the editor.",
+                "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.jira.todoIssue",
@@ -1394,19 +1401,22 @@
         "@atlaskit/toggle": "^14.2.0",
         "@atlaskit/tooltip": "^19.2.0",
         "@atlaskit/width-detector": "^4.4.0",
-        "@atlassianlabs/guipi-core-components": "^1.0.2",
-        "@atlassianlabs/guipi-core-controller": "^1.0.2",
-        "@atlassianlabs/guipi-jira-components": "^1.0.2",
+        "@atlassianlabs/guipi-core-components": "^2.0.0",
+        "@atlassianlabs/guipi-core-controller": "^2.0.0",
+        "@atlassianlabs/guipi-jira-components": "^2.0.0",
         "@atlassianlabs/jira-metaui-client": "^1.3.0",
         "@atlassianlabs/jira-metaui-transformer": "^1.3.0",
         "@atlassianlabs/jira-pi-client": "^1.3.0",
         "@atlassianlabs/jira-pi-common-models": "^1.3.0",
         "@atlassianlabs/jira-pi-meta-models": "^1.3.0",
         "@atlassianlabs/pi-client-common": "^1.3.0",
-        "@material-ui/core": "^4.12.4",
-        "@material-ui/icons": "^4.11.3",
-        "@material-ui/lab": "^4.0.0-alpha.61",
-        "@material-ui/styles": "^4.11.5",
+        "@emotion/react": "^11.14.0",
+        "@emotion/styled": "^11.14.1",
+        "@mui/icons-material": "^5.18.0",
+        "@mui/lab": "^5.0.0-alpha",
+        "@mui/material": "^5.18.0",
+        "@mui/styles": "^5.18.0",
+        "@mui/utils": "^5.17.1",
         "@segment/analytics-node": "^2.1.3",
         "@speed-highlight/core": "^1.2.7",
         "@vscode/codicons": "^0.0.36",

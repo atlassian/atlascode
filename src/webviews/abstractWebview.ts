@@ -162,7 +162,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
         }
     }
 
-    private fireAdditionalSettings(settings: AdditionalSettings) {
+    protected fireAdditionalSettings(settings: AdditionalSettings) {
         this.postMessage({ type: CommonMessageType.AdditionalSettings, settings });
     }
 

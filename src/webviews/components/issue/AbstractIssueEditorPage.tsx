@@ -207,7 +207,7 @@ export abstract class AbstractIssueEditorPage<
                 break;
             }
             case 'additionalSettings': {
-                this.setState({ isRovoDevEnabled: e.rovoDevEnabled });
+                this.setState({ isRovoDevEnabled: e.settings.rovoDevEnabled });
                 break;
             }
         }

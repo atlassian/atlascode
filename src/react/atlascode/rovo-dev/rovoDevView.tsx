@@ -150,7 +150,13 @@ const RovoDevView: React.FC = () => {
         (files: ToolReturnParseResult[]) => {
             dispatch({
                 type: RovoDevViewResponseType.KeepFileChanges,
-                files: files.map((file) => ({ filePath: file.filePath, type: file.type }) as ModifiedFile),
+                files: files.map(
+                    (file) =>
+                        ({
+                            filePath: file.filePath,
+                            type: file.type,
+                        }) as ModifiedFile,
+                ),
             });
             removeModifiedFileToolReturns(files);
         },
@@ -161,7 +167,13 @@ const RovoDevView: React.FC = () => {
         (files: ToolReturnParseResult[]) => {
             dispatch({
                 type: RovoDevViewResponseType.UndoFileChanges,
-                files: files.map((file) => ({ filePath: file.filePath, type: file.type }) as ModifiedFile),
+                files: files.map(
+                    (file) =>
+                        ({
+                            filePath: file.filePath,
+                            type: file.type,
+                        }) as ModifiedFile,
+                ),
             });
             removeModifiedFileToolReturns(files);
         },

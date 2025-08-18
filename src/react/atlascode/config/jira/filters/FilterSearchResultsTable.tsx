@@ -1,8 +1,10 @@
 import { FilterSearchResult, FilterSearchResults } from '@atlassianlabs/jira-pi-common-models';
+import SearchIcon from '@mui/icons-material/Search';
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
 import {
     Checkbox,
     CircularProgress,
-    makeStyles,
     Paper,
     Table,
     TableBody,
@@ -14,10 +16,8 @@ import {
     TextField,
     Toolbar,
     Typography,
-} from '@material-ui/core';
-import SearchIcon from '@material-ui/icons/Search';
-import StarIcon from '@material-ui/icons/Star';
-import StarBorderIcon from '@material-ui/icons/StarBorder';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import clsx from 'clsx';
 import React, { useContext, useEffect, useState } from 'react';
 
@@ -162,7 +162,7 @@ const FilterTableHead: React.FunctionComponent<FilterTableHeadProps> = ({
                     <TableCell
                         key={headCell.id}
                         align={headCell.align}
-                        padding={headCell.disablePadding ? 'none' : 'default'}
+                        padding={headCell.disablePadding ? 'none' : 'normal'}
                     >
                         {headCell.label}
                     </TableCell>

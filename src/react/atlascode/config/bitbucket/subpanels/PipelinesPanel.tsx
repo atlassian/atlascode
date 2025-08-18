@@ -1,5 +1,7 @@
-import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
 import equal from 'fast-deep-equal/es6';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 
@@ -60,16 +62,16 @@ export const PipelinesPanel: React.FunctionComponent<PipelinesPanelProps> = memo
         }, [expanded]);
 
         return (
-            <ExpansionPanel hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
-                <ExpansionPanelSummary
+            <Accordion hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
+                <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     aria-controls={`${ConfigSection.Bitbucket}-${ConfigSubSection.Pipelines}-content`}
                     id={`${ConfigSection.Bitbucket}-${ConfigSubSection.Pipelines}-header`}
                 >
                     <PanelTitle>Bitbucket Pipelines Explorer</PanelTitle>
                     <PanelSubtitle>configure the Bitbucket pipelines explorer and notifications</PanelSubtitle>
-                </ExpansionPanelSummary>
-                <ExpansionPanelDetails>
+                </AccordionSummary>
+                <AccordionDetails>
                     <PipelinesExplorer
                         filters={internalFilters}
                         enabled={enabled}
@@ -78,8 +80,8 @@ export const PipelinesPanel: React.FunctionComponent<PipelinesPanelProps> = memo
                         monitorEnabled={monitorEnabled}
                         refreshInterval={refreshInterval}
                     />
-                </ExpansionPanelDetails>
-            </ExpansionPanel>
+                </AccordionDetails>
+            </Accordion>
         );
     },
 );

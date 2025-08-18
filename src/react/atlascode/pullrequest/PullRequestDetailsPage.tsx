@@ -5,13 +5,13 @@ import {
     Container,
     Divider,
     Grid,
-    makeStyles,
     Paper,
     Theme,
     Typography,
     useMediaQuery,
     useTheme,
-} from '@material-ui/core';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
@@ -75,7 +75,7 @@ const PullRequestTitleSection: React.FC<PullRequestTitleSectionProps> = ({ state
                     <InlineTextEditor fullWidth defaultValue={state.pr.data.title} onSave={controller.updateTitle} />
                 </Grid>
                 <Grid item>
-                    <Grid container direction="row" spacing={2} justify={'space-between'}>
+                    <Grid container direction="row" spacing={2} justifyContent={'space-between'}>
                         <Grid item>
                             <Box marginLeft={2}>
                                 <BranchInfo

@@ -100,6 +100,10 @@ export class JiraIssueWebview
     }
 
     async invalidate() {
+        // TODO: we might want to also update feature gates here?
+        this.fireAdditionalSettings({
+            rovoDevEnabled: Container.isRovoDevEnabled,
+        });
         await this.forceUpdateIssue();
         Container.jiraActiveIssueStatusBar.handleActiveIssueChange(this._issue.key);
         Container.pmfStats.touchActivity();

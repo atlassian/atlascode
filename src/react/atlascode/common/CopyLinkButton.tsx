@@ -1,5 +1,5 @@
-import { IconButton, Tooltip } from '@material-ui/core';
-import FileCopyOutlinedIcon from '@material-ui/icons/FileCopyOutlined';
+import FileCopyOutlinedIcon from '@mui/icons-material/FileCopyOutlined';
+import { IconButton, Tooltip } from '@mui/material';
 import React, { useCallback } from 'react';
 
 interface Props {
@@ -13,7 +13,7 @@ export const CopyLinkButton: React.FC<Props> = (props: Props) => {
 
     return (
         <Tooltip title={props.tooltip}>
-            <IconButton aria-label="copy link" onClick={handleClick}>
+            <IconButton aria-label="copy link" onClick={handleClick} size="large">
                 <FileCopyOutlinedIcon />
             </IconButton>
         </Tooltip>

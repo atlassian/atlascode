@@ -2,7 +2,6 @@ import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import {
     Box,
     Link,
-    makeStyles,
     Table,
     TableBody,
     TableCell,
@@ -11,7 +10,8 @@ import {
     Theme,
     Tooltip,
     Typography,
-} from '@material-ui/core';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React from 'react';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';

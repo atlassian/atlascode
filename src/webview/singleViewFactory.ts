@@ -162,7 +162,7 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
         }
     }
 
-    private fireAdditionalSettings(settings: AdditionalSettings) {
+    protected fireAdditionalSettings(settings: AdditionalSettings) {
         this.postMessage({ type: CommonMessageType.AdditionalSettings, settings });
     }
 
