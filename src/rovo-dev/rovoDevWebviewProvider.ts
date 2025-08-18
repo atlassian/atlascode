@@ -90,8 +90,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private readonly viewType = 'atlascodeRovoDev';
     private readonly isBoysenberry = process.env.ROVODEV_BBY;
 
-    private _prHandler = new RovoDevPullRequestHandler();
-    private _perfLogger = new PerformanceLogger();
+    private readonly _prHandler: RovoDevPullRequestHandler | undefined;
+    private readonly _perfLogger = new PerformanceLogger();
+
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _rovoDevApiClient?: RovoDevApiClient;
     private _processState = RovoDevProcessState.NotStarted;
@@ -145,6 +146,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         // Register this provider with the process manager for error handling
         RovoDevProcessManager.setRovoDevWebviewProvider(this);
+
+        if (this.isBoysenberry) {
+            this._prHandler = new RovoDevPullRequestHandler();
+        }
     }
 
     public resolveWebviewView(
@@ -241,7 +246,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.CheckGitChanges:
-                        await this._prHandler.isGitStateClean().then((isClean) => {
+                        await this._prHandler!.isGitStateClean().then((isClean) => {
                             this._webView?.postMessage({
                                 type: RovoDevProviderMessageType.CheckGitChangesComplete,
                                 hasChanges: !isClean,
@@ -966,13 +971,15 @@ ${message}`;
     }
 
     private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
+        const prHandler = this._prHandler!;
+
         let prLink: string | undefined;
         const webview = this._webView!;
         try {
             if (!commitMessage || !branchName) {
                 throw new Error('Commit message and branch name are required to create a PR');
             }
-            prLink = await this._prHandler.createPR(branchName, commitMessage);
+            prLink = await prHandler.createPR(branchName, commitMessage);
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CreatePRComplete,
@@ -999,8 +1006,10 @@ ${message}`;
 
     private async getCurrentBranchName(): Promise<void> {
         const webview = this._webView!;
+        const prHandler = this._prHandler!;
+
         try {
-            const branchName = await this._prHandler.getCurrentBranchName();
+            const branchName = await prHandler.getCurrentBranchName();
             await webview.postMessage({
                 type: RovoDevProviderMessageType.GetCurrentBranchNameComplete,
                 data: {
