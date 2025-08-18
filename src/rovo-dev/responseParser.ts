@@ -393,7 +393,7 @@ export class RovoDevResponseParser {
     *flush() {
         // if there is still data in the buffer, something went wrong.
         if (this.buffer) {
-            throw new Error('RovoDev parser error: flushed with non-empty buffer');
+            throw new Error('Rovo Dev parser error: flushed with non-empty buffer');
         }
 
         const chunk = this.flushPreviousChunk();
@@ -425,7 +425,7 @@ export class RovoDevResponseParser {
             // but we just want to send every single chunk as individual messages
             case 'text':
                 if (!this.mergeAllChunks && buffer) {
-                    throw new Error('RovoDev parser error: text should not have buffer set');
+                    throw new Error('Rovo Dev parser error: text should not have buffer set');
                 }
                 return parseResponseText(chunk.data, buffer as RovoDevTextResponse);
 
