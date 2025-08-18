@@ -58,7 +58,7 @@
         "postinstall": "cp ./scripts/githooks/* ./.git/hooks",
         "extension:clean": "rm -rf ./atlascode-*.vsix",
         "extension:package:prerelease": "npm run extension:clean && vsce package --pre-release --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",
-        "extension:package": "npm run extension:clean && vsce package --no-dependencies --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",
+        "extension:package": "npm run extension:clean && vsce package --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",
         "extension:install": "npm run extension:package && code --install-extension ./atlascode-*.vsix --force",
         "test": "rm -rf coverage && npm run test:unit && npm run test:react && istanbul-merge --out coverage/coverage-final.json coverage/react/coverage-final.json coverage/unit/coverage-final.json && echo '\n\nTotal test coverage:' && nyc report --reporter clover --reporter lcov --reporter html --reporter text-summary -t coverage/ --report-dir coverage/",
         "test:nocoverage": "npm run test:unit -- --collectCoverage false && npm run test:react -- --collectCoverage false",
@@ -1401,9 +1401,9 @@
         "@atlaskit/toggle": "^14.2.0",
         "@atlaskit/tooltip": "^19.2.0",
         "@atlaskit/width-detector": "^4.4.0",
-        "@atlassianlabs/guipi-core-components": "^2.0.0",
-        "@atlassianlabs/guipi-core-controller": "^2.0.0",
-        "@atlassianlabs/guipi-jira-components": "^2.0.0",
+        "@atlassianlabs/guipi-core-components": "^3.0.0",
+        "@atlassianlabs/guipi-core-controller": "^3.0.0",
+        "@atlassianlabs/guipi-jira-components": "^3.0.0",
         "@atlassianlabs/jira-metaui-client": "^1.3.0",
         "@atlassianlabs/jira-metaui-transformer": "^1.3.0",
         "@atlassianlabs/jira-pi-client": "^1.3.0",
@@ -1555,10 +1555,10 @@
     },
     "overrides": {
         "@atlaskit/analytics-next-stable-react-context": {
-            "react": "^17.0.2"
+            "react": "^18.3.1"
         },
         "react-scrolllock": {
-            "react": "^17.0.2"
+            "react": "^18.3.1"
         }
     },
     "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
