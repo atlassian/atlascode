@@ -62,6 +62,7 @@ export interface ConfigControllerApi {
     viewPullRequest: () => void;
     createJiraIssue: () => void;
     viewJiraIssue: () => void;
+    openNativeSettings: () => void;
 }
 
 export const emptyApi: ConfigControllerApi = {
@@ -131,6 +132,9 @@ export const emptyApi: ConfigControllerApi = {
         return;
     },
     viewJiraIssue: (): void => {
+        return;
+    },
+    openNativeSettings: (): void => {
         return;
     },
 };
@@ -600,6 +604,10 @@ export function useConfigControllerV3(): [ConfigV3State, ConfigControllerApi] {
         postMessage({ type: ConfigActionType.ViewJiraIssue });
     }, [postMessage]);
 
+    const openNativeSettings = useCallback((): void => {
+        postMessage({ type: ConfigActionType.OpenNativeSettings });
+    }, [postMessage]);
+
     const controllerApi = useMemo<ConfigControllerApi>((): ConfigControllerApi => {
         return {
             postMessage: postMessage,
@@ -618,6 +626,7 @@ export function useConfigControllerV3(): [ConfigV3State, ConfigControllerApi] {
             createPullRequest: createPullRequest,
             viewPullRequest: viewPullRequest,
             viewJiraIssue: viewJiraIssue,
+            openNativeSettings: openNativeSettings,
         };
     }, [
         handleConfigChange,
@@ -636,6 +645,7 @@ export function useConfigControllerV3(): [ConfigV3State, ConfigControllerApi] {
         createPullRequest,
         viewPullRequest,
         viewJiraIssue,
+        openNativeSettings,
     ]);
 
     return [state, controllerApi];
@@ -907,6 +917,10 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         postMessage({ type: ConfigActionType.ViewJiraIssue });
     }, [postMessage]);
 
+    const openNativeSettings = useCallback((): void => {
+        postMessage({ type: ConfigActionType.OpenNativeSettings });
+    }, [postMessage]);
+
     const controllerApi = useMemo<ConfigControllerApi>((): ConfigControllerApi => {
         return {
             postMessage: postMessage,
@@ -925,6 +939,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             createPullRequest: createPullRequest,
             viewPullRequest: viewPullRequest,
             viewJiraIssue: viewJiraIssue,
+            openNativeSettings: openNativeSettings,
         };
     }, [
         handleConfigChange,
@@ -943,6 +958,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         createPullRequest,
         viewPullRequest,
         viewJiraIssue,
+        openNativeSettings,
     ]);
 
     return [state, controllerApi];

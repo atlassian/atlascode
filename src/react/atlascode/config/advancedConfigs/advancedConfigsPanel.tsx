@@ -1,9 +1,10 @@
-import { Box, Fade, Grid, makeStyles, Theme, Typography } from '@material-ui/core';
+import { Box, Fade, Grid, Link, makeStyles, Theme, Typography } from '@material-ui/core';
 import React from 'react';
 
 import { ConfigSection, ConfigV3SubSection } from '../../../../lib/ipc/models/config';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { CommonPanelProps } from '../../common/commonPanelProps';
+import { ConfigControllerContext } from '../configController';
 import { DebuggingPanel } from './subpanels/charlesDebug/DebuggingPanel';
 import { JiraExplorerJqlPanel } from './subpanels/customJql/JiraExplorerJqlPanel';
 import { StartWorkPanel } from './subpanels/startWork/StartWorkPanel';
@@ -40,6 +41,7 @@ export const AdvancedConfigsPanel: React.FunctionComponent<AdvancedConfigsProps>
     }, [sites]);
 
     const classes = useStyles();
+    const controller = React.useContext(ConfigControllerContext);
 
     return (
         <>
@@ -49,11 +51,18 @@ export const AdvancedConfigsPanel: React.FunctionComponent<AdvancedConfigsProps>
                         <Grid item>
                             <Box>
                                 <Typography variant="subtitle1" className={classes.root}>
-                                    Note: We have simplified our settings to help our users quickly interact with they
+                                    Note: We have simplified our settings to help users quickly interact with what they
                                     need. To find the different configurations you can customize, please refer to the
-                                    VSCode Native settings of our Extension.
+                                    <Link
+                                        component="button"
+                                        variant="subtitle1"
+                                        onClick={() => controller.openNativeSettings()}
+                                        className={classes.root}
+                                    >
+                                        Atlascode Extension User Settings
+                                    </Link>
+                                    .
                                 </Typography>
-                                {/* Add the link to the User Settings UI here */}
                             </Box>
                         </Grid>
                         <Grid item>

@@ -295,6 +295,10 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 this._analytics.fireFocusPullRequestEvent(id);
                 break;
             }
+            case ConfigActionType.OpenNativeSettings: {
+                await this._api.openNativeSettings();
+                break;
+            }
 
             case CommonActionType.SendAnalytics:
             case CommonActionType.CopyLink:
