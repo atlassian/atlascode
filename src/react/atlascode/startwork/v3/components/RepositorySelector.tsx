@@ -1,4 +1,4 @@
-import { Grid, MenuItem, TextField, Typography } from '@material-ui/core';
+import { Grid, MenuItem, TextField, Typography } from '@mui/material';
 import React, { useCallback } from 'react';
 
 import { RepoData } from '../../../../../lib/ipc/toUI/startWork';
@@ -34,7 +34,6 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
             <TextField
                 select
                 size="small"
-                fullWidth
                 variant="outlined"
                 value={selectedRepository?.workspaceRepo.rootUri || ''}
                 onChange={handleRepositoryChange}

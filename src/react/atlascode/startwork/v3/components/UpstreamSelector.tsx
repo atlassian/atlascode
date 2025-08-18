@@ -1,4 +1,4 @@
-import { Grid, MenuItem, TextField, Typography } from '@material-ui/core';
+import { Grid, MenuItem, TextField, Typography } from '@mui/material';
 import React from 'react';
 
 import { RepoData } from '../../../../../lib/ipc/toUI/startWork';
@@ -28,10 +28,10 @@ export const UpstreamSelector: React.FC<UpstreamSelectorProps> = ({
             <TextField
                 select
                 size="small"
-                fullWidth
                 value={upstream}
                 onChange={handleUpstreamChange}
                 variant="outlined"
+                sx={{ width: '50%' }}
             >
                 {selectedRepository.workspaceRepo.siteRemotes.map((item) => (
                     <MenuItem key={item.remote.name} value={item.remote.name}>

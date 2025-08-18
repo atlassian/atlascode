@@ -1,7 +1,7 @@
 import Lozenge from '@atlaskit/lozenge';
 import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
-import { Box, Checkbox, FormControlLabel, Grid, MenuItem, TextField, Typography } from '@mui/material';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
+import { Box, Checkbox, FormControlLabel, Grid, MenuItem, TextField, Typography } from '@mui/material';
 import React, { useCallback, useEffect } from 'react';
 
 import { colorToLozengeAppearanceMap } from '../../../../vscode/theme/colors';
@@ -55,7 +55,7 @@ export const UpdateStatusSection: React.FC<UpdateStatusSectionProps> = ({
     return (
         <Box
             border={1}
-            borderRadius={3}
+            borderRadius="3px"
             borderColor="var(--vscode-list-inactiveSelectionBackground)"
             padding={3}
             marginBottom={2}

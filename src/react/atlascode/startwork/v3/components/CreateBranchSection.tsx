@@ -78,7 +78,7 @@ export const CreateBranchSection: React.FC<CreateBranchSectionProps> = ({
     return (
         <Box
             border={1}
-            borderRadius={3}
+            borderRadius="3px"
             borderColor="var(--vscode-list-inactiveSelectionBackground)"
             padding={3}
             marginBottom={2}

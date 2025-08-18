@@ -1,4 +1,4 @@
-import { Checkbox, FormControlLabel, Grid } from '@material-ui/core';
+import { Checkbox, FormControlLabel, Grid } from '@mui/material';
 import React, { useCallback } from 'react';
 
 interface PushBranchToggleProps {

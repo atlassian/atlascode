@@ -1,5 +1,4 @@
-import { List, ListItem, Typography } from '@material-ui/core';
-import { Alert, AlertTitle } from '@material-ui/lab';
+import { Alert, AlertTitle, List, ListItem, Typography } from '@mui/material';
 import React from 'react';
 
 interface SuccessAlertProps {

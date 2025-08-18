@@ -1,6 +1,5 @@
-import { IconButton, Snackbar } from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import { Alert, AlertTitle } from '@material-ui/lab';
+import CloseIcon from '@mui/icons-material/Close';
+import { Alert, AlertTitle, IconButton, Snackbar } from '@mui/material';
 import React, { useCallback } from 'react';
 
 interface SnackbarNotificationProps {

@@ -81,7 +81,7 @@ const StartWorkPageV3: React.FunctionComponent = () => {
                     )}
 
                     {submitState === 'submit-success' && (
-                        <Button variant="contained" color="default" onClick={controller.closePage}>
+                        <Button variant="contained" color="inherit" onClick={controller.closePage}>
                             Close
                         </Button>
                     )}

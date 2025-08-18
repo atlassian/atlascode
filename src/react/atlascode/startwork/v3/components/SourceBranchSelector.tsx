@@ -1,5 +1,4 @@
-import { Grid, TextField, Typography } from '@material-ui/core';
-import { Autocomplete } from '@material-ui/lab';
+import { Autocomplete, Grid, TextField, Typography } from '@mui/material';
 import React from 'react';
 
 import { RepoData } from '../../../../../lib/ipc/toUI/startWork';
@@ -33,7 +32,7 @@ export const SourceBranchSelector: React.FC<SourceBranchSelectorProps> = ({
                 getOptionLabel={(option) => option.name || ''}
                 value={sourceBranch}
                 onChange={handleSourceBranchChange}
-                renderInput={(params) => <TextField {...params} size="small" variant="outlined" fullWidth />}
+                renderInput={(params) => <TextField {...params} size="small" variant="outlined" />}
                 size="small"
                 disableClearable
             />

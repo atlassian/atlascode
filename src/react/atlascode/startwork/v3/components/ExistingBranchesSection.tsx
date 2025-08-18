@@ -1,5 +1,5 @@
-import { Box, Card, CardContent, Grid, Link, Typography } from '@material-ui/core';
-import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { Box, Card, CardContent, Grid, Link, Typography } from '@mui/material';
 import React, { useCallback } from 'react';
 
 import { RepoData } from '../../../../../lib/ipc/toUI/startWork';

@@ -1,5 +1,4 @@
-import { Grid, TextField, Typography } from '@material-ui/core';
-import { Autocomplete } from '@material-ui/lab';
+import { Autocomplete, Grid, TextField, Typography } from '@mui/material';
 import React, { useCallback } from 'react';
 
 import { RepoData } from '../../../../../lib/ipc/toUI/startWork';
@@ -49,7 +48,7 @@ export const BranchPrefixSelector: React.FC<BranchPrefixSelectorProps> = ({
                         : 'Custom Prefix'
                 }
                 getOptionLabel={(option) => option.kind}
-                renderInput={(params) => <TextField {...params} size="small" variant="outlined" fullWidth />}
+                renderInput={(params) => <TextField {...params} size="small" variant="outlined" />}
                 size="small"
                 disableClearable
                 value={selectedBranchType}

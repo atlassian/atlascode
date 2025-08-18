@@ -1,4 +1,4 @@
-import { Grid, TextField, Typography } from '@material-ui/core';
+import { Grid, TextField, Typography } from '@mui/material';
 import React, { useCallback } from 'react';
 
 interface LocalBranchInputProps {
@@ -20,11 +20,11 @@ export const LocalBranchInput: React.FC<LocalBranchInputProps> = ({ localBranch,
         <Grid item>
             <Typography variant="body2">New local branch</Typography>
             <TextField
-                fullWidth
                 size="small"
                 value={localBranch}
                 variant="outlined"
                 onChange={handleLocalBranchChange}
+                sx={{ width: '50%' }}
             />
         </Grid>
     );
