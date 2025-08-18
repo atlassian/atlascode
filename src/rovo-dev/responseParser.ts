@@ -325,7 +325,7 @@ export class RovoDevResponseParser {
 
             const match = chunkRaw.match(/^event: ([^\r\n]+)\r?\ndata: (.*)$/);
             if (!match) {
-                throw new Error(`RovoDev parser error: unable to parse chunk: "${chunkRaw}"`);
+                throw new Error(`Rovo Dev parser error: unable to parse chunk: "${chunkRaw}"`);
             }
 
             const chunk: RovoDevSingleChunk | RovoDevPartStartChunk | RovoDevPartDeltaChunk = {
@@ -437,7 +437,7 @@ export class RovoDevResponseParser {
             case 'tool-return':
             case 'tool_return':
                 if (buffer) {
-                    throw new Error(`RovoDev parser error: ${chunk.event_kind} seem to be split`);
+                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
                 }
                 return parseResponseToolReturn(chunk.data, this.toolCalls);
 
@@ -447,18 +447,18 @@ export class RovoDevResponseParser {
 
             case 'exception':
                 if (buffer) {
-                    throw new Error(`RovoDev parser error: ${chunk.event_kind} seem to be split`);
+                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
                 }
                 return parseResponseException(chunk.data);
 
             case 'warning':
                 if (buffer) {
-                    throw new Error(`RovoDev parser error: ${chunk.event_kind} seem to be split`);
+                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
                 }
                 return parseResponseWarning(chunk.data);
 
             default:
-                throw new Error(`RovoDev parser error: unknown event kind: ${(chunk as any).event_kind}`);
+                throw new Error(`Rovo Dev parser error: unknown event kind: ${(chunk as any).event_kind}`);
         }
     }
 }
