@@ -1,5 +1,6 @@
 import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Box, Button, CircularProgress, Grid, makeStyles, Switch, TextField, Theme, useTheme } from '@material-ui/core';
+import { Box, Button, CircularProgress, Grid, Switch, TextField, Theme, useTheme } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import { baseKeymap } from 'prosemirror-commands';
 import { dropCursor } from 'prosemirror-dropcursor';
 import { buildKeymap, buildMenuItems } from 'prosemirror-example-setup';
@@ -130,7 +131,7 @@ const useStyles = makeStyles(
             editor: {
                 borderWidth: 1,
                 borderStyle: 'solid',
-                borderColor: theme.palette.type === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)',
+                borderColor: theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)',
                 borderRadius: theme.shape.borderRadius,
                 '&:hover': {
                     borderColor: theme.palette.text.primary,
@@ -287,8 +288,8 @@ export const MarkdownEditor: React.FC<PropsType> = (props: PropsType) => {
                     <TextField
                         multiline
                         fullWidth
-                        rows={4}
-                        rowsMax={20}
+                        minRows={4}
+                        maxRows={20}
                         value={content}
                         onChange={handlePlainTextChange}
                     />

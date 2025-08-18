@@ -1,5 +1,5 @@
-import { Avatar, Grid, TextField, Typography } from '@material-ui/core';
-import { Autocomplete } from '@material-ui/lab';
+import { Avatar, Grid, TextField, Typography } from '@mui/material';
+import Autocomplete from '@mui/material/Autocomplete';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useContext, useState } from 'react';
 import { useAsyncAbortable } from 'react-async-hook';
@@ -59,13 +59,13 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
             onClose={() => setOpen(false)}
             options={fetchUsers.result || props.defaultUsers}
             getOptionLabel={(option) => option?.displayName || ''}
-            getOptionSelected={(option, value) => option.accountId === value.accountId}
+            isOptionEqualToValue={(option, value) => option.accountId === value.accountId}
             value={props.users}
             onInputChange={handleInputChange}
             onChange={handleChange}
             loading={fetchUsers.loading}
             renderInput={(params) => <TextField {...params} label="Reviewers" />}
-            renderOption={(option) => (
+            renderOption={(props, option) => (
                 <Grid container spacing={1} direction="row" alignItems="center">
                     <Grid item>
                         <Avatar src={option?.avatarUrl} />

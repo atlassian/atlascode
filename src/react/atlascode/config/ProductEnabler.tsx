@@ -1,4 +1,4 @@
-import { Grid, Switch, Tooltip } from '@material-ui/core';
+import { Grid, Switch, Tooltip } from '@mui/material';
 import React, { useCallback } from 'react';
 
 export type ProductEnablerProps = {
@@ -20,7 +20,7 @@ export const ProductEnabler: React.FunctionComponent<ProductEnablerProps> = ({ l
     );
 
     return (
-        <Grid container justify="center" alignItems="center" spacing={1}>
+        <Grid container justifyContent="center" alignItems="center" spacing={1}>
             <Grid item>
                 <Tooltip title={enabled ? `Disable ${label} features` : `Enable ${label} features`}>
                     <Switch

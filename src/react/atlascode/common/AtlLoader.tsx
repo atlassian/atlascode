@@ -1,4 +1,5 @@
-import { Container, Grid, makeStyles, Typography } from '@material-ui/core';
+import { Container, Grid, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React from 'react';
 
 const styles = {
@@ -26,7 +27,7 @@ export const AtlLoader: React.FunctionComponent = () => {
 
     return (
         <Container maxWidth="xl">
-            <Grid container direction="column" justify="center" alignItems="center">
+            <Grid container direction="column" justifyContent="center" alignItems="center">
                 <Grid item>
                     <img className={classes.root} src={'images/atlassian-icon.svg'} />
                 </Grid>

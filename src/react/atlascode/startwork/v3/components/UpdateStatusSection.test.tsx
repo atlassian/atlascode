@@ -91,7 +91,7 @@ describe('UpdateStatusSection', () => {
     it('should render transition dropdown', () => {
         render(<UpdateStatusSection state={mockState} controller={mockController} />);
 
-        const dropdown = screen.getByRole('button');
+        const dropdown = screen.getByRole('combobox');
         expect(dropdown).toBeDefined();
     });
 
@@ -106,7 +106,7 @@ describe('UpdateStatusSection', () => {
     it('should handle transition change', () => {
         render(<UpdateStatusSection state={mockState} controller={mockController} />);
 
-        const dropdown = screen.getByRole('button');
+        const dropdown = screen.getByRole('combobox');
         fireEvent.mouseDown(dropdown);
 
         expect(screen.getByText('Done')).toBeDefined();
@@ -118,6 +118,6 @@ describe('UpdateStatusSection', () => {
         expect(screen.getByText('Update work item status')).toBeDefined();
         expect(screen.getByText('To Do')).toBeDefined();
         expect(screen.getByRole('checkbox')).toBeDefined();
-        expect(screen.getByRole('button')).toBeDefined();
+        expect(screen.getByRole('combobox')).toBeDefined();
     });
 });

@@ -14,7 +14,7 @@ import {
     RadioGroup,
     TextField,
     Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import React, { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
@@ -104,7 +104,7 @@ export const PMFDialog: React.FunctionComponent<PMFDialogProps> = ({ open, onCan
                             rows={3}
                             variant="outlined"
                             autoComplete="off"
-                            margin="dense"
+                            size="small"
                             id="improvements"
                             name="improvements"
                             label="How can we improve this extension for you?"
@@ -118,7 +118,7 @@ export const PMFDialog: React.FunctionComponent<PMFDialogProps> = ({ open, onCan
                             rows={3}
                             variant="outlined"
                             autoComplete="off"
-                            margin="dense"
+                            size="small"
                             id="alternative"
                             name="alternative"
                             label="What would you use as an alternative if this extension were no longer available?"
@@ -132,7 +132,7 @@ export const PMFDialog: React.FunctionComponent<PMFDialogProps> = ({ open, onCan
                             rows={3}
                             variant="outlined"
                             autoComplete="off"
-                            margin="dense"
+                            size="small"
                             id="benefits"
                             name="benefits"
                             label="What are the main benefits you receive from this extension?"

@@ -1,7 +1,7 @@
 import Lozenge from '@atlaskit/lozenge';
 import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
-import { Box, Checkbox, FormControlLabel, Grid, MenuItem, TextField, Typography } from '@material-ui/core';
-import ArrowRightAltIcon from '@material-ui/icons/ArrowRightAlt';
+import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
+import { Box, Checkbox, FormControlLabel, Grid, MenuItem, TextField, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { colorToLozengeAppearanceMap } from '../../../../vscode/theme/colors';
@@ -30,7 +30,7 @@ export const UpdateStatusSection: React.FC<UpdateStatusSectionProps> = ({ state,
     return (
         <Box
             border={1}
-            borderRadius={3}
+            borderRadius="3px"
             borderColor="var(--vscode-list-inactiveSelectionBackground)"
             padding={3}
             marginBottom={2}
@@ -43,7 +43,6 @@ export const UpdateStatusSection: React.FC<UpdateStatusSectionProps> = ({ state,
                     </Typography>
                 }
             />
-
             <Grid container alignItems="center" justifyContent="flex-start" spacing={1}>
                 <Grid item>
                     <Lozenge appearance={colorToLozengeAppearanceMap[state.issue.status.statusCategory.colorName]}>

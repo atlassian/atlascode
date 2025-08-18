@@ -9,7 +9,7 @@ import {
     Grid,
     TextField,
     Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import React, { memo, useCallback, useState } from 'react';
 import { AuthFormType } from 'src/react/atlascode/constants';
 import { isCustomUrl } from 'src/react/atlascode/util/authFormUtils';
@@ -171,7 +171,14 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
         const registerRequiredString = useCallback(register(validateRequiredString), []); // eslint-disable-line react-hooks/exhaustive-deps
 
         return (
-            <Dialog fullWidth maxWidth="md" open={open} onExited={onExited}>
+            <Dialog
+                fullWidth
+                maxWidth="md"
+                open={open}
+                TransitionProps={{
+                    onExited,
+                }}
+            >
                 <DialogTitle>
                     <Typography variant="h4">Authenticate</Typography>
                 </DialogTitle>
@@ -185,7 +192,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                 required
                                 autoFocus
                                 autoComplete="off"
-                                margin="dense"
+                                size="small"
                                 id="baseUrl"
                                 label="Base URL"
                                 helperText={errors.baseUrl ? errors.baseUrl : helperText}

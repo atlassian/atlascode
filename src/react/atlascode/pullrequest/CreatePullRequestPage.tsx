@@ -1,5 +1,8 @@
 import { RefreshButton, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import LaunchIcon from '@mui/icons-material/Launch';
+import { Autocomplete } from '@mui/lab';
 import {
     AppBar,
     Box,
@@ -20,11 +23,8 @@ import {
     Tooltip,
     Typography,
     useTheme,
-} from '@material-ui/core';
-import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
-import LaunchIcon from '@material-ui/icons/Launch';
-import { Autocomplete } from '@material-ui/lab';
-import { makeStyles } from '@material-ui/styles';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import path from 'path';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
@@ -257,6 +257,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                             ? `${state.repoData.href}/pull-requests/new`
                                             : `${state.repoData.href}/pull-requests?create`
                                     }
+                                    size="large"
                                 >
                                     <LaunchIcon />
                                 </IconButton>
@@ -306,7 +307,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                         <Autocomplete
                                                             options={state.repoData.localBranches}
                                                             getOptionLabel={(option: Branch) => option.name!}
-                                                            getOptionSelected={(option: Branch, value: Branch) =>
+                                                            isOptionEqualToValue={(option: Branch, value: Branch) =>
                                                                 option.name === value.name
                                                             }
                                                             value={sourceBranch}
@@ -331,7 +332,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                         <Autocomplete
                                                             options={state.repoData.remoteBranches}
                                                             getOptionLabel={(option: Branch) => option.name!}
-                                                            getOptionSelected={(option: Branch, value: Branch) =>
+                                                            isOptionEqualToValue={(option: Branch, value: Branch) =>
                                                                 option.name === value.name
                                                             }
                                                             groupBy={(option) => option.remote!}
@@ -386,8 +387,8 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                             <TextField
                                                 fullWidth
                                                 multiline
-                                                rows={4}
-                                                rowsMax={20}
+                                                minRows={4}
+                                                maxRows={20}
                                                 label="Summary"
                                                 name="summary"
                                                 value={summary}
@@ -444,6 +445,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                 spacing={2}
                                                 direction="column"
                                                 className={classes.leftBorder}
+                                                sx={{ maxWidth: '50%' }}
                                             >
                                                 <Grid item direction="row">
                                                     <Typography>
