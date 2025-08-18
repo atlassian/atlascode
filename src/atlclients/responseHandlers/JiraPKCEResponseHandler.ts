@@ -69,8 +69,6 @@ export class JiraPKCEResponseHandler extends ResponseHandler {
 
     public async accessibleResources(accessToken: string): Promise<AccessibleResource[]> {
         try {
-            const resources: AccessibleResource[] = [];
-
             const resourcesResponse = await this.axios(this.strategy.accessibleResourcesUrl(), {
                 method: 'GET',
                 headers: {
@@ -81,11 +79,7 @@ export class JiraPKCEResponseHandler extends ResponseHandler {
                 ...this.agent,
             });
 
-            resourcesResponse.data.forEach((resource: AccessibleResource) => {
-                resources.push(resource);
-            });
-
-            return resources;
+            return resourcesResponse.data;
         } catch (err) {
             Logger.error(err, 'Error fetching Jira resources');
             throw new Error(`Error fetching Jira resources: ${err}`);

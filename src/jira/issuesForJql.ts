@@ -11,10 +11,8 @@ export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise
     const performanceEnabled = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment);
     let issues: MinimalIssue<DetailedSiteInfo>[] = [];
     if (performanceEnabled) {
-        const [fields, epicFieldInfo] = await Promise.all([
-            Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site),
-            Container.jiraSettingsManager.getEpicFieldsForSite(site),
-        ]);
+        const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
+        const fields = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicFieldInfo);
 
         let index = 0;
         let total = 0;
@@ -39,8 +37,8 @@ export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise
             }
         }
     } else {
-        const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
         const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
+        const fields = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicFieldInfo);
 
         let index = 0;
         let total = 0;
