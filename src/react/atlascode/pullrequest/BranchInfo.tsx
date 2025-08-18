@@ -1,4 +1,4 @@
-import { ArrowRightAlt as ArrowRightAltIcon } from '@mui/icons-material';
+import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import { Chip, CircularProgress, Grid, Tooltip } from '@mui/material';
 import * as React from 'react';
 
