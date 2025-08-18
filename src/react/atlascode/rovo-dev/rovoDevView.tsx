@@ -113,7 +113,6 @@ const RovoDevView: React.FC = () => {
     const handleAppendError = useCallback((msg: ErrorMessage) => {
         setChatStream((prev) => {
             setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
-
             return [...prev, msg];
         });
     }, []);
@@ -126,6 +125,7 @@ const RovoDevView: React.FC = () => {
             if (!Array.isArray(last) && last?.source === 'User') {
                 const msg: ErrorMessage = {
                     source: 'RovoDevError',
+                    type: 'error',
                     text: 'Error: something went wrong while processing the prompt',
                     isRetriable: true,
                     uid: v4(),
@@ -384,11 +384,13 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ErrorMessage:
-                    if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
-                        finalizeResponse();
-                    }
-                    if (event.message.isProcessTerminated) {
-                        setCurrentState(State.ProcessTerminated);
+                    if (event.message.type === 'error') {
+                        if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
+                            finalizeResponse();
+                        }
+                        if (event.message.isProcessTerminated) {
+                            setCurrentState(State.ProcessTerminated);
+                        }
                     }
                     handleAppendError(event.message);
                     break;
@@ -468,6 +470,7 @@ const RovoDevView: React.FC = () => {
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendError({
                         source: 'RovoDevError',
+                        type: 'error',
                         // @ts-expect-error ts(2339) - event here should be 'never'
                         text: `Unknown message type: ${event.type}`,
                         isRetriable: false,

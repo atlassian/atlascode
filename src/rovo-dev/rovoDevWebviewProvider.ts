@@ -474,10 +474,26 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return webview.postMessage({
             type: RovoDevProviderMessageType.ErrorMessage,
             message: {
+                type: 'error',
                 text: `${error.message}${error.gitErrorCode ? `\n ${error.gitErrorCode}` : ''}`,
                 source: 'RovoDevError',
                 isRetriable,
                 isProcessTerminated,
+                uid: v4(),
+            },
+        });
+    }
+
+    private processWarning(message: string, title?: string) {
+        const webview = this._webView!;
+        return webview.postMessage({
+            type: RovoDevProviderMessageType.ErrorMessage,
+            message: {
+                type: 'warning',
+                text: message,
+                title,
+                source: 'RovoDevError',
+                isRetriable: false,
                 uid: v4(),
             },
         });
@@ -567,6 +583,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     return this.sendUserPromptToView({ text: cleanedText });
                 }
                 return Promise.resolve(false);
+
+            case 'exception':
+                const msg = response.title ? `${response.title} - ${response.message}` : response.message;
+                return this.processError(new Error(msg), false);
+
+            case 'warning':
+                return this.processWarning(response.message, response.title);
 
             default:
                 return Promise.resolve(false);
@@ -1096,16 +1119,7 @@ ${message}`;
      * @param errorMessage The error message to display in chat
      */
     public sendErrorToChat(errorMessage: string): void {
-        const webView = this._webView!;
-        webView.postMessage({
-            type: RovoDevProviderMessageType.ErrorMessage,
-            message: {
-                text: errorMessage,
-                source: 'RovoDevError',
-                isRetriable: false,
-                uid: v4(),
-            },
-        });
+        this.processError(new Error(errorMessage), false);
     }
 
     public signalBinaryDownloadStarted() {

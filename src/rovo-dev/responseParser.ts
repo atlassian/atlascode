@@ -66,19 +66,46 @@ interface RovoDevRetryPromptChunk {
     data: RovoDevRetryPromptResponseRaw;
 }
 
+// https://bitbucket.org/atlassian/acra-python/src/9ce5910e61d00e91f70c7978e067bde2690a1c97/packages/cli-rovodev/docs/serve/streaming-events.md?at=RDA-307-emit-warning-events-related-to-rate-limits-and-other-api-request-problems#:~:text=Server%20Error%20Warnings
+interface RovoDevExceptionResponseRaw {
+    message: string;
+    title?: string;
+    type: string;
+}
+
+interface RovoDevExceptionChunk {
+    event_kind: 'exception';
+    data: RovoDevExceptionResponseRaw;
+}
+
+// https://bitbucket.org/atlassian/acra-python/src/9ce5910e61d00e91f70c7978e067bde2690a1c97/packages/cli-rovodev/docs/serve/streaming-events.md?at=RDA-307-emit-warning-events-related-to-rate-limits-and-other-api-request-problems#:~:text=Server%20Error%20Warnings
+interface RovoDevWarningResponseRaw {
+    message: string;
+    title?: string;
+}
+
+interface RovoDevWarningChunk {
+    event_kind: 'warning';
+    data: RovoDevWarningResponseRaw;
+}
+
 type RovoDevSingleResponseRaw =
     | RovoDevUserPromptResponseRaw
     | RovoDevTextResponseRaw
     | RovoDevToolCallResponseRaw
     | RovoDevToolReturnResponseRaw
-    | RovoDevRetryPromptResponseRaw;
+    | RovoDevRetryPromptResponseRaw
+    | RovoDevWarningResponseRaw
+    | RovoDevExceptionResponseRaw;
 
 type RovoDevSingleChunk =
     | RovoDevUserPromptChunk
     | RovoDevTextChunk
     | RovoDevToolCallChunk
     | RovoDevToolReturnChunk
-    | RovoDevRetryPromptChunk;
+    | RovoDevRetryPromptChunk
+    | RovoDevExceptionChunk
+    | RovoDevWarningChunk;
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.PartStartEvent
 interface RovoDevPartStartResponseRaw {
@@ -139,12 +166,27 @@ export interface RovoDevRetryPromptResponse {
     timestamp: string;
 }
 
+export interface RovoDevExceptionResponse {
+    event_kind: 'exception';
+    message: string;
+    title?: string;
+    type: string;
+}
+
+export interface RovoDevWarningResponse {
+    event_kind: 'warning';
+    message: string;
+    title?: string;
+}
+
 export type RovoDevResponse =
     | RovoDevUserPromptResponse
     | RovoDevTextResponse
     | RovoDevToolCallResponse
     | RovoDevToolReturnResponse
-    | RovoDevRetryPromptResponse;
+    | RovoDevRetryPromptResponse
+    | RovoDevExceptionResponse
+    | RovoDevWarningResponse;
 
 // parsing functions for specific response types
 
@@ -227,6 +269,23 @@ function parseResponseRetryPrompt(
             timestamp: data.timestamp,
         };
     }
+}
+
+function parseResponseException(data: RovoDevExceptionResponseRaw): RovoDevExceptionResponse {
+    return {
+        event_kind: 'exception',
+        message: data.message,
+        title: data.title,
+        type: data.type,
+    };
+}
+
+function parseResponseWarning(data: RovoDevWarningResponseRaw): RovoDevWarningResponse {
+    return {
+        event_kind: 'warning',
+        message: data.message,
+        title: data.title,
+    };
 }
 
 // the parser
@@ -378,13 +437,25 @@ export class RovoDevResponseParser {
             case 'tool-return':
             case 'tool_return':
                 if (buffer) {
-                    throw new Error('RovoDev parser error: tool-return seem to be split');
+                    throw new Error(`RovoDev parser error: ${chunk.event_kind} seem to be split`);
                 }
                 return parseResponseToolReturn(chunk.data, this.toolCalls);
 
             case 'retry-prompt':
             case 'retry_prompt':
                 return parseResponseRetryPrompt(chunk.data, buffer as RovoDevRetryPromptResponse);
+
+            case 'exception':
+                if (buffer) {
+                    throw new Error(`RovoDev parser error: ${chunk.event_kind} seem to be split`);
+                }
+                return parseResponseException(chunk.data);
+
+            case 'warning':
+                if (buffer) {
+                    throw new Error(`RovoDev parser error: ${chunk.event_kind} seem to be split`);
+                }
+                return parseResponseWarning(chunk.data);
 
             default:
                 throw new Error(`RovoDev parser error: unknown event kind: ${(chunk as any).event_kind}`);
