@@ -308,7 +308,7 @@ class RovoDevProcessInstance extends Disposable implements RovoDevInstance {
                         if (code !== 0) {
                             let error: string;
                             if (stderrData.includes('auth token')) {
-                                error = `please login by providing an API Token. You can do this via Atlassian: Open Settings -> Authentication -> Other Options`;
+                                error = `please login by providing an API Token. You can do this via Atlassian: Open Settings -> Authentication`;
                             } else {
                                 // default error message
                                 error = `process exited with code ${code}, see the log for details.`;
