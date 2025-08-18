@@ -13,6 +13,7 @@ import {
 
 interface PromptInputBoxProps {
     disabled?: boolean;
+    hideButtons?: boolean;
     state: State;
     promptText: string;
     onPromptTextChange: (text: string) => void;
@@ -31,6 +32,7 @@ const TextAreaMessages: Record<State, string> = {
     [State.GeneratingResponse]: 'Generating response...',
     [State.CancellingResponse]: 'Cancelling the response...',
     [State.ExecutingPlan]: 'Executing the code plan...',
+    [State.ProcessTerminated]: 'Start a new session to chat',
 };
 
 const getTextAreaPlaceholder = (state: State) => {
@@ -39,6 +41,7 @@ const getTextAreaPlaceholder = (state: State) => {
 
 export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     disabled,
+    hideButtons,
     state,
     promptText,
     onPromptTextChange,
@@ -79,7 +82,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 }}
             >
                 {/* Left-side Add Context Button */}
-                {!disabled && (
+                {!hideButtons && (
                     <>
                         <LoadingButton
                             style={{
@@ -88,6 +91,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             spacing="compact"
                             label="Add context"
                             iconBefore={<i className="codicon codicon-add" />}
+                            isDisabled={disabled}
                             onClick={() => onAddContext()}
                         />
                         <div style={{ display: 'flex', gap: 8 }}>
@@ -102,7 +106,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                 label="Enable deep plan"
                                 iconBefore={<AiGenerativeTextSummaryIcon />}
                                 iconAfter={isDeepPlanEnabled ? <CloseIconDeepPlan /> : undefined}
-                                isDisabled={state !== State.WaitingForPrompt}
+                                isDisabled={disabled || state !== State.WaitingForPrompt}
                                 onClick={() => onDeepPlanToggled()}
                             >
                                 {isDeepPlanEnabled ? 'Deep plan enabled' : ''}
@@ -117,7 +121,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                     spacing="compact"
                                     label="Send prompt"
                                     iconBefore={<SendIcon label="Send prompt" />}
-                                    isDisabled={sendButtonDisabled}
+                                    isDisabled={disabled || sendButtonDisabled}
                                     onClick={() => onSend(promptText)}
                                 />
                             )}
@@ -127,7 +131,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                     spacing="compact"
                                     label="Stop"
                                     iconBefore={<StopIcon label="Stop" />}
-                                    isDisabled={state === State.CancellingResponse}
+                                    isDisabled={disabled || state === State.CancellingResponse}
                                     onClick={() => onCancel()}
                                 />
                             )}

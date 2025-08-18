@@ -26,7 +26,7 @@ import {
     BB_PIPELINES_FILENAME,
 } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
-import { deactivateRovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
+import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { GitExtension } from './typings/git';
 import { FeatureFlagClient, Features } from './util/featureFlags';
 import Performance from './util/perf';
@@ -207,10 +207,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
 // this method is called when your extension is deactivated
 export function deactivate() {
     if (!process.env.ROVODEV_BBY) {
-        if (Container.isRovoDevEnabled) {
-            deactivateRovoDevProcessManager();
-        }
-
+        RovoDevProcessManager.deactivateRovoDevProcessManager();
         NotificationManagerImpl.getInstance().stopListening();
     }
 

@@ -27,12 +27,12 @@ export enum PerimeterType {
 export abstract class FeatureFlagClient {
     private static featureGateOverrides: FeatureGateValues;
     private static experimentValueOverride: ExperimentGateValues;
-    private static options?: FeatureFlagClientOptions;
+    private static identifiers?: Identifiers;
 
     private static isExperimentationDisabled = false;
 
     private static async buildClientOptions(): Promise<FetcherOptions> {
-        if (!this.options) {
+        if (!this.identifiers) {
             throw new Error('FeatureFlagClient not initialized');
         }
         this.isExperimentationDisabled = !!process.env.ATLASCODE_NO_EXP;
@@ -63,14 +63,14 @@ export abstract class FeatureFlagClient {
     }
 
     public static async initialize(options: FeatureFlagClientOptions): Promise<void> {
-        this.options = options;
-        this.initializeOverrides();
-
         if (!options.identifiers.analyticsAnonymousId) {
             return Promise.reject(
                 new FeatureFlagClientInitError(ClientInitializedErrorType.IdMissing, 'analyticsAnonymousId not set'),
             );
         }
+
+        this.identifiers = options.identifiers;
+        this.initializeOverrides();
 
         const clientOptions = await this.buildClientOptions();
 
@@ -85,17 +85,31 @@ export abstract class FeatureFlagClient {
         }
     }
 
-    public static async updateUser({ tenantId }: { tenantId: string }): Promise<void> {
-        if (!this.options) {
+    public static async updateUser({ tenantId }: { tenantId?: string }): Promise<void> {
+        if (!this.identifiers) {
             Logger.error(new Error('FeatureFlagClient not initialized'));
             return;
         }
 
-        this.options.identifiers.tenantId = tenantId;
+        if (tenantId === this.identifiers.tenantId) {
+            // no change needed, avoid unnecessary updates
+            return;
+        }
+
+        // FeatureGates stores the identifiers object and uses it in comparison down the line
+        // hence we use a copy instead of modifying the original here
+        this.identifiers = {
+            ...this.identifiers,
+            tenantId,
+        };
 
         const clientOptions = await this.buildClientOptions();
 
-        await FeatureGates.updateUser(clientOptions, this.options.identifiers);
+        try {
+            await FeatureGates.updateUser(clientOptions, this.identifiers);
+        } catch (e) {
+            Logger.error(new Error(`FeatureFlagClient: Failed to update user: ${e}`));
+        }
     }
 
     private static initializeOverrides(): void {

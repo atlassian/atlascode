@@ -1,5 +1,6 @@
-import { Checkbox, IconButton, makeStyles, Tooltip } from '@material-ui/core';
-import DeleteIcon from '@material-ui/icons/Delete';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { Checkbox, IconButton, Tooltip } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useCallback, useState } from 'react';
 
 import { Task } from '../../../bitbucket/model';

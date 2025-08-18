@@ -1,5 +1,5 @@
 import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import { commands, env, ExtensionContext, TextEditor, Uri, window } from 'vscode';
+import { commands, Disposable, env, ExtensionContext, TextEditor, Uri, window } from 'vscode';
 
 import {
     cloneRepositoryButtonEvent,
@@ -8,7 +8,7 @@ import {
     Registry,
     viewScreenEvent,
 } from './analytics';
-import { DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
+import { BasicAuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
 import { rerunPipeline } from './commands/bitbucket/rerunPipeline';
 import { runPipeline } from './commands/bitbucket/runPipeline';
@@ -23,6 +23,7 @@ import { transitionIssue } from './jira/transitionIssue';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from './lib/ipc/models/config';
 import { Logger } from './logger';
+import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevContext } from './rovo-dev/rovoDevTypes';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
@@ -260,8 +261,9 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
         commands.registerCommand(Commands.RovodevNewSession, () => {
-            Container.rovodevWebviewProvider.executeReset();
+            Container.rovodevWebviewProvider.executeNewSession();
         }),
+        commands.registerCommand(Commands.RovodevShowTerminal, () => RovoDevProcessManager.showTerminal()),
     );
     vscodeContext.subscriptions.push(
         commands.registerCommand(Commands.RovodevAddToContext, async () => {
@@ -276,4 +278,87 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             });
         }),
     );
+}
+
+/**
+ * Commands to help with extension development, only enabled in debug mode
+ */
+export function registerDebugCommands(vscodeContext: ExtensionContext): Disposable {
+    const siteList = process.env.DEBUG_SITE_LIST?.split(',') || [];
+
+    const disposable = Disposable.from(
+        // Trigger arbitrary logic quickly when needed
+        commands.registerCommand(Commands.DebugQuickCommand, async () => {
+            if (!Container.isDebugging) {
+                return;
+            }
+
+            window.showInformationMessage('[DEBUG] Atlascode: Quick command');
+
+            // Add your logic here
+        }),
+
+        // Login to a cloud site with API token
+        commands.registerCommand(Commands.DebugQuickLogin, async () => {
+            if (!Container.isDebugging) {
+                return;
+            }
+
+            if (!process.env.DEBUG_USER_EMAIL || !process.env.DEBUG_USER_API_TOKEN || !siteList.length) {
+                window.showErrorMessage(
+                    'This command requires the following environment variables to be set: DEBUG_USER_EMAIL, DEBUG_USER_API_TOKEN, DEBUG_SITE_LIST',
+                );
+                return;
+            }
+
+            const selection = await window.showQuickPick(siteList, {
+                placeHolder: 'Select a site',
+            });
+
+            if (!selection) {
+                return;
+            }
+
+            Container.loginManager.userInitiatedServerLogin(
+                {
+                    host: selection,
+                    product: ProductJira,
+                },
+                {
+                    username: process.env.DEBUG_USER_EMAIL,
+                    password: process.env.DEBUG_USER_API_TOKEN,
+                } as BasicAuthInfo,
+            );
+        }),
+
+        // Log out of a cloud site
+        commands.registerCommand(Commands.DebugQuickLogout, async () => {
+            if (!Container.isDebugging) {
+                return;
+            }
+
+            if (!process.env.DEBUG_USER_EMAIL || !process.env.DEBUG_USER_API_TOKEN || !siteList.length) {
+                window.showErrorMessage(
+                    'This command requires the following environment variables to be set: DEBUG_USER_EMAIL, DEBUG_USER_API_TOKEN, DEBUG_SITE_LIST',
+                );
+                return;
+            }
+
+            const selection = await window.showQuickPick(siteList, {
+                placeHolder: 'Select a site',
+            });
+            if (!selection) {
+                return;
+            }
+
+            const info = Container.siteManager?.getSiteForHostname(ProductJira, selection);
+            if (info) {
+                await Container.clientManager.removeClient(info);
+                await Container.siteManager.removeSite(info);
+            }
+        }),
+    );
+    vscodeContext.subscriptions.push(disposable);
+
+    return disposable;
 }

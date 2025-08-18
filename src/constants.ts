@@ -85,12 +85,18 @@ export const enum Commands {
     RovodevAskInteractive = 'atlascode.rovodev.askInteractive',
     RovodevAddToContext = 'atlascode.rovodev.addToContext',
     RovodevNewSession = 'atlascode.rovodev.newChatSession',
+    RovodevShowTerminal = 'atlascode.rovodev.showTerminal',
     InProgressIssue = 'atlascode.jira.inProgressIssue',
     DoneIssue = 'atlascode.jira.doneIssue',
     ShowOnboardingFlow = 'atlascode.showOnboardingFlow',
     OpenRovoDevConfig = 'atlascode.openRovoDevConfig',
     OpenRovoDevMcpJson = 'atlascode.openRovoDevMcpJson',
     OpenRovoDevGlobalMemory = 'atlascode.openRovoDevGlobalMemory',
+
+    // Debug mode-only commands
+    DebugQuickCommand = 'atlascode.debug.quickCommand',
+    DebugQuickLogin = 'atlascode.debug.quickLogin',
+    DebugQuickLogout = 'atlascode.debug.quickLogout',
     OpenNativeSettings = 'atlascode.openNativeSettings',
 }
 

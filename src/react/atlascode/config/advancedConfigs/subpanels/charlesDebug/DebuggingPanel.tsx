@@ -1,5 +1,7 @@
-import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { ConfigV3SubSection } from 'src/lib/ipc/models/config';
 import { CommonSubpanelV3Props } from 'src/react/atlascode/common/commonPanelProps';
@@ -36,23 +38,23 @@ export const DebuggingPanel: React.FunctionComponent<DebuggingPanelProps> = memo
         }, [expanded]);
 
         return (
-            <ExpansionPanel hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
-                <ExpansionPanelSummary
+            <Accordion hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
+                <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     aria-controls={`charles-${ConfigV3SubSection.Debug}-content`}
                     id={`charles-${ConfigV3SubSection.Debug}-header`}
                 >
                     <PanelTitle>Debugging with Charles Web Proxy</PanelTitle>
                     <PanelSubtitle>configure debugging tools</PanelSubtitle>
-                </ExpansionPanelSummary>
-                <ExpansionPanelDetails>
+                </AccordionSummary>
+                <AccordionDetails>
                     <Debug
                         enableCharles={enableCharles}
                         charlesCertPath={charlesCertPath}
                         charlesDebugOnly={charlesDebugOnly}
                     />
-                </ExpansionPanelDetails>
-            </ExpansionPanel>
+                </AccordionDetails>
+            </Accordion>
         );
     },
 );

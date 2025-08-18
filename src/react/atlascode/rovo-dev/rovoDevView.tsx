@@ -150,7 +150,13 @@ const RovoDevView: React.FC = () => {
         (files: ToolReturnParseResult[]) => {
             dispatch({
                 type: RovoDevViewResponseType.KeepFileChanges,
-                files: files.map((file) => ({ filePath: file.filePath, type: file.type }) as ModifiedFile),
+                files: files.map(
+                    (file) =>
+                        ({
+                            filePath: file.filePath,
+                            type: file.type,
+                        }) as ModifiedFile,
+                ),
             });
             removeModifiedFileToolReturns(files);
         },
@@ -161,7 +167,13 @@ const RovoDevView: React.FC = () => {
         (files: ToolReturnParseResult[]) => {
             dispatch({
                 type: RovoDevViewResponseType.UndoFileChanges,
-                files: files.map((file) => ({ filePath: file.filePath, type: file.type }) as ModifiedFile),
+                files: files.map(
+                    (file) =>
+                        ({
+                            filePath: file.filePath,
+                            type: file.type,
+                        }) as ModifiedFile,
+                ),
             });
             removeModifiedFileToolReturns(files);
         },
@@ -270,7 +282,7 @@ const RovoDevView: React.FC = () => {
     }, []);
 
     const handleResponse = useCallback(
-        (data: RovoDevResponse) => {
+        (data: RovoDevResponse, isReplay?: boolean) => {
             switch (data.event_kind) {
                 case 'text':
                     if (!data.content) {
@@ -302,7 +314,9 @@ const RovoDevView: React.FC = () => {
 
                     setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE); // Clear pending tool call
                     handleAppendToolReturn(returnMessage);
-                    handleAppendModifiedFileToolReturns(returnMessage);
+                    if (!isReplay) {
+                        handleAppendModifiedFileToolReturns(returnMessage);
+                    }
                     break;
 
                 case 'retry-prompt':
@@ -335,6 +349,9 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.Response:
+                    if (currentState === State.WaitingForPrompt) {
+                        setCurrentState(State.GeneratingResponse);
+                    }
                     handleResponse(event.dataObject);
                     break;
 
@@ -352,24 +369,34 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ToolCall:
+                    if (currentState === State.WaitingForPrompt) {
+                        setCurrentState(State.GeneratingResponse);
+                    }
                     handleResponse(event.dataObject);
                     break;
 
                 case RovoDevProviderMessageType.ToolReturn:
-                    handleResponse(event.dataObject);
+                    if (currentState === State.WaitingForPrompt) {
+                        setCurrentState(State.GeneratingResponse);
+                    }
+                    const isReplay = event.isReplay || false;
+                    handleResponse(event.dataObject, isReplay);
                     break;
 
                 case RovoDevProviderMessageType.ErrorMessage:
                     if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
                         finalizeResponse();
                     }
+                    if (event.message.isProcessTerminated) {
+                        setCurrentState(State.ProcessTerminated);
+                    }
                     handleAppendError(event.message);
-
                     break;
 
                 case RovoDevProviderMessageType.NewSession:
                     clearChatHistory();
                     setPendingToolCallMessage('');
+                    setCurrentState(State.WaitingForPrompt);
                     break;
 
                 case RovoDevProviderMessageType.SetInitState:
@@ -429,6 +456,13 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.GetCurrentBranchNameComplete:
                 case RovoDevProviderMessageType.CheckGitChangesComplete:
                     break; // This is handled elsewhere
+
+                case RovoDevProviderMessageType.ForceStop:
+                    // Signal user that Rovo Dev is stopping
+                    if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
+                        setCurrentState(State.CancellingResponse);
+                    }
+                    break;
 
                 default:
                     // this is never supposed to happen since there aren't other type of messages
@@ -645,7 +679,12 @@ const RovoDevView: React.FC = () => {
                         }}
                     />
                     <PromptInputBox
-                        disabled={workspaceCount === 0 || currentState === State.Disabled}
+                        disabled={
+                            workspaceCount === 0 ||
+                            currentState === State.Disabled ||
+                            currentState === State.ProcessTerminated
+                        }
+                        hideButtons={workspaceCount === 0 || currentState === State.Disabled}
                         state={currentState}
                         promptText={promptText}
                         onPromptTextChange={(element) => setPromptText(element)}
@@ -662,7 +701,7 @@ const RovoDevView: React.FC = () => {
                         }}
                     />
                 </div>
-                <div className="ai-disclaimer">Uses AI. Verify Results</div>
+                <div className="ai-disclaimer">Uses AI. Verify results.</div>
             </div>
         </div>
     );

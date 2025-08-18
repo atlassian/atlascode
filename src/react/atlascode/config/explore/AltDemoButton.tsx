@@ -1,5 +1,6 @@
-import { Box, Button, darken, Divider, Grid, lighten, makeStyles, Theme, Typography } from '@material-ui/core';
-import Skeleton from '@material-ui/lab/Skeleton';
+import Skeleton from '@mui/lab/Skeleton';
+import { Box, Button, darken, Divider, Grid, lighten, Theme, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useCallback, useState } from 'react';
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -9,14 +10,14 @@ const useStyles = makeStyles((theme: Theme) => ({
         textTransform: 'none',
         padding: theme.spacing(3),
         backgroundColor:
-            theme.palette.type === 'dark'
+            theme.palette.mode === 'dark'
                 ? lighten(theme.palette.background.paper, 0.05)
                 : darken(theme.palette.background.paper, 0.05),
         color: theme.palette.text.primary,
         '&:hover': {
             color: theme.palette.text.primary,
             backgroundColor:
-                theme.palette.type === 'dark'
+                theme.palette.mode === 'dark'
                     ? lighten(theme.palette.background.paper, 0.2)
                     : darken(theme.palette.background.paper, 0.2),
         },
@@ -69,7 +70,7 @@ export const AltDemoButton: React.FunctionComponent<AltDemoButtonProps> = ({
 
     return (
         <Button className={classes.button} onClick={handleClick}>
-            <Grid container spacing={2} direction="row" justify="center" alignItems="flex-start">
+            <Grid container spacing={2} direction="row" justifyContent="center" alignItems="flex-start">
                 <Grid item xs={12}>
                     <Typography variant="h4" align="left">
                         {label} {productIcon}
@@ -80,7 +81,7 @@ export const AltDemoButton: React.FunctionComponent<AltDemoButtonProps> = ({
                 </Grid>
                 <Grid item lg={3} md={6} sm={12} xs={12}>
                     <Box hidden={imageLoaded}>
-                        <Skeleton variant="rect" width="100%" height="200px" />
+                        <Skeleton variant="rectangular" width="100%" height="200px" />
                     </Box>
                     <Box hidden={!imageLoaded}>
                         <img

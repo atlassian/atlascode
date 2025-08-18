@@ -1,4 +1,4 @@
-import { Box, Grid, Link, Typography } from '@material-ui/core';
+import { Box, Grid, Link, Typography } from '@mui/material';
 import React from 'react';
 
 import { TaskInfoSectionProps } from '../types';
@@ -15,7 +15,7 @@ export const TaskInfoSection: React.FC<TaskInfoSectionProps> = ({ state, control
                         <Grid item>
                             <Box
                                 border={1}
-                                borderRadius={3}
+                                borderRadius="3px"
                                 padding={0.5}
                                 borderColor={'var(--vscode-list-inactiveSelectionBackground)'}
                             >

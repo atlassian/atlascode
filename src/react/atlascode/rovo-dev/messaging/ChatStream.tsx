@@ -176,7 +176,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     // Other state management effect
     React.useEffect(() => {
-        if (state === State.WaitingForPrompt) {
+        if (process.env.ROVODEV_BBY && state === State.WaitingForPrompt) {
             setCanCreatePR(true);
             if (currentMessage) {
                 // Only check git changes if there's something in the chat

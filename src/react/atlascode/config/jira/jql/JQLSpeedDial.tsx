@@ -1,8 +1,8 @@
-import FilterListIcon from '@material-ui/icons/FilterList';
-import InputIcon from '@material-ui/icons/Input';
-import SpeedDial from '@material-ui/lab/SpeedDial';
-import SpeedDialAction from '@material-ui/lab/SpeedDialAction';
-import SpeedDialIcon from '@material-ui/lab/SpeedDialIcon';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import InputIcon from '@mui/icons-material/Input';
+import SpeedDial from '@mui/material/SpeedDial';
+import SpeedDialAction from '@mui/material/SpeedDialAction';
+import SpeedDialIcon from '@mui/material/SpeedDialIcon';
 import React, { memo, useCallback, useState } from 'react';
 
 import { JQLEntry } from '../../../../../config/model';
