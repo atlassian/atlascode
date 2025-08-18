@@ -445,6 +445,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                 spacing={2}
                                                 direction="column"
                                                 className={classes.leftBorder}
+                                                sx={{ maxWidth: '50%' }}
                                             >
                                                 <Grid item direction="row">
                                                     <Typography>
