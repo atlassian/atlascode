@@ -71,7 +71,7 @@ const RetryPromptButton: React.FC<{
     );
 };
 
-export const FollowUpActionFooter: React.FC<{}> = ({ children }) => {
+export const FollowUpActionFooter: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
     return (
         <div
             style={{

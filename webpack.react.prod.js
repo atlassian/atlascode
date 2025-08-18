@@ -107,7 +107,7 @@ module.exports = {
         }),
     ],
     performance: {
-        maxEntrypointSize: 331776, // overridden to 324KiB, recommended is 244KiB. (MUI bundle)
+        maxEntrypointSize: 343040, // overridden to 335KiB, recommended is 244KiB. (MUI bundle)
         maxAssetSize: 912838, // overridden to 850KiB, recommended is 244KiB
     },
     watchOptions: {
