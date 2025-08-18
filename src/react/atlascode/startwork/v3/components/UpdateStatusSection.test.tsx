@@ -65,38 +65,92 @@ const mockState: any = {
 };
 
 describe('UpdateStatusSection', () => {
+    const mockFormState = {
+        transitionIssueEnabled: true,
+        selectedTransition: mockState.issue.transitions[0],
+    };
+
+    const mockFormActions = {
+        onTransitionIssueEnabledChange: jest.fn(),
+        onSelectedTransitionChange: jest.fn(),
+    };
+
+    const mockProps = {
+        state: mockState,
+        controller: mockController,
+        formState: mockFormState,
+        formActions: mockFormActions,
+    };
+
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
     it('should render "Update work item status" title', () => {
-        render(<UpdateStatusSection state={mockState} controller={mockController} />);
+        render(<UpdateStatusSection {...mockProps} />);
 
         expect(screen.getByText('Update work item status')).toBeDefined();
     });
 
     it('should render current status lozenge', () => {
-        render(<UpdateStatusSection state={mockState} controller={mockController} />);
+        render(<UpdateStatusSection {...mockProps} />);
 
         expect(screen.getByText('To Do')).toBeDefined();
     });
 
     it('should render checkbox as checked by default', () => {
-        render(<UpdateStatusSection state={mockState} controller={mockController} />);
+        render(<UpdateStatusSection {...mockProps} />);
 
-        const checkbox = screen.getByRole('checkbox');
-        expect(checkbox).toBeDefined();
+        const checkbox = screen.getByRole('checkbox') as HTMLInputElement;
+        expect(checkbox.checked).toBe(true);
+    });
+
+    it('should toggle checkbox when clicked', () => {
+        let transitionIssueEnabled = true;
+        const mockOnTransitionIssueEnabledChange = jest.fn((enabled) => {
+            transitionIssueEnabled = enabled;
+        });
+
+        const { rerender } = render(
+            <UpdateStatusSection
+                {...mockProps}
+                formState={{ ...mockFormState, transitionIssueEnabled }}
+                formActions={{ ...mockFormActions, onTransitionIssueEnabledChange: mockOnTransitionIssueEnabledChange }}
+            />,
+        );
+
+        const checkbox = screen.getByRole('checkbox') as HTMLInputElement;
+
+        // Initially checked
+        expect(checkbox.checked).toBe(true);
+
+        // Click to uncheck
+        fireEvent.click(checkbox);
+        expect(mockOnTransitionIssueEnabledChange).toHaveBeenCalledWith(false);
+
+        // Rerender with updated state
+        rerender(
+            <UpdateStatusSection
+                {...mockProps}
+                formState={{ ...mockFormState, transitionIssueEnabled: false }}
+                formActions={{ ...mockFormActions, onTransitionIssueEnabledChange: mockOnTransitionIssueEnabledChange }}
+            />,
+        );
+
+        // Click to check again
+        fireEvent.click(checkbox);
+        expect(mockOnTransitionIssueEnabledChange).toHaveBeenCalledWith(true);
     });
 
     it('should render transition dropdown', () => {
-        render(<UpdateStatusSection state={mockState} controller={mockController} />);
+        render(<UpdateStatusSection {...mockProps} />);
 
         const dropdown = screen.getByRole('combobox');
         expect(dropdown).toBeDefined();
     });
 
     it('should select in-progress transition by default', () => {
-        render(<UpdateStatusSection state={mockState} controller={mockController} />);
+        render(<UpdateStatusSection {...mockProps} />);
 
         // The component should select the "In Progress" transition by default
         // because it contains "progress" in the name
@@ -104,7 +158,7 @@ describe('UpdateStatusSection', () => {
     });
 
     it('should handle transition change', () => {
-        render(<UpdateStatusSection state={mockState} controller={mockController} />);
+        render(<UpdateStatusSection {...mockProps} />);
 
         const dropdown = screen.getByRole('combobox');
         fireEvent.mouseDown(dropdown);
@@ -113,7 +167,7 @@ describe('UpdateStatusSection', () => {
     });
 
     it('should render with proper layout structure', () => {
-        render(<UpdateStatusSection state={mockState} controller={mockController} />);
+        render(<UpdateStatusSection {...mockProps} />);
 
         expect(screen.getByText('Update work item status')).toBeDefined();
         expect(screen.getByText('To Do')).toBeDefined();

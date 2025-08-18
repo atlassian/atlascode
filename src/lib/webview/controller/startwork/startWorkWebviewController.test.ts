@@ -4,6 +4,7 @@ import { createEmptyMinimalIssue, MinimalIssue, Transition } from '@atlassianlab
 import { DetailedSiteInfo, emptySiteInfo, ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel, WorkspaceRepo } from '../../../../bitbucket/model';
 import { Container } from '../../../../container';
+import { FeatureFlagClient } from '../../../../util/featureFlags';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { StartWorkAction, StartWorkActionType } from '../../../ipc/fromUI/startWork';
@@ -27,6 +28,14 @@ import { StartWorkWebviewController } from './startWorkWebviewController';
 jest.mock('@atlassianlabs/guipi-core-controller');
 jest.mock('../../../../container');
 jest.mock('../../formatError');
+jest.mock('../../../../util/featureFlags', () => ({
+    FeatureFlagClient: {
+        checkGate: jest.fn(),
+    },
+    Features: {
+        StartWorkV3: 'startWorkV3',
+    },
+}));
 
 describe('StartWorkWebviewController', () => {
     let controller: StartWorkWebviewController;
@@ -151,6 +160,9 @@ describe('StartWorkWebviewController', () => {
         };
 
         (formatError as jest.Mock).mockReturnValue('Formatted error message');
+
+        // Mock FeatureFlagClient to return false by default (old version)
+        (FeatureFlagClient.checkGate as jest.Mock).mockReturnValue(false);
 
         controller = new StartWorkWebviewController(
             mockMessagePoster,
@@ -453,7 +465,10 @@ describe('StartWorkWebviewController', () => {
                 });
             });
 
-            it('should refresh and post init message with repo data', async () => {
+            it('should refresh and post init message with repo data (old version - includes customBranchType)', async () => {
+                // Mock FeatureFlagClient to return false (old version)
+                (FeatureFlagClient.checkGate as jest.Mock).mockReturnValue(false);
+
                 await controller.onMessageReceived({ type: CommonActionType.Refresh });
 
                 expect(mockApi.getWorkspaceRepos).toHaveBeenCalled();
@@ -470,6 +485,38 @@ describe('StartWorkWebviewController', () => {
                                 { kind: 'bugfix', prefix: 'bugfix/' },
                                 { kind: 'feature', prefix: 'feature/' },
                                 { kind: 'Custom', prefix: '' },
+                            ]),
+                            developmentBranch: 'develop',
+                            isCloud: true,
+                            userName: 'testuser',
+                            userEmail: 'test@example.com',
+                            hasSubmodules: false,
+                        }),
+                    ]),
+                    customTemplate: '{issueKey}',
+                    customPrefixes: ['feature/', 'bugfix/'],
+                });
+            });
+
+            it('should refresh and post init message with repo data (new version - excludes customBranchType)', async () => {
+                // Mock FeatureFlagClient to return true (new version)
+                (FeatureFlagClient.checkGate as jest.Mock).mockReturnValue(true);
+
+                await controller.onMessageReceived({ type: CommonActionType.Refresh });
+
+                expect(mockApi.getWorkspaceRepos).toHaveBeenCalled();
+                expect(mockApi.getRepoDetails).toHaveBeenCalledWith(mockWorkspaceRepo);
+                expect(mockApi.getRepoScmState).toHaveBeenCalledWith(mockWorkspaceRepo);
+                expect(mockMessagePoster).toHaveBeenCalledWith({
+                    type: StartWorkMessageType.Init,
+                    issue: mockIssue,
+                    repoData: expect.arrayContaining([
+                        expect.objectContaining({
+                            workspaceRepo: mockWorkspaceRepo,
+                            href: 'https://test.atlassian.net/projects/test/repos/repo',
+                            branchTypes: expect.arrayContaining([
+                                { kind: 'bugfix', prefix: 'bugfix/' },
+                                { kind: 'feature', prefix: 'feature/' },
                             ]),
                             developmentBranch: 'develop',
                             isCloud: true,
