@@ -7,12 +7,22 @@ import { Container } from '../../container';
 import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
 import { Logger } from '../../logger';
 import { Branch, RefType } from '../../typings/git';
+import { FeatureFlagClient } from '../../util/featureFlags';
 import { VSCStartWorkActionApi } from './vscStartWorkActionApi';
 
 // Mock external dependencies
 jest.mock('../../logger');
 jest.mock('../../bitbucket/bbUtils');
 jest.mock('../../container');
+jest.mock('../../util/featureFlags', () => ({
+    FeatureFlagClient: {
+        checkGate: jest.fn(),
+        checkExperimentValue: jest.fn(),
+    },
+    Features: {
+        StartWorkV3: 'startWorkV3',
+    },
+}));
 
 describe('VSCStartWorkActionApi', () => {
     let api: VSCStartWorkActionApi;
@@ -173,6 +183,8 @@ describe('VSCStartWorkActionApi', () => {
 
         // Mock clientForSite
         (clientForSite as jest.Mock).mockResolvedValue(mockBbClient);
+
+        (FeatureFlagClient.checkGate as jest.Mock).mockReturnValue(false);
 
         api = new VSCStartWorkActionApi();
     });

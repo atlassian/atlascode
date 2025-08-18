@@ -2,30 +2,55 @@ import Lozenge from '@atlaskit/lozenge';
 import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import { Box, Checkbox, FormControlLabel, Grid, MenuItem, TextField, Typography } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { colorToLozengeAppearanceMap } from '../../../../vscode/theme/colors';
 import { UpdateStatusSectionProps } from '../types';
 
-export const UpdateStatusSection: React.FC<UpdateStatusSectionProps> = ({ state, controller }) => {
-    const [selectedTransition, setSelectedTransition] = useState<Transition>(emptyTransition);
+export const UpdateStatusSection: React.FC<UpdateStatusSectionProps> = ({
+    state,
+    controller,
+    formState,
+    formActions,
+}) => {
+    const { transitionIssueEnabled, selectedTransition } = formState;
+    const { onTransitionIssueEnabledChange, onSelectedTransitionChange } = formActions;
 
     useEffect(() => {
+        const availableTransitions = state.issue.transitions.filter((t) => t.to.id !== state.issue.status.id);
+
         const inProgressTransitionGuess: Transition =
-            state.issue.transitions.find((t) => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress')) ||
-            state.issue.transitions.find((t) => !t.isInitial) ||
-            state.issue.transitions?.[0] ||
+            availableTransitions.find((t) => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress')) ||
+            availableTransitions.find((t) => !t.isInitial) ||
+            availableTransitions[0] ||
             emptyTransition;
-        setSelectedTransition(inProgressTransitionGuess);
-    }, [state.issue]);
+
+        onSelectedTransitionChange(inProgressTransitionGuess);
+    }, [state.issue, onSelectedTransitionChange]);
+
+    const availableTransitions = state.issue.transitions.filter(
+        (transition) => transition.to.id !== state.issue.status.id,
+    );
+
+    const isValidSelectedTransition = availableTransitions.some((t) => t.id === selectedTransition.id);
+
+    useEffect(() => {
+        if (!isValidSelectedTransition && availableTransitions.length > 0) {
+            onSelectedTransitionChange(availableTransitions[0]);
+        }
+    }, [availableTransitions, isValidSelectedTransition, onSelectedTransitionChange]);
 
     const handleTransitionChange = (event: React.ChangeEvent<{ value: unknown }>) => {
         const transitionId = event.target.value as string;
         const transition = state.issue.transitions.find((t) => t.id === transitionId);
         if (transition) {
-            setSelectedTransition(transition);
+            onSelectedTransitionChange(transition);
         }
     };
+
+    const toggleTransitionIssueEnabled = useCallback(() => {
+        onTransitionIssueEnabledChange(!transitionIssueEnabled);
+    }, [transitionIssueEnabled, onTransitionIssueEnabledChange]);
 
     return (
         <Box
@@ -36,34 +61,34 @@ export const UpdateStatusSection: React.FC<UpdateStatusSectionProps> = ({ state,
             marginBottom={2}
         >
             <FormControlLabel
-                control={<Checkbox defaultChecked />}
+                control={<Checkbox checked={transitionIssueEnabled} onChange={toggleTransitionIssueEnabled} />}
                 label={
                     <Typography variant="h5" style={{ fontWeight: 700 }}>
                         Update work item status
                     </Typography>
                 }
             />
-            <Grid container alignItems="center" justifyContent="flex-start" spacing={1}>
-                <Grid item>
-                    <Lozenge appearance={colorToLozengeAppearanceMap[state.issue.status.statusCategory.colorName]}>
-                        {state.issue.status.name}
-                    </Lozenge>
-                </Grid>
-                <Box display="flex" alignItems="center">
-                    <ArrowRightAltIcon />
-                </Box>
-                <Grid item>
-                    <Box minWidth={150}>
-                        <TextField
-                            select
-                            size="small"
-                            value={selectedTransition.id}
-                            onChange={handleTransitionChange}
-                            variant="outlined"
-                        >
-                            {state.issue.transitions
-                                .filter((transition) => transition.to.id !== state.issue.status.id)
-                                .map((transition) => {
+
+            {transitionIssueEnabled && (
+                <Grid container alignItems="center" justifyContent="flex-start" spacing={1}>
+                    <Grid item>
+                        <Lozenge appearance={colorToLozengeAppearanceMap[state.issue.status.statusCategory.colorName]}>
+                            {state.issue.status.name}
+                        </Lozenge>
+                    </Grid>
+                    <Box display="flex" alignItems="center">
+                        <ArrowRightAltIcon />
+                    </Box>
+                    <Grid item>
+                        <Box minWidth={150}>
+                            <TextField
+                                select
+                                size="small"
+                                value={selectedTransition.id}
+                                onChange={handleTransitionChange}
+                                variant="outlined"
+                            >
+                                {availableTransitions.map((transition) => {
                                     return (
                                         <MenuItem key={transition.id} value={transition.id}>
                                             <Lozenge
@@ -76,10 +101,11 @@ export const UpdateStatusSection: React.FC<UpdateStatusSectionProps> = ({ state,
                                         </MenuItem>
                                     );
                                 })}
-                        </TextField>
-                    </Box>
+                            </TextField>
+                        </Box>
+                    </Grid>
                 </Grid>
-            </Grid>
+            )}
         </Box>
     );
 };

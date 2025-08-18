@@ -1,13 +1,35 @@
-import { Box, Button, Typography } from '@mui/material';
-import React from 'react';
+import { Box, Button, CircularProgress, Typography } from '@mui/material';
+import React, { useContext } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
 
 import { AtlascodeErrorBoundary } from '../../common/ErrorBoundary';
+import { ErrorStateContext } from '../../common/errorController';
+import { ErrorDisplay } from '../../common/ErrorDisplay';
 import { StartWorkControllerContext, useStartWorkController } from '../startWorkController';
-import { CreateBranchSection, TaskInfoSection, UpdateStatusSection } from './components';
+import {
+    CreateBranchSection,
+    SnackbarNotification,
+    SuccessAlert,
+    TaskInfoSection,
+    UpdateStatusSection,
+} from './components';
+import { useStartWorkFormState } from './hooks/useStartWorkFormState';
 
 const StartWorkPageV3: React.FunctionComponent = () => {
     const [state, controller] = useStartWorkController();
+    const errorState = useContext(ErrorStateContext);
+
+    const {
+        formState,
+        formActions,
+        updateStatusFormState,
+        updateStatusFormActions,
+        handleCreateBranch,
+        handleSnackbarClose,
+        submitState,
+        submitResponse,
+        snackbarOpen,
+    } = useStartWorkFormState(state, controller);
 
     return (
         <StartWorkControllerContext.Provider value={controller}>
@@ -22,13 +44,58 @@ const StartWorkPageV3: React.FunctionComponent = () => {
                         </Typography>
                     </Box>
 
+                    {submitState === 'submit-success' && <SuccessAlert submitResponse={submitResponse} />}
+
+                    {errorState.isErrorBannerOpen && (
+                        <Box marginBottom={2}>
+                            <ErrorDisplay />
+                        </Box>
+                    )}
+
                     <TaskInfoSection state={state} controller={controller} />
-                    <CreateBranchSection state={state} controller={controller} />
-                    <UpdateStatusSection state={state} controller={controller} />
-                    <Button variant="contained" color="primary">
-                        Create branch
-                    </Button>
+                    <CreateBranchSection
+                        state={state}
+                        controller={controller}
+                        formState={formState}
+                        formActions={formActions}
+                    />
+                    <UpdateStatusSection
+                        state={state}
+                        controller={controller}
+                        formState={updateStatusFormState}
+                        formActions={updateStatusFormActions}
+                    />
+
+                    {submitState !== 'submit-success' && (
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            disabled={submitState === 'submitting'}
+                            onClick={handleCreateBranch}
+                            endIcon={
+                                submitState === 'submitting' ? <CircularProgress color="inherit" size={20} /> : null
+                            }
+                        >
+                            Create branch
+                        </Button>
+                    )}
+
+                    {submitState === 'submit-success' && (
+                        <Button variant="contained" color="inherit" onClick={controller.closePage}>
+                            Close
+                        </Button>
+                    )}
                 </Box>
+
+                {submitState === 'submit-success' && (
+                    <SnackbarNotification
+                        open={snackbarOpen}
+                        onClose={handleSnackbarClose}
+                        title="Success!"
+                        message="See details at the top of this page"
+                        severity="success"
+                    />
+                )}
             </AtlascodeErrorBoundary>
         </StartWorkControllerContext.Provider>
     );
