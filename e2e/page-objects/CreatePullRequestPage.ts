@@ -16,10 +16,7 @@ export class CreatePullRequestPage {
             .frameLocator('iframe.webview')
             .frameLocator('iframe[title="Create pull request"]');
 
-        this.sourceBranchPicker = this.createPRFrame
-            .getByRole('combobox')
-            .filter({ hasText: 'Source branch' })
-            .locator('input');
+        this.sourceBranchPicker = this.createPRFrame.getByRole('combobox', { name: 'Source branch' });
 
         this.testBranchOption = this.createPRFrame.getByRole('option', { name: 'test-branch' });
 
