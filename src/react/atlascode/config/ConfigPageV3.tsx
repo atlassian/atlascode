@@ -31,7 +31,7 @@ import { AuthDialog } from './auth/dialog/AuthDialog';
 import { AuthDialogControllerContext, useAuthDialog } from './auth/useAuthDialog';
 import { ConfigControllerContext, useConfigControllerV3 } from './configController';
 import { ExplorePanel } from './exploreV3/ExplorePanel';
-import { AuthenicationPanel } from './generalAuth/AuthenicationPanel';
+import { AuthenticationPanel } from './generalAuth/AuthenticationPanel';
 import { SidebarButtons } from './SidebarButtons';
 
 const useStyles = makeStyles(
@@ -179,7 +179,7 @@ const ConfigPageV3: React.FunctionComponent = () => {
                                         id="simple-tab-0"
                                         aria-controls="simple-tabpanel-0"
                                         value={ConfigV3Section.Auth}
-                                        label="Authenications"
+                                        label="Authentications"
                                     />
                                     <Tab
                                         id="simple-tab-1"
@@ -247,11 +247,8 @@ const ConfigPageV3: React.FunctionComponent = () => {
                                     <ErrorDisplay />
                                     <PMFDisplay postMessageFunc={controller.postMessage} />
                                     <Box margin={2}>
-                                        <AuthenicationPanel
+                                        <AuthenticationPanel
                                             visible={openSection === ConfigV3Section.Auth}
-                                            selectedSubSections={openSubsections[ConfigV3Section.Auth]}
-                                            onSubsectionChange={handleSubsectionChange}
-                                            config={state.config!}
                                             jiraSites={state.jiraSites}
                                             bitbucketSites={state.bitbucketSites}
                                             isRemote={state.isRemote}
