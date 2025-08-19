@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 3.8.10
+
+### Features
+- Updates Command Palette to have better categories & keywords 
+
+
 ---
 
 ## What's new in 3.8.9
