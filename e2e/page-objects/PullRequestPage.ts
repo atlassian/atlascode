@@ -4,29 +4,29 @@ import { PRComments, PRCommits, PRFiles, PRHeader, PRSidebar, PRSummary, PRTitle
 export class PullRequestPage {
     readonly page: Page;
 
-    readonly prFrame: FrameLocator;
-    readonly prHeader: PRHeader;
-    readonly prTitle: PRTitle;
-    readonly prSummary: PRSummary;
-    readonly prCommits: PRCommits;
-    readonly prFiles: PRFiles;
-    readonly prComments: PRComments;
-    readonly prSidebar: PRSidebar;
+    readonly frame: FrameLocator;
+    readonly header: PRHeader;
+    readonly title: PRTitle;
+    readonly summary: PRSummary;
+    readonly commits: PRCommits;
+    readonly files: PRFiles;
+    readonly comments: PRComments;
+    readonly sidebar: PRSidebar;
 
     constructor(page: Page) {
         this.page = page;
 
-        this.prFrame = this.page.frameLocator('iframe.webview').frameLocator('iframe[title="Pull Request 123"]');
-        this.prHeader = new PRHeader(this.prFrame);
-        this.prTitle = new PRTitle(this.prFrame);
-        this.prSummary = new PRSummary(this.prFrame);
-        this.prCommits = new PRCommits(this.prFrame);
-        this.prFiles = new PRFiles(this.prFrame);
-        this.prComments = new PRComments(this.prFrame);
-        this.prSidebar = new PRSidebar(this.prFrame);
+        this.frame = this.page.frameLocator('iframe.webview').frameLocator('iframe[title="Pull Request 123"]');
+        this.header = new PRHeader(this.frame);
+        this.title = new PRTitle(this.frame);
+        this.summary = new PRSummary(this.frame);
+        this.commits = new PRCommits(this.frame);
+        this.files = new PRFiles(this.frame);
+        this.comments = new PRComments(this.frame);
+        this.sidebar = new PRSidebar(this.frame);
     }
 
     async expectPRPageLoaded() {
-        await expect(this.prHeader.headerTitle).toBeVisible();
+        await expect(this.header.title).toBeVisible();
     }
 }

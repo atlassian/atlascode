@@ -17,11 +17,11 @@ export async function viewPullRequset(page: Page) {
     const pullRequestPage = new PullRequestPage(page);
     await pullRequestPage.expectPRPageLoaded();
 
-    await pullRequestPage.prHeader.expectHeaderLoaded();
-    await pullRequestPage.prTitle.expectTitleSectionLoaded();
-    await pullRequestPage.prSummary.expectSummarySectionLoaded();
-    await pullRequestPage.prCommits.expectCommitsSectionLoaded();
-    await pullRequestPage.prFiles.expectFilesSectionLoaded();
-    await pullRequestPage.prComments.expectCommentsSectionLoaded();
-    await pullRequestPage.prSidebar.expectSidebarSectionLoaded();
+    await pullRequestPage.header.expectHeaderLoaded();
+    await pullRequestPage.title.expectTitleSectionLoaded();
+    await pullRequestPage.summary.expectSummarySectionLoaded();
+    await pullRequestPage.commits.expectCommitsSectionLoaded();
+    await pullRequestPage.files.expectFilesSectionLoaded();
+    await pullRequestPage.comments.expectCommentsSectionLoaded();
+    await pullRequestPage.sidebar.expectSidebarSectionLoaded();
 }

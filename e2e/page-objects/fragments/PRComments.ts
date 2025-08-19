@@ -6,30 +6,30 @@ const RICH_EDITOR_TEST_ID = 'common.rich-markdown-editor';
 export class PRComments {
     readonly frame: FrameLocator;
 
-    readonly commentsButton: Locator;
-    readonly commentsForm: Locator;
-    readonly commentsEditor: Locator;
-    readonly commentsEditorConfirm: Locator;
-    readonly commentsEditorCancel: Locator;
-    readonly commentsEditorCheckbox: Locator;
+    readonly sectionButton: Locator;
+    readonly form: Locator;
+    readonly editor: Locator;
+    readonly editorConfirmButton: Locator;
+    readonly editorCancelButton: Locator;
+    readonly richEditorCheckbox: Locator;
 
     constructor(frame: FrameLocator) {
         this.frame = frame;
 
-        this.commentsButton = this.frame.getByRole('button', { name: 'Comments' });
-        this.commentsForm = this.frame.getByTestId(FORM_TEST_ID);
-        this.commentsEditor = this.commentsForm.getByTestId(RICH_EDITOR_TEST_ID);
-        this.commentsEditorConfirm = this.commentsForm.getByRole('button', { name: 'save' });
-        this.commentsEditorCancel = this.commentsForm.getByRole('button', { name: 'cancel' });
-        this.commentsEditorCheckbox = this.commentsForm.getByRole('checkbox');
+        this.sectionButton = this.frame.getByRole('button', { name: 'Comments' });
+        this.form = this.frame.getByTestId(FORM_TEST_ID);
+        this.editor = this.form.getByTestId(RICH_EDITOR_TEST_ID);
+        this.editorConfirmButton = this.form.getByRole('button', { name: 'save' });
+        this.editorCancelButton = this.form.getByRole('button', { name: 'cancel' });
+        this.richEditorCheckbox = this.form.getByRole('checkbox');
     }
 
     async expectCommentsSectionLoaded() {
-        await expect(this.commentsButton).toBeVisible();
-        await expect(this.commentsForm).toBeVisible();
-        await expect(this.commentsEditor).toBeVisible();
-        await expect(this.commentsEditorConfirm).toBeVisible();
-        await expect(this.commentsEditorCancel).toBeVisible();
-        await expect(this.commentsEditorCheckbox).toBeVisible();
+        await expect(this.sectionButton).toBeVisible();
+        await expect(this.form).toBeVisible();
+        await expect(this.editor).toBeVisible();
+        await expect(this.editorConfirmButton).toBeVisible();
+        await expect(this.editorCancelButton).toBeVisible();
+        await expect(this.richEditorCheckbox).toBeVisible();
     }
 }
