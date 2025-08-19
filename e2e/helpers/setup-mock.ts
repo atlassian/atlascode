@@ -73,7 +73,7 @@ export async function setupSearchMock(request: APIRequestContext, status: string
     updatedIssue.issues[issueIndex].fields.status.name = status;
     updatedIssue.issues[issueIndex].fields.status.statusCategory.name = status;
 
-    const { id } = await setupWireMockMapping(request, 'GET', updatedIssue, '/rest/api/2/search');
+    const { id } = await setupWireMockMapping(request, 'GET', updatedIssue, '/rest/api/3/search/jql');
     return () => cleanupWireMockMapping(request, id);
 }
 
