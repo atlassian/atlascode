@@ -423,7 +423,7 @@ describe('RovoDevResponseParser', () => {
 
                 expect(() => {
                     Array.from(parser.parse(input));
-                }).toThrow('RovoDev parser error: unable to parse chunk');
+                }).toThrow('Rovo Dev parser error: unable to parse chunk');
             });
 
             it('should throw error for unknown event kind', () => {
@@ -431,7 +431,7 @@ describe('RovoDevResponseParser', () => {
 
                 expect(() => {
                     Array.from(parser.parse(input));
-                }).toThrow('RovoDev parser error: unknown event kind: unknown-event');
+                }).toThrow('Rovo Dev parser error: unknown event kind: unknown-event');
             });
 
             it('should throw error when text has buffer set', () => {
@@ -486,7 +486,7 @@ describe('RovoDevResponseParser', () => {
 
             expect(() => {
                 Array.from(parser.flush());
-            }).toThrow('RovoDev parser error: flushed with non-empty buffer');
+            }).toThrow('Rovo Dev parser error: flushed with non-empty buffer');
         });
     });
 

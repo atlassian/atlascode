@@ -1,7 +1,7 @@
 import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Box, Grid, IconButton, Radio, RadioGroup, Switch, Tab, Tabs, TextField } from '@material-ui/core';
-import Visibility from '@material-ui/icons/Visibility';
-import VisibilityOff from '@material-ui/icons/VisibilityOff';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { Box, Grid, IconButton, Radio, RadioGroup, Switch, Tab, Tabs, TextField } from '@mui/material';
 import React from 'react';
 import { BasicAuthInfo } from 'src/atlclients/authInfo';
 import { SiteWithAuthInfo } from 'src/lib/ipc/toUI/config';
@@ -75,7 +75,7 @@ export const CustomSiteAuthForm = ({
                         <TextField
                             required
                             autoFocus
-                            margin="dense"
+                            size="small"
                             id="contextPath"
                             name="contextPath"
                             label="Context path"
@@ -105,7 +105,7 @@ export const CustomSiteAuthForm = ({
                 <Grid item>
                     <TextField
                         required
-                        margin="dense"
+                        size="small"
                         id="username"
                         name="username"
                         label="Username"
@@ -119,7 +119,7 @@ export const CustomSiteAuthForm = ({
                 <Grid item>
                     <TextField
                         required
-                        margin="dense"
+                        size="small"
                         id="password"
                         name="password"
                         label="Password"
@@ -139,6 +139,7 @@ export const CustomSiteAuthForm = ({
                                         })
                                     }
                                     onMouseDown={preventClickDefault}
+                                    size="large"
                                 >
                                     {authFormState.showPassword ? (
                                         <Visibility fontSize="small" />
@@ -156,7 +157,7 @@ export const CustomSiteAuthForm = ({
                     <TextField
                         required
                         type="password"
-                        margin="dense"
+                        size="small"
                         id="personalAccessToken"
                         name="personalAccessToken"
                         label="Personal Access Token"
@@ -195,7 +196,6 @@ export const CustomSiteAuthForm = ({
                     label="Use Custom SSL Settings"
                 />
             </Grid>
-
             {watches.customSSLEnabled && (
                 <Box marginLeft={3}>
                     <Grid item>
@@ -246,13 +246,12 @@ export const CustomSiteAuthForm = ({
                     </Grid>
                 </Box>
             )}
-
             {watches.customSSLEnabled && watches.customSSLType === 'customServerSSL' && (
                 <Box marginLeft={3}>
                     <Grid item>
                         <TextField
                             required
-                            margin="dense"
+                            size="small"
                             id="sslCertPaths"
                             name="sslCertPaths"
                             label="sslCertPaths"
@@ -269,13 +268,12 @@ export const CustomSiteAuthForm = ({
                     </Grid>
                 </Box>
             )}
-
             {watches.customSSLEnabled && watches.customSSLType === 'customClientSSL' && (
                 <Box marginLeft={3}>
                     <Grid item>
                         <TextField
                             required
-                            margin="dense"
+                            size="small"
                             id="pfxPath"
                             name="pfxPath"
                             label="pfxPath"
@@ -290,7 +288,7 @@ export const CustomSiteAuthForm = ({
                     </Grid>
                     <Grid item>
                         <TextField
-                            margin="dense"
+                            size="small"
                             id="pfxPassphrase"
                             name="pfxPassphrase"
                             label="PFX passphrase"
@@ -309,6 +307,7 @@ export const CustomSiteAuthForm = ({
                                             })
                                         }
                                         onMouseDown={preventClickDefault}
+                                        size="large"
                                     >
                                         {authFormState.showPFXPassphrase ? (
                                             <Visibility fontSize="small" />

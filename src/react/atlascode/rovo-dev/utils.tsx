@@ -20,9 +20,12 @@ export interface DefaultMessage {
 }
 
 export interface ErrorMessage {
+    type: 'error' | 'warning' | 'info';
     text: string;
+    title?: string;
     source: 'RovoDevError';
     isRetriable: boolean;
+    isProcessTerminated?: boolean;
     uid: string;
 }
 

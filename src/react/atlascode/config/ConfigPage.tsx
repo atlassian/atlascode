@@ -1,11 +1,14 @@
 import { RefreshButton } from '@atlassianlabs/guipi-core-components';
+import PersonIcon from '@mui/icons-material/Person';
+import WorkIcon from '@mui/icons-material/Work';
+import ToggleButton from '@mui/lab/ToggleButton';
+import ToggleButtonGroup from '@mui/lab/ToggleButtonGroup';
 import {
     AppBar,
     Badge,
     Box,
     Container,
     Grid,
-    makeStyles,
     Paper,
     Tab,
     Tabs,
@@ -13,11 +16,8 @@ import {
     Toolbar,
     Tooltip,
     Typography,
-} from '@material-ui/core';
-import PersonIcon from '@material-ui/icons/Person';
-import WorkIcon from '@material-ui/icons/Work';
-import ToggleButton from '@material-ui/lab/ToggleButton';
-import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import equal from 'fast-deep-equal/es6';
 import React, { useCallback, useEffect, useState } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
@@ -187,7 +187,8 @@ const ConfigPage: React.FunctionComponent = () => {
                                     aria-label="simple tabs example"
                                     indicatorColor="primary"
                                     variant="scrollable"
-                                    scrollButtons="on"
+                                    scrollButtons
+                                    allowScrollButtonsMobile
                                 >
                                     <Tab
                                         id="simple-tab-0"

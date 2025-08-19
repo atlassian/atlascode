@@ -1,5 +1,5 @@
-import { Box, Button, Typography } from '@material-ui/core';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { Box, Button, Typography } from '@mui/material';
 import React, { useCallback } from 'react';
 
 import { ApprovalStatus } from '../../../bitbucket/model';

@@ -560,7 +560,7 @@ body {
 .input-section-container {
     width: 100%;
     background-color: var(--vscode-sideBar-background);
-    padding: 16px;
+    padding: 16px 16px 6px 16px;
     border-radius: 12px 12px 0 0;
 }
 

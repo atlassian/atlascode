@@ -1,5 +1,7 @@
-import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 
 import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
@@ -49,16 +51,16 @@ export const StatusBarPanel: React.FunctionComponent<StatusBarPanelProps> = memo
         }, [expanded]);
 
         return (
-            <ExpansionPanel hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
-                <ExpansionPanelSummary
+            <Accordion hidden={!visible} square={false} expanded={internalExpanded} onChange={expansionHandler}>
+                <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     aria-controls={`${configSection}-${ConfigSubSection.Auth}-content`}
                     id={`${configSection}-${ConfigSubSection.Status}-header`}
                 >
                     <PanelTitle>Status Bar</PanelTitle>
                     <PanelSubtitle>{`configure the status bar display for ${productName}`}</PanelSubtitle>
-                </ExpansionPanelSummary>
-                <ExpansionPanelDetails>
+                </AccordionSummary>
+                <AccordionDetails>
                     <StatusBar
                         configSection={configSection}
                         productName={productName}
@@ -67,8 +69,8 @@ export const StatusBarPanel: React.FunctionComponent<StatusBarPanelProps> = memo
                         showUser={showUser}
                         showLogin={showLogin}
                     />
-                </ExpansionPanelDetails>
-            </ExpansionPanel>
+                </AccordionDetails>
+            </Accordion>
         );
     },
 );

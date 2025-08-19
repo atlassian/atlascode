@@ -5,6 +5,7 @@
  * The annotation is shown only if enabled via the `atlascode.rovodev.showKeybinding` setting.
  * Decoration updates automatically on selection, editor, and configuration changes.
  */
+import { Container } from 'src/container';
 import { Range, ThemeColor, window, workspace } from 'vscode';
 
 export class RovoDevDecorator {
@@ -47,7 +48,7 @@ export class RovoDevDecorator {
         if (!editor) {
             return;
         }
-        if (!this.enabled) {
+        if (!Container.isRovoDevEnabled || !this.enabled) {
             editor.setDecorations(this.keybindingDecoration, []);
             return;
         }
