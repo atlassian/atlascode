@@ -1,7 +1,7 @@
 import { CssBaseline } from '@mui/material';
 import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import React, { useCallback, useEffect, useState } from 'react';
-import * as ReactDOM from 'react-dom';
+import * as ReactDOM from 'react-dom/client';
 import useConstant from 'use-constant';
 
 import AtlGlobalStyles from './atlascode/common/AtlGlobalStyles';
@@ -96,4 +96,5 @@ const App = () => {
     );
 };
 
-ReactDOM.render(<App />, root);
+const reactRoot = ReactDOM.createRoot(root);
+reactRoot.render(<App />);
