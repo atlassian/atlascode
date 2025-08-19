@@ -11,7 +11,7 @@ import {
     rovoDevPromptButtonStyles,
     rovoDevTextareaStyles,
 } from '../../rovoDevViewStyles';
-import { createMonacoPromptEditor, createSlashCommandProvider } from './utils';
+import { createMonacoPromptEditor, createSlashCommandProvider, removeMonacoStyles } from './utils';
 
 interface PromptInputBoxProps {
     disabled?: boolean;
@@ -110,6 +110,10 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
 
     React.useEffect(() => {
         const container = document.getElementById('prompt-editor-container');
+
+        // Remove Monaco's color stylesheet
+        removeMonacoStyles();
+
         if (container) {
             const completionProvider = monaco.languages.registerCompletionItemProvider(
                 'plaintext',

@@ -1,26 +1,10 @@
-import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 export const createMonacoPromptEditor = (container: HTMLElement) => {
-    const rootStyles = getComputedStyle(document.documentElement);
-
-    monaco.editor.defineTheme('no-colors-theme', {
-        base: 'vs-dark',
-        inherit: false, // Don't inherit any colors
-        rules: [],
-        colors: {
-            'editor.foreground': rootStyles.getPropertyValue('--vscode-input-foreground').trim(),
-            'editor.background': rootStyles.getPropertyValue('--vscode-input-background').trim(),
-            'editor.lineHighlightBackground': 'transparent',
-            'editor.selectionBackground': rootStyles.getPropertyValue('--vscode-editor-selectionBackground').trim(),
-            'editorCursor.foreground': rootStyles.getPropertyValue('--vscode-editorCursor-foreground').trim(),
-        }, // Empty colors object prevents color injection
-    });
-
     return monaco.editor.create(container, {
         // Basic editor options
         value: '',
         language: 'plaintext', // Or 'plaintext' for simple prompts]
-        theme: 'no-colors-theme',
         // Layout and appearance
         minimap: { enabled: false },
         lineNumbers: 'off',
@@ -147,3 +131,18 @@ export const createSlashCommandProvider = (): monaco.languages.CompletionItemPro
         },
     };
 };
+
+export function removeMonacoStyles() {
+    Array.from(document.styleSheets).forEach((stylesheet) => {
+        try {
+            // Check if this is the monaco-colors stylesheet
+            if (stylesheet.ownerNode && (stylesheet.ownerNode as HTMLElement).classList?.contains('monaco-colors')) {
+                // stylesheet.disabled = true;
+                // Or completely remove it:
+                stylesheet.ownerNode.remove();
+            }
+        } catch (e) {
+            console.warn('Could not access stylesheet:', e);
+        }
+    });
+}
