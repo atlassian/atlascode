@@ -498,18 +498,17 @@ export class CreateIssueWebview
     }
 
     formatIssueLinks(key: string, linkdata: any): any[] {
+        if (!linkdata || !Array.isArray(linkdata.issue) || !linkdata.type || !linkdata.type.id) {
+            return [];
+        }
         const issuelinks: any[] = [];
-
         linkdata.issue.forEach((link: any) => {
             issuelinks.push({
-                type: {
-                    id: linkdata.type.id,
-                },
+                type: { id: linkdata.type.id },
                 inwardIssue: linkdata.type.type === 'inward' ? { key: link.key } : { key: key },
                 outwardIssue: linkdata.type.type === 'outward' ? { key: link.key } : { key: key },
             });
         });
-
         return issuelinks;
     }
 
@@ -522,6 +521,15 @@ export class CreateIssueWebview
         if (raw['issuelinks']) {
             issuelinks = raw['issuelinks'];
             delete raw['issuelinks'];
+            if (
+                !issuelinks ||
+                !Array.isArray(issuelinks.issue) ||
+                issuelinks.issue.length < 1 ||
+                !issuelinks.type ||
+                !issuelinks.type.id
+            ) {
+                issuelinks = undefined;
+            }
         }
 
         if (raw['attachment']) {
@@ -560,6 +568,9 @@ export class CreateIssueWebview
             }
             const value = raw[key];
             if (value === undefined || value === null) {
+                return;
+            }
+            if (typeof value === 'boolean' && value === false) {
                 return;
             }
             if (typeof value === 'string' && value.trim().length < 1) {
