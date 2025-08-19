@@ -85,7 +85,7 @@ const AuthContainer = ({
                                 </Grid>
                                 <Grid item>
                                     <Button color="primary" variant="contained" onClick={openProductAuth}>
-                                        {`Login wth API Token`}
+                                        {`Login with API Token`}
                                     </Button>
                                 </Grid>
                                 {isRemoteAuthButtonVisible && (
@@ -99,7 +99,7 @@ const AuthContainer = ({
                             <React.Fragment>
                                 <Grid item>
                                     <Button color="primary" variant="contained" onClick={openProductAuth}>
-                                        {`Login wth API Token`}
+                                        {`Login with API Token`}
                                     </Button>
                                 </Grid>
                             </React.Fragment>
