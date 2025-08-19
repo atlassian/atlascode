@@ -1,25 +1,79 @@
-import SettingsIcon from '@mui/icons-material/Settings';
-import { Autocomplete } from '@mui/lab';
-import { Box, Checkbox, FormControlLabel, Grid, IconButton, TextField, Theme, Typography } from '@mui/material';
-import { makeStyles } from '@mui/styles';
-import React, { useContext } from 'react';
+import { Box, Checkbox, FormControlLabel, Grid, Typography } from '@mui/material';
+import React, { useCallback } from 'react';
 
-import { VSCodeStyles, VSCodeStylesContext } from '../../../../vscode/theme/styles';
 import { CreateBranchSectionProps } from '../types';
+import { BranchPrefixSelector } from './BranchPrefixSelector';
+import { ExistingBranchesSection } from './ExistingBranchesSection';
+import { LocalBranchInput } from './LocalBranchInput';
+import { PushBranchToggle } from './PushBranchToggle';
+import { RepositorySelector } from './RepositorySelector';
+import { SourceBranchSelector } from './SourceBranchSelector';
+import { UpstreamSelector } from './UpstreamSelector';
 
-const useStyles = makeStyles((theme: Theme) => ({
-    settingsButton: (props: VSCodeStyles) => ({
-        '& .MuiSvgIcon-root': {
-            fill: 'none',
-            stroke: props.descriptionForeground,
-            strokeWidth: 1.5,
+export const CreateBranchSection: React.FC<CreateBranchSectionProps> = ({
+    state,
+    controller,
+    formState,
+    formActions,
+}) => {
+    const {
+        pushBranchEnabled,
+        localBranch,
+        sourceBranch,
+        selectedRepository,
+        selectedBranchType,
+        upstream,
+        branchSetupEnabled,
+    } = formState;
+    const {
+        onPushBranchChange,
+        onLocalBranchChange,
+        onSourceBranchChange,
+        onRepositoryChange,
+        onBranchTypeChange,
+        onUpstreamChange,
+        onBranchSetupEnabledChange,
+    } = formActions;
+
+    const handleExistingBranchClick = useCallback(
+        (existingBranchName: string) => {
+            if (!selectedRepository) {
+                return;
+            }
+
+            const sourceBranchOption = [...selectedRepository.localBranches, ...selectedRepository.remoteBranches].find(
+                (branch) => branch.name === existingBranchName,
+            )!;
+
+            const updatedLocalBranch =
+                sourceBranchOption.type === 0
+                    ? sourceBranchOption.name!
+                    : sourceBranchOption.name!.substring(sourceBranchOption.remote!.length + 1);
+
+            // Convert custom prefixes to branch types format for finding the branch type
+            const convertedCustomPrefixes = state.customPrefixes.map((prefix) => {
+                const normalizedCustomPrefix = prefix.endsWith('/') ? prefix : prefix + '/';
+                return { prefix: normalizedCustomPrefix, kind: prefix };
+            });
+
+            const bt = [...selectedRepository.branchTypes, ...convertedCustomPrefixes].find((branchType) =>
+                existingBranchName.startsWith(branchType.prefix),
+            )!;
+
+            onBranchTypeChange(bt);
+
+            // HACK: without this wait, the update to local branch gets overwritten by buildBranchName since that function is called
+            // every time branchType is changed. This is a quick fix, but a better solution would be to create two state variables
+            // for prefixes: one for the autocomplete and the other the "real" prefix. Then, set the "real" prefix to "ExistingBranch" here
+            // and don't call buildBranchName if the "real" prefix is "ExistingBranch".
+            setTimeout(() => {
+                onLocalBranchChange(updatedLocalBranch.substring(bt.prefix.length));
+            }, 100);
+
+            onSourceBranchChange(sourceBranchOption);
         },
-    }),
-}));
-
-export const CreateBranchSection: React.FC<CreateBranchSectionProps> = ({ state, controller }) => {
-    const vscStyles = useContext(VSCodeStylesContext);
-    const classes = useStyles(vscStyles);
+        [selectedRepository, state.customPrefixes, onBranchTypeChange, onLocalBranchChange, onSourceBranchChange],
+    );
 
     return (
         <Box
@@ -29,50 +83,58 @@ export const CreateBranchSection: React.FC<CreateBranchSectionProps> = ({ state,
             padding={3}
             marginBottom={2}
         >
-            <Box marginBottom={2}>
-                <Typography variant="h5" style={{ fontWeight: 700 }}>
-                    Create branch
-                </Typography>
-            </Box>
-            <Grid container spacing={2} direction="column">
-                <Grid item>
-                    <Typography variant="body2">New local branch</Typography>
-                    <Grid container spacing={1} alignItems="center">
-                        <Grid item xs>
-                            <TextField
-                                fullWidth
-                                size="small"
-                                value="ALT-1156-bb-pr-creation-integration-is-cool-yeah-lets-go"
-                                variant="outlined"
-                            />
-                        </Grid>
-                        <Grid item>
-                            <IconButton size="small" color="default" className={classes.settingsButton}>
-                                <SettingsIcon fontSize="small" />
-                            </IconButton>
-                        </Grid>
-                    </Grid>
-                </Grid>
-
-                <Grid item xs={9}>
-                    <Typography variant="body2">Source branch</Typography>
-                    <Autocomplete
-                        options={[
-                            'bb-pr-creation-integration-is-cool-yeah-yeah-lets-go',
-                            'main',
-                            'develop',
-                            'feature/new-branch',
-                        ]}
-                        value="bb-pr-creation-integration-is-cool-yeah-lets-go"
-                        renderInput={(params) => <TextField {...params} size="small" variant="outlined" fullWidth />}
-                        size="small"
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={branchSetupEnabled}
+                        onChange={(e) => onBranchSetupEnabledChange(e.target.checked)}
                     />
-                </Grid>
+                }
+                label={
+                    <Typography variant="h5" style={{ fontWeight: 700 }}>
+                        Create branch
+                    </Typography>
+                }
+            />
 
-                <Grid item>
-                    <FormControlLabel control={<Checkbox defaultChecked />} label="Push the new branch to remote" />
+            {branchSetupEnabled && (
+                <Grid container spacing={2} direction="column">
+                    <RepositorySelector
+                        repoData={state.repoData}
+                        selectedRepository={selectedRepository}
+                        onRepositoryChange={onRepositoryChange}
+                    />
+
+                    <BranchPrefixSelector
+                        selectedRepository={selectedRepository}
+                        selectedBranchType={selectedBranchType}
+                        customPrefixes={state.customPrefixes}
+                        onBranchTypeChange={onBranchTypeChange}
+                    />
+
+                    <LocalBranchInput localBranch={localBranch} onLocalBranchChange={onLocalBranchChange} />
+
+                    <SourceBranchSelector
+                        selectedRepository={selectedRepository}
+                        sourceBranch={sourceBranch}
+                        onSourceBranchChange={onSourceBranchChange}
+                    />
+
+                    <UpstreamSelector
+                        selectedRepository={selectedRepository}
+                        upstream={upstream}
+                        onUpstreamChange={onUpstreamChange}
+                    />
+
+                    <ExistingBranchesSection
+                        selectedRepository={selectedRepository}
+                        issueKey={state.issue.key}
+                        onExistingBranchClick={handleExistingBranchClick}
+                    />
+
+                    <PushBranchToggle pushBranchEnabled={pushBranchEnabled} onPushBranchChange={onPushBranchChange} />
                 </Grid>
-            </Grid>
+            )}
         </Box>
     );
 };
