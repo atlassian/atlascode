@@ -107,8 +107,8 @@ module.exports = {
         }),
     ],
     performance: {
-        maxEntrypointSize: 3317760,
-        maxAssetSize: 912838000,
+        maxEntrypointSize: 350000,
+        maxAssetSize: 4000000,
     },
     watchOptions: {
         ignored: /node_modules/,
