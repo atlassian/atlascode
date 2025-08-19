@@ -15,6 +15,7 @@ export class PullRequestsNavigation {
     readonly createPRButton: Locator;
     readonly mockRepo: Locator;
     readonly prTreeitem: Locator;
+    readonly prDetails: Locator;
 
     constructor(page: Page) {
         this.page = page;
@@ -24,6 +25,7 @@ export class PullRequestsNavigation {
         this.createPRButton = this.bbPrTree.getByRole('treeitem', { name: 'Create pull request' });
         this.mockRepo = this.bbPrTree.getByRole('treeitem', { name: 'mock-repository' }).first();
         this.prTreeitem = this.bbPrTree.getByRole('treeitem', { name: '#123 New Feature Implementation' });
+        this.prDetails = this.bbPrTree.getByRole('treeitem', { name: 'Open pull request details' });
     }
 
     async addRepository() {

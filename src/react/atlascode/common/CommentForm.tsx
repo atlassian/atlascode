@@ -14,7 +14,7 @@ type CommentFormProps = {
 
 const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
     return (
-        <Grid container spacing={1} alignItems="flex-start">
+        <Grid container spacing={1} alignItems="flex-start" data-testid="common.comment-form">
             <Grid item>
                 <Avatar src={props.currentUser.avatarUrl} />
             </Grid>

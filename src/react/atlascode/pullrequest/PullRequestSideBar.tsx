@@ -22,7 +22,7 @@ export const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, c
 
     return (
         <Box margin={2}>
-            <Grid container spacing={1} direction={'column'}>
+            <Grid container spacing={1} direction={'column'} data-testid="pullrequest.sidebar">
                 <Grid item>
                     <Typography variant="h6">
                         <strong>Author</strong>
