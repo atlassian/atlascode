@@ -137,8 +137,6 @@ export function removeMonacoStyles() {
         try {
             // Check if this is the monaco-colors stylesheet
             if (stylesheet.ownerNode && (stylesheet.ownerNode as HTMLElement).classList?.contains('monaco-colors')) {
-                // stylesheet.disabled = true;
-                // Or completely remove it:
                 stylesheet.ownerNode.remove();
             }
         } catch (e) {
