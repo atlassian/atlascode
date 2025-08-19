@@ -146,10 +146,8 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     const handleSend = () => {
         if (editor) {
             const text = editor.getValue();
-            if (text) {
-                onSend(text);
-                editor.setValue(''); // Clear the editor after sending
-            }
+            onSend(text);
+            editor.setValue(''); // Clear the editor after sending
         }
     };
 
