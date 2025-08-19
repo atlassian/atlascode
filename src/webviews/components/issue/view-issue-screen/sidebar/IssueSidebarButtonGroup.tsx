@@ -9,7 +9,7 @@ import InlineDialog from '@atlaskit/inline-dialog';
 import Tooltip from '@atlaskit/tooltip';
 import { Transition, User } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, FieldUIs, FieldValues } from '@atlassianlabs/jira-pi-meta-models';
-import { Box } from '@material-ui/core';
+import { Box } from '@mui/material';
 import React from 'react';
 
 import VotesForm from '../../VotesForm';

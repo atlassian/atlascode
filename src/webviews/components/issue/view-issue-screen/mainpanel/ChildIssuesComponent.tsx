@@ -4,7 +4,7 @@ import Select from '@atlaskit/select';
 import { components } from '@atlaskit/select';
 import TextField from '@atlaskit/textfield';
 import { emptyIssueType, IssueType, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import { Box } from '@material-ui/core';
+import { Box } from '@mui/material';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
 

@@ -1,5 +1,5 @@
 import { RefreshButton } from '@atlassianlabs/guipi-core-components';
-import { Box } from '@material-ui/core';
+import { Box } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { ApprovalStatus } from '../../../bitbucket/model';

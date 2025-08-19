@@ -13,7 +13,7 @@ export const enum RovoDevProviderMessageType {
     ToolCall = 'toolCall',
     ToolReturn = 'toolReturn',
     ErrorMessage = 'errorMessage',
-    NewSession = 'newSession',
+    ClearChat = 'clearChat',
     SetInitState = 'setInitState',
     WorkspaceChanged = 'workspaceChanged',
     SetDownloadProgress = 'setDownloadProgress',
@@ -23,6 +23,7 @@ export const enum RovoDevProviderMessageType {
     UserFocusUpdated = 'userFocusUpdated',
     ContextAdded = 'contextAdded',
     CheckGitChangesComplete = 'checkGitChangesComplete',
+    ForceStop = 'forceStop',
 }
 
 export interface RovoDevObjectResponse {
@@ -39,7 +40,7 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.ToolCall, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ToolReturn, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ErrorMessage, { message: ErrorMessage }>
-    | ReducerAction<RovoDevProviderMessageType.NewSession>
+    | ReducerAction<RovoDevProviderMessageType.ClearChat>
     | ReducerAction<RovoDevProviderMessageType.SetInitState, { newState: RovoDevInitState }>
     | ReducerAction<RovoDevProviderMessageType.WorkspaceChanged, { workspaceCount: number }>
     | ReducerAction<RovoDevProviderMessageType.SetDownloadProgress, { downloadedBytes: number; totalBytes: number }>
@@ -48,4 +49,5 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>
     | ReducerAction<RovoDevProviderMessageType.UserFocusUpdated, { userFocus: RovoDevContextItem }>
     | ReducerAction<RovoDevProviderMessageType.ContextAdded, { context: RovoDevContextItem }>
-    | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>;
+    | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
+    | ReducerAction<RovoDevProviderMessageType.ForceStop>;

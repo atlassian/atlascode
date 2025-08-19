@@ -3,10 +3,10 @@ import MarkdownIt from 'markdown-it';
 import React from 'react';
 
 import { ChatMessageItem } from '../messaging/ChatMessageItem';
-import { chatMessageStyles, errorMessageStyles, inChatButtonStyles, messageContentStyles } from '../rovoDevViewStyles';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { ChatMessage, DefaultMessage, ErrorMessage, parseToolReturnMessage } from '../utils';
+import { ChatMessage, DefaultMessage, parseToolReturnMessage } from '../utils';
+import { ErrorMessageItem } from './errorMessage';
 
 export const mdParser = new MarkdownIt({
     html: true,
@@ -17,59 +17,6 @@ export const mdParser = new MarkdownIt({
 export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
 }
-
-export const ErrorMessageItem: React.FC<{
-    msg: ErrorMessage;
-    index: number;
-    isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
-    retryAfterError: () => void;
-}> = ({ msg, index, isRetryAfterErrorButtonEnabled, retryAfterError }) => {
-    const content = (
-        <div
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-            key="parsed-content"
-            dangerouslySetInnerHTML={{ __html: mdParser.render(msg.text || '') }}
-        />
-    );
-
-    return (
-        <div key={index} style={{ ...chatMessageStyles, ...errorMessageStyles }}>
-            <div style={{ display: 'flex', flexDirection: 'row' }}>
-                <div style={{ padding: '4px', color: 'var(--vscode-editorError-foreground)' }}>
-                    <StatusErrorIcon label="Rovo Dev encountered an error" />
-                </div>
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px',
-                        paddingTop: '2px',
-                        paddingLeft: '2px',
-                        width: '100%',
-                    }}
-                >
-                    <div style={messageContentStyles}>Rovo Dev encountered an error</div>
-                    <div style={messageContentStyles}>{content}</div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '8px' }}>
-                        {msg.isRetriable && isRetryAfterErrorButtonEnabled(msg.uid) && (
-                            <RetryPromptButton retryAfterError={retryAfterError} />
-                        )}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const RetryPromptButton: React.FC<{
-    retryAfterError: () => void;
-}> = ({ retryAfterError }) => {
-    return (
-        <button style={inChatButtonStyles} onClick={retryAfterError}>
-            Try again
-        </button>
-    );
-};
 
 export const FollowUpActionFooter: React.FC<{}> = ({ children }) => {
     return (

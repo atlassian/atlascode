@@ -9,6 +9,7 @@ import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
 import { StartWorkActionApi } from '../../lib/webview/controller/startwork/startWorkActionApi';
 import { Logger } from '../../logger';
 import { Branch, RefType } from '../../typings/git';
+import { FeatureFlagClient, Features } from '../../util/featureFlags';
 
 export class VSCStartWorkActionApi implements StartWorkActionApi {
     getWorkspaceRepos(): WorkspaceRepo[] {
@@ -102,6 +103,9 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
     }
 
     closePage() {
-        Container.startWorkWebviewFactory.hide();
+        const factory = FeatureFlagClient.checkGate(Features.StartWorkV3)
+            ? Container.startWorkV3WebviewFactory
+            : Container.startWorkWebviewFactory;
+        factory.hide();
     }
 }

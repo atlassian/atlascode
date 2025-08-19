@@ -7,7 +7,7 @@ import {
     JsdInternalCommentVisibility,
     User,
 } from '@atlassianlabs/jira-pi-common-models';
-import { Box } from '@material-ui/core';
+import { Box } from '@mui/material';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';

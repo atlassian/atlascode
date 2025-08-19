@@ -1,5 +1,5 @@
 import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Switch } from '@material-ui/core';
+import { Switch } from '@mui/material';
 import React, { memo, useContext } from 'react';
 
 import { ConfigControllerContext } from '../configController';

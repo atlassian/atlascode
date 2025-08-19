@@ -1,7 +1,7 @@
 import Button from '@atlaskit/button';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import ChevronUpIcon from '@atlaskit/icon/glyph/chevron-up';
-import { Box } from '@material-ui/core';
+import { Box } from '@mui/material';
 import React from 'react';
 export type SidebarItem = {
     itemLabel?: string;

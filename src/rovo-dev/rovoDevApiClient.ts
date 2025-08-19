@@ -74,6 +74,11 @@ export class RovoDevApiClient {
         await this.fetchApi('/v2/reset', 'POST');
     }
 
+    /** Invokes the POST `/v2/sessions/create` API */
+    public async createSession(): Promise<void> {
+        await this.fetchApi('/v2/sessions/create', 'POST');
+    }
+
     /** Invokes the POST `/v2/chat` API.
      * @param {string} message The message (prompt) to send to Rovo Dev.
      * @param {boolean} [enable_deep_plan=false] [optional] A value indicating if the deep planner tool should be enabled when processing this prompt. Default value is `false`.
@@ -89,7 +94,6 @@ export class RovoDevApiClient {
     }
 
     /** Invokes the POST `/v2/replay` API
-     *
      * @returns {Promise<Response>} An object representing the API response.
      */
     public replay(): Promise<Response> {
@@ -110,6 +114,24 @@ export class RovoDevApiClient {
      */
     public tool(tool_name: string, args: Record<string, string>) {
         throw new Error('Method not implemented: tool');
+    }
+
+    /** Invokes the POST `/v2/clear` API
+     * @returns {Promise<string>} The message returned by the clear API.
+     */
+    public async clear(): Promise<string> {
+        const response = await this.fetchApi('/v2/clear', 'POST');
+        const responseJson = await response.json();
+        return responseJson.message;
+    }
+
+    /** Invokes the POST `/v2/prune` API
+     * @returns {Promise<string>} The message returned by the prune API.
+     */
+    public async prune(): Promise<string> {
+        const response = await this.fetchApi('/v2/prune', 'POST');
+        const responseJson = await response.json();
+        return responseJson.message;
     }
 
     /** Invokes the GET `/v2/cache-file-path` API.

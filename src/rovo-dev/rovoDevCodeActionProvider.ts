@@ -1,5 +1,6 @@
 import path from 'path';
 import { Commands } from 'src/constants';
+import { Container } from 'src/container';
 import * as vscode from 'vscode';
 
 export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
@@ -9,6 +10,11 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
         context: vscode.CodeActionContext,
         token: vscode.CancellationToken,
     ): vscode.ProviderResult<vscode.CodeAction[]> {
+        // Disable completely if Rovo Dev is not enabled
+        if (!Container.isRovoDevEnabled) {
+            return [];
+        }
+
         // Only show if there is a selection
         if (!range || range.isEmpty) {
             return [];
