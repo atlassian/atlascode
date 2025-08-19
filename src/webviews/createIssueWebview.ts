@@ -513,14 +513,15 @@ export class CreateIssueWebview
     }
 
     formatCreatePayload(a: CreateIssueAction): [any, any, any, any] {
-        const raw: any = { ...a.issueData };
+        const raw: Record<string, unknown> = { ...a.issueData };
+        const rawAny = raw as Record<string, any>;
         let issuelinks: any = undefined;
         let attachments: any = undefined;
         let worklog: any = undefined;
 
-        if (raw['issuelinks']) {
-            issuelinks = raw['issuelinks'];
-            delete raw['issuelinks'];
+        if (rawAny['issuelinks']) {
+            issuelinks = rawAny['issuelinks'];
+            delete rawAny['issuelinks'];
             if (
                 !issuelinks ||
                 !Array.isArray(issuelinks.issue) ||
@@ -532,41 +533,41 @@ export class CreateIssueWebview
             }
         }
 
-        if (raw['attachment']) {
-            attachments = raw['attachment'];
-            delete raw['attachment'];
+        if (rawAny['attachment']) {
+            attachments = rawAny['attachment'];
+            delete rawAny['attachment'];
         }
 
-        if (raw['worklog'] && raw['worklog'].enabled) {
+        if (rawAny['worklog'] && rawAny['worklog'].enabled) {
             worklog = {
                 worklog: [
                     {
                         add: {
-                            ...raw['worklog'],
+                            ...rawAny['worklog'],
                             adjustEstimate: 'new',
-                            started: raw['worklog'].started
-                                ? format(raw['worklog'].started, "yyyy-MM-dd'T'HH:mm:ss.SSSXX")
+                            started: rawAny['worklog'].started
+                                ? format(rawAny['worklog'].started, "yyyy-MM-dd'T'HH:mm:ss.SSSXX")
                                 : undefined,
                         },
                     },
                 ],
             };
-            delete raw['worklog'];
+            delete rawAny['worklog'];
         } else {
-            delete raw['worklog'];
+            delete rawAny['worklog'];
         }
 
         // Filter out fields that are not present on the current screen and drop empty values
         const allowedFieldKeys = this._selectedIssueTypeId
             ? Object.keys(this._screenData.issueTypeUIs[this._selectedIssueTypeId].fields)
-            : Object.keys(raw);
+            : Object.keys(rawAny);
 
-        const payload: any = {};
-        Object.keys(raw).forEach((key) => {
+        const payload: Record<string, unknown> = {};
+        Object.keys(rawAny).forEach((key) => {
             if (!allowedFieldKeys.includes(key)) {
                 return;
             }
-            const value = raw[key];
+            const value = rawAny[key];
             if (value === undefined || value === null) {
                 return;
             }
