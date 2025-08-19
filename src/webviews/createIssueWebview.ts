@@ -514,37 +514,65 @@ export class CreateIssueWebview
     }
 
     formatCreatePayload(a: CreateIssueAction): [any, any, any, any] {
-        const payload: any = { ...a.issueData };
+        const raw: any = { ...a.issueData };
         let issuelinks: any = undefined;
         let attachments: any = undefined;
         let worklog: any = undefined;
 
-        if (payload['issuelinks']) {
-            issuelinks = payload['issuelinks'];
-            delete payload['issuelinks'];
+        if (raw['issuelinks']) {
+            issuelinks = raw['issuelinks'];
+            delete raw['issuelinks'];
         }
 
-        if (payload['attachment']) {
-            attachments = payload['attachment'];
-            delete payload['attachment'];
+        if (raw['attachment']) {
+            attachments = raw['attachment'];
+            delete raw['attachment'];
         }
 
-        if (payload['worklog'] && payload['worklog'].enabled) {
+        if (raw['worklog'] && raw['worklog'].enabled) {
             worklog = {
                 worklog: [
                     {
                         add: {
-                            ...payload['worklog'],
+                            ...raw['worklog'],
                             adjustEstimate: 'new',
-                            started: payload['worklog'].started
-                                ? format(payload['worklog'].started, "yyyy-MM-dd'T'HH:mm:ss.SSSXX")
+                            started: raw['worklog'].started
+                                ? format(raw['worklog'].started, "yyyy-MM-dd'T'HH:mm:ss.SSSXX")
                                 : undefined,
                         },
                     },
                 ],
             };
-            delete payload['worklog'];
+            delete raw['worklog'];
+        } else {
+            delete raw['worklog'];
         }
+
+        // Filter out fields that are not present on the current screen and drop empty values
+        const allowedFieldKeys = this._selectedIssueTypeId
+            ? Object.keys(this._screenData.issueTypeUIs[this._selectedIssueTypeId].fields)
+            : Object.keys(raw);
+
+        const payload: any = {};
+        Object.keys(raw).forEach((key) => {
+            if (!allowedFieldKeys.includes(key)) {
+                return;
+            }
+            const value = raw[key];
+            if (value === undefined || value === null) {
+                return;
+            }
+            if (typeof value === 'string' && value.trim().length < 1) {
+                return;
+            }
+            if (Array.isArray(value) && value.length < 1) {
+                return;
+            }
+            if (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length < 1) {
+                return;
+            }
+            payload[key] = value;
+        });
 
         return [payload, worklog, issuelinks, attachments];
     }
