@@ -1,5 +1,10 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 3.8.10
+
+### Features
+- Update Commands to have better categorization & key words.
+
 ---
 
 ## What's new in 3.8.9
