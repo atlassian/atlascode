@@ -56,19 +56,24 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
 }) => {
     const [editor, setEditor] = React.useState<monaco.editor.IStandaloneCodeEditor | null>(null);
 
-    const setupCommands = (editor: monaco.editor.IStandaloneCodeEditor) => {
+    const setupCommands = (editor: monaco.editor.IStandaloneCodeEditor, onSend: (text: string) => void) => {
         // Register command handlers
         monaco.editor.registerCommand('rovo-dev.clearChat', () => {
             // Your clear chat logic here
             console.log('Clearing chat...');
+
             editor.setValue(''); // Example: clear the editor
+
+            onSend('/clear'); // Send the clear command
         });
 
         monaco.editor.registerCommand('rovo-dev.pruneChat', () => {
             // Your prune chat logic here
             console.log('Pruning chat...');
+
             editor.setValue('');
             // Implement pruning logic as needed
+            onSend(`/prune`); // Send the prune command
         });
     };
 
@@ -113,7 +118,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             const editor = createMonacoPromptEditor(container);
             setupPromptKeyBindings(editor, onSend);
             setupAutoResize(editor);
-            setupCommands(editor);
+            setupCommands(editor, onSend);
             // Set initial value
             editor.setValue(promptText);
 
@@ -137,6 +142,16 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             placeholder: getTextAreaPlaceholder(state),
         });
     }, [state, editor, disabled]);
+
+    const handleSend = () => {
+        if (editor) {
+            const text = editor.getValue();
+            if (text) {
+                onSend(text);
+                editor.setValue(''); // Clear the editor after sending
+            }
+        }
+    };
 
     return (
         <>
@@ -191,7 +206,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                     label="Send prompt"
                                     iconBefore={<SendIcon label="Send prompt" />}
                                     isDisabled={disabled || sendButtonDisabled}
-                                    onClick={() => onSend(promptText)}
+                                    onClick={() => handleSend()}
                                 />
                             )}
                             {state !== State.WaitingForPrompt && (
