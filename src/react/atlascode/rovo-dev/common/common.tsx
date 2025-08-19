@@ -18,7 +18,7 @@ export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
 }
 
-export const FollowUpActionFooter: React.FC<{}> = ({ children }) => {
+export const FollowUpActionFooter: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
     return (
         <div
             style={{

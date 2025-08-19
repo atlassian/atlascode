@@ -19,9 +19,9 @@ export const authenticateWithJira = async (
     const settingsFrame = await openAtlassianSettings(page, 'Please login to Jira');
 
     await expect(settingsFrame.getByRole('button', { name: 'Authentication authenticate' })).toBeVisible();
-    await expect(settingsFrame.getByRole('button', { name: 'Login to Jira' })).toBeVisible();
+    await expect(settingsFrame.getByRole('button', { name: 'Login with API Token' })).toBeVisible();
 
-    settingsFrame.getByRole('button', { name: 'Login to Jira' }).click();
+    settingsFrame.getByRole('button', { name: 'Login with API Token' }).click();
     await page.waitForTimeout(250);
 
     await settingsFrame.getByRole('textbox', { name: 'Base URL' }).click();
@@ -63,9 +63,9 @@ export const authenticateWithJiraDC = async (
     const settingsFrame = await openAtlassianSettings(page, 'Please login to Jira');
 
     await expect(settingsFrame.getByRole('button', { name: 'Authentication authenticate' })).toBeVisible();
-    await expect(settingsFrame.getByRole('button', { name: 'Login to Jira' })).toBeVisible();
+    await expect(settingsFrame.getByRole('button', { name: 'Login with API Token' })).toBeVisible();
 
-    settingsFrame.getByRole('button', { name: 'Login to Jira' }).click();
+    settingsFrame.getByRole('button', { name: 'Login with API Token' }).click();
     await page.waitForTimeout(250);
 
     await settingsFrame.getByRole('textbox', { name: 'Base URL' }).click();

@@ -84,8 +84,8 @@ const AuthContainer = ({
                                     <CloudAuthButton product={product} />
                                 </Grid>
                                 <Grid item>
-                                    <Button color="primary" onClick={openProductAuth}>
-                                        {`Other options...`}
+                                    <Button color="primary" variant="contained" onClick={openProductAuth}>
+                                        {`Login with API Token`}
                                     </Button>
                                 </Grid>
                                 {isRemoteAuthButtonVisible && (
@@ -99,7 +99,7 @@ const AuthContainer = ({
                             <React.Fragment>
                                 <Grid item>
                                     <Button color="primary" variant="contained" onClick={openProductAuth}>
-                                        {`Login to ${product.name}`}
+                                        {`Login with API Token`}
                                     </Button>
                                 </Grid>
                             </React.Fragment>

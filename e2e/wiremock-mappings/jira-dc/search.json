@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPath": "/rest/api/2/search"
+    "urlPath": "/rest/api/3/search/jql"
   },
   "response": {
     "status": 200,
