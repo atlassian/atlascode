@@ -179,13 +179,13 @@ const ConfigPageV3: React.FunctionComponent = () => {
                                         id="simple-tab-0"
                                         aria-controls="simple-tabpanel-0"
                                         value={ConfigV3Section.Auth}
-                                        label="Authentications"
+                                        label="Authentication"
                                     />
                                     <Tab
                                         id="simple-tab-1"
                                         aria-controls="simple-tabpanel-1"
                                         value={ConfigV3Section.AdvancedConfig}
-                                        label="Advanced Configurations"
+                                        label="Advanced Settings"
                                     />
                                     <Tab
                                         id="simple-tab-2"
