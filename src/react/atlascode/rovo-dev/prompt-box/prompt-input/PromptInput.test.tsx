@@ -1,6 +1,8 @@
 jest.mock('monaco-editor', () => ({
     languages: {
-        registerCompletionItemProvider: jest.fn(),
+        registerCompletionItemProvider: jest.fn(() => ({
+            dispose: jest.fn(),
+        })),
     },
     editor: {
         create: jest.fn(() => ({
