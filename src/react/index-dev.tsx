@@ -1,8 +1,7 @@
 import { CssBaseline } from '@mui/material';
-import { ThemeProvider } from '@mui/material/styles';
-import { StyledEngineProvider } from '@mui/material/styles';
+import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import React, { useCallback, useEffect, useState } from 'react';
-import * as ReactDOM from 'react-dom';
+import * as ReactDOM from 'react-dom/client';
 import useConstant from 'use-constant';
 
 import { UIWSPort } from '../lib/ipc/models/ports';
@@ -130,7 +129,8 @@ const App = (): JSX.Element => {
 };
 
 const _vscapi = new VsCodeApi(() => {
-    ReactDOM.render(<App />, root);
+    const reactRoot = ReactDOM.createRoot(root);
+    reactRoot.render(<App />);
 }, ports[view.getAttribute('content')!]);
 
 window['acquireVsCodeApi'] = (): VsCodeApi => {
