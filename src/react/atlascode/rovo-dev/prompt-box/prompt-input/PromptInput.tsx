@@ -1,6 +1,7 @@
 import { LoadingButton } from '@atlaskit/button';
 import SendIcon from '@atlaskit/icon/core/arrow-up';
 import StopIcon from '@atlaskit/icon/core/video-stop';
+import * as monaco from 'monaco-editor';
 import React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 
@@ -10,6 +11,7 @@ import {
     rovoDevPromptButtonStyles,
     rovoDevTextareaStyles,
 } from '../../rovoDevViewStyles';
+import { createMonacoPromptEditor, createSlashCommandProvider } from './utils';
 
 interface PromptInputBoxProps {
     disabled?: boolean;
@@ -52,26 +54,93 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     sendButtonDisabled = false,
     onAddContext,
 }) => {
-    const handleKeyDown = React.useCallback(
-        (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-            if (event.key === 'Enter' && !event.shiftKey && state === State.WaitingForPrompt) {
-                event.preventDefault();
-                onSend(promptText);
-            }
-        },
-        [state, onSend, promptText],
-    );
+    const [editor, setEditor] = React.useState<monaco.editor.IStandaloneCodeEditor | null>(null);
+
+    const setupCommands = (editor: monaco.editor.IStandaloneCodeEditor) => {
+        // Register command handlers
+        monaco.editor.registerCommand('rovo-dev.clearChat', () => {
+            // Your clear chat logic here
+            console.log('Clearing chat...');
+            editor.setValue(''); // Example: clear the editor
+        });
+
+        monaco.editor.registerCommand('rovo-dev.pruneChat', () => {
+            // Your prune chat logic here
+            console.log('Pruning chat...');
+            editor.setValue('');
+            // Implement pruning logic as needed
+        });
+    };
+
+    const setupPromptKeyBindings = (editor: monaco.editor.IStandaloneCodeEditor, onSend: (text: string) => void) => {
+        editor.addCommand(
+            monaco.KeyCode.Enter,
+            () => {
+                const value = editor.getValue();
+                if (value.trim()) {
+                    onSend(value);
+                }
+            },
+            '!suggestWidgetVisible',
+        ); // Only trigger if suggestions are not visible
+
+        // Shift+Enter for new line (default behavior)
+        editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
+            editor.trigger('keyboard', 'type', { text: '\n' });
+        });
+    };
+
+    // Auto-resize functionality
+    const setupAutoResize = (editor: monaco.editor.IStandaloneCodeEditor, maxHeight = 200) => {
+        const updateHeight = () => {
+            const contentHeight = Math.min(maxHeight, editor.getContentHeight());
+            const container = editor.getContainerDomNode();
+            container.style.height = `${contentHeight}px`;
+            editor.layout();
+        };
+
+        editor.onDidContentSizeChange(updateHeight);
+        updateHeight();
+    };
+
+    React.useEffect(() => {
+        const container = document.getElementById('prompt-editor-container');
+        if (container) {
+            const completionProvider = monaco.languages.registerCompletionItemProvider(
+                'plaintext',
+                createSlashCommandProvider(),
+            );
+            const editor = createMonacoPromptEditor(container);
+            setupPromptKeyBindings(editor, onSend);
+            setupAutoResize(editor);
+            setupCommands(editor);
+            // Set initial value
+            editor.setValue(promptText);
+
+            setEditor(editor);
+            // Cleanup on unmount
+            return () => {
+                completionProvider.dispose();
+                editor.dispose();
+            };
+        }
+        return () => {};
+    }, [onSend, promptText]);
+
+    React.useEffect(() => {
+        if (!editor) {
+            return;
+        }
+
+        editor.updateOptions({
+            readOnly: disabled || state !== State.WaitingForPrompt,
+            placeholder: getTextAreaPlaceholder(state),
+        });
+    }, [state, editor, disabled]);
 
     return (
         <>
-            <textarea
-                style={{ ...{ fieldSizing: 'content' }, ...rovoDevTextareaStyles }}
-                placeholder={getTextAreaPlaceholder(state)}
-                onChange={(element) => onPromptTextChange(element.target.value)}
-                onKeyDown={handleKeyDown}
-                value={promptText}
-                disabled={disabled}
-            />
+            <div id="prompt-editor-container" style={{ ...{ fieldSizing: 'content' }, ...rovoDevTextareaStyles }} />
             <div
                 style={{
                     display: 'flex',
