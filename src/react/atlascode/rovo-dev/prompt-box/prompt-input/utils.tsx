@@ -2,10 +2,9 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 export const createMonacoPromptEditor = (container: HTMLElement) => {
     return monaco.editor.create(container, {
-        // Basic editor options
         value: '',
-        language: 'plaintext', // Or 'plaintext' for simple prompts]
-        // Layout and appearance
+        language: 'plaintext',
+
         minimap: { enabled: false },
         lineNumbers: 'off',
         glyphMargin: false,
@@ -17,7 +16,7 @@ export const createMonacoPromptEditor = (container: HTMLElement) => {
         wordWrap: 'on',
 
         overviewRulerLanes: 0,
-        // Scrolling behavior
+
         scrollbar: {
             vertical: 'hidden',
             horizontal: 'hidden',
@@ -25,27 +24,22 @@ export const createMonacoPromptEditor = (container: HTMLElement) => {
             alwaysConsumeMouseWheel: false,
         },
 
-        // Auto-sizing
         automaticLayout: true,
         domReadOnly: false,
         readOnly: false,
 
-        // Suggestions and IntelliSense
         quickSuggestions: false,
         suggestOnTriggerCharacters: true,
         acceptSuggestionOnEnter: 'on',
         tabCompletion: 'off',
         wordBasedSuggestions: 'off',
 
-        // Accessibility
         accessibilitySupport: 'auto',
 
-        // Cursor and selection
         cursorBlinking: 'blink',
         cursorStyle: 'line',
         selectOnLineNumbers: false,
 
-        // Disable features not needed for prompts
         codeLens: false,
         contextmenu: false,
         find: {
@@ -53,7 +47,6 @@ export const createMonacoPromptEditor = (container: HTMLElement) => {
             autoFindInSelection: 'never',
         },
 
-        // Multi-line support
         fontSize: 14,
         lineHeight: 20,
         fontFamily: 'var(--vscode-font-family)',
@@ -86,8 +79,6 @@ export const createSlashCommandProvider = (): monaco.languages.CompletionItemPro
     return {
         triggerCharacters: ['/'],
         provideCompletionItems: (model, position) => {
-            // Get the entire value of the editor
-            // Get text from start of document to current position
             const textUntilPosition = model.getValueInRange({
                 startLineNumber: 1,
                 startColumn: 1,
@@ -95,16 +86,12 @@ export const createSlashCommandProvider = (): monaco.languages.CompletionItemPro
                 endColumn: position.column,
             });
 
-            // Only trigger if:
-            // 1. We're at the very beginning of the document (position 1,1 or 1,2 for '/')
-            // 2. OR the entire text before cursor is just whitespace + '/' + optional characters
             const isAtBeginning = /^\s*\/\w*$/.test(textUntilPosition.trimStart());
 
             if (!isAtBeginning) {
                 return { suggestions: [] };
             }
 
-            // Find the start of the slash command
             const match = textUntilPosition.match(/\/\w*$/);
             if (!match) {
                 return { suggestions: [] };
@@ -123,7 +110,7 @@ export const createSlashCommandProvider = (): monaco.languages.CompletionItemPro
                     endColumn: position.column,
                 },
                 command: command.command,
-                sortText: `0${index}`, // Ensure our commands appear first
+                sortText: `0${index}`,
                 filterText: command.label,
             }));
 
