@@ -1400,7 +1400,7 @@
         "@atlaskit/textfield": "^7.0.0",
         "@atlaskit/toggle": "^14.2.0",
         "@atlaskit/tooltip": "^19.2.0",
-        "@atlaskit/width-detector": "^4.4.0",
+        "@atlaskit/width-detector": "^5.0.4",
         "@atlassianlabs/guipi-core-components": "^3.0.0",
         "@atlassianlabs/guipi-core-controller": "^3.0.0",
         "@atlassianlabs/guipi-jira-components": "^3.0.0",
