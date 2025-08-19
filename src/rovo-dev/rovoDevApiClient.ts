@@ -94,7 +94,6 @@ export class RovoDevApiClient {
     }
 
     /** Invokes the POST `/v2/replay` API
-     *
      * @returns {Promise<Response>} An object representing the API response.
      */
     public replay(): Promise<Response> {
@@ -115,6 +114,24 @@ export class RovoDevApiClient {
      */
     public tool(tool_name: string, args: Record<string, string>) {
         throw new Error('Method not implemented: tool');
+    }
+
+    /** Invokes the POST `/v2/clear` API
+     * @returns {Promise<string>} The message returned by the clear API.
+     */
+    public async clear(): Promise<string> {
+        const response = await this.fetchApi('/v2/clear', 'POST');
+        const responseJson = await response.json();
+        return responseJson.message;
+    }
+
+    /** Invokes the POST `/v2/prune` API
+     * @returns {Promise<string>} The message returned by the prune API.
+     */
+    public async prune(): Promise<string> {
+        const response = await this.fetchApi('/v2/prune', 'POST');
+        const responseJson = await response.json();
+        return responseJson.message;
     }
 
     /** Invokes the GET `/v2/cache-file-path` API.

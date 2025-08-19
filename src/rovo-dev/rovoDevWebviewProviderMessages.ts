@@ -13,7 +13,7 @@ export const enum RovoDevProviderMessageType {
     ToolCall = 'toolCall',
     ToolReturn = 'toolReturn',
     ErrorMessage = 'errorMessage',
-    NewSession = 'newSession',
+    ClearChat = 'clearChat',
     SetInitState = 'setInitState',
     WorkspaceChanged = 'workspaceChanged',
     SetDownloadProgress = 'setDownloadProgress',
@@ -40,7 +40,7 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.ToolCall, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ToolReturn, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ErrorMessage, { message: ErrorMessage }>
-    | ReducerAction<RovoDevProviderMessageType.NewSession>
+    | ReducerAction<RovoDevProviderMessageType.ClearChat>
     | ReducerAction<RovoDevProviderMessageType.SetInitState, { newState: RovoDevInitState }>
     | ReducerAction<RovoDevProviderMessageType.WorkspaceChanged, { workspaceCount: number }>
     | ReducerAction<RovoDevProviderMessageType.SetDownloadProgress, { downloadedBytes: number; totalBytes: number }>
