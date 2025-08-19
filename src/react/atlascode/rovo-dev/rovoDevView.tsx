@@ -77,17 +77,6 @@ const RovoDevView: React.FC = () => {
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
 
     React.useEffect(() => {
-        if (currentState === State.WaitingForPrompt) {
-            if (curThinkingMessages.length > 0) {
-                setChatStream((prev) => [...prev, curThinkingMessages]);
-                setCurThinkingMessages([]);
-            }
-            if (currentMessage) {
-                setChatStream((prev) => [...prev, currentMessage]);
-            }
-            setCurrentMessage(null);
-        }
-
         const codeBlocks = document.querySelectorAll('pre code');
         codeBlocks.forEach((block) => {
             highlightElement(block, detectLanguage(block.textContent || ''));
@@ -99,6 +88,15 @@ const RovoDevView: React.FC = () => {
         setPendingToolCallMessage('');
         setIsDeepPlanToggled(false);
 
+        if (curThinkingMessages.length > 0) {
+            setChatStream((prev) => [...prev, curThinkingMessages]);
+            setCurThinkingMessages([]);
+        }
+        if (currentMessage) {
+            setChatStream((prev) => [...prev, currentMessage]);
+        }
+        setCurrentMessage(null);
+
         const changedFilesCount = totalModifiedFiles.filter(
             (x) => x.type === 'create' || x.type === 'modify' || x.type === 'delete',
         ).length;
@@ -108,7 +106,18 @@ const RovoDevView: React.FC = () => {
                 filesCount: changedFilesCount,
             });
         }
-    }, [setCurrentState, setPendingToolCallMessage, setIsDeepPlanToggled, dispatch, totalModifiedFiles]);
+    }, [
+        setChatStream,
+        setCurrentMessage,
+        setCurThinkingMessages,
+        setCurrentState,
+        setPendingToolCallMessage,
+        setIsDeepPlanToggled,
+        dispatch,
+        curThinkingMessages,
+        currentMessage,
+        totalModifiedFiles,
+    ]);
 
     const handleAppendError = useCallback((msg: ErrorMessage) => {
         setChatStream((prev) => {
