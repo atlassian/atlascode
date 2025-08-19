@@ -395,7 +395,7 @@ const RovoDevView: React.FC = () => {
                     handleAppendError(event.message);
                     break;
 
-                case RovoDevProviderMessageType.NewSession:
+                case RovoDevProviderMessageType.ClearChat:
                     clearChatHistory();
                     setPendingToolCallMessage('');
                     setCurrentState(State.WaitingForPrompt);

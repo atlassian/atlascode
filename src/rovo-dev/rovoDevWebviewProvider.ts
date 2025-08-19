@@ -489,21 +489,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private processWarning(message: string, title?: string) {
-        const webview = this._webView!;
-        return webview.postMessage({
-            type: RovoDevProviderMessageType.ErrorMessage,
-            message: {
-                type: 'warning',
-                text: message,
-                title,
-                source: 'RovoDevError',
-                isRetriable: false,
-                uid: v4(),
-            },
-        });
-    }
-
     private async sendUserPromptToView({ text, enable_deep_plan, context }: RovoDevPrompt) {
         const webview = this._webView!;
 
@@ -594,7 +579,34 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 return this.processError(new Error(msg), false);
 
             case 'warning':
-                return this.processWarning(response.message, response.title);
+                return webview.postMessage({
+                    type: RovoDevProviderMessageType.ErrorMessage,
+                    message: {
+                        type: 'warning',
+                        text: response.message,
+                        title: response.title,
+                        source: 'RovoDevError',
+                        isRetriable: false,
+                        uid: v4(),
+                    },
+                });
+
+            case 'clear':
+                return webview.postMessage({
+                    type: RovoDevProviderMessageType.ClearChat,
+                });
+
+            case 'prune':
+                return webview.postMessage({
+                    type: RovoDevProviderMessageType.ErrorMessage,
+                    message: {
+                        type: 'info',
+                        text: response.message,
+                        source: 'RovoDevError',
+                        isRetriable: false,
+                        uid: v4(),
+                    },
+                });
 
             default:
                 return Promise.resolve(false);
@@ -683,8 +695,10 @@ ${message}`;
             return;
         }
 
+        const isCommand = text.trim() === '/clear' || text.trim() === '/prune';
+
         if (!suppressEcho) {
-            await this.sendUserPromptToView({ text, enable_deep_plan, context });
+            await this.sendUserPromptToView({ text, enable_deep_plan, context: isCommand ? undefined : context });
         }
 
         this.beginNewPrompt();
@@ -695,10 +709,13 @@ ${message}`;
             context,
         };
 
-        await this.sendPromptSentToView({ text, enable_deep_plan, context });
+        await this.sendPromptSentToView({ text, enable_deep_plan, context: isCommand ? undefined : context });
 
-        let payloadToSend = this.addUndoContextToPrompt(text);
-        payloadToSend = this.addContextToPrompt(payloadToSend, context);
+        let payloadToSend = text;
+        if (!isCommand) {
+            payloadToSend = this.addUndoContextToPrompt(payloadToSend);
+            payloadToSend = this.addContextToPrompt(payloadToSend, context);
+        }
 
         const currentPrompt = this._currentPrompt;
         const fetchOp = async (client: RovoDevApiClient) => {
@@ -826,7 +843,7 @@ ${message}`;
             RovoDevProcessManager.initializeRovoDevProcessManager(this._context);
 
             await webview.postMessage({
-                type: RovoDevProviderMessageType.NewSession,
+                type: RovoDevProviderMessageType.ClearChat,
             });
 
             return;
@@ -854,7 +871,7 @@ ${message}`;
             this._revertedChanges = [];
 
             await webview.postMessage({
-                type: RovoDevProviderMessageType.NewSession,
+                type: RovoDevProviderMessageType.ClearChat,
             });
 
             return true;
