@@ -175,8 +175,11 @@ export class Container {
             this._analyticsApi,
         );
 
-        context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
-        context.subscriptions.push((this._settingsV3WebviewFactory = settingsV3ViewFactory));
+        if (true || FeatureFlagClient.checkGate(Features.ConfigPageV3)) {
+            context.subscriptions.push((this._settingsWebviewFactory = settingsV3ViewFactory));
+        } else {
+            context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
+        }
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
         context.subscriptions.push((this._startWorkV3WebviewFactory = startWorkV3ViewFactory));
         context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
@@ -426,14 +429,9 @@ export class Container {
         return this._explorerFocusManager;
     }
 
-    private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;
+    private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage | SectionV3ChangeMessage, ConfigAction>;
     public static get settingsWebviewFactory() {
         return this._settingsWebviewFactory;
-    }
-
-    private static _settingsV3WebviewFactory: SingleWebview<SectionV3ChangeMessage, ConfigAction>;
-    public static get settingsV3WebviewFactory() {
-        return this._settingsV3WebviewFactory;
     }
 
     private static _pullRequestDetailsWebviewFactory: MultiWebview<any, PullRequestDetailsAction>;

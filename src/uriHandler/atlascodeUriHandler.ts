@@ -21,7 +21,7 @@ export class AtlascodeUriHandler extends Disposable implements UriHandler {
         if (!this.singleton) {
             this.singleton = new AtlascodeUriHandler(analyticsApi, [
                 new BasicUriHandler('openSettings', () => Container.settingsWebviewFactory.createOrShow()),
-                new BasicUriHandler('openSettingsV3', () => Container.settingsV3WebviewFactory.createOrShow()),
+                new BasicUriHandler('openSettingsV3', () => Container.settingsWebviewFactory.createOrShow()),
                 new BasicUriHandler('extension', () => Promise.resolve(Container.focus())),
                 new OpenPullRequestUriHandler(bitbucketHelper),
                 new CloneRepositoryUriHandler(bitbucketHelper),

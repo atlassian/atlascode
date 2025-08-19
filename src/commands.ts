@@ -29,6 +29,8 @@ import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
 
+// Going to add a ternary statement commands involving Settings using similar boolean expression to "FeatureFlagClient.checkGate(Features.ConfigPageV3) ? ConfigV3Section.<some section> : ConfigSection.<some section>"
+
 export function registerCommands(vscodeContext: ExtensionContext) {
     vscodeContext.subscriptions.push(
         commands.registerCommand(Commands.AddJiraSite, () =>
@@ -50,7 +52,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             }),
         ),
         commands.registerCommand(Commands.ShowConfigPageV3, () =>
-            Container.settingsV3WebviewFactory.createOrShow({
+            Container.settingsWebviewFactory.createOrShow({
                 section: ConfigV3Section.Auth,
                 subSection: ConfigV3SubSection.JiraAuth,
             }),
