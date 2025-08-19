@@ -8,6 +8,7 @@ export class PRSidebar {
     readonly sidebar: Locator;
     readonly sidebarAuthor: Locator;
     readonly sidebarReviewersButton: Locator;
+    readonly sidebarApprovedIcon: Locator;
     readonly sidebarAddReviewerInput: Locator;
     readonly sidebarCreatedDate: Locator;
     readonly sidebarUpdatedDate: Locator;
@@ -20,6 +21,7 @@ export class PRSidebar {
         this.sidebar = this.frame.getByTestId(SIDEBAR_TEST_ID);
         this.sidebarAuthor = this.sidebar.locator('.MuiGrid-item', { hasText: 'Author' });
         this.sidebarReviewersButton = this.sidebar.getByRole('button', { name: 'Reviewers' });
+        this.sidebarApprovedIcon = this.sidebar.getByLabel('Approved');
         this.sidebarAddReviewerInput = this.sidebar.getByPlaceholder('Add reviewer');
         this.sidebarCreatedDate = this.sidebar.locator(
             'div:has(strong:text("Created")):has(p[aria-label*="2025-07-03"])',

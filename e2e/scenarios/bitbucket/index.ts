@@ -1,3 +1,4 @@
+import { approvePullRequest } from './approvePullRequest.spec';
 import { authFlow } from './authFlow.spec';
 import { connectRepository } from './connectRepository.spec';
 import { createPullRequest } from './createPullRequest.spec';
@@ -8,4 +9,5 @@ export const bitbucketScenarios = [
     { name: 'Connect repository', run: connectRepository },
     { name: 'Create PullRequest', run: createPullRequest },
     { name: 'View PullRequset', run: viewPullRequset },
+    { name: 'Approve PullRequset', run: approvePullRequest },
 ];
