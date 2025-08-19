@@ -259,6 +259,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.WebviewReady:
+                        if (!this.isBoysenberry && !this.isDisabled) {
+                            await webview.postMessage({
+                                type: RovoDevProviderMessageType.WorkspaceChanged,
+                                workspaceCount: workspace.workspaceFolders?.length || 0,
+                            });
+                        }
+
                         const port = parseInt(process.env[rovodevInfo.envVars.port] || '0');
                         if (port) {
                             this.signalProcessStarted(port);
@@ -284,13 +291,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     });
                 }
             });
-
-            if (!this.isDisabled) {
-                webview.postMessage({
-                    type: RovoDevProviderMessageType.WorkspaceChanged,
-                    workspaceCount: workspace.workspaceFolders?.length || 0,
-                });
-            }
         }
     }
 
