@@ -1,4 +1,5 @@
 import { InlineTextEditor, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import {
     Divider,
     Fade,
@@ -8,13 +9,12 @@ import {
     List,
     ListItem,
     ListItemText,
-    makeStyles,
     Switch,
     Theme,
     Tooltip,
     Typography,
-} from '@material-ui/core';
-import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import clsx from 'clsx';
 import React, { memo, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
@@ -99,7 +99,7 @@ export const Debug: React.FunctionComponent<DebugProps> = memo(
                     <input className={classes.hidden} id="cert-path-button" type="file" onChange={handleFileChange} />
                     <label htmlFor="cert-path-button">
                         <Tooltip title="Choose Certificate File">
-                            <IconButton component="span">
+                            <IconButton component="span" size="large">
                                 <InsertDriveFileIcon fontSize="small" color="inherit" />
                             </IconButton>
                         </Tooltip>

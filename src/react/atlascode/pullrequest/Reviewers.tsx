@@ -1,7 +1,7 @@
-import { Avatar, Badge, Box, CircularProgress, Grid, IconButton, Tooltip, Typography } from '@material-ui/core';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import CloseIcon from '@material-ui/icons/Close';
-import { AvatarGroup } from '@material-ui/lab';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CloseIcon from '@mui/icons-material/Close';
+import { AvatarGroup } from '@mui/lab';
+import { Avatar, Badge, Box, CircularProgress, Grid, IconButton, Tooltip, Typography } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { BitbucketSite, Reviewer, User } from '../../../bitbucket/model';
@@ -25,7 +25,7 @@ const RemovableReviewerAvatar: React.FunctionComponent<RemovableReviewerAvatarPr
         <Box position="relative" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
             <Badge
                 style={{ borderWidth: '0px' }}
-                overlap="circle"
+                overlap="circular"
                 anchorOrigin={{
                     vertical: 'top',
                     horizontal: 'right',
@@ -164,7 +164,6 @@ export const Reviewers: React.FunctionComponent<ReviewersProps> = ({
                     )}
                 </Grid>
             )}
-
             <Grid style={{ width: '100%' }} item>
                 <AddReviewers site={site} reviewers={activeParticipants} updateReviewers={handleUpdateReviewers} />
             </Grid>

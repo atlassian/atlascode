@@ -135,7 +135,7 @@ const IssueMainPanel: React.FC<Props> = ({
                         </div>
                     </div>
                 ) : (
-                    { addContentDropDown }
+                    addContentDropDown
                 )}
             </div>
             {fields['description'] && (

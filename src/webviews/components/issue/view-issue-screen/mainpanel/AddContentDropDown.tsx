@@ -5,7 +5,7 @@ import ChildIssuesIcon from '@atlaskit/icon/glyph/child-issues';
 import EditorAttachmentIcon from '@atlaskit/icon/glyph/editor/attachment';
 import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
 import IssuesIcon from '@atlaskit/icon/glyph/issues';
-import { Box } from '@material-ui/core';
+import { Box } from '@mui/material';
 import React from 'react';
 
 export const AddContentDropdown: React.FC<{

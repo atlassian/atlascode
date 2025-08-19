@@ -9,7 +9,6 @@ import {
     DialogContent,
     DialogTitle,
     Grid,
-    makeStyles,
     MenuItem,
     Switch,
     Table,
@@ -18,7 +17,8 @@ import {
     TextField,
     Theme,
     Typography,
-} from '@material-ui/core';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
@@ -249,12 +249,8 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
                                     size="small"
                                     label="Merge Strategy"
                                 >
-                                    <MenuItem
-                                        key={emptyMergeStrategy.label}
-                                        //@ts-ignore
-                                        value={emptyMergeStrategy}
-                                        disabled
-                                    >
+                                    {/*@ts-ignore*/}
+                                    <MenuItem key={emptyMergeStrategy.label} value={emptyMergeStrategy} disabled>
                                         Select a merge strategy
                                     </MenuItem>
                                     {mergeStrategies.map((strategy) => (

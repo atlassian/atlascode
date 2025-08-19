@@ -1,5 +1,6 @@
-import { IconButton, makeStyles, Tooltip } from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
+import CloseIcon from '@mui/icons-material/Close';
+import { IconButton, Tooltip } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useCallback, useRef, useState } from 'react';
 
 const useStyles = makeStyles({

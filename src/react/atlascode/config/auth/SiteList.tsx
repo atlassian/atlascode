@@ -1,4 +1,9 @@
 import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
+import CloudIcon from '@mui/icons-material/Cloud';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DomainIcon from '@mui/icons-material/Domain';
+import EditIcon from '@mui/icons-material/Edit';
+import ErrorIcon from '@mui/icons-material/Error';
 import {
     Avatar,
     Box,
@@ -10,16 +15,11 @@ import {
     ListItemIcon,
     ListItemSecondaryAction,
     ListItemText,
-    makeStyles,
     Theme,
     Tooltip,
     Typography,
-} from '@material-ui/core';
-import CloudIcon from '@material-ui/icons/Cloud';
-import DeleteIcon from '@material-ui/icons/Delete';
-import DomainIcon from '@material-ui/icons/Domain';
-import EditIcon from '@material-ui/icons/Edit';
-import ErrorIcon from '@material-ui/icons/Error';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import clsx from 'clsx';
 import React, { useContext } from 'react';
 import { uid } from 'react-uid';
@@ -87,17 +87,17 @@ function generateListItems(
                     <ListItemSecondaryAction>
                         {swa.auth.state === AuthInfoState.Invalid && (
                             <Tooltip title="Credential Error">
-                                <IconButton edge="end" aria-label="error" onClick={() => edit(swa)}>
+                                <IconButton edge="end" aria-label="error" onClick={() => edit(swa)} size="large">
                                     <ErrorIcon fontSize="small" color="inherit" />
                                 </IconButton>
                             </Tooltip>
                         )}
                         {!swa.site.isCloud && (
-                            <IconButton edge="end" aria-label="edit" onClick={() => edit(swa)}>
+                            <IconButton edge="end" aria-label="edit" onClick={() => edit(swa)} size="large">
                                 <EditIcon fontSize="small" color="inherit" />
                             </IconButton>
                         )}
-                        <IconButton edge="end" aria-label="delete" onClick={() => logout(swa.site)}>
+                        <IconButton edge="end" aria-label="delete" onClick={() => logout(swa.site)} size="large">
                             <DeleteIcon fontSize="small" color="inherit" />
                         </IconButton>
                     </ListItemSecondaryAction>

@@ -89,8 +89,8 @@ export const AttachmentList: React.FunctionComponent<AttachmentListProps> = ({
                     };
                 })}
             />
-            <ModalTransition>
-                {selectedAttachment && (
+            {selectedAttachment && (
+                <ModalTransition>
                     <Modal
                         heading={selectedAttachment.filename}
                         shouldCloseOnEscapePress
@@ -99,8 +99,8 @@ export const AttachmentList: React.FunctionComponent<AttachmentListProps> = ({
                     >
                         <RenderedContent html={`<img src=${selectedAttachment.content} />`} fetchImage={fetchImage} />
                     </Modal>
-                )}
-            </ModalTransition>
+                </ModalTransition>
+            )}
         </React.Fragment>
     );
 };

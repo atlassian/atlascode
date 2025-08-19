@@ -90,8 +90,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private readonly viewType = 'atlascodeRovoDev';
     private readonly isBoysenberry = process.env.ROVODEV_BBY;
 
-    private _prHandler = new RovoDevPullRequestHandler();
-    private _perfLogger = new PerformanceLogger();
+    private readonly _prHandler: RovoDevPullRequestHandler | undefined;
+    private readonly _perfLogger = new PerformanceLogger();
+
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _rovoDevApiClient?: RovoDevApiClient;
     private _processState = RovoDevProcessState.NotStarted;
@@ -145,6 +146,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         // Register this provider with the process manager for error handling
         RovoDevProcessManager.setRovoDevWebviewProvider(this);
+
+        if (this.isBoysenberry) {
+            this._prHandler = new RovoDevPullRequestHandler();
+        }
     }
 
     public resolveWebviewView(
@@ -241,7 +246,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.CheckGitChanges:
-                        await this._prHandler.isGitStateClean().then((isClean) => {
+                        await this._prHandler!.isGitStateClean().then((isClean) => {
                             this._webView?.postMessage({
                                 type: RovoDevProviderMessageType.CheckGitChangesComplete,
                                 hasChanges: !isClean,
@@ -474,6 +479,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return webview.postMessage({
             type: RovoDevProviderMessageType.ErrorMessage,
             message: {
+                type: 'error',
                 text: `${error.message}${error.gitErrorCode ? `\n ${error.gitErrorCode}` : ''}`,
                 source: 'RovoDevError',
                 isRetriable,
@@ -568,6 +574,40 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 }
                 return Promise.resolve(false);
 
+            case 'exception':
+                const msg = response.title ? `${response.title} - ${response.message}` : response.message;
+                return this.processError(new Error(msg), false);
+
+            case 'warning':
+                return webview.postMessage({
+                    type: RovoDevProviderMessageType.ErrorMessage,
+                    message: {
+                        type: 'warning',
+                        text: response.message,
+                        title: response.title,
+                        source: 'RovoDevError',
+                        isRetriable: false,
+                        uid: v4(),
+                    },
+                });
+
+            case 'clear':
+                return webview.postMessage({
+                    type: RovoDevProviderMessageType.ClearChat,
+                });
+
+            case 'prune':
+                return webview.postMessage({
+                    type: RovoDevProviderMessageType.ErrorMessage,
+                    message: {
+                        type: 'info',
+                        text: response.message,
+                        source: 'RovoDevError',
+                        isRetriable: false,
+                        uid: v4(),
+                    },
+                });
+
             default:
                 return Promise.resolve(false);
         }
@@ -655,8 +695,10 @@ ${message}`;
             return;
         }
 
+        const isCommand = text.trim() === '/clear' || text.trim() === '/prune';
+
         if (!suppressEcho) {
-            await this.sendUserPromptToView({ text, enable_deep_plan, context });
+            await this.sendUserPromptToView({ text, enable_deep_plan, context: isCommand ? undefined : context });
         }
 
         this.beginNewPrompt();
@@ -667,10 +709,13 @@ ${message}`;
             context,
         };
 
-        await this.sendPromptSentToView({ text, enable_deep_plan, context });
+        await this.sendPromptSentToView({ text, enable_deep_plan, context: isCommand ? undefined : context });
 
-        let payloadToSend = this.addUndoContextToPrompt(text);
-        payloadToSend = this.addContextToPrompt(payloadToSend, context);
+        let payloadToSend = text;
+        if (!isCommand) {
+            payloadToSend = this.addUndoContextToPrompt(payloadToSend);
+            payloadToSend = this.addContextToPrompt(payloadToSend, context);
+        }
 
         const currentPrompt = this._currentPrompt;
         const fetchOp = async (client: RovoDevApiClient) => {
@@ -798,7 +843,7 @@ ${message}`;
             RovoDevProcessManager.initializeRovoDevProcessManager(this._context);
 
             await webview.postMessage({
-                type: RovoDevProviderMessageType.NewSession,
+                type: RovoDevProviderMessageType.ClearChat,
             });
 
             return;
@@ -826,7 +871,7 @@ ${message}`;
             this._revertedChanges = [];
 
             await webview.postMessage({
-                type: RovoDevProviderMessageType.NewSession,
+                type: RovoDevProviderMessageType.ClearChat,
             });
 
             return true;
@@ -966,13 +1011,15 @@ ${message}`;
     }
 
     private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
+        const prHandler = this._prHandler!;
+
         let prLink: string | undefined;
         const webview = this._webView!;
         try {
             if (!commitMessage || !branchName) {
                 throw new Error('Commit message and branch name are required to create a PR');
             }
-            prLink = await this._prHandler.createPR(branchName, commitMessage);
+            prLink = await prHandler.createPR(branchName, commitMessage);
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CreatePRComplete,
@@ -999,8 +1046,10 @@ ${message}`;
 
     private async getCurrentBranchName(): Promise<void> {
         const webview = this._webView!;
+        const prHandler = this._prHandler!;
+
         try {
-            const branchName = await this._prHandler.getCurrentBranchName();
+            const branchName = await prHandler.getCurrentBranchName();
             await webview.postMessage({
                 type: RovoDevProviderMessageType.GetCurrentBranchNameComplete,
                 data: {
@@ -1096,16 +1145,7 @@ ${message}`;
      * @param errorMessage The error message to display in chat
      */
     public sendErrorToChat(errorMessage: string): void {
-        const webView = this._webView!;
-        webView.postMessage({
-            type: RovoDevProviderMessageType.ErrorMessage,
-            message: {
-                text: errorMessage,
-                source: 'RovoDevError',
-                isRetriable: false,
-                uid: v4(),
-            },
-        });
+        this.processError(new Error(errorMessage), false);
     }
 
     public signalBinaryDownloadStarted() {

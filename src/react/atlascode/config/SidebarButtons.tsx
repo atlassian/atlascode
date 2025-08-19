@@ -1,5 +1,5 @@
 import { IconLink } from '@atlassianlabs/guipi-core-components';
-import { Grid } from '@material-ui/core';
+import { Grid } from '@mui/material';
 import React, { memo, useContext } from 'react';
 
 import { FeedbackUser, KnownLinkID } from '../../../lib/ipc/models/common';

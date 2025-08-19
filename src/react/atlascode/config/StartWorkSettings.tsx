@@ -1,5 +1,5 @@
 import { InlineTextEditor, InlineTextEditorList } from '@atlassianlabs/guipi-core-components';
-import { Box, FormHelperText, Grid, Link, Typography } from '@material-ui/core';
+import { Box, FormHelperText, Grid, Link, Typography } from '@mui/material';
 import Mustache from 'mustache';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 

@@ -1,6 +1,7 @@
-import { CssBaseline, ThemeProvider } from '@material-ui/core';
+import { CssBaseline } from '@mui/material';
+import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import React, { useCallback, useEffect, useState } from 'react';
-import * as ReactDOM from 'react-dom';
+import * as ReactDOM from 'react-dom/client';
 import useConstant from 'use-constant';
 
 import { UIWSPort } from '../lib/ipc/models/ports';
@@ -10,7 +11,6 @@ import { ErrorControllerContext, ErrorStateContext, useErrorController } from '.
 import { atlascodeTheme } from './atlascode/theme/atlascodeTheme';
 import { computeStyles, VSCodeStylesContext } from './vscode/theme/styles';
 import { createVSCodeTheme } from './vscode/theme/vscodeTheme';
-
 declare global {
     // eslint-disable-next-line no-unused-vars
     interface Window {
@@ -115,9 +115,11 @@ const App = (): JSX.Element => {
                 <ThemeProvider theme={currentTheme}>
                     <ErrorControllerContext.Provider value={errorController}>
                         <ErrorStateContext.Provider value={errorState}>
-                            <CssBaseline />
-                            <AtlGlobalStyles />
-                            <Page />
+                            <StyledEngineProvider injectFirst>
+                                <CssBaseline />
+                                <AtlGlobalStyles />
+                                <Page />
+                            </StyledEngineProvider>
                         </ErrorStateContext.Provider>
                     </ErrorControllerContext.Provider>
                 </ThemeProvider>
@@ -127,7 +129,8 @@ const App = (): JSX.Element => {
 };
 
 const _vscapi = new VsCodeApi(() => {
-    ReactDOM.render(<App />, root);
+    const reactRoot = ReactDOM.createRoot(root);
+    reactRoot.render(<App />);
 }, ports[view.getAttribute('content')!]);
 
 window['acquireVsCodeApi'] = (): VsCodeApi => {

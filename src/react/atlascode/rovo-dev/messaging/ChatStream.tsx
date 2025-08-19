@@ -4,7 +4,8 @@ import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev
 import { ConnectionTimeout } from 'src/util/time';
 
 import { useMessagingApi } from '../../messagingApi';
-import { ErrorMessageItem, FollowUpActionFooter, OpenFileFunc } from '../common/common';
+import { FollowUpActionFooter, OpenFileFunc } from '../common/common';
+import { ErrorMessageItem } from '../common/errorMessage';
 import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
 import { RovoDevLanding } from '../rovoDevLanding';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
@@ -176,7 +177,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     // Other state management effect
     React.useEffect(() => {
-        if (state === State.WaitingForPrompt) {
+        if (process.env.ROVODEV_BBY && state === State.WaitingForPrompt) {
             setCanCreatePR(true);
             if (currentMessage) {
                 // Only check git changes if there's something in the chat
