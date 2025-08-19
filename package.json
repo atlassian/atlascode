@@ -95,18 +95,21 @@
         "commands": [
             {
                 "command": "atlascode.rovodev.askInteractive",
-                "title": "Rovo Dev: Quick Ask",
-                "enablement": "atlascode:rovoDevEnabled"
+                "title": "Ask & Open",
+                "enablement": "atlascode:rovoDevEnabled",
+                "category": "Rovo Dev"
             },
             {
                 "command": "atlascode.rovodev.askRovoDev",
-                "title": "Ask Rovo Dev",
-                "enablement": "atlascode:rovoDevEnabled"
+                "title": "Open",
+                "enablement": "atlascode:rovoDevEnabled",
+                "category": "Rovo Dev"
             },
             {
                 "command": "atlascode.rovodev.addToContext",
-                "title": "Add selection to Rovo Dev context",
-                "enablement": "atlascode:rovoDevEnabled"
+                "title": "Add to Context",
+                "enablement": "atlascode:rovoDevEnabled",
+                "category": "Rovo Dev"
             },
             {
                 "command": "atlascode.rovodev.newChatSession",
@@ -115,33 +118,33 @@
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
                 },
-                "category": "Atlassian",
+                "category": "Rovo Dev",
                 "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.rovodev.showTerminal",
-                "title": "Show in terminal",
+                "title": "Trail Logs",
                 "icon": "$(terminal)",
-                "category": "Atlassian"
+                "category": "Rovo Dev"
             },
             {
                 "command": "atlascode.openRovoDevConfig",
-                "title": "Open Rovo Dev settings file",
-                "category": "Atlascode",
+                "title": "Open Settings File",
+                "category": "Rovo Dev",
                 "description": "Opens the ~/.rovodev/config.yaml file in the editor.",
                 "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.openRovoDevMcpJson",
-                "title": "Open Rovo Dev MCP configuration",
-                "category": "Atlascode",
+                "title": "Open MCP configuration",
+                "category": "Rovo Dev",
                 "description": "Opens the ~/.rovodev/mcp.json file in the editor.",
                 "enablement": "atlascode:rovoDevEnabled"
             },
             {
                 "command": "atlascode.openRovoDevGlobalMemory",
-                "title": "Open Rovo Dev Global Memory file",
-                "category": "Atlascode",
+                "title": "Open Global Memory file",
+                "category": "Rovo Dev",
                 "description": "Opens the ~/.rovodev/.agent.md file in the editor.",
                 "enablement": "atlascode:rovoDevEnabled"
             },
@@ -164,7 +167,7 @@
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
                 },
-                "category": "Atlassian"
+                "category": "Jira"
             },
             {
                 "command": "atlascode.jira.searchIssues",
@@ -173,7 +176,7 @@
                     "dark": "resources/dark/search.svg",
                     "light": "resources/light/search.svg"
                 },
-                "category": "Atlassian"
+                "category": "Jira"
             },
             {
                 "command": "atlascode.bb.deleteComment",
@@ -182,7 +185,7 @@
                     "dark": "resources/dark/delete.svg",
                     "light": "resources/light/delete.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.editComment",
@@ -191,7 +194,7 @@
                     "dark": "resources/dark/edit.svg",
                     "light": "resources/light/edit.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.cancelCommentAction",
@@ -208,7 +211,7 @@
                     "dark": "resources/dark/delete.svg",
                     "light": "resources/light/delete.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.addReply",
@@ -217,7 +220,7 @@
                     "dark": "resources/dark/add-comment.svg",
                     "light": "resources/light/add-comment.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.addTask",
@@ -226,7 +229,7 @@
                     "dark": "resources/dark/addTask.svg",
                     "light": "resources/light/addTask.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.editTask",
@@ -235,7 +238,7 @@
                     "dark": "resources/dark/edit.svg",
                     "light": "resources/light/edit.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.markTaskIncomplete",
@@ -244,7 +247,7 @@
                     "dark": "resources/dark/checked.svg",
                     "light": "resources/light/checked.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.markTaskComplete",
@@ -253,17 +256,17 @@
                     "dark": "resources/dark/unchecked.svg",
                     "light": "resources/light/unchecked.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.jira.createNewJql",
                 "title": "Create new JQL filter",
-                "category": "Atlassian"
+                "category": "Jira"
             },
             {
                 "command": "atlascode.jira.addJiraSite",
                 "title": "Add Jira Site",
-                "category": "Atlassian",
+                "category": "Jira",
                 "shortTitle": "Add another Jira site"
             },
             {
@@ -273,7 +276,7 @@
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
                 },
-                "category": "Atlassian"
+                "category": "Jira"
             },
             {
                 "command": "atlascode.jira.refreshCustomJqlExplorer",
@@ -282,7 +285,7 @@
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
                 },
-                "category": "Atlassian"
+                "category": "Jira"
             },
             {
                 "command": "atlascode.jira.showJiraIssueSettings",
@@ -291,28 +294,28 @@
                     "dark": "resources/dark/settings.svg",
                     "light": "resources/light/settings.svg"
                 },
-                "category": "Atlassian",
+                "category": "Jira",
                 "shortTitle": "View settings"
             },
             {
                 "command": "atlascode.jira.showIssueForKey",
                 "title": "Open Jira Issue",
-                "category": "Atlassian"
+                "category": "Jira"
             },
             {
                 "command": "atlascode.jira.transitionIssue",
                 "title": "Transition Issue...",
-                "category": "Atlassian"
+                "category": "Jira"
             },
             {
                 "command": "atlascode.jira.assignIssueToMe",
                 "title": "Assign Jira Issue to Me",
-                "category": "Atlassian"
+                "category": "Jira"
             },
             {
                 "command": "atlascode.jira.startWorkOnIssue",
                 "title": "Start work on Jira issue",
-                "category": "Atlassian"
+                "category": "Jira"
             },
             {
                 "command": "atlascode.bb.refreshPullRequests",
@@ -321,7 +324,7 @@
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.toggleFileNesting",
@@ -330,7 +333,7 @@
                     "dark": "resources/dark/fileTree.svg",
                     "light": "resources/light/fileTree.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.showPullRequestSettings",
@@ -339,7 +342,7 @@
                     "dark": "resources/dark/settings.svg",
                     "light": "resources/light/settings.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.viewInWebBrowser",
@@ -359,22 +362,22 @@
             {
                 "command": "atlascode.showJiraAuth",
                 "title": "Open Jira Auth Settings",
-                "category": "Atlassian"
+                "category": "Jira"
             },
             {
                 "command": "atlascode.showBitbucketAuth",
                 "title": "Open Bitbucket Auth Settings",
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.openInBitbucket",
                 "title": "Open in Bitbucket",
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.openChangeset",
                 "title": "Open Changeset",
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.createPullRequest",
@@ -383,22 +386,22 @@
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.viewPullRequest",
                 "title": "View Pull Request",
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.copyPullRequest",
                 "title": "Copy Pull Request Url to Clipboard",
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.editThisFile",
                 "title": "Edit this File",
-                "category": "Atlassian",
+                "category": "Bitbucket",
                 "icon": {
                     "dark": "resources/dark/edit.svg",
                     "light": "resources/light/edit.svg"
@@ -407,7 +410,7 @@
             {
                 "command": "atlascode.bb.rerunPipeline",
                 "title": "Rerun Build",
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.runPipelineForBranch",
@@ -416,7 +419,7 @@
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.refreshPipelines",
@@ -425,7 +428,7 @@
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.showPipelineSettings",
@@ -434,12 +437,12 @@
                     "dark": "resources/dark/settings.svg",
                     "light": "resources/light/settings.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.addComment",
                 "title": "Add comment",
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.bb.toggleCommentsVisibility",
@@ -448,12 +451,12 @@
                     "dark": "resources/dark/comment.svg",
                     "light": "resources/light/comment.svg"
                 },
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.debug.bitbucketSites",
                 "title": "Show Bitbucket sites info",
-                "category": "Atlassian"
+                "category": "Bitbucket"
             },
             {
                 "command": "atlascode.showExploreSettings",
@@ -472,17 +475,17 @@
             },
             {
                 "command": "atlascode.debug.quickCommand",
-                "title": "[DEBUG] Atlascode: Quick command",
+                "title": "[DEBUG] Atlassian: Quick command",
                 "enablement": "atlascode:debugMode"
             },
             {
                 "command": "atlascode.debug.quickLogin",
-                "title": "[DEBUG] Atlascode: Quick login",
+                "title": "[DEBUG] Atlassian: Quick login",
                 "enablement": "atlascode:debugMode"
             },
             {
                 "command": "atlascode.debug.quickLogout",
-                "title": "[DEBUG] Atlascode: Quick logout",
+                "title": "[DEBUG] Atlassian: Quick logout",
                 "enablement": "atlascode:debugMode"
             }
         ],
