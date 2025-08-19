@@ -21,8 +21,12 @@ export class PRSidebar {
         this.sidebarAuthor = this.sidebar.locator('.MuiGrid-item', { hasText: 'Author' });
         this.sidebarReviewersButton = this.sidebar.getByRole('button', { name: 'Reviewers' });
         this.sidebarAddReviewerInput = this.sidebar.getByPlaceholder('Add reviewer');
-        this.sidebarCreatedDate = this.sidebar.locator('div:has(strong:text("Created")):has(p[title*="2025-07-03"])');
-        this.sidebarUpdatedDate = this.sidebar.locator('div:has(strong:text("Updated")):has(p[title*="2025-07-03"])');
+        this.sidebarCreatedDate = this.sidebar.locator(
+            'div:has(strong:text("Created")):has(p[aria-label*="2025-07-03"])',
+        );
+        this.sidebarUpdatedDate = this.sidebar.locator(
+            'div:has(strong:text("Updated")):has(p[aria-label*="2025-07-03"])',
+        );
         this.sidebarTaskButton = this.sidebar.getByRole('button', { name: 'Tasks' });
         this.sidebarCreateTaskInput = this.sidebar.locator('div[data-placeholder="Create task"]');
     }
