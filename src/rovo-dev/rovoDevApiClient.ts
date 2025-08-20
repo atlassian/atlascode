@@ -15,6 +15,7 @@ class RovoDevApiError extends Error {
 export interface RovoDevHealthcheckResponse {
     status: string;
     version: string;
+    sessionId: string | null; // from response header
 }
 
 export interface RovoDevCancelResponse {
@@ -74,9 +75,12 @@ export class RovoDevApiClient {
         await this.fetchApi('/v2/reset', 'POST');
     }
 
-    /** Invokes the POST `/v2/sessions/create` API */
-    public async createSession(): Promise<void> {
-        await this.fetchApi('/v2/sessions/create', 'POST');
+    /** Invokes the POST `/v2/sessions/create` API
+     * @returns {Promise<string>} A value representing the new session id.
+     */
+    public async createSession(): Promise<string | null> {
+        const response = await this.fetchApi('/v2/sessions/create', 'POST');
+        return response.headers.get('x-session-id');
     }
 
     /** Invokes the POST `/v2/chat` API.
@@ -157,7 +161,9 @@ export class RovoDevApiClient {
      */
     public async healtcheckInfo(): Promise<RovoDevHealthcheckResponse> {
         const response = await this.fetchApi('/healthcheck', 'GET');
-        return await response.json();
+        const jsonResponse = (await response.json()) as RovoDevHealthcheckResponse;
+        jsonResponse.sessionId = response.headers.get('x-session-id');
+        return jsonResponse;
     }
 
     /** Invokes the GET `/healthcheck` API.

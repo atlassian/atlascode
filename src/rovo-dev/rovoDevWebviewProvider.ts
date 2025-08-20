@@ -286,10 +286,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    private beginNewSession(): void {
-        this._chatSessionId = v4();
+    private beginNewSession(sessionId: string | null | undefined, manuallyCreated: boolean): void {
+        this._chatSessionId = sessionId ?? v4();
         this._perfLogger.sessionStarted(this._chatSessionId);
-        this.fireTelemetryEvent('rovoDevNewSessionActionEvent', true);
+        this.fireTelemetryEvent('rovoDevNewSessionActionEvent', manuallyCreated);
     }
 
     private beginNewPrompt(overrideId?: string): void {
@@ -844,7 +844,7 @@ ${message}`;
             return;
         }
 
-        const success = await this.executeApiWithErrorHandling(async (client) => {
+        await this.executeApiWithErrorHandling(async (client) => {
             // in case there is an ongoing stream, we must cancel it
             await webview.postMessage({
                 type: RovoDevProviderMessageType.ForceStop,
@@ -852,27 +852,21 @@ ${message}`;
             try {
                 const cancelled = await this.executeCancel(true);
                 if (!cancelled) {
-                    return false;
+                    return;
                 }
             } catch {
                 return false;
             }
 
-            await client.createSession();
+            const sessionId = await client.createSession();
             this._revertedChanges = [];
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.ClearChat,
             });
 
-            return true;
+            return this.beginNewSession(sessionId, true);
         }, false);
-
-        if (success) {
-            this._chatSessionId = v4();
-            this._perfLogger.sessionStarted(this._chatSessionId);
-            this.fireTelemetryEvent('rovoDevNewSessionActionEvent', true);
-        }
     }
 
     private async executeCancel(fromNewSession: boolean): Promise<boolean> {
@@ -1169,11 +1163,12 @@ ${message}`;
 
         try {
             if (result) {
-                const version = ((await this.executeHealthcheckInfo()) ?? {}).version;
+                const info = await this.executeHealthcheckInfo();
+                const version = (info || {}).version;
+                const sessionId = (info || {}).sessionId;
                 if (version && semver_gte(version, MIN_SUPPORTED_ROVODEV_VERSION)) {
-                    this.beginNewSession();
+                    this.beginNewSession(sessionId, false);
                     if (this.isBoysenberry) {
-                        // TODO: we should obtain the session id from the boysenberry environment
                         await this.executeReplay();
                     }
                 } else {
