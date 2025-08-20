@@ -108,3 +108,30 @@ export async function setupPullrequests(request: APIRequestContext, values: Arra
 
     return () => cleanupWireMockMapping(request, id);
 }
+
+export async function setupPRComments(request: APIRequestContext, comments: Array<any>) {
+    const { id } = await setupWireMockMappingBitbucket(
+        request,
+        'GET',
+        { values: comments, pagelen: 100, size: comments.length, page: 1 },
+        '/2.0/repositories/mockuser/test-repository/pullrequests/123/comments',
+        {
+            pagelen: {
+                matches: '.*',
+            },
+        },
+    );
+
+    return () => cleanupWireMockMapping(request, id);
+}
+
+export async function setupPRCommentPost(request: APIRequestContext, comment: any) {
+    const { id } = await setupWireMockMappingBitbucket(
+        request,
+        'POST',
+        comment,
+        '/2.0/repositories/mockuser/test-repository/pullrequests/123/comments',
+    );
+
+    return () => cleanupWireMockMapping(request, id);
+}
