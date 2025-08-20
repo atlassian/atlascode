@@ -43,7 +43,13 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
     const [modalActionNotAvailable, setModalActionNotAvailable] = useState(false);
 
     const handleDemoButtonClick = useCallback(
-        (gifLink: string, modalTitle: string, description: React.ReactNode, action: () => void, actionNotAvailable) => {
+        (
+            gifLink: string,
+            modalTitle: string,
+            description: React.ReactNode,
+            action: () => void,
+            actionNotAvailable: boolean,
+        ) => {
             setModalTitle(modalTitle);
             setModalGifLink(gifLink);
             setModalDescription(description);

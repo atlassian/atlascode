@@ -3,42 +3,42 @@ import { expect, FrameLocator, Locator } from '@playwright/test';
 export class PRHeader {
     readonly frame: FrameLocator;
 
-    readonly headerTitle: Locator;
-    readonly headerCopyButton: Locator;
-    readonly headerRequestChangesButton: Locator;
-    readonly headerApproveButton: Locator;
-    readonly headerUnapproveButton: Locator;
-    readonly headerMergeButton: Locator;
-    readonly headerRefreshButton: Locator;
+    readonly title: Locator;
+    readonly copyButton: Locator;
+    readonly requestChangesButton: Locator;
+    readonly approveButton: Locator;
+    readonly unapproveButton: Locator;
+    readonly mergeButton: Locator;
+    readonly refreshButton: Locator;
 
     constructor(frame: FrameLocator) {
         this.frame = frame;
 
-        this.headerTitle = this.frame.getByText('test-repository: Pull request #123');
-        this.headerCopyButton = this.frame.getByRole('button', { name: 'copy link' });
-        this.headerRequestChangesButton = this.frame.getByRole('button', { name: 'Request Changes' });
-        this.headerApproveButton = this.frame.getByRole('button', { name: 'Approve' });
-        this.headerUnapproveButton = this.frame.getByRole('button', { name: 'Unapprove' });
-        this.headerMergeButton = this.frame.getByRole('button', { name: 'Merge' });
-        this.headerRefreshButton = this.frame.getByRole('button', { name: 'click to refresh' });
+        this.title = this.frame.getByText('test-repository: Pull request #123');
+        this.copyButton = this.frame.getByRole('button', { name: 'copy link' });
+        this.requestChangesButton = this.frame.getByRole('button', { name: 'Request Changes' });
+        this.approveButton = this.frame.getByRole('button', { name: 'Approve' });
+        this.unapproveButton = this.frame.getByRole('button', { name: 'Unapprove' });
+        this.mergeButton = this.frame.getByRole('button', { name: 'Merge' });
+        this.refreshButton = this.frame.getByRole('button', { name: 'click to refresh' });
     }
 
     async expectHeaderLoaded() {
-        await expect(this.headerTitle).toBeVisible();
-        await expect(this.headerCopyButton).toBeVisible();
-        await expect(this.headerRequestChangesButton).toBeVisible();
-        await expect(this.headerApproveButton).toBeVisible();
-        await expect(this.headerMergeButton).toBeVisible();
-        await expect(this.headerRefreshButton).toBeVisible();
+        await expect(this.title).toBeVisible();
+        await expect(this.copyButton).toBeVisible();
+        await expect(this.requestChangesButton).toBeVisible();
+        await expect(this.approveButton).toBeVisible();
+        await expect(this.mergeButton).toBeVisible();
+        await expect(this.refreshButton).toBeVisible();
     }
 
     async approvePullRequest() {
-        await this.headerApproveButton.click();
-        await expect(this.headerUnapproveButton).toBeVisible({ timeout: 250 });
+        await this.approveButton.click();
+        await expect(this.unapproveButton).toBeVisible({ timeout: 250 });
     }
 
     async unapprovePullRequest() {
-        await this.headerUnapproveButton.click();
-        await expect(this.headerApproveButton).toBeVisible({ timeout: 250 });
+        await this.unapproveButton.click();
+        await expect(this.approveButton).toBeVisible({ timeout: 250 });
     }
 }

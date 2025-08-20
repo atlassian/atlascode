@@ -16,12 +16,12 @@ export async function approvePullRequest(page: Page) {
 
     const pullRequestPage = new PullRequestPage(page);
     // user can approve PR
-    await pullRequestPage.prHeader.approvePullRequest();
+    await pullRequestPage.header.approvePullRequest();
     await page.waitForTimeout(250);
-    await expect(pullRequestPage.prSidebar.sidebarApprovedIcon).toBeVisible();
+    await expect(pullRequestPage.sidebar.approvedIcon).toBeVisible();
 
     // user can unapprove PR
-    await pullRequestPage.prHeader.unapprovePullRequest();
+    await pullRequestPage.header.unapprovePullRequest();
     await page.waitForTimeout(250);
-    await expect(pullRequestPage.prSidebar.sidebarApprovedIcon).not.toBeVisible();
+    await expect(pullRequestPage.sidebar.approvedIcon).not.toBeVisible();
 }

@@ -35,7 +35,7 @@ export async function assigningFlow(page: Page, request: APIRequestContext) {
         request,
         'GET',
         createSearchResponse(false),
-        '/rest/api/2/search',
+        '/rest/api/3/search/jql',
     );
     const menu = issueFrame.locator('.ac-select__menu');
     await expect(menu).toBeVisible();
@@ -57,7 +57,7 @@ export async function assigningFlow(page: Page, request: APIRequestContext) {
         request,
         'GET',
         createSearchResponse(true),
-        '/rest/api/2/search',
+        '/rest/api/3/search/jql',
     );
     await expect(menu).toBeVisible();
 
