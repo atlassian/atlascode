@@ -1451,6 +1451,7 @@
         "macaddress": "^0.5.3",
         "markdown-it": "^14.1.0",
         "merge-anything": "^6.0.6",
+        "monaco-editor": "^0.51.0",
         "mustache": "^4.0.1",
         "node-ipc": "^9.2.1",
         "p-cancelable": "^2.0.0",

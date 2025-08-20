@@ -19,6 +19,7 @@ export const baseConfigFor = (project: string, testExtension: string): Config =>
     moduleNameMapper: {
         '^src(.*)$': '<rootDir>/src$1',
         '^testsutil(/.+)?': '<rootDir>/testsutil$1',
+        'monaco-editor': '<rootDir>/__mocks__/monaco-editor.ts',
     },
 
     testMatch: [`**/*.test.${testExtension}`],

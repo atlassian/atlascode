@@ -568,8 +568,8 @@ const RovoDevView: React.FC = () => {
     }, [currentState, sendPrompt]);
 
     const retryPromptAfterError = useCallback((): void => {
-        // Disable the send button, and enable the pause button
         setCurrentState(State.GeneratingResponse);
+        setRetryAfterErrorEnabled('');
 
         postMessage({
             type: RovoDevViewResponseType.RetryPromptAfterError,
