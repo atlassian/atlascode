@@ -15,9 +15,9 @@ export const authenticateWithBitbucketDC = async (
     const settingsFrame = await openAtlassianSettings(page, 'Connect Bitbucket to view pull requests');
 
     await expect(settingsFrame.getByRole('button', { name: 'Authentication authenticate' })).toBeVisible();
-    await expect(settingsFrame.getByRole('button', { name: 'Login to Bitbucket' })).toBeVisible();
+    await expect(settingsFrame.getByRole('button', { name: 'Login with API Token' })).toBeVisible();
 
-    await settingsFrame.getByRole('button', { name: 'Login to Bitbucket' }).click();
+    await settingsFrame.getByRole('button', { name: 'Login with API Token' }).click();
     await page.waitForTimeout(250);
 
     await settingsFrame.getByRole('textbox', { name: 'Base URL' }).click();
@@ -68,9 +68,9 @@ export const authenticateWithBitbucketCloud = async (
     const settingsFrame = await openAtlassianSettings(page, 'Connect Bitbucket to view pull requests');
 
     await expect(settingsFrame.getByRole('button', { name: 'Authentication authenticate' })).toBeVisible();
-    await expect(settingsFrame.getByRole('button', { name: 'Login to Bitbucket' })).toBeVisible();
+    await expect(settingsFrame.getByRole('button', { name: 'Login with API Token' })).toBeVisible();
 
-    await settingsFrame.getByRole('button', { name: 'Login to Bitbucket' }).click();
+    await settingsFrame.getByRole('button', { name: 'Login with API Token' }).click();
     await page.waitForTimeout(250);
 
     await settingsFrame.getByRole('textbox', { name: 'Base URL' }).click();

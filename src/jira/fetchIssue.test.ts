@@ -70,7 +70,7 @@ describe('fetchIssue', () => {
         };
 
         (Container.jiraSettingsManager as any) = {
-            getMinimalIssueFieldIdsForSite: jest.fn().mockResolvedValue(mockFieldIds),
+            getMinimalIssueFieldIdsForSite: jest.fn().mockReturnValue(mockFieldIds),
             getEpicFieldsForSite: jest.fn().mockResolvedValue(mockEpicInfo),
             getAllFieldsForSite: jest.fn().mockResolvedValue(mockFields),
             getIssueLinkTypes: jest.fn().mockResolvedValue(mockIssueLinkTypes),
@@ -182,9 +182,9 @@ describe('fetchIssue', () => {
             expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
                 Experiments.AtlascodePerformanceExperiment,
             );
-            expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockEpicInfo);
             expect(mockClient.getIssue).toHaveBeenCalledWith(mockIssueKey, mockFieldIds);
             expect(jiraPiCommonModels.minimalIssueFromJsonObject).toHaveBeenCalledWith(
                 mockIssueResponse,
@@ -201,9 +201,9 @@ describe('fetchIssue', () => {
             expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
                 Experiments.AtlascodePerformanceExperiment,
             );
-            expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockEpicInfo);
             expect(mockClient.getIssue).toHaveBeenCalledWith(mockIssueKey, mockFieldIds);
             expect(jiraPiCommonModels.minimalIssueFromJsonObject).toHaveBeenCalledWith(
                 mockIssueResponse,
@@ -232,8 +232,9 @@ describe('fetchIssue', () => {
             const result = await getCachedOrFetchMinimalIssue(mockIssueKey, mockSiteDetails);
 
             expect(SearchJiraHelper.findIssue).toHaveBeenCalledWith(mockIssueKey);
-            expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockEpicInfo);
             expect(mockClient.getIssue).toHaveBeenCalledWith(mockIssueKey, mockFieldIds);
             expect(result).toBe(mockMinimalIssue);
         });
@@ -246,8 +247,9 @@ describe('fetchIssue', () => {
 
             expect(SearchJiraHelper.findIssue).toHaveBeenCalledWith(mockIssueKey);
             expect(jiraPiCommonModels.isMinimalIssue).toHaveBeenCalledWith(mockMinimalIssue);
-            expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockEpicInfo);
             expect(mockClient.getIssue).toHaveBeenCalledWith(mockIssueKey, mockFieldIds);
             expect(result).toBe(mockMinimalIssue);
         });

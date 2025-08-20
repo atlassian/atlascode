@@ -2,6 +2,7 @@ import React from 'react';
 
 export const rovoDevTextareaStyles: React.CSSProperties = {
     width: '100%',
+    minHeight: '20px',
     background: 'inherit',
     color: 'var(--vscode-input-foreground)',
     resize: 'none',

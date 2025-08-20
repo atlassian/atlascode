@@ -279,12 +279,13 @@ export const MarkdownEditor: React.FC<PropsType> = (props: PropsType) => {
             <Grid item>
                 {/* https://github.com/mui-org/material-ui/issues/17010 */}
                 <Box
+                    data-testid="common.rich-markdown-editor"
                     hidden={!enableRichTextEditor}
                     minHeight="8em"
                     className={classes.editor}
                     {...({ ref: viewHost } as any)}
                 />
-                <Box hidden={enableRichTextEditor} minHeight="8em">
+                <Box hidden={enableRichTextEditor} minHeight="8em" data-testid="common.simple-markdown-editor">
                     <TextField
                         multiline
                         fullWidth
