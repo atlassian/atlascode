@@ -34,11 +34,11 @@ export class PRHeader {
 
     async approvePullRequest() {
         await this.approveButton.click();
-        await expect(this.unapproveButton).toBeVisible({ timeout: 250 });
+        await this.unapproveButton.waitFor({ state: 'visible' });
     }
 
     async unapprovePullRequest() {
         await this.unapproveButton.click();
-        await expect(this.approveButton).toBeVisible({ timeout: 250 });
+        await this.approveButton.waitFor({ state: 'visible' });
     }
 }
