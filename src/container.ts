@@ -37,7 +37,7 @@ import { RovoDevDecorator } from './rovo-dev/rovoDevDecorator';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
-import { AtlascodeUriHandler, SETTINGS_URL, SETTINGS_URL_V3 } from './uriHandler';
+import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
 import { FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
@@ -140,7 +140,7 @@ export class Container {
                 new VSCConfigActionApi(this._analyticsApi, this._cancellationManager),
                 this._commonMessageHandler,
                 this._analyticsApi,
-                SETTINGS_URL_V3,
+                SETTINGS_URL,
             ),
             this._analyticsApi,
         );

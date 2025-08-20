@@ -355,11 +355,6 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.showConfigPageV3",
-                "title": "Open Settings V3",
-                "category": "Atlassian"
-            },
-            {
                 "command": "atlascode.extensionContext.showConfigPage",
                 "title": "Extension Settings (UI)",
                 "category": "Atlassian"
