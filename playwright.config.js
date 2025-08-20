@@ -22,5 +22,10 @@ export default defineConfig({
             testDir: 'e2e/tests/bitbucket',
             testMatch: /bitbucketCloud\.spec\.ts/,
         },
+        {
+            name: 'bitbucket-dc',
+            testDir: 'e2e/tests/bitbucket',
+            testMatch: /bitbucketDC\.spec\.ts/,
+        },
     ]
 });

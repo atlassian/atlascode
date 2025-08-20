@@ -28,10 +28,11 @@ RUN cat <<EOF > /usr/bin/entrypoint.sh && chmod +x /usr/bin/entrypoint.sh
 set -euo pipefail
 
 # Setting up git configuration
-echo ">> Running mock repository setup"
-chmod +x ./e2e/setup-mock-repository.sh
-./e2e/setup-mock-repository.sh
-
+if [[ "\${TARGET}" == "bitbucket-cloud" || "\${TARGET}" == "bitbucket-dc" ]]; then
+    echo ">> Running mock repository setup"
+    chmod +x ./e2e/setup-mock-repository.sh
+    ./e2e/setup-mock-repository.sh
+fi
 
 echo ">> Setting up trusted certificate authorities"
 cp ./e2e/sslcerts/rootCA.crt /usr/local/share/ca-certificates/atlascode_e2e_Root_CA.crt
@@ -49,7 +50,7 @@ if [[ -z "\${ONLYSERVER:-}" ]]; then
     code-server --auth none --disable-workspace-trust --bind-addr localhost:9988 &
     
     echo ">> Running e2e tests"
-    case "$TARGET" in
+    case "\${TARGET}" in
         jira-cloud)
             echo ">> Running Jira Cloud tests"
             npx playwright test --project=jira-cloud --workers=1 ;;
