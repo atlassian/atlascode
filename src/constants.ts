@@ -92,12 +92,12 @@ export const enum Commands {
     OpenRovoDevConfig = 'atlascode.openRovoDevConfig',
     OpenRovoDevMcpJson = 'atlascode.openRovoDevMcpJson',
     OpenRovoDevGlobalMemory = 'atlascode.openRovoDevGlobalMemory',
+    OpenNativeSettings = 'atlascode.openNativeSettings',
 
     // Debug mode-only commands
     DebugQuickCommand = 'atlascode.debug.quickCommand',
     DebugQuickLogin = 'atlascode.debug.quickLogin',
     DebugQuickLogout = 'atlascode.debug.quickLogout',
-    OpenNativeSettings = 'atlascode.openNativeSettings',
 }
 
 // Rovodev port mapping settings

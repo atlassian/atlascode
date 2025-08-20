@@ -81,16 +81,10 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             ),
             // Natigate them to VSCode Native settings
             commands.registerCommand(Commands.ShowPullRequestSettings, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigSection.Bitbucket,
-                    subSection: ConfigSubSection.PR,
-                }),
+                commands.executeCommand('workbench.action.openSettings', '@ext:atlassian.atlascode pull requests'),
             ),
             commands.registerCommand(Commands.ShowPipelineSettings, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigSection.Bitbucket,
-                    subSection: ConfigSubSection.Pipelines,
-                }),
+                commands.executeCommand('workbench.action.openSettings', '@ext:atlassian.atlascode pipeline'),
             ),
             // -----------------------------------
             commands.registerCommand(Commands.ShowExploreSettings, () => {
