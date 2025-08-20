@@ -8,7 +8,6 @@ import {
     Registry,
     viewScreenEvent,
 } from './analytics';
-// import { FeatureFlagClient, Features } from './util/featureFlags'; // Add back once Feature is set up
 import { BasicAuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
 import { rerunPipeline } from './commands/bitbucket/rerunPipeline';
@@ -26,6 +25,7 @@ import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } 
 import { Logger } from './logger';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevContext } from './rovo-dev/rovoDevTypes';
+import { Experiments, FeatureFlagClient } from './util/featureFlags'; // Add back once Feature is set up
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
@@ -33,7 +33,9 @@ import { PipelineNode } from './views/pipelines/PipelinesTree';
 // Going to add a ternary statement commands involving Settings using similar boolean expression to "FeatureFlagClient.checkGate(Features.ConfigPageV3) ? ConfigV3Section.<some section> : ConfigSection.<some section>"
 
 export function registerCommands(vscodeContext: ExtensionContext) {
-    const settingsFeatureValue: boolean = true; // FeatureFlagClient.checkGate(Features.ConfigPageV3);
+    const settingsFeatureValue: boolean = FeatureFlagClient.checkExperimentValue(
+        Experiments.AtlascodeNewSettingsExperiment,
+    );
     if (settingsFeatureValue) {
         vscodeContext.subscriptions.push(
             commands.registerCommand(Commands.AddJiraSite, () =>

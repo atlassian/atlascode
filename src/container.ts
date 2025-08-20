@@ -38,7 +38,7 @@ import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
-import { FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
+import { Experiments, FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -175,11 +175,6 @@ export class Container {
             this._analyticsApi,
         );
 
-        if (true || FeatureFlagClient.checkGate(Features.ConfigPageV3)) {
-            context.subscriptions.push((this._settingsWebviewFactory = settingsV3ViewFactory));
-        } else {
-            context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
-        }
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
         context.subscriptions.push((this._startWorkV3WebviewFactory = startWorkV3ViewFactory));
         context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
@@ -198,6 +193,7 @@ export class Container {
         this._bitbucketHelper = new BitbucketCheckoutHelper(context.globalState);
         context.subscriptions.push(new HelpExplorer());
 
+        let featureFlagClientInitialized = true;
         try {
             await FeatureFlagClient.initialize({
                 analyticsClient: this._analyticsClient,
@@ -229,6 +225,15 @@ export class Container {
             featureFlagClientInitializedEvent(false, error.errorType, error.reason).then((e) => {
                 this.analyticsClient.sendTrackEvent(e);
             });
+            featureFlagClientInitialized = false;
+        }
+        if (
+            featureFlagClientInitialized &&
+            FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeNewSettingsExperiment)
+        ) {
+            context.subscriptions.push((this._settingsWebviewFactory = settingsV3ViewFactory));
+        } else {
+            context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
         }
 
         context.subscriptions.push(AtlascodeUriHandler.create(this._analyticsApi, this._bitbucketHelper));

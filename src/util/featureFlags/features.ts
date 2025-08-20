@@ -3,18 +3,22 @@ export const enum Features {
     JiraRichText = 'atlascode-jira-rte',
     AtlassianNotifications = 'atlascode-atlassian-notifications-v2',
     StartWorkV3 = 'atlascode-start-work-v3',
-    ConfigPageV3 = 'atlascode-config-page-v3',
     RovoDevEnabled = 'rovo_dev_ff',
 }
 
 export const enum Experiments {
     AtlascodePerformanceExperiment = 'atlascode_performance_experiment',
+    AtlascodeNewSettingsExperiment = 'atlascode_new_settings_experiment',
 }
 
 export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
     [Experiments.AtlascodePerformanceExperiment]: {
         parameter: 'enabled',
         defaultValue: true,
+    },
+    [Experiments.AtlascodeNewSettingsExperiment]: {
+        parameter: 'enabled',
+        defaultValue: false,
     },
 };
 
