@@ -122,7 +122,7 @@ const RovoDevView: React.FC = () => {
     const handleAppendError = useCallback(
         (msg: ErrorMessage) => {
             // If generating response, put previous into chat stream but continue streaming
-            if (currentState === State.GeneratingResponse) {
+            if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
                 if (curThinkingMessages.length > 0) {
                     setChatStream((prev) => [...prev, curThinkingMessages]);
                     setCurThinkingMessages([]);
