@@ -12,22 +12,22 @@ export default defineConfig({
     },
     projects: [
         {
-            name: 'jira:cloud',
+            name: 'jira-cloud',
             testDir: 'e2e/tests/jira',
             testMatch: /jiraCloud\.spec\.ts/,
         },
         {
-            name: 'jira:dc',
+            name: 'jira-dc',
             testDir: 'e2e/tests/jira',
             testMatch: /jiraDC\.spec\.ts/,
         },
         {
-            name: 'bitbucket:cloud',
+            name: 'bitbucket-cloud',
             testDir: 'e2e/tests/bitbucket',
             testMatch: /bitbucketCloud\.spec\.ts/,
         },
         {
-            name: 'bitbucket:dc',
+            name: 'bitbucket-dc',
             testDir: 'e2e/tests/bitbucket',
             testMatch: /bitbucketDC\.spec\.ts/,
         },
