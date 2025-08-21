@@ -63,6 +63,7 @@ if [[ -z "\${ONLYSERVER:-}" ]]; then
         *)
             echo "Unsupported target: $TARGET"
             exit 2 ;;
+    esac
     echo ">> E2e tests completed"
 else
      # Only start server if ONLYSERVER is set
