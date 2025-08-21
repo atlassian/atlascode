@@ -1,10 +1,9 @@
 import { LoadingButton } from '@atlaskit/button';
-import Button, { IconButton } from '@atlaskit/button/new';
-import ClockIcon from '@atlaskit/icon/core/clock';
-import EyeOpenIcon from '@atlaskit/icon/core/eye-open';
-import EyeOpenFilledIcon from '@atlaskit/icon/core/eye-open-filled';
-import RefreshIcon from '@atlaskit/icon/core/refresh';
-import ThumbsUpIcon from '@atlaskit/icon/core/thumbs-up';
+import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
+import LikeIcon from '@atlaskit/icon/glyph/like';
+import RefreshIcon from '@atlaskit/icon/glyph/refresh';
+import WatchIcon from '@atlaskit/icon/glyph/watch';
+import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
 import AssetsSchemaIcon from '@atlaskit/icon-lab/core/assets-schema';
 import InlineDialog from '@atlaskit/inline-dialog';
 import Tooltip from '@atlaskit/tooltip';
@@ -59,6 +58,17 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
 
     const allowVoting: boolean = !!currentUser;
 
+    // Helper function for active button styling
+    const getActiveButtonStyle = (isActive: boolean) => {
+        return isActive
+            ? {
+                  border: '1px solid var(--vscode-focusBorder)',
+                  borderRadius: '3px',
+                  paddingBottom: '2px',
+              }
+            : {};
+    };
+
     const [worklogDialogOpen, setWorklogDialogOpen] = React.useState(false);
     const [votesDialogOpen, setVotesDialogOpen] = React.useState(false);
     const [watchesDialogOpen, setWatchesDialogOpen] = React.useState(false);
@@ -112,12 +122,12 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                 }}
             >
                 <Tooltip content="Refresh">
-                    <IconButton
-                        label="Refresh"
+                    <LoadingButton
+                        spacing="none"
+                        className="ac-button-secondary"
                         onClick={handleRefresh}
-                        icon={() => <RefreshIcon label="Refresh" />}
+                        iconBefore={<RefreshIcon label="refresh" />}
                         isLoading={loadingField === 'refresh'}
-                        spacing="compact"
                     />
                 </Tooltip>
                 {fields['worklog'] && (
@@ -137,12 +147,12 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                             placement="bottom-end"
                         >
                             <Tooltip content="Log work">
-                                <IconButton
-                                    label="Log Work"
+                                <LoadingButton
+                                    spacing="none"
+                                    className="ac-button-secondary"
                                     onClick={() => setWorklogDialogOpen(true)}
-                                    icon={() => <ClockIcon label="Log Work" />}
+                                    iconBefore={<EmojiFrequentIcon label="Log Work" />}
                                     isLoading={loadingField === 'worklog'}
-                                    spacing="compact"
                                 />
                             </Tooltip>
                         </InlineDialog>
@@ -166,41 +176,26 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                             placement="bottom-end"
                         >
                             <Tooltip content="Watch options">
-                                {numWatches ? (
-                                    <Button
-                                        onClick={() => {
-                                            setWatchesDialogOpen(true);
-                                        }}
-                                        iconBefore={() =>
-                                            fieldValues['watches'].isWatching ? (
-                                                <EyeOpenFilledIcon label="Watches" />
-                                            ) : (
-                                                <EyeOpenIcon label="Watches" />
-                                            )
-                                        }
-                                        isLoading={loadingField === 'watches'}
-                                        isSelected={fieldValues['watches']?.isWatching}
-                                        spacing="compact"
-                                    >
-                                        {numWatches}
-                                    </Button>
-                                ) : (
-                                    <IconButton
-                                        label="Watch options"
-                                        onClick={() => {
-                                            setWatchesDialogOpen(true);
-                                        }}
-                                        icon={() =>
-                                            fieldValues['watches'].isWatching ? (
-                                                <EyeOpenFilledIcon label="Watches" />
-                                            ) : (
-                                                <EyeOpenIcon label="Watches" />
-                                            )
-                                        }
-                                        isLoading={loadingField === 'watches'}
-                                        spacing="compact"
-                                    />
-                                )}
+                                <LoadingButton
+                                    spacing="none"
+                                    className="ac-button-secondary"
+                                    onClick={() => {
+                                        setWatchesDialogOpen(true);
+                                    }}
+                                    iconBefore={
+                                        fieldValues['watches'].isWatching ? (
+                                            <WatchFilledIcon label="Watches" />
+                                        ) : (
+                                            <WatchIcon label="Watches" />
+                                        )
+                                    }
+                                    isLoading={loadingField === 'watches'}
+                                    style={getActiveButtonStyle(
+                                        fieldValues['watches'] && fieldValues['watches'].watchCount > 0,
+                                    )}
+                                >
+                                    {numWatches}
+                                </LoadingButton>
                             </Tooltip>
                         </InlineDialog>
                     </div>
@@ -223,25 +218,16 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                             placement="bottom-end"
                         >
                             <Tooltip content="Vote options">
-                                {numVotes ? (
-                                    <Button
-                                        onClick={() => setVotesDialogOpen(true)}
-                                        iconBefore={() => <ThumbsUpIcon label="Votes" />}
-                                        isLoading={loadingField === 'votes'}
-                                        isSelected={fieldValues['votes']?.hasVoted}
-                                        spacing="compact"
-                                    >
-                                        {numVotes}
-                                    </Button>
-                                ) : (
-                                    <IconButton
-                                        label="Vote options"
-                                        onClick={() => setVotesDialogOpen(true)}
-                                        icon={() => <ThumbsUpIcon label="Votes" />}
-                                        isLoading={loadingField === 'votes'}
-                                        spacing="compact"
-                                    />
-                                )}
+                                <LoadingButton
+                                    spacing="none"
+                                    className="ac-button-secondary"
+                                    onClick={() => setVotesDialogOpen(true)}
+                                    iconBefore={<LikeIcon label="Votes" />}
+                                    isLoading={loadingField === 'votes'}
+                                    style={getActiveButtonStyle(fieldValues['votes'] && fieldValues['votes'].votes > 0)}
+                                >
+                                    {numVotes}
+                                </LoadingButton>
                             </Tooltip>
                         </InlineDialog>
                     </div>

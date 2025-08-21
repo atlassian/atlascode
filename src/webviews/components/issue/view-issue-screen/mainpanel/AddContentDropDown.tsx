@@ -1,10 +1,10 @@
 import { LoadingButton } from '@atlaskit/button';
 import DropdownMenu, { DropdownItem } from '@atlaskit/dropdown-menu';
-import AddIcon from '@atlaskit/icon/core/add';
-import AttachmentIcon from '@atlaskit/icon/core/attachment';
-import ChildWorkItemsIcon from '@atlaskit/icon/core/child-work-items';
-import ClockIcon from '@atlaskit/icon/core/clock';
-import WorkItemsIcon from '@atlaskit/icon/core/work-items';
+import AddIcon from '@atlaskit/icon/glyph/add';
+import ChildIssuesIcon from '@atlaskit/icon/glyph/child-issues';
+import EditorAttachmentIcon from '@atlaskit/icon/glyph/editor/attachment';
+import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
+import IssuesIcon from '@atlaskit/icon/glyph/issues';
 import { Box } from '@mui/material';
 import React from 'react';
 
@@ -68,28 +68,28 @@ export const AddContentDropdown: React.FC<{
                 >
                     <DropdownItem
                         css={dropdownItemStyles}
-                        elemBefore={<AttachmentIcon label="Add Attachment" />}
+                        elemBefore={<EditorAttachmentIcon label="Add Attachment" />}
                         onClick={handleAttachmentClick}
                     >
                         Attachment
                     </DropdownItem>
                     <DropdownItem
                         css={dropdownItemStyles}
-                        elemBefore={<ChildWorkItemsIcon label="Add Child Issues" />}
+                        elemBefore={<ChildIssuesIcon label="Add Child Issues" />}
                         onClick={handleChildIssueClick}
                     >
                         Child issue
                     </DropdownItem>
                     <DropdownItem
                         css={dropdownItemStyles}
-                        elemBefore={<WorkItemsIcon label="Add Linked Issue" />}
+                        elemBefore={<IssuesIcon label="Add Linked Issue" />}
                         onClick={handleLinkedIssueClick}
                     >
                         Linked issue
                     </DropdownItem>
                     <DropdownItem
                         css={dropdownItemStyles}
-                        elemBefore={<ClockIcon label="Log Work" />}
+                        elemBefore={<EmojiFrequentIcon label="Log Work" />}
                         onClick={handleLogWorkClick}
                     >
                         Work log

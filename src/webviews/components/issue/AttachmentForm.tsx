@@ -1,6 +1,6 @@
-import DeleteIcon from '@atlaskit/icon/core/delete';
-import FileIcon from '@atlaskit/icon/core/file';
-import UploadIcon from '@atlaskit/icon/core/upload';
+import FileIcon from '@atlaskit/icon/glyph/file';
+import TrashIcon from '@atlaskit/icon/glyph/trash';
+import UploadIcon from '@atlaskit/icon/glyph/upload';
 import TableTree from '@atlaskit/table-tree';
 import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
 import { filesize } from 'filesize';
@@ -15,7 +15,7 @@ type ItemData = {
 const Delete = (data: ItemData) => {
     return (
         <div className="ac-delete" onClick={() => data.delfunc(data.file)}>
-            <DeleteIcon label="Delete" />
+            <TrashIcon label="trash" />
         </div>
     );
 };
@@ -31,7 +31,7 @@ const Thumbnail = (data: ItemData) => {
 
     return (
         <div className="ac-attachment-thumb-img-inline">
-            <FileIcon label="No preview" />
+            <FileIcon label="no preview" />
         </div>
     );
 };
@@ -120,7 +120,7 @@ const dialogEditor = (
                                                     className="ac-attachment-delete"
                                                     onClick={() => dispatch({ type: 'removeFile', payload: file })}
                                                 >
-                                                    <DeleteIcon label="Delete" />
+                                                    <TrashIcon label="trash" />
                                                 </div>
                                             </div>
                                         </div>

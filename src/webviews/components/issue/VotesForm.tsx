@@ -1,6 +1,6 @@
 import Avatar from '@atlaskit/avatar';
 import AvatarGroup from '@atlaskit/avatar-group';
-import ThumbsUpIcon from '@atlaskit/icon/core/thumbs-up';
+import LikeIcon from '@atlaskit/icon/glyph/like';
 import { User, Votes } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
 
@@ -69,7 +69,7 @@ export default class VotesForm extends React.Component<MyProps, MyState> {
                     style={{ cursor: 'pointer' }}
                     onClick={this.toggleVote}
                 >
-                    <ThumbsUpIcon label="starfilledicon" size="medium" />
+                    <LikeIcon label="starfilledicon" size="medium" />
                     <span style={{ marginLeft: '8px' }}>Remove vote</span>
                 </div>
             );
@@ -81,7 +81,7 @@ export default class VotesForm extends React.Component<MyProps, MyState> {
                 style={{ cursor: 'pointer' }}
                 onClick={this.toggleVote}
             >
-                <ThumbsUpIcon label="staricon" size="medium" />
+                <LikeIcon label="staricon" size="medium" />
                 <span style={{ marginLeft: '8px' }}>Vote for this issue</span>
             </div>
         );

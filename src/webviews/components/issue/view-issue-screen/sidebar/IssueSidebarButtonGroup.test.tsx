@@ -40,7 +40,7 @@ describe('IssueSidebarButtonGroup', () => {
 
     it('calls handleRefresh when the refresh button is clicked', () => {
         const { getByLabelText } = render(<IssueSidebarButtonGroup {...defaultProps} />);
-        const refreshButton = getByLabelText('Refresh');
+        const refreshButton = getByLabelText('refresh');
         fireEvent.click(refreshButton);
         expect(mockHandleRefresh).toHaveBeenCalled();
     });
