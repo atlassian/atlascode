@@ -575,6 +575,30 @@ body {
     padding: 8px;
 }
 
+.monaco-editor {
+    color: var(--vscode-input-foreground) !important;
+}
+
+.monaco-editor .cursors-layer > .cursor {
+    background-color: var(--vscode-editorCursor-foreground) !important;
+} 
+
+.monaco-editor .margin {
+    background-color: var(--vscode-input-background) !important;
+}
+
+.monaco-editor .view-line {
+    color: var(--vscode-input-foreground) !important;
+}
+
+.monaco-editor .inputarea.ime-input {
+    color: var(--vscode-input-foreground) !important;
+}
+
+.monaco-editor .monaco-editor-background {
+    background-color: var(--vscode-input-background) !important;
+}
+
 .prompt-container:focus-within {
     outline: var(--vscode-focusBorder) solid 1px;
 }

@@ -1,5 +1,5 @@
 import Button from '@atlaskit/button';
-import AddIcon from '@atlaskit/icon/glyph/add';
+import AddIcon from '@atlaskit/icon/core/add';
 import InlineDialog from '@atlaskit/inline-dialog';
 import Tooltip from '@atlaskit/tooltip';
 import { IssueType, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';

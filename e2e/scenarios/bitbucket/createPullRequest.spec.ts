@@ -29,7 +29,7 @@ export async function createPullRequest(page: Page, request: APIRequestContext) 
     await createPullRequestPage.createPullRequestButton.click();
     await page.waitForTimeout(250);
 
-    await new PullRequestPage(page).expectPRCreated();
+    await new PullRequestPage(page).expectPRPageLoaded();
 
     await atlascodeDrawer.pullRequests.expectPRTreeitem();
 }

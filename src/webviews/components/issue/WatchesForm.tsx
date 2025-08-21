@@ -1,7 +1,7 @@
 import Avatar from '@atlaskit/avatar';
 import AvatarGroup from '@atlaskit/avatar-group';
-import WatchIcon from '@atlaskit/icon/glyph/watch';
-import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
+import EyeOpenIcon from '@atlaskit/icon/core/eye-open';
+import EyeOpenFilledIcon from '@atlaskit/icon/core/eye-open-filled';
 import { AsyncSelect } from '@atlaskit/select';
 import { User, Watches } from '@atlassianlabs/jira-pi-common-models';
 import { ValueType } from '@atlassianlabs/jira-pi-meta-models';
@@ -75,7 +75,7 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
                     style={{ cursor: 'pointer' }}
                     onClick={this.toggleWatching}
                 >
-                    <WatchFilledIcon label="watchfilledicon" size="medium" />
+                    <EyeOpenFilledIcon label="watchfilledicon" size="medium" />
                     <span style={{ marginLeft: '8px' }}>Stop watching</span>
                 </div>
             );
@@ -87,7 +87,7 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
                 style={{ cursor: 'pointer' }}
                 onClick={this.toggleWatching}
             >
-                <WatchIcon label="watchicon" size="medium" />
+                <EyeOpenIcon label="watchicon" size="medium" />
                 <span style={{ marginLeft: '8px' }}>Start watching</span>
             </div>
         );

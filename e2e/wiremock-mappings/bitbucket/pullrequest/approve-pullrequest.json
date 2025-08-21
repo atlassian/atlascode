@@ -1,0 +1,37 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/2.0/repositories/mockuser/test-repository/pullrequests/123/approve"
+  },
+  "response": {
+    "status": 201,
+    "jsonBody": {
+        "type": "participant",
+        "user": {
+            "display_name": "Mock User",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/users/%7Bmock-uuid%7D"
+                },
+                "html": {
+                    "href": "https://bitbucket.org/%7Bmock-uuid%7D/"
+                },
+                "avatar": {
+                    "href": "https://example.com/avatar.png"
+                }
+            },
+            "type": "user",
+            "uuid": "{mock-uuid}",
+            "account_id": "123",
+            "nickname": "Mock User"
+        },
+        "role": "PARTICIPANT",
+        "approved": true,
+        "state": "approved",
+        "participated_on": "2025-08-19T11:35:14.703446+00:00"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

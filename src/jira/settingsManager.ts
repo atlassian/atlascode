@@ -91,9 +91,8 @@ export class JiraSettingsManager extends Disposable {
         return this._issueLinkTypesStore.get(site.id)!;
     }
 
-    public async getMinimalIssueFieldIdsForSite(site: DetailedSiteInfo): Promise<string[]> {
+    public getMinimalIssueFieldIdsForSite(epicInfo: EpicFieldInfo): string[] {
         const fields = Array.from(minimalDefaultIssueFields);
-        const epicInfo = await this.getEpicFieldsForSite(site);
 
         if (epicInfo.epicsEnabled) {
             fields.push(epicInfo.epicLink.id, epicInfo.epicName.id);
