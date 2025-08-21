@@ -1,6 +1,7 @@
 name: Build
 permissions:
   contents: read
+  packages: read
 
 on:
   push:
@@ -65,15 +66,15 @@ jobs:
         run: npm run test
 
       - name: Build and package the extension
-        if: matrix.test-type == 'e2e'
+        if: matrix.kind == 'e2e'
         run: npm run extension:package
 
       - name: Generate SSL certs for E2E test
-        if: matrix.test-type == 'e2e'
+        if: matrix.kind == 'e2e'
         run: npm run test:e2e:sslcerts
 
       - name: Fetch E2E image
-        if: matrix.test-type == 'e2e'
+        if: matrix.kind == 'e2e'
         run: |
           docker pull ghcr.io/atlassian/atlascode-e2e:latest
           docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e
