@@ -94,6 +94,21 @@
         ],
         "commands": [
             {
+                "command": "atlascode.rovodev.quickAuth",
+                "title": "Authenticate",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.rovodev.quickAuth2",
+                "title": "Authenticate (but spicy)",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.rovodev.quickAuth3",
+                "title": "Authenticate (but spicy and with skips)",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.rovodev.askInteractive",
                 "title": "Ask & Open",
                 "enablement": "atlascode:rovoDevEnabled",

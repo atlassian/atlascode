@@ -288,4 +288,56 @@ export class LoginManager {
         const data = await response.json();
         return data.cloudId;
     }
+
+    public async testCredentials(site: SiteInfo, credentials: BasicAuthInfo | PATAuthInfo): Promise<boolean> {
+        const authHeader = this.authHeader(credentials);
+        // For cloud instances we can use the user ID as the credential ID (they're globally unique). Server instances
+        // will have a much smaller pool of user IDs so we use an arbitrary UUID as the credential ID.
+
+        let siteDetailsUrl = '';
+        let apiUrl = '';
+        const protocol = site.protocol ? site.protocol : 'https:';
+        const contextPath = site.contextPath ? site.contextPath : '';
+        const transport = getAxiosInstance();
+        switch (site.product.key) {
+            case ProductJira.key:
+                siteDetailsUrl = `${protocol}//${site.host}${contextPath}/rest/api/2/myself`;
+                apiUrl = `${protocol}//${site.host}${contextPath}/rest`;
+                break;
+            case ProductBitbucket.key:
+                apiUrl = `${protocol}//${site.host}${contextPath}`;
+                // Needed when using a API key to login (credentials is PATAuthInfo):
+                const res = await transport(`${apiUrl}/rest/api/latest/build/capabilities`, {
+                    method: 'GET',
+                    headers: {
+                        Authorization: authHeader,
+                    },
+                    ...getAgent(site),
+                });
+                const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
+                let ausername = res.headers['x-ausername'];
+                // convert the %40 and similar to special characters
+                ausername = decodeURIComponent(ausername);
+                // replace special characters with underscore (_)
+                ausername = ausername.replace(slugRegex, '_');
+                siteDetailsUrl = `${apiUrl}/rest/api/1.0/users/${ausername}`;
+                break;
+        }
+
+        try {
+            const res = await transport(siteDetailsUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: authHeader,
+                },
+                ...getAgent(site),
+            });
+            return res.status === 200;
+        } catch (error) {
+            // Any HTTP error means we can't authenticate
+            Logger.debug(`Failed to authenticate with ${site.host}: ${error}`);
+            return false;
+        }
+    }
 }

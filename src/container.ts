@@ -31,6 +31,7 @@ import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { Logger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
+import { registerQuickAuthCommand } from './onboarding/quickFlow';
 import { Pipeline } from './pipelines/model';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
 import { RovoDevDecorator } from './rovo-dev/rovoDevDecorator';
@@ -222,6 +223,7 @@ export class Container {
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
 
         this._onboardingProvider = new OnboardingProvider();
+        context.subscriptions.push(registerQuickAuthCommand());
 
         if (process.env.ROVODEV_BBY || FeatureFlagClient.checkGate(Features.RovoDevEnabled)) {
             this._isRovoDevEnabled = true;
