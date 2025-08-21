@@ -119,16 +119,31 @@ const RovoDevView: React.FC = () => {
         totalModifiedFiles,
     ]);
 
-    const handleAppendError = useCallback((msg: ErrorMessage) => {
-        setChatStream((prev) => {
-            setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
-            return [...prev, msg];
-        });
-    }, []);
+    const handleAppendError = useCallback(
+        (msg: ErrorMessage) => {
+            // If generating response, put previous into chat stream but continue streaming
+            if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
+                if (curThinkingMessages.length > 0) {
+                    setChatStream((prev) => [...prev, curThinkingMessages]);
+                    setCurThinkingMessages([]);
+                }
+                if (currentMessage) {
+                    setChatStream((prev) => [...prev, currentMessage]);
+                    setCurrentMessage(null);
+                }
+                // If waiting for prompt, finalize response and append error message
+            } else {
+                finalizeResponse();
+            }
+            setChatStream((prev) => {
+                setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
+                return [...prev, msg];
+            });
+        },
+        [curThinkingMessages, currentMessage, currentState, finalizeResponse],
+    );
 
     const validateResponseFinalized = useCallback(() => {
-        // setChatHistory here is used to ensure we are accessing the most up-to-date state
-        // if we use setHistory, we would not
         setChatStream((prev) => {
             const last = prev[prev.length - 1];
             if (!Array.isArray(last) && last?.source === 'User') {
@@ -394,9 +409,6 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.ErrorMessage:
                     if (event.message.type === 'error') {
-                        if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
-                            finalizeResponse();
-                        }
                         if (event.message.isProcessTerminated) {
                             setCurrentState(State.ProcessTerminated);
                         }

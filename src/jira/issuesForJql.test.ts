@@ -82,7 +82,7 @@ describe('issuesForJQL', () => {
         // Setup default mock implementations
         mockClient.searchForIssuesUsingJqlGet.mockResolvedValue({});
         (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
-        (Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite as jest.Mock).mockResolvedValue(mockFields);
+        (Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite as jest.Mock).mockReturnValue(mockFields);
         (Container.jiraSettingsManager.getEpicFieldsForSite as jest.Mock).mockResolvedValue(mockEpicFieldInfo);
         (Container.jiraSettingsManager.getIssueLinkTypes as jest.Mock).mockResolvedValue([]);
         (Container.jiraSettingsManager.getIssueCreateMetadata as jest.Mock).mockResolvedValue({});
@@ -101,8 +101,8 @@ describe('issuesForJQL', () => {
 
         // Verify dependencies were called with correct parameters
         expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSite);
-        expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockSite);
         expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSite);
+        expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockEpicFieldInfo);
         expect(Container.jiraSettingsManager.getIssueLinkTypes).toHaveBeenCalledWith(mockSite);
         expect(Container.jiraSettingsManager.getIssueCreateMetadata).toHaveBeenCalledWith('TEST', mockSite);
         expect(mockClient.searchForIssuesUsingJqlGet).toHaveBeenCalledWith(mockJql, mockFields, MAX_RESULTS, 0);
@@ -123,8 +123,8 @@ describe('issuesForJQL', () => {
 
         // Verify dependencies were called with correct parameters
         expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSite);
-        expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockSite);
         expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSite);
+        expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockEpicFieldInfo);
         expect(mockClient.searchForIssuesUsingJqlGet).toHaveBeenCalledWith(mockJql, mockFields, MAX_RESULTS, 0);
         expect(readSearchResults).toHaveBeenCalledWith({}, mockSite, mockEpicFieldInfo);
 

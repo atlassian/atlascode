@@ -46,6 +46,7 @@ export class CredentialManager implements Disposable {
     private _queue = new PQueue({ concurrency: 1 });
     private _refresher = new OAuthRefesher();
     private negotiator: Negotiator;
+    private _refreshInFlight = new Map<string, Promise<void>>();
 
     constructor(
         context: ExtensionContext,
@@ -265,10 +266,25 @@ export class CredentialManager implements Disposable {
             Logger.debug(`Need new auth token.`);
         }
 
+        const key = `${site.product.key}:${site.credentialId}`;
+
         if (this.negotiator.thisIsTheResponsibleProcess()) {
             Logger.debug(`Refreshing credentials.`);
+            let inFlight = this._refreshInFlight.get(key);
+
+            if (!inFlight) {
+                inFlight = (async () => {
+                    try {
+                        await Container.credentialManager.refreshAccessToken(site);
+                    } finally {
+                        this._refreshInFlight.delete(key);
+                    }
+                })();
+
+                this._refreshInFlight.set(key, inFlight);
+            }
             try {
-                await Container.credentialManager.refreshAccessToken(site);
+                await inFlight;
             } catch (e) {
                 Logger.error(e, 'error refreshing token');
                 return Promise.reject(
@@ -418,10 +434,11 @@ export class CredentialManager implements Disposable {
                     credentials.iat = newTokens.iat ?? 0;
                 }
 
-                this.saveAuthInfo(site, credentials);
+                await this.saveAuthInfo(site, credentials);
+                Logger.debug(`Successfully saved refreshed tokens for credentialId: ${site.credentialId}`);
             } else if (tokenResponse.shouldInvalidate) {
                 credentials.state = AuthInfoState.Invalid;
-                this.saveAuthInfo(site, credentials);
+                await this.saveAuthInfo(site, credentials);
             }
         }
     }

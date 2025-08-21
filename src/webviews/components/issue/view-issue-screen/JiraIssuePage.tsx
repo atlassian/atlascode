@@ -1,7 +1,7 @@
 import { LoadingButton } from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
-import WidthDetector from '@atlaskit/width-detector';
+import { WidthObserver } from '@atlaskit/width-detector';
 import { CommentVisibility, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, SelectFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { Box } from '@mui/material';
@@ -45,6 +45,7 @@ export interface ViewState extends CommonEditorViewState, EditIssueData {
     isEditingComment: boolean;
     hierarchyLoading: boolean;
     hierarchy: MinimalIssue<DetailedSiteInfo>[];
+    containerWidth?: number;
 }
 
 const emptyState: ViewState = {
@@ -777,48 +778,44 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         this.postMessage(e); /* just {this.postMessage} doesn't work */
                     }}
                 >
-                    <WidthDetector>
-                        {(width?: number) => {
-                            if (width && width < 800) {
-                                return (
-                                    <div style={{ margin: '20px 16px 0px 16px' }}>
+                    <>
+                        <WidthObserver setWidth={(width: number) => this.setState({ containerWidth: width })} />
+                        {this.state.containerWidth && this.state.containerWidth < 800 ? (
+                            <div style={{ margin: '20px 16px 0px 16px' }}>
+                                {this.getMainPanelNavMarkup()}
+                                <h1>{this.getInputMarkup(this.state.fields['summary'], true, 'summary')}</h1>
+                                {this.commonSidebar()}
+                                {this.getMainPanelBodyMarkup()}
+                                {this.createdUpdatedDates()}
+                            </div>
+                        ) : (
+                            <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
+                                <Grid layout="fluid">
+                                    <GridColumn>
                                         {this.getMainPanelNavMarkup()}
-                                        <h1>{this.getInputMarkup(this.state.fields['summary'], true, 'summary')}</h1>
-                                        {this.commonSidebar()}
-                                        {this.getMainPanelBodyMarkup()}
-                                        {this.createdUpdatedDates()}
-                                    </div>
-                                );
-                            }
-                            return (
-                                <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
-                                    <Grid layout="fluid">
-                                        <GridColumn>
-                                            {this.getMainPanelNavMarkup()}
-                                            <div style={{ paddingTop: '8px' }}>
-                                                <Grid layout="fluid">
-                                                    <GridColumn medium={8}>
-                                                        <h1 data-testid="issue.title">
-                                                            {this.getInputMarkup(
-                                                                this.state.fields['summary'],
-                                                                true,
-                                                                'summary',
-                                                            )}
-                                                        </h1>
-                                                        {this.getMainPanelBodyMarkup()}
-                                                    </GridColumn>
-                                                    <GridColumn medium={4}>
-                                                        {this.commonSidebar()}
-                                                        {this.createdUpdatedDates()}
-                                                    </GridColumn>
-                                                </Grid>
-                                            </div>
-                                        </GridColumn>
-                                    </Grid>
-                                </div>
-                            );
-                        }}
-                    </WidthDetector>
+                                        <div style={{ paddingTop: '8px' }}>
+                                            <Grid layout="fluid">
+                                                <GridColumn medium={8}>
+                                                    <h1 data-testid="issue.title">
+                                                        {this.getInputMarkup(
+                                                            this.state.fields['summary'],
+                                                            true,
+                                                            'summary',
+                                                        )}
+                                                    </h1>
+                                                    {this.getMainPanelBodyMarkup()}
+                                                </GridColumn>
+                                                <GridColumn medium={4}>
+                                                    {this.commonSidebar()}
+                                                    {this.createdUpdatedDates()}
+                                                </GridColumn>
+                                            </Grid>
+                                        </div>
+                                    </GridColumn>
+                                </Grid>
+                            </div>
+                        )}
+                    </>
                 </AtlascodeErrorBoundary>
             </Page>
         );

@@ -52,18 +52,19 @@ export async function fetchMinimalIssue(
 ): Promise<MinimalIssue<DetailedSiteInfo>> {
     const performanceEnabled = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment);
     if (performanceEnabled) {
-        const [fieldIds, client, epicInfo] = await Promise.all([
-            Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(siteDetails),
+        const [client, epicInfo] = await Promise.all([
             Container.clientManager.jiraClient(siteDetails),
             Container.jiraSettingsManager.getEpicFieldsForSite(siteDetails),
         ]);
+        const fieldIds = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicInfo);
 
         const res = await client.getIssue(issue, fieldIds);
         return minimalIssueFromJsonObject(res, siteDetails, epicInfo);
     }
-    const fieldIds = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(siteDetails);
     const client = await Container.clientManager.jiraClient(siteDetails);
     const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(siteDetails);
+    const fieldIds = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicInfo);
+
     const res = await client.getIssue(issue, fieldIds);
     return minimalIssueFromJsonObject(res, siteDetails, epicInfo);
 }

@@ -406,7 +406,7 @@ describe('JiraIssueWebview', () => {
                 ],
             };
 
-            (Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite as jest.Mock).mockResolvedValue([
+            (Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite as jest.Mock).mockReturnValue([
                 'summary',
                 'status',
             ]);
@@ -422,6 +422,7 @@ describe('JiraIssueWebview', () => {
             await jiraIssueWebview.updateEpicChildren();
 
             expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(epicInfo);
             expect(mockJiraClient.searchForIssuesUsingJqlGet).toHaveBeenCalledWith(
                 `parent = "${epicIssue.key}" order by lastViewed DESC`,
                 ['summary', 'status'],
