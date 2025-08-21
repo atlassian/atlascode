@@ -65,8 +65,6 @@ if [[ -z "\${ONLYSERVER:-}" ]]; then
             exit 2 ;;
     esac
     echo ">> E2e tests completed"
-    echo ">> Stopping code-server"
-    pkill -f "code-server"
 else
      # Only start server if ONLYSERVER is set
     echo "No e2e tests started. Only starting code-server."
