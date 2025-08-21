@@ -39,15 +39,22 @@ export class FeatureFlagClient {
     private readonly experimentValueOverride: ExperimentGateValues;
     private readonly isExperimentationDisabled: boolean;
 
-    private clientOptions: NewFetcherOptions = {} as any;
-    private identifiers: Identifiers = {};
+    /* We keep two clients:
+     * - a static base client that only tracks the user's anonoymous id
+     * - a variable tenant client that tracks the user's association with their tenant
+     * The former is used as a fallback for every time the latter is not available
+     */
     private clientBasic?: FeatureGateClient;
     private clientWithTenant?: FeatureGateClient;
+
+    private clientOptions: NewFetcherOptions = {} as any;
+    private identifiers: Identifiers = {};
     private tenantId?: string;
 
     // for debugging purposes, to ensure initialized is called only once
     private initializedCalled = false;
 
+    /** Gets the currently active feature flag client */
     private get client() {
         return this.clientWithTenant ?? this.clientBasic;
     }
@@ -62,7 +69,7 @@ export class FeatureFlagClient {
 
     /**
      * Workaround to account for a TLS-related ECONNRESET that sometimes occurs in undici
-     * when node attempts a naked `fetch`. The regular client implementation of
+     * when node attempts a naked `fetch`. The regular static client implementation of
      * FeatureGates doesn't let us reset the state fully - hence the odd logic here
      * where we re-initialize the client from scratch
      */
@@ -170,6 +177,7 @@ export class FeatureFlagClient {
             tenantId,
         };
 
+        this.clientWithTenant?.shutdownStatsig();
         this.clientWithTenant = undefined;
         this.clientWithTenant = await this.initializeWithRetry(this.clientOptions, identifiers);
     }
@@ -279,6 +287,9 @@ export class FeatureFlagClient {
     }
 
     public dispose() {
-        this.client?.shutdownStatsig();
+        this.clientWithTenant?.shutdownStatsig();
+        this.clientWithTenant = undefined;
+        this.clientBasic?.shutdownStatsig();
+        this.clientBasic = undefined;
     }
 }
