@@ -911,6 +911,7 @@ export abstract class AbstractIssueEditorPage<
                                 id={field.key}
                                 name={field.key}
                                 validate={validateFunc}
+                                defaultValue={defVal}
                             >
                                 {(fieldArgs: any) => {
                                     let errDiv = <span />;
@@ -987,6 +988,7 @@ export abstract class AbstractIssueEditorPage<
                                 id={field.key}
                                 name={field.key}
                                 validate={validateFunc}
+                                defaultValue={defVal}
                             >
                                 {(fieldArgs: any) => {
                                     let errDiv = <span />;
@@ -1068,6 +1070,7 @@ export abstract class AbstractIssueEditorPage<
                                 id={field.key}
                                 name={field.key}
                                 validate={validateFunc}
+                                defaultValue={defVal}
                             >
                                 {(fieldArgs: any) => {
                                     let errDiv = <span />;
@@ -1168,6 +1171,7 @@ export abstract class AbstractIssueEditorPage<
                                 id={field.key}
                                 name={field.key}
                                 validate={validateFunc}
+                                defaultValue={defVal}
                             >
                                 {(fieldArgs: any) => {
                                     let errDiv = <span />;
