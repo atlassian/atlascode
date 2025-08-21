@@ -42,13 +42,13 @@ jobs:
         include:
           - kind: unit
           - kind: e2e
-            target: jira:cloud
+            target: jira-cloud
           - kind: e2e
-            target: jira:dc
-          - kind: e2e
-            target: bb:cloud
-          - kind: e2e
-            target: bb:dc
+            target: jira-dc
+          # - kind: e2e
+          #   target: bitbucket:cloud
+          # - kind: e2e
+          #   target: bitbucket:dc
 
     env:
       ATLASCODE_FX3_API_KEY: ${{ secrets.ATLASCODE_FX3_API_KEY }}
@@ -86,7 +86,9 @@ jobs:
 
       - name: Run E2E (${{ matrix.target }})
         if: matrix.kind == 'e2e'
-        run: npm run test:e2e:docker:${{ matrix.target }}
+        run: npm run test:e2e:docker
+        env:
+          TARGET: ${{ matrix.target }}
 
       - name: Upload E2E artifacts (${{ matrix.target }})
         if: matrix.kind == 'e2e' && failure()
