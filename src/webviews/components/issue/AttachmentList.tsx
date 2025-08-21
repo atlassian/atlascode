@@ -1,6 +1,6 @@
 import { LinkIconButton } from '@atlaskit/button/new';
-import ShortcutIcon from '@atlaskit/icon/glyph/shortcut';
-import TrashIcon from '@atlaskit/icon/glyph/trash';
+import DeleteIcon from '@atlaskit/icon/core/delete';
+import LinkExternalIcon from '@atlaskit/icon/core/link-external';
 import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
 import TableTree from '@atlaskit/table-tree';
 import { filesize } from 'filesize';
@@ -25,7 +25,7 @@ type AttachmentListProps = {
 const Delete = (data: ItemData) => {
     return (
         <div className="ac-delete" onClick={() => data.delfunc(data.attachment)}>
-            <TrashIcon label="trash" />
+            <DeleteIcon label="Delete" />
         </div>
     );
 };
@@ -35,12 +35,9 @@ const ExternalLink = (data: ItemData) => {
         <LinkIconButton
             href={`${data.baseLinkUrl}/rest/api/2/attachment/content/${data.attachment.id}`}
             icon={(iconProps) => (
-                <ShortcutIcon
-                    {...iconProps}
-                    size="small"
-                    label="Open attachment"
-                    primaryColor="var(--vscode-textLink-foreground)"
-                />
+                <span style={{ color: 'var(--vscode-textLink-foreground)' }}>
+                    <LinkExternalIcon {...iconProps} size="medium" label="Open attachment" color="currentColor" />
+                </span>
             )}
             label="View in browser"
             appearance="subtle"

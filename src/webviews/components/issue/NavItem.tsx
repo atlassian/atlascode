@@ -1,5 +1,5 @@
 import Button from '@atlaskit/button';
-import CopyIcon from '@atlaskit/icon/glyph/copy';
+import CopyIcon from '@atlaskit/icon/core/copy';
 import Tooltip from '@atlaskit/tooltip';
 import * as React from 'react';
 
