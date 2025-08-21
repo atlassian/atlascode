@@ -25,29 +25,48 @@ ENV ATLASCODE_NO_EXP=1
 
 RUN cat <<EOF > /usr/bin/entrypoint.sh && chmod +x /usr/bin/entrypoint.sh
 #!/usr/bin/env bash
-set -ex
+set -euo pipefail
 
-#Setting up git configuration
-echo "Running git setup script..."
-chmod +x ./e2e/setup-mock-repository.sh
-./e2e/setup-mock-repository.sh
+# Setting up git configuration
+if [[ "\${TARGET}" == "bitbucket-cloud" || "\${TARGET}" == "bitbucket-dc" ]]; then
+    echo ">> Running mock repository setup"
+    chmod +x ./e2e/setup-mock-repository.sh
+    ./e2e/setup-mock-repository.sh
+fi
 
-echo "setting up trusted certificate authorities"
+echo ">> Setting up trusted certificate authorities"
 cp ./e2e/sslcerts/rootCA.crt /usr/local/share/ca-certificates/atlascode_e2e_Root_CA.crt
 update-ca-certificates
 
-echo "installing dependencies for atlascode extension"
+echo ">> Installing dependencies for Atlascode extension"
 code-server --install-extension ../redhat.vscode-yaml-1.18.0.vsix --force
-echo "installing atlascode"
+echo ">> Installing Atlascode extension"
 code-server --install-extension atlascode-*.vsix --force
 
-if [[ -z "\${ONLYSERVER}" ]]; then
+if [[ -z "\${ONLYSERVER:-}" ]]; then
     # start tests if ONLYSERVER is not set
 
-    echo "starting code-server"
+    echo ">> Starting code-server"
     code-server --auth none --disable-workspace-trust --bind-addr localhost:9988 &
-    echo "Running tests"
-    npx playwright test ./e2e/tests/**/*.spec.ts --workers=1
+    
+    echo ">> Running e2e tests"
+    case "\${TARGET}" in
+        jira-cloud)
+            echo ">> Running Jira Cloud tests"
+            npx playwright test --project=jira-cloud --workers=1 ;;
+        jira-dc) 
+            echo ">> Running Jira DC tests"
+            npx playwright test --project=jira-dc --workers=1 ;;
+        bitbucket-cloud)
+            echo ">> Running Bitbucket Cloud tests"
+            npx playwright test --project=bitbucket-cloud --workers=1 ;;
+        *)
+            echo "Unsupported target: $TARGET"
+            exit 2 ;;
+    esac
+    echo ">> E2e tests completed"
+    echo ">> Stopping code-server"
+    pkill -f "code-server"
 else
      # Only start server if ONLYSERVER is set
     echo "No e2e tests started. Only starting code-server."
