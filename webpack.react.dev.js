@@ -21,6 +21,7 @@ module.exports = {
         mui: resolveApp('./src/react/index.tsx'),
     },
     devtool: 'cheap-module-source-map',
+
     output: {
         publicPath: '',
         pathinfo: true,
@@ -41,6 +42,7 @@ module.exports = {
     plugins: [
         new MiniCssExtractPlugin({
             filename: '[name].css',
+            ignoreOrder: true,
         }),
         new WebpackManifestPlugin({
             fileName: 'asset-manifest.json',
