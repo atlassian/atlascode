@@ -125,8 +125,7 @@
                 "command": "atlascode.rovodev.showTerminal",
                 "title": "Trail Logs",
                 "icon": "$(terminal)",
-                "category": "Rovo Dev",
-                "enablement": "atlascode:rovoDevEnabled"
+                "category": "Rovo Dev"
             },
             {
                 "command": "atlascode.openRovoDevConfig",
