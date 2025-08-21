@@ -1,4 +1,4 @@
-import FeatureGates, { ClientOptions, FeatureGateEnvironment, Identifiers } from '@atlaskit/feature-gate-js-client';
+import { ClientOptions, FeatureGateEnvironment, Identifiers } from '@atlaskit/feature-gate-js-client';
 import { FetcherOptions } from '@atlaskit/feature-gate-js-client/dist/types/client/fetcher';
 import { NewFeatureGateOptions } from '@atlaskit/feature-gate-js-client/dist/types/client/types';
 
@@ -6,6 +6,7 @@ import { ClientInitializedErrorType } from '../../analytics';
 import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
 import { Logger } from '../../logger';
 import { ExperimentGates, ExperimentGateValues, Experiments, FeatureGateValues, Features } from './features';
+import { FeatureGateClient } from './utils';
 
 export type FeatureFlagClientOptions = {
     analyticsClient: AnalyticsClient;
@@ -24,15 +25,21 @@ export enum PerimeterType {
     COMMERCIAL = 'commercial',
 }
 
+const INIT_RETRY_COUNT = 5;
+
 export abstract class FeatureFlagClient {
     private static featureGateOverrides: FeatureGateValues;
     private static experimentValueOverride: ExperimentGateValues;
-    private static identifiers?: Identifiers;
+    private static options?: FeatureFlagClientOptions;
 
     private static isExperimentationDisabled = false;
 
+    // TODO: rework this implementation to not be static
+    // - now that we're no longer using a static FG client
+    private static client?: FeatureGateClient = undefined;
+
     private static async buildClientOptions(): Promise<FetcherOptions> {
-        if (!this.identifiers) {
+        if (!this.options) {
             throw new Error('FeatureFlagClient not initialized');
         }
         this.isExperimentationDisabled = !!process.env.ATLASCODE_NO_EXP;
@@ -62,6 +69,35 @@ export abstract class FeatureFlagClient {
         return clientOptions as any;
     }
 
+    /**
+     * Workaround to account for a TLS-related ECONNRESET that sometimes occurs in undici
+     * when node attempts a naked `fetch`. The regular static client implementation of
+     * FeatureGates doesn't let us reset the state fully - hence the odd logic here
+     * where we re-initialize the client from scratch
+     */
+    private static async initializeWithRetry(
+        clientOptions: FetcherOptions,
+        identifiers: Identifiers,
+        maxRetries: number = INIT_RETRY_COUNT,
+    ): Promise<FeatureGateClient> {
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                const client = new FeatureGateClient();
+                await client.initialize(clientOptions, identifiers);
+                return client;
+            } catch (err) {
+                if (i < maxRetries - 1) {
+                    Logger.info(
+                        `FeatureFlagClient: Retrying reinitialization (${maxRetries - i - 1} retries left). Reason: ${err}`,
+                    );
+                }
+            }
+        }
+        return Promise.reject(
+            new FeatureFlagClientInitError(ClientInitializedErrorType.Failed, 'FeatureFlagClient: Max retries reached'),
+        );
+    }
+
     public static async initialize(options: FeatureFlagClientOptions): Promise<void> {
         if (!options.identifiers.analyticsAnonymousId) {
             return Promise.reject(
@@ -69,7 +105,7 @@ export abstract class FeatureFlagClient {
             );
         }
 
-        this.identifiers = options.identifiers;
+        this.options = options;
         this.initializeOverrides();
 
         const clientOptions = await this.buildClientOptions();
@@ -77,39 +113,49 @@ export abstract class FeatureFlagClient {
         Logger.debug(
             `FeatureGates: initializing, target: ${clientOptions.targetApp}, environment: ${clientOptions.environment}`,
         );
-
         try {
-            await FeatureGates.initialize(clientOptions, options.identifiers);
+            this.client = await this.initializeWithRetry(clientOptions, options.identifiers);
         } catch (err) {
             return Promise.reject(new FeatureFlagClientInitError(ClientInitializedErrorType.Failed, err));
         }
     }
 
     public static async updateUser({ tenantId }: { tenantId?: string }): Promise<void> {
-        if (!this.identifiers) {
+        if (!this.client || !this.options) {
             Logger.error(new Error('FeatureFlagClient not initialized'));
             return;
         }
 
-        if (tenantId === this.identifiers.tenantId) {
+        if (tenantId === this.options.identifiers.tenantId) {
             // no change needed, avoid unnecessary updates
             return;
         }
 
         // FeatureGates stores the identifiers object and uses it in comparison down the line
         // hence we use a copy instead of modifying the original here
-        this.identifiers = {
-            ...this.identifiers,
+        this.options.identifiers = {
+            ...this.options.identifiers,
             tenantId,
         };
 
         const clientOptions = await this.buildClientOptions();
 
         try {
-            await FeatureGates.updateUser(clientOptions, this.identifiers);
+            await this.client.updateUser(clientOptions, this.options.identifiers);
+            return;
         } catch (e) {
             Logger.error(new Error(`FeatureFlagClient: Failed to update user: ${e}`));
         }
+
+        // Attempt to re-initialize with the new identifiers
+        try {
+            this.client = await this.initializeWithRetry(clientOptions, this.options.identifiers);
+        } catch (err) {
+            Logger.error(err, 'FeatureFlagClient: Failed to re-initialize');
+        }
+
+        // TODO: maybe we need some fallback to asynchronously re-initialize the client with back-off here?
+        // Leaving this for the next iteration
     }
 
     private static initializeOverrides(): void {
@@ -177,7 +223,7 @@ export abstract class FeatureFlagClient {
     }
 
     public static isInitialized(): boolean {
-        return !this.isExperimentationDisabled && FeatureGates.initializeCompleted();
+        return this.client !== undefined && !this.isExperimentationDisabled && this.client.initializeCompleted();
     }
 
     public static checkGate(gate: Features): boolean {
@@ -186,9 +232,9 @@ export abstract class FeatureFlagClient {
         }
 
         let gateValue = false;
-        if (this.isInitialized()) {
+        if (this.client && this.isInitialized()) {
             // FeatureGates.checkGate returns false if any errors
-            gateValue = FeatureGates.checkGate(gate);
+            gateValue = this.client.checkGate(gate);
         }
 
         Logger.debug(`FeatureGates ${gate} -> ${gateValue}`);
@@ -207,8 +253,8 @@ export abstract class FeatureFlagClient {
 
         const experimentGate = ExperimentGates[experiment];
         let gateValue = experimentGate.defaultValue;
-        if (this.isInitialized()) {
-            gateValue = FeatureGates.getExperimentValue(
+        if (this.client && this.isInitialized()) {
+            gateValue = this.client.getExperimentValue(
                 experiment,
                 experimentGate.parameter,
                 experimentGate.defaultValue,
@@ -220,6 +266,6 @@ export abstract class FeatureFlagClient {
     }
 
     public static dispose() {
-        FeatureGates.shutdownStatsig();
+        this.client?.shutdownStatsig();
     }
 }
