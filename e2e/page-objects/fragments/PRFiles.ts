@@ -1,16 +1,14 @@
-import { expect, FrameLocator, Locator, Page } from '@playwright/test';
+import { expect, FrameLocator, Locator } from '@playwright/test';
 
 export class PRFiles {
     readonly frame: FrameLocator;
-    readonly page: Page;
 
     readonly sectionButton: Locator;
     readonly commitsTable: Locator;
     readonly changedFile: Locator;
 
-    constructor(frame: FrameLocator, page: Page) {
+    constructor(frame: FrameLocator) {
         this.frame = frame;
-        this.page = page;
 
         this.sectionButton = this.frame.getByRole('button', { name: 'Files Changed' });
         this.commitsTable = this.frame.getByRole('table', { name: 'commits list' }).last();

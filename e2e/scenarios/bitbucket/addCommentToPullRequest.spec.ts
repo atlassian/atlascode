@@ -33,6 +33,9 @@ export async function addCommentToPullRequest(page: Page, request: APIRequestCon
 
     const pullRequestPage = new PullRequestPage(page);
 
+    // Ensure Details tab (where comments form lives) is active
+    await pullRequestPage.tabs.goToDetailsTab();
+
     // Add a comment via Comments fragment
     await pullRequestPage.comments.addNew(COMMENT_TEXT);
     await page.waitForTimeout(1000);

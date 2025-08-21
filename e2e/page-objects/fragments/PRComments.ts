@@ -34,32 +34,8 @@ export class PRComments {
     }
 
     async addNew(commentText: string) {
-        await this.ensureDetailsTabIsActive();
         await this.fillComment(commentText);
         await this.saveNew();
-    }
-
-    async ensureDetailsTabIsActive() {
-        const possibleSelectors: Locator[] = [
-            this.frame.getByRole('tab', { name: 'Details' }),
-            this.frame.getByRole('tab', { name: /details/i }),
-            this.frame.getByText('Details'),
-            this.frame.locator('[aria-label="Details"]'),
-            this.frame.locator('button:has-text("Details")'),
-        ];
-
-        for (const selector of possibleSelectors) {
-            try {
-                if (await selector.isVisible({ timeout: 1000 })) {
-                    await selector.click();
-                    // Wait for the comments form to be available as a signal the tab loaded
-                    await this.form.waitFor({ state: 'visible', timeout: 3000 });
-                    return;
-                }
-            } catch {
-                continue;
-            }
-        }
     }
 
     async fillComment(commentText: string) {
