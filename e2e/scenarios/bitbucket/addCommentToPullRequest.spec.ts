@@ -47,6 +47,6 @@ export async function addCommentToPullRequest(page: Page, request: APIRequestCon
     const commentDiffAdded = page.locator('div.comment-diff-added');
     await commentDiffAdded.first().click();
     await page.waitForTimeout(500);
-    await pullRequestPage.files.addInlineComment();
+    await pullRequestPage.inlineComment.addInlineComment();
     await page.waitForTimeout(500);
 }
