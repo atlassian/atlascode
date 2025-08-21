@@ -1,4 +1,4 @@
-import { expect, Frame, Locator } from 'playwright/test';
+import { expect, Frame, FrameLocator, Locator } from 'playwright/test';
 
 const TRANSITION_ISSUE_TEST_ID = 'start-work.transition-issue-checkbox';
 const GIT_BRANCH_TEST_ID = 'start-work.setup-git-branch-checkbox';
@@ -6,7 +6,7 @@ const PUSH_BRANCH_TEST_ID = 'start-work.push-branch-checkbox';
 const START_BUTTON_TEST_ID = 'start-work.start-button';
 
 export class StartWorkPage {
-    readonly issueFrame: Frame;
+    readonly issueFrame: Frame | FrameLocator;
 
     readonly successToast: Locator;
     readonly transitionIssueCheckbox: Locator;
@@ -18,7 +18,7 @@ export class StartWorkPage {
     readonly pushBranchCheckbox: Locator;
     readonly startButton: Locator;
 
-    constructor(frame: Frame) {
+    constructor(frame: Frame | FrameLocator) {
         this.issueFrame = frame;
         this.successToast = this.issueFrame.getByRole('presentation').filter({ hasText: 'Success!' });
         this.transitionIssueCheckbox = this.issueFrame.getByTestId(TRANSITION_ISSUE_TEST_ID);
@@ -54,7 +54,7 @@ export class StartWorkPage {
         await expect(this.localBranchInput).toHaveValue('bugfix/BTS-1-sample-user-interface-bugs');
     }
 
-    async checkSuccess() {
-        await expect(this.successToast).toBeVisible();
+    async waitForSuccessToast() {
+        await this.successToast.waitFor({ state: 'visible' });
     }
 }
