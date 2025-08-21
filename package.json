@@ -498,7 +498,7 @@
                 },
                 {
                     "id": "atlascode-rovo-dev",
-                    "title": "Rovo Dev Beta",
+                    "title": "Rovo Dev",
                     "icon": "resources/rovodev-icon.svg"
                 }
             ]
@@ -534,7 +534,7 @@
             "atlascode-rovo-dev": [
                 {
                     "id": "atlascode.views.rovoDev.webView",
-                    "name": "Rovo Dev Beta",
+                    "name": "Rovo Dev",
                     "type": "webview",
                     "when": "atlascode:rovoDevEnabled"
                 }
@@ -1381,23 +1381,23 @@
         "@atlaskit/avatar-group": "^12.2.0",
         "@atlaskit/breadcrumbs": "^14.2.0",
         "@atlaskit/button": "^20.5.3",
-        "@atlaskit/checkbox": "^15.4.0",
+        "@atlaskit/checkbox": "^17.1.10",
         "@atlaskit/comment": "^12.2.0",
         "@atlaskit/datetime-picker": "^15.13.1",
         "@atlaskit/dropdown-menu": "^12.26.5",
         "@atlaskit/feature-gate-js-client": "^5.5.5",
         "@atlaskit/form": "^11.2.0",
-        "@atlaskit/icon": "^23.11.0",
-        "@atlaskit/icon-lab": "^2.8.0",
+        "@atlaskit/icon": "^27.12.0",
+        "@atlaskit/icon-lab": "^5.6.0",
         "@atlaskit/inline-dialog": "^16.2.0",
-        "@atlaskit/lozenge": "^11.14.0",
+        "@atlaskit/lozenge": "^12.2.5",
         "@atlaskit/modal-dialog": "^12.1.0",
         "@atlaskit/page": "^12.0.7",
         "@atlaskit/page-header": "^10.2.2",
-        "@atlaskit/radio": "^7.3.0",
+        "@atlaskit/radio": "^8.2.0",
         "@atlaskit/section-message": "^7.0.0",
         "@atlaskit/select": "^18.10.6",
-        "@atlaskit/spinner": "^17.2.0",
+        "@atlaskit/spinner": "^19.0.1",
         "@atlaskit/table-tree": "^10.1.2",
         "@atlaskit/textarea": "^7.1.0",
         "@atlaskit/textfield": "^7.0.0",
