@@ -20,7 +20,7 @@ jest.mock('./features', () => {
     };
 });
 
-const mockClient = {
+let mockClient = {
     initialize: () => Promise.resolve(),
     initializeCompleted: () => false,
     checkGate: (key: any) => false,
@@ -34,29 +34,23 @@ jest.mock('./utils', () => {
     };
 });
 
+import { Identifiers } from '@atlaskit/feature-gate-js-client';
 import { it } from '@jest/globals';
-import { Logger } from 'src/logger';
 import { forceCastTo } from 'testsutil';
 
 import { ClientInitializedErrorType } from '../../analytics';
-import { FeatureFlagClient, FeatureFlagClientInitError, FeatureFlagClientOptions } from './featureFlagClient';
+import { FeatureFlagClient, FeatureFlagClientInitError } from './featureFlagClient';
 import { Experiments, Features } from './features';
 
 describe('FeatureFlagClient', () => {
-    let analyticsClient: any;
-    let options: FeatureFlagClientOptions;
+    let options: Identifiers;
     const originalEnv = process.env;
 
+    let featureFlagClient: FeatureFlagClient;
+
     beforeEach(() => {
-        analyticsClient = {
-            sendOperationalEvent: jest.fn(),
-            sendTrackEvent: jest.fn(),
-        };
         options = {
-            analyticsClient,
-            identifiers: {
-                analyticsAnonymousId: 'some-id',
-            },
+            analyticsAnonymousId: 'some-id',
         };
         process.env = {
             ...originalEnv,
@@ -68,6 +62,9 @@ describe('FeatureFlagClient', () => {
             ATLASCODE_EXP_OVERRIDES_BOOL: undefined,
             ATLASCODE_EXP_OVERRIDES_STRING: undefined,
         };
+
+        FeatureFlagClient['singleton'] = undefined;
+        featureFlagClient = FeatureFlagClient.getInstance();
     });
 
     afterEach(() => {
@@ -79,7 +76,7 @@ describe('FeatureFlagClient', () => {
         it('should initialize the feature flag client', async () => {
             jest.spyOn(mockClient, 'initialize');
 
-            await FeatureFlagClient.initialize(options);
+            await featureFlagClient.initialize(options);
             expect(mockClient.initialize).toHaveBeenCalled();
         });
 
@@ -89,7 +86,7 @@ describe('FeatureFlagClient', () => {
             let error: FeatureFlagClientInitError = undefined!;
 
             try {
-                await FeatureFlagClient.initialize(options);
+                await featureFlagClient.initialize(options);
             } catch (err) {
                 error = err;
             }
@@ -99,14 +96,14 @@ describe('FeatureFlagClient', () => {
             expect(error.errorType).toBe(ClientInitializedErrorType.Failed);
         });
 
-        it('should catch an error when the feature flag client skipped initialization', async () => {
+        it("should catch an error when the feature flag client doesn't have the FX3 data", async () => {
             jest.spyOn(mockClient, 'initialize');
             process.env.ATLASCODE_FX3_API_KEY = '';
 
             let error: FeatureFlagClientInitError = undefined!;
 
             try {
-                await FeatureFlagClient.initialize(options);
+                await featureFlagClient.initialize(options);
             } catch (err) {
                 error = err;
             }
@@ -118,12 +115,12 @@ describe('FeatureFlagClient', () => {
 
         it("should catch an error when the analyticsAnonymousId isn't set", async () => {
             jest.spyOn(mockClient, 'initialize');
-            options.identifiers.analyticsAnonymousId = '';
+            options.analyticsAnonymousId = '';
 
             let error: FeatureFlagClientInitError = undefined!;
 
             try {
-                await FeatureFlagClient.initialize(options);
+                await featureFlagClient.initialize(options);
             } catch (err) {
                 error = err;
             }
@@ -133,60 +130,34 @@ describe('FeatureFlagClient', () => {
             expect(error.errorType).toBe(ClientInitializedErrorType.IdMissing);
         });
 
-        it.each([true, false])(
-            'isInitialized returns whatever FeatureGates.initializeCompleted says',
-            async (initializeCompleted) => {
-                await FeatureFlagClient.initialize(options);
-
-                jest.spyOn(mockClient, 'initializeCompleted').mockReturnValue(initializeCompleted);
-
-                expect(FeatureFlagClient.isInitialized()).toEqual(initializeCompleted);
-            },
-        );
-
         it('checkGate returns what FeatureGates returns', async () => {
-            await FeatureFlagClient.initialize(options);
+            await featureFlagClient.initialize(options);
 
             const mockedCheckGate = (name: string) => MockedFeatureGates_Features[name] ?? false;
 
             jest.spyOn(mockClient, 'initializeCompleted').mockReturnValue(true);
             jest.spyOn(mockClient, 'checkGate').mockImplementation(mockedCheckGate);
 
-            expect(FeatureFlagClient.checkGate(forceCastTo<Features>('some-very-real-feature'))).toBeTruthy();
-            expect(FeatureFlagClient.checkGate(forceCastTo<Features>('another-very-real-feature'))).toBeTruthy();
-            expect(FeatureFlagClient.checkGate(forceCastTo<Features>('some-fake-feature'))).toBeFalsy();
-        });
-
-        it('if overrides are set, checkGate returns the overridden value', async () => {
-            process.env.ATLASCODE_FF_OVERRIDES = `another-very-real-feature=false`;
-
-            await FeatureFlagClient.initialize(options);
-
-            const mockedCheckGate = (name: string) => MockedFeatureGates_Features[name] ?? false;
-
-            jest.spyOn(mockClient, 'initializeCompleted').mockReturnValue(true);
-            jest.spyOn(mockClient, 'checkGate').mockImplementation(mockedCheckGate);
-
-            expect(FeatureFlagClient.checkGate(forceCastTo<Features>('some-very-real-feature'))).toBeTruthy();
-            expect(FeatureFlagClient.checkGate(forceCastTo<Features>('another-very-real-feature'))).toBeFalsy();
-            expect(FeatureFlagClient.checkGate(forceCastTo<Features>('some-fake-feature'))).toBeFalsy();
+            expect(featureFlagClient.checkGate(forceCastTo<Features>('some-very-real-feature'))).toBeTruthy();
+            expect(featureFlagClient.checkGate(forceCastTo<Features>('another-very-real-feature'))).toBeTruthy();
+            expect(featureFlagClient.checkGate(forceCastTo<Features>('some-fake-feature'))).toBeFalsy();
         });
 
         it('if FeatureGates is not initialized, checkGate always returns false', async () => {
-            await FeatureFlagClient.initialize(options);
+            await featureFlagClient.initialize(options);
 
             jest.spyOn(mockClient, 'initializeCompleted').mockReturnValue(false);
             jest.spyOn(mockClient, 'checkGate');
 
-            expect(FeatureFlagClient.checkGate(forceCastTo<Features>('some-very-real-feature'))).toBeFalsy();
-            expect(FeatureFlagClient.checkGate(forceCastTo<Features>('another-very-real-feature'))).toBeFalsy();
-            expect(FeatureFlagClient.checkGate(forceCastTo<Features>('some-fake-feature'))).toBeFalsy();
+            expect(featureFlagClient.checkGate(forceCastTo<Features>('some-very-real-feature'))).toBeFalsy();
+            expect(featureFlagClient.checkGate(forceCastTo<Features>('another-very-real-feature'))).toBeFalsy();
+            expect(featureFlagClient.checkGate(forceCastTo<Features>('some-fake-feature'))).toBeFalsy();
 
             expect(mockClient.checkGate).not.toHaveBeenCalled();
         });
 
         it('checkExperimentValue returns what FeatureGates returns', async () => {
-            await FeatureFlagClient.initialize(options);
+            await featureFlagClient.initialize(options);
 
             const mockedGetExperimentValue = (name: string, param: string, defaultValue: any) => {
                 const expData = MockExperimentGates[name];
@@ -199,58 +170,31 @@ describe('FeatureFlagClient', () => {
             jest.spyOn(mockClient, 'initializeCompleted').mockReturnValue(true);
             jest.spyOn(mockClient, 'getExperimentValue').mockImplementation(mockedGetExperimentValue);
 
-            expect(FeatureFlagClient.checkExperimentValue(forceCastTo<Experiments>('some-very-real-experiment'))).toBe(
+            expect(featureFlagClient.checkExperimentValue(forceCastTo<Experiments>('some-very-real-experiment'))).toBe(
                 'returned value',
             );
-            expect(FeatureFlagClient.checkExperimentValue(forceCastTo<Experiments>('another-exp-name'))).toBe(
+            expect(featureFlagClient.checkExperimentValue(forceCastTo<Experiments>('another-exp-name'))).toBe(
                 'returned value',
             );
             expect(
-                FeatureFlagClient.checkExperimentValue(forceCastTo<Experiments>('one-more-exp-name')),
-            ).toBeUndefined();
-        });
-
-        it('if overrides are set, getExperimentValue returns the overridden value', async () => {
-            process.env.ATLASCODE_EXP_OVERRIDES_STRING = `another-exp-name=another value`;
-
-            await FeatureFlagClient.initialize(options);
-
-            const mockedGetExperimentValue = (name: string, param: string, defaultValue: any) => {
-                const expData = MockExperimentGates[name];
-                if (!expData || expData.parameter !== param) {
-                    return undefined;
-                }
-                return 'returned value';
-            };
-
-            jest.spyOn(mockClient, 'initializeCompleted').mockReturnValue(true);
-            jest.spyOn(mockClient, 'getExperimentValue').mockImplementation(mockedGetExperimentValue);
-
-            expect(FeatureFlagClient.checkExperimentValue(forceCastTo<Experiments>('some-very-real-experiment'))).toBe(
-                'returned value',
-            );
-            expect(FeatureFlagClient.checkExperimentValue(forceCastTo<Experiments>('another-exp-name'))).toBe(
-                'another value',
-            );
-            expect(
-                FeatureFlagClient.checkExperimentValue(forceCastTo<Experiments>('one-more-exp-name')),
+                featureFlagClient.checkExperimentValue(forceCastTo<Experiments>('one-more-exp-name')),
             ).toBeUndefined();
         });
 
         it('if FeatureGates is not initialized, getExperimentValue returns the default value', async () => {
-            await FeatureFlagClient.initialize(options);
+            await featureFlagClient.initialize(options);
 
             jest.spyOn(mockClient, 'initializeCompleted').mockReturnValue(false);
             jest.spyOn(mockClient, 'getExperimentValue');
 
-            expect(FeatureFlagClient.checkExperimentValue(forceCastTo<Experiments>('some-very-real-experiment'))).toBe(
+            expect(featureFlagClient.checkExperimentValue(forceCastTo<Experiments>('some-very-real-experiment'))).toBe(
                 'a default value',
             );
-            expect(FeatureFlagClient.checkExperimentValue(forceCastTo<Experiments>('another-exp-name'))).toBe(
+            expect(featureFlagClient.checkExperimentValue(forceCastTo<Experiments>('another-exp-name'))).toBe(
                 'another default value',
             );
             expect(
-                FeatureFlagClient.checkExperimentValue(forceCastTo<Experiments>('one-more-exp-name')),
+                featureFlagClient.checkExperimentValue(forceCastTo<Experiments>('one-more-exp-name')),
             ).toBeUndefined();
 
             expect(mockClient.getExperimentValue).not.toHaveBeenCalled();
@@ -259,44 +203,101 @@ describe('FeatureFlagClient', () => {
 
     describe('updateUser', () => {
         beforeEach(async () => {
-            await FeatureFlagClient.initialize(options);
+            await featureFlagClient.initialize(options);
+            jest.spyOn(featureFlagClient as any, 'isInitialized').mockReturnValue(true);
         });
 
-        it('should not update user if tenantId is unchanged', async () => {
-            const spy = jest.spyOn(mockClient, 'updateUser');
-            await FeatureFlagClient.updateUser({ tenantId: undefined });
-            expect(spy).not.toHaveBeenCalled();
+        it('should update user only when the tenant changes', async () => {
+            // after initialization, the client in use is the 'basic' client without tenantId information
+            const baseClient = featureFlagClient['client'];
+
+            // prevents (new FeatureGateClient()) to return the same object
+            mockClient = { ...mockClient };
+
+            // updates the user with tenantId='tenant-1'
+            await featureFlagClient.updateUser({ tenantId: 'tenant-1' });
+            // now the client in use should be the one with tenantId='tenant-1'
+            expect(featureFlagClient['client']).not.toBe(baseClient);
+
+            // prevents (new FeatureGateClient()) to return the same object
+            mockClient = { ...mockClient };
+
+            const tenant1Client = featureFlagClient['client'];
+
+            // updates the user (again) with tenantId='tenant-1'
+            await featureFlagClient.updateUser({ tenantId: 'tenant-1' });
+            // the client in use hasn't changed
+            expect(featureFlagClient['client']).toBe(tenant1Client);
+
+            // prevents (new FeatureGateClient()) to return the same object
+            mockClient = { ...mockClient };
+
+            // updates the user with tenantId='tenant-2'
+            await featureFlagClient.updateUser({ tenantId: 'tenant-2' });
+            // the client in use is now different than both the base client, and the tenant1 client
+            expect(featureFlagClient['client']).not.toBe(tenant1Client);
+            expect(featureFlagClient['client']).not.toBe(baseClient);
+
+            // prevents (new FeatureGateClient()) to return the same object
+            mockClient = { ...mockClient };
+
+            // updates the user with no tenantId anymore
+            await featureFlagClient.updateUser({ tenantId: undefined });
+            // the client in use is now the base client again
+            expect(featureFlagClient['client']).toBe(baseClient);
         });
 
-        it('should update user if tenantId is changed', async () => {
-            const spy = jest.spyOn(mockClient, 'updateUser').mockResolvedValue(undefined);
-            await FeatureFlagClient.updateUser({ tenantId: 'tenant-2' });
-            expect(spy).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    apiKey: 'some-key',
-                    environment: 'Production',
-                    targetApp: 'some-app',
-                }),
-                expect.objectContaining({
-                    analyticsAnonymousId: 'some-id',
-                    tenantId: 'tenant-2',
-                }),
+        it('should throw an error if initializeWithRetry fails', async () => {
+            jest.spyOn(featureFlagClient as any, 'initializeWithRetry').mockRejectedValue(new Error('failz'));
+            await expect(featureFlagClient.updateUser({ tenantId: 'tenant-4' })).rejects.toThrow('failz');
+        });
+    });
+
+    describe('overrides', () => {
+        it('if overrides are set, checkGate returns the overridden value', async () => {
+            process.env.ATLASCODE_FF_OVERRIDES = `another-very-real-feature=false`;
+
+            FeatureFlagClient['singleton'] = undefined;
+            featureFlagClient = FeatureFlagClient.getInstance();
+            await featureFlagClient.initialize(options);
+
+            const mockedCheckGate = (name: string) => MockedFeatureGates_Features[name] ?? false;
+
+            jest.spyOn(mockClient, 'initializeCompleted').mockReturnValue(true);
+            jest.spyOn(mockClient, 'checkGate').mockImplementation(mockedCheckGate);
+
+            expect(featureFlagClient.checkGate(forceCastTo<Features>('some-very-real-feature'))).toBeTruthy();
+            expect(featureFlagClient.checkGate(forceCastTo<Features>('another-very-real-feature'))).toBeFalsy();
+            expect(featureFlagClient.checkGate(forceCastTo<Features>('some-fake-feature'))).toBeFalsy();
+        });
+
+        it('if overrides are set, getExperimentValue returns the overridden value', async () => {
+            process.env.ATLASCODE_EXP_OVERRIDES_STRING = `another-exp-name=another value`;
+
+            FeatureFlagClient['singleton'] = undefined;
+            featureFlagClient = FeatureFlagClient.getInstance();
+            await featureFlagClient.initialize(options);
+
+            const mockedGetExperimentValue = (name: string, param: string, defaultValue: any) => {
+                const expData = MockExperimentGates[name];
+                if (!expData || expData.parameter !== param) {
+                    return undefined;
+                }
+                return 'returned value';
+            };
+
+            jest.spyOn(mockClient, 'initializeCompleted').mockReturnValue(true);
+            jest.spyOn(mockClient, 'getExperimentValue').mockImplementation(mockedGetExperimentValue);
+
+            expect(featureFlagClient.checkExperimentValue(forceCastTo<Experiments>('some-very-real-experiment'))).toBe(
+                'returned value',
             );
-        });
-
-        it('should log error if FeatureFlagClient is not initialized', async () => {
-            FeatureFlagClient['options'] = undefined;
-            const loggerSpy = jest.spyOn(Logger, 'error').mockImplementation(() => {});
-            await FeatureFlagClient.updateUser({ tenantId: 'tenant-3' });
-            expect(loggerSpy).toHaveBeenCalledWith(expect.any(Error));
-        });
-
-        it('should log error if FeatureGates.updateUser throws', async () => {
-            const spy = jest.spyOn(mockClient, 'updateUser').mockRejectedValue('fail');
-            const loggerSpy = jest.spyOn(Logger, 'error').mockImplementation(() => {});
-            await FeatureFlagClient.updateUser({ tenantId: 'tenant-4' });
-            expect(spy).toHaveBeenCalled();
-            expect(loggerSpy).toHaveBeenCalledWith(expect.any(Error));
+            expect(featureFlagClient.checkExperimentValue(forceCastTo<Experiments>('another-exp-name'))).toBe(
+                'another value',
+            );
+            expect(
+                featureFlagClient.checkExperimentValue(forceCastTo<Experiments>('one-more-exp-name')),
+            ).toBeUndefined();
         });
     });
 });
