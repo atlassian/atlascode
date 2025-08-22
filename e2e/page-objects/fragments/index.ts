@@ -12,5 +12,3 @@ export { PRSummary } from './PRSummary';
 export { PRCommits } from './PRCommits';
 export { PRFiles } from './PRFiles';
 export { PRSidebar } from './PRSidebar';
-export { PRInlineComment } from './PRInlineComment';
-export { PRTabs } from './PRTabs';

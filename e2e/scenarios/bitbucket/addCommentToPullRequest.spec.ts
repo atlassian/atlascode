@@ -1,17 +1,12 @@
 import { APIRequestContext, Page } from '@playwright/test';
-import { closeOnboardingQuickPick, setupPRCommentPost, setupPRComments, setupPullrequests } from 'e2e/helpers';
+import { closeOnboardingQuickPick, setupPRCommentPost, setupPRComments } from 'e2e/helpers';
 import type { PullRequestComment } from 'e2e/helpers/types';
 import { prCommentPost } from 'e2e/mock-data/prComments';
-import { pullrequest } from 'e2e/mock-data/pullrequest';
-import { AtlascodeDrawer, AtlassianSettings, PullRequestPage } from 'e2e/page-objects';
-
-const COMMENT_TEXT = 'This is a test comment added to the pull request via e2e test';
+import { AtlascodeDrawer, AtlassianSettings, PRInlineCommentPage, PullRequestPage } from 'e2e/page-objects';
 
 export async function addCommentToPullRequest(page: Page, request: APIRequestContext) {
     await closeOnboardingQuickPick(page);
 
-    // Set up pull request with initial comments
-    await setupPullrequests(request, [pullrequest]);
     await setupPRComments(request, [prCommentPost]);
 
     // Set up the response for when a comment is posted
@@ -23,6 +18,7 @@ export async function addCommentToPullRequest(page: Page, request: APIRequestCon
             html: '<p>test comment</p>',
         },
     } as PullRequestComment;
+
     await setupPRCommentPost(request, postedComment);
 
     await new AtlassianSettings(page).closeSettingsPage();
@@ -35,14 +31,6 @@ export async function addCommentToPullRequest(page: Page, request: APIRequestCon
 
     const pullRequestPage = new PullRequestPage(page);
 
-    // Ensure Details tab (where comments form lives) is active
-    await pullRequestPage.tabs.goToDetailsTab();
-
-    // Add a comment via Comments fragment
-    await pullRequestPage.comments.addNew(COMMENT_TEXT);
-    await page.waitForTimeout(1000);
-    await pullRequestPage.comments.expectExists(COMMENT_TEXT);
-
     // Navigate to Files Changed and click specific file
     await pullRequestPage.files.expectFilesSectionLoaded();
     await pullRequestPage.files.changedFile.click();
@@ -52,6 +40,7 @@ export async function addCommentToPullRequest(page: Page, request: APIRequestCon
     const commentDiffAdded = page.locator('div.comment-diff-added');
     await commentDiffAdded.first().click();
     await page.waitForTimeout(500);
-    await pullRequestPage.inlineComment.addInlineComment();
+    const PrInlineComment = new PRInlineCommentPage(page);
+    await PrInlineComment.addInlineComment('test comment');
     await page.waitForTimeout(500);
 }
