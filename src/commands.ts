@@ -25,15 +25,13 @@ import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } 
 import { Logger } from './logger';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevContext } from './rovo-dev/rovoDevTypes';
-import { Experiments, FeatureFlagClient } from './util/featureFlags'; // Add back once Feature is set up
+import { Experiments } from './util/featureFlags';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
 
-// Going to add a ternary statement commands involving Settings using similar boolean expression to "FeatureFlagClient.checkGate(Features.ConfigPageV3) ? ConfigV3Section.<some section> : ConfigSection.<some section>"
-
 export function registerCommands(vscodeContext: ExtensionContext) {
-    const settingsFeatureValue: boolean = FeatureFlagClient.checkExperimentValue(
+    const settingsFeatureValue = Container.featureFlagClient.checkExperimentValue(
         Experiments.AtlascodeNewSettingsExperiment,
     );
     if (settingsFeatureValue) {

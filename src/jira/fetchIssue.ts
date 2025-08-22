@@ -7,7 +7,7 @@ import {
     MinimalORIssueLink,
 } from '@atlassianlabs/jira-pi-common-models';
 import { CreateMetaTransformerResult } from '@atlassianlabs/jira-pi-meta-models';
-import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
+import { Experiments } from 'src/util/featureFlags';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Container } from '../container';
@@ -18,7 +18,7 @@ export async function fetchCreateIssueUI(
     projectKey: string,
 ): Promise<CreateMetaTransformerResult<DetailedSiteInfo>> {
     const client = await Container.clientManager.jiraClient(siteDetails);
-    if (FeatureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment)) {
+    if (Container.featureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment)) {
         const [fields, issuelinkTypes, cMeta] = await Promise.all([
             Container.jiraSettingsManager.getAllFieldsForSite(siteDetails),
             Container.jiraSettingsManager.getIssueLinkTypes(siteDetails),
@@ -50,7 +50,9 @@ export async function fetchMinimalIssue(
     issue: string,
     siteDetails: DetailedSiteInfo,
 ): Promise<MinimalIssue<DetailedSiteInfo>> {
-    const performanceEnabled = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment);
+    const performanceEnabled = Container.featureFlagClient.checkExperimentValue(
+        Experiments.AtlascodePerformanceExperiment,
+    );
     if (performanceEnabled) {
         const [client, epicInfo] = await Promise.all([
             Container.clientManager.jiraClient(siteDetails),
@@ -71,7 +73,7 @@ export async function fetchMinimalIssue(
 
 export async function fetchEditIssueUI(issue: MinimalIssue<DetailedSiteInfo>): Promise<EditIssueUI<DetailedSiteInfo>> {
     const client = await Container.clientManager.jiraClient(issue.siteDetails);
-    if (FeatureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment)) {
+    if (Container.featureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment)) {
         const [fields, issuelinkTypes, cMeta] = await Promise.all([
             Container.jiraSettingsManager.getAllFieldsForSite(issue.siteDetails),
             Container.jiraSettingsManager.getIssueLinkTypes(issue.siteDetails),

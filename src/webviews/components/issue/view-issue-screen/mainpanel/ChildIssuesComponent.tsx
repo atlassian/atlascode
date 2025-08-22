@@ -1,7 +1,6 @@
 import Button from '@atlaskit/button';
-import AddIcon from '@atlaskit/icon/glyph/add';
-import Select from '@atlaskit/select';
-import { components } from '@atlaskit/select';
+import AddIcon from '@atlaskit/icon/core/add';
+import Select, { components } from '@atlaskit/select';
 import TextField from '@atlaskit/textfield';
 import { emptyIssueType, IssueType, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { Box } from '@mui/material';

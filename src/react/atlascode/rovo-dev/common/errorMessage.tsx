@@ -8,10 +8,9 @@ import { ErrorMessage } from '../utils';
 
 export const ErrorMessageItem: React.FC<{
     msg: ErrorMessage;
-    index: number;
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
     retryAfterError: () => void;
-}> = ({ msg, index, isRetryAfterErrorButtonEnabled, retryAfterError }) => {
+}> = ({ msg, isRetryAfterErrorButtonEnabled, retryAfterError }) => {
     const getColor = useCallback(() => {
         switch (msg.type) {
             case 'error':
@@ -35,7 +34,7 @@ export const ErrorMessageItem: React.FC<{
     }, [msg.type, msg.title]);
 
     return (
-        <div key={index} style={{ ...chatMessageStyles, ...errorMessageStyles }}>
+        <div style={{ ...chatMessageStyles, ...errorMessageStyles }}>
             <div style={{ display: 'flex', flexDirection: 'row' }}>
                 <div style={{ padding: '4px', color: getColor() }}>
                     {msg.type === 'error' && <StatusErrorIcon label={getTitle()} />}

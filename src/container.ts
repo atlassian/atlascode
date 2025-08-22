@@ -193,27 +193,11 @@ export class Container {
         this._bitbucketHelper = new BitbucketCheckoutHelper(context.globalState);
         context.subscriptions.push(new HelpExplorer());
 
-        let featureFlagClientInitialized = true;
+        this._featureFlagClient = FeatureFlagClient.getInstance();
         try {
-            await FeatureFlagClient.initialize({
-                analyticsClient: this._analyticsClient,
-                identifiers: {
-                    analyticsAnonymousId: this.machineId,
-                    tenantId: this._siteManager.primarySite?.id,
-                },
+            await this._featureFlagClient.initialize({
+                analyticsAnonymousId: this.machineId,
             });
-
-            if (!process.env.ROVODEV_BBY) {
-                this._siteManager.onDidSitesAvailableChange(async () => {
-                    await FeatureFlagClient.updateUser({ tenantId: this._siteManager.primarySite?.id });
-
-                    if (FeatureFlagClient.checkGate(Features.RovoDevEnabled)) {
-                        this.enableRovoDev(context);
-                    } else {
-                        this.disableRovoDev(context);
-                    }
-                });
-            }
 
             Logger.debug(`FeatureFlagClient: Succesfully initialized the client.`);
             featureFlagClientInitializedEvent(true).then((e) => {
@@ -221,19 +205,32 @@ export class Container {
             });
         } catch (err) {
             const error = err as FeatureFlagClientInitError;
-            Logger.debug(`FeatureFlagClient: Failed to initialize the client: ${error.reason}`);
-            featureFlagClientInitializedEvent(false, error.errorType, error.reason).then((e) => {
+            Logger.debug(`FeatureFlagClient: Failed to initialize the client: ${error.message}`);
+            featureFlagClientInitializedEvent(false, error.errorType, error.message).then((e) => {
                 this.analyticsClient.sendTrackEvent(e);
             });
-            featureFlagClientInitialized = false;
         }
-        if (
-            featureFlagClientInitialized &&
-            FeatureFlagClient.checkExperimentValue(Experiments.AtlascodeNewSettingsExperiment)
-        ) {
+        if (this._featureFlagClient.checkExperimentValue(Experiments.AtlascodeNewSettingsExperiment)) {
             context.subscriptions.push((this._settingsWebviewFactory = settingsV3ViewFactory));
         } else {
             context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
+        }
+
+        if (!process.env.ROVODEV_BBY) {
+            this._siteManager.onDidSitesAvailableChange(async () => {
+                if (await this.updateFeatureFlagTenantId(this._siteManager.primarySite?.id)) {
+                    if (this._featureFlagClient.checkGate(Features.RovoDevEnabled)) {
+                        this.enableRovoDev(context);
+                    } else {
+                        this.disableRovoDev(context);
+                    }
+                }
+            });
+        }
+
+        const tenantId = this._siteManager.primarySite?.id;
+        if (tenantId) {
+            await this.updateFeatureFlagTenantId(tenantId);
         }
 
         context.subscriptions.push(AtlascodeUriHandler.create(this._analyticsApi, this._bitbucketHelper));
@@ -244,9 +241,19 @@ export class Container {
 
         this._onboardingProvider = new OnboardingProvider();
 
-        if (process.env.ROVODEV_BBY || FeatureFlagClient.checkGate(Features.RovoDevEnabled)) {
+        if (process.env.ROVODEV_BBY || this.featureFlagClient.checkGate(Features.RovoDevEnabled)) {
             this._isRovoDevEnabled = true;
             this.enableRovoDev(context);
+        }
+    }
+
+    static async updateFeatureFlagTenantId(tenantId: string | undefined): Promise<boolean> {
+        try {
+            await this._featureFlagClient.updateUser({ tenantId });
+            return true;
+        } catch (err) {
+            Logger.error('RovoDev', err, "FeatureFlagClient: Failed to update user's tenantId");
+            return false;
         }
     }
 
@@ -394,7 +401,12 @@ export class Container {
         this._context.globalState.update(ConfigTargetKey, target);
     }
 
-    private static _isInAtlassianNetwork: boolean | undefined = undefined;
+    private static _featureFlagClient: FeatureFlagClient;
+    public static get featureFlagClient() {
+        return this._featureFlagClient;
+    }
+
+    private static _isInAtlassianNetwork: boolean | undefined;
     public static get isInAtlassianNetwork() {
         return this._isInAtlassianNetwork;
     }
