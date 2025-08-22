@@ -1,7 +1,6 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-    repeatEach: 10,
     retries: 3,
     use: {
         viewport: {
