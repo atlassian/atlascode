@@ -21,7 +21,7 @@ import { isAction, isAlertable, isPMFSubmitAction } from '../ipc/messaging';
 import { CommonActionType } from '../lib/ipc/fromUI/common';
 import { AdditionalSettings, CommonMessageType } from '../lib/ipc/toUI/common';
 import { iconSet, Resources } from '../resources';
-import { Experiments, FeatureFlagClient, Features } from '../util/featureFlags';
+import { Experiments, Features } from '../util/featureFlags';
 import { ExperimentGateValues, FeatureGateValues } from '../util/featureFlags/features';
 import { UIWebsocket } from '../ws';
 
@@ -149,7 +149,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
     private fireFeatureGates(features: Features[]) {
         if (features.length) {
             const featureFlags = {} as FeatureGateValues;
-            features.forEach((x) => (featureFlags[x] = FeatureFlagClient.checkGate(x)));
+            features.forEach((x) => (featureFlags[x] = Container.featureFlagClient.checkGate(x)));
             this.postMessage({ type: CommonMessageType.UpdateFeatureFlags, featureFlags });
         }
     }
@@ -157,7 +157,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
     private fireExperimentGates(experiments: Experiments[]) {
         if (experiments.length) {
             const experimentValues = {} as ExperimentGateValues;
-            experiments.forEach((x) => (experimentValues[x] = FeatureFlagClient.checkExperimentValue(x)));
+            experiments.forEach((x) => (experimentValues[x] = Container.featureFlagClient.checkExperimentValue(x)));
             this.postMessage({ type: CommonMessageType.UpdateExperimentValues, experimentValues });
         }
     }

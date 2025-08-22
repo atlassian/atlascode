@@ -640,6 +640,12 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
+    const executeGetAgentMemory = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.GetAgentMemory,
+        });
+    }, [postMessage]);
+
     return (
         <div className="rovoDevChat">
             <ChatStream
@@ -723,6 +729,7 @@ const RovoDevView: React.FC = () => {
                                 currentContext: promptContextCollection,
                             });
                         }}
+                        handleMemoryCommand={executeGetAgentMemory}
                     />
                 </div>
                 <div className="ai-disclaimer">Uses AI. Verify results.</div>

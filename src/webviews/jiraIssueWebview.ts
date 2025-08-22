@@ -13,7 +13,7 @@ import {
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
-import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
+import { Experiments } from 'src/util/featureFlags';
 import timer from 'src/util/perf';
 import { commands, env } from 'vscode';
 
@@ -191,7 +191,7 @@ export class JiraIssueWebview
     async updateEpicChildren() {
         if (this._issue.isEpic) {
             const site = this._issue.siteDetails;
-            const performanceEnabled = FeatureFlagClient.checkExperimentValue(
+            const performanceEnabled = Container.featureFlagClient.checkExperimentValue(
                 Experiments.AtlascodePerformanceExperiment,
             );
             if (performanceEnabled) {

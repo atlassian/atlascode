@@ -1,6 +1,5 @@
 import { IssueType, MinimalORIssueLink, Project } from '@atlassianlabs/jira-pi-common-models';
 import { CreateMetaTransformerResult, FieldUI, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
-import { FeatureFlagClient } from 'src/util/featureFlags';
 import { expansionCastTo } from 'testsutil';
 import { Position, Uri, window } from 'vscode';
 
@@ -163,7 +162,9 @@ describe('CreateIssueWebview', () => {
         jest.clearAllMocks();
 
         // Mock FeatureFlagClient to return false by default (performance disabled)
-        (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(false);
+        (Container.featureFlagClient as any) = {
+            checkExperimentValue: jest.fn().mockReturnValue(false),
+        };
 
         // Setup mocks
         Container.siteManager.getSiteForId = jest.fn().mockReturnValue(mockSiteDetails);
@@ -371,7 +372,7 @@ describe('CreateIssueWebview', () => {
 
         it('should use performance-enabled path when feature flag is enabled', async () => {
             // Enable performance feature flag
-            (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
+            (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
 
             await webview.forceUpdateFields();
 
@@ -390,7 +391,7 @@ describe('CreateIssueWebview', () => {
 
         it('should handle project without permission in performance mode', async () => {
             // Enable performance feature flag
-            (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
+            (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
 
             // Mock project without permission
             const projectWithoutPermission = { ...mockProject, id: 'different-id' };
@@ -420,7 +421,7 @@ describe('CreateIssueWebview', () => {
 
         it('should handle partial issue in performance mode', async () => {
             // Enable performance feature flag
-            (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
+            (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
 
             const partialIssue: PartialIssue = {
                 summary: 'Partial Summary',

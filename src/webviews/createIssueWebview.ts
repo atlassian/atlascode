@@ -3,7 +3,7 @@ import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from
 import { decode } from 'base64-arraybuffer-es6';
 import { format } from 'date-fns';
 import FormData from 'form-data';
-import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
+import { Experiments } from 'src/util/featureFlags';
 import timer from 'src/util/perf';
 import { commands, Position, Uri, ViewColumn, window } from 'vscode';
 
@@ -289,7 +289,7 @@ export class CreateIssueWebview
         this.isRefeshing = true;
         try {
             const availableSites = Container.siteManager.getSitesAvailable(ProductJira);
-            const performanceEnabled = FeatureFlagClient.checkExperimentValue(
+            const performanceEnabled = Container.featureFlagClient.checkExperimentValue(
                 Experiments.AtlascodePerformanceExperiment,
             );
             timer.mark(CreateJiraIssueRenderEventName);
