@@ -3,7 +3,6 @@ import { Disposable, Uri, ViewColumn, window } from 'vscode';
 import { Container } from '../container';
 import { CommonActionType } from '../lib/ipc/fromUI/common';
 import { CommonMessageType } from '../lib/ipc/toUI/common';
-import { FeatureFlagClient } from '../util/featureFlags';
 import { Experiments, Features } from '../util/featureFlags/features';
 import { UIWebsocket } from '../ws';
 import { SingleWebview } from './singleViewFactory';
@@ -123,6 +122,11 @@ describe('SingleWebview', () => {
         (Container.config as any) = { enableUIWS: false };
         (Container.pmfStats.shouldShowSurvey as jest.Mock).mockReturnValue(false);
 
+        (Container.featureFlagClient as any) = {
+            checkGate: jest.fn().mockReturnValue(false),
+            checkExperimentValue: jest.fn().mockReturnValue(false),
+        };
+
         extensionPath = '/test/extension/path';
         singleWebview = new SingleWebview(extensionPath, mockControllerFactory as any, mockAnalyticsApi as any);
     });
@@ -235,12 +239,12 @@ describe('SingleWebview', () => {
 
             mockController.requiredFeatureFlags = requiredFeatures;
 
-            (FeatureFlagClient.checkGate as jest.Mock).mockReturnValue(true);
-            (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue('test-value');
+            (Container.featureFlagClient.checkGate as jest.Mock).mockReturnValue(true);
+            (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue('test-value');
 
             await singleWebview.createOrShow();
 
-            expect(FeatureFlagClient.checkGate).toHaveBeenCalledWith(Features.EnableErrorTelemetry);
+            expect(Container.featureFlagClient.checkGate).toHaveBeenCalledWith(Features.EnableErrorTelemetry);
         });
     });
 
@@ -371,18 +375,18 @@ describe('SingleWebview', () => {
 
             await singleWebview.createOrShow();
 
-            expect(FeatureFlagClient.checkGate).not.toHaveBeenCalled();
+            expect(Container.featureFlagClient.checkGate).not.toHaveBeenCalled();
         });
 
         it('should fire multiple feature gates', async () => {
             const features = [Features.EnableErrorTelemetry];
             mockController.requiredFeatureFlags = features;
 
-            (FeatureFlagClient.checkGate as jest.Mock).mockReturnValue(true);
+            (Container.featureFlagClient.checkGate as jest.Mock).mockReturnValue(true);
 
             await singleWebview.createOrShow();
 
-            expect(FeatureFlagClient.checkGate).toHaveBeenCalledTimes(1);
+            expect(Container.featureFlagClient.checkGate).toHaveBeenCalledTimes(1);
             expect(mockWebviewPanel.webview.postMessage).toHaveBeenCalledWith({
                 command: CommonMessageType.UpdateFeatureFlags,
                 featureFlags: {
@@ -398,18 +402,18 @@ describe('SingleWebview', () => {
 
             await singleWebview.createOrShow();
 
-            expect(FeatureFlagClient.checkExperimentValue).not.toHaveBeenCalled();
+            expect(Container.featureFlagClient.checkExperimentValue).not.toHaveBeenCalled();
         });
 
         it('should fire multiple experiment gates', async () => {
             const experiments = ['very-long-experiment-name'] as unknown as Experiments[];
             mockController.requiredExperiments = experiments;
 
-            (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue('test-value');
+            (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue('test-value');
 
             await singleWebview.createOrShow();
 
-            expect(FeatureFlagClient.checkExperimentValue).toHaveBeenCalledTimes(1);
+            expect(Container.featureFlagClient.checkExperimentValue).toHaveBeenCalledTimes(1);
             expect(mockWebviewPanel.webview.postMessage).toHaveBeenCalledWith({
                 command: CommonMessageType.UpdateExperimentValues,
                 experimentValues: {

@@ -268,6 +268,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             this._processState = RovoDevProcessState.Starting;
                             RovoDevProcessManager.initializeRovoDevProcessManager(this._context);
                         }
+                        break;
+                    case RovoDevViewResponseType.GetAgentMemory:
+                        await this.executeOpenFile('.agent.md', false, undefined, true);
+                        break;
                 }
             } catch (error) {
                 this.processError(error, false);
@@ -932,7 +936,12 @@ ${message}`;
         }
     }
 
-    private async executeOpenFile(filePath: string, tryShowDiff: boolean, _range?: number[]): Promise<void> {
+    private async executeOpenFile(
+        filePath: string,
+        tryShowDiff: boolean,
+        _range?: number[],
+        createOnFail?: boolean,
+    ): Promise<void> {
         let cachedFilePath: string | undefined = undefined;
 
         if (tryShowDiff) {
@@ -960,11 +969,24 @@ ${message}`;
             }
 
             const fileUri = Uri.file(resolvedPath);
-
-            await window.showTextDocument(fileUri, {
-                preview: true,
-                selection: range || undefined,
-            });
+            try {
+                await window.showTextDocument(fileUri, {
+                    preview: true,
+                    selection: range || undefined,
+                });
+            } catch (error) {
+                if (createOnFail) {
+                    await getFsPromise((callback) => fs.writeFile(resolvedPath, '', callback));
+                    await window.showTextDocument(fileUri, {
+                        preview: true,
+                        selection: range || undefined,
+                    });
+                } else {
+                    throw new Error(
+                        `Unable to open file: ${resolvedPath}. ${error instanceof Error ? error.message : ''}`,
+                    );
+                }
+            }
         }
     }
 

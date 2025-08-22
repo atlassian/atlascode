@@ -437,17 +437,12 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                         Required fields are marked with an asterisk <RequiredAsterisk />
                                                     </p>
                                                 </FormHeader>
-                                                <Field
-                                                    label={<span>Site</span>}
-                                                    id="site"
-                                                    name="site"
-                                                    isRequired
-                                                    defaultValue={this.state.siteDetails}
-                                                >
+                                                <Field label={<span>Site</span>} id="site" name="site" isRequired>
                                                     {(fieldArgs: any) => {
                                                         return (
                                                             <Select
                                                                 {...fieldArgs.fieldProps}
+                                                                value={this.state.siteDetails}
                                                                 className="ac-form-select-container"
                                                                 classNamePrefix="ac-form-select"
                                                                 getOptionLabel={(option: any) => option.name}

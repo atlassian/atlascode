@@ -1,5 +1,4 @@
 import { createEmptyMinimalIssue, emptyUser, MinimalIssue, User } from '@atlassianlabs/jira-pi-common-models';
-import { FeatureFlagClient } from 'src/util/featureFlags';
 import { expansionCastTo } from 'testsutil/miscFunctions';
 import { commands, env, WebviewPanel } from 'vscode';
 
@@ -166,7 +165,9 @@ describe('JiraIssueWebview', () => {
         jest.clearAllMocks();
 
         // Defaulted value for AtlascodePerformanceExperiment should be false
-        (FeatureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(false);
+        (Container.featureFlagClient as any) = {
+            checkExperimentValue: jest.fn().mockReturnValue(false),
+        };
 
         mockJiraClient = {
             editIssue: jest.fn(),
