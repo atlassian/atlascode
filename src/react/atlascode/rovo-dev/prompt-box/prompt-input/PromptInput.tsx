@@ -25,6 +25,7 @@ interface PromptInputBoxProps {
     onCancel: () => void;
     sendButtonDisabled?: boolean;
     onAddContext: () => void;
+    handleMemoryCommand: () => void;
 }
 
 const TextAreaMessages: Record<State, string> = {
@@ -46,17 +47,21 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     hideButtons,
     state,
     promptText,
-    onPromptTextChange,
     isDeepPlanEnabled,
     onDeepPlanToggled,
     onSend,
     onCancel,
     sendButtonDisabled = false,
     onAddContext,
+    handleMemoryCommand,
 }) => {
     const [editor, setEditor] = React.useState<monaco.editor.IStandaloneCodeEditor | null>(null);
 
-    const setupCommands = (editor: monaco.editor.IStandaloneCodeEditor, onSend: (text: string) => void) => {
+    const setupCommands = (
+        editor: monaco.editor.IStandaloneCodeEditor,
+        onSend: (text: string) => void,
+        handleMemoryCommand: () => void,
+    ) => {
         monaco.editor.registerCommand('rovo-dev.clearChat', () => {
             editor.setValue('');
 
@@ -67,6 +72,12 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             editor.setValue('');
 
             onSend(`/prune`);
+        });
+
+        monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
+            handleMemoryCommand();
+
+            editor.setValue('');
         });
     };
 
@@ -114,7 +125,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             const editor = createMonacoPromptEditor(container);
             setupPromptKeyBindings(editor, onSend);
             setupAutoResize(editor);
-            setupCommands(editor, onSend);
+            setupCommands(editor, onSend, handleMemoryCommand);
 
             editor.setValue(promptText);
 
@@ -126,7 +137,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             };
         }
         return () => {};
-    }, [onSend, promptText]);
+    }, [handleMemoryCommand, onSend, promptText]);
 
     React.useEffect(() => {
         if (!editor) {

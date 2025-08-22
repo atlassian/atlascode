@@ -17,6 +17,7 @@ export const enum RovoDevViewResponseType {
     ReportThinkingDrawerExpanded = 'reportThinkingDrawerExpanded',
     CheckGitChanges = 'checkGitChanges',
     WebviewReady = 'webviewReady',
+    GetAgentMemory = 'getAgentMemory',
 }
 
 export interface ModifiedFile {
@@ -39,4 +40,5 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.ReportChangesGitPushed, { pullRequestCreated: boolean }>
     | ReducerAction<RovoDevViewResponseType.ReportThinkingDrawerExpanded>
     | ReducerAction<RovoDevViewResponseType.CheckGitChanges>
-    | ReducerAction<RovoDevViewResponseType.WebviewReady>;
+    | ReducerAction<RovoDevViewResponseType.WebviewReady>
+    | ReducerAction<RovoDevViewResponseType.GetAgentMemory>;
