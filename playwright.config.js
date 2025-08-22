@@ -1,8 +1,8 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-    retries: 3,
     use: {
+        retries: 3,
         viewport: {
             width: 1600,
             height: 800,
