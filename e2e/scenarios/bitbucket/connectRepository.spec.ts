@@ -1,4 +1,4 @@
-import { APIRequestContext, expect, Page } from '@playwright/test';
+import { APIRequestContext, Page } from '@playwright/test';
 import { closeOnboardingQuickPick, setupPullrequests } from 'e2e/helpers';
 import { AtlascodeDrawer, AtlassianSettings, ExplorerDrawer } from 'e2e/page-objects';
 
@@ -47,7 +47,7 @@ export async function connectRepository(page: Page, request: APIRequestContext) 
         await atlascodeDrawer.pullRequests.waitForNavigationLoad();
     }
 
-    await expect(atlascodeDrawer.pullRequests.mockRepo).toBeVisible();
+    await atlascodeDrawer.pullRequests.expectRepoConnected();
 
     await cleanupSetupPullrequests();
 }

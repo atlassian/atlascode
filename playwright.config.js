@@ -1,6 +1,8 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
+    repeatEach: 10,
+    retries: 3,
     use: {
         viewport: {
             width: 1600,
@@ -8,6 +10,5 @@ export default defineConfig({
         },
         video: 'retain-on-failure',
         trace: 'retain-on-failure',
-        retries: 3,
     },
 });
