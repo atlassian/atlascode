@@ -79,6 +79,12 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         description: 'Copy the last response to clipboard',
         command: { title: 'Copy', id: 'rovo-dev.copyResponse', tooltip: 'Copy the last response to clipboard' },
     },
+    {
+        label: '/memory',
+        insertText: '/memory',
+        description: 'Show agent memory',
+        command: { title: 'Agent Memory', id: 'rovo-dev.agentMemory', tooltip: 'Show agent memory' },
+    },
 ];
 
 export const createSlashCommandProvider = (): monaco.languages.CompletionItemProvider => {

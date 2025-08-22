@@ -660,6 +660,12 @@ const RovoDevView: React.FC = () => {
         navigator.clipboard.writeText(lastMessage.text);
     }, [chatStream, currentState]);
 
+    const executeGetAgentMemory = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.GetAgentMemory,
+        });
+    }, [postMessage]);
+
     return (
         <div className="rovoDevChat">
             <ChatStream
@@ -744,6 +750,7 @@ const RovoDevView: React.FC = () => {
                             });
                         }}
                         onCopy={handleCopyResponse}
+                        handleMemoryCommand={executeGetAgentMemory}
                     />
                 </div>
                 <div className="ai-disclaimer">Uses AI. Verify results.</div>

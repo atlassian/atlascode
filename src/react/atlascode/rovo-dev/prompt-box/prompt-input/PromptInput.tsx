@@ -26,6 +26,7 @@ interface PromptInputBoxProps {
     sendButtonDisabled?: boolean;
     onAddContext: () => void;
     onCopy: () => void;
+    handleMemoryCommand: () => void;
 }
 
 const TextAreaMessages: Record<State, string> = {
@@ -47,7 +48,6 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     hideButtons,
     state,
     promptText,
-    onPromptTextChange,
     isDeepPlanEnabled,
     onDeepPlanToggled,
     onSend,
@@ -55,6 +55,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     sendButtonDisabled = false,
     onAddContext,
     onCopy,
+    handleMemoryCommand,
 }) => {
     const [editor, setEditor] = React.useState<monaco.editor.IStandaloneCodeEditor | null>(null);
 
@@ -62,6 +63,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         editor: monaco.editor.IStandaloneCodeEditor,
         onSend: (text: string) => void,
         onCopy: () => void,
+        handleMemoryCommand: () => void,
     ) => {
         monaco.editor.registerCommand('rovo-dev.clearChat', () => {
             editor.setValue('');
@@ -78,6 +80,12 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         monaco.editor.registerCommand('rovo-dev.copyResponse', () => {
             editor.setValue('');
             onCopy();
+        });
+
+        monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
+            handleMemoryCommand();
+
+            editor.setValue('');
         });
     };
 
@@ -125,7 +133,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             const editor = createMonacoPromptEditor(container);
             setupPromptKeyBindings(editor, onSend);
             setupAutoResize(editor);
-            setupCommands(editor, onSend, onCopy);
+            setupCommands(editor, onSend, onCopy, handleMemoryCommand);
 
             editor.setValue(promptText);
 
@@ -137,7 +145,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             };
         }
         return () => {};
-    }, [onCopy, onSend, promptText]);
+    }, [handleMemoryCommand, onCopy, onSend, promptText]);
 
     React.useEffect(() => {
         if (!editor) {
