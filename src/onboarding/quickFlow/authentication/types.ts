@@ -1,3 +1,5 @@
+import { Product } from 'src/atlclients/authInfo';
+
 export enum AuthType {
     OAuth = 'OAuth',
     ApiToken = 'API Token',
@@ -6,6 +8,8 @@ export enum AuthType {
 
 export type AuthFlowData = {
     // Product is assumed to be Jira, for now
+    product: Product;
+
     skipAllowed: boolean;
 
     isNewSite: boolean;

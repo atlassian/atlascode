@@ -25,6 +25,7 @@ interface ChatStreamProps {
         openFile: OpenFileFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
+        bruhLogin: () => void;
     };
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
@@ -224,6 +225,11 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                     index={idx}
                                     isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
                                     retryAfterError={renderProps.retryPromptAfterError}
+                                    bruhLogin={() =>
+                                        messagingApi.postMessage({
+                                            type: RovoDevViewResponseType.InitiateQuickAuth,
+                                        })
+                                    }
                                 />
                             );
                         } else if (block.source === 'PullRequest') {

@@ -101,6 +101,8 @@ export const enum Commands {
     DebugQuickLogout = 'atlascode.debug.quickLogout',
 }
 
+export const useNewLoginFlow = true;
+
 // Rovodev port mapping settings
 export const rovodevInfo = {
     mappingKey: 'workspacePortMapping',

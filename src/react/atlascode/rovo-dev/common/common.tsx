@@ -40,6 +40,7 @@ export const renderChatHistory = (
     openFile: OpenFileFunc,
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean,
     retryAfterError: () => void,
+    bruhLogin?: () => void,
 ) => {
     switch (msg.source) {
         case 'ToolReturn':
@@ -57,6 +58,7 @@ export const renderChatHistory = (
                     msg={msg}
                     isRetryAfterErrorButtonEnabled={isRetryAfterErrorButtonEnabled}
                     retryAfterError={retryAfterError}
+                    bruhLogin={bruhLogin}
                 />
             );
         case 'RovoDev':

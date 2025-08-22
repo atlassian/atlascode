@@ -6,6 +6,7 @@ import {
     InputBoxValidationSeverity,
     QuickInputButton,
     QuickInputButtons,
+    QuickPickItem,
     QuickPickItemKind,
     ThemeIcon,
     Uri,
@@ -61,7 +62,22 @@ export class UI {
     }
 
     public sitePicker(state: PartialData): Promise<UiResponse> {
-        const sites = Container.siteManager.getSitesAvailable(ProductJira);
+        const sites: QuickPickItem[] = Container.siteManager
+            .getSitesAvailable(ProductJira)
+            .filter((site) => site.isCloud === (state.authenticationType !== AuthType.Server))
+            .map((site) => ({
+                label: site.host,
+                iconPath: site.isCloud ? new ThemeIcon('cloud') : new ThemeIcon('server'),
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+
+        if (sites.length === 0 && state.authenticationType === AuthType.ApiToken) {
+            sites.push({
+                label: 'Login with OAuth to see available cloud sites',
+                detail: 'Oops, not implemented yet! Run OAuth from the previous step to see sites here',
+                iconPath: new ThemeIcon('info'),
+            });
+        }
         const choices = [
             {
                 label: 'Log in to a new site...',
@@ -71,13 +87,7 @@ export class UI {
                 label: '',
                 kind: QuickPickItemKind.Separator,
             },
-            ...sites
-                .filter((site) => site.isCloud === (state.authenticationType !== AuthType.Server))
-                .map((site) => ({
-                    label: site.host,
-                    iconPath: site.isCloud ? new ThemeIcon('cloud') : new ThemeIcon('server'),
-                }))
-                .sort((a, b) => a.label.localeCompare(b.label)),
+            ...sites,
         ];
         return this.baseUI.showQuickPick(choices, {
             title: 'Select Site',
@@ -135,15 +145,18 @@ export class UI {
     }
 
     public async usernameInput(state: PartialData): Promise<UiResponse> {
-        const defaultUsername = state.username || (await this.getDefaultUsername(state));
+        const inferredUsername = await this.getDefaultUsername(state);
+        const defaultUsername = state.username || inferredUsername;
+
+        const credName = state.authenticationType === AuthType.ApiToken ? 'email address' : 'username';
 
         return this.baseUI.showInputBox({
             title: 'Quick Auth',
-            placeHolder: 'Enter your username',
+            placeHolder: `Enter your ${credName}`,
             value: defaultUsername,
             prompt:
-                state.authenticationType === AuthType.ApiToken
-                    ? 'API Token authentication requires an email address'
+                inferredUsername && inferredUsername === defaultUsername
+                    ? `This ${credName} was inferred from your existing credentials`
                     : undefined,
             valueSelection: defaultUsername ? [0, defaultUsername.length] : undefined,
             buttons: [QuickInputButtons.Back],

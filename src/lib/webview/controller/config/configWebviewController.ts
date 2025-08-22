@@ -4,8 +4,8 @@ import { v4 } from 'uuid';
 import { env } from 'vscode';
 import * as vscode from 'vscode';
 
-import { isBasicAuthInfo, isEmptySiteInfo, isPATAuthInfo } from '../../../../atlclients/authInfo';
-import { ExtensionId } from '../../../../constants';
+import { isBasicAuthInfo, isEmptySiteInfo, isPATAuthInfo, ProductJira } from '../../../../atlclients/authInfo';
+import { Commands, ExtensionId, useNewLoginFlow } from '../../../../constants';
 import { Container } from '../../../../container';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
@@ -130,6 +130,14 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 break;
             }
             case ConfigActionType.Login: {
+                if (useNewLoginFlow && msg.siteInfo.product.key === ProductJira.key) {
+                    vscode.commands.executeCommand(Commands.QuickAuth, {
+                        product: ProductJira,
+                        skipAllowed: true,
+                    });
+                    return;
+                }
+
                 let isCloud = true;
                 if (isBasicAuthInfo(msg.authInfo) || isPATAuthInfo(msg.authInfo)) {
                     isCloud = false;

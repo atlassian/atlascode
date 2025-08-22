@@ -650,6 +650,11 @@ const RovoDevView: React.FC = () => {
                     openFile,
                     isRetryAfterErrorButtonEnabled,
                     retryPromptAfterError,
+                    bruhLogin: () => {
+                        postMessage({
+                            type: RovoDevViewResponseType.InitiateQuickAuth,
+                        });
+                    },
                 }}
                 messagingApi={{
                     postMessage,

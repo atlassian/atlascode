@@ -1,7 +1,9 @@
 import { Box, Button, Grid } from '@mui/material';
 import React, { memo, useCallback, useContext } from 'react';
+import { useNewLoginFlow } from 'src/constants';
+import { ConfigActionType } from 'src/lib/ipc/fromUI/config';
 
-import { Product } from '../../../../atlclients/authInfo';
+import { AuthInfoState, emptyUserInfo, Product } from '../../../../atlclients/authInfo';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { ConfigControllerContext } from '../configController';
 import { CloudAuthButton } from './CloudAuthButton';
@@ -72,44 +74,68 @@ const AuthContainer = ({
     handleEdit,
     remoteAuth,
     isRemoteAuthButtonVisible,
-}: AuthContainerProps) => (
-    <React.Fragment>
-        <Grid item>
-            <Grid container direction="column" spacing={2}>
-                <Grid item>
-                    <Grid container spacing={2}>
-                        {!isRemote && (
-                            <React.Fragment>
+}: AuthContainerProps) => {
+    const useNewFlow = product.key === 'jira' && useNewLoginFlow;
+
+    return (
+        <React.Fragment>
+            <Grid item>
+                <Grid container direction="column" spacing={2}>
+                    <Grid item>
+                        <Grid container spacing={2}>
+                            {useNewFlow && (
                                 <Grid item>
-                                    <CloudAuthButton product={product} />
-                                </Grid>
-                                <Grid item>
-                                    <Button color="primary" variant="contained" onClick={openProductAuth}>
-                                        {`Login with API Token`}
+                                    <Button
+                                        color="primary"
+                                        variant="contained"
+                                        onClick={() =>
+                                            (window as any).__bruh_postMessage({
+                                                type: ConfigActionType.Login,
+                                                siteInfo: { product, host: '' },
+                                                authInfo: {
+                                                    user: emptyUserInfo,
+                                                    state: AuthInfoState.Valid,
+                                                },
+                                            })
+                                        }
+                                    >
+                                        {`🇨🇦 Wanna login eh buddy? 🇨🇦`}
                                     </Button>
                                 </Grid>
-                                {isRemoteAuthButtonVisible && (
+                            )}
+                            {!useNewFlow && !isRemote && (
+                                <React.Fragment>
                                     <Grid item>
-                                        <Button onClick={remoteAuth}>Remote Auth</Button>
+                                        <CloudAuthButton product={product} />
                                     </Grid>
-                                )}
-                            </React.Fragment>
-                        )}
-                        {isRemote && (
-                            <React.Fragment>
-                                <Grid item>
-                                    <Button color="primary" variant="contained" onClick={openProductAuth}>
-                                        {`Login with API Token`}
-                                    </Button>
-                                </Grid>
-                            </React.Fragment>
-                        )}
+                                    <Grid item>
+                                        <Button color="primary" variant="contained" onClick={openProductAuth}>
+                                            {`Login with API Token`}
+                                        </Button>
+                                    </Grid>
+                                    {isRemoteAuthButtonVisible && (
+                                        <Grid item>
+                                            <Button onClick={remoteAuth}>Remote Auth</Button>
+                                        </Grid>
+                                    )}
+                                </React.Fragment>
+                            )}
+                            {!useNewFlow && isRemote && (
+                                <React.Fragment>
+                                    <Grid item>
+                                        <Button color="primary" variant="contained" onClick={openProductAuth}>
+                                            {`Login with API Token`}
+                                        </Button>
+                                    </Grid>
+                                </React.Fragment>
+                            )}
+                        </Grid>
+                    </Grid>
+                    <Grid item>
+                        <SiteList product={product} sites={sites} editServer={handleEdit} />
                     </Grid>
                 </Grid>
-                <Grid item>
-                    <SiteList product={product} sites={sites} editServer={handleEdit} />
-                </Grid>
             </Grid>
-        </Grid>
-    </React.Fragment>
-);
+        </React.Fragment>
+    );
+};

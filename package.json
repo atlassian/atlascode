@@ -90,6 +90,11 @@
                 "key": "ctrl+alt+a",
                 "when": "editorTextFocus",
                 "mac": "cmd+alt+a"
+            },
+            {
+                "command": "atlascode.rovodev.quickAuth",
+                "key": "ctrl+alt+l",
+                "mac": "cmd+alt+l"
             }
         ],
         "commands": [

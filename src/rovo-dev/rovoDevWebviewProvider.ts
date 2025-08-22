@@ -1,7 +1,9 @@
 import * as fs from 'fs';
 import path from 'path';
 import { gte as semver_gte } from 'semver';
+import { ProductJira } from 'src/atlclients/authInfo';
 import { CommandContext, setCommandContext } from 'src/commandContext';
+import { AuthType } from 'src/onboarding/quickFlow/authentication/types';
 import { getFsPromise } from 'src/util/fsPromises';
 import { setTimeout } from 'timers/promises';
 import { v4 } from 'uuid';
@@ -36,7 +38,7 @@ import {
 } from '../../src/analytics';
 import { Container } from '../../src/container';
 import { Logger } from '../../src/logger';
-import { rovodevInfo } from '../constants';
+import { Commands, rovodevInfo } from '../constants';
 import {
     ModifiedFile,
     RovoDevViewResponse,
@@ -248,6 +250,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.ReportThinkingDrawerExpanded:
                         this.fireTelemetryEvent('rovoDevDetailsExpandedEvent', this._currentPromptId);
+                        break;
+
+                    case RovoDevViewResponseType.InitiateQuickAuth:
+                        commands.executeCommand(Commands.QuickAuth, {
+                            product: ProductJira,
+                            authenticationType: AuthType.ApiToken,
+                            skipAllowed: true,
+                        });
                         break;
 
                     case RovoDevViewResponseType.WebviewReady:
@@ -475,6 +485,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 source: 'RovoDevError',
                 isRetriable,
                 isProcessTerminated,
+                showLoginButton: error.message.includes('API token'),
                 uid: v4(),
             },
         });

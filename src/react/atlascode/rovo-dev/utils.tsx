@@ -26,6 +26,7 @@ export interface ErrorMessage {
     source: 'RovoDevError';
     isRetriable: boolean;
     isProcessTerminated?: boolean;
+    showLoginButton?: boolean;
     uid: string;
 }
 

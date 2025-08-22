@@ -134,6 +134,9 @@ export class BaseUI {
         return new Promise((resolve, reject) => {
             input.onDidAccept(() => {
                 const selection = input.selectedItems;
+                if (selection.some((item) => item.label.includes('Login with OAuth'))) {
+                    return;
+                }
                 resolve({ value: selection[0].label, action: UiAction.Next });
                 input.hide();
             });

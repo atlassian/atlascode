@@ -82,6 +82,10 @@ const ConfigPage: React.FunctionComponent = () => {
         return { ...emptySubsections, [state.openSection]: state.openSubSections };
     });
 
+    useEffect(() => {
+        (window as any).__bruh_postMessage = controller.postMessage;
+    }, [controller]);
+
     const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry } = useAuthDialog();
     const handleTabChange = useCallback((event: React.ChangeEvent<{}>, section: ConfigSection) => {
         setOpenSection(section);

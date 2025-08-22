@@ -11,7 +11,8 @@ export const ErrorMessageItem: React.FC<{
     index: number;
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
     retryAfterError: () => void;
-}> = ({ msg, index, isRetryAfterErrorButtonEnabled, retryAfterError }) => {
+    bruhLogin?: () => void;
+}> = ({ msg, index, isRetryAfterErrorButtonEnabled, retryAfterError, bruhLogin }) => {
     const getColor = useCallback(() => {
         switch (msg.type) {
             case 'error':
@@ -57,6 +58,11 @@ export const ErrorMessageItem: React.FC<{
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>{msg.text}</div>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '8px' }}>
+                        {msg.type === 'error' && msg.showLoginButton && (
+                            <button style={{ color: 'var(--vscode-editorError-foreground)' }} onClick={bruhLogin}>
+                                🇨🇦 EH BUDDY GOTTA LOGIN EH?
+                            </button>
+                        )}
                         {msg.isRetriable && isRetryAfterErrorButtonEnabled(msg.uid) && (
                             <RetryPromptButton retryAfterError={retryAfterError} />
                         )}

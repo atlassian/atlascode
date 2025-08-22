@@ -1,9 +1,10 @@
 import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { platform } from 'os';
 import { Command, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
 import { JQLEntry } from '../../../config/model';
-import { Commands } from '../../../constants';
+import { Commands, useNewLoginFlow } from '../../../constants';
 import { Container } from '../../../container';
 import { issuesForJQL } from '../../../jira/issuesForJql';
 import { Logger } from '../../../logger';
@@ -48,11 +49,32 @@ export function getJiraIssueUri(issue: MinimalIssue<DetailedSiteInfo>): Uri {
     return Uri.parse(`${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`);
 }
 
-export const loginToJiraMessageNode = createLabelItem('Please login to Jira', {
-    command: Commands.ShowConfigPage,
-    title: 'Login to Jira',
-    arguments: [ProductJira],
-});
+const platformKeybinding = (): string => {
+    // return ctrl/cmd + alt/opt + l using the fancy unicode
+    const isMac = platform() === 'darwin';
+    const controlKey = isMac ? '⌘' : 'Ctrl';
+    const altKey = isMac ? '⌥' : 'Alt';
+    return `[${controlKey}+${altKey}+L]`;
+};
+
+export const loginToJiraMessageNode = createLabelItem(
+    `${platformKeybinding()} 🇨🇦 Login to Jira buddy`,
+    useNewLoginFlow
+        ? {
+              command: Commands.QuickAuth,
+              title: 'Login to Jira',
+              arguments: [
+                  {
+                      product: ProductJira,
+                  },
+              ],
+          }
+        : {
+              command: Commands.ShowConfigPage,
+              title: 'Login to Jira',
+              arguments: [ProductJira],
+          },
+);
 
 export class JiraIssueNode extends TreeItem implements AbstractBaseNode {
     private children: JiraIssueNode[];
