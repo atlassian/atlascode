@@ -268,10 +268,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             this._processState = RovoDevProcessState.Starting;
                             RovoDevProcessManager.initializeRovoDevProcessManager(this._context);
                         }
-                        break;
-                    case RovoDevViewResponseType.CopyResponse:
-                        await navigator.clipboard.writeText(e.text);
-                        break;
                 }
             } catch (error) {
                 this.processError(error, false);
