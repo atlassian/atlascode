@@ -1,5 +1,6 @@
 import { APIRequestContext, Page } from '@playwright/test';
 import { closeOnboardingQuickPick, setupPRCommentPost, setupPRComments, setupPullrequests } from 'e2e/helpers';
+import type { PullRequestComment } from 'e2e/helpers/types';
 import { prCommentPost } from 'e2e/mock-data/prComments';
 import { pullrequest } from 'e2e/mock-data/pullrequest';
 import { AtlascodeDrawer, AtlassianSettings, PullRequestPage } from 'e2e/page-objects';
@@ -14,14 +15,15 @@ export async function addCommentToPullRequest(page: Page, request: APIRequestCon
     await setupPRComments(request, [prCommentPost]);
 
     // Set up the response for when a comment is posted
-    await setupPRCommentPost(request, {
+    const postedComment: PullRequestComment = {
         ...prCommentPost,
         content: {
             ...prCommentPost.content,
             raw: 'test comment',
             html: '<p>test comment</p>',
         },
-    });
+    } as PullRequestComment;
+    await setupPRCommentPost(request, postedComment);
 
     await new AtlassianSettings(page).closeSettingsPage();
 
