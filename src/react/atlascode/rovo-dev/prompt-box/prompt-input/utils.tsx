@@ -74,6 +74,12 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         command: { title: 'Prune', id: 'rovo-dev.pruneChat', tooltip: 'Prune the chat' },
     },
     {
+        label: '/copy',
+        insertText: '/copy',
+        description: 'Copy the last response to clipboard',
+        command: { title: 'Copy', id: 'rovo-dev.copyResponse', tooltip: 'Copy the last response to clipboard' },
+    },
+    {
         label: '/memory',
         insertText: '/memory',
         description: 'Show agent memory',
@@ -118,6 +124,7 @@ export const createSlashCommandProvider = (): monaco.languages.CompletionItemPro
                 command: command.command,
                 sortText: `0${index}`,
                 filterText: command.label,
+                detail: command.description,
             }));
 
             return { suggestions };

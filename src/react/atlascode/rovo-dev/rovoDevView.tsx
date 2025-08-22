@@ -640,6 +640,26 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
+    // Copy the last response to clipboard
+    // This is for PromptInputBox because it cannot access the chat stream directly
+    const handleCopyResponse = useCallback(() => {
+        const lastMessage = chatStream.at(-1);
+        if (currentState !== State.WaitingForPrompt || !lastMessage || Array.isArray(lastMessage)) {
+            return;
+        }
+
+        if (lastMessage.source !== 'RovoDev' || !lastMessage.text) {
+            return;
+        }
+
+        if (!navigator.clipboard) {
+            console.warn('Clipboard API not available');
+            return;
+        }
+
+        navigator.clipboard.writeText(lastMessage.text);
+    }, [chatStream, currentState]);
+
     const executeGetAgentMemory = useCallback(() => {
         postMessage({
             type: RovoDevViewResponseType.GetAgentMemory,
@@ -729,6 +749,7 @@ const RovoDevView: React.FC = () => {
                                 currentContext: promptContextCollection,
                             });
                         }}
+                        onCopy={handleCopyResponse}
                         handleMemoryCommand={executeGetAgentMemory}
                     />
                 </div>

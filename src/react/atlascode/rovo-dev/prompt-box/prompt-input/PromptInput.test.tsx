@@ -48,6 +48,7 @@ describe('PromptInputBox', () => {
         onCancel: jest.fn(),
         sendButtonDisabled: false,
         onAddContext: jest.fn(),
+        onCopy: jest.fn(),
         handleMemoryCommand: jest.fn(),
     };
 
