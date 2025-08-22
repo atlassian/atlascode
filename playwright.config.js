@@ -10,4 +10,26 @@ export default defineConfig({
         trace: 'retain-on-failure',
         retries: 3,
     },
+    projects: [
+        {
+            name: 'jira-cloud',
+            testDir: 'e2e/tests/jira',
+            testMatch: /jiraCloud\.spec\.ts/,
+        },
+        {
+            name: 'jira-dc',
+            testDir: 'e2e/tests/jira',
+            testMatch: /jiraDC\.spec\.ts/,
+        },
+        {
+            name: 'bitbucket-cloud',
+            testDir: 'e2e/tests/bitbucket',
+            testMatch: /bitbucketCloud\.spec\.ts/,
+        },
+        {
+            name: 'bitbucket-dc',
+            testDir: 'e2e/tests/bitbucket',
+            testMatch: /bitbucketDC\.spec\.ts/,
+        },
+    ]
 });
