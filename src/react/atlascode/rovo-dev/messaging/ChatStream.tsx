@@ -186,6 +186,14 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         }
     }, [state, chatHistory, currentThinking, currentMessage, isFormVisible, pendingToolCall, checkGitChanges]);
 
+    const handleCopyResponse = React.useCallback((text: string) => {
+        if (!navigator.clipboard) {
+            console.warn('Clipboard API not supported');
+            return;
+        }
+        navigator.clipboard.writeText(text);
+    }, []);
+
     return (
         <div ref={chatEndRef} className="chat-message-container">
             <RovoDevLanding />
@@ -202,7 +210,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                 />
                             );
                         } else if (block.source === 'User' || block.source === 'RovoDev') {
-                            return <ChatMessageItem msg={block} />;
+                            return (
+                                <ChatMessageItem
+                                    msg={block}
+                                    enableActions={block.source === 'RovoDev'}
+                                    onCopy={handleCopyResponse}
+                                />
+                            );
                         } else if (block.source === 'ToolReturn') {
                             const parsedMessages = parseToolReturnMessage(block);
 
@@ -221,7 +235,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             return (
                                 <ErrorMessageItem
                                     msg={block}
-                                    index={idx}
                                     isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
                                     retryAfterError={renderProps.retryPromptAfterError}
                                 />
