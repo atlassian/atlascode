@@ -28,7 +28,7 @@ import {
 import { registerResources } from './resources';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { GitExtension } from './typings/git';
-import { FeatureFlagClient, Features } from './util/featureFlags';
+import { Features } from './util/featureFlags';
 import Performance from './util/perf';
 import { NotificationManagerImpl } from './views/notifications/notificationManager';
 
@@ -114,7 +114,7 @@ export async function activate(context: ExtensionContext) {
 }
 
 function activateErrorReporting(): void {
-    if (Container.isDebugging || FeatureFlagClient.checkGate(Features.EnableErrorTelemetry)) {
+    if (Container.isDebugging || Container.featureFlagClient.checkGate(Features.EnableErrorTelemetry)) {
         registerAnalyticsClient(Container.analyticsClient);
     } else {
         unregisterErrorReporting();
@@ -212,5 +212,5 @@ export function deactivate() {
     }
 
     unregisterErrorReporting();
-    FeatureFlagClient.dispose();
+    Container.featureFlagClient.dispose();
 }

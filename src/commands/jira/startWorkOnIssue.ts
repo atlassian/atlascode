@@ -3,12 +3,12 @@ import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassi
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Container } from '../../container';
 import { fetchMinimalIssue } from '../../jira/fetchIssue';
-import { FeatureFlagClient, Features } from '../../util/featureFlags';
+import { Features } from '../../util/featureFlags';
 
 export async function startWorkOnIssue(issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) {
     let issue: MinimalIssue<DetailedSiteInfo>;
 
-    if (FeatureFlagClient.checkGate(Features.StartWorkV3)) {
+    if (Container.featureFlagClient.checkGate(Features.StartWorkV3)) {
         issue = await fetchMinimalIssue(issueOrKeyAndSite.key, issueOrKeyAndSite.siteDetails);
     } else {
         if (isMinimalIssue(issueOrKeyAndSite)) {
@@ -24,7 +24,7 @@ export async function startWorkOnIssue(issueOrKeyAndSite: MinimalIssueOrKeyAndSi
 
     const { startWorkV3WebviewFactory, startWorkWebviewFactory } = Container;
 
-    const factory = FeatureFlagClient.checkGate(Features.StartWorkV3)
+    const factory = Container.featureFlagClient.checkGate(Features.StartWorkV3)
         ? startWorkV3WebviewFactory
         : startWorkWebviewFactory;
 

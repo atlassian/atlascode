@@ -13,16 +13,13 @@ jest.mock('./authNotifier', () => ({
         })),
     },
 }));
-jest.mock('../../util/featureFlags', () => ({
-    Features: {},
-    FeatureFlagClient: {
-        checkGate: jest.fn(() => Promise.resolve(true)),
-    },
-}));
 jest.mock('../../container', () => ({
     Container: {
         analyticsClient: {
             sendTrackEvent: jest.fn(),
+        },
+        featureFlagClient: {
+            checkGate: jest.fn(() => Promise.resolve(true)),
         },
         credentialManager: {
             onDidAuthChange: jest.fn(),

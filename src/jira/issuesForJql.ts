@@ -1,5 +1,5 @@
 import { MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
-import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
+import { Experiments } from 'src/util/featureFlags';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Container } from '../container';
@@ -8,7 +8,9 @@ export const MAX_RESULTS = 100;
 
 export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise<MinimalIssue<DetailedSiteInfo>[]> {
     const client = await Container.clientManager.jiraClient(site);
-    const performanceEnabled = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment);
+    const performanceEnabled = Container.featureFlagClient.checkExperimentValue(
+        Experiments.AtlascodePerformanceExperiment,
+    );
     let issues: MinimalIssue<DetailedSiteInfo>[] = [];
     if (performanceEnabled) {
         const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);

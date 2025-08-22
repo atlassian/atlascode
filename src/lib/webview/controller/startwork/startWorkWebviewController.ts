@@ -5,7 +5,7 @@ import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel } from '../../../../bitbucket/model';
 import { Commands } from '../../../../constants';
 import { Container } from '../../../../container';
-import { FeatureFlagClient, Features } from '../../../../util/featureFlags';
+import { Features } from '../../../../util/featureFlags';
 import { OnJiraEditedRefreshDelay } from '../../../../util/time';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
@@ -86,7 +86,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                                 },
                             ),
                             // Only add customBranchType for old version (not V3)
-                            ...(FeatureFlagClient.checkGate(Features.StartWorkV3) ? [] : [customBranchType]),
+                            ...(Container.featureFlagClient.checkGate(Features.StartWorkV3) ? [] : [customBranchType]),
                         ];
                         const developmentBranch = repoDetails.developmentBranch;
                         const href = repoDetails.url;
