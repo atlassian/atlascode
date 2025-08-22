@@ -6,7 +6,6 @@ const addRepo = async (page: Page) => {
     await new AtlascodeDrawer(page).pullRequests.addRepository();
     await page.waitForTimeout(250);
 
-    // if (await new ExplorerDrawer(page).)
     const pathInput = page.getByRole('textbox', { name: 'Type to narrow down results. - Add Folder to Workspace' });
     await pathInput.waitFor({ state: 'visible' });
     await page.waitForTimeout(250);
