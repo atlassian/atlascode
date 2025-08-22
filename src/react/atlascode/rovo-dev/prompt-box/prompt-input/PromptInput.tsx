@@ -25,6 +25,7 @@ interface PromptInputBoxProps {
     onCancel: () => void;
     sendButtonDisabled?: boolean;
     onAddContext: () => void;
+    onCopy: () => void;
     handleMemoryCommand: () => void;
 }
 
@@ -53,6 +54,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     onCancel,
     sendButtonDisabled = false,
     onAddContext,
+    onCopy,
     handleMemoryCommand,
 }) => {
     const [editor, setEditor] = React.useState<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -60,6 +62,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     const setupCommands = (
         editor: monaco.editor.IStandaloneCodeEditor,
         onSend: (text: string) => void,
+        onCopy: () => void,
         handleMemoryCommand: () => void,
     ) => {
         monaco.editor.registerCommand('rovo-dev.clearChat', () => {
@@ -72,6 +75,11 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             editor.setValue('');
 
             onSend(`/prune`);
+        });
+
+        monaco.editor.registerCommand('rovo-dev.copyResponse', () => {
+            editor.setValue('');
+            onCopy();
         });
 
         monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
@@ -125,7 +133,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             const editor = createMonacoPromptEditor(container);
             setupPromptKeyBindings(editor, onSend);
             setupAutoResize(editor);
-            setupCommands(editor, onSend, handleMemoryCommand);
+            setupCommands(editor, onSend, onCopy, handleMemoryCommand);
 
             editor.setValue(promptText);
 
@@ -137,7 +145,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             };
         }
         return () => {};
-    }, [handleMemoryCommand, onSend, promptText]);
+    }, [handleMemoryCommand, onCopy, onSend, promptText]);
 
     React.useEffect(() => {
         if (!editor) {

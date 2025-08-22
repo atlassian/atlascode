@@ -46,14 +46,13 @@ export const renderChatHistory = (
             const parsedMessages = parseToolReturnMessage(msg);
             return parsedMessages.map((message) => {
                 if (message.technicalPlan) {
-                    return <TechnicalPlanComponent key={index} content={message.technicalPlan} openFile={openFile} />;
+                    return <TechnicalPlanComponent content={message.technicalPlan} openFile={openFile} />;
                 }
-                return <ToolReturnParsedItem key={index} msg={message} openFile={openFile} />;
+                return <ToolReturnParsedItem msg={message} openFile={openFile} />;
             });
         case 'RovoDevError':
             return (
                 <ErrorMessageItem
-                    index={index}
                     msg={msg}
                     isRetryAfterErrorButtonEnabled={isRetryAfterErrorButtonEnabled}
                     retryAfterError={retryAfterError}
@@ -61,7 +60,7 @@ export const renderChatHistory = (
             );
         case 'RovoDev':
         case 'User':
-            return <ChatMessageItem index={index} msg={msg} />;
+            return <ChatMessageItem msg={msg} />;
         case 'RovoDevRetry':
             const retryMsg: DefaultMessage = {
                 text: 'Unable to process the request ' + '`' + msg.tool_name + '`',
@@ -69,13 +68,12 @@ export const renderChatHistory = (
             };
             return (
                 <ChatMessageItem
-                    index={index}
                     msg={retryMsg}
                     icon={<StatusErrorIcon color="var(--ds-icon-danger)" label="error-icon" spacing="none" />}
                 />
             );
         default:
-            return <div key={index}>Unknown message type</div>;
+            return <div>Unknown message type</div>;
     }
 };
 

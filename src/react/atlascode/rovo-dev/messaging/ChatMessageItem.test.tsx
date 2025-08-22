@@ -16,7 +16,7 @@ describe('ChatMessageItem', () => {
     });
 
     it('renders user message correctly', () => {
-        render(<ChatMessageItem msg={defaultMessage} index={0} />);
+        render(<ChatMessageItem msg={defaultMessage} />);
 
         expect(screen.getByText('Test message')).toBeTruthy();
     });
@@ -27,7 +27,7 @@ describe('ChatMessageItem', () => {
             source: 'RovoDev',
         });
 
-        render(<ChatMessageItem msg={assistantMessage} index={0} />);
+        render(<ChatMessageItem msg={assistantMessage} />);
 
         expect(screen.getByText('Test message')).toBeTruthy();
     });
@@ -38,7 +38,7 @@ describe('ChatMessageItem', () => {
             source: 'RovoDev',
         });
 
-        render(<ChatMessageItem msg={assistantMessage} index={0} />);
+        render(<ChatMessageItem msg={assistantMessage} />);
         expect(screen.getByText('Bold text')).toBeTruthy();
     });
 });
