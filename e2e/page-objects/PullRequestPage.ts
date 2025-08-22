@@ -33,7 +33,7 @@ export class PullRequestPage {
         this.title = new PRTitle(this.frame);
         this.summary = new PRSummary(this.frame);
         this.commits = new PRCommits(this.frame);
-        this.files = new PRFiles(this.frame, this.page);
+        this.files = new PRFiles(this.frame);
         this.inlineComment = new PRInlineComment(this.frame, this.page);
         this.comments = new PRComments(this.frame);
         this.sidebar = new PRSidebar(this.frame);

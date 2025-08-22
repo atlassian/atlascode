@@ -109,29 +109,4 @@ export class PRComments {
         await expect(muiStructure).toBeVisible();
         await expect(muiStructure).toContainText(commentText);
     }
-
-    async clickFileLink(fileName: string) {
-        const possibleSelectors: Locator[] = [
-            this.frame.locator(`button:has(p:text("${fileName}")), a:has(p:text("${fileName}"))`),
-            this.frame.locator(`td:has-text("${fileName}") button, td:has-text("${fileName}") a`),
-            this.frame.locator(`[role="button"]:has-text("${fileName}"), a:has-text("${fileName}")`),
-            this.frame.locator(`table td a:has-text("${fileName}"), table td button:has-text("${fileName}")`),
-            this.frame.getByRole('link', { name: fileName }),
-            this.frame.getByRole('button', { name: fileName }),
-            this.frame.locator(`*:has-text("${fileName}")`).first(),
-        ];
-
-        for (const selector of possibleSelectors) {
-            try {
-                if (await selector.isVisible({ timeout: 3000 })) {
-                    await selector.click();
-                    return;
-                }
-            } catch {
-                continue;
-            }
-        }
-
-        throw new Error(`File link "${fileName}" not found or not clickable in Files Changed section`);
-    }
 }
