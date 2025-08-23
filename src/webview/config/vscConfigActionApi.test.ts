@@ -649,6 +649,43 @@ describe('VSCConfigActionApi', () => {
             expect(mockAnalyticsApi.fireCustomJQLCreatedEvent).toHaveBeenCalledWith(mockSite);
         });
 
+        it('should handle JQL settings with existing JQLs and set jqlSiteId for new ones', async () => {
+            const existingJql = {
+                id: 'existing-jql',
+                siteId: 'existing-site',
+                name: 'Existing JQL',
+                query: 'existing',
+                enabled: true,
+                monitor: false,
+            } as unknown as JQLEntry;
+
+            const newJql = {
+                id: 'new-jql',
+                siteId: 'new-site',
+                name: 'New JQL',
+                query: 'new',
+                enabled: true,
+                monitor: false,
+            } as unknown as JQLEntry;
+
+            const changes = { 'jira.jqlList': [existingJql, newJql] };
+            const mockSite = { id: 'new-site' } as unknown as DetailedSiteInfo;
+
+            // Mock existing JQLs in configuration
+            (configuration.get as jest.Mock).mockReturnValue([existingJql]);
+            mockSiteManager.getSiteForId.mockReturnValue(mockSite);
+
+            await vscConfigActionApi.updateSettings(ConfigTarget.User, changes);
+
+            expect(configuration.update).toHaveBeenCalledWith(
+                'jira.jqlList',
+                [existingJql, newJql],
+                ConfigurationTarget.Global,
+            );
+            expect(mockSiteManager.getSiteForId).toHaveBeenCalledWith(ProductJira, 'new-site');
+            expect(mockAnalyticsApi.fireCustomJQLCreatedEvent).toHaveBeenCalledWith(mockSite);
+        });
+
         it('should remove settings when removes array is provided', async () => {
             const changes = { 'test.setting': 'value' };
             const removes = ['test.remove'];
