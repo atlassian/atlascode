@@ -2,12 +2,12 @@ import { ChildProcess, spawn } from 'child_process';
 import { access, constants } from 'fs';
 import fs from 'fs';
 import net from 'net';
+import packageJson from 'package.json';
 import path from 'path';
 import { downloadAndUnzip } from 'src/util/downloadFile';
 import { getFsPromise } from 'src/util/fsPromises';
 import { Disposable, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
 
-import packageJson from '../../package.json';
 import { isBasicAuthInfo, ProductJira } from '../atlclients/authInfo';
 import { rovodevInfo } from '../constants';
 import { Container } from '../container';
