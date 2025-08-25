@@ -26,7 +26,7 @@ import { PipelineSummaryAction } from './lib/ipc/fromUI/pipelineSummary';
 import { PullRequestDetailsAction } from './lib/ipc/fromUI/pullRequestDetails';
 import { StartWorkAction } from './lib/ipc/fromUI/startWork';
 import { ConfigTarget } from './lib/ipc/models/config';
-import { SectionChangeMessage } from './lib/ipc/toUI/config';
+import { SectionChangeMessage, SectionV3ChangeMessage } from './lib/ipc/toUI/config';
 import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { Logger } from './logger';
@@ -38,7 +38,7 @@ import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
-import { FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
+import { Experiments, FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -50,6 +50,7 @@ import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
 import { VSCAnalyticsApi } from './vscAnalyticsApi';
 import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
 import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
+import { VSCConfigV3WebviewControllerFactory } from './webview/config/vscConfigV3WebviewControllerFactory';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
 import { ExplorerFocusManager } from './webview/ExplorerFocusManager';
 import { MultiWebview } from './webview/multiViewFactory';
@@ -133,6 +134,17 @@ export class Container {
             this._analyticsApi,
         );
 
+        const settingsV3ViewFactory = new SingleWebview<SectionV3ChangeMessage, ConfigAction>(
+            context.extensionPath,
+            new VSCConfigV3WebviewControllerFactory(
+                new VSCConfigActionApi(this._analyticsApi, this._cancellationManager),
+                this._commonMessageHandler,
+                this._analyticsApi,
+                SETTINGS_URL,
+            ),
+            this._analyticsApi,
+        );
+
         const startWorkV2ViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
             context.extensionPath,
             new VSCStartWorkWebviewControllerFactory(
@@ -163,7 +175,6 @@ export class Container {
             this._analyticsApi,
         );
 
-        context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
         context.subscriptions.push((this._startWorkV3WebviewFactory = startWorkV3ViewFactory));
         context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
@@ -183,7 +194,6 @@ export class Container {
         context.subscriptions.push(new HelpExplorer());
 
         this._featureFlagClient = FeatureFlagClient.getInstance();
-
         try {
             await this._featureFlagClient.initialize({
                 analyticsAnonymousId: this.machineId,
@@ -199,6 +209,11 @@ export class Container {
             featureFlagClientInitializedEvent(false, error.errorType, error.message).then((e) => {
                 this.analyticsClient.sendTrackEvent(e);
             });
+        }
+        if (this._featureFlagClient.checkExperimentValue(Experiments.AtlascodeNewSettingsExperiment)) {
+            context.subscriptions.push((this._settingsWebviewFactory = settingsV3ViewFactory));
+        } else {
+            context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
         }
 
         if (!process.env.ROVODEV_BBY) {
@@ -431,7 +446,7 @@ export class Container {
         return this._explorerFocusManager;
     }
 
-    private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;
+    private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage | SectionV3ChangeMessage, ConfigAction>;
     public static get settingsWebviewFactory() {
         return this._settingsWebviewFactory;
     }

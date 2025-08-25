@@ -466,7 +466,6 @@ describe('VSCAnalyticsApi', () => {
             expect(analytics.openSettingsButtonEvent).toHaveBeenCalledWith(source);
             expect(mockAnalyticsClient.sendUIEvent).toHaveBeenCalled();
         });
-
         it('should fire explore features button event', async () => {
             const source = 'test-source';
             await analyticsApi.fireExploreFeaturesButtonEvent(source);

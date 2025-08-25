@@ -2,20 +2,20 @@ import Axios from 'axios';
 import { v4 } from 'uuid';
 import * as vscode from 'vscode';
 
-import { AuthInfo, AuthInfoState, DetailedSiteInfo, SiteInfo } from '../../../../atlclients/authInfo';
+import { AuthInfo, AuthInfoState, DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import { ExtensionId } from '../../../../constants';
 import { Container } from '../../../../container';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { ConfigActionType } from '../../../ipc/fromUI/config';
 import { WebViewID } from '../../../ipc/models/common';
-import { ConfigSection, ConfigTarget } from '../../../ipc/models/config';
+import { ConfigTarget, ConfigV3Section } from '../../../ipc/models/config';
 import { CommonMessageType } from '../../../ipc/toUI/common';
-import { ConfigMessageType, SectionChangeMessage } from '../../../ipc/toUI/config';
+import { ConfigMessageType, SectionV3ChangeMessage } from '../../../ipc/toUI/config';
 import { Logger } from '../../../logger';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { ConfigActionApi } from './configActionApi';
-import { ConfigWebviewController, id } from './configWebviewController';
+import { ConfigV3WebviewController, id } from './configV3WebviewController';
 
 jest.mock('uuid');
 jest.mock('@atlassianlabs/guipi-core-controller', () => ({
@@ -44,15 +44,15 @@ jest.mock('../../../../container', () => ({
     },
 }));
 
-describe('ConfigWebviewController', () => {
-    let controller: ConfigWebviewController;
+describe('ConfigV3WebviewController', () => {
+    let controller: ConfigV3WebviewController;
     let mockMessagePoster: jest.Mock;
     let mockApi: jest.Mocked<ConfigActionApi>;
     let mockLogger: jest.Mocked<Logger>;
     let mockAnalytics: jest.Mocked<AnalyticsApi>;
     let mockCommonHandler: jest.Mocked<CommonActionMessageHandler>;
     let mockSettingsUrl: string;
-    let mockSection: SectionChangeMessage;
+    let mockSection: SectionV3ChangeMessage;
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -100,9 +100,9 @@ describe('ConfigWebviewController', () => {
             onMessageReceived: jest.fn(),
         } as unknown as jest.Mocked<CommonActionMessageHandler>;
         mockSettingsUrl = 'https://test-settings.atlassian.com';
-        mockSection = { section: ConfigSection.Jira, subSection: undefined };
+        mockSection = { section: ConfigV3Section.Auth, subSection: undefined };
 
-        controller = new ConfigWebviewController(
+        controller = new ConfigV3WebviewController(
             mockMessagePoster,
             mockApi,
             mockCommonHandler,
@@ -155,7 +155,7 @@ describe('ConfigWebviewController', () => {
 
     describe('update', () => {
         test('should post a section change message', () => {
-            const section = { section: ConfigSection.Bitbucket, subSection: undefined };
+            const section = { section: ConfigV3Section.AdvancedConfig, subSection: undefined };
             controller.update(section);
 
             expect(mockMessagePoster).toHaveBeenCalledWith({
@@ -192,7 +192,7 @@ describe('ConfigWebviewController', () => {
                 target: mockTarget,
                 showTunnelOption: true,
                 config: mockConfig,
-                section: 'jira',
+                section: 'generalAuth',
             });
         });
 
@@ -209,47 +209,92 @@ describe('ConfigWebviewController', () => {
             });
         });
 
-        test('should not run invalidation if already refreshing', async () => {
-            // Set isRefreshing to true
-            (controller as any)._isRefreshing = true;
+        test('should use default section when no initial section provided', async () => {
+            const controllerWithoutSection = new ConfigV3WebviewController(
+                mockMessagePoster,
+                mockApi,
+                mockCommonHandler,
+                mockLogger,
+                mockAnalytics,
+                mockSettingsUrl,
+            );
 
-            await controller['invalidate']();
+            const mockJiraSites = [{ id: 'site1' }];
+            const mockBBSites = [{ id: 'site2' }];
+            const mockTarget = 'workspace';
+            const mockConfig = { setting1: true };
+            const mockFeedbackUser = { id: 'user1' };
 
-            expect(mockApi.getSitesWithAuth).not.toHaveBeenCalled();
+            mockApi.getSitesWithAuth.mockResolvedValue([mockJiraSites, mockBBSites] as any);
+            mockApi.getConfigTarget.mockReturnValue(mockTarget as any);
+            mockApi.flattenedConfigForTarget.mockReturnValue(mockConfig as any);
+            mockApi.getFeedbackUser.mockResolvedValue(mockFeedbackUser as any);
+            mockApi.getIsRemote.mockReturnValue(false);
+            mockApi.shouldShowTunnelOption.mockReturnValue(true);
+
+            await controllerWithoutSection['invalidate']();
+
+            expect(mockMessagePoster).toHaveBeenCalledWith({
+                type: ConfigMessageType.Init,
+                bitbucketSites: mockBBSites,
+                jiraSites: mockJiraSites,
+                feedbackUser: mockFeedbackUser,
+                isRemote: false,
+                target: mockTarget,
+                showTunnelOption: true,
+                config: mockConfig,
+                section: 'generalAuth',
+            });
         });
     });
 
     describe('onMessageReceived', () => {
         test('should handle Refresh action', async () => {
-            const mockInvalidate = jest.spyOn(controller as any, 'invalidate');
-            mockInvalidate.mockResolvedValue(undefined);
+            const mockJiraSites = [{ id: 'site1' }];
+            const mockBBSites = [{ id: 'site2' }];
+            mockApi.getSitesWithAuth.mockResolvedValue([mockJiraSites, mockBBSites] as any);
+            mockApi.getConfigTarget.mockReturnValue('workspace' as any);
+            mockApi.flattenedConfigForTarget.mockReturnValue({} as any);
+            mockApi.getFeedbackUser.mockResolvedValue({} as any);
+            mockApi.getIsRemote.mockReturnValue(false);
+            mockApi.shouldShowTunnelOption.mockReturnValue(true);
 
             await controller.onMessageReceived({ type: CommonActionType.Refresh });
 
-            expect(mockInvalidate).toHaveBeenCalled();
+            expect(mockApi.getSitesWithAuth).toHaveBeenCalledTimes(1);
+            expect(mockMessagePoster).toHaveBeenCalledWith({
+                type: ConfigMessageType.Init,
+                bitbucketSites: mockBBSites,
+                jiraSites: mockJiraSites,
+                feedbackUser: {},
+                isRemote: false,
+                target: 'workspace',
+                showTunnelOption: true,
+                config: {},
+                section: 'generalAuth',
+            });
         });
 
         test('should handle error during refresh', async () => {
             const error = new Error('Refresh error');
-            const mockInvalidate = jest.spyOn(controller as any, 'invalidate');
-            mockInvalidate.mockRejectedValue(error);
+            mockApi.getSitesWithAuth.mockRejectedValue(error);
 
             await controller.onMessageReceived({ type: CommonActionType.Refresh });
 
-            expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error refeshing config');
+            expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error updating configuration');
             expect(mockMessagePoster).toHaveBeenCalledWith({
                 type: CommonMessageType.Error,
                 reason: expect.anything(),
             });
         });
 
-        test('should handle Login action for server auth', async () => {
-            const mockSiteInfo = { host: 'test.atlassian.net' } as SiteInfo;
+        test('should handle Login action for server authentication', async () => {
+            const mockSiteInfo = { host: 'test.atlassian.net' } as DetailedSiteInfo;
             const mockAuthInfo = {
-                user: { id: '123', displayName: 'Test User', email: 'test@example.com', avatarUrl: '' },
-                state: AuthInfoState.Valid,
                 username: 'test',
                 password: 'pass',
+                user: { id: 'user1', displayName: 'Test User', email: 'test@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
             } as AuthInfo;
 
             await controller.onMessageReceived({
@@ -262,15 +307,9 @@ describe('ConfigWebviewController', () => {
             expect(mockAnalytics.fireAuthenticateButtonEvent).toHaveBeenCalledWith(id, mockSiteInfo, false);
         });
 
-        test('should handle Login action for cloud auth', async () => {
-            const mockSiteInfo = { host: 'test.atlassian.net' } as SiteInfo;
-            const mockAuthInfo = {
-                user: { id: '123', displayName: 'Test User', email: 'test@example.com', avatarUrl: '' },
-                state: AuthInfoState.Valid,
-                access: 'token-123',
-                refresh: 'refresh-123',
-                recievedAt: Date.now(),
-            } as AuthInfo;
+        test('should handle Login action for cloud authentication', async () => {
+            const mockSiteInfo = { host: 'test.atlassian.net' } as DetailedSiteInfo;
+            const mockAuthInfo = { state: AuthInfoState.Valid } as AuthInfo;
 
             await controller.onMessageReceived({
                 type: ConfigActionType.Login,
@@ -282,16 +321,15 @@ describe('ConfigWebviewController', () => {
             expect(mockAnalytics.fireAuthenticateButtonEvent).toHaveBeenCalledWith(id, mockSiteInfo, true);
         });
 
-        test('should handle error during server authentication', async () => {
-            const error = new Error('Auth error');
-            const mockSiteInfo = { host: 'test.atlassian.net' } as SiteInfo;
+        test('should handle server authentication error', async () => {
+            const mockSiteInfo = { host: 'test.atlassian.net' } as DetailedSiteInfo;
             const mockAuthInfo = {
-                user: { id: '123', displayName: 'Test User', email: 'test@example.com', avatarUrl: '' },
-                state: AuthInfoState.Valid,
                 username: 'test',
                 password: 'pass',
+                user: { id: 'user1', displayName: 'Test User', email: 'test@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
             } as AuthInfo;
-
+            const error = new Error('Auth error');
             mockApi.authenticateServer.mockRejectedValue(error);
 
             await controller.onMessageReceived({
@@ -402,7 +440,7 @@ describe('ConfigWebviewController', () => {
             });
         });
 
-        test('should handle error for JQLSuggestionsRequest', async () => {
+        test('should handle JQLSuggestionsRequest error', async () => {
             const mockSite = { id: 'site1', host: 'test.atlassian.net' } as DetailedSiteInfo;
             const error = new Error('JQL error');
             mockApi.fetchJqlSuggestions.mockRejectedValue(error);
@@ -439,6 +477,23 @@ describe('ConfigWebviewController', () => {
             });
         });
 
+        test('should handle JQLOptionsRequest error', async () => {
+            const mockSite = { id: 'site1', host: 'test.atlassian.net' } as DetailedSiteInfo;
+            const error = new Error('JQL options error');
+            mockApi.fetchJqlOptions.mockRejectedValue(error);
+
+            await controller.onMessageReceived({
+                type: ConfigActionType.JQLOptionsRequest,
+                site: mockSite,
+            });
+
+            expect(mockLogger.error).toHaveBeenCalledWith(error, 'JQL fetch error');
+            expect(mockMessagePoster).toHaveBeenCalledWith({
+                type: CommonMessageType.Error,
+                reason: expect.anything(),
+            });
+        });
+
         test('should handle FilterSearchRequest action', async () => {
             const mockSite = { id: 'site1', host: 'test.atlassian.net' } as DetailedSiteInfo;
             const mockData = { filters: [] };
@@ -457,6 +512,48 @@ describe('ConfigWebviewController', () => {
             expect(mockMessagePoster).toHaveBeenCalledWith({
                 type: ConfigMessageType.FilterSearchResponse,
                 data: mockData,
+            });
+        });
+
+        test('should handle axios cancellation for FilterSearchRequest', async () => {
+            const mockSite = { id: 'site1', host: 'test.atlassian.net' } as DetailedSiteInfo;
+            const cancelError = { isCancel: true };
+            mockApi.fetchFilterSearchResults.mockRejectedValue(cancelError);
+            jest.spyOn(Axios, 'isCancel').mockReturnValue(true);
+
+            await controller.onMessageReceived({
+                type: ConfigActionType.FilterSearchRequest,
+                site: mockSite,
+                query: 'test',
+                maxResults: 10,
+                startAt: 0,
+            });
+
+            expect(mockLogger.warn).toHaveBeenCalled();
+            expect(mockMessagePoster).not.toHaveBeenCalledWith({
+                type: CommonMessageType.Error,
+                reason: expect.anything(),
+            });
+        });
+
+        test('should handle FilterSearchRequest error', async () => {
+            const mockSite = { id: 'site1', host: 'test.atlassian.net' } as DetailedSiteInfo;
+            const error = new Error('Filter error');
+            mockApi.fetchFilterSearchResults.mockRejectedValue(error);
+            jest.spyOn(Axios, 'isCancel').mockReturnValue(false);
+
+            await controller.onMessageReceived({
+                type: ConfigActionType.FilterSearchRequest,
+                site: mockSite,
+                query: 'test',
+                maxResults: 10,
+                startAt: 0,
+            });
+
+            expect(mockLogger.error).toHaveBeenCalledWith(error, 'Filter fetch error');
+            expect(mockMessagePoster).toHaveBeenCalledWith({
+                type: CommonMessageType.Error,
+                reason: expect.anything(),
             });
         });
 
@@ -479,22 +576,56 @@ describe('ConfigWebviewController', () => {
             });
         });
 
-        test('should handle SaveSettings action', async () => {
-            const mockTarget = ConfigTarget.User;
-            const mockChanges = { 'jira.enabled': true };
-            const mockRemoves = ['bitbucket.enabled'];
+        test('should handle axios cancellation for ValidateJqlRequest', async () => {
+            const mockSite = { id: 'site1', host: 'test.atlassian.net' } as DetailedSiteInfo;
+            const cancelError = { isCancel: true };
+            mockApi.validateJql.mockRejectedValue(cancelError);
+            jest.spyOn(Axios, 'isCancel').mockReturnValue(true);
 
             await controller.onMessageReceived({
-                type: ConfigActionType.SaveSettings,
-                target: mockTarget,
-                changes: mockChanges,
-                removes: mockRemoves,
+                type: ConfigActionType.ValidateJqlRequest,
+                site: mockSite,
+                jql: 'project = TEST',
             });
 
-            expect(mockApi.updateSettings).toHaveBeenCalledWith(mockTarget, mockChanges, mockRemoves);
+            expect(mockLogger.warn).toHaveBeenCalled();
+            expect(mockMessagePoster).not.toHaveBeenCalledWith({
+                type: CommonMessageType.Error,
+                reason: expect.anything(),
+            });
         });
 
-        test('should handle error during SaveSettings', async () => {
+        test('should handle ValidateJqlRequest error', async () => {
+            const mockSite = { id: 'site1', host: 'test.atlassian.net' } as DetailedSiteInfo;
+            const error = new Error('Validate error');
+            mockApi.validateJql.mockRejectedValue(error);
+            jest.spyOn(Axios, 'isCancel').mockReturnValue(false);
+
+            await controller.onMessageReceived({
+                type: ConfigActionType.ValidateJqlRequest,
+                site: mockSite,
+                jql: 'project = TEST',
+            });
+
+            expect(mockLogger.error).toHaveBeenCalledWith(error, 'JQL Validate network error');
+            expect(mockMessagePoster).toHaveBeenCalledWith({
+                type: CommonMessageType.Error,
+                reason: expect.anything(),
+            });
+        });
+
+        test('should handle SaveSettings action', async () => {
+            await controller.onMessageReceived({
+                type: ConfigActionType.SaveSettings,
+                target: ConfigTarget.User,
+                changes: { setting1: true },
+                removes: ['setting2'],
+            });
+
+            expect(mockApi.updateSettings).toHaveBeenCalledWith(ConfigTarget.User, { setting1: true }, ['setting2']);
+        });
+
+        test('should handle SaveSettings error', async () => {
             const error = new Error('Save error');
             mockApi.updateSettings.mockImplementation(() => {
                 throw error;
@@ -542,6 +673,28 @@ describe('ConfigWebviewController', () => {
             expect(mockAnalytics.fireFocusPullRequestEvent).toHaveBeenCalledWith(id);
         });
 
+        test('should delegate common actions to common handler', async () => {
+            const commonActions = [
+                { type: CommonActionType.SendAnalytics },
+                { type: CommonActionType.CopyLink },
+                { type: CommonActionType.OpenJiraIssue },
+                { type: CommonActionType.ExternalLink },
+                { type: CommonActionType.Cancel },
+                { type: CommonActionType.DismissPMFLater },
+                { type: CommonActionType.DismissPMFNever },
+                { type: CommonActionType.OpenPMFSurvey },
+                { type: CommonActionType.SubmitPMF },
+                { type: CommonActionType.SubmitFeedback },
+            ];
+
+            for (const action of commonActions) {
+                await controller.onMessageReceived(action as any);
+                expect(mockCommonHandler.onMessageReceived).toHaveBeenCalledWith(action);
+            }
+
+            expect(mockCommonHandler.onMessageReceived).toHaveBeenCalledTimes(commonActions.length);
+        });
+
         test('should call defaultActionGuard for unknown action types', async () => {
             const { defaultActionGuard } = require('@atlassianlabs/guipi-core-controller');
             const unknownAction = { type: 'unknown' };
@@ -550,7 +703,5 @@ describe('ConfigWebviewController', () => {
 
             expect(defaultActionGuard).toHaveBeenCalledWith(unknownAction);
         });
-
-        // This test is already covered above
     });
 });
