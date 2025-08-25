@@ -1398,7 +1398,7 @@
         "@atlaskit/page": "^12.0.7",
         "@atlaskit/page-header": "^10.2.2",
         "@atlaskit/radio": "^8.2.0",
-        "@atlaskit/section-message": "^7.0.0",
+        "@atlaskit/section-message": "^8.5.2",
         "@atlaskit/select": "^18.10.6",
         "@atlaskit/spinner": "^19.0.1",
         "@atlaskit/table-tree": "^10.1.2",
