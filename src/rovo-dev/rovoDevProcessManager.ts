@@ -7,12 +7,13 @@ import { downloadAndUnzip } from 'src/util/downloadFile';
 import { getFsPromise } from 'src/util/fsPromises';
 import { Disposable, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
 
+import packageJson from '../../package.json';
 import { isBasicAuthInfo, ProductJira } from '../atlclients/authInfo';
 import { rovodevInfo } from '../constants';
 import { Container } from '../container';
 import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
 
-export const MIN_SUPPORTED_ROVODEV_VERSION = '0.10.4';
+export const MIN_SUPPORTED_ROVODEV_VERSION = packageJson.rovoDev.version;
 
 function GetRovoDevURIs(context: ExtensionContext) {
     const extensionPath = context.storageUri!.fsPath;

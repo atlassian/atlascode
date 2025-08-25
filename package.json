@@ -45,6 +45,9 @@
         "workspace"
     ],
     "main": "./build/extension/extension",
+    "rovoDev": {
+        "version": "0.10.4"
+    },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
         "vscode:prepublish": "npm run compile",
