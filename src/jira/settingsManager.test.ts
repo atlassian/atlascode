@@ -179,19 +179,20 @@ describe('JiraSettingsManager', () => {
     });
 
     describe('getMinimalIssueFieldIdsForSite', () => {
-        beforeEach(() => {
-            // Mock getEpicFieldsForSite for tests
-            jest.spyOn(settingsManager, 'getEpicFieldsForSite').mockImplementation(async () => {
-                return {
-                    epicsEnabled: true,
-                    epicLink: { id: 'custom-epic-link', name: 'Epic Link' },
-                    epicName: { id: 'custom-epic-name', name: 'Epic Name' },
-                } as EpicFieldInfo;
-            });
-        });
+        const mockEpicInfoEnabled = {
+            epicsEnabled: true,
+            epicLink: { id: 'custom-epic-link', name: 'Epic Link' },
+            epicName: { id: 'custom-epic-name', name: 'Epic Name' },
+        } as EpicFieldInfo;
 
-        it('should return minimal issue fields including epic fields when epics are enabled', async () => {
-            const result = await settingsManager.getMinimalIssueFieldIdsForSite(mockSiteDetails);
+        const mockEpicInfoDisabled = {
+            epicsEnabled: false,
+            epicLink: { id: 'custom-epic-link', name: 'Epic Link' },
+            epicName: { id: 'custom-epic-name', name: 'Epic Name' },
+        } as EpicFieldInfo;
+
+        it('should return minimal issue fields including epic fields when epics are enabled', () => {
+            const result = settingsManager.getMinimalIssueFieldIdsForSite(mockEpicInfoEnabled);
 
             // Check that all default fields are included
             expect(result).toContain('summary');
@@ -210,16 +211,8 @@ describe('JiraSettingsManager', () => {
             expect(result).toContain('custom-epic-name');
         });
 
-        it('should return minimal issue fields without epic fields when epics are disabled', async () => {
-            jest.spyOn(settingsManager, 'getEpicFieldsForSite').mockImplementation(async () => {
-                return {
-                    epicsEnabled: false,
-                    epicLink: { id: 'custom-epic-link', name: 'Epic Link' },
-                    epicName: { id: 'custom-epic-name', name: 'Epic Name' },
-                } as EpicFieldInfo;
-            });
-
-            const result = await settingsManager.getMinimalIssueFieldIdsForSite(mockSiteDetails);
+        it('should return minimal issue fields without epic fields when epics are disabled', () => {
+            const result = settingsManager.getMinimalIssueFieldIdsForSite(mockEpicInfoDisabled);
 
             // Check that all default fields are included
             expect(result).toContain('summary');

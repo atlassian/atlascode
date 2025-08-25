@@ -15,6 +15,7 @@ export class PullRequestsNavigation {
     readonly createPRButton: Locator;
     readonly mockRepo: Locator;
     readonly prTreeitem: Locator;
+    readonly prDetails: Locator;
 
     constructor(page: Page) {
         this.page = page;
@@ -24,6 +25,7 @@ export class PullRequestsNavigation {
         this.createPRButton = this.bbPrTree.getByRole('treeitem', { name: 'Create pull request' });
         this.mockRepo = this.bbPrTree.getByRole('treeitem', { name: 'mock-repository' }).first();
         this.prTreeitem = this.bbPrTree.getByRole('treeitem', { name: '#123 New Feature Implementation' });
+        this.prDetails = this.bbPrTree.getByRole('treeitem', { name: 'Open pull request details' });
     }
 
     async addRepository() {
@@ -46,5 +48,12 @@ export class PullRequestsNavigation {
 
     async expectPRTreeitem() {
         await expect(this.prTreeitem).toBeVisible();
+    }
+
+    async expectRepoConnected() {
+        await this.mockRepo.scrollIntoViewIfNeeded();
+        await this.mockRepo.waitFor({ state: 'visible', timeout: 5_000 });
+        await expect(this.mockRepo).toHaveCount(1);
+        await expect(this.mockRepo).toHaveText(/.+/, { timeout: 5_000 });
     }
 }

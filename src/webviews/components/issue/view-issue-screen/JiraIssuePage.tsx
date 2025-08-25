@@ -45,6 +45,7 @@ export interface ViewState extends CommonEditorViewState, EditIssueData {
     isEditingComment: boolean;
     hierarchyLoading: boolean;
     hierarchy: MinimalIssue<DetailedSiteInfo>[];
+    containerWidth?: number;
 }
 
 const emptyState: ViewState = {

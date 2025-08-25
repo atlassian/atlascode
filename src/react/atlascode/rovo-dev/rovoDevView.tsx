@@ -77,17 +77,6 @@ const RovoDevView: React.FC = () => {
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
 
     React.useEffect(() => {
-        if (currentState === State.WaitingForPrompt) {
-            if (curThinkingMessages.length > 0) {
-                setChatStream((prev) => [...prev, curThinkingMessages]);
-                setCurThinkingMessages([]);
-            }
-            if (currentMessage) {
-                setChatStream((prev) => [...prev, currentMessage]);
-            }
-            setCurrentMessage(null);
-        }
-
         const codeBlocks = document.querySelectorAll('pre code');
         codeBlocks.forEach((block) => {
             highlightElement(block, detectLanguage(block.textContent || ''));
@@ -99,6 +88,15 @@ const RovoDevView: React.FC = () => {
         setPendingToolCallMessage('');
         setIsDeepPlanToggled(false);
 
+        if (curThinkingMessages.length > 0) {
+            setChatStream((prev) => [...prev, curThinkingMessages]);
+            setCurThinkingMessages([]);
+        }
+        if (currentMessage) {
+            setChatStream((prev) => [...prev, currentMessage]);
+        }
+        setCurrentMessage(null);
+
         const changedFilesCount = totalModifiedFiles.filter(
             (x) => x.type === 'create' || x.type === 'modify' || x.type === 'delete',
         ).length;
@@ -108,18 +106,44 @@ const RovoDevView: React.FC = () => {
                 filesCount: changedFilesCount,
             });
         }
-    }, [setCurrentState, setPendingToolCallMessage, setIsDeepPlanToggled, dispatch, totalModifiedFiles]);
+    }, [
+        setChatStream,
+        setCurrentMessage,
+        setCurThinkingMessages,
+        setCurrentState,
+        setPendingToolCallMessage,
+        setIsDeepPlanToggled,
+        dispatch,
+        curThinkingMessages,
+        currentMessage,
+        totalModifiedFiles,
+    ]);
 
-    const handleAppendError = useCallback((msg: ErrorMessage) => {
-        setChatStream((prev) => {
-            setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
-            return [...prev, msg];
-        });
-    }, []);
+    const handleAppendError = useCallback(
+        (msg: ErrorMessage) => {
+            // If generating response, put previous into chat stream but continue streaming
+            if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
+                if (curThinkingMessages.length > 0) {
+                    setChatStream((prev) => [...prev, curThinkingMessages]);
+                    setCurThinkingMessages([]);
+                }
+                if (currentMessage) {
+                    setChatStream((prev) => [...prev, currentMessage]);
+                    setCurrentMessage(null);
+                }
+                // If waiting for prompt, finalize response and append error message
+            } else {
+                finalizeResponse();
+            }
+            setChatStream((prev) => {
+                setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
+                return [...prev, msg];
+            });
+        },
+        [curThinkingMessages, currentMessage, currentState, finalizeResponse],
+    );
 
     const validateResponseFinalized = useCallback(() => {
-        // setChatHistory here is used to ensure we are accessing the most up-to-date state
-        // if we use setHistory, we would not
         setChatStream((prev) => {
             const last = prev[prev.length - 1];
             if (!Array.isArray(last) && last?.source === 'User') {
@@ -148,6 +172,9 @@ const RovoDevView: React.FC = () => {
 
     const keepFiles = useCallback(
         (files: ToolReturnParseResult[]) => {
+            if (files.length === 0) {
+                return;
+            }
             dispatch({
                 type: RovoDevViewResponseType.KeepFileChanges,
                 files: files.map(
@@ -385,9 +412,6 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.ErrorMessage:
                     if (event.message.type === 'error') {
-                        if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
-                            finalizeResponse();
-                        }
                         if (event.message.isProcessTerminated) {
                             setCurrentState(State.ProcessTerminated);
                         }
@@ -559,8 +583,8 @@ const RovoDevView: React.FC = () => {
     }, [currentState, sendPrompt]);
 
     const retryPromptAfterError = useCallback((): void => {
-        // Disable the send button, and enable the pause button
         setCurrentState(State.GeneratingResponse);
+        setRetryAfterErrorEnabled('');
 
         postMessage({
             type: RovoDevViewResponseType.RetryPromptAfterError,
@@ -616,6 +640,32 @@ const RovoDevView: React.FC = () => {
     const onCollapsiblePanelExpanded = useCallback(() => {
         postMessage({
             type: RovoDevViewResponseType.ReportThinkingDrawerExpanded,
+        });
+    }, [postMessage]);
+
+    // Copy the last response to clipboard
+    // This is for PromptInputBox because it cannot access the chat stream directly
+    const handleCopyResponse = useCallback(() => {
+        const lastMessage = chatStream.at(-1);
+        if (currentState !== State.WaitingForPrompt || !lastMessage || Array.isArray(lastMessage)) {
+            return;
+        }
+
+        if (lastMessage.source !== 'RovoDev' || !lastMessage.text) {
+            return;
+        }
+
+        if (!navigator.clipboard) {
+            console.warn('Clipboard API not available');
+            return;
+        }
+
+        navigator.clipboard.writeText(lastMessage.text);
+    }, [chatStream, currentState]);
+
+    const executeGetAgentMemory = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.GetAgentMemory,
         });
     }, [postMessage]);
 
@@ -702,6 +752,8 @@ const RovoDevView: React.FC = () => {
                                 currentContext: promptContextCollection,
                             });
                         }}
+                        onCopy={handleCopyResponse}
+                        handleMemoryCommand={executeGetAgentMemory}
                     />
                 </div>
                 <div className="ai-disclaimer">Uses AI. Verify results.</div>

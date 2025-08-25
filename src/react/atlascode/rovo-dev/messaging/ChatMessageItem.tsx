@@ -1,3 +1,6 @@
+import CopyIcon from '@atlaskit/icon/core/copy';
+import ThumbsDownIcon from '@atlaskit/icon/core/thumbs-down';
+import ThumbsUpIcon from '@atlaskit/icon/core/thumbs-up';
 import React from 'react';
 
 import { mdParser } from '../common/common';
@@ -6,14 +9,14 @@ import { DefaultMessage } from '../utils';
 
 export const ChatMessageItem: React.FC<{
     msg: DefaultMessage;
-    index?: number;
     icon?: React.ReactNode;
-}> = ({ msg, index, icon }) => {
+    enableActions?: boolean;
+    onCopy?: (text: string) => void;
+}> = ({ msg, icon, enableActions, onCopy }) => {
     const messageTypeStyles = msg.source === 'User' ? 'user-message' : 'agent-message';
     const content = (
         <div
             style={{ display: 'flex', flexDirection: 'column' }}
-            key="parsed-content"
             dangerouslySetInnerHTML={{ __html: mdParser.render(msg.text || '') }}
         />
     );
@@ -21,7 +24,6 @@ export const ChatMessageItem: React.FC<{
     return (
         <>
             <div
-                key={index}
                 className={`chat-message ${messageTypeStyles}`}
                 style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px' }}
             >
@@ -31,6 +33,26 @@ export const ChatMessageItem: React.FC<{
             {msg.source === 'User' && msg.context && (
                 <div className="message-context">
                     <PromptContextCollection content={msg.context} direction="column" align="right" inChat={true} />
+                </div>
+            )}
+            {msg.source === 'RovoDev' && enableActions && (
+                <div className="chat-message-actions">
+                    <button aria-label="like-response-button" title="Helpful" className="chat-message-action">
+                        <ThumbsUpIcon label="thumbs-up" />
+                    </button>
+                    <button aria-label="dislike-response-button" title="Unhelpful" className="chat-message-action">
+                        <ThumbsDownIcon label="thumbs-down" />
+                    </button>
+                    <button
+                        aria-label="copy-button"
+                        title="Copy response"
+                        className="chat-message-action"
+                        onClick={() => {
+                            onCopy && onCopy(msg.text || '');
+                        }}
+                    >
+                        <CopyIcon label="Copy button" />
+                    </button>
                 </div>
             )}
         </>

@@ -253,6 +253,28 @@ body {
     padding: 10px 16px 0 16px;
 }
 
+.chat-message-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 8px;
+}
+
+.chat-message-action {
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    color: var(--vscode-editor-foreground);
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+.chat-message-action:hover {
+    background: var(--vscode-button-secondaryHoverBackground);
+}
+
 .message-drawer {
     width: 100%;
     display: flex;
@@ -573,6 +595,30 @@ body {
     border-radius: 4px;
     background-color: var(--vscode-input-background);
     padding: 8px;
+}
+
+.monaco-editor {
+    color: var(--vscode-input-foreground) !important;
+}
+
+.monaco-editor .cursors-layer > .cursor {
+    background-color: var(--vscode-editorCursor-foreground) !important;
+} 
+
+.monaco-editor .margin {
+    background-color: var(--vscode-input-background) !important;
+}
+
+.monaco-editor .view-line {
+    color: var(--vscode-input-foreground) !important;
+}
+
+.monaco-editor .inputarea.ime-input {
+    color: var(--vscode-input-foreground) !important;
+}
+
+.monaco-editor .monaco-editor-background {
+    background-color: var(--vscode-input-background) !important;
 }
 
 .prompt-container:focus-within {

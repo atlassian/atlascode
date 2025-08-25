@@ -1,6 +1,6 @@
 import { LoadingButton } from '@atlaskit/button';
 import DropdownMenu, { DropdownItem } from '@atlaskit/dropdown-menu';
-import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
+import ChevronDownIcon from '@atlaskit/icon/core/chevron-down';
 import Lozenge from '@atlaskit/lozenge';
 import { Status, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { Box } from '@mui/material';
@@ -115,7 +115,7 @@ export const StatusTransitionMenu: React.FC<Props> = (props) => {
                         }}
                         {...properties}
                         ref={triggerRef}
-                        iconAfter={hasTransitions ? <ChevronDownIcon label="Status" /> : undefined}
+                        iconAfter={hasTransitions ? <ChevronDownIcon label="Status" size="small" /> : undefined}
                     >
                         {props.currentStatus.name}
                     </LoadingButton>

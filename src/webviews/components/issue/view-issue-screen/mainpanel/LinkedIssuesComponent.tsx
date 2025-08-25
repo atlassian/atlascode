@@ -1,5 +1,5 @@
 import { IconButton } from '@atlaskit/button/new';
-import AddIcon from '@atlaskit/icon/glyph/add';
+import AddIcon from '@atlaskit/icon/core/add';
 import { GlyphProps } from '@atlaskit/icon/types';
 import Select, { AsyncSelect } from '@atlaskit/select';
 import { IssuePickerIssue, MinimalIssueLink, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';

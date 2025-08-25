@@ -3,6 +3,15 @@ import { RovoDevApiClient } from './rovoDevApiClient';
 // Mock fetch globally
 global.fetch = jest.fn();
 
+const mockStandardResponseHeaders = () => {
+    const headers: Record<string, string> = {
+        'x-session-id': 'sessionId',
+    };
+    return {
+        get: (key: string) => headers[key] || null,
+    };
+};
+
 describe('RovoDevApiClient', () => {
     let client: RovoDevApiClient;
     const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
@@ -39,6 +48,7 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 200,
                 json: jest.fn().mockResolvedValue({ success: true }),
+                headers: mockStandardResponseHeaders(),
             } as unknown as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
@@ -60,6 +70,7 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 201,
                 json: jest.fn().mockResolvedValue({ created: true }),
+                headers: mockStandardResponseHeaders(),
             } as unknown as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
@@ -82,7 +93,8 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 404,
                 statusText: 'Not Found',
-            } as unknown as Response;
+                headers: mockStandardResponseHeaders(),
+            } as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
 
@@ -95,7 +107,8 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 500,
                 statusText: 'Internal Server Error',
-            } as unknown as Response;
+                headers: mockStandardResponseHeaders(),
+            } as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
 
@@ -111,6 +124,7 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 200,
                 json: jest.fn().mockResolvedValue(mockResponseObject),
+                headers: mockStandardResponseHeaders(),
             } as unknown as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
@@ -134,6 +148,7 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 200,
                 json: jest.fn().mockResolvedValue(mockResponseObject),
+                headers: mockStandardResponseHeaders(),
             } as unknown as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
@@ -147,7 +162,8 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 500,
                 statusText: 'Internal Server Error',
-            } as unknown as Response;
+                headers: mockStandardResponseHeaders(),
+            } as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
 
@@ -160,6 +176,7 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 200,
                 json: jest.fn().mockResolvedValue({}),
+                headers: mockStandardResponseHeaders(),
             } as unknown as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
@@ -180,7 +197,8 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 400,
                 statusText: 'Bad Request',
-            } as unknown as Response;
+                headers: mockStandardResponseHeaders(),
+            } as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
 
@@ -192,7 +210,8 @@ describe('RovoDevApiClient', () => {
         it('should send chat message successfully', async () => {
             const mockResponse = {
                 status: 200,
-            } as unknown as Response;
+                headers: mockStandardResponseHeaders(),
+            } as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
 
@@ -213,7 +232,8 @@ describe('RovoDevApiClient', () => {
         it('should request a deep plan successfully', async () => {
             const mockResponse = {
                 status: 200,
-            } as unknown as Response;
+                headers: mockStandardResponseHeaders(),
+            } as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
 
@@ -234,7 +254,8 @@ describe('RovoDevApiClient', () => {
         it('should handle empty message', async () => {
             const mockResponse = {
                 status: 200,
-            } as unknown as Response;
+                headers: mockStandardResponseHeaders(),
+            } as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
 
@@ -254,7 +275,8 @@ describe('RovoDevApiClient', () => {
         it('should handle special characters in message', async () => {
             const mockResponse = {
                 status: 200,
-            } as unknown as Response;
+                headers: mockStandardResponseHeaders(),
+            } as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
 
@@ -277,7 +299,8 @@ describe('RovoDevApiClient', () => {
         it('should make successful replay request', async () => {
             const mockResponse = {
                 status: 200,
-            } as unknown as Response;
+                headers: mockStandardResponseHeaders(),
+            } as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
 
@@ -298,7 +321,8 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 503,
                 statusText: 'Service Unavailable',
-            } as unknown as Response;
+                headers: mockStandardResponseHeaders(),
+            } as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
 
@@ -318,11 +342,18 @@ describe('RovoDevApiClient', () => {
         });
     });
 
+    describe('invalidateFileCache method', () => {
+        it('should throw not implemented error', () => {
+            expect(() => client.invalidateFileCache()).toThrow('Method not implemented: invalidate-file-cache');
+        });
+    });
+
     describe('getCacheFilePath method', () => {
         it('should return cached file path', async () => {
             const mockResponse = {
                 status: 200,
                 json: jest.fn().mockResolvedValue({ cached_file_path: '/tmp/cache/file.txt' }),
+                headers: mockStandardResponseHeaders(),
             } as unknown as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
@@ -348,6 +379,7 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 200,
                 json: jest.fn().mockResolvedValue({ cached_file_path: '/tmp/cache/special file.txt' }),
+                headers: mockStandardResponseHeaders(),
             } as unknown as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
@@ -373,7 +405,8 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 404,
                 statusText: 'Not Found',
-            } as unknown as Response;
+                headers: mockStandardResponseHeaders(),
+            } as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
 
@@ -383,9 +416,53 @@ describe('RovoDevApiClient', () => {
         });
     });
 
-    describe('invalidateFileCache method', () => {
-        it('should throw not implemented error', () => {
-            expect(() => client.invalidateFileCache()).toThrow('Method not implemented: invalidate-file-cache');
+    describe('createSession method', () => {
+        it('should return session id from response headers', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: {
+                    get: (key: string) => (key === 'x-session-id' ? 'mock-session-id' : null),
+                },
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+            const sessionId = await client.createSession();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/sessions/create', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: undefined,
+            });
+            expect(sessionId).toBe('mock-session-id');
+        });
+
+        it('should return null if x-session-id header is missing', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: {
+                    get: (_: string) => null,
+                },
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+            const sessionId = await client.createSession();
+            expect(sessionId).toBeNull();
+        });
+
+        it('should throw error if API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: {
+                    get: (_: string) => null,
+                },
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+            await expect(client.createSession()).rejects.toThrow("Failed to fetch '/v2/sessions/create API: HTTP 500");
         });
     });
 
@@ -398,6 +475,7 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 200,
                 json: jest.fn().mockResolvedValue(mockHealthcheckResponse),
+                headers: mockStandardResponseHeaders(),
             } as unknown as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
@@ -424,6 +502,7 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 200,
                 json: jest.fn().mockResolvedValue(mockHealthcheckResponse),
+                headers: mockStandardResponseHeaders(),
             } as unknown as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
@@ -438,7 +517,8 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 503,
                 statusText: 'Service Unavailable',
-            } as unknown as Response;
+                headers: mockStandardResponseHeaders(),
+            } as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
 
@@ -449,7 +529,8 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 404,
                 statusText: 'Not Found',
-            } as unknown as Response;
+                headers: mockStandardResponseHeaders(),
+            } as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
 
@@ -462,6 +543,7 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 200,
                 json: jest.fn().mockResolvedValue({ status: 'healthy' }),
+                headers: mockStandardResponseHeaders(),
             } as unknown as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
@@ -483,6 +565,7 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 200,
                 json: jest.fn().mockResolvedValue({ status: 'unhealthy' }),
+                headers: mockStandardResponseHeaders(),
             } as unknown as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
@@ -496,6 +579,7 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 200,
                 json: jest.fn().mockResolvedValue({ status: 'maintenance' }),
+                headers: mockStandardResponseHeaders(),
             } as unknown as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
@@ -509,7 +593,8 @@ describe('RovoDevApiClient', () => {
             const mockResponse = {
                 status: 500,
                 statusText: 'Internal Server Error',
-            } as unknown as Response;
+                headers: mockStandardResponseHeaders(),
+            } as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
 
@@ -529,7 +614,10 @@ describe('RovoDevApiClient', () => {
 
     describe('RovoDevApiError', () => {
         it('should create error with correct properties', () => {
-            const mockResponse = { status: 404 } as Response;
+            const mockResponse = {
+                status: 404,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
             const error = new (class RovoDevApiError extends Error {
                 constructor(
                     message: string,

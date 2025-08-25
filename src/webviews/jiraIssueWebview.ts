@@ -13,7 +13,7 @@ import {
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
-import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
+import { Experiments } from 'src/util/featureFlags';
 import timer from 'src/util/perf';
 import { commands, env } from 'vscode';
 
@@ -191,15 +191,15 @@ export class JiraIssueWebview
     async updateEpicChildren() {
         if (this._issue.isEpic) {
             const site = this._issue.siteDetails;
-            const performanceEnabled = FeatureFlagClient.checkExperimentValue(
+            const performanceEnabled = Container.featureFlagClient.checkExperimentValue(
                 Experiments.AtlascodePerformanceExperiment,
             );
             if (performanceEnabled) {
-                const [client, fields, epicInfo] = await Promise.all([
+                const [client, epicInfo] = await Promise.all([
                     Container.clientManager.jiraClient(site),
-                    Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site),
                     Container.jiraSettingsManager.getEpicFieldsForSite(site),
                 ]);
+                const fields = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicInfo);
                 let jqlQuery: string = '';
                 if (site.isCloud) {
                     jqlQuery = `parent = "${this._issue.key}" order by lastViewed DESC`;
@@ -211,8 +211,8 @@ export class JiraIssueWebview
                 this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
             } else {
                 const client = await Container.clientManager.jiraClient(site);
-                const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
                 const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
+                const fields = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicInfo);
 
                 let jqlQuery: string = '';
                 if (site.isCloud) {

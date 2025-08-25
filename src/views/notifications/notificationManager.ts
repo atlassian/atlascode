@@ -4,7 +4,7 @@ import { AuthInfoEvent, isRemoveAuthEvent, Product, ProductBitbucket, ProductJir
 import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
-import { FeatureFlagClient, Features } from '../../util/featureFlags';
+import { Features } from '../../util/featureFlags';
 import { Time } from '../../util/time';
 import { AtlassianNotificationNotifier } from './atlassianNotificationNotifier';
 import { AuthNotifier } from './authNotifier';
@@ -110,7 +110,7 @@ export class NotificationManagerImpl extends Disposable {
             NotificationManagerImpl.instance = new NotificationManagerImpl();
 
             NotificationManagerImpl.instance.notifiers.add(AuthNotifier.getInstance());
-            if (FeatureFlagClient.checkGate(Features.AtlassianNotifications)) {
+            if (Container.featureFlagClient.checkGate(Features.AtlassianNotifications)) {
                 NotificationManagerImpl.instance.notifiers.add(AtlassianNotificationNotifier.getInstance());
             }
 

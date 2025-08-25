@@ -23,7 +23,7 @@ export const startWorkFlow = async (page: Page, request: APIRequestContext) => {
 
     const startWorkFrame = await getIssueFrame(page);
     const startWorkPage = new StartWorkPage(startWorkFrame);
-    await startWorkPage.setupGitBranch(false);
+    await startWorkPage.setupCheckbox(startWorkPage.gitBranchCheckbox, false);
     await startWorkPage.startWork();
     await page.waitForTimeout(2_000);
 

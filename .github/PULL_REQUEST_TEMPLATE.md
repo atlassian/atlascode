@@ -1,6 +1,9 @@
 ### What Is This Change?
 
 <!--
+
+Main branch should always be clean and ready for release. If you need make a large feature, use a dev branch to do so. 
+
 Thanks for considering making a PR to this repository!👋
 
 Please give us a brief description of what the proposed change is.

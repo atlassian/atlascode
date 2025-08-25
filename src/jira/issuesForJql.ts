@@ -1,5 +1,5 @@
 import { MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
-import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
+import { Experiments } from 'src/util/featureFlags';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Container } from '../container';
@@ -8,13 +8,13 @@ export const MAX_RESULTS = 100;
 
 export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise<MinimalIssue<DetailedSiteInfo>[]> {
     const client = await Container.clientManager.jiraClient(site);
-    const performanceEnabled = FeatureFlagClient.checkExperimentValue(Experiments.AtlascodePerformanceExperiment);
+    const performanceEnabled = Container.featureFlagClient.checkExperimentValue(
+        Experiments.AtlascodePerformanceExperiment,
+    );
     let issues: MinimalIssue<DetailedSiteInfo>[] = [];
     if (performanceEnabled) {
-        const [fields, epicFieldInfo] = await Promise.all([
-            Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site),
-            Container.jiraSettingsManager.getEpicFieldsForSite(site),
-        ]);
+        const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
+        const fields = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicFieldInfo);
 
         let index = 0;
         let total = 0;
@@ -39,8 +39,8 @@ export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise
             }
         }
     } else {
-        const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
         const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
+        const fields = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicFieldInfo);
 
         let index = 0;
         let total = 0;

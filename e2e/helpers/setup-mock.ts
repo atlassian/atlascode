@@ -3,6 +3,7 @@ import { APIRequestContext } from '@playwright/test';
 import fs from 'fs';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
+import type { PullRequestComment } from './types';
 import { updateIssueField } from './update-jira-issue';
 
 /**
@@ -104,6 +105,37 @@ export async function setupPullrequests(request: APIRequestContext, values: Arra
                 equalTo: '25',
             },
         },
+    );
+
+    return () => cleanupWireMockMapping(request, id);
+}
+
+export async function setupPRComments(request: APIRequestContext, comments: Array<PullRequestComment>) {
+    const { id } = await setupWireMockMappingBitbucket(
+        request,
+        'GET',
+        { values: comments, pagelen: 100, size: comments.length, page: 1 },
+        '/2.0/repositories/mockuser/test-repository/pullrequests/123/comments',
+        {
+            pagelen: {
+                matches: '.*',
+            },
+        },
+    );
+
+    return () => cleanupWireMockMapping(request, id);
+}
+
+export async function setupPRCommentPost(
+    request: APIRequestContext,
+    comment: PullRequestComment | PullRequestComment[],
+) {
+    const body = Array.isArray(comment) ? comment[0] : comment;
+    const { id } = await setupWireMockMappingBitbucket(
+        request,
+        'POST',
+        body,
+        '/2.0/repositories/mockuser/test-repository/pullrequests/123/comments',
     );
 
     return () => cleanupWireMockMapping(request, id);

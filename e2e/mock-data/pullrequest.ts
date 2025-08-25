@@ -57,7 +57,7 @@ export const pullrequest = {
     },
     source: {
         branch: {
-            name: 'feature/new-feature',
+            name: 'test-branch',
         },
         commit: {
             hash: 'def456abc789012345678901234567890123456',

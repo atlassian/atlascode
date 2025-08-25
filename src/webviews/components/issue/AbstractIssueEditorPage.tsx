@@ -1049,6 +1049,7 @@ export abstract class AbstractIssueEditorPage<
                                             <Select
                                                 {...fieldArgs.fieldProps}
                                                 {...commonProps}
+                                                value={defVal}
                                                 className="ac-form-select-container"
                                                 classNamePrefix="ac-form-select"
                                                 isClearable={this.isClearableSelect(selectField)}
@@ -1125,6 +1126,7 @@ export abstract class AbstractIssueEditorPage<
                                             <CreatableSelect
                                                 {...fieldArgs.fieldProps}
                                                 {...commonProps}
+                                                value={defVal}
                                                 className="ac-form-select-container"
                                                 classNamePrefix="ac-form-select"
                                                 placeholder="Type to create new option"
@@ -1206,6 +1208,7 @@ export abstract class AbstractIssueEditorPage<
                                             <AsyncSelect
                                                 {...fieldArgs.fieldProps}
                                                 {...commonProps}
+                                                value={defVal}
                                                 className="ac-form-select-container"
                                                 classNamePrefix="ac-form-select"
                                                 placeholder="Type to search"
@@ -1306,6 +1309,7 @@ export abstract class AbstractIssueEditorPage<
                                             <AsyncCreatableSelect
                                                 {...fieldArgs.fieldProps}
                                                 {...commonProps}
+                                                value={defVal}
                                                 className="ac-form-select-container"
                                                 classNamePrefix="ac-form-select"
                                                 placeholder="Type to search"
