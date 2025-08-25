@@ -30,7 +30,6 @@ import { AdvancedConfigsPanel } from './advancedConfigs/advancedConfigsPanel';
 import { AuthDialog } from './auth/dialog/AuthDialog';
 import { AuthDialogControllerContext, useAuthDialog } from './auth/useAuthDialog';
 import { ConfigControllerContext, useConfigControllerV3 } from './configController';
-import { ExplorePanel } from './exploreV3/ExplorePanel';
 import { AuthenticationPanel } from './generalAuth/AuthenticationPanel';
 import { SidebarButtons } from './SidebarButtons';
 
@@ -107,15 +106,6 @@ const ConfigPageV3: React.FunctionComponent = () => {
         [openSection],
     );
 
-    const handleCompleteSectionChange = useCallback((section: ConfigV3Section, subSection: ConfigV3SubSection) => {
-        setOpenSection(section);
-        setOpenSubsections((oldSections) => {
-            const newSections = { ...oldSections };
-            newSections[section] = [...oldSections[section], subSection];
-            return newSections;
-        });
-    }, []);
-
     const handleTargetChange = useCallback((event: React.MouseEvent<HTMLElement>, newTarget: ConfigTarget) => {
         if (newTarget) {
             setInternalTarget(newTarget);
@@ -187,12 +177,6 @@ const ConfigPageV3: React.FunctionComponent = () => {
                                         value={ConfigV3Section.AdvancedConfig}
                                         label="Advanced Settings"
                                     />
-                                    <Tab
-                                        id="simple-tab-2"
-                                        aria-controls="simple-tabpanel-2"
-                                        value={ConfigV3Section.Explore}
-                                        label="Explore"
-                                    />
                                 </Tabs>
                                 <div className={classes.grow} />
                                 <Typography variant="subtitle1" classes={{ root: classes.targetSelectLabel }}>
@@ -260,11 +244,6 @@ const ConfigPageV3: React.FunctionComponent = () => {
                                             config={state.config!}
                                             sites={state.jiraSites}
                                             isRemote={state.isRemote}
-                                        />
-                                        <ExplorePanel
-                                            visible={openSection === ConfigV3Section.Explore}
-                                            config={state.config!}
-                                            sectionChanger={handleCompleteSectionChange}
                                         />
                                     </Box>
                                 </Paper>

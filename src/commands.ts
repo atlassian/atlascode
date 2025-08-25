@@ -87,13 +87,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 commands.executeCommand('workbench.action.openSettings', '@ext:atlassian.atlascode pipeline'),
             ),
             // -----------------------------------
-            commands.registerCommand(Commands.ShowExploreSettings, () => {
-                Container.analyticsApi.fireExploreFeaturesButtonEvent(HelpTreeViewId);
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigV3Section.Explore,
-                    subSection: undefined,
-                });
-            }),
             commands.registerCommand(
                 Commands.ViewInWebBrowser,
                 async (prNode: AbstractBaseNode, source?: string, linkId?: string) => {

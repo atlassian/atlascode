@@ -67,7 +67,7 @@ export const JiraExplorerJqlPanel: React.FunctionComponent<JiraExplorerJqlPanelP
                     aria-controls={`${ConfigSection.Jira}-${ConfigV3SubSection.Issues}-content`}
                     id={`${ConfigSection.Jira}-${ConfigV3SubSection.Issues}-header`}
                 >
-                    <PanelTitle>Jira Work Items Explorer</PanelTitle>
+                    <PanelTitle>Filters and Custom JQL</PanelTitle>
                     <PanelSubtitle>configure custom JQL and filters</PanelSubtitle>
                 </AccordionSummary>
                 <AccordionDetails>

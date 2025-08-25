@@ -53,7 +53,7 @@ export const AdvancedConfigsPanel: React.FunctionComponent<AdvancedConfigsProps>
                             <Box>
                                 <Typography variant="subtitle1" className={classes.root}>
                                     Note: We have simplified our settings to help users quickly interact with what they
-                                    need. To find the different configurations you can customize, please refer to the
+                                    need. To find the different configurations you can customize, please refer to the{' '}
                                     <Link
                                         component="button"
                                         variant="subtitle1"

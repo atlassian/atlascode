@@ -24,9 +24,6 @@ export const JiraExplorer: React.FunctionComponent<JiraExplorerProps> = memo(({ 
             <Grid item>
                 <Box marginTop={2}>
                     <Typography component="div" variant="h4">
-                        <Box display="inline" fontWeight="fontWeightBold">
-                            Filters and Custom JQL
-                        </Box>
                         <Box display="inline" marginLeft={3}>
                             <Link href="https://www.atlassian.com/blog/jira-software/jql-the-most-flexible-way-to-search-jira-14">
                                 What is JQL?
