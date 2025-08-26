@@ -7,15 +7,10 @@ export const enum Features {
 }
 
 export const enum Experiments {
-    AtlascodePerformanceExperiment = 'atlascode_performance_experiment',
     AtlascodeNewSettingsExperiment = 'atlascode_new_settings_experiment',
 }
 
 export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
-    [Experiments.AtlascodePerformanceExperiment]: {
-        parameter: 'enabled',
-        defaultValue: true,
-    },
     [Experiments.AtlascodeNewSettingsExperiment]: {
         parameter: 'enabled',
         defaultValue: false,
