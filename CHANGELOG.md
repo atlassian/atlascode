@@ -3,17 +3,24 @@
 ## What's new in 3.8.11
 
 ### Features
-- Updates Command Palette to have better categories & keywords 
+
+- Updates Command Palette to have better categories & keywords
+
+### Bug Fixes
+
+- Fixed issue when project value was not updating in create issue page
+- Fixed issue when trying to create children issues on epic that had no children to begin with.
 
 ## What's new in 3.8.10
 
 ### Features
-- Updates Command Palette to have better categories & keywords 
+
+- Updates Command Palette to have better categories & keywords
 - Fixed usage of deprecated JQL APIs
 
-### Bug Fixes 
-- Added loading indicator to Refresh button for Jira issue auto-refreshes
+### Bug Fixes
 
+- Added loading indicator to Refresh button for Jira issue auto-refreshes
 
 ---
 

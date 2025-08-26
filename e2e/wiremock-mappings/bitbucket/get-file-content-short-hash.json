@@ -1,0 +1,13 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/2.0/repositories/mockuser/test-repository/src/def456.*/test2.json"
+    },
+    "response": {
+        "status": 200,
+        "body": "{\"description\": \"Updated configuration for testing\", \"enabled\": true, \"settings\": {\"debug\": true, \"timeout\": 10000, \"features\": [\"comments\", \"pullrequests\"]}}",
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

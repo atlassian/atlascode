@@ -1,7 +1,9 @@
+import { addCommentToPullRequest } from './addCommentToPullRequest.spec';
 import { approvePullRequest } from './approvePullRequest.spec';
 import { authFlow } from './authFlow.spec';
 import { connectRepository } from './connectRepository.spec';
 import { createPullRequest } from './createPullRequest.spec';
+import { startWorkFlow } from './startWorkFlow.spec';
 import { viewPullRequset } from './viewPullRequest.spec';
 
 export const bitbucketScenarios = [
@@ -9,5 +11,7 @@ export const bitbucketScenarios = [
     { name: 'Connect repository', run: connectRepository },
     { name: 'Create PullRequest', run: createPullRequest },
     { name: 'View PullRequset', run: viewPullRequset },
+    { name: 'Add comment to PullRequest', run: addCommentToPullRequest },
     { name: 'Approve PullRequset', run: approvePullRequest },
+    { name: 'Start work Flow', run: startWorkFlow },
 ];

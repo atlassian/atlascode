@@ -7,3 +7,4 @@ export { StartWorkPage } from './StartWorkPage';
 export { ExplorerDrawer } from './ExplorerDrawer';
 export { CreatePullRequestPage } from './CreatePullRequestPage';
 export { PullRequestPage } from './PullRequestPage';
+export { PRInlineCommentPage } from './PRInlineCommentPage';

@@ -453,6 +453,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                             <Grid container spacing={1} direction="row">
                                                 <Grid item>
                                                     <Switch
+                                                        data-testid="start-work.transition-issue-checkbox"
                                                         color="primary"
                                                         size="small"
                                                         checked={transitionIssueEnabled}
@@ -737,6 +738,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                         <Grid container spacing={1} direction="row">
                                                             <Grid item>
                                                                 <Switch
+                                                                    data-testid="start-work.push-branch-checkbox"
                                                                     color="primary"
                                                                     size="small"
                                                                     checked={pushBranchEnabled}

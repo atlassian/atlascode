@@ -8,17 +8,26 @@
         "jsonBody": {
             "values": [{
                 "type": "diffstat",
-                "lines_added": 4,
-                "lines_removed": 0,
-                "status": "added",
-                "old": null,
-                "new": {
+                "lines_added": 3,
+                "lines_removed": 1,
+                "status": "modified",
+                "old": {
                     "path": "test2.json",
                     "type": "commit_file",
                     "escaped_path": "test2.json",
                     "links": {
                         "self": {
                             "href": "https://api.bitbucket.org/2.0/repositories/mockuser/test-repository/src/35c37c0bb16c21ef943fb16890a2209253bfcc83/test2.json"
+                        }
+                    }
+                },
+                "new": {
+                    "path": "test2.json",
+                    "type": "commit_file",
+                    "escaped_path": "test2.json",
+                    "links": {
+                        "self": {
+                            "href": "https://api.bitbucket.org/2.0/repositories/mockuser/test-repository/src/def456abc789012345678901234567890123456/test2.json"
                         }
                     }
                 }

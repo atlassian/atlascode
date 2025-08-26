@@ -1,5 +1,6 @@
 export { IssueComments } from './IssueComments';
 export { IssueDescription } from './IssueDescription';
+export { PRComments } from './PRComments';
 export { IssueQuickContent } from './IssueQuickContent';
 export { IssueStatus } from './IssueStatus';
 export { IssueTitle } from './IssueTitle';
@@ -10,5 +11,4 @@ export { PRTitle } from './PRTitle';
 export { PRSummary } from './PRSummary';
 export { PRCommits } from './PRCommits';
 export { PRFiles } from './PRFiles';
-export { PRComments } from './PRComments';
 export { PRSidebar } from './PRSidebar';

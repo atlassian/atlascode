@@ -1,0 +1,13 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/2.0/repositories/mockuser/test-repository/src/35c37c0bb16c21ef943fb16890a2209253bfcc83/test2.json"
+    },
+    "response": {
+        "status": 200,
+        "body": "{\"description\": \"Configuration file for testing\", \"enabled\": true, \"settings\": {\"debug\": false, \"timeout\": 5000}}",
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

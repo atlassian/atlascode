@@ -172,6 +172,9 @@ const RovoDevView: React.FC = () => {
 
     const keepFiles = useCallback(
         (files: ToolReturnParseResult[]) => {
+            if (files.length === 0) {
+                return;
+            }
             dispatch({
                 type: RovoDevViewResponseType.KeepFileChanges,
                 files: files.map(

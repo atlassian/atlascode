@@ -71,6 +71,7 @@ const IssueMainPanel: React.FC<Props> = ({
 
     //states
     const [enableSubtasks, setEnableSubtasks] = React.useState(false);
+    const [enableEpicChildren, setEnableEpicChildren] = React.useState(false);
     const [enableLinkedIssues, setEnableLinkedIssues] = React.useState(false);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [isInlineDialogOpen, setIsInlineDialogOpen] = React.useState(false);
@@ -81,9 +82,15 @@ const IssueMainPanel: React.FC<Props> = ({
         <Tooltip content="Add content">
             <AddContentDropdown
                 handleAttachmentClick={() => setIsModalOpen(true)}
-                handleChildIssueClick={() => {
-                    setEnableSubtasks(true);
-                }}
+                handleChildIssueClick={
+                    isEpic
+                        ? () => {
+                              setEnableEpicChildren(true);
+                          }
+                        : () => {
+                              setEnableSubtasks(true);
+                          }
+                }
                 handleLinkedIssueClick={() => {
                     setEnableLinkedIssues(true);
                 }}
@@ -202,26 +209,32 @@ const IssueMainPanel: React.FC<Props> = ({
             {subtasks && (subtasks.length > 0 || enableSubtasks) && (
                 <div>
                     <ChildIssuesComponent
-                        subtaskTypes={subtaskTypes}
+                        childTypes={subtaskTypes}
                         label="Child issues"
                         loading={loadingField === 'subtasks'}
                         onSave={(e: any) => handleInlineEdit(fields['subtasks'], e)}
-                        enableSubtasks={{ enable: enableSubtasks, setEnableSubtasks }}
+                        enable={enableSubtasks}
+                        setEnableEpicChildren={setEnableEpicChildren}
+                        setEnableSubtasks={setEnableSubtasks}
                         handleOpenIssue={handleOpenIssue}
                         issues={subtasks}
+                        isEpic={isEpic}
                     />
                 </div>
             )}
-            {isEpic && epicChildren && epicChildren.length > 0 && (
+            {isEpic && epicChildren && (epicChildren.length > 0 || enableEpicChildren) && (
                 <div>
                     <ChildIssuesComponent
-                        subtaskTypes={!epicChildrenTypes ? [] : epicChildrenTypes} // This are not "subtasks" for epics but full issues
+                        childTypes={!epicChildrenTypes ? [] : epicChildrenTypes}
                         label="Epic Child issues"
-                        loading={loadingField === 'subtasks'}
-                        onSave={(e: any) => handleInlineEdit(fields['subtasks'], e)}
-                        enableSubtasks={{ enable: enableSubtasks, setEnableSubtasks }} // Change this for epics
+                        loading={loadingField === 'subtasks'} // Handles loading state the same as subtasks
+                        onSave={(e: any) => handleInlineEdit(fields['subtasks'], e)} // Creates an issue in the same way for standardIssues and subtasks
+                        enable={enableEpicChildren}
+                        setEnableEpicChildren={setEnableEpicChildren}
+                        setEnableSubtasks={setEnableSubtasks}
                         handleOpenIssue={handleOpenIssue}
                         issues={epicChildren}
+                        isEpic={isEpic}
                     />
                 </div>
             )}

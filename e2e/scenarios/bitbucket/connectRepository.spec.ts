@@ -1,4 +1,4 @@
-import { APIRequestContext, expect, Page } from '@playwright/test';
+import { APIRequestContext, Page } from '@playwright/test';
 import { closeOnboardingQuickPick, setupPullrequests } from 'e2e/helpers';
 import { AtlascodeDrawer, AtlassianSettings, ExplorerDrawer } from 'e2e/page-objects';
 
@@ -6,7 +6,6 @@ const addRepo = async (page: Page) => {
     await new AtlascodeDrawer(page).pullRequests.addRepository();
     await page.waitForTimeout(250);
 
-    // if (await new ExplorerDrawer(page).)
     const pathInput = page.getByRole('textbox', { name: 'Type to narrow down results. - Add Folder to Workspace' });
     await pathInput.waitFor({ state: 'visible' });
     await page.waitForTimeout(250);
@@ -47,7 +46,7 @@ export async function connectRepository(page: Page, request: APIRequestContext) 
         await atlascodeDrawer.pullRequests.waitForNavigationLoad();
     }
 
-    await expect(atlascodeDrawer.pullRequests.mockRepo).toBeVisible();
+    await atlascodeDrawer.pullRequests.expectRepoConnected();
 
     await cleanupSetupPullrequests();
 }
