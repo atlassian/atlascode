@@ -32,7 +32,7 @@ interface State {
 }
 
 export default class InlineIssueLinksEditor extends React.Component<Props, State> {
-    constructor(props: any) {
+    constructor(props: Props) {
         super(props);
 
         this.state = {
@@ -48,27 +48,28 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
         };
     }
 
-    override componentWillReceiveProps(nextProps: any) {
-        const newState: any = {};
+    static getDerivedStateFromProps(nextProps: Pick<Props, 'linkTypes' | 'label' | 'isLoading'>, state: State) {
+        const newState: Partial<State> = {};
 
-        if (nextProps.linkTypes && nextProps.linkTypes !== this.state.linkTypes) {
+        if (nextProps.linkTypes && nextProps.linkTypes !== state.linkTypes) {
             newState.linkTypes = nextProps.linkTypes;
         }
 
-        if (nextProps.label && nextProps.label !== this.state.label) {
+        if (nextProps.label && nextProps.label !== state.label) {
             newState.label = nextProps.label;
         }
 
-        if (nextProps.isLoading !== undefined && nextProps.isLoading !== this.state.isLoading) {
+        if (nextProps.isLoading !== undefined && nextProps.isLoading !== state.isLoading) {
             newState.isLoading = nextProps.isLoading;
         }
 
         if (Object.keys(newState).length > 0) {
-            this.setState(newState);
+            return newState;
         }
+        return null;
     }
 
-    handleOpenInlineEditor = (e: any) => {
+    handleOpenInlineEditor = () => {
         this.setState({ isEditing: true, editorContainerClassname: 'ac-flex-space-between' });
     };
 
@@ -97,7 +98,7 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
         });
     };
 
-    handleSave = (e: any) => {
+    handleSave = () => {
         this.setState({
             isEditing: false,
             defaultIssueValue: undefined,
@@ -148,8 +149,8 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
                                         className="ac-select-container"
                                         classNamePrefix="ac-select"
                                         loadOptions={this.props.onFetchIssues}
-                                        getOptionLabel={(option: any) => option.key}
-                                        getOptionValue={(option: any) => option.key}
+                                        getOptionLabel={(option: IssuePickerIssue) => option.key}
+                                        getOptionValue={(option: IssuePickerIssue) => option.key}
                                         placeholder="Search for an issue"
                                         isLoading={this.state.isIssueLoading}
                                         isDisabled={this.state.isIssueLoading}

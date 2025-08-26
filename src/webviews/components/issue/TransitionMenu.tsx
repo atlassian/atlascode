@@ -1,4 +1,5 @@
 import Lozenge from '@atlaskit/lozenge';
+import type { OptionProps, SingleValueProps } from '@atlaskit/select';
 import Select, { components } from '@atlaskit/select';
 import { emptyTransition, Status, Transition } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
@@ -7,7 +8,7 @@ import { colorToLozengeAppearanceMap } from '../colors';
 
 const { Option } = components;
 
-const StatusOption = (props: any) => (
+const StatusOption = (props: typeof OptionProps & { data: Transition }) => (
     <Option {...props}>
         <Lozenge appearance={colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName]}>
             {props.data.to.name}
@@ -15,7 +16,7 @@ const StatusOption = (props: any) => (
     </Option>
 );
 
-const StatusOptionWithTransitionName = (props: any) => (
+const StatusOptionWithTransitionName = (props: typeof OptionProps & { data: Transition }) => (
     <Option {...props}>
         {`${props.data.name} → `}
         <Lozenge appearance={colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName]}>
@@ -24,7 +25,7 @@ const StatusOptionWithTransitionName = (props: any) => (
     </Option>
 );
 
-const StatusValue = (props: any) => (
+const StatusValue = (props: typeof SingleValueProps & { data: Transition }) => (
     <components.SingleValue {...props}>
         <Lozenge appearance={colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName]}>
             {props.data.to.name}
@@ -45,26 +46,26 @@ type State = {
 };
 
 export class TransitionMenu extends React.Component<Props, State> {
-    constructor(props: any) {
+    constructor(props: Props) {
         super(props);
-        const selectedTransition = this.getCurrentTransition(props.currentStatus, props.transitions);
+        const selectedTransition = TransitionMenu.getCurrentTransition(props.currentStatus, props.transitions);
         this.state = {
             selectedTransition: selectedTransition,
-            showTransitionName: this.shouldShowTransitionName(props.transitions),
+            showTransitionName: TransitionMenu.shouldShowTransitionName(props.transitions),
         };
     }
 
-    override componentWillReceiveProps(nextProps: any) {
-        const selectedTransition = this.getCurrentTransition(nextProps.currentStatus, nextProps.transitions);
-        this.setState({
-            selectedTransition: selectedTransition,
-            showTransitionName: this.shouldShowTransitionName(nextProps.transitions),
-        });
+    static getDerivedStateFromProps(nextProps: Pick<Props, 'transitions' | 'currentStatus'>) {
+        const selectedTransition = TransitionMenu.getCurrentTransition(nextProps.currentStatus, nextProps.transitions);
+        return {
+            selectedTransition,
+            showTransitionName: TransitionMenu.shouldShowTransitionName(nextProps.transitions),
+        };
     }
 
     // The transition list may not include the transition corresponding to current status.
     // Create a dummy transition for current status in that case.
-    private getCurrentTransition(currentStatus: Status, transitions: Transition[]): Transition {
+    private static getCurrentTransition(currentStatus: Status, transitions: Transition[]): Transition {
         const selectedTransition = transitions.find((transition: Transition) => transition.to.id === currentStatus.id);
         if (selectedTransition !== undefined) {
             return selectedTransition;
@@ -73,7 +74,7 @@ export class TransitionMenu extends React.Component<Props, State> {
         return { ...emptyTransition, to: currentStatus };
     }
 
-    private shouldShowTransitionName(transitions: Transition[]) {
+    private static shouldShowTransitionName(transitions: Transition[]) {
         return transitions.some((t) => t.name !== t.to.name);
     }
 

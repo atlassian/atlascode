@@ -672,6 +672,7 @@ export abstract class AbstractIssueEditorPage<
                 );
             }
             case UIType.Subtasks: {
+                // seems unused, but keeping it for now. No calls of getInputMarkup for uiType === 'subtasks'
                 let markup = <React.Fragment />;
                 if (editmode) {
                     markup = (
