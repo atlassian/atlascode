@@ -1,5 +1,4 @@
 import { MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
-import { Experiments } from 'src/util/featureFlags';
 import { expansionCastTo, forceCastTo } from 'testsutil';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
@@ -31,15 +30,6 @@ jest.mock('../container', () => ({
                 },
             },
         },
-    },
-}));
-
-jest.mock('src/util/featureFlags', () => ({
-    FeatureFlagClient: {
-        checkExperimentValue: jest.fn(),
-    },
-    Experiments: {
-        AtlascodePerformanceExperiment: 'atlascode-performance-experiment',
     },
 }));
 
@@ -76,11 +66,6 @@ describe('issuesForJQL', () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        // Mock FeatureFlagClient to return false by default (performance disabled)
-        (Container.featureFlagClient as any) = {
-            checkExperimentValue: jest.fn().mockReturnValue(false),
-        };
-
         // Setup default mock implementations
         mockClient.searchForIssuesUsingJqlGet.mockResolvedValue({});
         (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
@@ -91,41 +76,9 @@ describe('issuesForJQL', () => {
         (readSearchResults as jest.Mock).mockResolvedValue(mockSearchResult);
     });
 
-    it('should fetch issues using JQL query with parallel calls when performance is enabled', async () => {
-        // Enable performance mode
-        (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
-
+    it('should fetch issues using JQL query', async () => {
         // Execute the function
         const result = await issuesForJQL(mockJql, mockSite);
-
-        // Verify feature flag was checked
-        expect(Container.featureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
-            Experiments.AtlascodePerformanceExperiment,
-        );
-
-        // Verify dependencies were called with correct parameters
-        expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSite);
-        expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSite);
-        expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockEpicFieldInfo);
-        expect(Container.jiraSettingsManager.getIssueLinkTypes).toHaveBeenCalledWith(mockSite);
-        expect(Container.jiraSettingsManager.getIssueCreateMetadata).toHaveBeenCalledWith('TEST', mockSite);
-        expect(mockClient.searchForIssuesUsingJqlGet).toHaveBeenCalledWith(mockJql, mockFields, MAX_RESULTS, 0);
-        expect(readSearchResults).toHaveBeenCalledWith({}, mockSite, mockEpicFieldInfo);
-
-        // Verify correct data is returned
-        expect(result).toEqual(mockIssues);
-    });
-
-    it('should fetch issues using JQL query with sequential calls when performance is disabled', async () => {
-        // Performance mode is disabled by default in beforeEach
-
-        // Execute the function
-        const result = await issuesForJQL(mockJql, mockSite);
-
-        // Verify feature flag was checked
-        expect(Container.featureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
-            Experiments.AtlascodePerformanceExperiment,
-        );
 
         // Verify dependencies were called with correct parameters
         expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSite);
@@ -252,10 +205,21 @@ describe('issuesForJQL', () => {
         await expect(issuesForJQL(mockJql, mockSite)).rejects.toThrow(errorMessage);
     });
 
-    it('should correctly extract project keys from different issues and cache metadata calls when performance is enabled', async () => {
-        // Enable performance mode
-        (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
+    it('should handle empty results', async () => {
+        // Setup empty results
+        (readSearchResults as jest.Mock).mockResolvedValue({
+            issues: [],
+            total: 0,
+        });
 
+        // Execute the function
+        const result = await issuesForJQL(mockJql, mockSite);
+
+        // Verify empty array is returned
+        expect(result).toEqual([]);
+    });
+
+    it('should extract unique project keys and cache metadata for multiple projects', async () => {
         // Setup issues from multiple projects
         const multiProjectIssues = [
             forceCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'PROJ1-123' }),
@@ -278,35 +242,39 @@ describe('issuesForJQL', () => {
         expect(Container.jiraSettingsManager.getIssueCreateMetadata).toHaveBeenCalledWith('PROJ2', mockSite);
         expect(Container.jiraSettingsManager.getIssueCreateMetadata).toHaveBeenCalledWith('PROJ3', mockSite);
 
+        // Verify getIssueLinkTypes was called
+        expect(Container.jiraSettingsManager.getIssueLinkTypes).toHaveBeenCalledWith(mockSite);
+
         // Verify correct data is returned
         expect(result).toEqual(multiProjectIssues);
     });
 
-    it('should not cache metadata calls when performance is disabled', async () => {
-        // Performance mode is disabled by default in beforeEach
-
-        // Setup issues from multiple projects
-        const multiProjectIssues = [
-            forceCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'PROJ1-123' }),
-            forceCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'PROJ2-456' }),
+    it('should handle issues with complex project keys', async () => {
+        // Setup issues with various project key formats
+        const complexKeyIssues = [
+            forceCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'ABC-123' }),
+            forceCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'PROJECT_NAME-456' }),
+            forceCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'X-789' }),
         ];
 
         (readSearchResults as jest.Mock).mockResolvedValue({
-            issues: multiProjectIssues,
-            total: multiProjectIssues.length,
+            issues: complexKeyIssues,
+            total: complexKeyIssues.length,
         });
 
         // Execute the function
         const result = await issuesForJQL(mockJql, mockSite);
 
-        // Verify getIssueCreateMetadata was not called when performance is disabled
-        expect(Container.jiraSettingsManager.getIssueCreateMetadata).not.toHaveBeenCalled();
+        // Verify getIssueCreateMetadata was called for each unique project
+        expect(Container.jiraSettingsManager.getIssueCreateMetadata).toHaveBeenCalledWith('ABC', mockSite);
+        expect(Container.jiraSettingsManager.getIssueCreateMetadata).toHaveBeenCalledWith('PROJECT_NAME', mockSite);
+        expect(Container.jiraSettingsManager.getIssueCreateMetadata).toHaveBeenCalledWith('X', mockSite);
 
         // Verify correct data is returned
-        expect(result).toEqual(multiProjectIssues);
+        expect(result).toEqual(complexKeyIssues);
     });
 
-    it('should handle empty results without calling metadata functions', async () => {
+    it('should not call metadata functions when no issues are returned', async () => {
         // Setup empty results
         (readSearchResults as jest.Mock).mockResolvedValue({
             issues: [],
