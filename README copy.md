@@ -1,18 +1,26 @@
 
 # Jira, Rovo Dev, Bitbucket
 
+Stay in your IDE; don't switch contexts. 
+
 Browse, View, Create, and Manage your Jira Work Items, Bitbucket PRs, Bitbucket Pipelines. 
 
-Use Rovo Dev, our AI Coding Agent, to task with seamless integration to your Work Items, PRs, and Pipelins.
+Use Rovo Dev, our AI Coding Agent, to complete tasks, ask questions, and fix up PRs & Pipelines. 
 
-<img src="image.png" alt="alt text" style="max-height: 500px;">
+## Jira
+<img src="image-4.png" alt="alt text" style="max-height: 500px;">
+
+## Rovo Dev
+<img src="image-5.png" alt="alt text" style="max-height: 500px;">
+
+## Bitbucket
+<img src="image-6.png" alt="alt text" style="max-height: 500px;">
+
 
 # Get Started 
-1. Install the extension from within VS Code (or a fork like Cursor or Windsurf) or download it from the marketplace.
-2. Authenticate the extension with Atlassian
-3. Open a Jira, View a PR, or ask Rovo Dev to work on something 
-4. Try out all the features below. 
-5. Check out TODO video for getting started 
+1. Install the extension (one click) 
+2. Authenticate the extension with Atlassian 
+3. Open a Jira, View a PR, or ask Rovo Dev to work on something  
 
 # Usage 
 
@@ -23,6 +31,7 @@ Use Rovo Dev, our AI Coding Agent, to task with seamless integration to your Wor
 | **Rovo Dev - AI Coding Agent** | Rovo: | Ask questions, start on Jiras, write tests or documentation |
 | **Pull Requests** | Bitbucket: | Browse, View, Update, Create, and Approve / Decline / Merge |
 | **Pipelines**  | Bitbucket: | Browse, View, Run |
+
 
 # Troubleshooting 
 If the table below doesn't help you, [raise an issue here.](https://github.com/atlassian/atlascode/issues?q=is%3Aissue%20state%3Aopen%20sort%3Aupdated-desc)
@@ -43,21 +52,11 @@ As of now, Rovo Dev in VS Code (and it's forks) is only available for internal d
 # Compatibility
 
 
-| Platform | Version | Support |
+| Platform | Version | Compatibility |
 |----------|---------|---------|
 | Jira Cloud | - | ✅ |
 | Bitbucket Cloud | - | ✅ |
-| Rovo Dev | via Jira Cloud API Tokens | ✅ |
+| Rovo Dev | via Jira Cloud API Tokens | ✅ - Atlassian Employees for now |
 | RDE / WSL | via API Tokens | Jira ✅, Bitbucket ❌ |
 | Jira & Bitbucket Server | [Atlassian End of Support Policy](https://confluence.atlassian.com/support/atlassian-support-end-of-life-policy-201851003.html) | ✅
-
-
-
-# Support & Billing 
-
-[Raise an issue here.](https://github.com/atlassian/atlascode/issues?q=is%3Aissue%20state%3Aopen%20sort%3Aupdated-desc)
-
-This VS Code extension is offered **free** of charge by Atlassian. It provides an additional user interface for some Atlassian Products, which is billed separately. Your use of any Atlassian Products remains subject to the Atlassian Customer Agreement. This extension does not modify your billing or licensing for any Atlassian Product.
-
-Support and availability are available per the [Atlassian Customer Agreement](https://www.atlassian.com/legal/atlassian-customer-agreement#free-or-beta-products) for free products.
 
