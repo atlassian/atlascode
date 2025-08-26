@@ -74,6 +74,9 @@ const RovoDevView: React.FC = () => {
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
     const [workspaceCount, setWorkspaceCount] = useState(process.env.ROVODEV_BBY ? 1 : 0);
 
+    const [isFeedbackFormVisible, setIsFeedbackFormVisible] = React.useState(false);
+    const [feedbackTitle, setFeedbackTitle] = React.useState('Share your thoughts');
+
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
 
     React.useEffect(() => {
@@ -214,6 +217,8 @@ const RovoDevView: React.FC = () => {
         setIsDeepPlanCreated(false);
         setCurThinkingMessages([]);
         setCurrentMessage(null);
+        setFeedbackTitle('Share your thoughts');
+        setIsFeedbackFormVisible(false);
     }, [totalModifiedFiles, keepFiles]);
 
     const handleAppendModifiedFileToolReturns = useCallback(
@@ -490,6 +495,10 @@ const RovoDevView: React.FC = () => {
                     }
                     break;
 
+                case RovoDevProviderMessageType.ShowFeedbackForm:
+                    setFeedbackTitle(event.title || 'Share your thoughts');
+                    setIsFeedbackFormVisible(true);
+                    break;
                 default:
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendError({
@@ -692,6 +701,9 @@ const RovoDevView: React.FC = () => {
                 downloadProgress={downloadProgress}
                 onChangesGitPushed={onChangesGitPushed}
                 onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
+                feedbackVisible={isFeedbackFormVisible}
+                setFeedbackVisible={setIsFeedbackFormVisible}
+                feedbackTitle={feedbackTitle}
             />
             <div className="input-section-container">
                 <UpdatedFilesComponent

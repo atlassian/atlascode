@@ -272,6 +272,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     case RovoDevViewResponseType.GetAgentMemory:
                         await this.executeOpenFile('.agent.md', false, undefined, true);
                         break;
+
+                    case RovoDevViewResponseType.TriggerFeedback:
+                        await this.executeTriggerFeedback(e.feedbackType);
+                        break;
                 }
             } catch (error) {
                 this.processError(error, false);
@@ -1019,6 +1023,15 @@ ${message}`;
         await Promise.all(promises);
 
         this.fireTelemetryEvent('rovoDevFileChangedActionEvent', this._currentPromptId, 'keep', files.length);
+    }
+
+    private async executeTriggerFeedback(feedbackType?: 'helpful' | 'unhelpful') {
+        const webview = this._webView!;
+
+        await webview.postMessage({
+            type: RovoDevProviderMessageType.ShowFeedbackForm,
+            title: feedbackType === 'helpful' ? 'What was helpful?' : 'What could be improved?',
+        });
     }
 
     private async createPR(commitMessage?: string, branchName?: string): Promise<void> {

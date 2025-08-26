@@ -12,7 +12,8 @@ export const ChatMessageItem: React.FC<{
     icon?: React.ReactNode;
     enableActions?: boolean;
     onCopy?: (text: string) => void;
-}> = ({ msg, icon, enableActions, onCopy }) => {
+    onFeedback?: (isPositive: boolean) => void;
+}> = ({ msg, icon, enableActions, onCopy, onFeedback }) => {
     const messageTypeStyles = msg.source === 'User' ? 'user-message' : 'agent-message';
     const content = (
         <div
@@ -37,11 +38,21 @@ export const ChatMessageItem: React.FC<{
             )}
             {msg.source === 'RovoDev' && enableActions && (
                 <div className="chat-message-actions">
-                    <button aria-label="like-response-button" title="Helpful" className="chat-message-action">
-                        <ThumbsUpIcon label="thumbs-up" />
+                    <button
+                        onClick={() => onFeedback && onFeedback(true)}
+                        aria-label="like-response-button"
+                        title="Helpful"
+                        className="chat-message-action"
+                    >
+                        <ThumbsUpIcon label="thumbs-up" spacing="none" />
                     </button>
-                    <button aria-label="dislike-response-button" title="Unhelpful" className="chat-message-action">
-                        <ThumbsDownIcon label="thumbs-down" />
+                    <button
+                        onClick={() => onFeedback && onFeedback(false)}
+                        aria-label="dislike-response-button"
+                        title="Unhelpful"
+                        className="chat-message-action"
+                    >
+                        <ThumbsDownIcon label="thumbs-down" spacing="none" />
                     </button>
                     <button
                         aria-label="copy-button"
@@ -51,7 +62,7 @@ export const ChatMessageItem: React.FC<{
                             onCopy && onCopy(msg.text || '');
                         }}
                     >
-                        <CopyIcon label="Copy button" />
+                        <CopyIcon label="Copy button" spacing="none" />
                     </button>
                 </div>
             )}

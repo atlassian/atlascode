@@ -7,6 +7,7 @@ import { useMessagingApi } from '../../messagingApi';
 import { FollowUpActionFooter, OpenFileFunc } from '../common/common';
 import { ErrorMessageItem } from '../common/errorMessage';
 import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
+import { FeedbackForm } from '../feedback-form/FeedbackForm';
 import { RovoDevLanding } from '../rovoDevLanding';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
@@ -37,6 +38,9 @@ interface ChatStreamProps {
     downloadProgress: [number, number];
     onChangesGitPushed: (msg: DefaultMessage, pullRequestCreated: boolean) => void;
     onCollapsiblePanelExpanded: () => void;
+    feedbackVisible?: boolean;
+    setFeedbackVisible?: (visible: boolean) => void;
+    feedbackTitle?: string;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -53,6 +57,9 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     messagingApi,
     onChangesGitPushed,
     onCollapsiblePanelExpanded,
+    feedbackVisible = false,
+    setFeedbackVisible,
+    feedbackTitle = 'Share your thoughts',
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -194,6 +201,16 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         navigator.clipboard.writeText(text);
     }, []);
 
+    const handleFeedbackTrigger = React.useCallback(
+        (isPositive: boolean) => {
+            messagingApi.postMessage({
+                type: RovoDevViewResponseType.TriggerFeedback,
+                feedbackType: isPositive ? 'helpful' : 'unhelpful',
+            });
+        },
+        [messagingApi],
+    );
+
     return (
         <div ref={chatEndRef} className="chat-message-container">
             <RovoDevLanding />
@@ -213,8 +230,9 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             return (
                                 <ChatMessageItem
                                     msg={block}
-                                    enableActions={block.source === 'RovoDev'}
+                                    enableActions={block.source === 'RovoDev' && idx === chatHistory.length - 1}
                                     onCopy={handleCopyResponse}
+                                    onFeedback={handleFeedbackTrigger}
                                 />
                             );
                         } else if (block.source === 'ToolReturn') {
@@ -291,6 +309,15 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             }}
                             isFormVisible={isFormVisible}
                             setFormVisible={setIsFormVisible}
+                        />
+                    )}
+                    {!canCreatePR && !deepPlanCreated && feedbackVisible && (
+                        <FeedbackForm
+                            title={feedbackTitle}
+                            onSumbit={(feedback, includeTenMessages) => {
+                                setFeedbackVisible && setFeedbackVisible(false);
+                            }}
+                            onCancel={() => setFeedbackVisible && setFeedbackVisible(false)}
                         />
                     )}
                 </FollowUpActionFooter>

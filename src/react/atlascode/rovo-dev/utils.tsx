@@ -6,12 +6,7 @@ export type ToolReturnMessage =
     | ToolReturnTechnicalPlanMessage
     | ToolReturnGrepFileContentMessage
     | ToolReturnGenericMessage;
-export type ChatMessage =
-    | DefaultMessage
-    | ErrorMessage
-    | ToolCallMessage
-    | ToolReturnGenericMessage
-    | ToolReturnGroupedMessage;
+export type ChatMessage = DefaultMessage | ErrorMessage | ToolCallMessage | ToolReturnGenericMessage;
 
 export interface DefaultMessage {
     text: string;
