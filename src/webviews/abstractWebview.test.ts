@@ -25,6 +25,10 @@ jest.mock('../container', () => ({
             sendScreenEvent: jest.fn(),
             sendTrackEvent: jest.fn(),
         },
+        featureFlagClient: {
+            checkGate: jest.fn().mockReturnValue(false),
+            checkExperimentValue: jest.fn().mockReturnValue(undefined),
+        },
         analyticsApi: {
             fireUIErrorEvent: jest.fn(),
         },
@@ -81,13 +85,6 @@ class TestReactWebview extends AbstractReactWebview {
         return undefined;
     }
 }
-
-jest.mock('../util/featureFlags', () => ({
-    FeatureFlagClient: {
-        checkGate: jest.fn().mockReturnValue(false),
-        checkExperimentValue: jest.fn().mockReturnValue(undefined),
-    },
-}));
 
 // Test implementation of InitializingWebview
 class TestInitializingWebview implements InitializingWebview<string> {

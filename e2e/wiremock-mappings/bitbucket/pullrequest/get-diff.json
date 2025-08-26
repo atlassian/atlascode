@@ -1,0 +1,13 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/2.0/repositories/mockuser/test-repository/pullrequests/123/diff"
+    },
+    "response": {
+        "status": 200,
+        "body": "diff --git a/test2.json b/test2.json\nindex 35c37c0..def456a 100644\n--- a/test2.json\n+++ b/test2.json\n@@ -1,1 +1,1 @@\n-{\"description\": \"Configuration file for testing\", \"enabled\": true, \"settings\": {\"debug\": false, \"timeout\": 5000}}\n+{\"description\": \"Updated configuration for testing\", \"enabled\": true, \"settings\": {\"debug\": true, \"timeout\": 10000, \"features\": [\"comments\", \"pullrequests\"]}}\n",
+        "headers": {
+            "Content-Type": "text/plain"
+        }
+    }
+}

@@ -253,6 +253,28 @@ body {
     padding: 10px 16px 0 16px;
 }
 
+.chat-message-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 8px;
+}
+
+.chat-message-action {
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    color: var(--vscode-editor-foreground);
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+.chat-message-action:hover {
+    background: var(--vscode-button-secondaryHoverBackground);
+}
+
 .message-drawer {
     width: 100%;
     display: flex;

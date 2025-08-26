@@ -172,6 +172,9 @@ const RovoDevView: React.FC = () => {
 
     const keepFiles = useCallback(
         (files: ToolReturnParseResult[]) => {
+            if (files.length === 0) {
+                return;
+            }
             dispatch({
                 type: RovoDevViewResponseType.KeepFileChanges,
                 files: files.map(
@@ -640,6 +643,32 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
+    // Copy the last response to clipboard
+    // This is for PromptInputBox because it cannot access the chat stream directly
+    const handleCopyResponse = useCallback(() => {
+        const lastMessage = chatStream.at(-1);
+        if (currentState !== State.WaitingForPrompt || !lastMessage || Array.isArray(lastMessage)) {
+            return;
+        }
+
+        if (lastMessage.source !== 'RovoDev' || !lastMessage.text) {
+            return;
+        }
+
+        if (!navigator.clipboard) {
+            console.warn('Clipboard API not available');
+            return;
+        }
+
+        navigator.clipboard.writeText(lastMessage.text);
+    }, [chatStream, currentState]);
+
+    const executeGetAgentMemory = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.GetAgentMemory,
+        });
+    }, [postMessage]);
+
     return (
         <div className="rovoDevChat">
             <ChatStream
@@ -723,6 +752,8 @@ const RovoDevView: React.FC = () => {
                                 currentContext: promptContextCollection,
                             });
                         }}
+                        onCopy={handleCopyResponse}
+                        handleMemoryCommand={executeGetAgentMemory}
                     />
                 </div>
                 <div className="ai-disclaimer">Uses AI. Verify results.</div>

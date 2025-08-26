@@ -4,7 +4,6 @@ import { createEmptyMinimalIssue, MinimalIssue, Transition } from '@atlassianlab
 import { DetailedSiteInfo, emptySiteInfo, ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel, WorkspaceRepo } from '../../../../bitbucket/model';
 import { Container } from '../../../../container';
-import { FeatureFlagClient } from '../../../../util/featureFlags';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { StartWorkAction, StartWorkActionType } from '../../../ipc/fromUI/startWork';
@@ -162,7 +161,9 @@ describe('StartWorkWebviewController', () => {
         (formatError as jest.Mock).mockReturnValue('Formatted error message');
 
         // Mock FeatureFlagClient to return false by default (old version)
-        (FeatureFlagClient.checkGate as jest.Mock).mockReturnValue(false);
+        (Container.featureFlagClient as any) = {
+            checkGate: jest.fn().mockReturnValue(false),
+        };
 
         controller = new StartWorkWebviewController(
             mockMessagePoster,
@@ -467,7 +468,7 @@ describe('StartWorkWebviewController', () => {
 
             it('should refresh and post init message with repo data (old version - includes customBranchType)', async () => {
                 // Mock FeatureFlagClient to return false (old version)
-                (FeatureFlagClient.checkGate as jest.Mock).mockReturnValue(false);
+                (Container.featureFlagClient.checkGate as jest.Mock).mockReturnValue(false);
 
                 await controller.onMessageReceived({ type: CommonActionType.Refresh });
 
@@ -500,7 +501,7 @@ describe('StartWorkWebviewController', () => {
 
             it('should refresh and post init message with repo data (new version - excludes customBranchType)', async () => {
                 // Mock FeatureFlagClient to return true (new version)
-                (FeatureFlagClient.checkGate as jest.Mock).mockReturnValue(true);
+                (Container.featureFlagClient.checkGate as jest.Mock).mockReturnValue(true);
 
                 await controller.onMessageReceived({ type: CommonActionType.Refresh });
 

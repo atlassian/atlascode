@@ -49,4 +49,11 @@ export class PullRequestsNavigation {
     async expectPRTreeitem() {
         await expect(this.prTreeitem).toBeVisible();
     }
+
+    async expectRepoConnected() {
+        await this.mockRepo.scrollIntoViewIfNeeded();
+        await this.mockRepo.waitFor({ state: 'visible', timeout: 5_000 });
+        await expect(this.mockRepo).toHaveCount(1);
+        await expect(this.mockRepo).toHaveText(/.+/, { timeout: 5_000 });
+    }
 }

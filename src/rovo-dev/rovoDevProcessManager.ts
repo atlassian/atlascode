@@ -2,6 +2,7 @@ import { ChildProcess, spawn } from 'child_process';
 import { access, constants } from 'fs';
 import fs from 'fs';
 import net from 'net';
+import packageJson from 'package.json';
 import path from 'path';
 import { downloadAndUnzip } from 'src/util/downloadFile';
 import { getFsPromise } from 'src/util/fsPromises';
@@ -12,7 +13,7 @@ import { rovodevInfo } from '../constants';
 import { Container } from '../container';
 import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
 
-export const MIN_SUPPORTED_ROVODEV_VERSION = '0.10.4';
+export const MIN_SUPPORTED_ROVODEV_VERSION = packageJson.rovoDev.version;
 
 function GetRovoDevURIs(context: ExtensionContext) {
     const extensionPath = context.storageUri!.fsPath;

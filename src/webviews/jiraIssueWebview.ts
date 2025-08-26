@@ -13,7 +13,7 @@ import {
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
-import { Experiments, FeatureFlagClient } from 'src/util/featureFlags';
+import { Experiments } from 'src/util/featureFlags';
 import timer from 'src/util/perf';
 import { commands, env } from 'vscode';
 
@@ -191,7 +191,7 @@ export class JiraIssueWebview
     async updateEpicChildren() {
         if (this._issue.isEpic) {
             const site = this._issue.siteDetails;
-            const performanceEnabled = FeatureFlagClient.checkExperimentValue(
+            const performanceEnabled = Container.featureFlagClient.checkExperimentValue(
                 Experiments.AtlascodePerformanceExperiment,
             );
             if (performanceEnabled) {
@@ -456,15 +456,26 @@ export class JiraIssueWebview
                             const createdIssue = await client.getIssue(resp.key, IssueLinkIssueKeys, '');
                             const picked = readIssueLinkIssue(createdIssue, msg.site);
 
-                            if (!Array.isArray(this._editUIData.fieldValues['subtasks'])) {
-                                this._editUIData.fieldValues['subtasks'] = [];
+                            // Check if this is an epic creating children vs regular issue creating subtasks
+                            if (this._issue.isEpic) {
+                                // For epics, refresh the epic children list
+                                await this.updateEpicChildren();
+                            } else {
+                                // For regular issues, update subtasks as before
+                                if (!Array.isArray(this._editUIData.fieldValues['subtasks'])) {
+                                    this._editUIData.fieldValues['subtasks'] = [];
+                                }
+
+                                this._editUIData.fieldValues['subtasks'].push(picked);
+                                this.postMessage({
+                                    type: 'fieldValueUpdate',
+                                    fieldValues: {
+                                        subtasks: this._editUIData.fieldValues['subtasks'],
+                                        nonce: msg.nonce,
+                                    },
+                                });
                             }
 
-                            this._editUIData.fieldValues['subtasks'].push(picked);
-                            this.postMessage({
-                                type: 'fieldValueUpdate',
-                                fieldValues: { subtasks: this._editUIData.fieldValues['subtasks'], nonce: msg.nonce },
-                            });
                             issueCreatedEvent(msg.site, resp.key).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
