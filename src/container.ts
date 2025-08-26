@@ -31,6 +31,7 @@ import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { Logger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
+import { registerQuickAuthCommand } from './onboarding/quickFlow';
 import { Pipeline } from './pipelines/model';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
 import { RovoDevDecorator } from './rovo-dev/rovoDevDecorator';
@@ -194,6 +195,9 @@ export class Container {
         context.subscriptions.push(new HelpExplorer());
 
         this._featureFlagClient = FeatureFlagClient.getInstance();
+
+        // TODO: add a guard rail feature flag
+        context.subscriptions.push(registerQuickAuthCommand());
         try {
             await this._featureFlagClient.initialize({
                 analyticsAnonymousId: this.machineId,

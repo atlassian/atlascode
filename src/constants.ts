@@ -93,6 +93,7 @@ export const enum Commands {
     OpenRovoDevMcpJson = 'atlascode.openRovoDevMcpJson',
     OpenRovoDevGlobalMemory = 'atlascode.openRovoDevGlobalMemory',
     OpenNativeSettings = 'atlascode.openNativeSettings',
+    QuickAuth = 'atlascode.rovodev.quickAuth',
 
     // Debug mode-only commands
     DebugQuickCommand = 'atlascode.debug.quickCommand',

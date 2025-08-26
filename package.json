@@ -97,6 +97,11 @@
         ],
         "commands": [
             {
+                "command": "atlascode.rovodev.quickAuth",
+                "title": "Authenticate",
+                "category": "Jira"
+            },
+            {
                 "command": "atlascode.rovodev.askInteractive",
                 "title": "Ask & Open",
                 "enablement": "atlascode:rovoDevEnabled",
