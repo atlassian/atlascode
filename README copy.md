@@ -16,28 +16,13 @@ Use Rovo Dev, our AI Coding Agent, to task with seamless integration to your Wor
 
 # Usage 
 
-| Product | Feature | Command Palette | UI |
-|---------|---------|-----------------|--------|
-| **Authentication** | Sign In | TODO | Screen shot  |
-| **Jira** | Browse Work Items | Atlassian: Focus on Assigned Jira Work Items View | Screen shot  |
-|  | Search Work Items | Jira: Search Jira Issue Results | Screenshot |
-|  | View Work Item | Jira: Open Jira Issue | Screenshot |
-|  | Create Work Item | Jira: Create Jira Issue | Screenshot |
-|  | Start Work Item | TODO | Screenshot |
-| **Rovo Dev - AI Coding Agent** | Start Chat | Rovo Dev: Open | Screenshot |
-|  | Start on Work Item | TODO | Screenshot |
-|  | Start on PR Comment | _Coming Soon_ |  |
-|  | Start on Pipeline Failure | _Coming Soon_ |  |
-| **Pull Requests** | Browse PRs | TODO | Screenshot |
-|  | Search PRs | TODO | Screenshot |
-|  | View PRs | TODO | Screenshot |
-|  | Create PRs | TODO | Screenshot |
-| **Pipelines**  | Browse Pipelines | TODO | Screenshot |
-|  | Search Pipelines | TODO | Screenshot |
-|  | View Pipelines | TODO | Screenshot |
-|  | Run Pipelines | TODO | Screenshot |
-| **Command Pallete** | Mac | `Cmd + Shift + P` | Screenshot
-|  | Windows | `Ctrl + Shift + P` | Screenshot
+| Product | Command Palette | Available Features |
+|---------|-----------------|---------|
+| **Authentication** | Atlassian: Open Settings | Sign in / Login |
+| **Jira** | Jira:  | Browse, Search, View, Update, Create, and Start |
+| **Rovo Dev - AI Coding Agent** | Rovo: | Ask questions, start on Jiras, write tests or documentation |
+| **Pull Requests** | Bitbucket: | Browse, View, Update, Create, and Approve / Decline / Merge |
+| **Pipelines**  | Bitbucket: | Browse, View, Run |
 
 # Troubleshooting 
 If the table below doesn't help you, [raise an issue here.](https://github.com/atlassian/atlascode/issues?q=is%3Aissue%20state%3Aopen%20sort%3Aupdated-desc)
