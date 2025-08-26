@@ -9,6 +9,7 @@
 ### Bug Fixes
 
 - Fixed issue when project value was not updating in create issue page
+- Fixed issue when trying to create children issues on epic that had no children to begin with.
 
 ## What's new in 3.8.10
 

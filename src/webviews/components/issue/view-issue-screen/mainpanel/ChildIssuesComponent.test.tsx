@@ -7,19 +7,23 @@ import { ChildIssuesComponent } from './ChildIssuesComponent';
 describe('ChildIssuesComponent', () => {
     const mockOnSave = jest.fn();
     const mockSetEnableSubtasks = jest.fn();
+    const mockSetEnableEpicChildren = jest.fn();
     const mockHandleOpenIssue = jest.fn();
 
     const defaultProps = {
-        subtaskTypes: [
+        childTypes: [
             { id: '1', name: 'Task', iconUrl: 'task-icon.png' },
             { id: '2', name: 'Bug', iconUrl: 'bug-icon.png' },
         ] as IssueType[],
         label: 'Subtasks',
         onSave: mockOnSave,
         loading: false,
-        enableSubtasks: { enable: false, setEnableSubtasks: mockSetEnableSubtasks },
+        enable: false,
         handleOpenIssue: mockHandleOpenIssue,
         issues: [],
+        isEpic: false,
+        setEnableEpicChildren: mockSetEnableEpicChildren,
+        setEnableSubtasks: mockSetEnableSubtasks,
     };
 
     beforeEach(() => {

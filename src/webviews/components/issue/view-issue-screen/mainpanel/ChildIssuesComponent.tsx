@@ -15,13 +15,16 @@ export type SummaryAndIssueType = {
     issuetype: { id: string };
 };
 type Props = {
-    subtaskTypes: IssueType[];
+    childTypes: IssueType[];
     label: string;
     onSave: (val: SummaryAndIssueType) => void;
     loading: boolean;
-    enableSubtasks: { enable: boolean; setEnableSubtasks: (enable: boolean) => void };
+    enable: boolean;
+    setEnableSubtasks: (enable: boolean) => void;
+    setEnableEpicChildren: (enable: boolean) => void;
     handleOpenIssue: (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => void;
     issues: any[];
+    isEpic: boolean;
 };
 
 const { Option, SingleValue } = components;
@@ -44,20 +47,22 @@ const IconValue = (props: any) => (
 );
 
 export const ChildIssuesComponent: React.FC<Props> = ({
-    subtaskTypes,
+    childTypes,
     label,
     onSave,
     loading,
-    enableSubtasks,
+    enable,
+    setEnableSubtasks,
+    setEnableEpicChildren,
     handleOpenIssue,
     issues,
+    isEpic,
 }) => {
     const [isEditing, setIsEditing] = React.useState(false);
     const [inputValue, setInputValue] = React.useState('');
     const [selectedIssueType, setSelectedIssueType] = React.useState<IssueType>(
-        subtaskTypes.length > 0 ? subtaskTypes[0] : emptyIssueType,
+        childTypes.length > 0 ? childTypes[0] : emptyIssueType,
     );
-    const { enable, setEnableSubtasks } = enableSubtasks;
     React.useEffect(() => {
         if (enable) {
             setIsEditing(true);
@@ -76,8 +81,12 @@ export const ChildIssuesComponent: React.FC<Props> = ({
     const handleCancel = () => {
         setInputValue('');
         setIsEditing(false);
-        setSelectedIssueType(subtaskTypes.length > 0 ? subtaskTypes[0] : emptyIssueType);
-        setEnableSubtasks(false);
+        setSelectedIssueType(childTypes.length > 0 ? childTypes[0] : emptyIssueType);
+        if (isEpic) {
+            setEnableEpicChildren(false);
+        } else {
+            setEnableSubtasks(false);
+        }
     };
     return (
         <Box>
@@ -100,7 +109,7 @@ export const ChildIssuesComponent: React.FC<Props> = ({
                             <Select
                                 className="ac-select-container"
                                 classNamePrefix="ac-select"
-                                options={subtaskTypes}
+                                options={childTypes}
                                 defaultValue={selectedIssueType}
                                 components={{ Option: IconOption, SingleValue: IconValue }}
                                 getOptionLabel={(option: IssueType) => option.name}
