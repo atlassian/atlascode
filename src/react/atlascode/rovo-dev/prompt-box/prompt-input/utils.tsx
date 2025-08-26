@@ -47,7 +47,6 @@ export const createMonacoPromptEditor = (container: HTMLElement) => {
             autoFindInSelection: 'never',
         },
 
-        fontSize: 14,
         lineHeight: 20,
         fontFamily: 'var(--vscode-font-family)',
     });
