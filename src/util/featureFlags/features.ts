@@ -18,7 +18,7 @@ export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
     },
     [Experiments.AtlascodeNewSettingsExperiment]: {
         parameter: 'enabled',
-        defaultValue: false,
+        defaultValue: true,
     },
 };
 

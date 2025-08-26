@@ -76,7 +76,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             commands.registerCommand(Commands.ShowJiraIssueSettings, () =>
                 Container.settingsWebviewFactory.createOrShow({
                     section: ConfigV3Section.AdvancedConfig,
-                    subSection: ConfigV3SubSection.Issues,
+                    subSection: undefined,
                 }),
             ),
             // Natigate them to VSCode Native settings
