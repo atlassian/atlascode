@@ -3,7 +3,6 @@ import { Commands } from 'src/constants';
 import { commands, Disposable, window } from 'vscode';
 
 import { AuthFlow, AuthFlowData } from './authentication';
-import { AuthType } from './authentication/types';
 
 export function registerQuickAuthCommand(): Disposable {
     return Disposable.from(
@@ -18,24 +17,6 @@ export function registerQuickAuthCommand(): Disposable {
             await flow.run({
                 ...initialState,
                 product: ProductJira,
-            });
-        }),
-        commands.registerCommand(Commands.QuickAuth2, async () => {
-            const flow = new AuthFlow();
-            await flow.run({
-                product: ProductJira,
-                skipAllowed: true,
-                authenticationType: AuthType.ApiToken,
-                username: 'bruh@atlassian.com',
-            });
-        }),
-        commands.registerCommand(Commands.QuickAuth3, async () => {
-            const flow = new AuthFlow();
-            await flow.run({
-                product: ProductJira,
-                skipAllowed: true,
-                authenticationType: AuthType.ApiToken,
-                username: 'bruh@atlassian.com',
             });
         }),
     );

@@ -1,24 +1,20 @@
-import { QuickFlow } from '../baseFlow';
-import { BaseUI } from '../baseUI';
-import { AuthState, States } from './states';
-import { AuthFlowData } from './types';
-import { UI } from './ui';
+import { QuickFlow } from '../quickFlow';
+import { AuthFlowUI } from './authFlowUI';
+import { CommonAuthStates } from './states/common';
+import { AuthFlowData, AuthState } from './types';
 
 export { AuthFlowData };
 
-export class AuthFlow extends QuickFlow<UI, AuthFlowData> {
+export class AuthFlow extends QuickFlow<AuthFlowUI, AuthFlowData> {
     static FlowDataType: AuthFlowData;
-    static UIType: UI;
+    static UIType: AuthFlowUI;
 
-    constructor(
-        private readonly _ui: UI = new UI(new BaseUI('Authenticate with Jira')),
-        private readonly _states: States = new States(),
-    ) {
+    constructor(private readonly _ui: AuthFlowUI = new AuthFlowUI()) {
         super();
     }
 
     initialState(): AuthState {
-        return this._states.initial;
+        return CommonAuthStates.initialState;
     }
 
     ui() {

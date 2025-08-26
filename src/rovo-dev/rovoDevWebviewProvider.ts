@@ -3,7 +3,7 @@ import path from 'path';
 import { gte as semver_gte } from 'semver';
 import { ProductJira } from 'src/atlclients/authInfo';
 import { CommandContext, setCommandContext } from 'src/commandContext';
-import { AuthType } from 'src/onboarding/quickFlow/authentication/types';
+import { AuthenticationType } from 'src/onboarding/quickFlow/authentication/types';
 import { getFsPromise } from 'src/util/fsPromises';
 import { setTimeout } from 'timers/promises';
 import { v4 } from 'uuid';
@@ -255,7 +255,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     case RovoDevViewResponseType.InitiateQuickAuth:
                         commands.executeCommand(Commands.QuickAuth, {
                             product: ProductJira,
-                            authenticationType: AuthType.ApiToken,
+                            authenticationType: AuthenticationType.ApiToken,
                             skipAllowed: true,
                         });
                         break;

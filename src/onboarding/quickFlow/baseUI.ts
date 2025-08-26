@@ -15,7 +15,7 @@ export enum UiAction {
     Back,
 }
 
-export type UiResponse = { value: string; action: UiAction };
+export type UiResponse<T = string> = { value?: T; action: UiAction };
 
 export type ExtraOptions = {
     step?: number;
@@ -61,7 +61,7 @@ export class BaseUI {
         input.password = props.password || false;
         input.prompt = props.prompt;
 
-        input.buttons = props.buttons || [];
+        input.buttons = [QuickInputButtons.Back, ...(props.buttons || [])];
 
         return new Promise((resolve, reject) => {
             if (props.validateInput !== undefined) {
@@ -109,7 +109,10 @@ export class BaseUI {
         });
     }
 
-    public showQuickPick(items: QuickPickItem[], props: QuickPickOptions & ExtraOptions): Promise<UiResponse> {
+    public showQuickPick<T = string>(
+        items: QuickPickItem[],
+        props: QuickPickOptions & ExtraOptions & { validateSelection?: (items: readonly QuickPickItem[]) => boolean },
+    ): Promise<UiResponse<T>> {
         const input = window.createQuickPick();
 
         // Common properties
@@ -124,7 +127,7 @@ export class BaseUI {
         input.totalSteps = props.step;
         input.ignoreFocusOut = props.ignoreFocusOut || true;
 
-        input.buttons = props.buttons || [];
+        input.buttons = [QuickInputButtons.Back, ...(props.buttons || [])];
         if (props.buttonHandler !== undefined) {
             input.onDidTriggerButton((e) => {
                 props.buttonHandler?.(e);
@@ -134,15 +137,16 @@ export class BaseUI {
         return new Promise((resolve, reject) => {
             input.onDidAccept(() => {
                 const selection = input.selectedItems;
-                if (selection.some((item) => item.label.includes('Login with OAuth'))) {
+                if (props.validateSelection?.(selection) === false) {
                     return;
                 }
-                resolve({ value: selection[0].label, action: UiAction.Next });
+
+                resolve({ value: selection[0].label as T, action: UiAction.Next });
                 input.hide();
             });
             input.onDidHide(() => {
                 input.dispose();
-                resolve({ value: '', action: UiAction.Back });
+                resolve({ value: undefined, action: UiAction.Back });
             });
             input.show();
         });
