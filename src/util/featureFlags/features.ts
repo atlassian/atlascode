@@ -12,7 +12,7 @@ export const enum Experiments {
 
 export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
     [Experiments.AtlascodeNewSettingsExperiment]: {
-        parameter: 'enabled',
+        parameter: 'enabled2',
         defaultValue: false,
     },
 };
