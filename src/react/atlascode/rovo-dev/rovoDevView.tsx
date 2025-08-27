@@ -766,6 +766,11 @@ const RovoDevView: React.FC = () => {
                         }}
                         onCopy={handleCopyResponse}
                         handleMemoryCommand={executeGetAgentMemory}
+                        handleTriggerFeedbackCommand={() =>
+                            postMessage({
+                                type: RovoDevViewResponseType.TriggerFeedback,
+                            })
+                        }
                     />
                 </div>
                 <div className="ai-disclaimer">Uses AI. Verify results.</div>

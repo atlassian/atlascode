@@ -34,6 +34,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ title, onSumbit, onC
                             required
                             rows={4}
                             style={{ resize: 'vertical' }}
+                            autoFocus
                         />
                     </div>
                     <div className="form-field">

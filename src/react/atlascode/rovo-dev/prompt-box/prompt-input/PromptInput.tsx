@@ -27,6 +27,7 @@ interface PromptInputBoxProps {
     onAddContext: () => void;
     onCopy: () => void;
     handleMemoryCommand: () => void;
+    handleTriggerFeedbackCommand: () => void;
 }
 
 const TextAreaMessages: Record<State, string> = {
@@ -56,6 +57,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     onAddContext,
     onCopy,
     handleMemoryCommand,
+    handleTriggerFeedbackCommand,
 }) => {
     const [editor, setEditor] = React.useState<monaco.editor.IStandaloneCodeEditor | null>(null);
 
@@ -64,6 +66,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         onSend: (text: string) => void,
         onCopy: () => void,
         handleMemoryCommand: () => void,
+        handleTriggerFeedbackCommand: () => void,
     ) => {
         monaco.editor.registerCommand('rovo-dev.clearChat', () => {
             editor.setValue('');
@@ -84,6 +87,12 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
 
         monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
             handleMemoryCommand();
+
+            editor.setValue('');
+        });
+
+        monaco.editor.registerCommand('rovo-dev.triggerFeedback', () => {
+            handleTriggerFeedbackCommand();
 
             editor.setValue('');
         });
@@ -133,7 +142,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             const editor = createMonacoPromptEditor(container);
             setupPromptKeyBindings(editor, onSend);
             setupAutoResize(editor);
-            setupCommands(editor, onSend, onCopy, handleMemoryCommand);
+            setupCommands(editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand);
 
             editor.setValue(promptText);
 
@@ -145,7 +154,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             };
         }
         return () => {};
-    }, [handleMemoryCommand, onCopy, onSend, promptText]);
+    }, [handleMemoryCommand, handleTriggerFeedbackCommand, onCopy, onSend, promptText]);
 
     React.useEffect(() => {
         if (!editor) {

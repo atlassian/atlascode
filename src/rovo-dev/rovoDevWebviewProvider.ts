@@ -1035,12 +1035,12 @@ ${message}`;
                 {
                     iconPath: new ThemeIcon('report'),
                     label: 'I want to report harmful or inappropriate content',
-                    description: 'Flag this output for inappropriate, offensive or otherwise malicious output. ',
+                    detail: 'Flag this output for inappropriate, offensive or otherwise malicious output. ',
                 },
                 {
                     iconPath: new ThemeIcon('feedback'),
                     label: 'I want to send feedback to Atlassian',
-                    description: 'Share your feedback so we can improve these experiences.',
+                    detail: 'Share your feedback so we can improve these experiences.',
                 },
             ];
             const result = await window.showQuickPick(items, { placeHolder: 'Report answer or leave feedback' });
