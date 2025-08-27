@@ -1,55 +1,90 @@
-# Atlassian for VS Code
+
+# Atlassian: Jira, Rovo Dev, Bitbucket
+
+
+Stay in your IDE; don't switch contexts. 
+
+Browse, View, Create, and Manage your Jira Work Items, Bitbucket PRs, Bitbucket Pipelines. 
+
+Use Rovo Dev (closed beta), our AI Coding Agent, to complete tasks, ask questions, and fix up PRs & Pipelines. 
+
+Compatible with VS Code, Cursor, Windsurf and other forks.
+
+## Jira
+<img src="https://raw.githubusercontent.com/atlassian/atlascode/main/.readme/image-4.png" alt="alt text" style="max-height: 500px;">
+
+## Rovo Dev (closed beta)
+<img src="https://raw.githubusercontent.com/atlassian/atlascode/main/.readme/image-5.png" alt="alt text" style="max-height: 500px;">
+
+## Bitbucket
+<img src="https://raw.githubusercontent.com/atlassian/atlascode/main/.readme/image-6.png" alt="alt text" style="max-height: 500px;">
+
+
+# Get Started 
+1. Install the extension (one click) 
+2. Authenticate the extension with Atlassian 
+3. Open a Jira, View a PR, or ask Rovo Dev to work on something  
+
+# Usage 
+
+| Product | Command Palette | Available Features |
+|---------|-----------------|---------|
+| **Authentication** | Atlassian: Open Settings | Sign in / Login |
+| **Jira** | Jira:  | Browse, Search, View, Update, Create, and Start |
+| **Rovo Dev - AI Coding Agent** | Rovo: | Ask questions, start on Jiras, write tests or documentation |
+| **Pull Requests** | Bitbucket: | Browse, View, Update, Create, and Approve / Decline / Merge |
+| **Pipelines**  | Bitbucket: | Browse, View, Run |
+
+
+# Troubleshooting 
+If the table below doesn't help you, [raise an issue here.](https://github.com/atlassian/atlascode/issues?q=is%3Aissue%20state%3Aopen%20sort%3Aupdated-desc)
+
+| Issue | Troubleshooting Steps |
+|-------|----------------------|
+| **Rovo Dev not working** | 1. Confirm you are on the latest stable release<br>2. Confirm you have an API token<br>3. Confirm the site on the API token has Rovo Dev enabled<br>4. Confirm you haven't run out of tokens<br>5. Try creating a new session<br>6. Try restarting your IDE<br>7. Try re-authenticating |
+| **Jira Work Items not displaying** | 1. Confirm you are on the latest stable release<br>2. Try restarting the IDE<br>3. Try re-authenticating |
+| **Bitbucket PRs not displaying** | 1. Confirm you are in a repo that uses Bitbucket as a remote<br>2. Confirm you are on the latest stable release<br>3. Try restarting the IDE<br>4. Try re-authenticating |
+| **Bitbucket Pipelines not displaying** | 1. Confirm you are in a repo that uses Bitbucket as a remote<br>2. Confirm you are on the latest stable release<br>3. Try restarting the IDE<br>4. Try re-authenticating |
+| **Authentication: Bitbucket/Jira Server failing to Authneticate** | 1. Confirm your server version is supported by the [Atlassian End of Support Policy](https://confluence.atlassian.com/support/atlassian-support-end-of-life-policy-201851003.html)<br>2. Confirm you are on the latest stable release<br>3. Try restarting the IDE<br>4. Try re-authenticating |
+
+
+## Feature Release Notes 
+
+As of now, Rovo Dev in VS Code (and it's forks) is only available for internal dogfooding (aka: Atlassian Employees).
+
+# Compatibility
+
+
+| Platform | Version | Compatibility |
+|----------|---------|---------|
+| Jira Cloud | - | ✅ |
+| Bitbucket Cloud | - | ✅ |
+| Rovo Dev | via Jira Cloud API Tokens | ✅ - closed beta |
+| RDE / WSL | via API Tokens |  ✅Jira <br> ❌ Bitbucket  |
+| Jira & Bitbucket DC / Server | [Atlassian End of Support Policy](https://confluence.atlassian.com/support/atlassian-support-end-of-life-policy-201851003.html) | ✅
+| VS Code | >= 1.77.0 | ✅
+| Cursor | - | ✅
+| Windsurf | - | ✅ 
+| VS Codium | - | ✅
+
+
+If you are Jira or Bitbucket DC / Server, you can find your instance's version in the footer of any Jira/Bitbucket page.
+
+
+# Additional support docs 
+
+https://confluence.atlassian.com/display/BITBUCKET/Getting+started+with+VS+Code
+
+https://support.atlassian.com/bitbucket-cloud/docs/use-the-atlassian-for-vs-code-extension/
+
+
+
+# For Contibutors 
+
 
 [![Atlassian license](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square)](LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](CONTRIBUTING.md)
 
-Stay in the flow by using Atlassian for VSCode to start work on a JIRA issue, raise and review PRs, and close out work! All directly from the IDE.
 
-
-[**Download now**](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode&ssr=false#overview)
-
-
-## Usage
-
-
-### Getting Started
-
--   Make sure you have VS Code version 1.77.0 or above
--   Download the extension from the marketplace
--   Authenticate with Jira and/or Bitbucket from the 'Atlassian: Open Settings' page available in the command palette
--   From the command palette, type 'Atlassian:' to see all of the extensions available commands
-
-For more information, see [Getting started with VS Code](https://confluence.atlassian.com/display/BITBUCKET/Getting+started+with+VS+Code) and the related content.
-
-**Note:** Jira Service Desk projects are not fully supported at this time.
-
-### Features at a Glance
-
-Here's a quick peek at a developer's workflow:
-
-![dev workflow](https://raw.githubusercontent.com/atlassian/atlascode/main/.readme/dev-workflow.gif)
-
-Reviewing with Bitbucket pull request features is a snap:
-
-![review pr](https://raw.githubusercontent.com/atlassian/atlascode/main/.readme/review-pr.gif)
-
-Got a burning issue you'd like to work on?
-
-![start work](https://raw.githubusercontent.com/atlassian/atlascode/main/.readme/issue-start-work.gif)
-
-Kick off your builds:
-
-![builds](https://raw.githubusercontent.com/atlassian/atlascode/main/.readme/start-pipeline.gif)
-
-Create that issue without breaking your stride:
-
-![issue from todo](https://raw.githubusercontent.com/atlassian/atlascode/main/.readme/create-from-code-lens.gif)
-
-...and lots more
-
-
-## Feedback
-
-Please use the in-app feedback form to tell us what you think! It's available from the 'Atlassian: Open Settings' and 'Atlassian: Open Welcome' pages available in the command palette.
 
 ## Installation
 
@@ -64,8 +99,6 @@ Running and debugging the extension:
 -   When you want to test your code changes
     ** If the extension development host is still running restart by clicking ⟲ in the debug toolbar.
     ** If you've already stopped the host just start debugging again.
-
-
 
 ## Documentation
 
@@ -109,14 +142,8 @@ Contributions to Atlassian for VS Code are welcome! Please see [CONTRIBUTING.md]
 
 # Issues 
 
-We moved from Bitbucket to Github. 
-
 To open a new issues, please see [Github](https://github.com/atlassian/atlascode/issues)
 
-To see old issues, please first look at [Github](https://github.com/atlassian/atlascode/issues) then at [Bitbucket](https://bitbucket.org/atlassianlabs/atlascode/issues)
-
-**Note for Server/Data Center users:** The extension supports Jira and Bitbucket versions released in the last two years, per our [end of life policy](https://confluence.atlassian.com/x/ewAID).
-You can find your instance's version in the footer of any Jira/Bitbucket page.
 
 ## License
 

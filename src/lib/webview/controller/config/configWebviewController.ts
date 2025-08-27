@@ -21,7 +21,7 @@ import { ConfigActionApi } from './configActionApi';
 
 const AUTH_URI = `${env.uriScheme || 'vscode'}://${ExtensionId}/auth`;
 
-export const id: string = 'atlascodeSettingsV2';
+export const id: string = 'atlascodeSettingsV2'; // Need to change this to 'id_v2' to help with dif versions
 
 export class ConfigWebviewController implements WebviewController<SectionChangeMessage> {
     public readonly requiredFeatureFlags = [];
@@ -293,6 +293,10 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
             case ConfigActionType.ViewPullRequest: {
                 this._api.viewPullRequest();
                 this._analytics.fireFocusPullRequestEvent(id);
+                break;
+            }
+            case ConfigActionType.OpenNativeSettings: {
+                await this._api.openNativeSettings();
                 break;
             }
 

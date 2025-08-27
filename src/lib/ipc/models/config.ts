@@ -11,6 +11,12 @@ export enum ConfigSection {
     Explore = 'explore',
 }
 
+export enum ConfigV3Section {
+    Auth = 'generalAuth', // For UI
+    AdvancedConfig = 'advancedConfigs', // For UI
+    Explore = 'explore', // UI and functionality
+}
+
 export enum ConfigSubSection {
     Auth = 'auth',
     Issues = 'issues',
@@ -27,6 +33,15 @@ export enum ConfigSubSection {
     JiraFeatures = 'jiraFeatures',
     BitbucketFeatures = 'bitbucketFeatures',
     StartWork = 'startWork',
+}
+
+export enum ConfigV3SubSection {
+    BbAuth = 'bitbucketAuth',
+    JiraAuth = 'jiraAuth',
+    StartWork = 'startWork',
+    Issues = 'issues',
+    Misc = 'misc',
+    Debug = 'debug',
 }
 
 export type FlattenedConfig = { [key: string]: any };

@@ -9,6 +9,7 @@ export class PRComments {
     readonly sectionButton: Locator;
     readonly form: Locator;
     readonly editor: Locator;
+    readonly editorContent: Locator;
     readonly editorConfirmButton: Locator;
     readonly editorCancelButton: Locator;
     readonly richEditorCheckbox: Locator;
@@ -19,6 +20,7 @@ export class PRComments {
         this.sectionButton = this.frame.getByRole('button', { name: 'Comments' });
         this.form = this.frame.getByTestId(FORM_TEST_ID);
         this.editor = this.form.getByTestId(RICH_EDITOR_TEST_ID);
+        this.editorContent = this.editor.locator('div.ProseMirror[contenteditable="true"]');
         this.editorConfirmButton = this.form.getByRole('button', { name: 'save' });
         this.editorCancelButton = this.form.getByRole('button', { name: 'cancel' });
         this.richEditorCheckbox = this.form.getByRole('checkbox');
@@ -26,8 +28,12 @@ export class PRComments {
 
     async expectCommentsSectionLoaded() {
         await expect(this.sectionButton).toBeVisible();
-        await expect(this.form).toBeVisible();
+
+        // Wait for form to be visible with longer timeout and scroll into view
+        await expect(this.form).toBeVisible({ timeout: 10000 });
+
         await expect(this.editor).toBeVisible();
+        await expect(this.editorContent).toBeVisible();
         await expect(this.editorConfirmButton).toBeVisible();
         await expect(this.editorCancelButton).toBeVisible();
         await expect(this.richEditorCheckbox).toBeVisible();

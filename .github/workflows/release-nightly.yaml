@@ -38,9 +38,8 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Set version
-        run: |
-          npm -no-git-tag-version --allow-same-version -f version $PACKAGE_VERSION
+      - name: Set version in package.json
+        run: npm version $PACKAGE_VERSION --no-git-tag-version --allow-same-version -f
 
       - name: Install dependencies
         run: npm ci --no-audit
