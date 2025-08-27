@@ -13,7 +13,6 @@ import {
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
-import { Experiments } from 'src/util/featureFlags';
 import timer from 'src/util/perf';
 import { commands, env } from 'vscode';
 
@@ -191,39 +190,20 @@ export class JiraIssueWebview
     async updateEpicChildren() {
         if (this._issue.isEpic) {
             const site = this._issue.siteDetails;
-            const performanceEnabled = Container.featureFlagClient.checkExperimentValue(
-                Experiments.AtlascodePerformanceExperiment,
-            );
-            if (performanceEnabled) {
-                const [client, epicInfo] = await Promise.all([
-                    Container.clientManager.jiraClient(site),
-                    Container.jiraSettingsManager.getEpicFieldsForSite(site),
-                ]);
-                const fields = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicInfo);
-                let jqlQuery: string = '';
-                if (site.isCloud) {
-                    jqlQuery = `parent = "${this._issue.key}" order by lastViewed DESC`;
-                } else {
-                    jqlQuery = `"Epic Link" = ${this._issue.key} order by lastViewed DESC`;
-                }
-                const res = await client.searchForIssuesUsingJqlGet(jqlQuery, fields);
-                const searchResults = await readSearchResults(res, site, epicInfo);
-                this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
+            const [client, epicInfo] = await Promise.all([
+                Container.clientManager.jiraClient(site),
+                Container.jiraSettingsManager.getEpicFieldsForSite(site),
+            ]);
+            const fields = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicInfo);
+            let jqlQuery: string = '';
+            if (site.isCloud) {
+                jqlQuery = `parent = "${this._issue.key}" order by lastViewed DESC`;
             } else {
-                const client = await Container.clientManager.jiraClient(site);
-                const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
-                const fields = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicInfo);
-
-                let jqlQuery: string = '';
-                if (site.isCloud) {
-                    jqlQuery = `parent = "${this._issue.key}" order by lastViewed DESC`;
-                } else {
-                    jqlQuery = `"Epic Link" = ${this._issue.key} order by lastViewed DESC`;
-                }
-                const res = await client.searchForIssuesUsingJqlGet(jqlQuery, fields);
-                const searchResults = await readSearchResults(res, site, epicInfo);
-                this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
+                jqlQuery = `"Epic Link" = ${this._issue.key} order by lastViewed DESC`;
             }
+            const res = await client.searchForIssuesUsingJqlGet(jqlQuery, fields);
+            const searchResults = await readSearchResults(res, site, epicInfo);
+            this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
         }
     }
 
@@ -456,15 +436,26 @@ export class JiraIssueWebview
                             const createdIssue = await client.getIssue(resp.key, IssueLinkIssueKeys, '');
                             const picked = readIssueLinkIssue(createdIssue, msg.site);
 
-                            if (!Array.isArray(this._editUIData.fieldValues['subtasks'])) {
-                                this._editUIData.fieldValues['subtasks'] = [];
+                            // Check if this is an epic creating children vs regular issue creating subtasks
+                            if (this._issue.isEpic) {
+                                // For epics, refresh the epic children list
+                                await this.updateEpicChildren();
+                            } else {
+                                // For regular issues, update subtasks as before
+                                if (!Array.isArray(this._editUIData.fieldValues['subtasks'])) {
+                                    this._editUIData.fieldValues['subtasks'] = [];
+                                }
+
+                                this._editUIData.fieldValues['subtasks'].push(picked);
+                                this.postMessage({
+                                    type: 'fieldValueUpdate',
+                                    fieldValues: {
+                                        subtasks: this._editUIData.fieldValues['subtasks'],
+                                        nonce: msg.nonce,
+                                    },
+                                });
                             }
 
-                            this._editUIData.fieldValues['subtasks'].push(picked);
-                            this.postMessage({
-                                type: 'fieldValueUpdate',
-                                fieldValues: { subtasks: this._editUIData.fieldValues['subtasks'], nonce: msg.nonce },
-                            });
                             issueCreatedEvent(msg.site, resp.key).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
