@@ -30,7 +30,6 @@ export class PRComments {
         await expect(this.sectionButton).toBeVisible();
 
         // Wait for form to be visible with longer timeout and scroll into view
-        await this.form.scrollIntoViewIfNeeded();
         await expect(this.form).toBeVisible({ timeout: 10000 });
 
         await expect(this.editor).toBeVisible();
