@@ -15,6 +15,10 @@ body {
     max-width: 800px;
 }
 
+#prompt-editor-container * {
+    font-size: var(--vscode-font-size) !important;
+}
+
 .rovoDevChat button {
     cursor: pointer;
 }

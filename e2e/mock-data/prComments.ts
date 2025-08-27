@@ -1,9 +1,9 @@
 export const prCommentPost = {
     id: 'pr-comment-124',
     content: {
-        raw: 'This is a test comment added to the pull request via e2e test',
+        raw: '',
         markup: 'markdown',
-        html: '<p>This is a test comment added to the pull request via e2e test</p>',
+        html: '<p></p>',
     },
     created_on: '2025-01-17T14:18:00+00:00',
     updated_on: '2025-01-17T14:18:00+00:00',

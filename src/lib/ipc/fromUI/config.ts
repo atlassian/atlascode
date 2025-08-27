@@ -19,6 +19,7 @@ export enum ConfigActionType {
     ViewJiraIssue = 'viewJiraIssue',
     CreatePullRequest = 'createPullRequest',
     ViewPullRequest = 'viewPullRequest',
+    OpenNativeSettings = 'openNativeSettings',
 }
 
 export type ConfigAction =
@@ -36,6 +37,7 @@ export type ConfigAction =
     | ReducerAction<ConfigActionType.ViewJiraIssue>
     | ReducerAction<ConfigActionType.CreatePullRequest>
     | ReducerAction<ConfigActionType.ViewPullRequest>
+    | ReducerAction<ConfigActionType.OpenNativeSettings>
     | CommonAction;
 
 export interface AuthAction {
