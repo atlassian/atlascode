@@ -606,6 +606,34 @@ describe('VSCConfigActionApi', () => {
 
             expect(result).toEqual({ default: 'value' });
         });
+
+        it('should return default config when workspace folder value is null', () => {
+            (configuration.inspect as jest.Mock).mockReturnValue({
+                defaultValue: { default: 'value' },
+                globalValue: null,
+                workspaceValue: null,
+                workspaceFolderValue: null,
+            });
+
+            const result = vscConfigActionApi.flattenedConfigForTarget(ConfigTarget.WorkspaceFolder);
+
+            expect(result).toEqual({ default: 'value' });
+        });
+
+        it('should handle unknown config target with default case', () => {
+            (configuration.inspect as jest.Mock).mockReturnValue({
+                defaultValue: { default: 'value' },
+                globalValue: { global: 'value' },
+                workspaceValue: null,
+                workspaceFolderValue: null,
+            });
+
+            // Cast to any to test the default case with an unknown target
+            const result = vscConfigActionApi.flattenedConfigForTarget('unknown' as any);
+
+            expect(merge).toHaveBeenCalledWith({ default: 'value' }, { global: 'value' });
+            expect(result).toEqual({ default: 'value', global: 'value' });
+        });
     });
 
     describe('updateSettings', () => {
@@ -624,6 +652,19 @@ describe('VSCConfigActionApi', () => {
             await vscConfigActionApi.updateSettings(ConfigTarget.Workspace, changes);
 
             expect(configuration.update).toHaveBeenCalledWith('test.setting', 'value', ConfigurationTarget.Workspace);
+            expect(mockAnalyticsApi.fireFeatureChangeEvent).not.toHaveBeenCalled();
+        });
+
+        it('should update settings for workspace folder target', async () => {
+            const changes = { 'test.setting': 'folder-value' };
+
+            await vscConfigActionApi.updateSettings(ConfigTarget.WorkspaceFolder, changes);
+
+            expect(configuration.update).toHaveBeenCalledWith(
+                'test.setting',
+                'folder-value',
+                ConfigurationTarget.WorkspaceFolder,
+            );
             expect(mockAnalyticsApi.fireFeatureChangeEvent).not.toHaveBeenCalled();
         });
 
