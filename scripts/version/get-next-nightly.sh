@@ -4,7 +4,9 @@
 # except the minor version is incremented by one
 # https://code.visualstudio.com/api/working-with-extensions/publishing-extension#prerelease-extensions
 
-git fetch --tags --force >&2
+# --force here is to prevent "would clobber existing tag" error from occuring in `git fetch`
+# Without it, the nightly build triggered from releases can't resolve nightly version correctly
+git fetch --tags --force -q
 
 echo "Evaluating next nightly version..." >&2
 
