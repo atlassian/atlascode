@@ -112,6 +112,18 @@ const ConfigPageV3: React.FunctionComponent = () => {
         }
     }, []);
 
+    const handleJiraToggle = useCallback((enabled: boolean): void => {
+        const changes = Object.create(null);
+        changes['jira.enabled'] = enabled;
+        setChanges(changes);
+    }, []);
+
+    const handleBitbucketToggle = useCallback((enabled: boolean): void => {
+        const changes = Object.create(null);
+        changes['bitbucket.enabled'] = enabled;
+        setChanges(changes);
+    }, []);
+
     useEffect(() => {
         if (Object.keys(changes).length > 0) {
             controller.updateConfig(changes);
@@ -236,6 +248,9 @@ const ConfigPageV3: React.FunctionComponent = () => {
                                             jiraSites={state.jiraSites}
                                             bitbucketSites={state.bitbucketSites}
                                             isRemote={state.isRemote}
+                                            config={state.config}
+                                            jiraToggle={handleJiraToggle}
+                                            bbToggle={handleBitbucketToggle}
                                         />
                                         <AdvancedConfigsPanel
                                             visible={openSection === ConfigV3Section.AdvancedConfig}

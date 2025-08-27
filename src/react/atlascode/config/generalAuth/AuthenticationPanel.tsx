@@ -11,6 +11,9 @@ type AuthenicationPanelProps = {
     jiraSites: SiteWithAuthInfo[];
     bitbucketSites: SiteWithAuthInfo[];
     isRemote: boolean;
+    config: { [key: string]: any };
+    jiraToggle: (enabled: boolean) => void;
+    bbToggle: (enabled: boolean) => void;
 };
 
 export const AuthenticationPanel: React.FunctionComponent<AuthenicationPanelProps> = ({
@@ -18,6 +21,9 @@ export const AuthenticationPanel: React.FunctionComponent<AuthenicationPanelProp
     jiraSites,
     bitbucketSites,
     isRemote,
+    config,
+    jiraToggle,
+    bbToggle,
 }) => {
     return (
         <>
@@ -30,6 +36,8 @@ export const AuthenticationPanel: React.FunctionComponent<AuthenicationPanelProp
                                 sites={jiraSites}
                                 product={ProductJira}
                                 section={ConfigV3Section.Auth}
+                                config={config}
+                                productToggle={jiraToggle}
                             />
                         </Grid>
                         <Grid item>
@@ -38,6 +46,8 @@ export const AuthenticationPanel: React.FunctionComponent<AuthenicationPanelProp
                                 sites={bitbucketSites}
                                 product={ProductBitbucket}
                                 section={ConfigV3Section.Auth}
+                                config={config}
+                                productToggle={bbToggle}
                             />
                         </Grid>
                     </Grid>
