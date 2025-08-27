@@ -4,7 +4,7 @@
 # except the minor version is incremented by one
 # https://code.visualstudio.com/api/working-with-extensions/publishing-extension#prerelease-extensions
 
-git fetch --tags >&2
+git fetch --tags --force >&2
 
 echo "Evaluating next nightly version..." >&2
 
