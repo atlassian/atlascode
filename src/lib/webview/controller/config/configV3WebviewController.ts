@@ -1,5 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
+import { ConfigV3Section } from 'src/lib/ipc/models/config';
 import { v4 } from 'uuid';
 import { env } from 'vscode';
 import * as vscode from 'vscode';
@@ -12,7 +13,7 @@ import { CommonActionType } from '../../../ipc/fromUI/common';
 import { ConfigAction, ConfigActionType } from '../../../ipc/fromUI/config';
 import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
-import { ConfigMessage, ConfigMessageType, ConfigResponse, SectionChangeMessage } from '../../../ipc/toUI/config';
+import { ConfigMessageType, ConfigResponse, ConfigV3Message, SectionV3ChangeMessage } from '../../../ipc/toUI/config';
 import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
@@ -21,9 +22,9 @@ import { ConfigActionApi } from './configActionApi';
 
 const AUTH_URI = `${env.uriScheme || 'vscode'}://${ExtensionId}/auth`;
 
-export const id: string = 'atlascodeSettingsV2'; // Need to change this to 'id_v2' to help with dif versions
+export const id: string = 'atlascodeSettingsV3';
 
-export class ConfigWebviewController implements WebviewController<SectionChangeMessage> {
+export class ConfigV3WebviewController implements WebviewController<SectionV3ChangeMessage> {
     public readonly requiredFeatureFlags = [];
     public readonly requiredExperiments = [];
 
@@ -34,7 +35,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
     private _commonHandler: CommonActionMessageHandler;
     private _isRefreshing = false;
     private _settingsUrl: string;
-    private _initialSection?: SectionChangeMessage;
+    private _initialSection?: SectionV3ChangeMessage;
 
     constructor(
         messagePoster: MessagePoster,
@@ -43,7 +44,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         logger: Logger,
         analytics: AnalyticsApi,
         settingsUrl: string,
-        section?: SectionChangeMessage,
+        section?: SectionV3ChangeMessage,
     ) {
         this._messagePoster = messagePoster;
         this._api = api;
@@ -64,7 +65,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         return { id: WebViewID.ConfigWebview, site: undefined, product: undefined };
     }
 
-    private postMessage(message: ConfigMessage | ConfigResponse | CommonMessage) {
+    private postMessage(message: ConfigV3Message | ConfigResponse | CommonMessage) {
         this._messagePoster(message);
     }
 
@@ -86,7 +87,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
             this._isRefreshing = true;
             const [jiraSites, bbSites] = await this._api.getSitesWithAuth();
             const target = this._api.getConfigTarget();
-            const section = this._initialSection ? this._initialSection : {};
+            const section = this._initialSection ? this._initialSection : { section: ConfigV3Section.Auth };
             const cfg = this._api.flattenedConfigForTarget(target);
             this.postMessage({
                 type: ConfigMessageType.Init,
@@ -111,7 +112,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         }
     }
 
-    public update(section: SectionChangeMessage) {
+    public update(section: SectionV3ChangeMessage) {
         this.postMessage({ type: ConfigMessageType.SectionChange, ...section });
     }
 
@@ -143,15 +144,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                         });
                     }
                 } else {
-                    try {
-                        await this._api.authenticateCloud(msg.siteInfo, this._settingsUrl);
-                    } catch (e) {
-                        this._logger.error(e, 'Cloud authentication error');
-                        this.postMessage({
-                            type: CommonMessageType.Error,
-                            reason: formatError(e, 'Cloud authentication error'),
-                        });
-                    }
+                    this._api.authenticateCloud(msg.siteInfo, this._settingsUrl);
                 }
                 this._analytics.fireAuthenticateButtonEvent(id, msg.siteInfo, isCloud);
                 break;

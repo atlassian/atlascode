@@ -143,6 +143,24 @@ describe('CredentialManager', () => {
         });
     });
 
+    describe('dispose', () => {
+        it('should clear memory store and dispose event emitter', () => {
+            const memStore = (credentialManager as any)._memStore;
+            const eventEmitter = (credentialManager as any)._onDidAuthChange;
+
+            // Add some data to memory store
+            memStore.get(ProductJira.key).set('test-id', mockAuthInfo);
+
+            // Verify data exists before dispose
+            expect(memStore.get(ProductJira.key).size).toBe(1);
+
+            credentialManager.dispose();
+
+            // After dispose, the clear() method should have been called
+            expect(eventEmitter.dispose).toHaveBeenCalled();
+        });
+    });
+
     describe('getAuthInfo', () => {
         it('should return auth info from memory store if available', async () => {
             // Setup memory store with auth info

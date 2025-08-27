@@ -3,7 +3,7 @@
 # Make sure that the minor version is even
 version=$1
 
-if [[ $version =~ ^[0-9]+\.[0-9]*[02468]\.[0-9]+$ ]]; then
+if [[ $version =~ ^[0-9]+\.([1-9][0-9]*)?[02468]\.[0-9]+$ ]]; then
     echo "Version $version is a valid stable release (even minor version)"
     exit 0
 else
