@@ -97,6 +97,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 target: target,
                 showTunnelOption: this._api.shouldShowTunnelOption(),
                 config: cfg,
+                machineId: vscode.env.machineId,
                 ...section,
             });
 

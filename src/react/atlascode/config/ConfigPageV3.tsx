@@ -244,6 +244,7 @@ const ConfigPageV3: React.FunctionComponent = () => {
                                             config={state.config!}
                                             sites={state.jiraSites}
                                             isRemote={state.isRemote}
+                                            machineId={state.machineId}
                                         />
                                     </Box>
                                 </Paper>

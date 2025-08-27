@@ -301,6 +301,7 @@ const ConfigPage: React.FunctionComponent = () => {
                                             selectedSubSections={openSubsections[ConfigSection.General]}
                                             onSubsectionChange={handleSubsectionChange}
                                             config={state.config!}
+                                            machineId={state.machineId}
                                         />
                                         <ExplorePanel
                                             visible={openSection === ConfigSection.Explore}
