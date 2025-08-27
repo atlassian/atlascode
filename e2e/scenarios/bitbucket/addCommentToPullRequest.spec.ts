@@ -7,6 +7,16 @@ import { AtlascodeDrawer, AtlassianSettings, PRInlineCommentPage, PullRequestPag
 export async function addInlineCommentToPullRequest(page: Page, request: APIRequestContext) {
     await closeOnboardingQuickPick(page);
 
+    await new AtlassianSettings(page).closeSettingsPage();
+
+    const { pullRequests } = new AtlascodeDrawer(page);
+    await pullRequests.prTreeitem.click();
+    await pullRequests.prDetails.waitFor({ state: 'visible' });
+    await pullRequests.prDetails.click();
+    await page.waitForTimeout(250);
+
+    const pullRequestPage = new PullRequestPage(page);
+
     await setupPRComments(request, [prCommentPost]);
 
     // Set up the response for when a comment is posted
@@ -20,16 +30,6 @@ export async function addInlineCommentToPullRequest(page: Page, request: APIRequ
     } as PullRequestComment;
 
     await setupPRCommentPost(request, postedComment);
-
-    await new AtlassianSettings(page).closeSettingsPage();
-
-    const { pullRequests } = new AtlascodeDrawer(page);
-    await pullRequests.prTreeitem.click();
-    await pullRequests.prDetails.waitFor({ state: 'visible' });
-    await pullRequests.prDetails.click();
-    await page.waitForTimeout(250);
-
-    const pullRequestPage = new PullRequestPage(page);
 
     // Navigate to Files Changed and click specific file
     await pullRequestPage.files.expectFilesSectionLoaded();
@@ -48,8 +48,23 @@ export async function addInlineCommentToPullRequest(page: Page, request: APIRequ
 export async function addGeneralCommentToPullRequest(page: Page, request: APIRequestContext) {
     await closeOnboardingQuickPick(page);
 
-    await setupPRComments(request, [prCommentPost]);
+    await new AtlassianSettings(page).closeSettingsPage();
 
+    const { pullRequests } = new AtlascodeDrawer(page);
+    await pullRequests.prTreeitem.click();
+    await pullRequests.prDetails.waitFor({ state: 'visible' });
+    await pullRequests.prDetails.click();
+    await page.waitForTimeout(250);
+
+    const pullRequestPage = new PullRequestPage(page);
+
+    // Setup initial empty comments - PR page will request this first
+    await setupPRComments(request, []);
+
+    // First, let's make sure the PR page is loaded
+    await pullRequestPage.expectPRPageLoaded();
+
+    // Now that PR page is open and has requested comments, setup the mock for posting a comment
     const postedComment: PullRequestComment = {
         ...prCommentPost,
         content: {
@@ -61,18 +76,6 @@ export async function addGeneralCommentToPullRequest(page: Page, request: APIReq
 
     await setupPRCommentPost(request, postedComment);
 
-    await new AtlassianSettings(page).closeSettingsPage();
-
-    const { pullRequests } = new AtlascodeDrawer(page);
-    await pullRequests.prTreeitem.click();
-    await pullRequests.prDetails.waitFor({ state: 'visible' });
-    await pullRequests.prDetails.click();
-    await page.waitForTimeout(250);
-
-    const pullRequestPage = new PullRequestPage(page);
-
-    // First, let's make sure the PR page is loaded
-    await pullRequestPage.expectPRPageLoaded();
     await pullRequestPage.summary.sectionButton.click();
     await page.waitForTimeout(1000);
 
@@ -88,6 +91,10 @@ export async function addGeneralCommentToPullRequest(page: Page, request: APIReq
             const editor = form.getByTestId('common.rich-markdown-editor');
             const editorContent = editor.locator('div.ProseMirror[contenteditable="true"]');
             const confirmButton = form.getByRole('button', { name: 'save' });
+
+            // Wait for editor components to be ready
+            await editor.waitFor({ state: 'visible', timeout: 10000 });
+            await editorContent.waitFor({ state: 'visible', timeout: 10000 });
 
             await editorContent.click();
             await page.waitForTimeout(250);
