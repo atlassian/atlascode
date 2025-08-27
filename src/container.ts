@@ -196,8 +196,6 @@ export class Container {
 
         this._featureFlagClient = FeatureFlagClient.getInstance();
 
-        // TODO: add a guard rail feature flag
-        context.subscriptions.push(registerQuickAuthCommand());
         try {
             await this._featureFlagClient.initialize({
                 analyticsAnonymousId: this.machineId,
@@ -218,6 +216,13 @@ export class Container {
             context.subscriptions.push((this._settingsWebviewFactory = settingsV3ViewFactory));
         } else {
             context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
+        }
+
+        if (this._featureFlagClient.checkGate(Features.UseNewAuthFlow)) {
+            setCommandContext(CommandContext.UseNewAuthFlow, true);
+            context.subscriptions.push(registerQuickAuthCommand());
+        } else {
+            setCommandContext(CommandContext.UseNewAuthFlow, false);
         }
 
         if (!process.env.ROVODEV_BBY) {

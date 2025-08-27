@@ -98,7 +98,8 @@
             {
                 "command": "atlascode.rovodev.quickAuth",
                 "title": "Authenticate",
-                "category": "Jira"
+                "category": "Jira",
+                "when": "atlascode:useNewAuthFlow"
             },
             {
                 "command": "atlascode.rovodev.askInteractive",
@@ -804,6 +805,10 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "atlascode.rovodev.quickAuth",
+                    "when": "atlascode:useNewAuthFlow"
+                },
                 {
                     "command": "atlascode.rovodev.askRovoDev",
                     "when": "atlascode:rovoDevEnabled"
