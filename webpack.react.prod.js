@@ -74,6 +74,7 @@ module.exports = {
     plugins: [
         new MiniCssExtractPlugin({
             filename: '[name].css',
+            ignoreOrder: true,
         }),
         new WebpackManifestPlugin({
             fileName: 'asset-manifest.json',

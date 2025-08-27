@@ -56,6 +56,7 @@ export const enum Commands {
     ShowIssueForSiteIdAndKey = 'atlascode.jira.showIssueForSiteIdAndKey',
     ShowIssueForURL = 'atlascode.jira.showIssueForURL',
     ShowConfigPage = 'atlascode.showConfigPage',
+    ShowConfigPageV3 = 'atlascode.showConfigPageV3',
     ShowConfigPageFromExtensionContext = 'atlascode.extensionContext.showConfigPage',
     ShowJiraAuth = 'atlascode.showJiraAuth',
     ShowBitbucketAuth = 'atlascode.showBitbucketAuth',
@@ -91,6 +92,7 @@ export const enum Commands {
     OpenRovoDevConfig = 'atlascode.openRovoDevConfig',
     OpenRovoDevMcpJson = 'atlascode.openRovoDevMcpJson',
     OpenRovoDevGlobalMemory = 'atlascode.openRovoDevGlobalMemory',
+    OpenNativeSettings = 'atlascode.openNativeSettings',
 
     // Debug mode-only commands
     DebugQuickCommand = 'atlascode.debug.quickCommand',
