@@ -4,7 +4,7 @@ import type { PullRequestComment } from 'e2e/helpers/types';
 import { prCommentPost } from 'e2e/mock-data/prComments';
 import { AtlascodeDrawer, AtlassianSettings, PRInlineCommentPage, PullRequestPage } from 'e2e/page-objects';
 
-export async function addCommentToPullRequest(page: Page, request: APIRequestContext) {
+export async function addInlineCommentToPullRequest(page: Page, request: APIRequestContext) {
     await closeOnboardingQuickPick(page);
 
     await setupPRComments(request, [prCommentPost]);
