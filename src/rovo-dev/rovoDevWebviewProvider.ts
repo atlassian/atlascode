@@ -12,8 +12,10 @@ import {
     Event,
     ExtensionContext,
     Position,
+    QuickPickItem,
     Range,
     TextEditor,
+    ThemeIcon,
     Uri,
     Webview,
     WebviewView,
@@ -1025,12 +1027,32 @@ ${message}`;
         this.fireTelemetryEvent('rovoDevFileChangedActionEvent', this._currentPromptId, 'keep', files.length);
     }
 
-    private async executeTriggerFeedback(feedbackType?: 'helpful' | 'unhelpful') {
+    public async executeTriggerFeedback(feedbackType?: 'helpful' | 'unhelpful') {
         const webview = this._webView!;
+        let title = 'Share your thoughts';
+        if (feedbackType === 'unhelpful') {
+            const items: QuickPickItem[] = [
+                {
+                    iconPath: new ThemeIcon('report'),
+                    label: 'I want to report harmful or inappropriate content',
+                    description: 'Flag this output for inappropriate, offensive or otherwise malicious output. ',
+                },
+                {
+                    iconPath: new ThemeIcon('feedback'),
+                    label: 'I want to send feedback to Atlassian',
+                    description: 'Share your feedback so we can improve these experiences.',
+                },
+            ];
+            const result = await window.showQuickPick(items, { placeHolder: 'Report answer or leave feedback' });
+
+            if (result && result.label.includes('report')) {
+                title = 'Report harmful or inappropriate content';
+            }
+        }
 
         await webview.postMessage({
             type: RovoDevProviderMessageType.ShowFeedbackForm,
-            title: feedbackType === 'helpful' ? 'What was helpful?' : 'What could be improved?',
+            title: title,
         });
     }
 
