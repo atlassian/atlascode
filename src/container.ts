@@ -226,7 +226,7 @@ export class Container {
                     if (this._featureFlagClient.checkGate(Features.RovoDevEnabled)) {
                         this.enableRovoDev(context);
                     } else {
-                        this.disableRovoDev(context);
+                        this.disableRovoDev();
                     }
                 }
             });
@@ -261,43 +261,43 @@ export class Container {
         }
     }
 
-    static enableRovoDev(context: ExtensionContext) {
+    static async enableRovoDev(context: ExtensionContext) {
         if (this._rovodevDisposable) {
             // Already enabled
-            return;
+            await RovoDevProcessManager.refreshRovoDevCredentials(context);
+        } else {
+            // this enables the Rovo Dev activity bar
+            await setCommandContext(CommandContext.RovoDevEnabled, true);
+
+            this._rovodevDisposable = vscode.Disposable.from(
+                new RovoDevDecorator(),
+                languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
+                    providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
+                }),
+                (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context, context.extensionPath)),
+                this.configureRovodevSettingsCommands(context),
+            );
+
+            context.subscriptions.push(this._rovodevDisposable);
         }
 
-        // this enables the Rovo Dev activity bar
-        setCommandContext(CommandContext.RovoDevEnabled, true);
-
-        this._rovodevDisposable = vscode.Disposable.from(
-            new RovoDevDecorator(),
-            languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
-                providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
-            }),
-            (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context, context.extensionPath)),
-            this.configureRovodevSettingsCommands(context),
-        );
-
-        context.subscriptions.push(this._rovodevDisposable);
-
         // Refresh all issue views to show the secret button
-        this.jiraIssueViewManager.refreshAll();
+        await this.jiraIssueViewManager.refreshAll();
     }
 
-    static disableRovoDev(context: ExtensionContext) {
+    static async disableRovoDev() {
         if (!this._rovodevDisposable) {
             // Already disabled
             return;
         }
 
-        setCommandContext(CommandContext.RovoDevEnabled, false);
+        await setCommandContext(CommandContext.RovoDevEnabled, false);
         this._rovodevDisposable.dispose();
         this._rovodevDisposable = undefined;
         RovoDevProcessManager.deactivateRovoDevProcessManager();
 
         // Refresh all issue views to hide the secret button
-        this.jiraIssueViewManager.refreshAll();
+        await this.jiraIssueViewManager.refreshAll();
     }
 
     static configureRovodevSettingsCommands(context: ExtensionContext) {
