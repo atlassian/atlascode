@@ -12,6 +12,7 @@ import { v4 } from 'uuid';
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
 import { useMessagingApi } from '../messagingApi';
+import { FeedbackType } from './feedback-form/FeedbackForm';
 import { ChatStream } from './messaging/ChatStream';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
@@ -23,6 +24,7 @@ import {
     CODE_PLAN_EXECUTE_PROMPT,
     DefaultMessage,
     ErrorMessage,
+    extractLastNMessages,
     isCodeChangeTool,
     MessageBlockDetails,
     parseToolReturnMessage,
@@ -75,7 +77,6 @@ const RovoDevView: React.FC = () => {
     const [workspaceCount, setWorkspaceCount] = useState(process.env.ROVODEV_BBY ? 1 : 0);
 
     const [isFeedbackFormVisible, setIsFeedbackFormVisible] = React.useState(false);
-    const [feedbackTitle, setFeedbackTitle] = React.useState('Share your thoughts');
 
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
 
@@ -217,7 +218,6 @@ const RovoDevView: React.FC = () => {
         setIsDeepPlanCreated(false);
         setCurThinkingMessages([]);
         setCurrentMessage(null);
-        setFeedbackTitle('Share your thoughts');
         setIsFeedbackFormVisible(false);
     }, [totalModifiedFiles, keepFiles]);
 
@@ -496,7 +496,6 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ShowFeedbackForm:
-                    setFeedbackTitle(event.title || 'Share your thoughts');
                     setIsFeedbackFormVisible(true);
                     break;
                 default:
@@ -554,7 +553,7 @@ const RovoDevView: React.FC = () => {
             setCurrentState(State.GeneratingResponse);
 
             // Send the prompt to backend
-            postMessage({
+            dispatch({
                 type: RovoDevViewResponseType.Prompt,
                 text,
                 enable_deep_plan: isDeepPlanToggled,
@@ -564,7 +563,7 @@ const RovoDevView: React.FC = () => {
             // Clear the input field
             setPromptText('');
         },
-        [currentState, isDeepPlanCreated, isDeepPlanToggled, postMessage, promptContextCollection],
+        [currentState, isDeepPlanCreated, isDeepPlanToggled, promptContextCollection],
     );
 
     // On the first render, get the context update
@@ -673,10 +672,32 @@ const RovoDevView: React.FC = () => {
     }, [chatStream, currentState]);
 
     const executeGetAgentMemory = useCallback(() => {
-        postMessage({
+        dispatch({
             type: RovoDevViewResponseType.GetAgentMemory,
         });
-    }, [postMessage]);
+    }, []);
+
+    const handleShowFeedbackForm = useCallback(() => {
+        setIsFeedbackFormVisible(true);
+    }, []);
+
+    const executeSendFeedback = useCallback(
+        (feedbackType: FeedbackType, feedack: string, includeTenMessages: boolean) => {
+            let lastTenMessages: string[] | undefined = undefined;
+            if (includeTenMessages) {
+                lastTenMessages = extractLastNMessages(10, chatStream);
+            }
+
+            postMessage({
+                type: RovoDevViewResponseType.SendFeedback,
+                feedbackType,
+                feedbackMessage: feedack,
+                lastTenMessages,
+            });
+            setIsFeedbackFormVisible(false);
+        },
+        [chatStream, postMessage],
+    );
 
     return (
         <div className="rovoDevChat">
@@ -703,7 +724,7 @@ const RovoDevView: React.FC = () => {
                 onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                 feedbackVisible={isFeedbackFormVisible}
                 setFeedbackVisible={setIsFeedbackFormVisible}
-                feedbackTitle={feedbackTitle}
+                sendFeedback={executeSendFeedback}
             />
             <div className="input-section-container">
                 <UpdatedFilesComponent
@@ -766,11 +787,7 @@ const RovoDevView: React.FC = () => {
                         }}
                         onCopy={handleCopyResponse}
                         handleMemoryCommand={executeGetAgentMemory}
-                        handleTriggerFeedbackCommand={() =>
-                            postMessage({
-                                type: RovoDevViewResponseType.TriggerFeedback,
-                            })
-                        }
+                        handleTriggerFeedbackCommand={handleShowFeedbackForm}
                     />
                 </div>
                 <div className="ai-disclaimer">Uses AI. Verify results.</div>

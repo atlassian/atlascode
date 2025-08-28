@@ -12,10 +12,8 @@ import {
     Event,
     ExtensionContext,
     Position,
-    QuickPickItem,
     Range,
     TextEditor,
-    ThemeIcon,
     Uri,
     Webview,
     WebviewView,
@@ -276,7 +274,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.TriggerFeedback:
-                        await this.executeTriggerFeedback(e.feedbackType);
+                        await this.executeTriggerFeedback();
+                        break;
+
+                    case RovoDevViewResponseType.SendFeedback:
+                        console.log('Send feedback message received in provider');
+                        console.log(e);
                         break;
                 }
             } catch (error) {
@@ -1027,32 +1030,11 @@ ${message}`;
         this.fireTelemetryEvent('rovoDevFileChangedActionEvent', this._currentPromptId, 'keep', files.length);
     }
 
-    public async executeTriggerFeedback(feedbackType?: 'helpful' | 'unhelpful') {
+    public async executeTriggerFeedback() {
         const webview = this._webView!;
-        let title = 'Share your thoughts';
-        if (feedbackType === 'unhelpful') {
-            const items: QuickPickItem[] = [
-                {
-                    iconPath: new ThemeIcon('report'),
-                    label: 'I want to report harmful or inappropriate content',
-                    detail: 'Flag this output for inappropriate, offensive or otherwise malicious output. ',
-                },
-                {
-                    iconPath: new ThemeIcon('feedback'),
-                    label: 'I want to send feedback to Atlassian',
-                    detail: 'Share your feedback so we can improve these experiences.',
-                },
-            ];
-            const result = await window.showQuickPick(items, { placeHolder: 'Report answer or leave feedback' });
-
-            if (result && result.label.includes('report')) {
-                title = 'Report harmful or inappropriate content';
-            }
-        }
 
         await webview.postMessage({
             type: RovoDevProviderMessageType.ShowFeedbackForm,
-            title: title,
         });
     }
 

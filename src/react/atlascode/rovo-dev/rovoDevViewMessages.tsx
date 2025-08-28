@@ -1,6 +1,8 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { RovoDevContext, RovoDevPrompt } from 'src/rovo-dev/rovoDevTypes';
 
+import { FeedbackType } from './feedback-form/FeedbackForm';
+
 export const enum RovoDevViewResponseType {
     Prompt = 'prompt',
     CancelResponse = 'cancelResponse',
@@ -19,6 +21,7 @@ export const enum RovoDevViewResponseType {
     WebviewReady = 'webviewReady',
     GetAgentMemory = 'getAgentMemory',
     TriggerFeedback = 'triggerFeedback',
+    SendFeedback = 'sendFeedback',
 }
 
 export interface ModifiedFile {
@@ -43,4 +46,8 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.CheckGitChanges>
     | ReducerAction<RovoDevViewResponseType.WebviewReady>
     | ReducerAction<RovoDevViewResponseType.GetAgentMemory>
-    | ReducerAction<RovoDevViewResponseType.TriggerFeedback, { feedbackType?: 'helpful' | 'unhelpful' }>;
+    | ReducerAction<RovoDevViewResponseType.TriggerFeedback>
+    | ReducerAction<
+          RovoDevViewResponseType.SendFeedback,
+          { feedbackType: FeedbackType; feedbackMessage: string; lastTenMessages?: string[] }
+      >;

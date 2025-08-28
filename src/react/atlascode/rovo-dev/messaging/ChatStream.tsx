@@ -7,7 +7,7 @@ import { useMessagingApi } from '../../messagingApi';
 import { FollowUpActionFooter, OpenFileFunc } from '../common/common';
 import { ErrorMessageItem } from '../common/errorMessage';
 import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
-import { FeedbackForm } from '../feedback-form/FeedbackForm';
+import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
 import { RovoDevLanding } from '../rovoDevLanding';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
@@ -40,7 +40,7 @@ interface ChatStreamProps {
     onCollapsiblePanelExpanded: () => void;
     feedbackVisible?: boolean;
     setFeedbackVisible?: (visible: boolean) => void;
-    feedbackTitle?: string;
+    sendFeedback?: (feedbackType: FeedbackType, feedack: string, lastTenMessages?: boolean) => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -59,7 +59,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onCollapsiblePanelExpanded,
     feedbackVisible = false,
     setFeedbackVisible,
-    feedbackTitle = 'Share your thoughts',
+    sendFeedback,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -67,6 +67,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     const [canCreatePR, setCanCreatePR] = React.useState(false);
     const [hasChangesInGit, setHasChangesInGit] = React.useState(false);
     const [isFormVisible, setIsFormVisible] = React.useState(false);
+    const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
 
     const checkGitChanges = React.useCallback(async () => {
         const response = await messagingApi.postMessagePromise(
@@ -203,12 +204,10 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     const handleFeedbackTrigger = React.useCallback(
         (isPositive: boolean) => {
-            messagingApi.postMessage({
-                type: RovoDevViewResponseType.TriggerFeedback,
-                feedbackType: isPositive ? 'helpful' : 'unhelpful',
-            });
+            setFeedbackType(isPositive ? FeedbackType.Like : FeedbackType.Dislike);
+            setFeedbackVisible && setFeedbackVisible(true);
         },
-        [messagingApi],
+        [setFeedbackVisible],
     );
 
     return (
@@ -230,7 +229,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             return (
                                 <ChatMessageItem
                                     msg={block}
-                                    enableActions={block.source === 'RovoDev' && idx === chatHistory.length - 1}
+                                    enableActions={block.source === 'RovoDev'}
                                     onCopy={handleCopyResponse}
                                     onFeedback={handleFeedbackTrigger}
                                 />
@@ -313,11 +312,15 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     )}
                     {!canCreatePR && !deepPlanCreated && feedbackVisible && (
                         <FeedbackForm
-                            title={feedbackTitle}
-                            onSumbit={(feedback, includeTenMessages) => {
+                            type={feedbackType}
+                            onSumbit={(feedbackType, feedback, includeTenMessages) => {
+                                setFeedbackType(undefined);
+                                sendFeedback && sendFeedback(feedbackType, feedback, includeTenMessages);
+                            }}
+                            onCancel={() => {
+                                setFeedbackType(undefined);
                                 setFeedbackVisible && setFeedbackVisible(false);
                             }}
-                            onCancel={() => setFeedbackVisible && setFeedbackVisible(false)}
                         />
                     )}
                 </FollowUpActionFooter>

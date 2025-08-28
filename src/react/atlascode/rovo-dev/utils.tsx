@@ -234,3 +234,42 @@ export const scrollToEnd = (() => {
         }
     };
 })();
+
+export function extractLastNMessages(n: number, history: MessageBlockDetails[]) {
+    let msgCount = 0;
+    let idx = history.length - 1;
+    const lastTenMessages = [];
+    let msgBlock: string[] = [];
+
+    while (idx >= 0 && msgCount < n) {
+        const block = history[idx];
+        if (!Array.isArray(block) && block?.source === 'User') {
+            msgBlock.unshift(JSON.stringify(block));
+            lastTenMessages.unshift(msgBlock.join('\n'));
+            msgBlock = [];
+            idx--;
+            msgCount++;
+            continue;
+        }
+
+        if (Array.isArray(block)) {
+            block.forEach((item) => {
+                const tmpItem = { ...item };
+                if (item.source === 'ToolReturn') {
+                    // we don't want to send the full content of the tool_return back in the feedback as it can contain sensitive data
+                    delete (tmpItem as any).content;
+                    delete (tmpItem as any).parsedContent;
+                }
+                msgBlock.unshift(JSON.stringify(tmpItem));
+            });
+            idx--;
+            continue;
+        }
+
+        if (block) {
+            msgBlock.unshift(JSON.stringify(block));
+        }
+        idx--;
+    }
+    return lastTenMessages;
+}

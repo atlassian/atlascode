@@ -52,4 +52,4 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.ContextAdded, { context: RovoDevContextItem }>
     | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
     | ReducerAction<RovoDevProviderMessageType.ForceStop>
-    | ReducerAction<RovoDevProviderMessageType.ShowFeedbackForm, { title: string }>;
+    | ReducerAction<RovoDevProviderMessageType.ShowFeedbackForm>;

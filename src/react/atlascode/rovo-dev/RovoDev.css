@@ -656,3 +656,13 @@ body {
     opacity: 0.7;
 }
 
+.form-select {
+    width: 100%;
+    border: 1px solid var(--vscode-dropdown-border);
+    background-color: var(--vscode-dropdown-background);
+    color: var(--vscode-dropdown-foreground);
+}
+
+.form-select:focus {
+    outline: var(--vscode-focusBorder) solid 1px;
+}
