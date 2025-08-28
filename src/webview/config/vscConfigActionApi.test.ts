@@ -61,6 +61,7 @@ describe('VSCConfigActionApi', () => {
         mockAnalyticsApi = {
             fireFeatureChangeEvent: jest.fn(),
             fireCustomJQLCreatedEvent: jest.fn(),
+            fireOpenSettingsButtonEvent: jest.fn(),
         } as any;
 
         mockCancelMan = {
@@ -605,6 +606,34 @@ describe('VSCConfigActionApi', () => {
 
             expect(result).toEqual({ default: 'value' });
         });
+
+        it('should return default config when workspace folder value is null', () => {
+            (configuration.inspect as jest.Mock).mockReturnValue({
+                defaultValue: { default: 'value' },
+                globalValue: null,
+                workspaceValue: null,
+                workspaceFolderValue: null,
+            });
+
+            const result = vscConfigActionApi.flattenedConfigForTarget(ConfigTarget.WorkspaceFolder);
+
+            expect(result).toEqual({ default: 'value' });
+        });
+
+        it('should handle unknown config target with default case', () => {
+            (configuration.inspect as jest.Mock).mockReturnValue({
+                defaultValue: { default: 'value' },
+                globalValue: { global: 'value' },
+                workspaceValue: null,
+                workspaceFolderValue: null,
+            });
+
+            // Cast to any to test the default case with an unknown target
+            const result = vscConfigActionApi.flattenedConfigForTarget('unknown' as any);
+
+            expect(merge).toHaveBeenCalledWith({ default: 'value' }, { global: 'value' });
+            expect(result).toEqual({ default: 'value', global: 'value' });
+        });
     });
 
     describe('updateSettings', () => {
@@ -623,6 +652,19 @@ describe('VSCConfigActionApi', () => {
             await vscConfigActionApi.updateSettings(ConfigTarget.Workspace, changes);
 
             expect(configuration.update).toHaveBeenCalledWith('test.setting', 'value', ConfigurationTarget.Workspace);
+            expect(mockAnalyticsApi.fireFeatureChangeEvent).not.toHaveBeenCalled();
+        });
+
+        it('should update settings for workspace folder target', async () => {
+            const changes = { 'test.setting': 'folder-value' };
+
+            await vscConfigActionApi.updateSettings(ConfigTarget.WorkspaceFolder, changes);
+
+            expect(configuration.update).toHaveBeenCalledWith(
+                'test.setting',
+                'folder-value',
+                ConfigurationTarget.WorkspaceFolder,
+            );
             expect(mockAnalyticsApi.fireFeatureChangeEvent).not.toHaveBeenCalled();
         });
 
@@ -645,6 +687,43 @@ describe('VSCConfigActionApi', () => {
 
             expect(configuration.update).toHaveBeenCalledWith('jira.jqlList', [newJql], ConfigurationTarget.Global);
             expect(mockSiteManager.getSiteForId).toHaveBeenCalledWith(ProductJira, 'test-site');
+            expect(mockAnalyticsApi.fireCustomJQLCreatedEvent).toHaveBeenCalledWith(mockSite);
+        });
+
+        it('should handle JQL settings with existing JQLs and set jqlSiteId for new ones', async () => {
+            const existingJql = {
+                id: 'existing-jql',
+                siteId: 'existing-site',
+                name: 'Existing JQL',
+                query: 'existing',
+                enabled: true,
+                monitor: false,
+            } as unknown as JQLEntry;
+
+            const newJql = {
+                id: 'new-jql',
+                siteId: 'new-site',
+                name: 'New JQL',
+                query: 'new',
+                enabled: true,
+                monitor: false,
+            } as unknown as JQLEntry;
+
+            const changes = { 'jira.jqlList': [existingJql, newJql] };
+            const mockSite = { id: 'new-site' } as unknown as DetailedSiteInfo;
+
+            // Mock existing JQLs in configuration
+            (configuration.get as jest.Mock).mockReturnValue([existingJql]);
+            mockSiteManager.getSiteForId.mockReturnValue(mockSite);
+
+            await vscConfigActionApi.updateSettings(ConfigTarget.User, changes);
+
+            expect(configuration.update).toHaveBeenCalledWith(
+                'jira.jqlList',
+                [existingJql, newJql],
+                ConfigurationTarget.Global,
+            );
+            expect(mockSiteManager.getSiteForId).toHaveBeenCalledWith(ProductJira, 'new-site');
             expect(mockAnalyticsApi.fireCustomJQLCreatedEvent).toHaveBeenCalledWith(mockSite);
         });
 
@@ -726,6 +805,60 @@ describe('VSCConfigActionApi', () => {
             vscConfigActionApi.viewPullRequest();
 
             expect(mockExplorerFocusManager.fireEvent).toHaveBeenCalledWith(FocusEventActions.VIEWPULLREQUEST, true);
+        });
+    });
+
+    describe('openNativeSettings', () => {
+        it('should execute workbench.action.openSettings command with extension filter', async () => {
+            await vscConfigActionApi.openNativeSettings();
+
+            expect(commands.executeCommand).toHaveBeenCalledWith(
+                'workbench.action.openSettings',
+                '@ext:atlassian.atlascode',
+            );
+        });
+
+        it('should fire analytics event for opening settings', async () => {
+            await vscConfigActionApi.openNativeSettings();
+
+            expect(mockAnalyticsApi.fireOpenSettingsButtonEvent).toHaveBeenCalledWith('advancedConfigsPanel');
+        });
+
+        it('should call both command execution and analytics', async () => {
+            await vscConfigActionApi.openNativeSettings();
+
+            expect(commands.executeCommand).toHaveBeenCalledWith(
+                'workbench.action.openSettings',
+                '@ext:atlassian.atlascode',
+            );
+            expect(mockAnalyticsApi.fireOpenSettingsButtonEvent).toHaveBeenCalledWith('advancedConfigsPanel');
+            expect(commands.executeCommand).toHaveBeenCalledTimes(1);
+            expect(mockAnalyticsApi.fireOpenSettingsButtonEvent).toHaveBeenCalledTimes(1);
+        });
+
+        it('should handle command execution errors gracefully', async () => {
+            const mockError = new Error('Command execution failed');
+            (commands.executeCommand as jest.Mock).mockRejectedValueOnce(mockError);
+
+            await expect(vscConfigActionApi.openNativeSettings()).rejects.toThrow('Command execution failed');
+
+            // Analytics should not be called if command fails
+            expect(mockAnalyticsApi.fireOpenSettingsButtonEvent).not.toHaveBeenCalled();
+        });
+
+        it('should still fire analytics even if command succeeds but analytics fails', async () => {
+            (commands.executeCommand as jest.Mock).mockResolvedValueOnce(undefined);
+            mockAnalyticsApi.fireOpenSettingsButtonEvent.mockImplementationOnce(() => {
+                throw new Error('Analytics failed');
+            });
+
+            await expect(vscConfigActionApi.openNativeSettings()).rejects.toThrow('Analytics failed');
+
+            // Command should still have been called
+            expect(commands.executeCommand).toHaveBeenCalledWith(
+                'workbench.action.openSettings',
+                '@ext:atlassian.atlascode',
+            );
         });
     });
 });

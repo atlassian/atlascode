@@ -11,6 +11,7 @@ import { GenMiscPanel } from './subpanels/GenMiscPanel';
 type GeneralPanelProps = CommonPanelProps & {
     config: { [key: string]: any };
     onSubsectionChange: (subSection: ConfigSubSection, expanded: boolean) => void;
+    machineId?: string;
 };
 
 const useStyles = makeStyles(
@@ -28,6 +29,7 @@ export const GeneralPanel: React.FunctionComponent<GeneralPanelProps> = ({
     selectedSubSections,
     onSubsectionChange,
     config,
+    machineId,
 }) => {
     const classes = useStyles();
 
@@ -78,6 +80,11 @@ export const GeneralPanel: React.FunctionComponent<GeneralPanelProps> = ({
                                     If you don't wish to send usage data to Atlassian, you can set the
                                     telemetry.enableTelemetry user setting to false, and restart VS Code.
                                 </Typography>
+                                {machineId && (
+                                    <Typography variant="subtitle1" className={classes.root}>
+                                        VSCode unique ID: {machineId}
+                                    </Typography>
+                                )}
                             </Box>
                         </Grid>
                         <Grid item></Grid>

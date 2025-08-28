@@ -2,7 +2,6 @@ import { createIssueUI, editIssueUI } from '@atlassianlabs/jira-metaui-client';
 import { DEFAULT_API_VERSION } from '@atlassianlabs/jira-pi-client';
 import * as jiraPiCommonModels from '@atlassianlabs/jira-pi-common-models';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-import { Experiments } from 'src/util/featureFlags';
 import { expansionCastTo } from 'testsutil';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
@@ -21,14 +20,6 @@ jest.mock('@atlassianlabs/jira-metaui-client');
 jest.mock('@atlassianlabs/jira-pi-common-models');
 jest.mock('../container');
 jest.mock('../views/jira/searchJiraHelper');
-jest.mock('src/util/featureFlags', () => ({
-    FeatureFlagClient: {
-        checkExperimentValue: jest.fn(),
-    },
-    Experiments: {
-        AtlascodePerformanceExperiment: 'atlascode-performance-experiment',
-    },
-}));
 
 describe('fetchIssue', () => {
     // Mock data
@@ -60,11 +51,6 @@ describe('fetchIssue', () => {
     // Setup mocks before each test
     beforeEach(() => {
         jest.clearAllMocks();
-
-        // Mock FeatureFlagClient to return false by default
-        (Container.featureFlagClient as any) = {
-            checkExperimentValue: jest.fn().mockReturnValue(false),
-        };
 
         // Setup Container mock
         (Container.clientManager as any) = {
@@ -109,15 +95,9 @@ describe('fetchIssue', () => {
     });
 
     describe('fetchCreateIssueUI', () => {
-        it('should call client manager and createIssueUI with parallel fetching when performance is enabled', async () => {
-            // Enable performance mode
-            (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
-
+        it('should call client manager and createIssueUI', async () => {
             const result = await fetchCreateIssueUI(mockSiteDetails, mockProjectKey);
 
-            expect(Container.featureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
-                Experiments.AtlascodePerformanceExperiment,
-            );
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.jiraSettingsManager.getAllFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.jiraSettingsManager.getIssueLinkTypes).toHaveBeenCalledWith(mockSiteDetails);
@@ -134,22 +114,6 @@ describe('fetchIssue', () => {
                 mockCreateMetadata,
                 true,
             );
-            expect(result).toEqual({
-                fields: [],
-                issuetypes: [],
-                projectKey: mockProjectKey,
-            });
-        });
-
-        it('should call client manager and createIssueUI without parallel fetching when performance is disabled', async () => {
-            // Performance mode is disabled by default in beforeEach
-            const result = await fetchCreateIssueUI(mockSiteDetails, mockProjectKey);
-
-            expect(Container.featureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
-                Experiments.AtlascodePerformanceExperiment,
-            );
-            expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
-            expect(createIssueUI).toHaveBeenCalledWith(mockProjectKey, mockClient);
             expect(result).toEqual({
                 fields: [],
                 issuetypes: [],
@@ -175,34 +139,9 @@ describe('fetchIssue', () => {
     });
 
     describe('fetchMinimalIssue', () => {
-        it('should fetch issue data with parallel calls when performance is enabled', async () => {
-            // Enable performance mode
-            (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
-
+        it('should fetch issue data', async () => {
             const result = await fetchMinimalIssue(mockIssueKey, mockSiteDetails);
 
-            expect(Container.featureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
-                Experiments.AtlascodePerformanceExperiment,
-            );
-            expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
-            expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
-            expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockEpicInfo);
-            expect(mockClient.getIssue).toHaveBeenCalledWith(mockIssueKey, mockFieldIds);
-            expect(jiraPiCommonModels.minimalIssueFromJsonObject).toHaveBeenCalledWith(
-                mockIssueResponse,
-                mockSiteDetails,
-                mockEpicInfo,
-            );
-            expect(result).toBe(mockMinimalIssue);
-        });
-
-        it('should fetch issue data sequentially when performance is disabled', async () => {
-            // Performance mode is disabled by default in beforeEach
-            const result = await fetchMinimalIssue(mockIssueKey, mockSiteDetails);
-
-            expect(Container.featureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
-                Experiments.AtlascodePerformanceExperiment,
-            );
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.jiraSettingsManager.getEpicFieldsForSite).toHaveBeenCalledWith(mockSiteDetails);
             expect(Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite).toHaveBeenCalledWith(mockEpicInfo);
@@ -258,15 +197,9 @@ describe('fetchIssue', () => {
     });
 
     describe('fetchEditIssueUI', () => {
-        it('should call client manager and editIssueUI with parallel fetching when performance is enabled', async () => {
-            // Enable performance mode
-            (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
-
+        it('should call client manager and editIssueUI', async () => {
             const result = await fetchEditIssueUI(mockMinimalIssue);
 
-            expect(Container.featureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
-                Experiments.AtlascodePerformanceExperiment,
-            );
             expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockMinimalIssue.siteDetails);
             expect(Container.jiraSettingsManager.getAllFieldsForSite).toHaveBeenCalledWith(
                 mockMinimalIssue.siteDetails,
@@ -288,16 +221,88 @@ describe('fetchIssue', () => {
             expect(result).toEqual({ fields: [] });
         });
 
-        it('should call client manager and editIssueUI without parallel fetching when performance is disabled', async () => {
-            // Performance mode is disabled by default in beforeEach
-            const result = await fetchEditIssueUI(mockMinimalIssue);
+        it('should extract project key correctly from issue key', async () => {
+            const issueWithComplexKey = expansionCastTo<MinimalIssue<DetailedSiteInfo>>({
+                key: 'COMPLEX_PROJECT-999',
+                summary: 'Test issue with complex project key',
+                siteDetails: mockSiteDetails,
+            });
 
-            expect(Container.featureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
-                Experiments.AtlascodePerformanceExperiment,
+            const result = await fetchEditIssueUI(issueWithComplexKey);
+
+            expect(Container.jiraSettingsManager.getIssueCreateMetadata).toHaveBeenCalledWith(
+                'COMPLEX_PROJECT',
+                issueWithComplexKey.siteDetails,
             );
-            expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockMinimalIssue.siteDetails);
-            expect(editIssueUI).toHaveBeenCalledWith(mockMinimalIssue, mockClient);
             expect(result).toEqual({ fields: [] });
+        });
+    });
+
+    describe('error handling', () => {
+        it('should propagate errors from fetchMinimalIssue', async () => {
+            const errorMessage = 'Failed to fetch issue';
+            mockClient.getIssue.mockRejectedValue(new Error(errorMessage));
+
+            await expect(fetchMinimalIssue(mockIssueKey, mockSiteDetails)).rejects.toThrow(errorMessage);
+        });
+
+        it('should propagate errors from fetchCreateIssueUI', async () => {
+            const errorMessage = 'Failed to create issue UI';
+            (createIssueUI as jest.Mock).mockRejectedValue(new Error(errorMessage));
+
+            await expect(fetchCreateIssueUI(mockSiteDetails, mockProjectKey)).rejects.toThrow(errorMessage);
+        });
+
+        it('should propagate errors from fetchEditIssueUI', async () => {
+            const errorMessage = 'Failed to edit issue UI';
+            (editIssueUI as jest.Mock).mockRejectedValue(new Error(errorMessage));
+
+            await expect(fetchEditIssueUI(mockMinimalIssue)).rejects.toThrow(errorMessage);
+        });
+    });
+
+    describe('parallel execution verification', () => {
+        it('should call all dependencies in parallel for fetchCreateIssueUI', async () => {
+            const startTime = Date.now();
+
+            // Mock all dependencies to take some time
+            (Container.jiraSettingsManager.getAllFieldsForSite as jest.Mock).mockImplementation(
+                () => new Promise((resolve) => setTimeout(() => resolve(mockFields), 10)),
+            );
+            (Container.jiraSettingsManager.getIssueLinkTypes as jest.Mock).mockImplementation(
+                () => new Promise((resolve) => setTimeout(() => resolve(mockIssueLinkTypes), 10)),
+            );
+            (Container.jiraSettingsManager.getIssueCreateMetadata as jest.Mock).mockImplementation(
+                () => new Promise((resolve) => setTimeout(() => resolve(mockCreateMetadata), 10)),
+            );
+
+            await fetchCreateIssueUI(mockSiteDetails, mockProjectKey);
+
+            const endTime = Date.now();
+            const executionTime = endTime - startTime;
+
+            // If executed in parallel, should take ~10ms, if sequential would take ~30ms
+            expect(executionTime).toBeLessThan(25);
+        });
+
+        it('should call dependencies in parallel for fetchMinimalIssue', async () => {
+            const startTime = Date.now();
+
+            // Mock dependencies to take some time
+            (Container.clientManager.jiraClient as jest.Mock).mockImplementation(
+                () => new Promise((resolve) => setTimeout(() => resolve(mockClient), 10)),
+            );
+            (Container.jiraSettingsManager.getEpicFieldsForSite as jest.Mock).mockImplementation(
+                () => new Promise((resolve) => setTimeout(() => resolve(mockEpicInfo), 10)),
+            );
+
+            await fetchMinimalIssue(mockIssueKey, mockSiteDetails);
+
+            const endTime = Date.now();
+            const executionTime = endTime - startTime;
+
+            // If executed in parallel, should take ~10ms, if sequential would take ~20ms
+            expect(executionTime).toBeLessThan(18);
         });
     });
 });

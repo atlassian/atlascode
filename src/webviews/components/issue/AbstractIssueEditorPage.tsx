@@ -502,12 +502,9 @@ export abstract class AbstractIssueEditorPage<
                                     {...fieldArgs.fieldProps}
                                     className="ac-inputField"
                                     isDisabled={this.state.isSomethingLoading}
-                                    onChange={(e: any) =>
-                                        chain(
-                                            fieldArgs.fieldProps.onChange,
-                                            this.handleInlineEdit(field, e.currentTarget.value),
-                                        )
-                                    }
+                                    onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
+                                        this.handleInlineEdit(field, e.currentTarget.value),
+                                    )}
                                     placeholder={field.key === 'summary' && 'What needs to be done?'}
                                 />
                             );
@@ -517,9 +514,9 @@ export abstract class AbstractIssueEditorPage<
                                         {...fieldArgs.fieldProps}
                                         value={this.state.fieldValues[field.key]}
                                         isDisabled={this.state.isSomethingLoading}
-                                        onChange={(e: string) =>
-                                            chain(fieldArgs.fieldProps.onChange, this.handleInlineEdit(field, e))
-                                        }
+                                        onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
+                                            this.handleInlineEdit(field, val),
+                                        )}
                                         fetchUsers={async (input: string) =>
                                             (await this.fetchUsers(input)).map((user) => ({
                                                 displayName: user.displayName,
@@ -672,6 +669,7 @@ export abstract class AbstractIssueEditorPage<
                 );
             }
             case UIType.Subtasks: {
+                // seems unused, but keeping it for now. No calls of getInputMarkup for uiType === 'subtasks'
                 let markup = <React.Fragment />;
                 if (editmode) {
                     markup = (

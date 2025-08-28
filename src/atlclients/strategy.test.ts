@@ -102,4 +102,18 @@ describe('Authentication strategies', () => {
         expect(strategy.profileUrl()).toBe(expected.profileUrl);
         expect(strategy.emailsUrl()).toBe(expected.emailsUrl);
     });
+
+    it('should throw error for unknown provider', () => {
+        expect(() => {
+            strategyForProvider('unknown-provider' as OAuthProvider);
+        }).toThrow('Unknown provider: unknown-provider');
+    });
+
+    it('should handle JiraCloudRemote provider', () => {
+        const strategy = strategyForProvider(OAuthProvider.JiraCloudRemote);
+        expect(strategy).toBeDefined();
+        // JiraCloudRemote uses JiraDevStrategy which extends JiraStrategy,
+        // so it should return the provider from the strategy data
+        expect(strategy.provider()).toBeDefined();
+    });
 });

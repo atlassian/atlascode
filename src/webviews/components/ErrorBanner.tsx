@@ -2,21 +2,20 @@ import SectionMessage from '@atlaskit/section-message';
 import { isErrorCollection, isErrorWithMessages } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
 
-export default class ErrorBanner extends React.Component<
-    { errorDetails: any; onDismissError: () => void },
-    { errorDetails: any }
-> {
-    constructor(props: any) {
+export type ErrorBannerProps = { errorDetails: any; onDismissError: () => void };
+
+export default class ErrorBanner extends React.Component<ErrorBannerProps, { errorDetails: any }> {
+    constructor(props: ErrorBannerProps) {
         super(props);
         this.state = {
             errorDetails: this.props.errorDetails,
         };
     }
 
-    override componentWillReceiveProps(nextProps: any) {
-        this.setState({
+    static getDerivedStateFromProps(nextProps: Partial<ErrorBannerProps>) {
+        return {
             errorDetails: nextProps.errorDetails,
-        });
+        };
     }
 
     override render() {
