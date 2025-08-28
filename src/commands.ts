@@ -211,6 +211,14 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 Container.openPullRequestHandler(data.pullRequestUrl);
             }),
             commands.registerCommand(Commands.ShowOnboardingFlow, () => Container.onboardingProvider.start()),
+            commands.registerCommand(Commands.JiraLogin, () => {
+                const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
+                if (useNewAuthFlow) {
+                    commands.executeCommand(Commands.QuickAuth, { product: ProductJira });
+                } else {
+                    commands.executeCommand(Commands.ShowConfigPage);
+                }
+            }),
         );
     } else {
         vscodeContext.subscriptions.push(
