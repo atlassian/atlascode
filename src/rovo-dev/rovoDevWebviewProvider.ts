@@ -1232,16 +1232,14 @@ ${message}`;
         });
     }
 
-    public signalProcessTerminated(errorMessage?: string, canBeRestarted = true) {
+    public signalProcessTerminated(errorMessage?: string) {
         this._processState = RovoDevProcessState.Terminated;
         this._initialized = false;
         this._rovoDevApiClient = undefined;
 
-        errorMessage = errorMessage ? `Agent process terminated:\r\n${errorMessage}\r\n` : 'Agent process terminated.';
-
-        if (canBeRestarted) {
-            errorMessage += '\r\nPlease start a new chat session to continue.';
-        }
+        errorMessage = errorMessage
+            ? `Agent process terminated:\r\n${errorMessage}\r\n\r\nPlease start a new chat session to continue.`
+            : 'Agent process terminated.\r\nPlease start a new chat session to continue.';
 
         const error = new Error(errorMessage);
         return this.processError(error, false, true);
