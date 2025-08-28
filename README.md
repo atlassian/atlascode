@@ -77,7 +77,10 @@ https://confluence.atlassian.com/display/BITBUCKET/Getting+started+with+VS+Code
 
 https://support.atlassian.com/bitbucket-cloud/docs/use-the-atlassian-for-vs-code-extension/
 
+# Support & Billing
 
+This VS Code extension is offered **free** of charge by Atlassian and without warranty. It provides an additional user interface for some Atlassian Products, which is billed separately. Your use of any Atlassian Products remains subject to the Atlassian Customer Agreement. This extension does not modify your billing or licensing for any Atlassian Product.
+Support and availability are available per the Atlassian Customer Agreement for free products.
 
 # For Contibutors 
 
