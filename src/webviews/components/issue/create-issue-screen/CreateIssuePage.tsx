@@ -1,7 +1,6 @@
 import Button from '@atlaskit/button';
 import LoadingButton from '@atlaskit/button/loading-button';
-import Form, { Field, FormFooter, FormHeader, RequiredAsterisk } from '@atlaskit/form';
-import { ErrorMessage } from '@atlaskit/form';
+import Form, { ErrorMessage, Field, FormFooter, FormHeader, RequiredAsterisk } from '@atlaskit/form';
 import Page from '@atlaskit/page';
 import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';

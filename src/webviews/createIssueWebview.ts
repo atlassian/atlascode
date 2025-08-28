@@ -427,53 +427,93 @@ export class CreateIssueWebview
     }
 
     formatIssueLinks(key: string, linkdata: any): any[] {
+        if (!linkdata || !Array.isArray(linkdata.issue) || !linkdata.type || !linkdata.type.id) {
+            return [];
+        }
         const issuelinks: any[] = [];
-
         linkdata.issue.forEach((link: any) => {
             issuelinks.push({
-                type: {
-                    id: linkdata.type.id,
-                },
+                type: { id: linkdata.type.id },
                 inwardIssue: linkdata.type.type === 'inward' ? { key: link.key } : { key: key },
                 outwardIssue: linkdata.type.type === 'outward' ? { key: link.key } : { key: key },
             });
         });
-
         return issuelinks;
     }
 
     formatCreatePayload(a: CreateIssueAction): [any, any, any, any] {
-        const payload: any = { ...a.issueData };
+        const raw: Record<string, unknown> = { ...a.issueData };
+        const rawAny = raw as Record<string, any>;
         let issuelinks: any = undefined;
         let attachments: any = undefined;
         let worklog: any = undefined;
 
-        if (payload['issuelinks']) {
-            issuelinks = payload['issuelinks'];
-            delete payload['issuelinks'];
+        if (rawAny['issuelinks']) {
+            issuelinks = rawAny['issuelinks'];
+            delete rawAny['issuelinks'];
+            if (
+                !issuelinks ||
+                !Array.isArray(issuelinks.issue) ||
+                issuelinks.issue.length < 1 ||
+                !issuelinks.type ||
+                !issuelinks.type.id
+            ) {
+                issuelinks = undefined;
+            }
         }
 
-        if (payload['attachment']) {
-            attachments = payload['attachment'];
-            delete payload['attachment'];
+        if (rawAny['attachment']) {
+            attachments = rawAny['attachment'];
+            delete rawAny['attachment'];
         }
 
-        if (payload['worklog'] && payload['worklog'].enabled) {
+        if (rawAny['worklog'] && rawAny['worklog'].enabled) {
             worklog = {
                 worklog: [
                     {
                         add: {
-                            ...payload['worklog'],
+                            ...rawAny['worklog'],
                             adjustEstimate: 'new',
-                            started: payload['worklog'].started
-                                ? format(payload['worklog'].started, "yyyy-MM-dd'T'HH:mm:ss.SSSXX")
+                            started: rawAny['worklog'].started
+                                ? format(rawAny['worklog'].started, "yyyy-MM-dd'T'HH:mm:ss.SSSXX")
                                 : undefined,
                         },
                     },
                 ],
             };
-            delete payload['worklog'];
+            delete rawAny['worklog'];
+        } else {
+            delete rawAny['worklog'];
         }
+
+        // Filter out fields that are not present on the current screen and drop empty values
+        const allowedFieldKeys = this._selectedIssueTypeId
+            ? Object.keys(this._screenData.issueTypeUIs[this._selectedIssueTypeId].fields)
+            : Object.keys(rawAny);
+
+        const payload: Record<string, unknown> = {};
+        Object.keys(rawAny).forEach((key) => {
+            if (!allowedFieldKeys.includes(key)) {
+                return;
+            }
+            const value = rawAny[key];
+            if (value === undefined || value === null) {
+                return;
+            }
+            if (typeof value === 'boolean' && value === false) {
+                return;
+            }
+            if (typeof value === 'string' && value.trim().length < 1) {
+                return;
+            }
+            if (Array.isArray(value) && value.length < 1) {
+                return;
+            }
+            if (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length < 1) {
+                return;
+            }
+            payload[key] = value;
+        });
 
         return [payload, worklog, issuelinks, attachments];
     }

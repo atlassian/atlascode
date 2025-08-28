@@ -4,6 +4,7 @@ export const enum Features {
     AtlassianNotifications = 'atlascode-atlassian-notifications-v2',
     StartWorkV3 = 'atlascode-start-work-v3',
     RovoDevEnabled = 'rovo_dev_ff',
+    UseNewAuthFlow = 'atlascode-use-new-auth-flow',
 }
 
 export const enum Experiments {
