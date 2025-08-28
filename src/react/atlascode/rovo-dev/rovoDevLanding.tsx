@@ -99,7 +99,7 @@ export const RovoDevLanding: React.FC<{ subState: SubState; onLoginClick: () => 
 
             {subState === SubState.NeedAuth && (
                 <div style={{ marginTop: '24px' }}>
-                    <div>Please authenticate with a Jira site using a API token to enable Rovo Dev.</div>
+                    <div>Please authenticate with a Jira site using an API token to enable Rovo Dev.</div>
                     <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={onLoginClick}>
                         Login to Jira
                     </button>
