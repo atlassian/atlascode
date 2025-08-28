@@ -25,7 +25,7 @@ import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } 
 import { Logger } from './logger';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevContext } from './rovo-dev/rovoDevTypes';
-import { Experiments } from './util/featureFlags';
+import { Experiments, Features } from './util/featureFlags';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
@@ -406,6 +406,14 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 Container.openPullRequestHandler(data.pullRequestUrl);
             }),
             commands.registerCommand(Commands.ShowOnboardingFlow, () => Container.onboardingProvider.start()),
+            commands.registerCommand(Commands.JiraLogin, () => {
+                const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
+                if (useNewAuthFlow) {
+                    commands.executeCommand(Commands.QuickAuth, { product: ProductJira });
+                } else {
+                    commands.executeCommand(Commands.ShowConfigPage);
+                }
+            }),
         );
     }
 }

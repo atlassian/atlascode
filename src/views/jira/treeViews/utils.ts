@@ -49,9 +49,8 @@ export function getJiraIssueUri(issue: MinimalIssue<DetailedSiteInfo>): Uri {
 }
 
 export const loginToJiraMessageNode = createLabelItem('Please login to Jira', {
-    command: Commands.ShowConfigPage,
+    command: Commands.JiraLogin,
     title: 'Login to Jira',
-    arguments: [ProductJira],
 });
 
 export class JiraIssueNode extends TreeItem implements AbstractBaseNode {
