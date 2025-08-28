@@ -10,7 +10,9 @@ import Spinner from '@atlaskit/spinner';
 import Textfield from '@atlaskit/textfield';
 import {
     CommentVisibility,
+    emptyIssueType,
     IssuePickerIssue,
+    IssueType,
     JsdInternalCommentVisibility,
     MinimalIssueOrKeyAndSite,
 } from '@atlassianlabs/jira-pi-common-models';
@@ -24,6 +26,7 @@ import {
     UIType,
     ValueType,
 } from '@atlassianlabs/jira-pi-meta-models';
+import { Tooltip } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
 import * as React from 'react';
@@ -289,7 +292,11 @@ export abstract class AbstractIssueEditorPage<
         }
     };
 
-    protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
+    protected loadIssueOptions = (
+        field: SelectFieldUI,
+        input: string,
+        currentJQL?: string,
+    ): Promise<IssuePickerIssue[]> => {
         return new Promise((resolve) => {
             const nonce: string = v4();
             // this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl, nonce: nonce });
@@ -302,6 +309,7 @@ export abstract class AbstractIssueEditorPage<
                             site: this.state.siteDetails,
                             autocompleteUrl: field.autoCompleteUrl,
                             nonce: nonce,
+                            currentJQL: currentJQL,
                         },
                         'issueSuggestionsList',
                         ConnectionTimeout,
@@ -411,7 +419,11 @@ export abstract class AbstractIssueEditorPage<
         }
     }, 100);
 
-    protected getInputMarkup(field: FieldUI, editmode: boolean = false): any {
+    protected getInputMarkup(
+        field: FieldUI,
+        editmode: boolean = false,
+        currentIssueType: IssueType = emptyIssueType,
+    ): any {
         switch (field.uiType) {
             case UIType.Input: {
                 const validateFunc = this.getValidateFunction(field, editmode);
@@ -685,7 +697,122 @@ export abstract class AbstractIssueEditorPage<
                 }
                 return markup;
             }
+            case UIType.IssueLink: {
+                if (editmode && currentIssueType.name !== 'Epic') {
+                    let defaultParent: IssuePickerIssue | undefined;
+                    if (this.state.fieldValues['parent']) {
+                        defaultParent = {
+                            img: this.state.fieldValues['parent'].issuetype?.iconUrl || '',
+                            key: this.state.fieldValues['parent'].key,
+                            keyHtml: `<b>${this.state.fieldValues['parent'].key}</b>`,
+                            summary: this.state.fieldValues['parent'].summary,
+                            summaryText: this.state.fieldValues['parent'].summary,
+                        };
+                    } else {
+                        defaultParent = undefined;
+                    }
+                    const sameProjectQuery = `project = "${this.state.fieldValues['project'].key}"`;
+                    let jqlQuery: string = '';
+                    if (currentIssueType.subtask) {
+                        jqlQuery = `${sameProjectQuery} AND issuetype in standardIssueTypes())`;
+                    } else {
+                        jqlQuery = `${sameProjectQuery} AND issuetype = Epic`;
+                    }
 
+                    if (this.state.siteDetails.isCloud) {
+                        return (
+                            <AsyncSelect
+                                isClearable={!field.required && !currentIssueType.subtask}
+                                isMulti={false}
+                                defaultValue={defaultParent}
+                                className="ac-select-container"
+                                classNamePrefix="ac-select"
+                                loadOptions={async (input: string) =>
+                                    await this.loadIssueOptions(field as SelectFieldUI, input, jqlQuery)
+                                }
+                                getOptionLabel={(option: any) => option.key}
+                                getOptionValue={(option: any) => option.key}
+                                placeholder="Search for parent issue"
+                                isLoading={this.state.loadingField === field.key}
+                                isDisabled={this.state.isSomethingLoading}
+                                onChange={(val: any) => {
+                                    this.handleSelectChange(field as SelectFieldUI, val);
+                                }}
+                                components={{
+                                    Option: SelectFieldHelper.IssueSuggestionOption,
+                                    SingleValue: SelectFieldHelper.IssueSuggestionValue,
+                                }}
+                            />
+                        );
+                    } else {
+                        return (
+                            <Tooltip title="Can only configure in Jira Web">
+                                <div style={{ display: 'inline-block', width: '100%' }}>
+                                    <AsyncSelect
+                                        isClearable={!field.required && !currentIssueType.subtask}
+                                        isMulti={false}
+                                        defaultValue={defaultParent}
+                                        className="ac-select-container"
+                                        classNamePrefix="ac-select"
+                                        getOptionLabel={(option: any) => option.key}
+                                        getOptionValue={(option: any) => option.key}
+                                        placeholder="Can only configure in Jira Web"
+                                        isLoading={this.state.loadingField === field.key}
+                                        isDisabled={true}
+                                        components={{
+                                            Option: SelectFieldHelper.IssueSuggestionOption,
+                                            SingleValue: SelectFieldHelper.IssueSuggestionValue,
+                                        }}
+                                    />
+                                </div>
+                            </Tooltip>
+                        );
+                    }
+                } else if (currentIssueType.name !== 'Epic') {
+                    // This will never run for DC because it does not have 'parent' field
+                    return (
+                        <Field
+                            label={<span>{field.name}</span>}
+                            isRequired={field.required}
+                            id={field.key}
+                            name={field.key}
+                        >
+                            {(fieldArgs: any) => {
+                                return (
+                                    <AsyncSelect
+                                        {...fieldArgs.fieldProps}
+                                        isClearable={!field.required}
+                                        isMulti={false}
+                                        className="ac-form-select-container"
+                                        classNamePrefix="ac-form-select"
+                                        loadOptions={async (input: string) =>
+                                            await this.loadIssueOptions(
+                                                field as SelectFieldUI,
+                                                input,
+                                                'issuetype = Epic',
+                                            )
+                                        }
+                                        getOptionLabel={(option: any) => option.key}
+                                        getOptionValue={(option: any) => option.key}
+                                        placeholder="Search for parent issue"
+                                        isLoading={this.state.loadingField === field.key}
+                                        isDisabled={this.state.isSomethingLoading}
+                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                            this.handleInlineEdit(field, val);
+                                        })}
+                                        components={{
+                                            Option: SelectFieldHelper.IssueSuggestionOption,
+                                            SingleValue: SelectFieldHelper.IssueSuggestionValue,
+                                        }}
+                                    />
+                                );
+                            }}
+                        </Field>
+                    );
+                } else {
+                    return <React.Fragment />;
+                }
+            }
             case UIType.IssueLinks: {
                 let markup = <div></div>;
                 if (editmode) {
@@ -697,7 +824,6 @@ export abstract class AbstractIssueEditorPage<
                                 this.handleInlineEdit(field, val);
                             }}
                             isLoading={this.state.loadingField === field.key}
-                            //onFetchIssues={async (input: string) => ReactPromiseUtil.debouncePromise<IssuePickerIssue[]>(() => this.loadIssueOptions(field as SelectFieldUI, input), 100)()}
                             onFetchIssues={async (input: string) =>
                                 await this.loadIssueOptions(field as SelectFieldUI, input)
                             }
