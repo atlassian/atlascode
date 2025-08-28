@@ -1,4 +1,4 @@
-export const enum Features {
+export enum Features {
     EnableErrorTelemetry = 'atlascode-send-error-telemetry',
     JiraRichText = 'atlascode-jira-rte',
     AtlassianNotifications = 'atlascode-atlassian-notifications-v2',
