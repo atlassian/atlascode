@@ -204,14 +204,16 @@ export class RovoDevProcessManager {
     }
 
     public static async initializeRovoDevProcessManager(context: ExtensionContext) {
-        const rovoDevURIs = GetRovoDevURIs(context);
-
-        await this.rovoDevWebviewProvider.signalInitializing();
-
         if (this.rovoDevInstance) {
-            sendErrorToChat(this.rovoDevWebviewProvider, new Error('Rovo Dev is already initialized'));
+            if (await this.rovoDevInstance.refreshCredentials()) {
+                await this.rovoDevWebviewProvider.signalInitializing();
+                this.rovoDevInstance.restart();
+            }
             return;
         }
+
+        const rovoDevURIs = GetRovoDevURIs(context);
+        await this.rovoDevWebviewProvider.signalInitializing();
 
         const credentials = await getCloudCredentials();
         if (!credentials) {
@@ -232,14 +234,7 @@ export class RovoDevProcessManager {
     }
 
     public static async refreshRovoDevCredentials(context: ExtensionContext) {
-        if (this.rovoDevInstance) {
-            if (await this.rovoDevInstance.refreshCredentials()) {
-                await this.rovoDevWebviewProvider.signalInitializing();
-                this.rovoDevInstance.restart();
-            }
-        } else {
-            this.initializeRovoDevProcessManager(context);
-        }
+        await this.initializeRovoDevProcessManager(context);
     }
 
     public static deactivateRovoDevProcessManager() {

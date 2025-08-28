@@ -201,8 +201,9 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     return (
         <div ref={chatEndRef} className="chat-message-container">
             <RovoDevLanding subState={subState} onLoginClick={onLoginClick} />
-            {chatHistory &&
-                chatHistory.map((block, idx) => {
+            {(state !== State.Disabled || subState !== SubState.NeedAuth) &&
+                chatHistory &&
+                chatHistory.map((block) => {
                     if (block) {
                         if (Array.isArray(block)) {
                             return (

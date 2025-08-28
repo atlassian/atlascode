@@ -449,6 +449,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private completeChatResponse(sourceApi: 'replay' | 'chat' | 'error') {
+        if (this._processState === RovoDevProcessState.Disabled) {
+            return Promise.resolve(false);
+        }
+
         const webview = this._webView!;
         return webview.postMessage({
             type: RovoDevProviderMessageType.CompleteMessage,
@@ -504,6 +508,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private processRovoDevResponse(sourceApi: 'chat' | 'replay', response: RovoDevResponse): Thenable<boolean> {
         const fireTelemetry = sourceApi === 'chat';
         const webview = this._webView!;
+
+        if (this._processState === RovoDevProcessState.Disabled) {
+            return Promise.resolve(false);
+        }
 
         switch (response.event_kind) {
             case 'text':
