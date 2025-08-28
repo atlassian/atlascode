@@ -6,7 +6,7 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import { RovoDevContext, RovoDevContextItem, RovoDevInitState, State } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevContext, RovoDevContextItem, RovoDevInitState, State, SubState } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
@@ -61,6 +61,7 @@ const RovoDevView: React.FC = () => {
     const [curThinkingMessages, setCurThinkingMessages] = useState<ChatMessage[]>([]);
 
     const [currentState, setCurrentState] = useState(State.WaitingForPrompt);
+    const [currentSubState, setCurrentSubState] = useState(SubState.None);
     const [initState, setInitState] = useState(
         process.env.ROVODEV_BBY ? RovoDevInitState.Initialized : RovoDevInitState.NotInitialized,
     );
@@ -428,6 +429,7 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.SetInitState:
                     setInitState(event.newState);
+                    setCurrentSubState(SubState.None);
                     break;
 
                 case RovoDevProviderMessageType.ProviderReady:
@@ -447,6 +449,9 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.RovoDevDisabled:
                     setCurrentState(State.Disabled);
+                    if (event.reason === 'needAuth') {
+                        setCurrentSubState(SubState.NeedAuth);
+                    }
                     break;
 
                 case RovoDevProviderMessageType.UserFocusUpdated:
@@ -512,6 +517,8 @@ const RovoDevView: React.FC = () => {
             clearChatHistory,
             handleAppendError,
             setInitState,
+            setCurrentState,
+            setCurrentSubState,
             currentState,
         ],
     );
@@ -670,6 +677,12 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
+    const onLoginClick = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.LaunchJiraAuth,
+        });
+    }, [postMessage]);
+
     return (
         <div className="rovoDevChat">
             <ChatStream
@@ -689,10 +702,12 @@ const RovoDevView: React.FC = () => {
                 deepPlanCreated={isDeepPlanCreated}
                 executeCodePlan={executeCodePlan}
                 state={currentState}
+                subState={currentSubState}
                 initState={initState}
                 downloadProgress={downloadProgress}
                 onChangesGitPushed={onChangesGitPushed}
                 onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
+                onLoginClick={onLoginClick}
             />
             <div className="input-section-container">
                 <UpdatedFilesComponent

@@ -32,7 +32,7 @@ export interface RovoDevObjectResponse {
 }
 
 export type RovoDevProviderMessage =
-    | ReducerAction<RovoDevProviderMessageType.RovoDevDisabled>
+    | ReducerAction<RovoDevProviderMessageType.RovoDevDisabled, { reason: 'needAuth' | 'other' }>
     | ReducerAction<RovoDevProviderMessageType.PromptSent, RovoDevPrompt>
     | ReducerAction<RovoDevProviderMessageType.Response, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.UserChatMessage, { message: ChatMessage }>

@@ -35,7 +35,7 @@ import {
 } from '../../src/analytics';
 import { Container } from '../../src/container';
 import { Logger } from '../../src/logger';
-import { rovodevInfo } from '../constants';
+import { Commands, rovodevInfo } from '../constants';
 import {
     ModifiedFile,
     RovoDevViewResponse,
@@ -261,15 +261,20 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         if (fixedPort) {
                             this.signalProcessStarted(fixedPort);
                         } else if (this.isBoysenberry) {
-                            this.signalRovoDevDisabled();
+                            this.signalRovoDevDisabled('other');
                             throw new Error('Rovo Dev port not set');
                         } else {
                             this._processState = RovoDevProcessState.Starting;
                             RovoDevProcessManager.initializeRovoDevProcessManager(this._context);
                         }
                         break;
+
                     case RovoDevViewResponseType.GetAgentMemory:
                         await this.executeOpenFile('.agent.md', false, undefined, true);
+                        break;
+
+                    case RovoDevViewResponseType.LaunchJiraAuth:
+                        await commands.executeCommand(Commands.JiraAPITokenLogin);
                         break;
                 }
             } catch (error) {
@@ -1140,6 +1145,14 @@ ${message}`;
         return this.processError(new Error(errorMessage), false);
     }
 
+    public signalInitializing() {
+        const webView = this._webView!;
+        return webView.postMessage({
+            type: RovoDevProviderMessageType.SetInitState,
+            newState: RovoDevInitState.NotInitialized,
+        });
+    }
+
     public signalBinaryDownloadStarted() {
         const webView = this._webView!;
         return webView.postMessage({
@@ -1214,12 +1227,13 @@ ${message}`;
         }
     }
 
-    public signalRovoDevDisabled() {
+    public signalRovoDevDisabled(reason: 'needAuth' | 'other') {
         this._processState = RovoDevProcessState.Disabled;
 
         const webView = this._webView!;
         return webView.postMessage({
             type: RovoDevProviderMessageType.RovoDevDisabled,
+            reason,
         });
     }
 

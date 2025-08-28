@@ -123,6 +123,26 @@ async function getOrAssignPortForWorkspace(): Promise<number> {
     throw new Error('unable to find an available port.');
 }
 
+class ProcessManagerError extends Error {
+    constructor(type: 'needAuth');
+    constructor(type: 'other', message: string);
+    constructor(
+        public type: 'needAuth' | 'other',
+        message?: string,
+    ) {
+        super(message || type);
+    }
+}
+
+async function sendErrorToChat(rovoDevWebViewProvider: RovoDevWebviewProvider, error: Error) {
+    if (error instanceof ProcessManagerError && error.type === 'needAuth') {
+        await rovoDevWebViewProvider.signalRovoDevDisabled('needAuth');
+    } else {
+        await rovoDevWebViewProvider.signalRovoDevDisabled('other');
+        await rovoDevWebViewProvider.sendErrorToChat(`Unable to start Rovo Dev:\n${error.message}`);
+    }
+}
+
 export class RovoDevProcessManager {
     private static disposables: Disposable[] = [];
 
@@ -147,9 +167,11 @@ export class RovoDevProcessManager {
         const zipUrl = rovoDevURIs.RovoDevZipUrl;
 
         if (!zipUrl) {
-            await this.rovoDevWebviewProvider.signalRovoDevDisabled();
-            await this.rovoDevWebviewProvider.sendErrorToChat(
-                `Rovo Dev is not supported for the following platform/architecture: ${process.platform}/${process.arch}`,
+            await sendErrorToChat(
+                this.rovoDevWebviewProvider,
+                new Error(
+                    `Rovo Dev is not supported for the following platform/architecture: ${process.platform}/${process.arch}`,
+                ),
             );
             return;
         }
@@ -169,9 +191,12 @@ export class RovoDevProcessManager {
 
             await getFsPromise((callback) => fs.mkdir(versionDir, { recursive: true }, callback));
         } catch (error) {
-            const message = `Unable to update Rovo Dev:\n${error.message}\n\nTo try again, please close VS Code and reopen it.`;
-            await this.rovoDevWebviewProvider.signalRovoDevDisabled();
-            await this.rovoDevWebviewProvider.sendErrorToChat(message);
+            await sendErrorToChat(
+                this.rovoDevWebviewProvider,
+                new Error(
+                    `Unable to update Rovo Dev:\n${error.message}\n\nTo try again, please close VS Code and reopen it.`,
+                ),
+            );
             throw error;
         }
 
@@ -181,14 +206,16 @@ export class RovoDevProcessManager {
     public static async initializeRovoDevProcessManager(context: ExtensionContext) {
         const rovoDevURIs = GetRovoDevURIs(context);
 
+        await this.rovoDevWebviewProvider.signalInitializing();
+
         if (this.rovoDevInstance) {
-            this.sendErrorToChat(new Error('Rovo Dev is already initialized'));
+            sendErrorToChat(this.rovoDevWebviewProvider, new Error('Rovo Dev is already initialized'));
             return;
         }
 
         const credentials = await getCloudCredentials();
         if (!credentials) {
-            this.sendErrorToChat(new Error('Please authenticate with an API token to enable Rovo Dev'));
+            sendErrorToChat(this.rovoDevWebviewProvider, new ProcessManagerError('needAuth'));
             return;
         }
 
@@ -200,13 +227,16 @@ export class RovoDevProcessManager {
 
             await this.startRovoDev(credentials, rovoDevURIs);
         } catch (error) {
-            this.sendErrorToChat(error);
+            sendErrorToChat(this.rovoDevWebviewProvider, error);
         }
     }
 
     public static async refreshRovoDevCredentials(context: ExtensionContext) {
         if (this.rovoDevInstance) {
-            this.rovoDevInstance.refreshCredentials();
+            if (await this.rovoDevInstance.refreshCredentials()) {
+                await this.rovoDevWebviewProvider.signalInitializing();
+                this.rovoDevInstance.restart();
+            }
         } else {
             this.initializeRovoDevProcessManager(context);
         }
@@ -253,11 +283,6 @@ export class RovoDevProcessManager {
     public static showTerminal() {
         this.rovoDevInstance?.showTerminal();
     }
-
-    private static async sendErrorToChat(error: Error) {
-        await this.rovoDevWebviewProvider.signalRovoDevDisabled();
-        await this.rovoDevWebviewProvider.sendErrorToChat(`Unable to start Rovo Dev:\n${error.message}`);
-    }
 }
 
 abstract class RovoDevInstance extends Disposable {
@@ -268,14 +293,15 @@ abstract class RovoDevInstance extends Disposable {
     public abstract start(): Promise<void>;
     public abstract stop(): void;
     public abstract showTerminal(): void;
-    protected abstract restart(): void;
+    public abstract restart(): void;
 
-    public async refreshCredentials(): Promise<void> {
+    public async refreshCredentials(): Promise<boolean> {
         const credentials = await getCloudCredentials();
         if (!this.areEquals(credentials, this.credentials)) {
             this.credentials = credentials;
-            this.restart();
+            return true;
         }
+        return false;
     }
 
     private areEquals(cred1?: CloudCredentials, cred2?: CloudCredentials) {
@@ -319,7 +345,7 @@ class RovoDevProcessInstance extends RovoDevInstance {
                     return;
                 }
                 if (!credentials) {
-                    reject(new Error('Please authenticate with an API token to enable Rovo Dev'));
+                    reject(new ProcessManagerError('needAuth'));
                     return;
                 }
 
@@ -330,7 +356,6 @@ class RovoDevProcessInstance extends RovoDevInstance {
                     USER_EMAIL: username,
                     ...(key ? { USER_API_TOKEN: key } : {}),
                 };
-                let stderrData = '';
 
                 this.rovoDevProcess = spawn(
                     this.rovoDevBinPath,
@@ -348,28 +373,13 @@ class RovoDevProcessInstance extends RovoDevInstance {
 
                         if (this.restarting) {
                             this.restarting = false;
-                            this.start().catch(async (error) => {
-                                await this.rovoDevWebviewProvider.signalRovoDevDisabled();
-                                await this.rovoDevWebviewProvider.sendErrorToChat(error.message);
-                            });
+                            this.start().catch((error) => sendErrorToChat(this.rovoDevWebviewProvider, error));
                         } else if (code !== 0) {
-                            let error: string;
-                            if (stderrData.includes('auth token')) {
-                                error = `please login by providing an API Token. You can do this via Atlassian: Open Settings -> Authentication`;
-                            } else {
-                                // default error message
-                                error = `process exited with code ${code}, see the log for details.`;
-                            }
-
-                            this.rovoDevWebviewProvider.signalProcessTerminated(error);
+                            this.rovoDevWebviewProvider.signalProcessTerminated(
+                                `process exited with code ${code}, see the log for details.`,
+                            );
                         }
                     });
-
-                if (this.rovoDevProcess.stderr) {
-                    this.rovoDevProcess.stderr.on('data', (data) => {
-                        stderrData += data.toString();
-                    });
-                }
 
                 resolve();
             });
@@ -387,7 +397,7 @@ class RovoDevProcessInstance extends RovoDevInstance {
         this.rovoDevProcess = undefined;
     }
 
-    protected override restart(): void {
+    public override restart(): void {
         this.restarting = true;
         this.stop();
     }
@@ -417,7 +427,7 @@ class RovoDevTerminalInstance extends RovoDevInstance {
 
         return new Promise<void>((resolve, reject) => {
             if (!credentials) {
-                reject(new Error('Please authenticate with an API token to enable Rovo Dev'));
+                reject(new ProcessManagerError('needAuth'));
                 return;
             }
 
@@ -474,12 +484,9 @@ class RovoDevTerminalInstance extends RovoDevInstance {
         }
     }
 
-    protected override restart(): void {
+    public override restart(): void {
         this.stop();
-        this.start().catch(async (error) => {
-            await this.rovoDevWebviewProvider.signalRovoDevDisabled();
-            await this.rovoDevWebviewProvider.sendErrorToChat(error.message);
-        });
+        this.start().catch((error) => sendErrorToChat(this.rovoDevWebviewProvider, error));
     }
 
     private hasStopped() {

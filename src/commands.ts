@@ -23,6 +23,7 @@ import { transitionIssue } from './jira/transitionIssue';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from './lib/ipc/models/config';
 import { Logger } from './logger';
+import { AuthenticationType } from './onboarding/quickFlow/authentication/types';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevContext } from './rovo-dev/rovoDevTypes';
 import { Experiments, Features } from './util/featureFlags';
@@ -215,6 +216,17 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
                 if (useNewAuthFlow) {
                     commands.executeCommand(Commands.QuickAuth, { product: ProductJira });
+                } else {
+                    commands.executeCommand(Commands.ShowConfigPage);
+                }
+            }),
+            commands.registerCommand(Commands.JiraAPITokenLogin, () => {
+                const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
+                if (useNewAuthFlow) {
+                    commands.executeCommand(Commands.QuickAuth, {
+                        product: ProductJira,
+                        authenticationType: AuthenticationType.ApiToken,
+                    });
                 } else {
                     commands.executeCommand(Commands.ShowConfigPage);
                 }
@@ -418,6 +430,17 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
                 if (useNewAuthFlow) {
                     commands.executeCommand(Commands.QuickAuth, { product: ProductJira });
+                } else {
+                    commands.executeCommand(Commands.ShowConfigPage);
+                }
+            }),
+            commands.registerCommand(Commands.JiraAPITokenLogin, () => {
+                const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
+                if (useNewAuthFlow) {
+                    commands.executeCommand(Commands.QuickAuth, {
+                        product: ProductJira,
+                        authenticationType: AuthenticationType.ApiToken,
+                    });
                 } else {
                     commands.executeCommand(Commands.ShowConfigPage);
                 }

@@ -18,6 +18,7 @@ export const enum RovoDevViewResponseType {
     CheckGitChanges = 'checkGitChanges',
     WebviewReady = 'webviewReady',
     GetAgentMemory = 'getAgentMemory',
+    LaunchJiraAuth = 'launchJiraAuth',
 }
 
 export interface ModifiedFile {
@@ -41,4 +42,5 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.ReportThinkingDrawerExpanded>
     | ReducerAction<RovoDevViewResponseType.CheckGitChanges>
     | ReducerAction<RovoDevViewResponseType.WebviewReady>
-    | ReducerAction<RovoDevViewResponseType.GetAgentMemory>;
+    | ReducerAction<RovoDevViewResponseType.GetAgentMemory>
+    | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>;
