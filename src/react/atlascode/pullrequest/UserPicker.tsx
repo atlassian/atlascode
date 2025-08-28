@@ -64,6 +64,15 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
             onInputChange={handleInputChange}
             onChange={handleChange}
             loading={fetchUsers.loading}
+            noOptionsText={
+                fetchUsers.loading
+                    ? 'Loading...'
+                    : !props.site
+                      ? 'No site available for search'
+                      : inputText.length > 1
+                        ? 'No users found in this workspace'
+                        : 'Type to search users'
+            }
             renderInput={(params) => <TextField {...params} label="Reviewers" />}
             renderOption={(props, option) => (
                 <Grid container spacing={1} direction="row" alignItems="center">

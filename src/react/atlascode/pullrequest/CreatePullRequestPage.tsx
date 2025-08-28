@@ -400,7 +400,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                 site={
                                                     state.repoData.workspaceRepo.siteRemotes.find(
                                                         (r) => r.remote.name === destinationBranch.remote,
-                                                    )?.site
+                                                    )?.site || state.repoData.workspaceRepo.mainSiteRemote.site
                                                 }
                                                 users={reviewers}
                                                 defaultUsers={state.repoData.defaultReviewers}
