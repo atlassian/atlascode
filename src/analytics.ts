@@ -964,9 +964,9 @@ async function checkUserDomain(): Promise<string> {
 async function appendUserInfo<T>(e: Object): Promise<T> {
     let newObj: Object;
     const aaid = Container.siteManager?.getFirstAAID();
-    const userDomain = await checkUserDomain();
 
     if (aaid) {
+        const userDomain = await checkUserDomain();
         newObj = {
             ...e,
             ...{
