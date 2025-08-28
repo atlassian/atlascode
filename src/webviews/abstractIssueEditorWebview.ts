@@ -73,8 +73,24 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                         if (isFetchQueryAndSite(msg)) {
                             try {
                                 const client = await Container.clientManager.jiraClient(msg.site);
+                                const baseUrl = client.baseUrl.replace(/\/rest$/, '');
                                 let suggestions: IssuePickerIssue[] = [];
-                                if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
+                                if (
+                                    msg.query &&
+                                    msg.currentJQL &&
+                                    msg.currentJQL.trim() !== '' &&
+                                    msg.query.trim() !== ''
+                                ) {
+                                    const apiUrl = `${baseUrl}/rest/api/${client.apiVersion}/issue/picker?query=${encodeURIComponent(msg.query)}&currentJQL=${encodeURIComponent(msg.currentJQL)}`;
+                                    const res = await client.getAutocompleteDataFromUrl(apiUrl);
+                                    const result: IssuePickerResult = res as IssuePickerResult;
+                                    if (Array.isArray(result.sections)) {
+                                        suggestions = result.sections.reduce(
+                                            (prev, curr) => prev.concat(curr.issues),
+                                            [] as IssuePickerIssue[],
+                                        );
+                                    }
+                                } else if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
                                     const result: IssuePickerResult = await client.getAutocompleteDataFromUrl(
                                         msg.autocompleteUrl + encodeURIComponent(msg.query),
                                     );
@@ -88,9 +104,14 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                     suggestions = await client.getIssuePickerSuggestions(encodeURIComponent(msg.query));
                                 }
 
+                                const updatedSuggestions = suggestions.map((suggestion) => ({
+                                    ...suggestion,
+                                    img: baseUrl + suggestion.img,
+                                }));
+
                                 this.postMessage({
                                     type: 'issueSuggestionsList',
-                                    issues: suggestions,
+                                    issues: updatedSuggestions,
                                     nonce: msg.nonce,
                                 });
                             } catch (e) {

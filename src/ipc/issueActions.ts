@@ -64,6 +64,7 @@ export interface FetchQueryAction extends Action {
     site: DetailedSiteInfo;
     autocompleteUrl?: string;
     valueType: ValueType;
+    currentJQL?: string;
 }
 
 export interface ScreensForProjectsAction extends Action {
