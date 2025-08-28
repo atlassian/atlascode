@@ -135,8 +135,9 @@ const RovoDevView: React.FC = () => {
                     setChatStream((prev) => [...prev, currentMessage]);
                     setCurrentMessage(null);
                 }
-                // If waiting for prompt, finalize response and append error message
-            } else {
+            }
+            // If waiting for prompt, finalize response and append error message
+            else if (currentState === State.WaitingForPrompt) {
                 finalizeResponse();
             }
             setChatStream((prev) => {
@@ -434,7 +435,7 @@ const RovoDevView: React.FC = () => {
                     setInitState(event.newState);
                     break;
 
-                case RovoDevProviderMessageType.WorkspaceChanged:
+                case RovoDevProviderMessageType.ProviderReady:
                     setWorkspaceCount(event.workspaceCount);
                     setCurrentState(event.workspaceCount ? State.WaitingForPrompt : State.NoWorkspaceOpen);
                     break;

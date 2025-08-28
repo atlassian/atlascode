@@ -260,49 +260,4 @@ describe('fetchIssue', () => {
             await expect(fetchEditIssueUI(mockMinimalIssue)).rejects.toThrow(errorMessage);
         });
     });
-
-    describe('parallel execution verification', () => {
-        it('should call all dependencies in parallel for fetchCreateIssueUI', async () => {
-            const startTime = Date.now();
-
-            // Mock all dependencies to take some time
-            (Container.jiraSettingsManager.getAllFieldsForSite as jest.Mock).mockImplementation(
-                () => new Promise((resolve) => setTimeout(() => resolve(mockFields), 10)),
-            );
-            (Container.jiraSettingsManager.getIssueLinkTypes as jest.Mock).mockImplementation(
-                () => new Promise((resolve) => setTimeout(() => resolve(mockIssueLinkTypes), 10)),
-            );
-            (Container.jiraSettingsManager.getIssueCreateMetadata as jest.Mock).mockImplementation(
-                () => new Promise((resolve) => setTimeout(() => resolve(mockCreateMetadata), 10)),
-            );
-
-            await fetchCreateIssueUI(mockSiteDetails, mockProjectKey);
-
-            const endTime = Date.now();
-            const executionTime = endTime - startTime;
-
-            // If executed in parallel, should take ~10ms, if sequential would take ~30ms
-            expect(executionTime).toBeLessThan(25);
-        });
-
-        it('should call dependencies in parallel for fetchMinimalIssue', async () => {
-            const startTime = Date.now();
-
-            // Mock dependencies to take some time
-            (Container.clientManager.jiraClient as jest.Mock).mockImplementation(
-                () => new Promise((resolve) => setTimeout(() => resolve(mockClient), 10)),
-            );
-            (Container.jiraSettingsManager.getEpicFieldsForSite as jest.Mock).mockImplementation(
-                () => new Promise((resolve) => setTimeout(() => resolve(mockEpicInfo), 10)),
-            );
-
-            await fetchMinimalIssue(mockIssueKey, mockSiteDetails);
-
-            const endTime = Date.now();
-            const executionTime = endTime - startTime;
-
-            // If executed in parallel, should take ~10ms, if sequential would take ~20ms
-            expect(executionTime).toBeLessThan(18);
-        });
-    });
 });

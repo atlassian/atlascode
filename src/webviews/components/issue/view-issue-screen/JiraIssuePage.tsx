@@ -1,8 +1,8 @@
 import { LoadingButton } from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
-import { WidthObserver } from '@atlaskit/width-detector';
-import { CommentVisibility, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
+import WidthDetector from '@atlaskit/width-detector';
+import { CommentVisibility, IssueType, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, SelectFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { Box } from '@mui/material';
 import { formatDistanceToNow, parseISO } from 'date-fns';
@@ -72,12 +72,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     // TODO: proper error handling in webviews :'(
     // This is a temporary workaround to hopefully troubleshoot
     // https://github.com/atlassian/atlascode/issues/46
-    override getInputMarkup(field: FieldUI, editmode?: boolean, context?: String) {
+    override getInputMarkup(field: FieldUI, editmode?: boolean, currentIssueType?: IssueType, context?: String) {
         if (!field) {
             console.warn(`Field error - no field when trying to render ${context}`);
             return null;
         }
-        return super.getInputMarkup(field, editmode);
+        return super.getInputMarkup(field, editmode, currentIssueType);
     }
 
     getProjectKey = (): string => {
@@ -280,6 +280,36 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     worklogData: newValue,
                     issueKey: this.state.key,
                 });
+                break;
+            }
+
+            case UIType.IssueLink: {
+                let newValueParent = newValue;
+                let completeParentData = null;
+                if (newValue && newValue.id) {
+                    completeParentData = {
+                        ...this.state.fieldValues.parent,
+                        key: newValue.key,
+                        summary: newValue.summaryText || newValue.summary,
+                        issuetype: {
+                            ...this.state.fieldValues.parent?.issuetype,
+                            iconUrl: newValue.img,
+                        },
+                    };
+                    newValueParent = {
+                        ...newValue,
+                        id: newValue.id.toString(),
+                    };
+                } else if (newValue === undefined) {
+                    newValueParent = null;
+                }
+                await this.handleEditIssue(field.key, newValueParent);
+                this.setState({
+                    fieldValues: {
+                        ...this.state.fieldValues,
+                        parent: completeParentData,
+                    },
+                }); // Added this because iconUrl would reset for some reason but the rest of the data stayed like 'key'
                 break;
             }
 
@@ -653,14 +683,39 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     commonSidebar(): any {
-        const commonItems: SidebarItem[] = ['assignee', 'reporter', 'labels', 'priority', 'components', 'fixVersions']
-            .filter((field) => !!this.state.fields[field])
-            .map((field) => {
-                return {
-                    itemLabel: this.state.fields[field].name,
-                    itemComponent: this.getInputMarkup(this.state.fields[field], true, field),
-                };
-            });
+        let commonItems: SidebarItem[];
+
+        if (this.state.siteDetails.isCloud || this.state.fieldValues['issuetype'].subtask) {
+            commonItems = ['assignee', 'reporter', 'labels', 'priority', 'components', 'fixVersions', 'parent']
+                .filter((field) => !!this.state.fields[field])
+                .map((field) => {
+                    return {
+                        itemLabel: this.state.fields[field].name,
+                        itemComponent: this.getInputMarkup(
+                            this.state.fields[field],
+                            true,
+                            this.state.fieldValues['issuetype'],
+                            field,
+                        ),
+                    };
+                });
+        } else {
+            // only child-parent relationship in DC is between subtasks and StandardIssueTypes
+            // epic and standardIssue types do not hold this relationship nor is EpicLink passed in via the fields
+            commonItems = ['assignee', 'reporter', 'labels', 'priority', 'components', 'fixVersions']
+                .filter((field) => !!this.state.fields[field])
+                .map((field) => {
+                    return {
+                        itemLabel: this.state.fields[field].name,
+                        itemComponent: this.getInputMarkup(
+                            this.state.fields[field],
+                            true,
+                            this.state.fieldValues['issuetype'],
+                            field,
+                        ),
+                    };
+                });
+        }
 
         const advancedItems: SidebarItem[] = this.advancedSidebarFields
             .map((field) => {
@@ -670,7 +725,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     }
                     return {
                         itemLabel: field.name,
-                        itemComponent: this.getInputMarkup(field, true, `Advanced sidebar`),
+                        itemComponent: this.getInputMarkup(
+                            field,
+                            true,
+                            this.state.fieldValues['issuetype'],
+                            `Advanced sidebar`,
+                        ),
                     };
                 } else {
                     return undefined;
@@ -731,7 +791,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 markups.push(
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{field.name}</label>
-                        {this.getInputMarkup(field, true, `Advanced main`)}
+                        {this.getInputMarkup(field, true, this.state.fieldValues['issuetype'], `Advanced main`)}
                     </div>,
                 );
             }
@@ -778,44 +838,56 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         this.postMessage(e); /* just {this.postMessage} doesn't work */
                     }}
                 >
-                    <>
-                        <WidthObserver setWidth={(width: number) => this.setState({ containerWidth: width })} />
-                        {this.state.containerWidth && this.state.containerWidth < 800 ? (
-                            <div style={{ margin: '20px 16px 0px 16px' }}>
-                                {this.getMainPanelNavMarkup()}
-                                <h1>{this.getInputMarkup(this.state.fields['summary'], true, 'summary')}</h1>
-                                {this.commonSidebar()}
-                                {this.getMainPanelBodyMarkup()}
-                                {this.createdUpdatedDates()}
-                            </div>
-                        ) : (
-                            <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
-                                <Grid layout="fluid">
-                                    <GridColumn>
+                    <WidthDetector>
+                        {(width?: number) => {
+                            if (width && width < 800) {
+                                return (
+                                    <div style={{ margin: '20px 16px 0px 16px' }}>
                                         {this.getMainPanelNavMarkup()}
-                                        <div style={{ paddingTop: '8px' }}>
-                                            <Grid layout="fluid">
-                                                <GridColumn medium={8}>
-                                                    <h1 data-testid="issue.title">
-                                                        {this.getInputMarkup(
-                                                            this.state.fields['summary'],
-                                                            true,
-                                                            'summary',
-                                                        )}
-                                                    </h1>
-                                                    {this.getMainPanelBodyMarkup()}
-                                                </GridColumn>
-                                                <GridColumn medium={4}>
-                                                    {this.commonSidebar()}
-                                                    {this.createdUpdatedDates()}
-                                                </GridColumn>
-                                            </Grid>
-                                        </div>
-                                    </GridColumn>
-                                </Grid>
-                            </div>
-                        )}
-                    </>
+                                        <h1>
+                                            {this.getInputMarkup(
+                                                this.state.fields['summary'],
+                                                true,
+                                                this.state.fieldValues['issuetype'],
+                                                'summary',
+                                            )}
+                                        </h1>
+                                        {this.commonSidebar()}
+                                        {this.getMainPanelBodyMarkup()}
+                                        {this.createdUpdatedDates()}
+                                    </div>
+                                );
+                            }
+                            return (
+                                <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
+                                    <Grid layout="fluid">
+                                        <GridColumn>
+                                            {this.getMainPanelNavMarkup()}
+                                            <div style={{ paddingTop: '8px' }}>
+                                                <Grid layout="fluid">
+                                                    <GridColumn medium={8}>
+                                                        <h1 data-testid="issue.title">
+                                                            {this.getInputMarkup(
+                                                                this.state.fields['summary'],
+                                                                true,
+                                                                this.state.fieldValues['issuetype'],
+                                                                'summary',
+                                                            )}
+                                                        </h1>
+                                                        {this.getMainPanelBodyMarkup()}
+                                                    </GridColumn>
+                                                    <GridColumn medium={4}>
+                                                        {this.commonSidebar()}
+                                                        {this.createdUpdatedDates()}
+                                                    </GridColumn>
+                                                </Grid>
+                                            </div>
+                                        </GridColumn>
+                                    </Grid>
+                                </div>
+                            );
+                        }}
+                    </WidthDetector>
                 </AtlascodeErrorBoundary>
             </Page>
         );

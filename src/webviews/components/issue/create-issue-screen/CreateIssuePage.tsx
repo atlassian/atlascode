@@ -1,7 +1,6 @@
 import Button from '@atlaskit/button';
 import LoadingButton from '@atlaskit/button/loading-button';
-import Form, { Field, FormFooter, FormHeader, RequiredAsterisk } from '@atlaskit/form';
-import { ErrorMessage } from '@atlaskit/form';
+import Form, { ErrorMessage, Field, FormFooter, FormHeader, RequiredAsterisk } from '@atlaskit/form';
 import Page from '@atlaskit/page';
 import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
@@ -371,9 +370,16 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     }
 
     getAdvancedFieldMarkup(): any {
-        return this.advancedFields
-            .filter((field) => field.key !== 'parent') //TODO: add parent functionality
-            .map((field) => this.getInputMarkup(field));
+        // Cloud supports parent-child relation only for all issues. DC supports parent-child for standard-issues and subtasks
+        if (this.state.siteDetails.isCloud) {
+            return this.advancedFields.map((field) =>
+                this.getInputMarkup(field, false, this.state.fieldValues['issuetype']),
+            );
+        } else {
+            return this.advancedFields
+                .filter((field) => field.key !== 'parent') //
+                .map((field) => this.getInputMarkup(field));
+        }
     }
 
     formHeader = () => {

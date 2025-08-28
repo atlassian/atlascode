@@ -15,6 +15,7 @@ export enum CommandContext {
     RovoDevTerminalEnabled = 'atlascode:rovoDevTerminalEnabled',
     BbyEnvironmentActive = 'atlascode:bbyEnvironmentActive',
     DebugMode = 'atlascode:debugMode',
+    UseNewAuthFlow = 'atlascode:useNewAuthFlow',
 }
 
 export function setCommandContext(key: CommandContext | string, value: any) {

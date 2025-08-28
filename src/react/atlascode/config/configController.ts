@@ -220,6 +220,7 @@ function configReducerV3(state: ConfigV3State, action: ConfigV3UIAction): Config
                 openSubSections: action.data.subSection ? [action.data.subSection] : [],
                 isSomethingLoading: false,
                 isErrorBannerOpen: false,
+                machineId: action.data.machineId,
                 errorDetails: undefined,
             };
             return newstate;
@@ -284,6 +285,7 @@ function configReducer(state: ConfigState, action: ConfigUIAction): ConfigState 
                 openSubSections: action.data.subSection ? [action.data.subSection] : [],
                 isSomethingLoading: false,
                 isErrorBannerOpen: false,
+                machineId: action.data.machineId,
                 errorDetails: undefined,
             };
             return newstate;

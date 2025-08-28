@@ -58,6 +58,7 @@ export interface ConfigInitMessage {
     target: ConfigTarget;
     section?: ConfigSection;
     subSection?: ConfigSubSection;
+    machineId?: string;
 }
 export interface ConfigV3InitMessage {
     config: FlattenedConfig;
@@ -69,6 +70,7 @@ export interface ConfigV3InitMessage {
     target: ConfigTarget;
     section?: ConfigV3Section;
     subSection?: ConfigV3SubSection;
+    machineId?: string;
 }
 
 export const emptyConfigInitMessage: ConfigInitMessage = {

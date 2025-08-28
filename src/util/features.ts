@@ -1,9 +1,10 @@
-export const enum Features {
+export enum Features {
     EnableErrorTelemetry = 'atlascode-send-error-telemetry',
     JiraRichText = 'atlascode-jira-rte',
     AtlassianNotifications = 'atlascode-atlassian-notifications-v2',
     StartWorkV3 = 'atlascode-start-work-v3',
     RovoDevEnabled = 'rovo_dev_ff',
+    UseNewAuthFlow = 'atlascode-use-new-auth-flow',
 }
 
 export const enum Experiments {
@@ -12,7 +13,7 @@ export const enum Experiments {
 
 export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
     [Experiments.AtlascodeNewSettingsExperiment]: {
-        parameter: 'enabled',
+        parameter: 'enabled2',
         defaultValue: false,
     },
 };

@@ -97,6 +97,7 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
                 isRemote: this._api.getIsRemote(),
                 target: target,
                 showTunnelOption: this._api.shouldShowTunnelOption(),
+                machineId: vscode.env.machineId,
                 config: cfg,
                 ...section,
             });

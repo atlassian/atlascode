@@ -4,7 +4,7 @@ import { NewFeatureGateOptions } from '@atlaskit/feature-gate-js-client/dist/typ
 
 import { ClientInitializedErrorType } from '../../analytics';
 import { Logger } from '../../logger';
-import { ExperimentGates, ExperimentGateValues, Experiments, FeatureGateValues, Features } from './features';
+import { ExperimentGates, ExperimentGateValues, Experiments, FeatureGateValues, Features } from '../features';
 import { FeatureGateClient } from './utils';
 
 type NewFetcherOptions = FetcherOptions &
