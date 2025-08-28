@@ -47,8 +47,9 @@ const IconValue = (props: any) => (
     </components.SingleValue>
 );
 
+// seems whole component is unused, but keeping it for now.
 export default class InlineSubtaskEditor extends React.Component<Props, State> {
-    constructor(props: any) {
+    constructor(props: Props) {
         super(props);
 
         this.state = {
@@ -62,27 +63,28 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
         };
     }
 
-    override componentWillReceiveProps(nextProps: any) {
-        const newState: any = {};
+    static getDerivedStateFromProps(nextProps: Omit<Props, 'onSave'>, state: Partial<State>) {
+        const newState: Partial<State> = {};
 
-        if (nextProps.subtaskTypes && nextProps.subtaskTypes !== this.state.subtaskTypes) {
+        if (nextProps.subtaskTypes && nextProps.subtaskTypes !== state.subtaskTypes) {
             newState.subtaskTypes = nextProps.subtaskTypes;
         }
 
-        if (nextProps.label && nextProps.label !== this.state.label) {
+        if (nextProps.label && nextProps.label !== state.label) {
             newState.label = nextProps.label;
         }
 
-        if (nextProps.isLoading !== undefined && nextProps.isLoading !== this.state.isLoading) {
+        if (nextProps.isLoading !== undefined && nextProps.isLoading !== state.isLoading) {
             newState.isLoading = nextProps.isLoading;
         }
 
         if (Object.keys(newState).length > 0) {
-            this.setState(newState);
+            return newState;
         }
+        return null;
     }
 
-    handleOpenInlineEditor = (e: any) => {
+    handleOpenInlineEditor = () => {
         this.setState({ isEditing: true, editorContainerClassname: 'ac-flex-space-between' });
     };
 
@@ -128,8 +130,8 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
                                 classNamePrefix="ac-select"
                                 options={this.state.subtaskTypes}
                                 components={{ Option: IconOption, SingleValue: IconValue }}
-                                getOptionLabel={(option: any) => option.name}
-                                getOptionValue={(option: any) => option.id}
+                                getOptionLabel={(option: IssueType) => option.name}
+                                getOptionValue={(option: IssueType) => option.id}
                                 isDisabled={this.state.isLoading}
                                 onChange={this.handleIssueTypeChange}
                             />

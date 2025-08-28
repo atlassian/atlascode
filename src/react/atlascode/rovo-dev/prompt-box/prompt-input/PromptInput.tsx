@@ -153,7 +153,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         }
 
         editor.updateOptions({
-            readOnly: disabled || state !== State.WaitingForPrompt,
+            readOnly: disabled,
             placeholder: getTextAreaPlaceholder(state),
         });
     }, [state, editor, disabled]);
