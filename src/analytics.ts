@@ -485,7 +485,7 @@ export async function viewScreenEvent(
 
     const tenantId: string | undefined = site ? site.id : undefined;
 
-    return anyUserOrAnonymousWithAtlassianMetric<ScreenEvent>(tenantOrNull<ScreenEvent>(e, tenantId));
+    return appendUserInfo<ScreenEvent>(tenantOrNull<ScreenEvent>(e, tenantId));
 }
 
 // UI Events
@@ -513,7 +513,7 @@ export async function bbIssuesPaginationEvent(): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function prPaginationEvent(): Promise<UIEvent> {
@@ -532,7 +532,7 @@ export async function prPaginationEvent(): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function moreSettingsButtonEvent(source: string): Promise<UIEvent> {
@@ -548,7 +548,7 @@ export async function moreSettingsButtonEvent(source: string): Promise<UIEvent> 
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function focusCreateIssueEvent(source: string): Promise<UIEvent> {
@@ -564,7 +564,7 @@ export async function focusCreateIssueEvent(source: string): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function focusIssueEvent(source: string): Promise<UIEvent> {
@@ -580,7 +580,7 @@ export async function focusIssueEvent(source: string): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 export async function focusCreatePullRequestEvent(source: string): Promise<UIEvent> {
     const e = {
@@ -595,7 +595,7 @@ export async function focusCreatePullRequestEvent(source: string): Promise<UIEve
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 export async function focusPullRequestEvent(source: string): Promise<UIEvent> {
     const e = {
@@ -610,7 +610,7 @@ export async function focusPullRequestEvent(source: string): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 export async function doneButtonEvent(source: string): Promise<UIEvent> {
     const e = {
@@ -625,7 +625,7 @@ export async function doneButtonEvent(source: string): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function authenticateButtonEvent(
@@ -655,7 +655,7 @@ export async function authenticateButtonEvent(
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function editButtonEvent(source: string): Promise<UIEvent> {
@@ -671,7 +671,7 @@ export async function editButtonEvent(source: string): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function logoutButtonEvent(source: string): Promise<UIEvent> {
@@ -687,7 +687,7 @@ export async function logoutButtonEvent(source: string): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function saveManualCodeEvent(source: string): Promise<UIEvent> {
@@ -703,7 +703,7 @@ export async function saveManualCodeEvent(source: string): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function configureJQLButtonEvent(source: string): Promise<UIEvent> {
@@ -719,7 +719,7 @@ export async function configureJQLButtonEvent(source: string): Promise<UIEvent> 
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function openSettingsButtonEvent(source: string): Promise<UIEvent> {
@@ -735,7 +735,7 @@ export async function openSettingsButtonEvent(source: string): Promise<UIEvent> 
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function exploreFeaturesButtonEvent(source: string): Promise<UIEvent> {
@@ -751,7 +751,7 @@ export async function exploreFeaturesButtonEvent(source: string): Promise<UIEven
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function openWorkbenchRepositoryButtonEvent(source: string): Promise<UIEvent> {
@@ -767,7 +767,7 @@ export async function openWorkbenchRepositoryButtonEvent(source: string): Promis
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function openWorkbenchWorkspaceButtonEvent(source: string): Promise<UIEvent> {
@@ -783,7 +783,7 @@ export async function openWorkbenchWorkspaceButtonEvent(source: string): Promise
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function cloneRepositoryButtonEvent(source: string): Promise<UIEvent> {
@@ -799,7 +799,7 @@ export async function cloneRepositoryButtonEvent(source: string): Promise<UIEven
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function openActiveIssueEvent(): Promise<UIEvent> {
@@ -815,7 +815,7 @@ export async function openActiveIssueEvent(): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function notificationBannerClickedEvent(source: string, buttonType: string): Promise<UIEvent> {
@@ -834,7 +834,7 @@ export async function notificationBannerClickedEvent(source: string, buttonType:
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function createPrTerminalLinkPanelButtonClickedEvent(
@@ -856,7 +856,7 @@ export async function createPrTerminalLinkPanelButtonClickedEvent(
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function notificationActionButtonClickedEvent(
@@ -881,7 +881,7 @@ export async function notificationActionButtonClickedEvent(
         },
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 // Helper methods
 
@@ -905,7 +905,7 @@ async function trackEvent(action: string, actionSubject: string, eventProps: any
         trackEvent: event(action, actionSubject, eventProps),
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<TrackEvent>(e);
+    return appendUserInfo<TrackEvent>(e);
 }
 
 async function tenantTrackEvent(
@@ -920,7 +920,7 @@ async function tenantTrackEvent(
         trackEvent: event(action, actionSubject, eventProps),
     };
 
-    return anyUserOrAnonymousWithAtlassianMetric<TrackEvent>(e);
+    return appendUserInfo<TrackEvent>(e);
 }
 
 function event(action: string, actionSubject: string, attributes: any): any {
@@ -961,7 +961,7 @@ async function checkUserDomain(): Promise<string> {
     return 'not-atlassian';
 }
 
-async function anyUserOrAnonymousWithAtlassianMetric<T>(e: Object): Promise<T> {
+async function appendUserInfo<T>(e: Object): Promise<T> {
     let newObj: Object;
     const aaid = Container.siteManager?.getFirstAAID();
     const userDomain = await checkUserDomain();
