@@ -20,6 +20,7 @@ export enum ConfigActionType {
     CreatePullRequest = 'createPullRequest',
     ViewPullRequest = 'viewPullRequest',
     OpenNativeSettings = 'openNativeSettings',
+    StartAuthFlow = 'StartAuthFlow',
 }
 
 export type ConfigAction =
@@ -38,6 +39,7 @@ export type ConfigAction =
     | ReducerAction<ConfigActionType.CreatePullRequest>
     | ReducerAction<ConfigActionType.ViewPullRequest>
     | ReducerAction<ConfigActionType.OpenNativeSettings>
+    | ReducerAction<ConfigActionType.StartAuthFlow>
     | CommonAction;
 
 export interface AuthAction {

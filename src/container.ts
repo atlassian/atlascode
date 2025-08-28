@@ -201,6 +201,7 @@ export class Container {
                 analyticsAnonymousId: this.machineId,
             });
 
+            this.pushFeatureUpdatesToUI();
             Logger.debug(`FeatureFlagClient: Succesfully initialized the client.`);
             featureFlagClientInitializedEvent(true).then((e) => {
                 this.analyticsClient.sendTrackEvent(e);
@@ -259,6 +260,7 @@ export class Container {
     static async updateFeatureFlagTenantId(tenantId: string | undefined): Promise<boolean> {
         try {
             await this._featureFlagClient.updateUser({ tenantId });
+            this.pushFeatureUpdatesToUI();
             return true;
         } catch (err) {
             Logger.error('RovoDev', err, "FeatureFlagClient: Failed to update user's tenantId");
@@ -325,6 +327,21 @@ export class Container {
         } catch (error) {
             Logger.error('RovoDev', error, 'Refreshing Jira issue views');
             return;
+        }
+    }
+
+    static pushFeatureUpdatesToUI() {
+        const factories = [
+            this.settingsWebviewFactory,
+            this.startWorkWebviewFactory,
+            this.startWorkV3WebviewFactory,
+            this.createPullRequestWebviewFactory,
+        ];
+
+        for (const factory of factories) {
+            if (typeof factory?.updateFeatureMetadata === 'function') {
+                factory.updateFeatureMetadata();
+            }
         }
     }
 
