@@ -110,6 +110,19 @@ async function getCloudCredentials(): Promise<{ username: string; key: string; h
 
 type CloudCredentials = NonNullable<Awaited<ReturnType<typeof getCloudCredentials>>>;
 
+async function getOrAssignPortForWorkspace(): Promise<number> {
+    const portStart = rovodevInfo.portRange.start;
+    const portEnd = rovodevInfo.portRange.end;
+
+    for (let port = portStart; port <= portEnd; ++port) {
+        if (await isPortAvailable(port)) {
+            return port;
+        }
+    }
+
+    throw new Error('unable to find an available port.');
+}
+
 export class RovoDevProcessManager {
     private static disposables: Disposable[] = [];
 
@@ -209,19 +222,6 @@ export class RovoDevProcessManager {
         this.stopRovoDevInstance();
     }
 
-    private static async getOrAssignPortForWorkspace(): Promise<number> {
-        const portStart = rovodevInfo.portRange.start;
-        const portEnd = rovodevInfo.portRange.end;
-
-        for (let port = portStart; port <= portEnd; ++port) {
-            if (await isPortAvailable(port)) {
-                return port;
-            }
-        }
-
-        throw new Error('unable to find an available port.');
-    }
-
     private static async startRovoDev(credentials: CloudCredentials, rovoDevURIs: RovoDevURIs) {
         // skip there is no workspace folder open
         if (!workspace.workspaceFolders) {
@@ -229,14 +229,12 @@ export class RovoDevProcessManager {
         }
 
         const folder = workspace.workspaceFolders[0];
-        const port = await this.getOrAssignPortForWorkspace();
 
         if (Container.isDebugging) {
             this.rovoDevInstance = new RovoDevTerminalInstance(
                 this.rovoDevWebviewProvider,
                 credentials,
                 folder.uri.fsPath,
-                port,
                 rovoDevURIs.RovoDevBinPath,
                 rovoDevURIs.RovoDevIconUri,
             );
@@ -245,7 +243,6 @@ export class RovoDevProcessManager {
                 this.rovoDevWebviewProvider,
                 credentials,
                 folder.uri.fsPath,
-                port,
                 rovoDevURIs.RovoDevBinPath,
             );
         }
@@ -306,14 +303,14 @@ class RovoDevProcessInstance extends RovoDevInstance {
         private rovoDevWebviewProvider: RovoDevWebviewProvider,
         credentials: CloudCredentials | undefined,
         private workspacePath: string,
-        private port: number,
         private rovoDevBinPath: string,
     ) {
         super(credentials);
     }
 
-    public start(): Promise<void> {
+    public async start(): Promise<void> {
         const credentials = this.credentials;
+        const port = await getOrAssignPortForWorkspace();
 
         return new Promise<void>((resolve, reject) => {
             access(this.rovoDevBinPath, constants.X_OK, (err) => {
@@ -337,7 +334,7 @@ class RovoDevProcessInstance extends RovoDevInstance {
 
                 this.rovoDevProcess = spawn(
                     this.rovoDevBinPath,
-                    [`serve`, `${this.port}`, `--application-id`, `com.atlassian.vscode`],
+                    [`serve`, `${port}`, `--application-id`, `com.atlassian.vscode`],
                     {
                         cwd: this.workspacePath,
                         stdio: ['ignore', 'pipe', 'pipe'],
@@ -345,7 +342,7 @@ class RovoDevProcessInstance extends RovoDevInstance {
                         env,
                     },
                 )
-                    .on('spawn', () => this.rovoDevWebviewProvider.signalProcessStarted(this.port))
+                    .on('spawn', () => this.rovoDevWebviewProvider.signalProcessStarted(port))
                     .on('exit', (code) => {
                         this.hasStopped();
 
@@ -408,15 +405,15 @@ class RovoDevTerminalInstance extends RovoDevInstance {
         private rovoDevWebviewProvider: RovoDevWebviewProvider,
         credentials: CloudCredentials | undefined,
         private workspacePath: string,
-        private port: number,
         private rovoDevBinPath: string,
         private rovoDevIconUri: Uri,
     ) {
         super(credentials);
     }
 
-    public start(): Promise<void> {
+    public async start(): Promise<void> {
         const credentials = this.credentials;
+        const port = await getOrAssignPortForWorkspace();
 
         return new Promise<void>((resolve, reject) => {
             if (!credentials) {
@@ -435,7 +432,7 @@ class RovoDevTerminalInstance extends RovoDevInstance {
                 this.rovoDevTerminal = window.createTerminal({
                     name: 'Rovo Dev',
                     shellPath: this.rovoDevBinPath,
-                    shellArgs: [`serve`, `${this.port}`, `--application-id`, `com.atlassian.vscode`],
+                    shellArgs: [`serve`, `${port}`, `--application-id`, `com.atlassian.vscode`],
                     cwd: this.workspacePath,
                     hideFromUser: true,
                     isTransient: true,
@@ -463,7 +460,7 @@ class RovoDevTerminalInstance extends RovoDevInstance {
                 });
                 this.disposables.push(onDidCloseTerminal);
 
-                this.rovoDevWebviewProvider.signalProcessStarted(this.port, true);
+                this.rovoDevWebviewProvider.signalProcessStarted(port, true);
                 resolve();
             });
         });
