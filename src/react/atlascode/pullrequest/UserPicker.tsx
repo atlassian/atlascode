@@ -26,38 +26,44 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
         ),
     );
 
-    const handleChange = async (event: React.ChangeEvent, value: User[]) => props.onChange(value);
+    const handleChange = (event: React.ChangeEvent, value: User[]) => props.onChange(value);
 
     const handleInputChange = useCallback(
         (event: React.ChangeEvent, value: string) => {
-            if (open && event?.type === 'change') {
+            if (event?.type === 'change') {
                 setInputText(value);
             }
         },
-        [open, setInputText],
+        [setInputText],
     );
 
     const fetchUsers = useAsyncAbortable(
         async (abortSignal) => {
             if (inputText.length > 1 && props.site) {
-                const results = await debouncedUserFetcher(props.site, inputText, abortSignal);
-                return results;
+                try {
+                    const results = await debouncedUserFetcher(props.site, inputText, abortSignal);
+                    return results || [];
+                } catch {
+                    // Return empty array on error so user can see "No options" instead of crash
+                    return [];
+                }
             }
-            return props.defaultUsers;
+            return props.defaultUsers || [];
         },
-        [props.site, inputText],
+        [props.site, inputText, props.defaultUsers],
     );
+
+    const options = fetchUsers.result || [];
 
     return (
         <Autocomplete
             multiple
             filterSelectedOptions
             size="small"
-            disableClearable
             open={open}
             onOpen={() => setOpen(true)}
             onClose={() => setOpen(false)}
-            options={fetchUsers.result || props.defaultUsers}
+            options={options}
             getOptionLabel={(option) => option?.displayName || ''}
             isOptionEqualToValue={(option, value) => option.accountId === value.accountId}
             value={props.users}
@@ -74,15 +80,17 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
                         : 'Type to search users'
             }
             renderInput={(params) => <TextField {...params} label="Reviewers" />}
-            renderOption={(props, option) => (
-                <Grid container spacing={1} direction="row" alignItems="center">
-                    <Grid item>
-                        <Avatar src={option?.avatarUrl} />
+            renderOption={(optionProps, option) => (
+                <li {...optionProps} key={option?.accountId}>
+                    <Grid container spacing={1} direction="row" alignItems="center">
+                        <Grid item>
+                            <Avatar src={option?.avatarUrl} />
+                        </Grid>
+                        <Grid item>
+                            <Typography>{option?.displayName}</Typography>
+                        </Grid>
                     </Grid>
-                    <Grid item>
-                        <Typography>{option?.displayName}</Typography>
-                    </Grid>
-                </Grid>
+                </li>
             )}
         />
     );
