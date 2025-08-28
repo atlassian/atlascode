@@ -4,16 +4,17 @@ export const enum Features {
     AtlassianNotifications = 'atlascode-atlassian-notifications-v2',
     StartWorkV3 = 'atlascode-start-work-v3',
     RovoDevEnabled = 'rovo_dev_ff',
+    UseNewAuthFlow = 'atlascode-use-new-auth-flow',
 }
 
 export const enum Experiments {
-    AtlascodePerformanceExperiment = 'atlascode_performance_experiment',
+    AtlascodeNewSettingsExperiment = 'atlascode_new_settings_experiment',
 }
 
 export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
-    [Experiments.AtlascodePerformanceExperiment]: {
-        parameter: 'enabled',
-        defaultValue: true,
+    [Experiments.AtlascodeNewSettingsExperiment]: {
+        parameter: 'enabled2',
+        defaultValue: false,
     },
 };
 

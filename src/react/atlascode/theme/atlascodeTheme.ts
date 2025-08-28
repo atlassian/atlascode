@@ -137,6 +137,5 @@ export const atlascodeTheme = (baseTheme: Theme, usedefault?: boolean): Theme =>
             },
         }),
     );
-    console.debug('Created new theme', newTheme);
     return newTheme;
 };

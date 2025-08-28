@@ -18,7 +18,6 @@ resources/rovo-dev/
 .nvmrc
 .prettierignore
 CODEOWNERS
-HOMEPAGE.md
 changelog.md
 nightlyver.sh
 package.json
