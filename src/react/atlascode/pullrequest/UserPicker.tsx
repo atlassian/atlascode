@@ -53,7 +53,17 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
         [props.site, inputText, props.defaultUsers],
     );
 
-    const options = fetchUsers.result || [];
+    // Ensure selected users are always included in options to avoid MUI warnings
+    const fetchedOptions = fetchUsers.result || [];
+    const selectedUsers = props.users || [];
+
+    // Combine fetched options with selected users, removing duplicates
+    const allOptions = [...fetchedOptions];
+    selectedUsers.forEach((selectedUser) => {
+        if (!allOptions.find((option) => option.accountId === selectedUser.accountId)) {
+            allOptions.push(selectedUser);
+        }
+    });
 
     return (
         <Autocomplete
@@ -63,9 +73,9 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
             open={open}
             onOpen={() => setOpen(true)}
             onClose={() => setOpen(false)}
-            options={options}
+            options={allOptions}
             getOptionLabel={(option) => option?.displayName || ''}
-            isOptionEqualToValue={(option, value) => option.accountId === value.accountId}
+            isOptionEqualToValue={(option, value) => option?.accountId === value?.accountId}
             value={props.users}
             onInputChange={handleInputChange}
             onChange={handleChange}
