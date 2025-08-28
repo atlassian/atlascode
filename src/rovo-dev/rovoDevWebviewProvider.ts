@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import path from 'path';
-import { gte as semver_gte } from 'semver';
 import { CommandContext, setCommandContext } from 'src/commandContext';
 import { getFsPromise } from 'src/util/fsPromises';
 import { setTimeout } from 'timers/promises';
@@ -47,7 +46,7 @@ import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
-import { MIN_SUPPORTED_ROVODEV_VERSION, RovoDevProcessManager } from './rovoDevProcessManager';
+import { RovoDevProcessManager } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevContext, RovoDevContextItem, RovoDevInitState, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
@@ -253,14 +252,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     case RovoDevViewResponseType.WebviewReady:
                         if (!this.isBoysenberry && !this.isDisabled) {
                             await webview.postMessage({
-                                type: RovoDevProviderMessageType.WorkspaceChanged,
+                                type: RovoDevProviderMessageType.ProviderReady,
                                 workspaceCount: workspace.workspaceFolders?.length || 0,
                             });
                         }
 
-                        const port = parseInt(process.env[rovodevInfo.envVars.port] || '0');
-                        if (port) {
-                            this.signalProcessStarted(port);
+                        const fixedPort = parseInt(process.env[rovodevInfo.envVars.port] || '0');
+                        if (fixedPort) {
+                            this.signalProcessStarted(fixedPort);
                         } else if (this.isBoysenberry) {
                             this.signalRovoDevDisabled();
                             throw new Error('Rovo Dev port not set');
@@ -277,17 +276,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 this.processError(error, false);
             }
         });
-
-        if (!this.isBoysenberry) {
-            workspace.onDidChangeWorkspaceFolders(() => {
-                if (!this.isDisabled) {
-                    webview.postMessage({
-                        type: RovoDevProviderMessageType.WorkspaceChanged,
-                        workspaceCount: workspace.workspaceFolders?.length || 0,
-                    });
-                }
-            });
-        }
     }
 
     private beginNewSession(sessionId: string | null | undefined, manuallyCreated: boolean): void {
@@ -1148,13 +1136,13 @@ ${message}`;
      * Sends an error message to the chat history instead of showing a VS Code notification
      * @param errorMessage The error message to display in chat
      */
-    public sendErrorToChat(errorMessage: string): void {
-        this.processError(new Error(errorMessage), false);
+    public sendErrorToChat(errorMessage: string) {
+        return this.processError(new Error(errorMessage), false);
     }
 
     public signalBinaryDownloadStarted() {
         const webView = this._webView!;
-        webView.postMessage({
+        return webView.postMessage({
             type: RovoDevProviderMessageType.SetInitState,
             newState: RovoDevInitState.UpdatingBinaries,
         });
@@ -1162,7 +1150,7 @@ ${message}`;
 
     public signalBinaryDownloadEnded() {
         const webView = this._webView!;
-        webView.postMessage({
+        return webView.postMessage({
             type: RovoDevProviderMessageType.SetInitState,
             newState: RovoDevInitState.NotInitialized,
         });
@@ -1178,6 +1166,10 @@ ${message}`;
 
         const webView = this._webView!;
 
+        await webView.postMessage({
+            type: RovoDevProviderMessageType.ClearChat,
+        });
+
         // wait for Rovo Dev to be ready, for up to 10 seconds
         const result = await this.waitFor(() => this.executeHealthcheck(), 100000, 500);
 
@@ -1186,24 +1178,16 @@ ${message}`;
         try {
             if (result) {
                 const info = await this.executeHealthcheckInfo();
-                const version = (info || {}).version;
                 const sessionId = (info || {}).sessionId;
-                if (version && semver_gte(version, MIN_SUPPORTED_ROVODEV_VERSION)) {
-                    this.beginNewSession(sessionId, false);
-                    if (this.isBoysenberry) {
-                        await this.executeReplay();
-                    }
-                } else {
-                    throw new Error(
-                        `Rovo Dev version (${version}) is out of date. Please update Rovo Dev and try again.\nMin version compatible: ${MIN_SUPPORTED_ROVODEV_VERSION}`,
-                    );
+
+                this.beginNewSession(sessionId, false);
+                if (this.isBoysenberry) {
+                    await this.executeReplay();
                 }
             } else {
-                const errorMsg = this._rovoDevApiClient
-                    ? `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within 10000ms`
-                    : `Unable to initialize RovoDev's client within 10000ms`;
-
-                throw new Error(errorMsg);
+                throw new Error(
+                    `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within 10000ms`,
+                );
             }
         } catch (error) {
             thrownError = error;
@@ -1212,7 +1196,7 @@ ${message}`;
         this._initialized = true;
         this._processState = RovoDevProcessState.Started;
 
-        webView.postMessage({
+        await webView.postMessage({
             type: RovoDevProviderMessageType.SetInitState,
             newState: RovoDevInitState.Initialized,
         });
@@ -1234,14 +1218,14 @@ ${message}`;
         this._processState = RovoDevProcessState.Disabled;
 
         const webView = this._webView!;
-        webView.postMessage({
+        return webView.postMessage({
             type: RovoDevProviderMessageType.RovoDevDisabled,
         });
     }
 
     public signalDownloadProgress(downloadedBytes: number, totalBytes: number) {
         const webView = this._webView!;
-        webView.postMessage({
+        return webView.postMessage({
             type: RovoDevProviderMessageType.SetDownloadProgress,
             downloadedBytes,
             totalBytes,
@@ -1251,6 +1235,7 @@ ${message}`;
     public signalProcessTerminated(errorMessage?: string) {
         this._processState = RovoDevProcessState.Terminated;
         this._initialized = false;
+        this._rovoDevApiClient = undefined;
 
         errorMessage = errorMessage
             ? `Agent process terminated:\n${errorMessage}\n\nPlease start a new chat session to continue.`

@@ -4,6 +4,7 @@ import fs from 'fs';
 import net from 'net';
 import packageJson from 'package.json';
 import path from 'path';
+import { Logger } from 'src/logger';
 import { downloadAndUnzip } from 'src/util/downloadFile';
 import { getFsPromise } from 'src/util/fsPromises';
 import { Disposable, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
@@ -13,7 +14,7 @@ import { rovodevInfo } from '../constants';
 import { Container } from '../container';
 import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
 
-export const MIN_SUPPORTED_ROVODEV_VERSION = packageJson.rovoDev.version;
+const MIN_SUPPORTED_ROVODEV_VERSION = packageJson.rovoDev.version;
 
 function GetRovoDevURIs(context: ExtensionContext) {
     const extensionPath = context.storageUri!.fsPath;
@@ -75,31 +76,51 @@ function isPortAvailable(port: number): Promise<boolean> {
  * Placeholder implementation for Rovo Dev CLI credential storage
  */
 async function getCloudCredentials(): Promise<{ username: string; key: string; host: string } | undefined> {
-    const sites = Container.siteManager.getSitesAvailable(ProductJira);
+    try {
+        const sites = Container.siteManager.getSitesAvailable(ProductJira);
 
-    const promises = sites.map(async (site) => {
-        if (!site.isCloud) {
-            return undefined;
+        const promises = sites.map(async (site) => {
+            if (!site.isCloud) {
+                return undefined;
+            }
+
+            if (!site.host.endsWith('.atlassian.net')) {
+                return undefined;
+            }
+
+            const authInfo = await Container.credentialManager.getAuthInfo(site);
+            if (!isBasicAuthInfo(authInfo)) {
+                return undefined;
+            }
+
+            return {
+                username: authInfo.username,
+                key: authInfo.password,
+                host: site.host,
+            };
+        });
+
+        const results = (await Promise.all(promises)).filter((result) => result !== undefined);
+        return results.length > 0 ? results[0] : undefined;
+    } catch (error) {
+        Logger.error('RovoDev', error, 'Error fetching cloud credentials for Rovo Dev');
+        return undefined;
+    }
+}
+
+type CloudCredentials = NonNullable<Awaited<ReturnType<typeof getCloudCredentials>>>;
+
+async function getOrAssignPortForWorkspace(): Promise<number> {
+    const portStart = rovodevInfo.portRange.start;
+    const portEnd = rovodevInfo.portRange.end;
+
+    for (let port = portStart; port <= portEnd; ++port) {
+        if (await isPortAvailable(port)) {
+            return port;
         }
+    }
 
-        if (!site.host.endsWith('.atlassian.net')) {
-            return undefined;
-        }
-
-        const authInfo = await Container.credentialManager.getAuthInfo(site);
-        if (!isBasicAuthInfo(authInfo)) {
-            return undefined;
-        }
-
-        return {
-            username: authInfo.username,
-            key: authInfo.password,
-            host: site.host,
-        };
-    });
-
-    const results = (await Promise.all(promises)).filter((result) => result !== undefined);
-    return results.length > 0 ? results[0] : undefined;
+    throw new Error('unable to find an available port.');
 }
 
 export class RovoDevProcessManager {
@@ -126,8 +147,8 @@ export class RovoDevProcessManager {
         const zipUrl = rovoDevURIs.RovoDevZipUrl;
 
         if (!zipUrl) {
-            this.rovoDevWebviewProvider.signalRovoDevDisabled();
-            this.rovoDevWebviewProvider.sendErrorToChat(
+            await this.rovoDevWebviewProvider.signalRovoDevDisabled();
+            await this.rovoDevWebviewProvider.sendErrorToChat(
                 `Rovo Dev is not supported for the following platform/architecture: ${process.platform}/${process.arch}`,
             );
             return;
@@ -149,41 +170,46 @@ export class RovoDevProcessManager {
             await getFsPromise((callback) => fs.mkdir(versionDir, { recursive: true }, callback));
         } catch (error) {
             const message = `Unable to update Rovo Dev:\n${error.message}\n\nTo try again, please close VS Code and reopen it.`;
-            this.rovoDevWebviewProvider.signalRovoDevDisabled();
-            this.rovoDevWebviewProvider.sendErrorToChat(message);
+            await this.rovoDevWebviewProvider.signalRovoDevDisabled();
+            await this.rovoDevWebviewProvider.sendErrorToChat(message);
             throw error;
         }
 
         this.rovoDevWebviewProvider.signalBinaryDownloadEnded();
-
-        await this.initializeRovoDevProcessManager(context);
     }
 
     public static async initializeRovoDevProcessManager(context: ExtensionContext) {
         const rovoDevURIs = GetRovoDevURIs(context);
 
-        this.rovoDevInstance?.dispose();
-        this.rovoDevInstance = undefined;
-
-        if (!fs.existsSync(rovoDevURIs.RovoDevBinPath)) {
-            this.rovoDevWebviewProvider.signalBinaryDownloadStarted();
-            await this.downloadBinaryThenInitialize(context, rovoDevURIs);
+        if (this.rovoDevInstance) {
+            this.sendErrorToChat(new Error('Rovo Dev is already initialized'));
             return;
         }
 
-        // Listen for workspace folder changes
-        const listener = workspace.onDidChangeWorkspaceFolders((event) => {
-            if (!this.rovoDevInstance && event.added.length > 0) {
-                this.startRovoDev(rovoDevURIs);
-            } else if (event.removed.length === workspace.workspaceFolders?.length) {
-                this.stopRovoDevInstance();
+        const credentials = await getCloudCredentials();
+        if (!credentials) {
+            this.sendErrorToChat(new Error('Please authenticate with an API token to enable Rovo Dev'));
+            return;
+        }
+
+        try {
+            if (!fs.existsSync(rovoDevURIs.RovoDevBinPath)) {
+                this.rovoDevWebviewProvider.signalBinaryDownloadStarted();
+                await this.downloadBinaryThenInitialize(context, rovoDevURIs);
             }
-        });
 
-        context.subscriptions.push(listener);
-        this.disposables.push(listener);
+            await this.startRovoDev(credentials, rovoDevURIs);
+        } catch (error) {
+            this.sendErrorToChat(error);
+        }
+    }
 
-        await this.startRovoDev(rovoDevURIs);
+    public static async refreshRovoDevCredentials(context: ExtensionContext) {
+        if (this.rovoDevInstance) {
+            this.rovoDevInstance.refreshCredentials();
+        } else {
+            this.initializeRovoDevProcessManager(context);
+        }
     }
 
     public static deactivateRovoDevProcessManager() {
@@ -196,20 +222,7 @@ export class RovoDevProcessManager {
         this.stopRovoDevInstance();
     }
 
-    private static async getOrAssignPortForWorkspace(): Promise<number> {
-        const portStart = rovodevInfo.portRange.start;
-        const portEnd = rovodevInfo.portRange.end;
-
-        for (let port = portStart; port <= portEnd; ++port) {
-            if (await isPortAvailable(port)) {
-                return port;
-            }
-        }
-
-        throw new Error('unable to find an available port.');
-    }
-
-    private static async startRovoDev(rovoDevURIs: RovoDevURIs) {
+    private static async startRovoDev(credentials: CloudCredentials, rovoDevURIs: RovoDevURIs) {
         // skip there is no workspace folder open
         if (!workspace.workspaceFolders) {
             return;
@@ -217,73 +230,100 @@ export class RovoDevProcessManager {
 
         const folder = workspace.workspaceFolders[0];
 
-        try {
-            const port = await this.getOrAssignPortForWorkspace();
-
-            if (Container.isDebugging) {
-                this.rovoDevInstance = new RovoDevTerminalInstance(
-                    this.rovoDevWebviewProvider,
-                    folder.uri.fsPath,
-                    port,
-                    rovoDevURIs.RovoDevBinPath,
-                    rovoDevURIs.RovoDevIconUri,
-                );
-            } else {
-                this.rovoDevInstance = new RovoDevProcessInstance(
-                    this.rovoDevWebviewProvider,
-                    folder.uri.fsPath,
-                    port,
-                    rovoDevURIs.RovoDevBinPath,
-                );
-            }
-        } catch (error) {
-            this.rovoDevWebviewProvider.signalRovoDevDisabled();
-            this.rovoDevWebviewProvider.sendErrorToChat(`Unable to start Rovo Dev:\n${error.message}`);
+        if (Container.isDebugging) {
+            this.rovoDevInstance = new RovoDevTerminalInstance(
+                this.rovoDevWebviewProvider,
+                credentials,
+                folder.uri.fsPath,
+                rovoDevURIs.RovoDevBinPath,
+                rovoDevURIs.RovoDevIconUri,
+            );
+        } else {
+            this.rovoDevInstance = new RovoDevProcessInstance(
+                this.rovoDevWebviewProvider,
+                credentials,
+                folder.uri.fsPath,
+                rovoDevURIs.RovoDevBinPath,
+            );
         }
+
+        await this.rovoDevInstance.start();
     }
 
     public static showTerminal() {
         this.rovoDevInstance?.showTerminal();
     }
+
+    private static async sendErrorToChat(error: Error) {
+        await this.rovoDevWebviewProvider.signalRovoDevDisabled();
+        await this.rovoDevWebviewProvider.sendErrorToChat(`Unable to start Rovo Dev:\n${error.message}`);
+    }
 }
 
-interface RovoDevInstance extends Disposable {
-    stop(): void;
-    showTerminal(): void;
+abstract class RovoDevInstance extends Disposable {
+    constructor(protected credentials: CloudCredentials | undefined) {
+        super(() => this.stop());
+    }
+
+    public abstract start(): Promise<void>;
+    public abstract stop(): void;
+    public abstract showTerminal(): void;
+    protected abstract restart(): void;
+
+    public async refreshCredentials(): Promise<void> {
+        const credentials = await getCloudCredentials();
+        if (!this.areEquals(credentials, this.credentials)) {
+            this.credentials = credentials;
+            this.restart();
+        }
+    }
+
+    private areEquals(cred1?: CloudCredentials, cred2?: CloudCredentials) {
+        if (cred1 === cred2) {
+            return true;
+        }
+
+        if (!cred1 || !cred2) {
+            return false;
+        }
+
+        return cred1.host === cred2.host && cred1.key === cred2.key && cred1.username === cred2.username;
+    }
 }
 
-class RovoDevProcessInstance extends Disposable implements RovoDevInstance {
+class RovoDevProcessInstance extends RovoDevInstance {
     private rovoDevProcess: ChildProcess | undefined;
+    private restarting: boolean = false;
 
     public get isRunning() {
         return !!this.rovoDevProcess;
     }
 
     constructor(
-        rovoDevWebviewProvider: RovoDevWebviewProvider,
-        workspacePath: string,
-        port: number,
-        rovoDevBinPath: string,
+        private rovoDevWebviewProvider: RovoDevWebviewProvider,
+        credentials: CloudCredentials | undefined,
+        private workspacePath: string,
+        private rovoDevBinPath: string,
     ) {
-        super(() => this.stop());
+        super(credentials);
+    }
 
-        this.stop();
+    public async start(): Promise<void> {
+        const credentials = this.credentials;
+        const port = await getOrAssignPortForWorkspace();
 
-        access(rovoDevBinPath, constants.X_OK, (err) => {
-            if (err) {
-                throw new Error(`executable not found.`);
-            }
-
-            getCloudCredentials().then((creds) => {
-                if (!creds) {
-                    rovoDevWebviewProvider.signalRovoDevDisabled();
-                    rovoDevWebviewProvider.signalProcessTerminated(
-                        'Please authenticate with an API token to enable Rovo Dev',
-                    );
+        return new Promise<void>((resolve, reject) => {
+            access(this.rovoDevBinPath, constants.X_OK, (err) => {
+                if (err) {
+                    reject(new Error(`executable not found.`));
+                    return;
+                }
+                if (!credentials) {
+                    reject(new Error('Please authenticate with an API token to enable Rovo Dev'));
                     return;
                 }
 
-                const { username, key } = creds;
+                const { username, key } = credentials;
 
                 const env: NodeJS.ProcessEnv = {
                     USER: process.env.USER,
@@ -293,20 +333,26 @@ class RovoDevProcessInstance extends Disposable implements RovoDevInstance {
                 let stderrData = '';
 
                 this.rovoDevProcess = spawn(
-                    rovoDevBinPath,
+                    this.rovoDevBinPath,
                     [`serve`, `${port}`, `--application-id`, `com.atlassian.vscode`],
                     {
-                        cwd: workspacePath,
+                        cwd: this.workspacePath,
                         stdio: ['ignore', 'pipe', 'pipe'],
                         detached: true,
                         env,
                     },
                 )
-                    .on('spawn', () => rovoDevWebviewProvider.signalProcessStarted(port))
+                    .on('spawn', () => this.rovoDevWebviewProvider.signalProcessStarted(port))
                     .on('exit', (code) => {
-                        this.rovoDevProcess = undefined;
+                        this.hasStopped();
 
-                        if (code !== 0) {
+                        if (this.restarting) {
+                            this.restarting = false;
+                            this.start().catch(async (error) => {
+                                await this.rovoDevWebviewProvider.signalRovoDevDisabled();
+                                await this.rovoDevWebviewProvider.sendErrorToChat(error.message);
+                            });
+                        } else if (code !== 0) {
                             let error: string;
                             if (stderrData.includes('auth token')) {
                                 error = `please login by providing an API Token. You can do this via Atlassian: Open Settings -> Authentication`;
@@ -315,8 +361,7 @@ class RovoDevProcessInstance extends Disposable implements RovoDevInstance {
                                 error = `process exited with code ${code}, see the log for details.`;
                             }
 
-                            rovoDevWebviewProvider.signalRovoDevDisabled();
-                            rovoDevWebviewProvider.signalProcessTerminated(error);
+                            this.rovoDevWebviewProvider.signalProcessTerminated(error);
                         }
                     });
 
@@ -325,6 +370,8 @@ class RovoDevProcessInstance extends Disposable implements RovoDevInstance {
                         stderrData += data.toString();
                     });
                 }
+
+                resolve();
             });
         });
     }
@@ -332,8 +379,17 @@ class RovoDevProcessInstance extends Disposable implements RovoDevInstance {
     public stop() {
         if (this.rovoDevProcess) {
             this.rovoDevProcess.kill();
-            this.rovoDevProcess = undefined;
+            this.hasStopped();
         }
+    }
+
+    private hasStopped() {
+        this.rovoDevProcess = undefined;
+    }
+
+    protected override restart(): void {
+        this.restarting = true;
+        this.stop();
     }
 
     public showTerminal() {
@@ -341,42 +397,46 @@ class RovoDevProcessInstance extends Disposable implements RovoDevInstance {
     }
 }
 
-class RovoDevTerminalInstance extends Disposable implements RovoDevInstance {
+class RovoDevTerminalInstance extends RovoDevInstance {
     private rovoDevTerminal: Terminal | undefined;
+    private disposables: Disposable[] = [];
 
     constructor(
-        rovoDevWebviewProvider: RovoDevWebviewProvider,
-        workspacePath: string,
-        port: number,
-        rovoDevBinPath: string,
-        rovoDevIconUri: Uri,
+        private rovoDevWebviewProvider: RovoDevWebviewProvider,
+        credentials: CloudCredentials | undefined,
+        private workspacePath: string,
+        private rovoDevBinPath: string,
+        private rovoDevIconUri: Uri,
     ) {
-        super(() => this.stop());
+        super(credentials);
+    }
 
-        access(rovoDevBinPath, constants.X_OK, (err) => {
-            if (err) {
-                throw new Error(`executable not found.`);
+    public async start(): Promise<void> {
+        const credentials = this.credentials;
+        const port = await getOrAssignPortForWorkspace();
+
+        return new Promise<void>((resolve, reject) => {
+            if (!credentials) {
+                reject(new Error('Please authenticate with an API token to enable Rovo Dev'));
+                return;
             }
 
-            getCloudCredentials().then((creds) => {
-                if (!creds) {
-                    rovoDevWebviewProvider.signalRovoDevDisabled();
-                    rovoDevWebviewProvider.signalProcessTerminated(
-                        'Please authenticate with an API token to enable Rovo Dev',
-                    );
+            access(this.rovoDevBinPath, constants.X_OK, (err) => {
+                if (err) {
+                    reject(new Error(`executable not found.`));
                     return;
                 }
 
-                const { username, key } = creds || {};
+                const { username, key } = credentials;
 
                 this.rovoDevTerminal = window.createTerminal({
                     name: 'Rovo Dev',
-                    shellPath: rovoDevBinPath,
+                    shellPath: this.rovoDevBinPath,
                     shellArgs: [`serve`, `${port}`, `--application-id`, `com.atlassian.vscode`],
-                    cwd: workspacePath,
+                    cwd: this.workspacePath,
                     hideFromUser: true,
                     isTransient: true,
-                    iconPath: rovoDevIconUri,
+                    iconPath: this.rovoDevIconUri,
                     env: {
                         USER: process.env.USER,
                         USER_EMAIL: username,
@@ -384,32 +444,49 @@ class RovoDevTerminalInstance extends Disposable implements RovoDevInstance {
                     },
                 });
 
-                window.onDidCloseTerminal((event) => {
+                const onDidCloseTerminal = window.onDidCloseTerminal((event) => {
                     if (event === this.rovoDevTerminal) {
+                        this.hasStopped();
+
                         const code = event.exitStatus?.code;
                         if (code) {
-                            rovoDevWebviewProvider.signalRovoDevDisabled();
-                            rovoDevWebviewProvider.signalProcessTerminated(
+                            this.rovoDevWebviewProvider.signalProcessTerminated(
                                 `Rovo Dev exited with code ${code}, see the log for details.`,
                             );
                         } else {
-                            rovoDevWebviewProvider.signalProcessTerminated();
+                            this.rovoDevWebviewProvider.signalProcessTerminated();
                         }
                     }
                 });
+                this.disposables.push(onDidCloseTerminal);
 
-                rovoDevWebviewProvider.signalProcessStarted(port, true);
+                this.rovoDevWebviewProvider.signalProcessStarted(port, true);
+                resolve();
             });
         });
     }
 
     public stop() {
         if (this.rovoDevTerminal) {
-            const terminal = this.rovoDevTerminal;
-            this.rovoDevTerminal = undefined;
             // sends a CTRL+C to the terminal
-            terminal.sendText('\u0003', true);
+            this.rovoDevTerminal.sendText('\u0003', true);
+            this.hasStopped();
         }
+    }
+
+    protected override restart(): void {
+        this.stop();
+        this.start().catch(async (error) => {
+            await this.rovoDevWebviewProvider.signalRovoDevDisabled();
+            await this.rovoDevWebviewProvider.sendErrorToChat(error.message);
+        });
+    }
+
+    private hasStopped() {
+        this.rovoDevTerminal?.dispose();
+        this.rovoDevTerminal = undefined;
+        this.disposables.forEach((x) => x.dispose());
+        this.disposables = [];
     }
 
     public showTerminal() {
