@@ -3,7 +3,7 @@ import { Disposable, Uri, ViewColumn, window } from 'vscode';
 import { Container } from '../container';
 import { CommonActionType } from '../lib/ipc/fromUI/common';
 import { CommonMessageType } from '../lib/ipc/toUI/common';
-import { Experiments, Features } from '../util/featureFlags/features';
+import { Experiments, Features } from '../util/features';
 import { UIWebsocket } from '../ws';
 import { SingleWebview } from './singleViewFactory';
 
