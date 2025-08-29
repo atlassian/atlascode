@@ -30,8 +30,8 @@ export const JiraBasicAuthForm = ({
                 <TextField
                     required
                     size="small"
-                    id="email"
-                    name="email"
+                    id="username"
+                    name="username"
                     label="Email"
                     defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).username}
                     helperText={errors.username ? errors.username : undefined}
