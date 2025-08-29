@@ -33,3 +33,15 @@ export class Transition {
         return [undefined, undefined];
     }
 }
+
+export type QuickFlowAnalyticsEvent = {
+    flowType: string;
+    flowId: string;
+    status: 'started' | 'in_progress' | 'completed' | 'cancelled';
+
+    origin?: string;
+    direction?: 'forward' | 'back';
+    stepNumber?: number;
+    step?: string;
+    nextStep?: string;
+};

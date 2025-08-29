@@ -215,7 +215,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             commands.registerCommand(Commands.JiraLogin, () => {
                 const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
                 if (useNewAuthFlow) {
-                    commands.executeCommand(Commands.QuickAuth, { product: ProductJira });
+                    commands.executeCommand(Commands.QuickAuth, { product: ProductJira }, 'assigned to me');
                 } else {
                     commands.executeCommand(Commands.ShowConfigPage);
                 }
@@ -429,7 +429,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             commands.registerCommand(Commands.JiraLogin, () => {
                 const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
                 if (useNewAuthFlow) {
-                    commands.executeCommand(Commands.QuickAuth, { product: ProductJira });
+                    commands.executeCommand(Commands.QuickAuth, { product: ProductJira }, 'assigned to me');
                 } else {
                     commands.executeCommand(Commands.ShowConfigPage);
                 }

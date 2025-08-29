@@ -1,6 +1,7 @@
 import { window } from 'vscode';
 
 import { QuickFlow } from './quickFlow';
+import { QuickFlowAnalyticsEvent } from './types';
 
 jest.mock('vscode', () => ({
     window: {
@@ -26,6 +27,13 @@ class TestQuickFlow extends QuickFlow<UIType, DataType> {
 
     ui() {
         return this._ui;
+    }
+
+    override enrichEvent(event: Partial<QuickFlowAnalyticsEvent>): QuickFlowAnalyticsEvent {
+        return {
+            ...event,
+            flowType: 'test',
+        } as any;
     }
 }
 
