@@ -12,6 +12,7 @@ import { v4 } from 'uuid';
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
 import { useMessagingApi } from '../messagingApi';
+import { FeedbackType } from './feedback-form/FeedbackForm';
 import { ChatStream } from './messaging/ChatStream';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
@@ -23,6 +24,7 @@ import {
     CODE_PLAN_EXECUTE_PROMPT,
     DefaultMessage,
     ErrorMessage,
+    extractLastNMessages,
     isCodeChangeTool,
     MessageBlockDetails,
     parseToolReturnMessage,
@@ -74,6 +76,8 @@ const RovoDevView: React.FC = () => {
     const [isDeepPlanCreated, setIsDeepPlanCreated] = useState(false);
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
     const [workspaceCount, setWorkspaceCount] = useState(process.env.ROVODEV_BBY ? 1 : 0);
+
+    const [isFeedbackFormVisible, setIsFeedbackFormVisible] = React.useState(false);
 
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
 
@@ -216,6 +220,7 @@ const RovoDevView: React.FC = () => {
         setIsDeepPlanCreated(false);
         setCurThinkingMessages([]);
         setCurrentMessage(null);
+        setIsFeedbackFormVisible(false);
     }, [totalModifiedFiles, keepFiles]);
 
     const handleAppendModifiedFileToolReturns = useCallback(
@@ -509,6 +514,9 @@ const RovoDevView: React.FC = () => {
                     }
                     break;
 
+                case RovoDevProviderMessageType.ShowFeedbackForm:
+                    setIsFeedbackFormVisible(true);
+                    break;
                 default:
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendError({
@@ -566,7 +574,7 @@ const RovoDevView: React.FC = () => {
             setCurrentState(State.GeneratingResponse);
 
             // Send the prompt to backend
-            postMessage({
+            dispatch({
                 type: RovoDevViewResponseType.Prompt,
                 text,
                 enable_deep_plan: isDeepPlanToggled,
@@ -576,7 +584,7 @@ const RovoDevView: React.FC = () => {
             // Clear the input field
             setPromptText('');
         },
-        [currentState, isDeepPlanCreated, isDeepPlanToggled, postMessage, setCurrentState, promptContextCollection],
+        [currentState, isDeepPlanCreated, isDeepPlanToggled, setCurrentState, promptContextCollection],
     );
 
     // On the first render, get the context update
@@ -685,10 +693,33 @@ const RovoDevView: React.FC = () => {
     }, [chatStream, currentState]);
 
     const executeGetAgentMemory = useCallback(() => {
-        postMessage({
+        dispatch({
             type: RovoDevViewResponseType.GetAgentMemory,
         });
-    }, [postMessage]);
+    }, []);
+
+    const handleShowFeedbackForm = useCallback(() => {
+        setIsFeedbackFormVisible(true);
+    }, []);
+
+    const executeSendFeedback = useCallback(
+        (feedbackType: FeedbackType, feedack: string, canContact: boolean, includeTenMessages: boolean) => {
+            let lastTenMessages: string[] | undefined = undefined;
+            if (includeTenMessages) {
+                lastTenMessages = extractLastNMessages(10, chatStream);
+            }
+
+            postMessage({
+                type: RovoDevViewResponseType.SendFeedback,
+                feedbackType,
+                feedbackMessage: feedack,
+                lastTenMessages,
+                canContact,
+            });
+            setIsFeedbackFormVisible(false);
+        },
+        [chatStream, postMessage],
+    );
 
     const onLoginClick = useCallback(() => {
         postMessage({
@@ -720,6 +751,9 @@ const RovoDevView: React.FC = () => {
                 downloadProgress={downloadProgress}
                 onChangesGitPushed={onChangesGitPushed}
                 onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
+                feedbackVisible={isFeedbackFormVisible}
+                setFeedbackVisible={setIsFeedbackFormVisible}
+                sendFeedback={executeSendFeedback}
                 onLoginClick={onLoginClick}
             />
             {currentState !== State.Disabled && (
@@ -780,6 +814,7 @@ const RovoDevView: React.FC = () => {
                             }}
                             onCopy={handleCopyResponse}
                             handleMemoryCommand={executeGetAgentMemory}
+                            handleTriggerFeedbackCommand={handleShowFeedbackForm}
                         />
                     </div>
                     <div className="ai-disclaimer">Uses AI. Verify results.</div>

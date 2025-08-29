@@ -46,6 +46,7 @@ import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
+import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
 import { RovoDevProcessManager } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevContext, RovoDevContextItem, RovoDevInitState, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
@@ -271,6 +272,20 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.GetAgentMemory:
                         await this.executeOpenFile('.agent.md', false, undefined, true);
+                        break;
+
+                    case RovoDevViewResponseType.TriggerFeedback:
+                        await this.executeTriggerFeedback();
+                        break;
+
+                    case RovoDevViewResponseType.SendFeedback:
+                        console.log('Send feedback message received in provider');
+                        RovoDevFeedbackManager.submitFeedback({
+                            feedbackType: e.feedbackType,
+                            feedbackMessage: e.feedbackMessage,
+                            canContact: e.canContact,
+                            lastTenMessages: e.lastTenMessages,
+                        });
                         break;
 
                     case RovoDevViewResponseType.LaunchJiraAuth:
@@ -1020,6 +1035,14 @@ ${message}`;
         await Promise.all(promises);
 
         this.fireTelemetryEvent('rovoDevFileChangedActionEvent', this._currentPromptId, 'keep', files.length);
+    }
+
+    public async executeTriggerFeedback() {
+        const webview = this._webView!;
+
+        await webview.postMessage({
+            type: RovoDevProviderMessageType.ShowFeedbackForm,
+        });
     }
 
     private async createPR(commitMessage?: string, branchName?: string): Promise<void> {

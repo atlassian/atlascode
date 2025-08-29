@@ -357,8 +357,8 @@ body {
     cursor: pointer;
 }
 
-/* Pull Request form styles */
-.pull-request-form-container {
+/* form styles */
+.form-container {
     display: flex;
     padding: 12px;
     flex-direction: column;
@@ -368,21 +368,21 @@ body {
     flex: 1 0 0;
 }
 
-.pull-request-form-body {
+.form-body {
     display: flex;
     flex-direction: column;
     gap: 18px;
     width: 100%;
 }
 
-.pull-request-form-header {
+.form-header {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 4px;
 }
 
-.pull-request-form-fields {
+.form-fields {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -390,7 +390,7 @@ body {
     align-self: stretch;
 }
 
-.pull-request-form-field {
+.form-field {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -398,12 +398,12 @@ body {
     align-self: stretch;
 }
 
-.pull-request-form-field label {
+.form-field label {
     font-size: 11px;
     color: var(--vscode-editor-foreground);
 }
 
-.pull-request-form-field input[type="text"] {
+.form-field input[type="text"], .form-field textarea {
     width: 100%;
     padding: 6px 8px;
     border: 1px solid var(--vscode-input-border);
@@ -411,11 +411,30 @@ body {
     color: var(--vscode-input-foreground);
 }
 
-.pull-request-form-field input[type="text"]:focus {
+.form-field input[type="text"]:focus, .form-field textarea:focus {
     outline: var(--vscode-focusBorder) solid 1px;
 }
 
-.pull-request-form-actions {
+.form-field-checkbox {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+.form-field-checkbox input[type="checkbox"] {
+    background-color: var(--vscode-checkbox-background);
+    color: var(--vscode-checkbox-foreground);
+    border: 1px solid var(--vscode-checkbox-border);
+    cursor: pointer;
+}
+
+.form-field-checkbox input[type="checkbox"]:focus {
+    outline: var(--vscode-checkbox-selectBorder) solid 1px;
+    background-color: var(--vscode-checkbox-selectBackground);
+}
+
+.form-actions {
     display: flex;
     flex-direction: row;
     gap: 10px;
@@ -423,8 +442,8 @@ body {
     justify-content: flex-end;
 }
 
-.pull-request-cancel-button,
-.pull-request-submit-button {
+.form-cancel-button,
+.form-submit-button {
     padding: 6px 12px;
     display: flex;
     align-items: center;
@@ -433,21 +452,21 @@ body {
     cursor: pointer;
 }
 
-.pull-request-cancel-button {
+.form-cancel-button {
     background-color: var(--vscode-button-secondaryBackground);
     color: var(--vscode-button-secondaryForeground);
 }
 
-.pull-request-cancel-button:hover {
+.form-cancel-button:hover {
     background-color: var(--vscode-button-secondaryHoverBackground);
 }
 
-.pull-request-submit-button {
+.form-submit-button {
     background-color: var(--vscode-button-background);
     color: var(--vscode-button-foreground);
 }
 
-.pull-request-submit-button:hover {
+.form-submit-button:hover {
     background-color: var(--vscode-button-hoverBackground);
 }
 
@@ -637,3 +656,13 @@ body {
     opacity: 0.7;
 }
 
+.form-select {
+    width: 100%;
+    border: 1px solid var(--vscode-dropdown-border);
+    background-color: var(--vscode-dropdown-background);
+    color: var(--vscode-dropdown-foreground);
+}
+
+.form-select:focus {
+    outline: var(--vscode-focusBorder) solid 1px;
+}

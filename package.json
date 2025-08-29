@@ -157,6 +157,12 @@
                 "enablement": "atlascode:rovoDevEnabled"
             },
             {
+                "command": "atlascode.rovodev.shareFeedback",
+                "title": "Share feedback",
+                "category": "Rovo Dev",
+                "enablement": "atlascode:rovoDevEnabled"
+            },
+            {
                 "command": "atlascode.jira.todoIssue",
                 "title": "TO DO"
             },
@@ -620,6 +626,10 @@
                     "command": "atlascode.rovodev.showTerminal",
                     "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView",
                     "group": "navigation@2"
+                },
+                {
+                    "command": "atlascode.rovodev.shareFeedback",
+                    "when": "view == atlascode.views.rovoDev.webView"
                 },
                 {
                     "command": "atlascode.jira.createIssue",

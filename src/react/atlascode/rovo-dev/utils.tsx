@@ -6,12 +6,7 @@ export type ToolReturnMessage =
     | ToolReturnTechnicalPlanMessage
     | ToolReturnGrepFileContentMessage
     | ToolReturnGenericMessage;
-export type ChatMessage =
-    | DefaultMessage
-    | ErrorMessage
-    | ToolCallMessage
-    | ToolReturnGenericMessage
-    | ToolReturnGroupedMessage;
+export type ChatMessage = DefaultMessage | ErrorMessage | ToolCallMessage | ToolReturnGenericMessage;
 
 export interface DefaultMessage {
     text: string;
@@ -239,3 +234,44 @@ export const scrollToEnd = (() => {
         }
     };
 })();
+
+export function extractLastNMessages(n: number, history: MessageBlockDetails[]) {
+    let msgCount = 0;
+    let idx = history.length - 1;
+    const lastTenMessages = [];
+    let msgBlock: string[] = [];
+
+    while (idx >= 0 && msgCount < n) {
+        const block = history[idx];
+        if (!Array.isArray(block) && block && block.source === 'User') {
+            msgBlock.unshift(JSON.stringify(block, undefined, 4));
+            lastTenMessages.unshift(msgBlock.join('\n'));
+            msgBlock = [];
+            idx--;
+            msgCount++;
+            continue;
+        }
+
+        if (Array.isArray(block)) {
+            const thinkingMsgs: string[] = [];
+            block.forEach((item) => {
+                const tmpItem = { ...item };
+                if (item.source === 'ToolReturn') {
+                    // we don't want to send the full content of the tool_return back in the feedback as it can contain sensitive data
+                    delete (tmpItem as any).content;
+                    delete (tmpItem as any).parsedContent;
+                }
+                thinkingMsgs.push(JSON.stringify(tmpItem, undefined, 4));
+            });
+            msgBlock.unshift(thinkingMsgs.join('\n'));
+            idx--;
+            continue;
+        }
+
+        if (block) {
+            msgBlock.unshift(JSON.stringify(block, undefined, 4));
+        }
+        idx--;
+    }
+    return lastTenMessages;
+}
