@@ -15,7 +15,7 @@ export const enum RovoDevProviderMessageType {
     ErrorMessage = 'errorMessage',
     ClearChat = 'clearChat',
     SetInitState = 'setInitState',
-    WorkspaceChanged = 'workspaceChanged',
+    ProviderReady = 'providerReady',
     SetDownloadProgress = 'setDownloadProgress',
     CancelFailed = 'cancelFailed',
     CreatePRComplete = 'createPRComplete',
@@ -42,7 +42,7 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.ErrorMessage, { message: ErrorMessage }>
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
     | ReducerAction<RovoDevProviderMessageType.SetInitState, { newState: RovoDevInitState }>
-    | ReducerAction<RovoDevProviderMessageType.WorkspaceChanged, { workspaceCount: number }>
+    | ReducerAction<RovoDevProviderMessageType.ProviderReady, { workspaceCount: number }>
     | ReducerAction<RovoDevProviderMessageType.SetDownloadProgress, { downloadedBytes: number; totalBytes: number }>
     | ReducerAction<RovoDevProviderMessageType.CancelFailed>
     | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string; error?: string } }>

@@ -9,7 +9,7 @@
 ### Bug Fixes
 
 - Fixed issue when project value was not updating in create issue page
-- Fixed issue when trying to create children issues on epic that had no children to begin with.
+- Fixed issue when trying to create children issues on epic that had no children to begin with
 
 ## What's new in 3.8.10
 
@@ -32,7 +32,7 @@
 
 ### Bug Fixes
 
-- Removed setting options that had no practical or business logic use.
+- Removed setting options that had no practical or business logic use
 - Fixed a bug where Jira site icon is broken in create Jira issue page
 - Fixed a bug with getting the error when deleting multiple instances
 - Fixed a bug where we could not assign people to a Jira issue as DC users
@@ -54,7 +54,7 @@
 ### Features
 
 - Update logic of selecting the default project and site to the most relevant one for the user on the Creating a JIRA issue page
-- Added filtering for options and error message in projects field on Create Jira issue page.
+- Added filtering for options and error message in projects field on Create Jira issue page
 
 ### Bug Fixes
 
@@ -65,7 +65,8 @@
 - Fixed a bug when Save site button is enabled without valid credentials
 - Fixed a bug where after creating a new Jira issue, the issue would not appear in the sidebar
 - Fixed a bug where fields were not being cleared after a successful form submission and issue creation
-- Fixed an unexpected status dropdown behavior when user doesn't have enough permissions to change it.
+- Fixed an unexpected status dropdown behavior when user doesn't have enough permissions to change it
+- Improved the latency for opening, editing, and creating Jira work items
 
 ## What's new in 3.8.6
 

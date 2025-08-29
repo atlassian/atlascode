@@ -201,6 +201,7 @@ export class Container {
                 analyticsAnonymousId: this.machineId,
             });
 
+            this.pushFeatureUpdatesToUI();
             Logger.debug(`FeatureFlagClient: Succesfully initialized the client.`);
             featureFlagClientInitializedEvent(true).then((e) => {
                 this.analyticsClient.sendTrackEvent(e);
@@ -229,9 +230,9 @@ export class Container {
             this._siteManager.onDidSitesAvailableChange(async () => {
                 if (await this.updateFeatureFlagTenantId(this._siteManager.primarySite?.id)) {
                     if (this._featureFlagClient.checkGate(Features.RovoDevEnabled)) {
-                        this.enableRovoDev(context);
+                        await this.enableRovoDev(context);
                     } else {
-                        this.disableRovoDev(context);
+                        await this.disableRovoDev();
                     }
                 }
             });
@@ -252,13 +253,14 @@ export class Container {
 
         if (process.env.ROVODEV_BBY || this.featureFlagClient.checkGate(Features.RovoDevEnabled)) {
             this._isRovoDevEnabled = true;
-            this.enableRovoDev(context);
+            await this.enableRovoDev(context);
         }
     }
 
     static async updateFeatureFlagTenantId(tenantId: string | undefined): Promise<boolean> {
         try {
             await this._featureFlagClient.updateUser({ tenantId });
+            this.pushFeatureUpdatesToUI();
             return true;
         } catch (err) {
             Logger.error('RovoDev', err, "FeatureFlagClient: Failed to update user's tenantId");
@@ -266,43 +268,81 @@ export class Container {
         }
     }
 
-    static enableRovoDev(context: ExtensionContext) {
+    static async enableRovoDev(context: ExtensionContext) {
         if (this._rovodevDisposable) {
-            // Already enabled
-            return;
+            try {
+                // Already enabled
+                await RovoDevProcessManager.refreshRovoDevCredentials(context);
+            } catch (error) {
+                Logger.error('RovoDev', error, 'Refreshing Rovo Dev credentials');
+                return;
+            }
+        } else {
+            try {
+                // this enables the Rovo Dev activity bar
+                await setCommandContext(CommandContext.RovoDevEnabled, true);
+
+                this._rovodevDisposable = vscode.Disposable.from(
+                    new RovoDevDecorator(),
+                    languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
+                        providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
+                    }),
+                    (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context, context.extensionPath)),
+                    this.configureRovodevSettingsCommands(context),
+                );
+
+                context.subscriptions.push(this._rovodevDisposable);
+            } catch (error) {
+                Logger.error('RovoDev', error, 'Enabling Rovo Dev');
+            }
         }
 
-        // this enables the Rovo Dev activity bar
-        setCommandContext(CommandContext.RovoDevEnabled, true);
-
-        this._rovodevDisposable = vscode.Disposable.from(
-            new RovoDevDecorator(),
-            languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
-                providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
-            }),
-            (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context, context.extensionPath)),
-            this.configureRovodevSettingsCommands(context),
-        );
-
-        context.subscriptions.push(this._rovodevDisposable);
-
-        // Refresh all issue views to show the secret button
-        this.jiraIssueViewManager.refreshAll();
+        try {
+            // Refresh all issue views to show the secret button
+            this.jiraIssueViewManager.refreshAll();
+        } catch (error) {
+            Logger.error('RovoDev', error, 'Refreshing Jira issue views');
+            return;
+        }
     }
 
-    static disableRovoDev(context: ExtensionContext) {
-        if (!this._rovodevDisposable) {
-            // Already disabled
-            return;
+    static async disableRovoDev() {
+        try {
+            if (!this._rovodevDisposable) {
+                // Already disabled
+                return;
+            }
+
+            await setCommandContext(CommandContext.RovoDevEnabled, false);
+            this._rovodevDisposable.dispose();
+            this._rovodevDisposable = undefined;
+            RovoDevProcessManager.deactivateRovoDevProcessManager();
+        } catch (error) {
+            Logger.error('RovoDev', error, 'Disabling Rovo Dev');
         }
 
-        setCommandContext(CommandContext.RovoDevEnabled, false);
-        this._rovodevDisposable.dispose();
-        this._rovodevDisposable = undefined;
-        RovoDevProcessManager.deactivateRovoDevProcessManager();
+        try {
+            // Refresh all issue views to show the secret button
+            this.jiraIssueViewManager.refreshAll();
+        } catch (error) {
+            Logger.error('RovoDev', error, 'Refreshing Jira issue views');
+            return;
+        }
+    }
 
-        // Refresh all issue views to hide the secret button
-        this.jiraIssueViewManager.refreshAll();
+    static pushFeatureUpdatesToUI() {
+        const factories = [
+            this.settingsWebviewFactory,
+            this.startWorkWebviewFactory,
+            this.startWorkV3WebviewFactory,
+            this.createPullRequestWebviewFactory,
+        ];
+
+        for (const factory of factories) {
+            if (typeof factory?.updateFeatureMetadata === 'function') {
+                factory.updateFeatureMetadata();
+            }
+        }
     }
 
     static configureRovodevSettingsCommands(context: ExtensionContext) {

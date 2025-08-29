@@ -15,7 +15,7 @@ import { AnalyticsApi } from '../lib/analyticsApi';
 import { CommonActionType } from '../lib/ipc/fromUI/common';
 import { AdditionalSettings, CommonMessageType } from '../lib/ipc/toUI/common';
 import { WebviewController } from '../lib/webview/controller/webviewController';
-import { ExperimentGateValues, Experiments, FeatureGateValues, Features } from '../util/featureFlags/features';
+import { ExperimentGateValues, Experiments, FeatureGateValues, Features } from '../util/features';
 import { UIWebsocket } from '../ws';
 import { VSCWebviewControllerFactory } from './vscWebviewControllerFactory';
 
@@ -135,6 +135,11 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
             this._panel.reveal(column ? column : ViewColumn.Active); // , false);
         }
 
+        // The webview might not be ready at this point; see another usage in `onMessageReceived`
+        this.updateFeatureMetadata();
+    }
+
+    public updateFeatureMetadata() {
         if (this._controller) {
             // Send feature gates to the panel in a message
             this.fireFeatureGates(this._controller.requiredFeatureFlags);
@@ -184,6 +189,9 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
                     const { site, product } = this._controller.screenDetails();
                     this._analyticsApi.fireViewScreenEvent('atlascodePmfBanner', site, product);
                 }
+
+                // Using `refresh` for webview readiness indication here - update feature flag data when ready
+                this.updateFeatureMetadata();
             }
         }
     }
