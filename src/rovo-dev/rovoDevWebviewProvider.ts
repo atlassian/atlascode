@@ -46,6 +46,7 @@ import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
+import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
 import { RovoDevProcessManager } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevContext, RovoDevContextItem, RovoDevInitState, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
@@ -278,7 +279,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.SendFeedback:
                         console.log('Send feedback message received in provider');
-                        console.log(e);
+                        RovoDevFeedbackManager.submitFeedback({
+                            feedbackType: e.feedbackType,
+                            feedbackMessage: e.feedbackMessage,
+                            canContact: e.canContact,
+                            lastTenMessages: e.lastTenMessages,
+                        });
                         break;
                 }
             } catch (error) {

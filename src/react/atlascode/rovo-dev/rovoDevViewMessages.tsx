@@ -49,5 +49,5 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.TriggerFeedback>
     | ReducerAction<
           RovoDevViewResponseType.SendFeedback,
-          { feedbackType: FeedbackType; feedbackMessage: string; lastTenMessages?: string[] }
+          { feedbackType: FeedbackType; feedbackMessage: string; lastTenMessages?: string[]; canContact: boolean }
       >;

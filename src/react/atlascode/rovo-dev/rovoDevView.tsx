@@ -683,7 +683,7 @@ const RovoDevView: React.FC = () => {
     }, []);
 
     const executeSendFeedback = useCallback(
-        (feedbackType: FeedbackType, feedack: string, includeTenMessages: boolean) => {
+        (feedbackType: FeedbackType, feedack: string, canContact: boolean, includeTenMessages: boolean) => {
             let lastTenMessages: string[] | undefined = undefined;
             if (includeTenMessages) {
                 lastTenMessages = extractLastNMessages(10, chatStream);
@@ -694,6 +694,7 @@ const RovoDevView: React.FC = () => {
                 feedbackType,
                 feedbackMessage: feedack,
                 lastTenMessages,
+                canContact,
             });
             setIsFeedbackFormVisible(false);
         },

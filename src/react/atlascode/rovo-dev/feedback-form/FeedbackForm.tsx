@@ -1,44 +1,37 @@
 import FeedbackIcon from '@atlaskit/icon/core/feedback';
 import React from 'react';
 
-export enum FeedbackType {
-    Like = 'like',
-    Dislike = 'dislike',
-    ReportContent = 'reportContent',
-    General = 'general',
-}
+export type FeedbackType = 'bug' | 'reportContent' | 'general';
 
 export interface FeedbackFormProps {
-    onSumbit: (feedbackType: FeedbackType, feedback: string, includeTenMessages: boolean) => void;
+    onSubmit: (feedbackType: FeedbackType, feedback: string, canContact: boolean, includeTenMessages: boolean) => void;
     onCancel: () => void;
     type?: 'like' | 'dislike';
 }
 
-export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSumbit, onCancel, type }) => {
+export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSubmit, onCancel, type }) => {
     const [includeTenMessages, setIncludeTenMessages] = React.useState(true);
+    const [canContact, setCanContact] = React.useState(true);
     const [title, setTitle] = React.useState('Share your thoughts');
-    const [feedbackType, setFeedbackType] = React.useState<FeedbackType>(
-        type ? (type === 'like' ? FeedbackType.Like : FeedbackType.Dislike) : FeedbackType.General,
-    );
+    const [feedbackType, setFeedbackType] = React.useState<FeedbackType>(type === 'dislike' ? 'bug' : 'general');
     const [options, setOptions] = React.useState<{ value: FeedbackType; label: string }[] | null>(null);
 
     React.useEffect(() => {
         if (type === 'like') {
-            setFeedbackType(FeedbackType.Like);
+            setFeedbackType('general');
         } else if (type === 'dislike') {
-            setFeedbackType(FeedbackType.Dislike);
+            setFeedbackType('bug');
             setTitle('Please, share your feedback');
             setOptions([
-                { value: FeedbackType.Dislike, label: 'Dislike' },
-                { value: FeedbackType.ReportContent, label: 'Report inappropriate content' },
+                { value: 'bug', label: 'Report bug' },
+                { value: 'reportContent', label: 'Report harmful or inappropriate content' },
             ]);
         } else {
-            setFeedbackType(FeedbackType.General);
+            setFeedbackType('general');
             setOptions([
-                { value: FeedbackType.General, label: 'General feedback' },
-                { value: FeedbackType.Like, label: 'Like' },
-                { value: FeedbackType.Dislike, label: 'Dislike' },
-                { value: FeedbackType.ReportContent, label: 'Report inappropriate content' },
+                { value: 'general', label: 'General feedback' },
+                { value: 'bug', label: 'Report bug' },
+                { value: 'reportContent', label: 'Report harmful or inappropriate content' },
             ]);
         }
     }, [type]);
@@ -46,19 +39,20 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSumbit, onCancel, 
     const handleTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedType = event.target.value as FeedbackType;
         setFeedbackType(selectedType);
-        if (selectedType === FeedbackType.Like || selectedType === FeedbackType.General) {
+        if (selectedType === 'general') {
             setTitle('Share your thoughts');
-        } else if (selectedType === FeedbackType.Dislike) {
+        } else if (selectedType === 'bug') {
             setTitle('Please, share your feedback');
-        } else if (selectedType === FeedbackType.ReportContent) {
+        } else if (selectedType === 'reportContent') {
             setTitle('Report inappropriate content');
         }
     };
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
-        const feedback = formData.get('feedback-message')?.toString() || '';
-        onSumbit(feedbackType, feedback, includeTenMessages);
+        const feedback = formData.get('feedback-message');
+        const feedbackText = feedback ? feedback.toString() : '';
+        onSubmit(feedbackType, feedbackText, canContact, includeTenMessages);
     };
 
     return (
@@ -112,6 +106,16 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSumbit, onCancel, 
                                 onChange={(e) => setIncludeTenMessages(e.target.checked)}
                             />
                             Include last 10 messages in the feedback
+                        </div>
+                    </div>
+                    <div className="form-field">
+                        <div className="form-field-checkbox">
+                            <input
+                                type="checkbox"
+                                checked={canContact}
+                                onChange={(e) => setCanContact(e.target.checked)}
+                            />
+                            Atlassian can contact me about this feedback
                         </div>
                     </div>
                 </div>

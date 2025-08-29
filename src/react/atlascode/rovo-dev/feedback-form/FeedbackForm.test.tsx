@@ -2,14 +2,14 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
-import { FeedbackForm, FeedbackFormProps, FeedbackType } from './FeedbackForm';
+import { FeedbackForm, FeedbackFormProps } from './FeedbackForm';
 
 describe('FeedbackForm', () => {
     const mockOnSubmit = jest.fn();
     const mockOnCancel = jest.fn();
 
     const defaultProps: FeedbackFormProps = {
-        onSumbit: mockOnSubmit,
+        onSubmit: mockOnSubmit,
         onCancel: mockOnCancel,
     };
 
@@ -46,13 +46,13 @@ describe('FeedbackForm', () => {
 
         const select = screen.getByLabelText('Type of feedback');
 
-        await user.selectOptions(select, FeedbackType.ReportContent);
+        await user.selectOptions(select, 'reportContent');
         expect(screen.getAllByText('Report inappropriate content')).toBeTruthy();
 
-        await user.selectOptions(select, FeedbackType.Dislike);
+        await user.selectOptions(select, 'bug');
         expect(screen.getByText('Please, share your feedback')).toBeTruthy();
 
-        await user.selectOptions(select, FeedbackType.Like);
+        await user.selectOptions(select, 'general');
         expect(screen.getByText('Share your thoughts')).toBeTruthy();
     });
 
@@ -62,15 +62,15 @@ describe('FeedbackForm', () => {
 
         const select = screen.getByLabelText('Type of feedback');
         const textarea = screen.getByLabelText('Feedback');
-        const checkbox = screen.getByRole('checkbox');
+        const checkbox = screen.getAllByRole('checkbox');
         const submitButton = screen.getByText('Send feedback');
 
-        await user.selectOptions(select, FeedbackType.Like);
+        await user.selectOptions(select, 'general');
         await user.type(textarea, 'Great feature!');
-        await user.click(checkbox); // Uncheck
+        await user.click(checkbox[0]); // Uncheck
         await user.click(submitButton);
 
-        expect(mockOnSubmit).toHaveBeenCalledWith(FeedbackType.Like, 'Great feature!', false);
+        expect(mockOnSubmit).toHaveBeenCalledWith('general', 'Great feature!', true, false);
     });
 
     it('submits form with like type preset', async () => {
@@ -83,7 +83,7 @@ describe('FeedbackForm', () => {
         await user.type(textarea, 'Love this!');
         await user.click(submitButton);
 
-        expect(mockOnSubmit).toHaveBeenCalledWith(FeedbackType.Like, 'Love this!', true);
+        expect(mockOnSubmit).toHaveBeenCalledWith('general', 'Love this!', true, true);
     });
 
     it('calls onCancel when cancel button is clicked', async () => {
@@ -114,18 +114,17 @@ describe('FeedbackForm', () => {
 
         const options = screen.getAllByRole('option');
         expect(options).toHaveLength(3); // Including disabled placeholder
-        expect(screen.getByText('Dislike')).toBeTruthy();
-        expect(screen.getByText('Report inappropriate content')).toBeTruthy();
+        expect(screen.getByText('Report bug')).toBeTruthy();
+        expect(screen.getByText('Report harmful or inappropriate content')).toBeTruthy();
     });
 
     it('shows all options for general feedback', () => {
         render(<FeedbackForm {...defaultProps} />);
 
         const options = screen.getAllByRole('option');
-        expect(options).toHaveLength(5); // Including disabled placeholder
+        expect(options).toHaveLength(4); // Including disabled placeholder
         expect(screen.getByText('General feedback')).toBeTruthy();
-        expect(screen.getByText('Like')).toBeTruthy();
-        expect(screen.getByText('Dislike')).toBeTruthy();
-        expect(screen.getByText('Report inappropriate content')).toBeTruthy();
+        expect(screen.getByText('Report bug')).toBeTruthy();
+        expect(screen.getByText('Report harmful or inappropriate content')).toBeTruthy();
     });
 });

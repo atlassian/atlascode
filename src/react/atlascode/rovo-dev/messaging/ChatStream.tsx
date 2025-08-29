@@ -38,9 +38,9 @@ interface ChatStreamProps {
     downloadProgress: [number, number];
     onChangesGitPushed: (msg: DefaultMessage, pullRequestCreated: boolean) => void;
     onCollapsiblePanelExpanded: () => void;
-    feedbackVisible?: boolean;
-    setFeedbackVisible?: (visible: boolean) => void;
-    sendFeedback?: (feedbackType: FeedbackType, feedack: string, lastTenMessages?: boolean) => void;
+    feedbackVisible: boolean;
+    setFeedbackVisible: (visible: boolean) => void;
+    sendFeedback: (feedbackType: FeedbackType, feedack: string, canContact: boolean, lastTenMessages: boolean) => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -204,8 +204,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     const handleFeedbackTrigger = React.useCallback(
         (isPositive: boolean) => {
-            setFeedbackType(isPositive ? FeedbackType.Like : FeedbackType.Dislike);
-            setFeedbackVisible && setFeedbackVisible(true);
+            setFeedbackType(isPositive ? 'like' : 'dislike');
+            setFeedbackVisible(true);
         },
         [setFeedbackVisible],
     );
@@ -313,13 +313,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     {!canCreatePR && !deepPlanCreated && feedbackVisible && (
                         <FeedbackForm
                             type={feedbackType}
-                            onSumbit={(feedbackType, feedback, includeTenMessages) => {
+                            onSubmit={(feedbackType, feedback, canContact, includeTenMessages) => {
                                 setFeedbackType(undefined);
-                                sendFeedback && sendFeedback(feedbackType, feedback, includeTenMessages);
+                                sendFeedback(feedbackType, feedback, canContact, includeTenMessages);
                             }}
                             onCancel={() => {
                                 setFeedbackType(undefined);
-                                setFeedbackVisible && setFeedbackVisible(false);
+                                setFeedbackVisible(false);
                             }}
                         />
                     )}

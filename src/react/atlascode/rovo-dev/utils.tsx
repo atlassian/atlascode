@@ -243,8 +243,8 @@ export function extractLastNMessages(n: number, history: MessageBlockDetails[]) 
 
     while (idx >= 0 && msgCount < n) {
         const block = history[idx];
-        if (!Array.isArray(block) && block?.source === 'User') {
-            msgBlock.unshift(JSON.stringify(block));
+        if (!Array.isArray(block) && block && block.source === 'User') {
+            msgBlock.unshift(JSON.stringify(block, undefined, 4));
             lastTenMessages.unshift(msgBlock.join('\n'));
             msgBlock = [];
             idx--;
@@ -253,6 +253,7 @@ export function extractLastNMessages(n: number, history: MessageBlockDetails[]) 
         }
 
         if (Array.isArray(block)) {
+            const thinkingMsgs: string[] = [];
             block.forEach((item) => {
                 const tmpItem = { ...item };
                 if (item.source === 'ToolReturn') {
@@ -260,14 +261,15 @@ export function extractLastNMessages(n: number, history: MessageBlockDetails[]) 
                     delete (tmpItem as any).content;
                     delete (tmpItem as any).parsedContent;
                 }
-                msgBlock.unshift(JSON.stringify(tmpItem));
+                thinkingMsgs.push(JSON.stringify(tmpItem, undefined, 4));
             });
+            msgBlock.unshift(thinkingMsgs.join('\n'));
             idx--;
             continue;
         }
 
         if (block) {
-            msgBlock.unshift(JSON.stringify(block));
+            msgBlock.unshift(JSON.stringify(block, undefined, 4));
         }
         idx--;
     }
