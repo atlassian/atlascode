@@ -182,13 +182,14 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     // Other state management effect
     React.useEffect(() => {
         if (process.env.ROVODEV_BBY && state === State.WaitingForPrompt) {
-            setCanCreatePR(true);
-            if (currentMessage) {
+            const canCreatePR = chatHistory.length > 0;
+            setCanCreatePR(canCreatePR);
+            if (canCreatePR) {
                 // Only check git changes if there's something in the chat
                 checkGitChanges();
             }
         }
-    }, [state, chatHistory, currentThinking, currentMessage, isFormVisible, pendingToolCall, checkGitChanges]);
+    }, [state, chatHistory, isFormVisible, checkGitChanges]);
 
     const handleCopyResponse = React.useCallback((text: string) => {
         if (!navigator.clipboard) {
