@@ -95,15 +95,15 @@ export class AuthFlowUI {
             [
                 {
                     iconPath: new ThemeIcon('cloud'),
-                    label: AuthenticationType.ApiToken,
-                    description: 'Uses API token',
-                    detail: 'Get the full power of Atlassian integration, including experimental and AI features',
-                },
-                {
-                    iconPath: new ThemeIcon('cloud'),
                     label: AuthenticationType.OAuth,
                     description: 'Uses OAuth',
                     detail: 'Get basic access to your Atlassian work items',
+                },
+                {
+                    iconPath: new ThemeIcon('cloud'),
+                    label: AuthenticationType.ApiToken,
+                    description: 'Uses API token',
+                    detail: 'Get the full power of Atlassian integration, including experimental and AI features',
                 },
                 {
                     iconPath: new ThemeIcon('server'),
