@@ -22,6 +22,7 @@ export const enum RovoDevViewResponseType {
     GetAgentMemory = 'getAgentMemory',
     TriggerFeedback = 'triggerFeedback',
     SendFeedback = 'sendFeedback',
+    LaunchJiraAuth = 'launchJiraAuth',
 }
 
 export interface ModifiedFile {
@@ -50,4 +51,5 @@ export type RovoDevViewResponse =
     | ReducerAction<
           RovoDevViewResponseType.SendFeedback,
           { feedbackType: FeedbackType; feedbackMessage: string; lastTenMessages?: string[]; canContact: boolean }
-      >;
+      >
+    | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>;

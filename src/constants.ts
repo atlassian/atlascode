@@ -96,6 +96,7 @@ export const enum Commands {
     OpenNativeSettings = 'atlascode.openNativeSettings',
     QuickAuth = 'atlascode.rovodev.quickAuth',
     JiraLogin = 'atlascode.jira.login',
+    JiraAPITokenLogin = 'atlascode.jira.apiTokenLogin',
 
     // Debug mode-only commands
     DebugQuickCommand = 'atlascode.debug.quickCommand',

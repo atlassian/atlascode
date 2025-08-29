@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { RovoDevInitState, State } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevInitState, State, SubState } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
@@ -34,6 +34,7 @@ interface ChatStreamProps {
     deepPlanCreated: boolean;
     executeCodePlan: () => void;
     state: State;
+    subState: SubState;
     initState: RovoDevInitState;
     downloadProgress: [number, number];
     onChangesGitPushed: (msg: DefaultMessage, pullRequestCreated: boolean) => void;
@@ -41,6 +42,7 @@ interface ChatStreamProps {
     feedbackVisible: boolean;
     setFeedbackVisible: (visible: boolean) => void;
     sendFeedback: (feedbackType: FeedbackType, feedack: string, canContact: boolean, lastTenMessages: boolean) => void;
+    onLoginClick: () => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -52,6 +54,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     deepPlanCreated,
     executeCodePlan,
     state,
+    subState,
     initState,
     downloadProgress,
     messagingApi,
@@ -60,6 +63,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     feedbackVisible = false,
     setFeedbackVisible,
     sendFeedback,
+    onLoginClick,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -186,13 +190,14 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     // Other state management effect
     React.useEffect(() => {
         if (process.env.ROVODEV_BBY && state === State.WaitingForPrompt) {
-            setCanCreatePR(true);
-            if (currentMessage) {
+            const canCreatePR = chatHistory.length > 0;
+            setCanCreatePR(canCreatePR);
+            if (canCreatePR) {
                 // Only check git changes if there's something in the chat
                 checkGitChanges();
             }
         }
-    }, [state, chatHistory, currentThinking, currentMessage, isFormVisible, pendingToolCall, checkGitChanges]);
+    }, [state, chatHistory, isFormVisible, checkGitChanges]);
 
     const handleCopyResponse = React.useCallback((text: string) => {
         if (!navigator.clipboard) {
@@ -212,9 +217,10 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            <RovoDevLanding />
-            {chatHistory &&
-                chatHistory.map((block, idx) => {
+            <RovoDevLanding subState={subState} onLoginClick={onLoginClick} />
+            {(state !== State.Disabled || subState !== SubState.NeedAuth) &&
+                chatHistory &&
+                chatHistory.map((block) => {
                     if (block) {
                         if (Array.isArray(block)) {
                             return (

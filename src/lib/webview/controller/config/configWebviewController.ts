@@ -1,11 +1,12 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
+import { Features } from 'src/util/features';
 import { v4 } from 'uuid';
 import { env } from 'vscode';
 import * as vscode from 'vscode';
 
 import { isBasicAuthInfo, isEmptySiteInfo, isPATAuthInfo } from '../../../../atlclients/authInfo';
-import { ExtensionId } from '../../../../constants';
+import { Commands, ExtensionId } from '../../../../constants';
 import { Container } from '../../../../container';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
@@ -24,7 +25,7 @@ const AUTH_URI = `${env.uriScheme || 'vscode'}://${ExtensionId}/auth`;
 export const id: string = 'atlascodeSettingsV2'; // Need to change this to 'id_v2' to help with dif versions
 
 export class ConfigWebviewController implements WebviewController<SectionChangeMessage> {
-    public readonly requiredFeatureFlags = [];
+    public readonly requiredFeatureFlags = [Features.UseNewAuthFlow];
     public readonly requiredExperiments = [];
 
     private _messagePoster: MessagePoster;
@@ -298,6 +299,10 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
             }
             case ConfigActionType.OpenNativeSettings: {
                 await this._api.openNativeSettings();
+                break;
+            }
+            case ConfigActionType.StartAuthFlow: {
+                vscode.commands.executeCommand(Commands.JiraLogin);
                 break;
             }
 
