@@ -15,7 +15,7 @@ import { AnalyticsApi } from '../lib/analyticsApi';
 import { CommonActionType } from '../lib/ipc/fromUI/common';
 import { AdditionalSettings, CommonMessageType } from '../lib/ipc/toUI/common';
 import { WebviewController } from '../lib/webview/controller/webviewController';
-import { ExperimentGateValues, Experiments, FeatureGateValues, Features } from '../util/featureFlags/features';
+import { ExperimentGateValues, Experiments, FeatureGateValues, Features } from '../util/features';
 import { UIWebsocket } from '../ws';
 import { VSCWebviewControllerFactory } from './vscWebviewControllerFactory';
 

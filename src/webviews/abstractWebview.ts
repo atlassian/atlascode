@@ -22,7 +22,7 @@ import { CommonActionType } from '../lib/ipc/fromUI/common';
 import { AdditionalSettings, CommonMessageType } from '../lib/ipc/toUI/common';
 import { iconSet, Resources } from '../resources';
 import { Experiments, Features } from '../util/featureFlags';
-import { ExperimentGateValues, FeatureGateValues } from '../util/featureFlags/features';
+import { ExperimentGateValues, FeatureGateValues } from '../util/features';
 import { UIWebsocket } from '../ws';
 
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
