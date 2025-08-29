@@ -70,8 +70,8 @@ export class AuthFlowUI {
         if (sites.length === 0 && state.authenticationType === AuthenticationType.ApiToken && !state.hasOAuthFailed) {
             sites.push({
                 label: SpecialSiteOptions.OAuth,
-                detail: 'Select this to OAuth before proceeding',
-                iconPath: new ThemeIcon('info'),
+                detail: 'Select this option to complete Basic authentication and view all available cloud sites',
+                iconPath: new ThemeIcon('cloud'),
             });
         }
         const choices = [
@@ -100,7 +100,7 @@ export class AuthFlowUI {
                     detail: 'Get basic access to your Atlassian work items',
                 },
                 {
-                    iconPath: new ThemeIcon('key'),
+                    iconPath: new ThemeIcon('cloud'),
                     label: AuthenticationType.ApiToken,
                     description: 'Uses API token',
                     detail: 'Get the full power of Atlassian integration, including experimental and AI features',
@@ -295,9 +295,14 @@ export class AuthFlowUI {
     }
 
     public inputPassword(state: PartialData, passwordName: string): Promise<UiResponse> {
+        const prompt =
+            state.authenticationType === AuthenticationType.ApiToken
+                ? 'You can always visit [id.atlassian.com](https://id.atlassian.com/manage-profile/security/api-tokens) to generate a new token'
+                : '';
         return this.baseUI.showInputBox({
             placeHolder: `Enter your ${passwordName}`,
             password: true,
+            prompt,
             value: state.password || '',
             valueSelection: state.password ? [0, state.password.length] : undefined,
         });
@@ -331,7 +336,7 @@ export class AuthFlowUI {
                     await new Promise((resolveDelay) => setTimeout(resolveDelay, 300));
 
                     // Resolve here to move forward to the error handling step
-                    resolve(error?.message || 'OAuth authentication failed');
+                    resolve(error?.message || 'Basic authentication failed');
                 }
             },
         });

@@ -5,12 +5,12 @@ import { AuthFlowUI } from './authFlowUI';
 
 export enum SpecialSiteOptions {
     NewSite = 'Log in to a new site...',
-    OAuth = 'Login with OAuth to see available cloud sites',
+    OAuth = 'Show available cloud sites...',
 }
 
 export enum AuthenticationType {
     OAuth = 'Cloud - Basic',
-    ApiToken = 'Cloud - Full',
+    ApiToken = 'Cloud - Full Access',
     Server = 'Server',
 }
 
