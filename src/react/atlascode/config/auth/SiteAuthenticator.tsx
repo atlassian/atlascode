@@ -3,6 +3,7 @@ import React, { memo, useCallback, useContext } from 'react';
 
 import { Product } from '../../../../atlclients/authInfo';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
+import { Features, useFeatureFlags } from '../../common/FeatureFlagContext';
 import { ConfigControllerContext } from '../configController';
 import { CloudAuthButton } from './CloudAuthButton';
 import { SiteList } from './SiteList';
@@ -72,44 +73,59 @@ const AuthContainer = ({
     handleEdit,
     remoteAuth,
     isRemoteAuthButtonVisible,
-}: AuthContainerProps) => (
-    <React.Fragment>
-        <Grid item>
-            <Grid container direction="column" spacing={2}>
-                <Grid item>
-                    <Grid container spacing={2}>
-                        {!isRemote && (
-                            <React.Fragment>
+}: AuthContainerProps) => {
+    const { flags } = useFeatureFlags();
+    const configController = useContext(ConfigControllerContext);
+
+    return (
+        <React.Fragment>
+            <Grid item>
+                <Grid container direction="column" spacing={2}>
+                    <Grid item>
+                        <Grid container spacing={2}>
+                            {flags[Features.UseNewAuthFlow] && product.key === 'jira' ? (
+                                // Only enabled for jira for now
                                 <Grid item>
-                                    <CloudAuthButton product={product} />
-                                </Grid>
-                                <Grid item>
-                                    <Button color="primary" variant="contained" onClick={openProductAuth}>
-                                        {`Login with API Token`}
+                                    <Button
+                                        color="primary"
+                                        variant="contained"
+                                        onClick={configController.startAuthFlow}
+                                    >
+                                        Login to {product.name}
                                     </Button>
                                 </Grid>
-                                {isRemoteAuthButtonVisible && (
+                            ) : !isRemote ? (
+                                <React.Fragment>
                                     <Grid item>
-                                        <Button onClick={remoteAuth}>Remote Auth</Button>
+                                        <CloudAuthButton product={product} />
                                     </Grid>
-                                )}
-                            </React.Fragment>
-                        )}
-                        {isRemote && (
-                            <React.Fragment>
-                                <Grid item>
-                                    <Button color="primary" variant="contained" onClick={openProductAuth}>
-                                        {`Login with API Token`}
-                                    </Button>
-                                </Grid>
-                            </React.Fragment>
-                        )}
+                                    <Grid item>
+                                        <Button color="primary" variant="contained" onClick={openProductAuth}>
+                                            {`Login with API Token`}
+                                        </Button>
+                                    </Grid>
+                                    {isRemoteAuthButtonVisible && (
+                                        <Grid item>
+                                            <Button onClick={remoteAuth}>Remote Auth</Button>
+                                        </Grid>
+                                    )}
+                                </React.Fragment>
+                            ) : (
+                                <React.Fragment>
+                                    <Grid item>
+                                        <Button color="primary" variant="contained" onClick={openProductAuth}>
+                                            {`Login with API Token`}
+                                        </Button>
+                                    </Grid>
+                                </React.Fragment>
+                            )}
+                        </Grid>
+                    </Grid>
+                    <Grid item>
+                        <SiteList product={product} sites={sites} editServer={handleEdit} />
                     </Grid>
                 </Grid>
-                <Grid item>
-                    <SiteList product={product} sites={sites} editServer={handleEdit} />
-                </Grid>
             </Grid>
-        </Grid>
-    </React.Fragment>
-);
+        </React.Fragment>
+    );
+};

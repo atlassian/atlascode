@@ -25,6 +25,7 @@ import { AnalyticsView } from 'src/analyticsTypes';
 import { ConfigTarget, ConfigV3Section, ConfigV3SubSection } from '../../../lib/ipc/models/config';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { ErrorDisplay } from '../common/ErrorDisplay';
+import { FeatureFlagProvider } from '../common/FeatureFlagContext';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { AdvancedConfigsPanel } from './advancedConfigs/advancedConfigsPanel';
 import { AuthDialog } from './auth/dialog/AuthDialog';
@@ -157,132 +158,134 @@ const ConfigPageV3: React.FunctionComponent = () => {
 
     return (
         <ConfigControllerContext.Provider value={controller}>
-            <AuthDialogControllerContext.Provider value={authDialogController}>
-                <AtlascodeErrorBoundary
-                    context={{ view: AnalyticsView.SettingsPage }}
-                    postMessageFunc={controller.postMessage}
-                >
-                    <Container maxWidth="xl">
-                        <AppBar position="relative">
-                            <Toolbar>
-                                <Typography variant="h3" className={classes.title}>
-                                    Atlassian Settings
-                                </Typography>
-                                <Tabs
-                                    value={openSection}
-                                    onChange={handleTabChange}
-                                    aria-label="simple tabs example"
-                                    indicatorColor="primary"
-                                    variant="scrollable"
-                                    scrollButtons
-                                    allowScrollButtonsMobile
-                                >
-                                    <Tab
-                                        id="simple-tab-0"
-                                        aria-controls="simple-tabpanel-0"
-                                        value={ConfigV3Section.Auth}
-                                        label="Authentication"
-                                    />
-                                    <Tab
-                                        id="simple-tab-1"
-                                        aria-controls="simple-tabpanel-1"
-                                        value={ConfigV3Section.AdvancedConfig}
-                                        label="Advanced Settings"
-                                    />
-                                </Tabs>
-                                <div className={classes.grow} />
-                                <Typography variant="subtitle1" classes={{ root: classes.targetSelectLabel }}>
-                                    Save settings to:{' '}
-                                </Typography>
-                                <ToggleButtonGroup
-                                    color="primary"
-                                    size="small"
-                                    value={internalTarget}
-                                    exclusive
-                                    onChange={handleTargetChange}
-                                >
-                                    <Tooltip title="User settings">
-                                        <ToggleButton
-                                            key={1}
-                                            value={ConfigTarget.User}
-                                            selected={internalTarget !== ConfigTarget.User}
-                                            disableRipple={internalTarget === ConfigTarget.User}
-                                        >
-                                            <Badge
-                                                color="primary"
-                                                variant="dot"
-                                                invisible={internalTarget !== ConfigTarget.User}
-                                            >
-                                                <PersonIcon />
-                                            </Badge>
-                                        </ToggleButton>
-                                    </Tooltip>
-                                    <Tooltip title="Workspace settings">
-                                        <ToggleButton
-                                            key={2}
-                                            value={ConfigTarget.Workspace}
-                                            selected={internalTarget !== ConfigTarget.Workspace}
-                                            disableRipple={internalTarget === ConfigTarget.Workspace}
-                                        >
-                                            <Badge
-                                                color="primary"
-                                                variant="dot"
-                                                invisible={internalTarget !== ConfigTarget.Workspace}
-                                            >
-                                                <WorkIcon />
-                                            </Badge>
-                                        </ToggleButton>
-                                    </Tooltip>
-                                </ToggleButtonGroup>
-                                <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
-                            </Toolbar>
-                        </AppBar>
-                        <Grid container spacing={1}>
-                            <Grid item xs={12} md={9} lg={10} xl={10}>
-                                <Paper className={classes.paper100}>
-                                    <ErrorDisplay />
-                                    <PMFDisplay postMessageFunc={controller.postMessage} />
-                                    <Box margin={2}>
-                                        <AuthenticationPanel
-                                            visible={openSection === ConfigV3Section.Auth}
-                                            jiraSites={state.jiraSites}
-                                            bitbucketSites={state.bitbucketSites}
-                                            isRemote={state.isRemote}
-                                            config={state.config}
-                                            jiraToggle={handleJiraToggle}
-                                            bbToggle={handleBitbucketToggle}
+            <FeatureFlagProvider>
+                <AuthDialogControllerContext.Provider value={authDialogController}>
+                    <AtlascodeErrorBoundary
+                        context={{ view: AnalyticsView.SettingsPage }}
+                        postMessageFunc={controller.postMessage}
+                    >
+                        <Container maxWidth="xl">
+                            <AppBar position="relative">
+                                <Toolbar>
+                                    <Typography variant="h3" className={classes.title}>
+                                        Atlassian Settings
+                                    </Typography>
+                                    <Tabs
+                                        value={openSection}
+                                        onChange={handleTabChange}
+                                        aria-label="simple tabs example"
+                                        indicatorColor="primary"
+                                        variant="scrollable"
+                                        scrollButtons
+                                        allowScrollButtonsMobile
+                                    >
+                                        <Tab
+                                            id="simple-tab-0"
+                                            aria-controls="simple-tabpanel-0"
+                                            value={ConfigV3Section.Auth}
+                                            label="Authentication"
                                         />
-                                        <AdvancedConfigsPanel
-                                            visible={openSection === ConfigV3Section.AdvancedConfig}
-                                            selectedSubSections={openSubsections[ConfigV3Section.AdvancedConfig]}
-                                            onSubsectionChange={handleSubsectionChange}
-                                            config={state.config!}
-                                            sites={state.jiraSites}
-                                            isRemote={state.isRemote}
-                                            machineId={state.machineId}
+                                        <Tab
+                                            id="simple-tab-1"
+                                            aria-controls="simple-tabpanel-1"
+                                            value={ConfigV3Section.AdvancedConfig}
+                                            label="Advanced Settings"
                                         />
-                                    </Box>
-                                </Paper>
+                                    </Tabs>
+                                    <div className={classes.grow} />
+                                    <Typography variant="subtitle1" classes={{ root: classes.targetSelectLabel }}>
+                                        Save settings to:{' '}
+                                    </Typography>
+                                    <ToggleButtonGroup
+                                        color="primary"
+                                        size="small"
+                                        value={internalTarget}
+                                        exclusive
+                                        onChange={handleTargetChange}
+                                    >
+                                        <Tooltip title="User settings">
+                                            <ToggleButton
+                                                key={1}
+                                                value={ConfigTarget.User}
+                                                selected={internalTarget !== ConfigTarget.User}
+                                                disableRipple={internalTarget === ConfigTarget.User}
+                                            >
+                                                <Badge
+                                                    color="primary"
+                                                    variant="dot"
+                                                    invisible={internalTarget !== ConfigTarget.User}
+                                                >
+                                                    <PersonIcon />
+                                                </Badge>
+                                            </ToggleButton>
+                                        </Tooltip>
+                                        <Tooltip title="Workspace settings">
+                                            <ToggleButton
+                                                key={2}
+                                                value={ConfigTarget.Workspace}
+                                                selected={internalTarget !== ConfigTarget.Workspace}
+                                                disableRipple={internalTarget === ConfigTarget.Workspace}
+                                            >
+                                                <Badge
+                                                    color="primary"
+                                                    variant="dot"
+                                                    invisible={internalTarget !== ConfigTarget.Workspace}
+                                                >
+                                                    <WorkIcon />
+                                                </Badge>
+                                            </ToggleButton>
+                                        </Tooltip>
+                                    </ToggleButtonGroup>
+                                    <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
+                                </Toolbar>
+                            </AppBar>
+                            <Grid container spacing={1}>
+                                <Grid item xs={12} md={9} lg={10} xl={10}>
+                                    <Paper className={classes.paper100}>
+                                        <ErrorDisplay />
+                                        <PMFDisplay postMessageFunc={controller.postMessage} />
+                                        <Box margin={2}>
+                                            <AuthenticationPanel
+                                                visible={openSection === ConfigV3Section.Auth}
+                                                jiraSites={state.jiraSites}
+                                                bitbucketSites={state.bitbucketSites}
+                                                isRemote={state.isRemote}
+                                                config={state.config}
+                                                jiraToggle={handleJiraToggle}
+                                                bbToggle={handleBitbucketToggle}
+                                            />
+                                            <AdvancedConfigsPanel
+                                                visible={openSection === ConfigV3Section.AdvancedConfig}
+                                                selectedSubSections={openSubsections[ConfigV3Section.AdvancedConfig]}
+                                                onSubsectionChange={handleSubsectionChange}
+                                                config={state.config!}
+                                                sites={state.jiraSites}
+                                                isRemote={state.isRemote}
+                                                machineId={state.machineId}
+                                            />
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+                                <Grid item xs={12} md={3} lg={2} xl={2}>
+                                    <Paper className={classes.paperOverflow}>
+                                        <Box margin={2}>
+                                            <SidebarButtons feedbackUser={state.feedbackUser} />
+                                        </Box>
+                                    </Paper>
+                                </Grid>
                             </Grid>
-                            <Grid item xs={12} md={3} lg={2} xl={2}>
-                                <Paper className={classes.paperOverflow}>
-                                    <Box margin={2}>
-                                        <SidebarButtons feedbackUser={state.feedbackUser} />
-                                    </Box>
-                                </Paper>
-                            </Grid>
-                        </Grid>
-                    </Container>
-                    <AuthDialog
-                        product={authDialogProduct}
-                        doClose={authDialogController.close}
-                        authEntry={authDialogEntry}
-                        open={authDialogOpen}
-                        save={controller.login}
-                        onExited={authDialogController.onExited}
-                    />
-                </AtlascodeErrorBoundary>
-            </AuthDialogControllerContext.Provider>
+                        </Container>
+                        <AuthDialog
+                            product={authDialogProduct}
+                            doClose={authDialogController.close}
+                            authEntry={authDialogEntry}
+                            open={authDialogOpen}
+                            save={controller.login}
+                            onExited={authDialogController.onExited}
+                        />
+                    </AtlascodeErrorBoundary>
+                </AuthDialogControllerContext.Provider>
+            </FeatureFlagProvider>
         </ConfigControllerContext.Provider>
     );
 };
