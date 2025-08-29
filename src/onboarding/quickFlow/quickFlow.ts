@@ -1,6 +1,4 @@
-import { Container } from 'src/container';
 import { AnalyticsApi } from 'src/lib/analyticsApi';
-import * as uuid from 'uuid';
 
 import { QuickFlowAnalyticsEvent, State } from './types';
 
@@ -13,8 +11,8 @@ export abstract class QuickFlow<UIType, DataType> {
     private readonly flowId: string;
 
     constructor(
-        flowId: string = uuid.v4(),
-        private readonly analyticsApi: AnalyticsApi = Container.analyticsApi,
+        flowId: string,
+        private readonly analyticsApi?: AnalyticsApi,
     ) {
         this.flowId = flowId;
     }
@@ -113,7 +111,7 @@ export abstract class QuickFlow<UIType, DataType> {
             event.direction = 'forward';
         }
 
-        this.analyticsApi.fireQuickFlowEvent(
+        this.analyticsApi?.fireQuickFlowEvent(
             this.enrichEvent({
                 flowId: this.flowId,
                 status: 'in_progress',

@@ -17,7 +17,7 @@ class TestQuickFlow extends QuickFlow<UIType, DataType> {
     private _initialState: any;
 
     constructor(initialState: any) {
-        super();
+        super('test', undefined);
         this._initialState = initialState;
     }
 
