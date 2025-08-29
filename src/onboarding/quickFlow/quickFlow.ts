@@ -1,6 +1,6 @@
 import { AnalyticsApi } from 'src/lib/analyticsApi';
 
-import { QuickFlowAnalyticsEvent, State } from './types';
+import { QuickFlowAnalyticsEvent, QuickFlowStatus, State } from './types';
 
 type FlowAction<UIType, DataType> = {
     data: Partial<DataType>;
@@ -8,10 +8,8 @@ type FlowAction<UIType, DataType> = {
 };
 
 export abstract class QuickFlow<UIType, DataType> {
-    private readonly flowId: string;
-
     constructor(
-        flowId: string,
+        private readonly flowId: string,
         private readonly analyticsApi?: AnalyticsApi,
     ) {
         this.flowId = flowId;
@@ -27,13 +25,13 @@ export abstract class QuickFlow<UIType, DataType> {
 
     public abstract ui(): UIType;
 
-    public async run(initialData?: Partial<DataType>) {
+    public async run(initialData?: Partial<DataType>): Promise<QuickFlowStatus> {
         let state = this.initialState();
         const ui = this.ui();
         let stepCount = 0;
 
         this.track({
-            status: 'started',
+            status: QuickFlowStatus.Started,
             step: state.name,
             stepNumber: stepCount,
         });
@@ -55,7 +53,7 @@ export abstract class QuickFlow<UIType, DataType> {
 
                 // go back
                 this.track({
-                    status: 'in_progress',
+                    status: QuickFlowStatus.InProgress,
                     direction: 'back',
                     step: state.name,
                     nextStep: old.state.name,
@@ -71,7 +69,7 @@ export abstract class QuickFlow<UIType, DataType> {
             }
 
             this.track({
-                status: 'in_progress',
+                status: QuickFlowStatus.InProgress,
                 step: state.name,
                 nextStep: nextState.name,
                 stepNumber: stepCount,
@@ -82,21 +80,24 @@ export abstract class QuickFlow<UIType, DataType> {
         }
 
         if (actionStack.length > 0 && state.isTerminal) {
+            const finalStatus = state.isFailure ? QuickFlowStatus.Failed : QuickFlowStatus.Completed;
             this.track({
-                status: 'completed',
+                status: finalStatus,
                 step: state.name,
                 stepNumber: stepCount,
             });
             state.action(this.evalData(actionStack), ui);
-            return;
+            return finalStatus;
         }
 
         // The flow is cancelled, report it
         this.track({
-            status: 'cancelled',
+            status: QuickFlowStatus.Cancelled,
             step: state.name,
             stepNumber: stepCount,
         });
+
+        return QuickFlowStatus.Cancelled;
     }
 
     abstract enrichEvent(event: Partial<QuickFlowAnalyticsEvent>): QuickFlowAnalyticsEvent;
@@ -109,12 +110,14 @@ export abstract class QuickFlow<UIType, DataType> {
         } else if (event.status === 'completed') {
             event.nextStep = '_DONE';
             event.direction = 'forward';
+        } else if (event.status === 'failed') {
+            event.nextStep = '_FAILED';
+            event.direction = 'forward';
         }
 
         this.analyticsApi?.fireQuickFlowEvent(
             this.enrichEvent({
                 flowId: this.flowId,
-                status: 'in_progress',
                 ...event,
             }),
         );

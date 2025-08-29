@@ -1,7 +1,13 @@
 import { UiAction } from '../../baseUI';
 import { Transition } from '../../types';
 import { AuthFlowUI } from '../authFlowUI';
-import { AuthenticationType, AuthState, PartialAuthData } from '../types';
+import {
+    AUTHENTICATION_SUCCESSFUL,
+    AuthenticationType,
+    AuthState,
+    PartialAuthData,
+    SpecialSiteOptions,
+} from '../types';
 import { ServerAuthStates } from './server';
 import { TerminalAuthStates } from './terminal';
 
@@ -17,7 +23,7 @@ export class CommonAuthStates {
         name: 'selectAuthType',
         action: async (data: PartialAuthData, ui: AuthFlowUI) => {
             const transitions = {
-                [AuthenticationType.OAuth]: TerminalAuthStates.runOauth,
+                [AuthenticationType.OAuth]: CommonAuthStates.oauthLoading,
                 [AuthenticationType.ApiToken]: CommonAuthStates.selectSiteFromDropdown,
                 [AuthenticationType.Server]: CommonAuthStates.selectSiteFromDropdown,
             };
@@ -58,8 +64,11 @@ export class CommonAuthStates {
                 return Transition.back();
             }
 
-            if (value === 'Log in to a new site...') {
+            if (value === SpecialSiteOptions.NewSite) {
                 return Transition.forward(CommonAuthStates.inputNewSite, { isNewSite: true });
+            }
+            if (value === SpecialSiteOptions.OAuth) {
+                return Transition.forward(CommonAuthStates.oauthLoading);
             }
             return Transition.forward(transitions[data.authenticationType!], { site: value });
         },
@@ -132,7 +141,7 @@ export class CommonAuthStates {
                 [AuthenticationType.ApiToken]: TerminalAuthStates.addAPIToken,
                 [AuthenticationType.Server]: ServerAuthStates.showContextPathPrompt,
                 // Should be unreachable
-                [AuthenticationType.OAuth]: TerminalAuthStates.runOauth,
+                [AuthenticationType.OAuth]: TerminalAuthStates.oauthFailure,
             };
 
             if (data.skipAllowed && data.password !== undefined) {
@@ -146,6 +155,37 @@ export class CommonAuthStates {
             }
 
             return Transition.forward(transitions[data.authenticationType!], { password: value });
+        },
+    };
+
+    public static oauthLoading: AuthState = {
+        name: 'oauthLoading',
+        action: async (data: PartialAuthData, ui: AuthFlowUI) => {
+            if (data.hasOAuthFailed) {
+                // This can only happen if the user tries to go back to this state after failure
+                // We should never retry without confirmation when going back
+                return Transition.back();
+            }
+
+            const { value, action } = await ui.showOAuthLoading(data);
+            if (action === UiAction.Back) {
+                return Transition.back();
+            }
+
+            if (value === AUTHENTICATION_SUCCESSFUL) {
+                return Transition.forward(
+                    data.authenticationType === AuthenticationType.ApiToken
+                        ? CommonAuthStates.selectSiteFromDropdown
+                        : TerminalAuthStates.oauthSuccess,
+                );
+            }
+
+            return Transition.forward(
+                data.authenticationType === AuthenticationType.ApiToken
+                    ? CommonAuthStates.selectSiteFromDropdown
+                    : TerminalAuthStates.oauthFailure,
+                { hasOAuthFailed: true },
+            );
         },
     };
 }

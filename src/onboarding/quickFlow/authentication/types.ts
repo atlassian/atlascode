@@ -9,8 +9,8 @@ export enum SpecialSiteOptions {
 }
 
 export enum AuthenticationType {
-    OAuth = 'OAuth',
-    ApiToken = 'API Token',
+    OAuth = 'Cloud - Basic',
+    ApiToken = 'Cloud - Full',
     Server = 'Server',
 }
 
@@ -25,11 +25,11 @@ export enum SSLConfigurationType {
     CustomClientSideCerts = 'Custom client-side certificates',
 }
 
+export const AUTHENTICATION_SUCCESSFUL = 'Authentication successful';
+
 export type AuthFlowData = {
     // Product is assumed to be Jira, for now
     product: Product;
-
-    skipAllowed: boolean;
 
     isNewSite: boolean;
     site: string;
@@ -47,6 +47,10 @@ export type AuthFlowData = {
     sslCertsPath: string;
     pfxPath: string;
     pfxPassphrase: string;
+
+    // Metadata
+    skipAllowed?: boolean;
+    hasOAuthFailed?: boolean;
 };
 
 export type PartialAuthData = Partial<AuthFlowData>;
