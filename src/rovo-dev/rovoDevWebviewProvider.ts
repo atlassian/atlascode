@@ -265,7 +265,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             throw new Error('Rovo Dev port not set');
                         } else {
                             this._processState = RovoDevProcessState.Starting;
-                            RovoDevProcessManager.initializeRovoDevProcessManager(this._context);
+                            RovoDevProcessManager.initializeRovoDev(this._context);
                         }
                         break;
 
@@ -835,7 +835,7 @@ ${message}`;
         // special handling for when the Rovo Dev process has been terminated
         if (this._processState === RovoDevProcessState.Terminated) {
             this._processState = RovoDevProcessState.Starting;
-            RovoDevProcessManager.initializeRovoDevProcessManager(this._context);
+            RovoDevProcessManager.initializeRovoDev(this._context);
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.ClearChat,
@@ -1127,13 +1127,23 @@ ${message}`;
         check: () => Promise<boolean> | boolean,
         timeoutMs: number,
         interval: number,
+        abortIf?: () => boolean,
     ): Promise<boolean> {
+        if (abortIf?.()) {
+            return false;
+        }
+
         let result = await check();
         while (!result && timeoutMs) {
             await setTimeout(interval);
+            if (abortIf?.()) {
+                return false;
+            }
+
             timeoutMs -= interval;
             result = await check();
         }
+
         return result;
     }
 
@@ -1192,7 +1202,15 @@ ${message}`;
         });
 
         // wait for Rovo Dev to be ready, for up to 10 seconds
-        const result = await this.waitFor(() => this.executeHealthcheck(), 100000, 500);
+        const result = await this.waitFor(
+            () => this.executeHealthcheck(),
+            100000,
+            500,
+            () => !this.rovoDevApiClient,
+        );
+        if (!this._rovoDevApiClient) {
+            return;
+        }
 
         let thrownError: Error | undefined = undefined;
 
@@ -1255,6 +1273,8 @@ ${message}`;
     }
 
     public signalProcessTerminated(errorMessage?: string) {
+        this.signalRovoDevDisabled('other');
+
         this._processState = RovoDevProcessState.Terminated;
         this._initialized = false;
         this._rovoDevApiClient = undefined;

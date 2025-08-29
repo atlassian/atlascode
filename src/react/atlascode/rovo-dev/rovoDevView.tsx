@@ -389,7 +389,11 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.CompleteMessage:
-                    if (currentState === State.GeneratingResponse) {
+                    if (
+                        currentState === State.GeneratingResponse ||
+                        currentState === State.ExecutingPlan ||
+                        currentState === State.CancellingResponse
+                    ) {
                         finalizeResponse();
                         if (!event.isReplay) {
                             validateResponseFinalized();
@@ -429,6 +433,7 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.SetInitState:
                     setInitState(event.newState);
+                    setCurrentState(State.WaitingForPrompt);
                     setCurrentSubState(SubState.None);
                     break;
 
@@ -448,7 +453,11 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.RovoDevDisabled:
-                    if (currentState === State.GeneratingResponse) {
+                    if (
+                        currentState === State.GeneratingResponse ||
+                        currentState === State.ExecutingPlan ||
+                        currentState === State.CancellingResponse
+                    ) {
                         finalizeResponse();
                     }
                     clearChatHistory();
@@ -567,7 +576,7 @@ const RovoDevView: React.FC = () => {
             // Clear the input field
             setPromptText('');
         },
-        [currentState, isDeepPlanCreated, isDeepPlanToggled, postMessage, promptContextCollection],
+        [currentState, isDeepPlanCreated, isDeepPlanToggled, postMessage, setCurrentState, promptContextCollection],
     );
 
     // On the first render, get the context update
@@ -592,7 +601,7 @@ const RovoDevView: React.FC = () => {
         }
         setCurrentState(State.ExecutingPlan);
         sendPrompt(CODE_PLAN_EXECUTE_PROMPT);
-    }, [currentState, sendPrompt]);
+    }, [currentState, setCurrentState, sendPrompt]);
 
     const retryPromptAfterError = useCallback((): void => {
         setCurrentState(State.GeneratingResponse);
@@ -601,7 +610,7 @@ const RovoDevView: React.FC = () => {
         postMessage({
             type: RovoDevViewResponseType.RetryPromptAfterError,
         });
-    }, [postMessage]);
+    }, [setCurrentState, postMessage]);
 
     const cancelResponse = useCallback((): void => {
         if (currentState === State.CancellingResponse) {
