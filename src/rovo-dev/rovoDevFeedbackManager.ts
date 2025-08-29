@@ -92,11 +92,11 @@ export class RovoDevFeedbackManager {
             });
         } catch (error) {
             Logger.error(error as Error, 'Error submitting Rovo Dev feedback');
-            void vscode.window.showErrorMessage('There was an error submitting your feedback. Please try again later.');
+            vscode.window.showErrorMessage('There was an error submitting your feedback. Please try again later.');
             return;
         }
 
-        void vscode.window.showInformationMessage('Thank you for your feedback!');
+        vscode.window.showInformationMessage('Thank you for your feedback!');
     }
 
     private static getContext() {
