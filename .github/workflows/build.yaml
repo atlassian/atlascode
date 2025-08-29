@@ -13,6 +13,27 @@ concurrency:
 
 jobs:
 
+  paths-filter:
+    runs-on: ubuntu-latest
+    outputs:
+      runTests: ${{ steps.filter.outputs.workflows }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          workflows:
+            - 'src/**'
+            - 'resources/**'
+            - 'e2e/**'
+            - '__tests__/**'
+            - '__mocks__/**'
+            - 'package.json'
+            - 'jest.*'
+            - 'playwright.config.ts'
+            - 'webpack.*'
+
   lint:
     runs-on: ubuntu-latest
     steps:
