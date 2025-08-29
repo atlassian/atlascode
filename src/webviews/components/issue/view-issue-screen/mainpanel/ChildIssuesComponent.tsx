@@ -25,6 +25,7 @@ type Props = {
     handleOpenIssue: (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => void;
     issues: any[];
     isEpic: boolean;
+    onStatusChange?: (issueKey: string, statusName: string) => void;
 };
 
 const { Option, SingleValue } = components;
@@ -57,6 +58,7 @@ export const ChildIssuesComponent: React.FC<Props> = ({
     handleOpenIssue,
     issues,
     isEpic,
+    onStatusChange,
 }) => {
     const [isEditing, setIsEditing] = React.useState(false);
     const [inputValue, setInputValue] = React.useState('');
@@ -136,7 +138,7 @@ export const ChildIssuesComponent: React.FC<Props> = ({
                     </Box>
                 </Box>
             )}
-            <IssueList onIssueClick={handleOpenIssue} issues={issues} />
+            <IssueList onIssueClick={handleOpenIssue} issues={issues} onStatusChange={onStatusChange} />
         </Box>
     );
 };

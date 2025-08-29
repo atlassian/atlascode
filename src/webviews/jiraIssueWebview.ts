@@ -26,6 +26,7 @@ import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
 import { Commands } from '../constants';
 import { Container } from '../container';
 import {
+    EditChildIssueAction,
     EditIssueAction,
     isAddAttachmentsAction,
     isCreateIssue,
@@ -39,6 +40,7 @@ import {
     isTransitionIssue,
     isUpdateVoteAction,
     isUpdateWatcherAction,
+    TransitionChildIssueAction,
 } from '../ipc/issueActions';
 import { EditIssueData, emptyEditIssueData } from '../ipc/issueMessaging';
 import { Action } from '../ipc/messaging';
@@ -357,6 +359,89 @@ export class JiraIssueWebview
                             type: 'error',
                             reason: this.formatErrorReason(e, 'Error updating issue'),
                             fieldValues: this.getFieldValuesForKeys(Object.keys(newFieldValues)),
+                            nonce: msg.nonce,
+                        });
+                    }
+                    break;
+                }
+                case 'editChildIssue': {
+                    handled = true;
+                    const childIssueMsg = msg as EditChildIssueAction;
+                    const issueKey = childIssueMsg.issueKey;
+                    const newFieldValues: FieldValues = childIssueMsg.fields;
+                    try {
+                        const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+                        await client.editIssue(issueKey, newFieldValues);
+
+                        await this.forceUpdateIssue();
+                        await this.postMessage({
+                            type: 'editIssueDone',
+                            nonce: msg.nonce,
+                        });
+
+                        Object.keys(newFieldValues).forEach((key) => {
+                            issueUpdatedEvent(this._issue.siteDetails, issueKey, key, this.fieldNameForKey(key)).then(
+                                (e) => {
+                                    Container.analyticsClient.sendTrackEvent(e);
+                                },
+                            );
+                        });
+
+                        await commands.executeCommand(
+                            Commands.RefreshAssignedWorkItemsExplorer,
+                            OnJiraEditedRefreshDelay,
+                        );
+                        await commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
+                    } catch (e) {
+                        Logger.error(e, 'Error updating child issue');
+                        this.postMessage({
+                            type: 'error',
+                            reason: this.formatErrorReason(e, 'Error updating child issue'),
+                            nonce: msg.nonce,
+                        });
+                    }
+                    break;
+                }
+                case 'transitionChildIssue': {
+                    handled = true;
+                    const transitionMsg = msg as TransitionChildIssueAction;
+                    const issueKey = transitionMsg.issueKey;
+                    const statusName = transitionMsg.statusName;
+                    try {
+                        const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+
+                        const childIssue = await fetchMinimalIssue(issueKey, this._issue.siteDetails);
+
+                        const targetTransition = childIssue.transitions?.find((transition: any) => {
+                            const targetStatus = transition.to.name.toLowerCase();
+                            const desiredStatus = statusName.toLowerCase();
+
+                            return (
+                                targetStatus.includes(desiredStatus) ||
+                                (desiredStatus.includes('todo') && targetStatus.includes('todo')) ||
+                                (desiredStatus.includes('to do') && targetStatus.includes('todo')) ||
+                                (desiredStatus.includes('progress') && targetStatus.includes('progress')) ||
+                                (desiredStatus.includes('done') &&
+                                    (targetStatus.includes('done') || targetStatus.includes('closed')))
+                            );
+                        });
+
+                        if (targetTransition) {
+                            await client.transitionIssue(issueKey, targetTransition.id);
+
+                            await this.forceUpdateIssue();
+                            await this.postMessage({
+                                type: 'editIssueDone',
+                                nonce: msg.nonce,
+                            });
+                        } else {
+                            throw new Error(`No transition found for status: ${statusName}`);
+                        }
+                    } catch (e) {
+                        Logger.error(e, 'Error transitioning child issue');
+                        this.postMessage({
+                            type: 'error',
+                            reason: this.formatErrorReason(e, 'Error transitioning child issue'),
                             nonce: msg.nonce,
                         });
                     }
