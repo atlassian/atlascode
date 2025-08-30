@@ -1,12 +1,24 @@
 import { FieldDescriptor, Fields } from '../common/types';
 import { clearField, getFieldValue, isCheckboxOrRadio, isCustomUrl } from './authFormUtils';
 
+// mock URL.parse if missing
+if (!URL.parse) {
+    (URL as any).parse = (url: string) => {
+        try {
+            return new URL(url);
+        } catch {
+            return null;
+        }
+    };
+}
+
 describe('authFormUtils', () => {
     describe('isCustomUrl', () => {
         it('should return true for custom domain URLs', () => {
             expect(isCustomUrl('https://jira.mycompany.com')).toBe(true);
             expect(isCustomUrl('https://bitbucket.mycompany.com')).toBe(true);
             expect(isCustomUrl('https://custom-domain.example.com')).toBe(true);
+            expect(isCustomUrl('https://scammer.fake-atlassian.net')).toBe(true);
             expect(isCustomUrl('http://localhost:8080')).toBe(true);
         });
 
@@ -18,18 +30,21 @@ describe('authFormUtils', () => {
             expect(isCustomUrl('https://test.bb-inf.net')).toBe(false);
         });
 
-        it('should return false for invalid URLs', () => {
-            expect(isCustomUrl('invalid-url')).toBe(false);
-            expect(isCustomUrl('')).toBe(false);
-            expect(isCustomUrl('not-a-url')).toBe(false);
-            expect(isCustomUrl('ftp://invalid')).toBe(true);
-        });
-
         it('should handle edge cases', () => {
             expect(isCustomUrl('https://subdomain.atlassian.net.fake.com')).toBe(true);
             expect(isCustomUrl('https://atlassian.net.fake.com')).toBe(true);
-            expect(isCustomUrl('https://fake-atlassian.net')).toBe(false);
+            expect(isCustomUrl('https://fake-atlassian.net')).toBe(true);
             expect(isCustomUrl('https://fake-atlassian.com')).toBe(true);
+            expect(isCustomUrl('https://127.0.0.1')).toBe(true);
+        });
+
+        it('should handle missing protocol', () => {
+            expect(isCustomUrl('mycompany.atlassian.net')).toBe(false);
+            expect(isCustomUrl('test.jira.com')).toBe(false);
+            expect(isCustomUrl('test.jira-dev.com')).toBe(false);
+            expect(isCustomUrl('local-url')).toBe(true);
+            expect(isCustomUrl('localhost')).toBe(true);
+            expect(isCustomUrl('127.0.0.1')).toBe(true);
         });
     });
 

@@ -3,8 +3,16 @@ import { cloudHostnames } from '../constants';
 
 export function isCustomUrl(url: string): boolean {
     try {
-        const urlObj = new URL(url);
-        return cloudHostnames.every((host) => !urlObj.hostname.endsWith(host));
+        const urlObj = URL.parse(url) || URL.parse('https://' + url);
+        if (!urlObj) {
+            return false;
+        }
+
+        const isCloudHost = cloudHostnames.find(
+            (host) => urlObj.hostname === host || urlObj.hostname.endsWith(`.${host}`),
+        );
+
+        return !isCloudHost;
     } catch {
         return false;
     }
