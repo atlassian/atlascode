@@ -24,6 +24,7 @@ export const enum RovoDevProviderMessageType {
     ContextAdded = 'contextAdded',
     CheckGitChangesComplete = 'checkGitChangesComplete',
     ForceStop = 'forceStop',
+    ShowFeedbackForm = 'showFeedbackForm',
 }
 
 export interface RovoDevObjectResponse {
@@ -32,7 +33,7 @@ export interface RovoDevObjectResponse {
 }
 
 export type RovoDevProviderMessage =
-    | ReducerAction<RovoDevProviderMessageType.RovoDevDisabled>
+    | ReducerAction<RovoDevProviderMessageType.RovoDevDisabled, { reason: 'needAuth' | 'other' }>
     | ReducerAction<RovoDevProviderMessageType.PromptSent, RovoDevPrompt>
     | ReducerAction<RovoDevProviderMessageType.Response, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.UserChatMessage, { message: ChatMessage }>
@@ -50,4 +51,5 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.UserFocusUpdated, { userFocus: RovoDevContextItem }>
     | ReducerAction<RovoDevProviderMessageType.ContextAdded, { context: RovoDevContextItem }>
     | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
-    | ReducerAction<RovoDevProviderMessageType.ForceStop>;
+    | ReducerAction<RovoDevProviderMessageType.ForceStop>
+    | ReducerAction<RovoDevProviderMessageType.ShowFeedbackForm>;

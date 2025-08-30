@@ -1,4 +1,5 @@
 import Axios from 'axios';
+import { Features } from 'src/util/features';
 import { v4 } from 'uuid';
 import * as vscode from 'vscode';
 
@@ -119,7 +120,7 @@ describe('ConfigWebviewController', () => {
         });
 
         test('should have required feature flags and experiments as empty arrays', () => {
-            expect(controller.requiredFeatureFlags).toEqual([]);
+            expect(controller.requiredFeatureFlags).toEqual([Features.UseNewAuthFlow]);
             expect(controller.requiredExperiments).toEqual([]);
         });
 

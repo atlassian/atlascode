@@ -13,14 +13,14 @@ const useStyles = makeStyles(
     (theme: Theme) =>
         ({
             code: {
-                backgroundColor: 'rgb(220, 220, 220)', //bright shade of gray
+                backgroundColor: 'var(--vscode-editorWidget-background)',
                 borderRadius: 5,
                 margin: theme.spacing(0, 1),
                 padding: theme.spacing(0, 1),
             },
             linkified: {
                 '&:hover': {
-                    backgroundColor: 'white',
+                    backgroundColor: 'var(--vscode-editor-selectionHighlightBackground)',
                 },
             },
         }) as const,

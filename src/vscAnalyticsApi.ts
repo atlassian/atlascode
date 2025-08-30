@@ -38,6 +38,7 @@ import {
     prPaginationEvent,
     prTaskEvent,
     prUrlCopiedEvent,
+    quickFlowEvent,
     saveManualCodeEvent,
     startIssueCreationEvent,
     uiErrorEvent,
@@ -48,6 +49,7 @@ import { AnalyticsClient } from './analytics-node-client/src/client.min.js';
 import { UIErrorInfo } from './analyticsTypes';
 import { DetailedSiteInfo, Product, SiteInfo } from './atlclients/authInfo';
 import { AnalyticsApi } from './lib/analyticsApi';
+import { QuickFlowAnalyticsEvent } from './onboarding/quickFlow/types';
 
 export class VSCAnalyticsApi implements AnalyticsApi {
     private _analyticsClient: AnalyticsClient;
@@ -333,6 +335,12 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async fireUIErrorEvent(errorInfo: UIErrorInfo) {
         return uiErrorEvent(errorInfo).then(async (e) => {
+            this._analyticsClient.sendTrackEvent(e);
+        });
+    }
+
+    public async fireQuickFlowEvent(event: QuickFlowAnalyticsEvent): Promise<void> {
+        return quickFlowEvent(event).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

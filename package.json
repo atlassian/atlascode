@@ -45,7 +45,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.11.13"
+        "version": "0.11.15"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -154,6 +154,12 @@
                 "title": "Open Global Memory file",
                 "category": "Rovo Dev",
                 "description": "Opens the ~/.rovodev/.agent.md file in the editor.",
+                "enablement": "atlascode:rovoDevEnabled"
+            },
+            {
+                "command": "atlascode.rovodev.shareFeedback",
+                "title": "Share feedback",
+                "category": "Rovo Dev",
                 "enablement": "atlascode:rovoDevEnabled"
             },
             {
@@ -620,6 +626,10 @@
                     "command": "atlascode.rovodev.showTerminal",
                     "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView",
                     "group": "navigation@2"
+                },
+                {
+                    "command": "atlascode.rovodev.shareFeedback",
+                    "when": "view == atlascode.views.rovoDev.webView"
                 },
                 {
                     "command": "atlascode.jira.createIssue",

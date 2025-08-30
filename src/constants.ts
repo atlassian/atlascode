@@ -86,6 +86,7 @@ export const enum Commands {
     RovodevAddToContext = 'atlascode.rovodev.addToContext',
     RovodevNewSession = 'atlascode.rovodev.newChatSession',
     RovodevShowTerminal = 'atlascode.rovodev.showTerminal',
+    RovodevShareFeedback = 'atlascode.rovodev.shareFeedback',
     InProgressIssue = 'atlascode.jira.inProgressIssue',
     DoneIssue = 'atlascode.jira.doneIssue',
     ShowOnboardingFlow = 'atlascode.showOnboardingFlow',
@@ -95,6 +96,7 @@ export const enum Commands {
     OpenNativeSettings = 'atlascode.openNativeSettings',
     QuickAuth = 'atlascode.rovodev.quickAuth',
     JiraLogin = 'atlascode.jira.login',
+    JiraAPITokenLogin = 'atlascode.jira.apiTokenLogin',
 
     // Debug mode-only commands
     DebugQuickCommand = 'atlascode.debug.quickCommand',

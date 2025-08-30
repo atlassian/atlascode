@@ -1,4 +1,7 @@
 import * as React from 'react';
+import { SubState } from 'src/rovo-dev/rovoDevTypes';
+
+import { inChatButtonStyles } from './rovoDevViewStyles';
 
 const RovoDevImg = () => {
     const maskTypeAlphaStyle = {
@@ -66,7 +69,10 @@ const RovoDevImg = () => {
     );
 };
 
-export const RovoDevLanding: React.FC<{}> = () => {
+export const RovoDevLanding: React.FC<{ subState: SubState; onLoginClick: () => void }> = ({
+    subState,
+    onLoginClick,
+}) => {
     if (process.env.ROVODEV_BBY) {
         return null;
     }
@@ -90,6 +96,15 @@ export const RovoDevLanding: React.FC<{}> = () => {
             <div style={{ fontSize: '12px', maxWidth: '270px' }}>
                 Rovo Dev can help you understand context of your repository, suggest and make updates.
             </div>
+
+            {subState === SubState.NeedAuth && (
+                <div style={{ marginTop: '24px' }}>
+                    <div>Please authenticate with a Jira site using an API token to enable Rovo Dev.</div>
+                    <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={onLoginClick}>
+                        Login to Jira
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

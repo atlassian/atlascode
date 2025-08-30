@@ -5,12 +5,12 @@ import { AuthFlowUI } from './authFlowUI';
 
 export enum SpecialSiteOptions {
     NewSite = 'Log in to a new site...',
-    OAuth = 'Login with OAuth to see available cloud sites',
+    OAuth = 'Show available cloud sites...',
 }
 
 export enum AuthenticationType {
-    OAuth = 'OAuth',
-    ApiToken = 'API Token',
+    OAuth = 'Cloud - Basic',
+    ApiToken = 'Cloud - Full Access',
     Server = 'Server',
 }
 
@@ -25,11 +25,11 @@ export enum SSLConfigurationType {
     CustomClientSideCerts = 'Custom client-side certificates',
 }
 
+export const AUTHENTICATION_SUCCESSFUL = 'Authentication successful';
+
 export type AuthFlowData = {
     // Product is assumed to be Jira, for now
     product: Product;
-
-    skipAllowed: boolean;
 
     isNewSite: boolean;
     site: string;
@@ -47,6 +47,10 @@ export type AuthFlowData = {
     sslCertsPath: string;
     pfxPath: string;
     pfxPassphrase: string;
+
+    // Metadata
+    skipAllowed?: boolean;
+    hasOAuthFailed?: boolean;
 };
 
 export type PartialAuthData = Partial<AuthFlowData>;

@@ -82,6 +82,7 @@ describe('configController', () => {
                 viewPullRequest: expect.any(Function),
                 viewJiraIssue: expect.any(Function),
                 openNativeSettings: expect.any(Function),
+                startAuthFlow: expect.any(Function),
             });
         });
     });

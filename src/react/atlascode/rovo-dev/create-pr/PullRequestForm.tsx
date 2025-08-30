@@ -94,14 +94,14 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
     return (
         <>
             {isFormVisible ? (
-                <div className="pull-request-form-container">
-                    <form onSubmit={handleSubmit} className="pull-request-form-body">
-                        <div className="pull-request-form-header">
+                <div className="form-container">
+                    <form onSubmit={handleSubmit} className="form-body">
+                        <div className="form-header">
                             <PullRequestIcon label="pull-request-icon" spacing="none" />
                             Create pull request
                         </div>
-                        <div className="pull-request-form-fields">
-                            <div className="pull-request-form-field">
+                        <div className="form-fields">
+                            <div className="form-field">
                                 <label htmlFor="pr-commit-message">Commit message</label>
                                 <input
                                     type="text"
@@ -111,7 +111,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                                     required
                                 />
                             </div>
-                            <div className="pull-request-form-field">
+                            <div className="form-field">
                                 <label htmlFor="pr-branch-name">Branch name</label>
                                 <input
                                     type="text"
@@ -123,11 +123,11 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                                 />
                             </div>
                         </div>
-                        <div className="pull-request-form-actions">
-                            <button type="button" onClick={() => onCancel()} className="pull-request-cancel-button">
+                        <div className="form-actions">
+                            <button type="button" onClick={() => onCancel()} className="form-cancel-button">
                                 Cancel
                             </button>
-                            <button type="submit" className="pull-request-submit-button">
+                            <button type="submit" className="form-submit-button">
                                 {isPullRequestLoading ? (
                                     <i className="codicon codicon-loading codicon-modifier-spin" />
                                 ) : (

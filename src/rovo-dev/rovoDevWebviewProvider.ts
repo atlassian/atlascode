@@ -35,7 +35,7 @@ import {
 } from '../../src/analytics';
 import { Container } from '../../src/container';
 import { Logger } from '../../src/logger';
-import { rovodevInfo } from '../constants';
+import { Commands, rovodevInfo } from '../constants';
 import {
     ModifiedFile,
     RovoDevViewResponse,
@@ -46,6 +46,7 @@ import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
+import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
 import { RovoDevProcessManager } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevContext, RovoDevContextItem, RovoDevInitState, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
@@ -261,15 +262,34 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         if (fixedPort) {
                             this.signalProcessStarted(fixedPort);
                         } else if (this.isBoysenberry) {
-                            this.signalRovoDevDisabled();
+                            this.signalRovoDevDisabled('other');
                             throw new Error('Rovo Dev port not set');
                         } else {
                             this._processState = RovoDevProcessState.Starting;
-                            RovoDevProcessManager.initializeRovoDevProcessManager(this._context);
+                            RovoDevProcessManager.initializeRovoDev(this._context);
                         }
                         break;
+
                     case RovoDevViewResponseType.GetAgentMemory:
                         await this.executeOpenFile('.agent.md', false, undefined, true);
+                        break;
+
+                    case RovoDevViewResponseType.TriggerFeedback:
+                        await this.executeTriggerFeedback();
+                        break;
+
+                    case RovoDevViewResponseType.SendFeedback:
+                        console.log('Send feedback message received in provider');
+                        RovoDevFeedbackManager.submitFeedback({
+                            feedbackType: e.feedbackType,
+                            feedbackMessage: e.feedbackMessage,
+                            canContact: e.canContact,
+                            lastTenMessages: e.lastTenMessages,
+                        });
+                        break;
+
+                    case RovoDevViewResponseType.LaunchJiraAuth:
+                        await commands.executeCommand(Commands.JiraAPITokenLogin);
                         break;
                 }
             } catch (error) {
@@ -444,6 +464,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private completeChatResponse(sourceApi: 'replay' | 'chat' | 'error') {
+        if (this._processState === RovoDevProcessState.Disabled) {
+            return Promise.resolve(false);
+        }
+
         const webview = this._webView!;
         return webview.postMessage({
             type: RovoDevProviderMessageType.CompleteMessage,
@@ -499,6 +523,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private processRovoDevResponse(sourceApi: 'chat' | 'replay', response: RovoDevResponse): Thenable<boolean> {
         const fireTelemetry = sourceApi === 'chat';
         const webview = this._webView!;
+
+        if (this._processState === RovoDevProcessState.Disabled) {
+            return Promise.resolve(false);
+        }
 
         switch (response.event_kind) {
             case 'text':
@@ -822,7 +850,7 @@ ${message}`;
         // special handling for when the Rovo Dev process has been terminated
         if (this._processState === RovoDevProcessState.Terminated) {
             this._processState = RovoDevProcessState.Starting;
-            RovoDevProcessManager.initializeRovoDevProcessManager(this._context);
+            RovoDevProcessManager.initializeRovoDev(this._context);
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.ClearChat,
@@ -1009,6 +1037,14 @@ ${message}`;
         this.fireTelemetryEvent('rovoDevFileChangedActionEvent', this._currentPromptId, 'keep', files.length);
     }
 
+    public async executeTriggerFeedback() {
+        const webview = this._webView!;
+
+        await webview.postMessage({
+            type: RovoDevProviderMessageType.ShowFeedbackForm,
+        });
+    }
+
     private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
         const prHandler = this._prHandler!;
 
@@ -1114,13 +1150,23 @@ ${message}`;
         check: () => Promise<boolean> | boolean,
         timeoutMs: number,
         interval: number,
+        abortIf?: () => boolean,
     ): Promise<boolean> {
+        if (abortIf?.()) {
+            return false;
+        }
+
         let result = await check();
         while (!result && timeoutMs) {
             await setTimeout(interval);
+            if (abortIf?.()) {
+                return false;
+            }
+
             timeoutMs -= interval;
             result = await check();
         }
+
         return result;
     }
 
@@ -1138,6 +1184,14 @@ ${message}`;
      */
     public sendErrorToChat(errorMessage: string) {
         return this.processError(new Error(errorMessage), false);
+    }
+
+    public signalInitializing() {
+        const webView = this._webView!;
+        return webView.postMessage({
+            type: RovoDevProviderMessageType.SetInitState,
+            newState: RovoDevInitState.NotInitialized,
+        });
     }
 
     public signalBinaryDownloadStarted() {
@@ -1171,7 +1225,15 @@ ${message}`;
         });
 
         // wait for Rovo Dev to be ready, for up to 10 seconds
-        const result = await this.waitFor(() => this.executeHealthcheck(), 100000, 500);
+        const result = await this.waitFor(
+            () => this.executeHealthcheck(),
+            100000,
+            500,
+            () => !this.rovoDevApiClient,
+        );
+        if (!this._rovoDevApiClient) {
+            return;
+        }
 
         let thrownError: Error | undefined = undefined;
 
@@ -1214,12 +1276,13 @@ ${message}`;
         }
     }
 
-    public signalRovoDevDisabled() {
+    public signalRovoDevDisabled(reason: 'needAuth' | 'other') {
         this._processState = RovoDevProcessState.Disabled;
 
         const webView = this._webView!;
         return webView.postMessage({
             type: RovoDevProviderMessageType.RovoDevDisabled,
+            reason,
         });
     }
 
@@ -1233,6 +1296,8 @@ ${message}`;
     }
 
     public signalProcessTerminated(errorMessage?: string) {
+        this.signalRovoDevDisabled('other');
+
         this._processState = RovoDevProcessState.Terminated;
         this._initialized = false;
         this._rovoDevApiClient = undefined;

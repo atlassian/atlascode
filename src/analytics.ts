@@ -12,6 +12,7 @@ import {
 } from './atlclients/authInfo';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
+import { QuickFlowAnalyticsEvent } from './onboarding/quickFlow/types';
 import { NotificationSurface, NotificationType } from './views/notifications/notificationManager';
 import { NotificationSource } from './views/notifications/notificationSources';
 
@@ -489,6 +490,10 @@ export async function viewScreenEvent(
 }
 
 // UI Events
+
+export async function quickFlowEvent(event: QuickFlowAnalyticsEvent): Promise<TrackEvent> {
+    return trackEvent('statusUpdated', 'quickFlow', { attributes: { ...event } });
+}
 
 export async function uiErrorEvent(errorInfo: UIErrorInfo): Promise<TrackEvent> {
     const e = trackEvent('failedTest', 'ui', {
