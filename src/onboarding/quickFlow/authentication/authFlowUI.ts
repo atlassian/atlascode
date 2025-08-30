@@ -294,7 +294,11 @@ export class AuthFlowUI {
         });
     }
 
-    public inputPassword(state: PartialData, passwordName: string): Promise<UiResponse> {
+    public inputPassword(
+        state: PartialData,
+        passwordName: string,
+        preAcceptValidationFunc?: (value: string) => Promise<string | undefined>,
+    ): Promise<UiResponse> {
         const prompt =
             state.authenticationType === AuthenticationType.ApiToken
                 ? 'You can always visit [id.atlassian.com](https://id.atlassian.com/manage-profile/security/api-tokens) to generate a new token'
@@ -305,6 +309,7 @@ export class AuthFlowUI {
             prompt,
             value: state.password || '',
             valueSelection: state.password ? [0, state.password.length] : undefined,
+            preAcceptValidationFunc,
         });
     }
 
