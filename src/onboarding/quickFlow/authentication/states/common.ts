@@ -141,7 +141,7 @@ export class CommonAuthStates {
                 [AuthenticationType.ApiToken]: TerminalAuthStates.addAPIToken,
                 [AuthenticationType.Server]: ServerAuthStates.showContextPathPrompt,
                 // Should be unreachable
-                [AuthenticationType.OAuth]: TerminalAuthStates.oauthFailure,
+                [AuthenticationType.OAuth]: TerminalAuthStates.authFailure,
             };
 
             if (data.skipAllowed && data.password !== undefined) {
@@ -176,14 +176,14 @@ export class CommonAuthStates {
                 return Transition.forward(
                     data.authenticationType === AuthenticationType.ApiToken
                         ? CommonAuthStates.selectSiteFromDropdown
-                        : TerminalAuthStates.oauthSuccess,
+                        : TerminalAuthStates.authSuccess,
                 );
             }
 
             return Transition.forward(
                 data.authenticationType === AuthenticationType.ApiToken
                     ? CommonAuthStates.selectSiteFromDropdown
-                    : TerminalAuthStates.oauthFailure,
+                    : TerminalAuthStates.authFailure,
                 { hasOAuthFailed: true },
             );
         },
