@@ -384,6 +384,7 @@ describe('VSCCommonMessageHandler', () => {
                 errorName: 'TestError',
                 errorMessage: 'Test error message',
                 errorCause: 'Test cause',
+                userDomain: 'unknown',
             };
 
             const action: CommonAction = {

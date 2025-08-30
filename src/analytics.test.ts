@@ -10,7 +10,7 @@ const mockedData: MockedData = {};
 
 jest.mock('./container', () => ({
     Container: {
-        siteManager: { getFirstAAID: () => mockedData.getFirstAAID_value },
+        siteManager: { getFirstAAID: () => mockedData.getFirstAAID_value, getSitesAvailable: () => [] },
         machineId: 'test-machine-id',
     },
 }));
@@ -41,7 +41,7 @@ describe('analytics', () => {
             const screenName = 'testScreen';
             const event = await analytics.viewScreenEvent(screenName);
             expect(event.name).toEqual(screenName);
-            expect(event.screenEvent.attributes).toBeUndefined();
+            expect(event.screenEvent.attributes).toEqual({ userDomain: 'unknown' });
         });
 
         it('should exclude from activity if screen name is atlascodeWelcomeScreen', async () => {
@@ -274,6 +274,7 @@ describe('analytics', () => {
                 errorName: 'TestError',
                 errorMessage: 'Test UI error',
                 errorCause: 'Test cause',
+                userDomain: 'unknown',
             };
 
             const event = await analytics.uiErrorEvent(errorInfo);
