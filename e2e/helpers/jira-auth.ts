@@ -4,7 +4,7 @@ import { expect } from '@playwright/test';
 import { closeAllNotifications, openAtlassianSettings } from './common';
 
 const BASE_URL_CLOUD: string = 'https://mockedteams.atlassian.net';
-const BASE_URL_DC: string = 'https://mockedteams.atlassian.net'; // THIS IS WRONG! But it works for testing
+const BASE_URL_DC: string = 'https://mockedteams.atlassian.net'; // THIS IS WRONG! But it works for testing, should be some URL without "atlassian.net" in it
 const USERNAME: string = 'mock@atlassian.code';
 const PASSWORD: string = '12345';
 
