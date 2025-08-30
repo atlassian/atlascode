@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 3.8.12
+
+### Features
+
+- Authentication URLs' protocols can be omitted, and it'll default to https
+
 ## What's new in 3.8.11
 
 ### Features
