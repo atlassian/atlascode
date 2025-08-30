@@ -8,7 +8,11 @@ export function isCustomUrl(url: string): boolean {
             return false;
         }
 
-        return cloudHostnames.every((host) => !urlObj.hostname.endsWith(host));
+        const isCloudHost = cloudHostnames.find(
+            (host) => urlObj.hostname === host || urlObj.hostname.endsWith(`.${host}`),
+        );
+
+        return !isCloudHost;
     } catch {
         return false;
     }
