@@ -1,9 +1,8 @@
-import { ConfigurationChangeEvent, Disposable, TreeItem } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Uri } from 'vscode';
 
 import { Product, ProductJira } from '../../atlclients/authInfo';
 import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
-import { loginToJiraMessageNode } from '../jira/treeViews/utils';
 import { NotificationManagerImpl, NotificationNotifier, NotificationType } from './notificationManager';
 
 export class AuthNotifier extends Disposable implements NotificationNotifier {
@@ -49,12 +48,17 @@ export class AuthNotifier extends Disposable implements NotificationNotifier {
     }
 
     private checkJiraAuth(): void {
-        this.checkAuth(ProductJira, 'jira.login', 'Log in to Jira to view & manage work items', loginToJiraMessageNode);
+        this.checkAuth(
+            ProductJira,
+            'jira.login',
+            'Log in to Jira to view & manage work items',
+            Uri.parse('Please login to Jira'),
+        );
     }
 
-    private checkAuth(product: Product, notificationId: string, message: string, treeItem: TreeItem): void {
+    private checkAuth(product: Product, notificationId: string, message: string, uri: Uri): void {
         if (!this.isEnabled(product)) {
-            NotificationManagerImpl.getInstance().clearNotificationsByUri(treeItem.resourceUri!);
+            NotificationManagerImpl.getInstance().clearNotificationsByUri(uri);
             return;
         }
         const numberOfAuth =
@@ -63,7 +67,7 @@ export class AuthNotifier extends Disposable implements NotificationNotifier {
         if (numberOfAuth === 0) {
             NotificationManagerImpl.getInstance().addNotification({
                 id: notificationId,
-                uri: treeItem.resourceUri!,
+                uri: uri,
                 notificationType: NotificationType.LoginNeeded,
                 message: message,
                 product: product,
@@ -71,7 +75,7 @@ export class AuthNotifier extends Disposable implements NotificationNotifier {
             });
             return;
         }
-        NotificationManagerImpl.getInstance().clearNotificationsByUri(treeItem.resourceUri!);
+        NotificationManagerImpl.getInstance().clearNotificationsByUri(uri);
     }
 
     private isEnabled(product: Product): boolean {
