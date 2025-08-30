@@ -226,12 +226,15 @@ export class Container {
             setCommandContext(CommandContext.UseNewAuthFlow, false);
         }
 
+        // in Boysenberry we don't need to listen to Jira auth updates
         if (!process.env.ROVODEV_BBY) {
             this._siteManager.onDidSitesAvailableChange(async () => {
                 if (await this.updateFeatureFlagTenantId(this._siteManager.primarySite?.id)) {
                     if (this._featureFlagClient.checkGate(Features.RovoDevEnabled)) {
+                        this._isRovoDevEnabled = true;
                         await this.enableRovoDev(context);
                     } else {
+                        this._isRovoDevEnabled = false;
                         await this.disableRovoDev();
                     }
                 }
@@ -251,6 +254,7 @@ export class Container {
 
         this._onboardingProvider = new OnboardingProvider();
 
+        // in Boysenberry Rovo Dev is always enabled
         if (process.env.ROVODEV_BBY || this.featureFlagClient.checkGate(Features.RovoDevEnabled)) {
             this._isRovoDevEnabled = true;
             await this.enableRovoDev(context);
