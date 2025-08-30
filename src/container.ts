@@ -418,8 +418,8 @@ export class Container {
         return env.machineId;
     }
 
-    private static get isRemote() {
-        return env.remoteName !== undefined;
+    public static get isRemote() {
+        return !!env.remoteName;
     }
 
     private static get isWebUI() {
