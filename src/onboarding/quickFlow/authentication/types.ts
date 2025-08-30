@@ -51,6 +51,7 @@ export type AuthFlowData = {
     // Metadata
     skipAllowed?: boolean;
     hasOAuthFailed?: boolean;
+    error?: string;
 };
 
 export type PartialAuthData = Partial<AuthFlowData>;

@@ -269,6 +269,7 @@ describe('VSCAnalyticsApi', () => {
                 errorName: 'TestError',
                 errorMessage: 'Test error message',
                 errorCause: 'Test error cause',
+                userDomain: 'unknown',
             };
 
             await analyticsApi.fireUIErrorEvent(errorInfo);

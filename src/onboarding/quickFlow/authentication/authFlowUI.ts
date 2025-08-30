@@ -124,14 +124,14 @@ export class AuthFlowUI {
         return this.baseUI.showQuickPick(
             [
                 {
-                    label: 'Yes',
-                    description: 'Your Jira server has a path',
-                    detail: `For example: https://${site}/path/to/jira`,
-                },
-                {
                     label: 'No',
                     description: 'Your Jira server is running at the root',
                     detail: `For example: https://${site}/`,
+                },
+                {
+                    label: 'Yes',
+                    description: 'Your Jira server has a path',
+                    detail: `For example: https://${site}/path/to/jira`,
                 },
             ],
             {

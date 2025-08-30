@@ -55,6 +55,7 @@ export type UIErrorInfo = UIAnalyticsContext & {
     errorName: string;
     errorMessage: string;
     errorCause: string;
+    userDomain: string;
 };
 
 export enum CreatePrTerminalSelection {
