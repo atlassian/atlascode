@@ -9,30 +9,32 @@ import { AuthState, PartialAuthData, ServerCredentialType } from '../types';
 export class TerminalAuthStates {
     public static addAPIToken: AuthState = {
         name: 'addAPIToken',
-        isTerminal: true,
         action: async (data: PartialAuthData, ui: AuthFlowUI) => {
             if (!data.site || !data.username || !data.password) {
                 throw new Error('Missing required fields for API Token authentication');
             }
 
-            Container.loginManager.userInitiatedServerLogin(
-                {
-                    host: data.site,
-                    product: ProductJira,
-                },
-                {
-                    username: data.username,
-                    password: data.password,
-                } as BasicAuthInfo,
-            );
+            try {
+                await Container.loginManager.userInitiatedServerLogin(
+                    {
+                        host: data.site,
+                        product: ProductJira,
+                    },
+                    {
+                        username: data.username,
+                        password: data.password,
+                    } as BasicAuthInfo,
+                );
 
-            return Transition.done();
+                return Transition.forward(TerminalAuthStates.authSuccess);
+            } catch (err) {
+                return Transition.forward(TerminalAuthStates.authFailure, { error: err.message || err });
+            }
         },
     };
 
     public static finishServerAuth: AuthState = {
         name: 'serverAuth',
-        isTerminal: true,
         action: async (data: PartialAuthData, ui: AuthFlowUI) => {
             if (!data.site) {
                 throw new Error('Missing required fields for Server authentication');
@@ -48,37 +50,41 @@ export class TerminalAuthStates {
                           password: data.password,
                       } as BasicAuthInfo);
 
-            Container.loginManager.userInitiatedServerLogin(
-                {
-                    host: data.site,
-                    product: ProductJira,
-                    contextPath: data.contextPath,
-                    customSSLCertPaths: data.sslCertsPath,
-                    pfxPath: data.pfxPath,
-                    pfxPassphrase: data.pfxPassphrase,
-                },
-                authInfo,
-            );
+            try {
+                await Container.loginManager.userInitiatedServerLogin(
+                    {
+                        host: data.site,
+                        product: ProductJira,
+                        contextPath: data.contextPath,
+                        customSSLCertPaths: data.sslCertsPath,
+                        pfxPath: data.pfxPath,
+                        pfxPassphrase: data.pfxPassphrase,
+                    },
+                    authInfo,
+                );
 
-            return Transition.done();
+                return Transition.forward(TerminalAuthStates.authSuccess);
+            } catch (err) {
+                return Transition.forward(TerminalAuthStates.authFailure, { error: err.message || err });
+            }
         },
     };
 
-    public static oauthFailure: AuthState = {
-        name: 'oauthFailure',
+    public static authFailure: AuthState = {
+        name: 'authFailure',
         isTerminal: true,
         isFailure: true,
         action: async (data: PartialAuthData, ui: AuthFlowUI) => {
-            window.showErrorMessage('OAuth authentication failed');
+            window.showErrorMessage(data.error ? `Authentication failed: ${data.error}` : 'Authentication failed');
             return Transition.done();
         },
     };
 
-    public static oauthSuccess: AuthState = {
-        name: 'oauthSuccess',
+    public static authSuccess: AuthState = {
+        name: 'authSuccess',
         isTerminal: true,
         action: async (data: PartialAuthData, ui: AuthFlowUI) => {
-            // No action needed
+            window.showInformationMessage('Authentication successful!');
             return Transition.done();
         },
     };
