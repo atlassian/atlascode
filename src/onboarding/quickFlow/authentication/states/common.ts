@@ -52,7 +52,7 @@ export class CommonAuthStates {
             const transitions = {
                 [AuthenticationType.OAuth]: CommonAuthStates.inputUsername,
                 [AuthenticationType.ApiToken]: CommonAuthStates.inputUsername,
-                [AuthenticationType.Server]: ServerAuthStates.chooseServerAuthType,
+                [AuthenticationType.Server]: ServerAuthStates.showContextPathPrompt,
             };
 
             if (data.skipAllowed && data.site !== undefined) {
@@ -80,7 +80,7 @@ export class CommonAuthStates {
             const transitions = {
                 [AuthenticationType.OAuth]: CommonAuthStates.inputUsername,
                 [AuthenticationType.ApiToken]: CommonAuthStates.inputUsername,
-                [AuthenticationType.Server]: ServerAuthStates.chooseServerAuthType,
+                [AuthenticationType.Server]: ServerAuthStates.showContextPathPrompt,
             };
 
             const { value, action } = await ui.inputNewSite(data);
@@ -139,7 +139,7 @@ export class CommonAuthStates {
         action: async (data: PartialAuthData, ui: AuthFlowUI) => {
             const transitions = {
                 [AuthenticationType.ApiToken]: TerminalAuthStates.addAPIToken,
-                [AuthenticationType.Server]: ServerAuthStates.showContextPathPrompt,
+                [AuthenticationType.Server]: TerminalAuthStates.finishServerAuth,
                 // Should be unreachable
                 [AuthenticationType.OAuth]: TerminalAuthStates.authFailure,
             };
