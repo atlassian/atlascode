@@ -63,6 +63,7 @@ describe('SiteManager', () => {
             getAuthInfo: jest.fn(),
             removeAuthInfo: jest.fn(),
             generateCredentialId: jest.fn(),
+            isSiteCredentialShared: jest.fn().mockReturnValue(false),
         } as unknown as CredentialManager;
 
         CredentialManager.generateCredentialId = jest.fn((productKey, userId) => `${productKey}-${userId}`);
