@@ -93,7 +93,7 @@ export class AuthFlowUI {
     public pickAuthenticationType(state: PartialData): Promise<UiResponse<AuthenticationType>> {
         const choices: QuickPickItem[] = [];
 
-        if (Container.isRemote) {
+        if (!Container.isRemote) {
             choices.push({
                 iconPath: new ThemeIcon('cloud'),
                 label: AuthenticationType.OAuth,
