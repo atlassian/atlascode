@@ -87,6 +87,7 @@ module.exports = {
                 test: /\.(ts|js)x?$/,
                 exclude: [/node_modules/, /\.test\.ts$/, /\.spec\.ts$/],
                 use: [
+                    { loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } },
                     {
                         loader: '@compiled/webpack-loader',
                         options: {
@@ -95,7 +96,6 @@ module.exports = {
                             inlineCss: true,
                         },
                     },
-                    { loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } },
                 ],
             },
 
