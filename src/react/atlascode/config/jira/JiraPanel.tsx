@@ -16,6 +16,7 @@ type JiraPanelProps = CommonPanelProps & {
     config: { [key: string]: any };
     sites: SiteWithAuthInfo[];
     isRemote: boolean;
+    initiateJiraApiTokenAuth: boolean;
     onSubsectionChange: (subSection: ConfigSubSection, expanded: boolean) => void;
 };
 
@@ -26,6 +27,7 @@ export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
     config,
     sites,
     isRemote,
+    initiateJiraApiTokenAuth,
 }) => {
     const siteInfos = useMemo(() => {
         return sites.map((swa) => {
@@ -51,6 +53,7 @@ export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
                                 sites={sites}
                                 product={ProductJira}
                                 section={ConfigSection.Jira}
+                                initiateApiTokenAuth={initiateJiraApiTokenAuth}
                             />
                         </Grid>
                         <Grid item>

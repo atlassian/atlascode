@@ -250,6 +250,16 @@ const ConfigPageV3: React.FunctionComponent = () => {
                                                 jiraSites={state.jiraSites}
                                                 bitbucketSites={state.bitbucketSites}
                                                 isRemote={state.isRemote}
+                                                initiateJiraApiTokenAuth={
+                                                    openSection === ConfigV3Section.Auth &&
+                                                    state.openSubSections[0] === ConfigV3SubSection.JiraAuth &&
+                                                    !!state.initiateApiTokenAuth
+                                                }
+                                                initiateBitbucketApiTokenAuth={
+                                                    openSection === ConfigV3Section.Auth &&
+                                                    state.openSubSections[0] === ConfigV3SubSection.BbAuth &&
+                                                    !!state.initiateApiTokenAuth
+                                                }
                                                 config={state.config}
                                                 jiraToggle={handleJiraToggle}
                                                 bbToggle={handleBitbucketToggle}

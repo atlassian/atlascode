@@ -40,12 +40,13 @@ type AuthPanelProps = {
     sites: SiteWithAuthInfo[];
     product: Product;
     section: ConfigV3Section;
+    initiateApiTokenAuth: boolean;
     config: { [key: string]: any };
     productToggle: (enabled: boolean) => void;
 };
 
 export const AuthPanel: React.FunctionComponent<AuthPanelProps> = memo(
-    ({ isRemote, sites, product, section, config, productToggle }) => {
+    ({ isRemote, sites, product, section, config, productToggle, initiateApiTokenAuth }) => {
         const currentAuthSubSection = product.key === 'jira' ? ConfigV3SubSection.JiraAuth : ConfigV3SubSection.BbAuth;
         const classes = useStyles();
 
@@ -71,7 +72,12 @@ export const AuthPanel: React.FunctionComponent<AuthPanelProps> = memo(
                 </AccordionSummary>
                 {config[`${product.key}.enabled`] && (
                     <AccordionDetails>
-                        <SiteAuthenticator product={product} isRemote={isRemote} sites={sites} />
+                        <SiteAuthenticator
+                            product={product}
+                            isRemote={isRemote}
+                            sites={sites}
+                            initiateApiTokenAuth={initiateApiTokenAuth}
+                        />
                     </AccordionDetails>
                 )}
             </Accordion>
