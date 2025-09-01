@@ -1,5 +1,5 @@
 import { Box, Button, Grid } from '@mui/material';
-import React, { memo, useCallback, useContext } from 'react';
+import React, { useCallback, useContext } from 'react';
 
 import { Product } from '../../../../atlclients/authInfo';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
@@ -15,45 +15,44 @@ type SiteAuthenticatorProps = {
     sites: SiteWithAuthInfo[];
 };
 
-export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> = memo(
-    ({ product, isRemote, sites }) => {
-        const authDialogController = useContext(AuthDialogControllerContext);
-        const configController = useContext(ConfigControllerContext);
-        const openProductAuth = useCallback(() => {
-            authDialogController.openDialog(product, undefined);
-        }, [authDialogController, product]);
+export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> = ({ product, isRemote, sites }) => {
+    const authDialogController = useContext(AuthDialogControllerContext);
+    const configController = useContext(ConfigControllerContext);
 
-        const remoteAuth = useCallback(() => {
-            configController.remoteLogin();
-        }, [configController]);
+    const openProductAuth = useCallback(() => {
+        authDialogController.openDialog(product, undefined, sites);
+    }, [authDialogController, product, sites]);
 
-        const handleEdit = useCallback(
-            (swa: SiteWithAuthInfo) => {
-                authDialogController.openDialog(product, swa);
-            },
-            [authDialogController, product],
-        );
+    const remoteAuth = useCallback(() => {
+        configController.remoteLogin();
+    }, [configController]);
 
-        // TODO AXON-46: feature flag this when closer to release
-        const [isRemoteAuthButtonVisible] = React.useState(false);
+    const handleEdit = useCallback(
+        (swa: SiteWithAuthInfo) => {
+            authDialogController.openDialog(product, swa, []);
+        },
+        [authDialogController, product],
+    );
 
-        return (
-            <Box flexGrow={1}>
-                <Grid container direction="column" spacing={2}>
-                    <AuthContainer
-                        isRemote={isRemote}
-                        product={product}
-                        openProductAuth={openProductAuth}
-                        sites={sites}
-                        handleEdit={handleEdit}
-                        remoteAuth={remoteAuth}
-                        isRemoteAuthButtonVisible={isRemoteAuthButtonVisible}
-                    />
-                </Grid>
-            </Box>
-        );
-    },
-);
+    // TODO AXON-46: feature flag this when closer to release
+    const [isRemoteAuthButtonVisible] = React.useState(false);
+
+    return (
+        <Box flexGrow={1}>
+            <Grid container direction="column" spacing={2}>
+                <AuthContainer
+                    isRemote={isRemote}
+                    product={product}
+                    openProductAuth={openProductAuth}
+                    sites={sites}
+                    handleEdit={handleEdit}
+                    remoteAuth={remoteAuth}
+                    isRemoteAuthButtonVisible={isRemoteAuthButtonVisible}
+                />
+            </Grid>
+        </Box>
+    );
+};
 
 interface AuthContainerProps {
     isRemote: boolean;

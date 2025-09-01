@@ -79,7 +79,8 @@ const ConfigPageV3: React.FunctionComponent = () => {
         return { ...emptySubsections, [state.openSection]: state.openSubSections };
     });
 
-    const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry } = useAuthDialog();
+    const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry, allSitesWithAuth } =
+        useAuthDialog();
     const handleTabChange = useCallback((event: React.ChangeEvent<{}>, section: ConfigV3Section) => {
         setOpenSection(section);
     }, []);
@@ -282,6 +283,7 @@ const ConfigPageV3: React.FunctionComponent = () => {
                             open={authDialogOpen}
                             save={controller.login}
                             onExited={authDialogController.onExited}
+                            allSitesWithAuth={allSitesWithAuth}
                         />
                     </AtlascodeErrorBoundary>
                 </AuthDialogControllerContext.Provider>
