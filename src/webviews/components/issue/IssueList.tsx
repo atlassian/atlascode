@@ -1,5 +1,6 @@
 import Button from '@atlaskit/button';
 import DropdownMenu, { DropdownItem, DropdownItemGroup } from '@atlaskit/dropdown-menu';
+import ChevronDownIcon from '@atlaskit/icon/core/chevron-down';
 import Lozenge from '@atlaskit/lozenge';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
@@ -67,10 +68,8 @@ const StatusColumn = (data: ItemData) => {
                     (option.value === 'In Progress' && currentStatus.toLowerCase().includes('progress')),
             ) || statusOptions[0];
 
-        const currentLozColor = colorToLozengeAppearanceMap[currentOption.colorName];
-
         return (
-            <div style={{ width: '120px' }}>
+            <div style={{ width: '120px', fontSize: '12px' }}>
                 <DropdownMenu
                     trigger={({ triggerRef, ...props }) => (
                         <Button
@@ -78,31 +77,32 @@ const StatusColumn = (data: ItemData) => {
                             ref={triggerRef}
                             appearance="subtle"
                             style={{ padding: '4px 8px', minHeight: '32px', width: '100%' }}
+                            iconAfter={<ChevronDownIcon label="" size="small" />}
                         >
-                            <Lozenge appearance={currentLozColor}>{currentOption.label}</Lozenge>
+                            {currentOption.label}
                         </Button>
                     )}
                     placement="bottom-start"
                 >
                     <DropdownItemGroup>
-                        {statusOptions.map((option) => {
-                            const lozColor = colorToLozengeAppearanceMap[option.colorName];
-                            const isSelected = option.value === currentOption.value;
+                        {statusOptions
+                            .filter((option) => option.value !== currentOption.value)
+                            .map((option) => {
+                                const lozColor = colorToLozengeAppearanceMap[option.colorName];
 
-                            return (
-                                <DropdownItem
-                                    key={option.value}
-                                    onClick={() => {
-                                        if (data.onStatusChange) {
-                                            data.onStatusChange(data.issue.key, option.value);
-                                        }
-                                    }}
-                                    isSelected={isSelected}
-                                >
-                                    <Lozenge appearance={lozColor}>{option.label}</Lozenge>
-                                </DropdownItem>
-                            );
-                        })}
+                                return (
+                                    <DropdownItem
+                                        key={option.value}
+                                        onClick={() => {
+                                            if (data.onStatusChange) {
+                                                data.onStatusChange(data.issue.key, option.value);
+                                            }
+                                        }}
+                                    >
+                                        <Lozenge appearance={lozColor}>{option.label}</Lozenge>
+                                    </DropdownItem>
+                                );
+                            })}
                     </DropdownItemGroup>
                 </DropdownMenu>
             </div>
@@ -129,7 +129,7 @@ export default class IssueList extends React.Component<
         return (
             <TableTree
                 columns={[IssueKey, Summary, Priority, StatusColumn]}
-                columnWidths={['150px', '100%', '20px', '140px']}
+                columnWidths={['150px', '100%', '20px', '150px']}
                 items={this.props.issues.map((issue) => {
                     return {
                         id: issue.key,
