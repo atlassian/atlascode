@@ -90,7 +90,7 @@ const StatusColumn = (data: ItemData) => {
             ) || statusOptions[0];
 
         return (
-            <div style={{ width: '120px', fontSize: '11px' }}>
+            <div style={{ width: '120px', fontSize: '12px', minWidth: '110px' }}>
                 <DropdownMenu
                     trigger={({ triggerRef, ...props }) => (
                         <Button
