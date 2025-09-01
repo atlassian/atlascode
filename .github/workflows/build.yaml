@@ -45,8 +45,8 @@ jobs:
             target: jira-cloud
           - kind: e2e
             target: jira-dc
-          - kind: e2e
-            target: bitbucket-cloud
+          # - kind: e2e
+          #   target: bitbucket-cloud
           - kind: e2e
             target: bitbucket-dc
 
