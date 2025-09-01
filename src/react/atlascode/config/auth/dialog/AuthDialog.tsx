@@ -203,16 +203,17 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                             ? autocompleteSites[0]
                                             : defaultSiteWithAuth.site.baseLinkUrl
                                     }
-                                    loading={false}
                                     size="small"
-                                    openOnFocus
+                                    openOnFocus={autocompleteSites.length > 1}
+                                    selectOnFocus
                                     blurOnSelect
-                                    freeSolo={true}
+                                    freeSolo
                                     renderInput={(params) => (
                                         <TextField
                                             {...params}
                                             name="baseUrl"
                                             required
+                                            autoFocus={autocompleteSites.length !== 1}
                                             id="baseUrl"
                                             label="Base URL"
                                             helperText={errors.baseUrl || helperText}

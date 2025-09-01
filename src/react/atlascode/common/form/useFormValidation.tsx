@@ -127,6 +127,13 @@ export function useFormValidation<FieldTypes>(
                     ref.addEventListener('input', handleChange);
                 }
 
+                // simulate an input event after 100ms from its initialization, if it starts with a value
+                setTimeout(() => {
+                    if (ref.value) {
+                        ref.dispatchEvent(new Event('input'));
+                    }
+                }, 100);
+
                 if (fields[ref.name] !== undefined && isOptionable) {
                     const existingField = fields[ref.name];
                     if (!existingField.options.find((option) => option.value === ref.value)) {
