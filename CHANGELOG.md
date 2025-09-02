@@ -5,6 +5,7 @@
 ### Bug Fixes
 
 - Fixed issue in create issue page when site select is empty after changing issue type
+- Fixed style issues on feedback modal
 
 ## What's new in 3.8.11
 
