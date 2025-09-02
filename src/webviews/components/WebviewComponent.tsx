@@ -77,7 +77,10 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
             bodyStyle.setProperty('--vscode-button-background--75', opacity(color, 75));
 
             //set atlaskit components theme
-            const isDark: boolean = body.getAttribute('class') === 'vscode-dark';
+            const isDark: boolean =
+                body.getAttribute('class') === 'vscode-dark' ||
+                (body.classList.contains('vscode-high-contrast') &&
+                    !body.classList.contains('vscode-high-contrast-light'));
             setGlobalTheme({
                 light: 'light',
                 dark: 'dark',
