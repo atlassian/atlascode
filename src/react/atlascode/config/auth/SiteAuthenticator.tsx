@@ -28,9 +28,10 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
     const [opened, setOpened] = useState(false);
     const authDialogController = useContext(AuthDialogControllerContext);
     const configController = useContext(ConfigControllerContext);
+
     const openProductAuth = useCallback(() => {
-        authDialogController.openDialog(product, undefined);
-    }, [authDialogController, product]);
+        authDialogController.openDialog(product, undefined, sites);
+    }, [authDialogController, product, sites]);
 
     const remoteAuth = useCallback(() => {
         configController.remoteLogin();
@@ -38,7 +39,7 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
 
     const handleEdit = useCallback(
         (swa: SiteWithAuthInfo) => {
-            authDialogController.openDialog(product, swa);
+            authDialogController.openDialog(product, swa, []);
         },
         [authDialogController, product],
     );

@@ -1,6 +1,7 @@
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import equal from 'fast-deep-equal/es6';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { SiteWithAuthInfo } from 'src/lib/ipc/toUI/config';
 import useConstant from 'use-constant';
 
 import { Product } from '../../../../atlclients/authInfo';
@@ -12,7 +13,8 @@ import { clearFieldsSwitchingFormTypes, getFieldsValidationHelpers, selectAuthFo
 export function useFormValidation<FieldTypes>(
     authTypeTabIndex: number,
     product: Product,
-    watch?: Partial<FieldTypes>,
+    watch: Partial<FieldTypes> | undefined,
+    allSitesWithAuth: SiteWithAuthInfo[],
 ): FormValidation<FieldTypes> {
     const fields = useConstant<Fields>(() => ({}));
     const watchDefaults = useRef<Partial<FieldTypes>>(watch ? watch : {});
@@ -125,6 +127,13 @@ export function useFormValidation<FieldTypes>(
                     ref.addEventListener('input', handleChange);
                 }
 
+                // simulate an input event after 100ms from its initialization, if it starts with a value
+                setTimeout(() => {
+                    if (ref.value) {
+                        ref.dispatchEvent(new Event('input'));
+                    }
+                }, 100);
+
                 if (fields[ref.name] !== undefined && isOptionable) {
                     const existingField = fields[ref.name];
                     if (!existingField.options.find((option) => option.value === ref.value)) {
@@ -155,6 +164,7 @@ export function useFormValidation<FieldTypes>(
         },
         [fields, handleChange],
     );
+
     function register<Element extends InputElement = InputElement>(): (ref: Element | null) => void;
     function register<Element extends InputElement = InputElement>(
         refOrValidate?: Element | ValidateFunc,
@@ -168,6 +178,7 @@ export function useFormValidation<FieldTypes>(
 
         return doRegister;
     }
+
     const { getRelevantFieldNames, validRequiredFields, getRelevantErrors } = getFieldsValidationHelpers(
         fields,
         product,
@@ -191,6 +202,9 @@ export function useFormValidation<FieldTypes>(
 
     const authFormType = selectAuthFormType(product, watches.current, errors.current);
 
+    const baseUrl: string | undefined = (errors.current as any).baseUrl ? undefined : (watches.current as any).baseUrl;
+    const authSiteFound = baseUrl ? allSitesWithAuth.find((x) => x.site.baseLinkUrl === baseUrl) : undefined;
+
     return {
         register: useCallback(register, []), // eslint-disable-line react-hooks/exhaustive-deps
         watches: watches.current,
@@ -199,5 +213,6 @@ export function useFormValidation<FieldTypes>(
         isValid,
         authFormType,
         updateWatches,
+        authSiteFound,
     };
 }
