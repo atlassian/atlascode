@@ -6,6 +6,10 @@
 
 - Authentication URLs' protocols can be omitted, and it'll default to https
 
+### Bug Fixes
+
+- Fixed issue in create issue page when site select is empty after changing issue type
+
 ## What's new in 3.8.11
 
 ### Features
