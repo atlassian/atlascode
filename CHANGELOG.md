@@ -2,10 +2,6 @@
 
 ## What's new in 3.8.12
 
-### Features
-
-- Add the ability to update the Status column from the child issues table tree
-
 ### Bug Fixes
 
 - Fixed issue in create issue page when site select is empty after changing issue type
