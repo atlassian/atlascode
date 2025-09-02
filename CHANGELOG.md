@@ -2,9 +2,10 @@
 
 ## What's new in 3.8.12
 
-### Features
+### Bug Fixes
 
-- Authentication URLs' protocols can be omitted, and it'll default to https
+- Fixed issue in create issue page when site select is empty after changing issue type
+- Fixed style issues on feedback modal
 
 ## What's new in 3.8.11
 

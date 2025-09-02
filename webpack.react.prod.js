@@ -10,6 +10,7 @@ const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const CSSMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const autoprefixer = require('autoprefixer');
+const { CompiledExtractPlugin } = require('@compiled/webpack-loader');
 
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
@@ -73,8 +74,11 @@ module.exports = {
     },
     plugins: [
         new MiniCssExtractPlugin({
-            filename: '[name].css',
+            filename: '[name].[contenthash].css',
             ignoreOrder: true,
+        }),
+        new CompiledExtractPlugin({
+            sortShorthand: true,
         }),
         new WebpackManifestPlugin({
             fileName: 'asset-manifest.json',
@@ -126,10 +130,26 @@ module.exports = {
                 // Include ts, tsx, js, and jsx files.
                 test: /\.(ts|js)x?$/,
                 exclude: [/node_modules/, /\.test\.ts$/, /\.spec\.ts$/],
-                use: [{ loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } }],
+                use: [
+                    { loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } },
+                    {
+                        loader: '@compiled/webpack-loader',
+                        options: {
+                            transformerBabelPlugins: ['@atlaskit/tokens/babel-plugin'],
+                            extract: true,
+                            inlineCss: true,
+                        },
+                    },
+                ],
             },
+
             {
-                test: /\.css$/,
+                test: /compiled(-css)?\.css$/i,
+                use: [MiniCssExtractPlugin.loader, 'css-loader'],
+            },
+
+            {
+                test: /(?<!compiled-css)(?<!\.compiled)\.css$/i,
                 use: [
                     {
                         loader: MiniCssExtractPlugin.loader,
