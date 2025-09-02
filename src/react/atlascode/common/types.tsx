@@ -1,3 +1,5 @@
+import { SiteWithAuthInfo } from 'src/lib/ipc/toUI/config';
+
 export type Product = 'Jira' | 'Bitbucket';
 
 export type InputElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
@@ -33,6 +35,7 @@ export type FormValidation<FieldTypes> = {
     errors: Partial<Errors<FieldTypes>>;
     isValid: boolean;
     authFormType: string;
+    authSiteFound: SiteWithAuthInfo | undefined;
     handleSubmit: (callback: OnSubmit<Partial<FieldTypes>>) => (e?: React.BaseSyntheticEvent) => Promise<void>;
     updateWatches: (updates: Partial<FieldTypes>) => void;
 };

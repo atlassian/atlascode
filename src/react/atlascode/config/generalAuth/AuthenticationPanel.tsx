@@ -11,6 +11,8 @@ type AuthenicationPanelProps = {
     jiraSites: SiteWithAuthInfo[];
     bitbucketSites: SiteWithAuthInfo[];
     isRemote: boolean;
+    initiateJiraApiTokenAuth: boolean;
+    initiateBitbucketApiTokenAuth: boolean;
     config: { [key: string]: any };
     jiraToggle: (enabled: boolean) => void;
     bbToggle: (enabled: boolean) => void;
@@ -21,6 +23,8 @@ export const AuthenticationPanel: React.FunctionComponent<AuthenicationPanelProp
     jiraSites,
     bitbucketSites,
     isRemote,
+    initiateJiraApiTokenAuth,
+    initiateBitbucketApiTokenAuth,
     config,
     jiraToggle,
     bbToggle,
@@ -36,6 +40,7 @@ export const AuthenticationPanel: React.FunctionComponent<AuthenicationPanelProp
                                 sites={jiraSites}
                                 product={ProductJira}
                                 section={ConfigV3Section.Auth}
+                                initiateApiTokenAuth={initiateJiraApiTokenAuth}
                                 config={config}
                                 productToggle={jiraToggle}
                             />
@@ -46,6 +51,7 @@ export const AuthenticationPanel: React.FunctionComponent<AuthenicationPanelProp
                                 sites={bitbucketSites}
                                 product={ProductBitbucket}
                                 section={ConfigV3Section.Auth}
+                                initiateApiTokenAuth={initiateBitbucketApiTokenAuth}
                                 config={config}
                                 productToggle={bbToggle}
                             />

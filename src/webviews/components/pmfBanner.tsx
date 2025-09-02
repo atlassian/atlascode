@@ -1,8 +1,12 @@
 import Button, { ButtonGroup } from '@atlaskit/button';
+import { cssMap } from '@atlaskit/css';
 import Form, { Field, FormFooter } from '@atlaskit/form';
 import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
+import { ModalBody } from '@atlaskit/modal-dialog';
+import { ModalFooter } from '@atlaskit/modal-dialog';
 import { RadioGroup } from '@atlaskit/radio';
 import SectionMessage from '@atlaskit/section-message';
+import { token } from '@atlaskit/tokens';
 import * as React from 'react';
 
 import { LegacyPMFData } from '../../ipc/messaging';
@@ -15,6 +19,30 @@ const q3 = {
     question: '(optional) What would you use as an alternative if this extension were no longer available?',
 };
 const q4 = { id: 'q4', question: '(optional) What is the main benefit you receive from this extension?' };
+
+const styles = cssMap({
+    headerText: {
+        paddingBlockStart: token('space.200', '16px'),
+        paddingBlockEnd: token('space.200', '16px'),
+        font: token('font.heading.medium'),
+        fontWeight: token('font.weight.regular'),
+    },
+    fieldLabel: {
+        font: token('font.heading.xsmall'),
+        fontWeight: token('font.weight.regular'),
+    },
+    buttonWrapper: {
+        display: 'inline-flex',
+        paddingLeft: token('space.050', '4px'),
+        paddingRight: token('space.050', '4px'),
+    },
+    footerContainer: {
+        paddingLeft: token('space.250', '20px'),
+        paddingRight: token('space.250', '20px'),
+    },
+});
+
+const FieldLabel = ({ question }: { question: string }) => <div css={styles.fieldLabel}>{question}</div>;
 
 export default class PMFBBanner extends React.Component<
     {
@@ -69,7 +97,7 @@ export default class PMFBBanner extends React.Component<
 
         return (
             <div>
-                <SectionMessage appearance="change" title="Take a quick survey to let us know how we're doing">
+                <SectionMessage appearance="information" title="Take a quick survey to let us know how we're doing">
                     <div>
                         <ButtonGroup>
                             <Button className="ac-button" onClick={this.handleOpen}>
@@ -87,107 +115,123 @@ export default class PMFBBanner extends React.Component<
 
                 {isOpen && (
                     <ModalTransition>
-                        <Modal onClose={this.handleLater} heading="Send Survey" shouldCloseOnEscapePress={false}>
+                        <Modal
+                            onClose={this.handleLater}
+                            heading="Send Survey"
+                            shouldCloseOnEscapePress={false}
+                            width="large"
+                            height="500px"
+                        >
                             <Form name="pmf-collector" onSubmit={this.handleFeedback}>
                                 {(frmArgs: any) => {
                                     return (
                                         <form {...frmArgs.formProps}>
-                                            <Field
-                                                label={q1.question}
-                                                isRequired={false}
-                                                id="q1"
-                                                name="q1"
-                                                value={this.state.q1Value}
-                                                validate={FieldValidators.validateMultiSelect}
-                                            >
-                                                {(fieldArgs: any) => {
-                                                    return (
-                                                        <RadioGroup
-                                                            {...fieldArgs.fieldProps}
-                                                            options={radioItems}
-                                                            onChange={FieldValidators.chain(
-                                                                fieldArgs.fieldProps.onChange,
-                                                                this.updateQ1,
-                                                            )}
-                                                        />
-                                                    );
-                                                }}
-                                            </Field>
-
-                                            <Field label={q2.question} isRequired={false} id="q2" name="q2">
-                                                {(fieldArgs: any) => {
-                                                    return (
-                                                        <div>
-                                                            <textarea
+                                            <ModalBody>
+                                                <div css={styles.headerText}>Tell us about your experience</div>
+                                                <Field
+                                                    label={<FieldLabel question={q1.question} />}
+                                                    isRequired={false}
+                                                    id="q1"
+                                                    name="q1"
+                                                    value={this.state.q1Value}
+                                                    validate={FieldValidators.validateMultiSelect}
+                                                >
+                                                    {(fieldArgs: any) => {
+                                                        return (
+                                                            <RadioGroup
                                                                 {...fieldArgs.fieldProps}
-                                                                style={{ width: '100%', display: 'block' }}
-                                                                className="ac-textarea"
-                                                                rows={3}
+                                                                options={radioItems}
+                                                                onChange={FieldValidators.chain(
+                                                                    fieldArgs.fieldProps.onChange,
+                                                                    this.updateQ1,
+                                                                )}
                                                             />
-                                                        </div>
-                                                    );
-                                                }}
-                                            </Field>
+                                                        );
+                                                    }}
+                                                </Field>
 
-                                            <Field label={q3.question} isRequired={false} id="q3" name="q3">
-                                                {(fieldArgs: any) => {
-                                                    return (
-                                                        <div>
-                                                            <textarea
-                                                                {...fieldArgs.fieldProps}
-                                                                style={{ width: '100%', display: 'block' }}
-                                                                className="ac-textarea"
-                                                                rows={3}
-                                                            />
-                                                        </div>
-                                                    );
-                                                }}
-                                            </Field>
+                                                <Field
+                                                    label={<FieldLabel question={q2.question} />}
+                                                    isRequired={false}
+                                                    id="q2"
+                                                    name="q2"
+                                                >
+                                                    {(fieldArgs: any) => {
+                                                        return (
+                                                            <div>
+                                                                <textarea
+                                                                    {...fieldArgs.fieldProps}
+                                                                    style={{ width: '100%', display: 'block' }}
+                                                                    className="ac-textarea"
+                                                                    rows={3}
+                                                                />
+                                                            </div>
+                                                        );
+                                                    }}
+                                                </Field>
 
-                                            <Field label={q4.question} isRequired={false} id="q4" name="q4">
-                                                {(fieldArgs: any) => {
-                                                    return (
-                                                        <div>
-                                                            <textarea
-                                                                {...fieldArgs.fieldProps}
-                                                                style={{ width: '100%', display: 'block' }}
-                                                                className="ac-textarea"
-                                                                rows={3}
-                                                            />
-                                                        </div>
-                                                    );
-                                                }}
-                                            </Field>
+                                                <Field
+                                                    label={<FieldLabel question={q3.question} />}
+                                                    isRequired={false}
+                                                    id="q3"
+                                                    name="q3"
+                                                >
+                                                    {(fieldArgs: any) => {
+                                                        return (
+                                                            <div>
+                                                                <textarea
+                                                                    {...fieldArgs.fieldProps}
+                                                                    style={{ width: '100%', display: 'block' }}
+                                                                    className="ac-textarea"
+                                                                    rows={3}
+                                                                />
+                                                            </div>
+                                                        );
+                                                    }}
+                                                </Field>
 
+                                                <Field
+                                                    label={<FieldLabel question={q4.question} />}
+                                                    isRequired={false}
+                                                    id="q4"
+                                                    name="q4"
+                                                >
+                                                    {(fieldArgs: any) => {
+                                                        return (
+                                                            <div>
+                                                                <textarea
+                                                                    {...fieldArgs.fieldProps}
+                                                                    style={{ width: '100%', display: 'block' }}
+                                                                    className="ac-textarea"
+                                                                    rows={3}
+                                                                />
+                                                            </div>
+                                                        );
+                                                    }}
+                                                </Field>
+                                            </ModalBody>
                                             <FormFooter actions={{}}>
-                                                <div
-                                                    style={{
-                                                        display: 'inline-flex',
-                                                        marginRight: '4px',
-                                                        marginLeft: '4px;',
-                                                    }}
-                                                >
-                                                    <Button
-                                                        type="submit"
-                                                        className="ac-button"
-                                                        isDisabled={this.state.q1Value === undefined}
-                                                    >
-                                                        Submit
-                                                    </Button>
-                                                </div>
-                                                <div
-                                                    style={{
-                                                        display: 'inline-flex',
-                                                        marginRight: '4px',
-                                                        marginLeft: '4px;',
-                                                    }}
-                                                >
-                                                    <Button className="ac-button" onClick={this.handleLater}>
-                                                        Cancel
-                                                    </Button>
+                                                <div css={styles.footerContainer}>
+                                                    <div css={styles.buttonWrapper}>
+                                                        <Button
+                                                            type="submit"
+                                                            className="ac-button"
+                                                            isDisabled={this.state.q1Value === undefined}
+                                                        >
+                                                            Submit
+                                                        </Button>
+                                                    </div>
+                                                    <div css={styles.buttonWrapper}>
+                                                        <Button className="ac-button" onClick={this.handleLater}>
+                                                            Cancel
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                             </FormFooter>
-                                            <div style={{ height: '20px' }} />
+                                            {/* ModalFooter is a placeholder for buttons when window height changes */}
+                                            <ModalFooter>
+                                                <div></div>
+                                            </ModalFooter>
                                         </form>
                                     );
                                 }}
