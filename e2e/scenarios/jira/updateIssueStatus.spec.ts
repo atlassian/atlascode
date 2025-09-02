@@ -22,7 +22,7 @@ export async function updateIssueStatus(page: Page, request: APIRequestContext) 
     const cleanupSearchMock = await setupSearchMock(request, NEXT_STATUS);
 
     await jiraIssuePage.status.changeTo(NEXT_STATUS);
-    await page.waitForTimeout(2_000);
+    await page.waitForTimeout(6_000);
 
     await jiraIssuePage.status.expectEqual(NEXT_STATUS);
     await atlascodeDrawer.jira.expectIssueStatus(ISSUE_NAME, NEXT_STATUS);
