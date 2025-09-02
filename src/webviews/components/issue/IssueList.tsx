@@ -55,9 +55,9 @@ const StatusColumn = (data: ItemData) => {
     if (data.onStatusChange) {
         const currentStatus = data.issue.status.name;
         const statusOptions = [
-            { label: 'TO DO', value: 'To Do', colorName: 'new' },
-            { label: 'IN PROGRESS', value: 'In Progress', colorName: 'indeterminate' },
-            { label: 'DONE', value: 'Done', colorName: 'done' },
+            { label: 'TO DO', value: 'To Do', colorName: 'blue-gray' },
+            { label: 'IN PROGRESS', value: 'In Progress', colorName: 'blue' },
+            { label: 'DONE', value: 'Done', colorName: 'green' },
         ];
 
         const currentOption =
@@ -68,18 +68,23 @@ const StatusColumn = (data: ItemData) => {
                     (option.value === 'In Progress' && currentStatus.toLowerCase().includes('progress')),
             ) || statusOptions[0];
 
+        const currentLozColor = colorToLozengeAppearanceMap[data.issue.status.statusCategory.colorName] || 'default';
+
         return (
-            <div style={{ width: '120px', fontSize: '12px' }}>
+            <div style={{ width: '150px', fontSize: '12px', minWidth: '140px' }}>
                 <DropdownMenu
                     trigger={({ triggerRef, ...props }) => (
                         <Button
                             {...props}
                             ref={triggerRef}
                             appearance="subtle"
-                            style={{ padding: '4px 8px', minHeight: '32px', width: '100%' }}
+                            style={{
+                                padding: '4px 6px',
+                                minHeight: '32px',
+                            }}
                             iconAfter={<ChevronDownIcon label="" size="small" />}
                         >
-                            {currentOption.label}
+                            <Lozenge appearance={currentLozColor}>{currentOption.label}</Lozenge>
                         </Button>
                     )}
                     placement="bottom-start"
