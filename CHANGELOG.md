@@ -5,6 +5,7 @@
 ### Features
 
 - Autocomplete the site URL for API token authentication using already OAuth authenticated sites
+- Don't require typing https:// when typing the authentication site's URL
 
 ## What's new in 3.8.12
 

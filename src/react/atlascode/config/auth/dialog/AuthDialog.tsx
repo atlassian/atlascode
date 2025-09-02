@@ -29,7 +29,7 @@ import {
 } from '../../../../../atlclients/authInfo';
 import { emptySiteWithAuthInfo, SiteWithAuthInfo } from '../../../../../lib/ipc/toUI/config';
 import { useFormValidation } from '../../../common/form/useFormValidation';
-import { validateRequiredString, validateStartsWithProtocol } from '../../../util/fieldValidators';
+import { validateRequiredString, validateUrl } from '../../../util/fieldValidators';
 import { CustomSiteAuthForm } from './CustomSiteAuthForm';
 import { JiraBasicAuthForm } from './JiraApiTokenAuthForm';
 import { emptyAuthFormState, FormFields } from './types';
@@ -175,7 +175,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
             [],
         );
 
-        const registerUrl = useCallback(register(validateStartsWithProtocol), []); // eslint-disable-line react-hooks/exhaustive-deps
+        const registerUrl = useCallback(register(validateUrl), []); // eslint-disable-line react-hooks/exhaustive-deps
         const registerRequiredString = useCallback(register(validateRequiredString), []); // eslint-disable-line react-hooks/exhaustive-deps
 
         return (
