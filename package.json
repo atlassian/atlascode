@@ -1413,7 +1413,7 @@
         "@atlaskit/icon-lab": "^5.6.0",
         "@atlaskit/inline-dialog": "^17.2.6",
         "@atlaskit/layering": "^3.0.0",
-        "@atlaskit/lozenge": "^12.2.5",
+        "@atlaskit/lozenge": "^13.0.7",
         "@atlaskit/modal-dialog": "^14.3.4",
         "@atlaskit/page": "^14.0.1",
         "@atlaskit/page-header": "^12.1.1",
