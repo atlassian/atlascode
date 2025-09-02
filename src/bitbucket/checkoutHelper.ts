@@ -2,7 +2,7 @@ import { commands, Memento, QuickPickItem, window } from 'vscode';
 
 import { Commands } from '../constants';
 import { Container } from '../container';
-import { ConfigSection, ConfigSubSection } from '../lib/ipc/models/config';
+import { ConfigV3Section, ConfigV3SubSection } from '../lib/ipc/models/config';
 import { Logger } from '../logger';
 import { checkout } from '../views/pullrequest/gitActions';
 import { bitbucketSiteForRemote, clientForHostname } from './bbUtils';
@@ -156,8 +156,8 @@ export class BitbucketCheckoutHelper implements CheckoutHelper {
         window.showInformationMessage(prompt, 'Open auth settings').then((userChoice) => {
             if (userChoice === 'Open auth settings') {
                 Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigSection.Bitbucket,
-                    subSection: ConfigSubSection.Auth,
+                    section: ConfigV3Section.Auth,
+                    subSection: ConfigV3SubSection.BbAuth,
                 });
             }
         });

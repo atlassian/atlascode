@@ -5,7 +5,7 @@ import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { showIssue } from '../../commands/jira/showIssue';
 import { startWorkOnIssue } from '../../commands/jira/startWorkOnIssue';
 import { Container } from '../../container';
-import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
+import { ConfigV3Section, ConfigV3SubSection } from '../../lib/ipc/models/config';
 import { Logger } from '../../logger';
 import { BasicUriHandler } from './basicUriHandler';
 
@@ -71,8 +71,8 @@ export class OpenOrWorkOnJiraIssueUriHandler extends BasicUriHandler {
             .then((userChoice) => {
                 if (userChoice === 'Open auth settings') {
                     Container.settingsWebviewFactory.createOrShow({
-                        section: ConfigSection.Jira,
-                        subSection: ConfigSubSection.Auth,
+                        section: ConfigV3Section.Auth,
+                        subSection: ConfigV3SubSection.JiraAuth,
                     });
                 }
             });

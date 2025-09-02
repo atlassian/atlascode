@@ -4,13 +4,13 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 
-import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
+import { ConfigSection, ConfigSubSection, ConfigV3SubSection } from '../../../lib/ipc/models/config';
 import { StartWorkSettings } from '../config/StartWorkSettings';
-import { CommonSubpanelProps } from './commonPanelProps';
+import { CommonSubpanelV3Props } from './commonPanelProps';
 import { PanelSubtitle } from './PanelSubtitle';
 import { PanelTitle } from './PanelTitle';
 
-type StartWorkPanelProps = CommonSubpanelProps & {
+type StartWorkPanelProps = CommonSubpanelV3Props & {
     customPrefixes: string[];
     customTemplate: string;
 };
@@ -22,7 +22,7 @@ export const StartWorkPanel: React.FunctionComponent<StartWorkPanelProps> = memo
         const expansionHandler = useCallback(
             (event: React.ChangeEvent<{}>, expanded: boolean) => {
                 setInternalExpanded(expanded);
-                onSubsectionChange(ConfigSubSection.StartWork, expanded);
+                onSubsectionChange(ConfigV3SubSection.StartWork, expanded);
             },
             [onSubsectionChange],
         );

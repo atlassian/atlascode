@@ -4,7 +4,6 @@ import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, emptyRepo, Repo, WorkspaceRepo } from '../../bitbucket/model';
 import { Container } from '../../container';
-import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
 import { Logger } from '../../logger';
 import { Branch, RefType } from '../../typings/git';
 import { VSCStartWorkActionApi } from './vscStartWorkActionApi';
@@ -416,24 +415,6 @@ describe('VSCStartWorkActionApi', () => {
     });
 
     describe('openSettings', () => {
-        it('should open settings webview with section and subsection', () => {
-            api.openSettings(ConfigSection.Jira, ConfigSubSection.Issues);
-
-            expect(mockSettingsWebviewFactory.createOrShow).toHaveBeenCalledWith({
-                section: ConfigSection.Jira,
-                subSection: ConfigSubSection.Issues,
-            });
-        });
-
-        it('should open settings webview with only section', () => {
-            api.openSettings(ConfigSection.Jira);
-
-            expect(mockSettingsWebviewFactory.createOrShow).toHaveBeenCalledWith({
-                section: ConfigSection.Jira,
-                subSection: undefined,
-            });
-        });
-
         it('should open settings webview without parameters', () => {
             api.openSettings();
 

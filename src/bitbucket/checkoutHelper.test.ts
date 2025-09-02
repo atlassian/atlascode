@@ -2,7 +2,7 @@ import { commands, Memento, window } from 'vscode';
 
 import { Commands } from '../constants';
 import { Container } from '../container';
-import { ConfigSection, ConfigSubSection } from '../lib/ipc/models/config';
+import { ConfigV3Section, ConfigV3SubSection } from '../lib/ipc/models/config';
 import { Logger } from '../logger';
 import { checkout } from '../views/pullrequest/gitActions';
 import { bitbucketSiteForRemote, clientForHostname } from './bbUtils';
@@ -451,8 +451,8 @@ describe('BitbucketCheckoutHelper', () => {
             await checkoutHelper.completeBranchCheckOut();
 
             expect(Container.settingsWebviewFactory.createOrShow).toHaveBeenCalledWith({
-                section: ConfigSection.Bitbucket,
-                subSection: ConfigSubSection.Auth,
+                section: ConfigV3Section.Auth,
+                subSection: ConfigV3SubSection.BbAuth,
             });
         });
 

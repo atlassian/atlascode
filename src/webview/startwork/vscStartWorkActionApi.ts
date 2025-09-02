@@ -5,7 +5,7 @@ import { clientForSite } from '../../bitbucket/bbUtils';
 import { emptyRepo, Repo, WorkspaceRepo } from '../../bitbucket/model';
 import { StartWorkBranchTemplate } from '../../config/model';
 import { Container } from '../../container';
-import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
+import { ConfigV3Section, ConfigV3SubSection } from '../../lib/ipc/models/config';
 import { StartWorkActionApi } from '../../lib/webview/controller/startwork/startWorkActionApi';
 import { Logger } from '../../logger';
 import { Branch, RefType } from '../../typings/git';
@@ -96,7 +96,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         };
     }
 
-    openSettings(section?: ConfigSection, subsection?: ConfigSubSection): void {
+    openSettings(section?: ConfigV3Section, subsection?: ConfigV3SubSection): void {
         Container.settingsWebviewFactory.createOrShow(
             section ? { section: section, subSection: subsection } : undefined,
         );

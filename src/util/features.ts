@@ -8,12 +8,12 @@ export enum Features {
 }
 
 export const enum Experiments {
-    AtlascodeNewSettingsExperiment = 'atlascode_new_settings_experiment',
+    AtlascodeExperiment = '', // When new experiment starts, replace this line
 }
 
 export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
-    [Experiments.AtlascodeNewSettingsExperiment]: {
-        parameter: 'enabled2',
+    [Experiments.AtlascodeExperiment]: {
+        parameter: 'enabled',
         defaultValue: false,
     },
 };

@@ -10,14 +10,7 @@ import { flatten } from 'flatten-anything';
 import { AuthInfo, DetailedSiteInfo, emptyBasicAuthInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import { emptyConfig } from '../../../config/model';
 import { emptyFeedbackUser, FeedbackUser } from '../models/common';
-import {
-    ConfigSection,
-    ConfigSubSection,
-    ConfigTarget,
-    ConfigV3Section,
-    ConfigV3SubSection,
-    FlattenedConfig,
-} from '../models/config';
+import { ConfigTarget, ConfigV3Section, ConfigV3SubSection, FlattenedConfig } from '../models/config';
 
 export enum ConfigMessageType {
     Init = 'init',
@@ -29,12 +22,6 @@ export enum ConfigMessageType {
     FilterSearchResponse = 'filterSearchResponse',
     ValidateJqlResponse = 'validateJqlResponse',
 }
-
-export type ConfigMessage =
-    | ReducerAction<ConfigMessageType.Init, ConfigInitMessage>
-    | ReducerAction<ConfigMessageType.Update, ConfigUpdateMessage>
-    | ReducerAction<ConfigMessageType.SectionChange, SectionChangeMessage>
-    | ReducerAction<ConfigMessageType.SitesUpdate, SitesUpdateMessage>;
 
 export type ConfigV3Message =
     | ReducerAction<ConfigMessageType.Init, ConfigV3InitMessage>
@@ -48,18 +35,6 @@ export type ConfigResponse =
     | ReducerAction<ConfigMessageType.FilterSearchResponse, FilterSearchResponseMessage>
     | ReducerAction<ConfigMessageType.ValidateJqlResponse, ValidateJqlResponseMessage>;
 
-export interface ConfigInitMessage {
-    config: FlattenedConfig;
-    jiraSites: SiteWithAuthInfo[];
-    bitbucketSites: SiteWithAuthInfo[];
-    feedbackUser: FeedbackUser;
-    isRemote: boolean;
-    showTunnelOption: boolean;
-    target: ConfigTarget;
-    section?: ConfigSection;
-    subSection?: ConfigSubSection;
-    machineId?: string;
-}
 export interface ConfigV3InitMessage {
     config: FlattenedConfig;
     jiraSites: SiteWithAuthInfo[];
@@ -72,17 +47,6 @@ export interface ConfigV3InitMessage {
     subSection?: ConfigV3SubSection;
     machineId?: string;
 }
-
-export const emptyConfigInitMessage: ConfigInitMessage = {
-    config: flatten(emptyConfig),
-    jiraSites: [],
-    bitbucketSites: [],
-    feedbackUser: emptyFeedbackUser,
-    isRemote: false,
-    showTunnelOption: false,
-    target: ConfigTarget.User,
-    section: ConfigSection.Jira,
-};
 
 export const emptyConfigV3InitMessage: ConfigV3InitMessage = {
     config: flatten(emptyConfig),
@@ -129,11 +93,6 @@ export interface FilterSearchResponseMessage {
 
 export interface ValidateJqlResponseMessage {
     data: JQLErrors;
-}
-
-export interface SectionChangeMessage {
-    section: ConfigSection;
-    subSection: ConfigSubSection | undefined;
 }
 
 export interface SectionV3ChangeMessage {
