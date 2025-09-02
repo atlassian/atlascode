@@ -75,21 +75,15 @@ const StatusColumn = (data: ItemData) => {
 
     if (data.onStatusChange) {
         const currentStatus = data.issue.status.name;
-        const statusOptions = [
-            { label: 'TO DO', value: 'To Do', colorName: 'blue-gray' },
-            { label: 'IN PROGRESS', value: 'In Progress', colorName: 'blue' },
-            { label: 'DONE', value: 'Done', colorName: 'green' },
-        ];
-
-        const currentOption =
-            statusOptions.find(
-                (option) =>
-                    currentStatus.toLowerCase().includes(option.value.toLowerCase()) ||
-                    (option.value === 'To Do' && currentStatus.toLowerCase().includes('todo')) ||
-                    (option.value === 'In Progress' && currentStatus.toLowerCase().includes('progress')),
-            ) || statusOptions[0];
-
         const currentLozColor = colorToLozengeAppearanceMap[data.issue.status.statusCategory.colorName] || 'default';
+
+        const transitions = (data.issue as any).transitions || [];
+
+        const validTransitions = transitions.filter((transition: any) => transition.to.id !== data.issue.status.id);
+
+        if (validTransitions.length === 0) {
+            return <Lozenge appearance={currentLozColor}>{currentStatus}</Lozenge>;
+        }
 
         return (
             <div style={{ width: '150px', fontSize: '12px', minWidth: '140px' }}>
@@ -105,30 +99,29 @@ const StatusColumn = (data: ItemData) => {
                             }}
                             iconAfter={<ChevronDownIcon label="" size="small" />}
                         >
-                            <Lozenge appearance={currentLozColor}>{currentOption.label}</Lozenge>
+                            <Lozenge appearance={currentLozColor}>{currentStatus}</Lozenge>
                         </Button>
                     )}
                     placement="bottom-start"
                 >
                     <DropdownItemGroup>
-                        {statusOptions
-                            .filter((option) => option.value !== currentOption.value)
-                            .map((option) => {
-                                const lozColor = colorToLozengeAppearanceMap[option.colorName];
+                        {validTransitions.map((transition: any) => {
+                            const lozColor =
+                                colorToLozengeAppearanceMap[transition.to.statusCategory.colorName] || 'default';
 
-                                return (
-                                    <DropdownItem
-                                        key={option.value}
-                                        onClick={() => {
-                                            if (data.onStatusChange) {
-                                                data.onStatusChange(data.issue.key, option.value);
-                                            }
-                                        }}
-                                    >
-                                        <Lozenge appearance={lozColor}>{option.label}</Lozenge>
-                                    </DropdownItem>
-                                );
-                            })}
+                            return (
+                                <DropdownItem
+                                    key={transition.id}
+                                    onClick={() => {
+                                        if (data.onStatusChange) {
+                                            data.onStatusChange(data.issue.key, transition.to.name);
+                                        }
+                                    }}
+                                >
+                                    <Lozenge appearance={lozColor}>{transition.to.name}</Lozenge>
+                                </DropdownItem>
+                            );
+                        })}
                     </DropdownItemGroup>
                 </DropdownMenu>
             </div>

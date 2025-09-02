@@ -46,6 +46,7 @@ import { EditIssueData, emptyEditIssueData } from '../ipc/issueMessaging';
 import { Action } from '../ipc/messaging';
 import { isOpenPullRequest } from '../ipc/prActions';
 import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
+import { fetchMultipleIssuesWithTransitions } from '../jira/fetchIssueWithTransitions';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
@@ -123,6 +124,98 @@ export class JiraIssueWebview
         return values;
     }
 
+    /**
+     * Enhances child issues (subtasks) and linked issues with their transitions data
+     */
+    private async enhanceChildAndLinkedIssuesWithTransitions(): Promise<void> {
+        if (!this._editUIData?.fieldValues) {
+            return;
+        }
+
+        try {
+            const issueKeysToFetch: string[] = [];
+
+            const subtasks = this._editUIData.fieldValues['subtasks'];
+            if (Array.isArray(subtasks)) {
+                subtasks.forEach((subtask: any) => {
+                    if (subtask.key) {
+                        issueKeysToFetch.push(subtask.key);
+                    }
+                });
+            }
+
+            const issuelinks = this._editUIData.fieldValues['issuelinks'];
+            if (Array.isArray(issuelinks)) {
+                issuelinks.forEach((issuelink: any) => {
+                    if (issuelink.inwardIssue?.key) {
+                        issueKeysToFetch.push(issuelink.inwardIssue.key);
+                    }
+                    if (issuelink.outwardIssue?.key) {
+                        issueKeysToFetch.push(issuelink.outwardIssue.key);
+                    }
+                });
+            }
+
+            if (issueKeysToFetch.length > 0) {
+                const enhancedIssues = await fetchMultipleIssuesWithTransitions(
+                    issueKeysToFetch,
+                    this._issue.siteDetails,
+                );
+
+                const enhancedIssuesMap = new Map();
+                enhancedIssues.forEach((issue) => {
+                    enhancedIssuesMap.set(issue.key, issue);
+                });
+
+                if (Array.isArray(subtasks)) {
+                    subtasks.forEach((subtask: any, index: number) => {
+                        const enhanced = enhancedIssuesMap.get(subtask.key);
+                        if (enhanced) {
+                            this._editUIData.fieldValues['subtasks'][index] = {
+                                ...subtask,
+                                transitions: enhanced.transitions,
+                                status: enhanced.status,
+                                assignee: enhanced.assignee,
+                                priority: enhanced.priority,
+                            };
+                        }
+                    });
+                }
+
+                if (Array.isArray(issuelinks)) {
+                    issuelinks.forEach((issuelink: any, index: number) => {
+                        if (issuelink.inwardIssue?.key) {
+                            const enhanced = enhancedIssuesMap.get(issuelink.inwardIssue.key);
+                            if (enhanced) {
+                                this._editUIData.fieldValues['issuelinks'][index].inwardIssue = {
+                                    ...issuelink.inwardIssue,
+                                    transitions: enhanced.transitions,
+                                    status: enhanced.status,
+                                    assignee: enhanced.assignee,
+                                    priority: enhanced.priority,
+                                };
+                            }
+                        }
+                        if (issuelink.outwardIssue?.key) {
+                            const enhanced = enhancedIssuesMap.get(issuelink.outwardIssue.key);
+                            if (enhanced) {
+                                this._editUIData.fieldValues['issuelinks'][index].outwardIssue = {
+                                    ...issuelink.outwardIssue,
+                                    transitions: enhanced.transitions,
+                                    status: enhanced.status,
+                                    assignee: enhanced.assignee,
+                                    priority: enhanced.priority,
+                                };
+                            }
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            Logger.error(error, 'Error enhancing child and linked issues with transitions');
+        }
+    }
+
     private async forceUpdateIssue(refetchMinimalIssue: boolean = false) {
         if (this.isRefeshing) {
             return;
@@ -143,6 +236,8 @@ export class JiraIssueWebview
             }
 
             this._editUIData = editUI as EditIssueData;
+
+            await this.enhanceChildAndLinkedIssuesWithTransitions();
             if (this._issue.issuetype.name === 'Epic') {
                 this._issue.isEpic = true;
                 this._editUIData.isEpic = true;
