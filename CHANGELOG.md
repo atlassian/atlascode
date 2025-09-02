@@ -1,7 +1,12 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
-## What's new in 3.8.12
+## What's new in 3.8.13
 
+### Features
+
+ - Don't require typing https:// when typing the authentication site's URL
+
+## What's new in 3.8.12
 
 ### Bug Fixes
 
