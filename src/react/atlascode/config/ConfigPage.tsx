@@ -83,7 +83,8 @@ const ConfigPage: React.FunctionComponent = () => {
         return { ...emptySubsections, [state.openSection]: state.openSubSections };
     });
 
-    const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry } = useAuthDialog();
+    const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry, allSitesWithAuth } =
+        useAuthDialog();
     const handleTabChange = useCallback((event: React.ChangeEvent<{}>, section: ConfigSection) => {
         setOpenSection(section);
     }, []);
@@ -289,6 +290,11 @@ const ConfigPage: React.FunctionComponent = () => {
                                                 config={state.config!}
                                                 sites={state.jiraSites}
                                                 isRemote={state.isRemote}
+                                                initiateJiraApiTokenAuth={
+                                                    openSection === ConfigSection.Jira &&
+                                                    openSubsections[ConfigSection.Jira] &&
+                                                    !!state.initiateApiTokenAuth
+                                                }
                                             />
                                             <BitbucketPanel
                                                 visible={openSection === ConfigSection.Bitbucket}
@@ -297,6 +303,11 @@ const ConfigPage: React.FunctionComponent = () => {
                                                 config={state.config!}
                                                 sites={state.bitbucketSites}
                                                 isRemote={state.isRemote}
+                                                initiateBitbucketApiTokenAuth={
+                                                    openSection === ConfigSection.Bitbucket &&
+                                                    openSubsections[ConfigSection.Bitbucket] &&
+                                                    !!state.initiateApiTokenAuth
+                                                }
                                             />
                                             <GeneralPanel
                                                 visible={openSection === ConfigSection.General}
@@ -329,6 +340,7 @@ const ConfigPage: React.FunctionComponent = () => {
                             open={authDialogOpen}
                             save={controller.login}
                             onExited={authDialogController.onExited}
+                            allSitesWithAuth={allSitesWithAuth}
                         />
                     </AtlascodeErrorBoundary>
                 </AuthDialogControllerContext.Provider>
