@@ -378,9 +378,12 @@ export class CreateIssueWebview
             this._screenData.issueTypeUIs[issueType.id],
             this._screenData.issueTypeUIs[this._selectedIssueTypeId!].selectFieldOptions,
         );
+        const currentSiteOptions = this._screenData.issueTypeUIs[this._selectedIssueTypeId!].selectFieldOptions.site;
+
         this._screenData.issueTypeUIs[issueType.id].selectFieldOptions = {
             ...this._screenData.issueTypeUIs[issueType.id].selectFieldOptions,
             ...selectOverrides,
+            ...(currentSiteOptions && { site: currentSiteOptions }),
         };
 
         this._screenData.issueTypeUIs[issueType.id].fieldValues['issuetype'] = issueType;

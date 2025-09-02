@@ -8,6 +8,7 @@ const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const autoprefixer = require('autoprefixer');
+const { CompiledExtractPlugin } = require('@compiled/webpack-loader');
 
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
@@ -43,6 +44,9 @@ module.exports = {
         new MiniCssExtractPlugin({
             filename: '[name].css',
             ignoreOrder: true,
+        }),
+        new CompiledExtractPlugin({
+            sortShorthand: true,
         }),
         new WebpackManifestPlugin({
             fileName: 'asset-manifest.json',
@@ -82,10 +86,25 @@ module.exports = {
                 // Include ts, tsx, js, and jsx files.
                 test: /\.(ts|js)x?$/,
                 exclude: [/node_modules/, /\.test\.ts$/, /\.spec\.ts$/],
-                use: [{ loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } }],
+                use: [
+                    { loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } },
+                    {
+                        loader: '@compiled/webpack-loader',
+                        options: {
+                            transformerBabelPlugins: ['@atlaskit/tokens/babel-plugin'],
+                            extract: true,
+                            inlineCss: true,
+                        },
+                    },
+                ],
+            },
+
+            {
+                test: /compiled(-css)?\.css$/i,
+                use: [MiniCssExtractPlugin.loader, 'css-loader'],
             },
             {
-                test: /\.css$/,
+                test: /(?<!compiled-css)(?<!\.compiled)\.css$/i,
                 use: [
                     {
                         loader: MiniCssExtractPlugin.loader,
