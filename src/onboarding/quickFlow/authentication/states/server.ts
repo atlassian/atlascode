@@ -33,7 +33,7 @@ export class ServerAuthStates {
         name: 'inputPAT',
         action: async (data: PartialAuthData, ui: AuthFlowUI) => {
             if (data.skipAllowed && data.personalAccessToken !== undefined) {
-                return Transition.forward(ServerAuthStates.showContextPathPrompt);
+                return Transition.forward(TerminalAuthStates.finishServerAuth);
             }
 
             const { value, action } = await ui.inputPassword(data, 'Personal Access Token');
@@ -41,7 +41,7 @@ export class ServerAuthStates {
                 return Transition.back();
             }
 
-            return Transition.forward(ServerAuthStates.showContextPathPrompt, { personalAccessToken: value });
+            return Transition.forward(TerminalAuthStates.finishServerAuth, { personalAccessToken: value });
         },
     };
 
@@ -87,7 +87,7 @@ export class ServerAuthStates {
         name: 'chooseSslConfigurationType',
         action: async (data: PartialAuthData, ui: AuthFlowUI) => {
             const transitions = {
-                [SSLConfigurationType.Default]: TerminalAuthStates.finishServerAuth,
+                [SSLConfigurationType.Default]: ServerAuthStates.chooseServerAuthType,
                 [SSLConfigurationType.CustomCA]: ServerAuthStates.inputSslCertsPath,
                 [SSLConfigurationType.CustomClientSideCerts]: ServerAuthStates.inputPfxPath,
             };
@@ -111,7 +111,7 @@ export class ServerAuthStates {
         name: 'inputSslCertsPath',
         action: async (data: PartialAuthData, ui: AuthFlowUI) => {
             if (data.skipAllowed && data.sslCertsPath !== undefined) {
-                return Transition.forward(TerminalAuthStates.finishServerAuth);
+                return Transition.forward(ServerAuthStates.chooseServerAuthType);
             }
 
             const { value, action } = await ui.inputSslCertsPath(data);
@@ -119,7 +119,7 @@ export class ServerAuthStates {
                 return Transition.back();
             }
 
-            return Transition.forward(TerminalAuthStates.finishServerAuth, { sslCertsPath: value });
+            return Transition.forward(ServerAuthStates.chooseServerAuthType, { sslCertsPath: value });
         },
     };
 
@@ -143,7 +143,7 @@ export class ServerAuthStates {
         name: 'inputPfxPassphrase',
         action: async (data: PartialAuthData, ui: AuthFlowUI) => {
             if (data.skipAllowed && data.pfxPassphrase !== undefined) {
-                return Transition.forward(TerminalAuthStates.finishServerAuth);
+                return Transition.forward(ServerAuthStates.chooseServerAuthType);
             }
 
             const { value, action } = await ui.inputPfxPassphrase(data);
@@ -151,7 +151,7 @@ export class ServerAuthStates {
                 return Transition.back();
             }
 
-            return Transition.forward(TerminalAuthStates.finishServerAuth, { pfxPassphrase: value });
+            return Transition.forward(ServerAuthStates.chooseServerAuthType, { pfxPassphrase: value });
         },
     };
 }

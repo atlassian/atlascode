@@ -151,6 +151,68 @@ export class BaseUI {
             input.show();
         });
     }
+
+    /**
+     * Display a special text box with different handling
+     * awaitedFunc controls how and when this terminates, and can control the box behavior
+     */
+    showLoadingIndicator({
+        props,
+        awaitedFunc,
+    }: {
+        props: InputBoxOptions & ExtraOptions;
+        awaitedFunc: (resolve: (value: any) => void, reject: (reason?: any) => void, input: InputBox) => Promise<any>;
+    }): Promise<UiResponse> {
+        const input = window.createInputBox();
+
+        // Common properties
+        input.title = this.title;
+        input.ignoreFocusOut = this.ignoreFocusOut;
+
+        // Special properties
+        input.placeholder = props.placeHolder;
+        input.step = props.step;
+        input.totalSteps = props.totalSteps;
+        input.value = props.value || '';
+        input.valueSelection = props.valueSelection;
+        input.password = props.password || false;
+        input.prompt = props.prompt;
+
+        input.buttons = [QuickInputButtons.Back, ...(props.buttons || [])];
+
+        input.enabled = false;
+        input.busy = true;
+
+        return new Promise((resolve, reject) => {
+            input.onDidTriggerButton((e) => {
+                if (e === QuickInputButtons.Back) {
+                    resolve({ value: input.value, action: UiAction.Back });
+                    input.hide();
+                } else {
+                    props.buttonHandler?.(e);
+                }
+            });
+
+            input.onDidHide(() => {
+                input.dispose();
+                resolve({ value: '', action: UiAction.Back });
+            });
+
+            input.show();
+
+            awaitedFunc(
+                (value) => {
+                    resolve({ value, action: UiAction.Next });
+                    input.hide();
+                },
+                (reason) => {
+                    resolve({ value: '', action: UiAction.Back });
+                    input.hide();
+                },
+                input,
+            );
+        });
+    }
 }
 
 class Debouncer<T> {

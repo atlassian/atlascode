@@ -45,7 +45,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.11.13"
+        "version": "0.11.15"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -154,6 +154,12 @@
                 "title": "Open Global Memory file",
                 "category": "Rovo Dev",
                 "description": "Opens the ~/.rovodev/.agent.md file in the editor.",
+                "enablement": "atlascode:rovoDevEnabled"
+            },
+            {
+                "command": "atlascode.rovodev.shareFeedback",
+                "title": "Share feedback",
+                "category": "Rovo Dev",
                 "enablement": "atlascode:rovoDevEnabled"
             },
             {
@@ -620,6 +626,10 @@
                     "command": "atlascode.rovodev.showTerminal",
                     "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView",
                     "group": "navigation@2"
+                },
+                {
+                    "command": "atlascode.rovodev.shareFeedback",
+                    "when": "view == atlascode.views.rovoDev.webView"
                 },
                 {
                     "command": "atlascode.jira.createIssue",
@@ -1507,6 +1517,7 @@
         "websocket": "^1.0.35"
     },
     "devDependencies": {
+        "@compiled/webpack-loader": "^0.19.6",
         "@jest/globals": "^30.0.2",
         "@playwright/test": "1.53.0",
         "@testing-library/dom": "^10.4.1",
@@ -1538,7 +1549,7 @@
         "autoprefixer": "^10.4.20",
         "concurrently": "^9.1.2",
         "css-loader": "^7.1.2",
-        "css-minimizer-webpack-plugin": "^7.0.0",
+        "css-minimizer-webpack-plugin": "^7.0.2",
         "eslint": "^9.27.0",
         "eslint-import-resolver-typescript": "^4.4.1",
         "eslint-plugin-import": "^2.30.0",
@@ -1553,7 +1564,7 @@
         "jest-css-modules-transform": "^4.4.2",
         "jest-environment-jsdom": "^30.0.0-beta.3",
         "jest-mock-vscode": "^4.4.0",
-        "mini-css-extract-plugin": "^2.9.1",
+        "mini-css-extract-plugin": "^2.9.4",
         "nyc": "^17.1.0",
         "ovsx": "^0.10.5",
         "path-browserify": "^1.0.1",

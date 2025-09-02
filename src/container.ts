@@ -307,12 +307,12 @@ export class Container {
     }
 
     static async disableRovoDev() {
-        try {
-            if (!this._rovodevDisposable) {
-                // Already disabled
-                return;
-            }
+        if (!this._rovodevDisposable) {
+            // Already disabled
+            return;
+        }
 
+        try {
             await setCommandContext(CommandContext.RovoDevEnabled, false);
             this._rovodevDisposable.dispose();
             this._rovodevDisposable = undefined;

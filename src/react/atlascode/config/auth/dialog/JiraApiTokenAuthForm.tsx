@@ -1,6 +1,6 @@
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { Box, Grid, IconButton, Link, TextField, Typography } from '@mui/material';
+import { Box, Grid, IconButton, Link, TextField } from '@mui/material';
 import React from 'react';
 import { BasicAuthInfo } from 'src/atlclients/authInfo';
 import { SiteWithAuthInfo } from 'src/lib/ipc/toUI/config';
@@ -27,26 +27,12 @@ export const JiraBasicAuthForm = ({
     return (
         <React.Fragment>
             <Grid item>
-                <Typography variant="body1">
-                    <Box fontWeight="fontWeightBold">This looks like a Jira Cloud site ☁</Box>
-                    <Box fontSize="small">
-                        You can use an{' '}
-                        <Link href="https://id.atlassian.com/manage-profile/security/api-tokens">API Token</Link>
-                        to connect to this site. Read more about Atlassian API tokens{' '}
-                        <Link href="https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/">
-                            here
-                        </Link>
-                        .
-                    </Box>
-                </Typography>
-            </Grid>
-            <Grid item>
                 <TextField
                     required
                     size="small"
                     id="username"
                     name="username"
-                    label="Username"
+                    label="Email"
                     defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).username}
                     helperText={errors.username ? errors.username : undefined}
                     fullWidth
@@ -55,12 +41,15 @@ export const JiraBasicAuthForm = ({
                 />
             </Grid>
             <Grid item>
+                <Box fontSize="small">
+                    <Link href="https://id.atlassian.com/manage-profile/security/api-tokens">Create an API Token</Link>
+                </Box>
                 <TextField
                     required
                     size="small"
                     id="password"
                     name="password"
-                    label="Password (API token)"
+                    label="API token"
                     defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).password}
                     type={authFormState.showPassword ? 'text' : 'password'}
                     helperText={errors.password ? errors.password : undefined}

@@ -84,6 +84,12 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         description: 'Show agent memory',
         command: { title: 'Agent Memory', id: 'rovo-dev.agentMemory', tooltip: 'Show agent memory' },
     },
+    {
+        label: '/feedback',
+        insertText: '/feedback',
+        description: 'Provide feedback on Rovo Dev',
+        command: { title: 'Feedback', id: 'rovo-dev.triggerFeedback', tooltip: 'Provide feedback on Rovo Dev' },
+    },
 ];
 
 export const createSlashCommandProvider = (): monaco.languages.CompletionItemProvider => {

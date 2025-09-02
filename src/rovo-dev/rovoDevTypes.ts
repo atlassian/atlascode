@@ -61,6 +61,11 @@ export const enum State {
     ProcessTerminated,
 }
 
+export const enum SubState {
+    None,
+    NeedAuth, // for Disable state
+}
+
 export const enum RovoDevInitState {
     NotInitialized,
     UpdatingBinaries,

@@ -23,6 +23,7 @@ import { transitionIssue } from './jira/transitionIssue';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from './lib/ipc/models/config';
 import { Logger } from './logger';
+import { AuthenticationType } from './onboarding/quickFlow/authentication/types';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevContext } from './rovo-dev/rovoDevTypes';
 import { Experiments, Features } from './util/featureFlags';
@@ -214,7 +215,18 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             commands.registerCommand(Commands.JiraLogin, () => {
                 const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
                 if (useNewAuthFlow) {
-                    commands.executeCommand(Commands.QuickAuth, { product: ProductJira });
+                    commands.executeCommand(Commands.QuickAuth, { product: ProductJira }, 'assigned to me');
+                } else {
+                    commands.executeCommand(Commands.ShowConfigPage);
+                }
+            }),
+            commands.registerCommand(Commands.JiraAPITokenLogin, () => {
+                const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
+                if (useNewAuthFlow) {
+                    commands.executeCommand(Commands.QuickAuth, {
+                        product: ProductJira,
+                        authenticationType: AuthenticationType.ApiToken,
+                    });
                 } else {
                     commands.executeCommand(Commands.ShowConfigPage);
                 }
@@ -417,7 +429,18 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             commands.registerCommand(Commands.JiraLogin, () => {
                 const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
                 if (useNewAuthFlow) {
-                    commands.executeCommand(Commands.QuickAuth, { product: ProductJira });
+                    commands.executeCommand(Commands.QuickAuth, { product: ProductJira }, 'assigned to me');
+                } else {
+                    commands.executeCommand(Commands.ShowConfigPage);
+                }
+            }),
+            commands.registerCommand(Commands.JiraAPITokenLogin, () => {
+                const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
+                if (useNewAuthFlow) {
+                    commands.executeCommand(Commands.QuickAuth, {
+                        product: ProductJira,
+                        authenticationType: AuthenticationType.ApiToken,
+                    });
                 } else {
                     commands.executeCommand(Commands.ShowConfigPage);
                 }
@@ -476,6 +499,9 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             Container.rovodevWebviewProvider.executeNewSession();
         }),
         commands.registerCommand(Commands.RovodevShowTerminal, () => RovoDevProcessManager.showTerminal()),
+        commands.registerCommand(Commands.RovodevShareFeedback, () =>
+            Container.rovodevWebviewProvider.executeTriggerFeedback(),
+        ),
     );
     vscodeContext.subscriptions.push(
         commands.registerCommand(Commands.RovodevAddToContext, async () => {

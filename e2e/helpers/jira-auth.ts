@@ -3,7 +3,8 @@ import { expect } from '@playwright/test';
 
 import { closeAllNotifications, openAtlassianSettings } from './common';
 
-const BASE_URL: string = 'https://mockedteams.atlassian.net';
+const BASE_URL_CLOUD: string = 'https://mockedteams.atlassian.net';
+const BASE_URL_DC: string = 'https://mockedteams.atlassian.net'; // THIS IS WRONG! But it works for testing, should be some URL without "atlassian.net" in it
 const USERNAME: string = 'mock@atlassian.code';
 const PASSWORD: string = '12345';
 
@@ -12,7 +13,7 @@ const PASSWORD: string = '12345';
  */
 export const authenticateWithJira = async (
     page: Page,
-    baseUrl: string = BASE_URL,
+    baseUrl: string = BASE_URL_CLOUD,
     username: string = USERNAME,
     password: string = PASSWORD,
 ) => {
@@ -30,16 +31,16 @@ export const authenticateWithJira = async (
     await settingsFrame.getByRole('textbox', { name: 'Base URL' }).fill(baseUrl);
     await page.waitForTimeout(250);
 
-    await settingsFrame.getByRole('textbox', { name: 'Username' }).click();
+    await settingsFrame.getByRole('textbox', { name: 'Email' }).click();
     await page.waitForTimeout(250);
 
-    await settingsFrame.getByRole('textbox', { name: 'Username' }).fill(username);
+    await settingsFrame.getByRole('textbox', { name: 'Email' }).fill(username);
     await page.waitForTimeout(250);
 
-    await settingsFrame.getByRole('textbox', { name: 'Password (API token)' }).click();
+    await settingsFrame.getByRole('textbox', { name: 'API token' }).click();
     await page.waitForTimeout(250);
 
-    await settingsFrame.getByRole('textbox', { name: 'Password (API token)' }).fill(password);
+    await settingsFrame.getByRole('textbox', { name: 'API token' }).fill(password);
     await page.waitForTimeout(250);
 
     await closeAllNotifications(page);
@@ -56,7 +57,7 @@ export const authenticateWithJira = async (
  */
 export const authenticateWithJiraDC = async (
     page: Page,
-    baseUrl: string = BASE_URL,
+    baseUrl: string = BASE_URL_DC,
     username: string = USERNAME,
     password: string = PASSWORD,
 ) => {
@@ -74,10 +75,10 @@ export const authenticateWithJiraDC = async (
     await settingsFrame.getByRole('textbox', { name: 'Base URL' }).fill(baseUrl);
     await page.waitForTimeout(250);
 
-    await settingsFrame.getByRole('textbox', { name: 'Username' }).click();
+    await settingsFrame.getByRole('textbox', { name: 'Email' }).click();
     await page.waitForTimeout(250);
 
-    await settingsFrame.getByRole('textbox', { name: 'Username' }).fill(username);
+    await settingsFrame.getByRole('textbox', { name: 'Email' }).fill(username);
     await page.waitForTimeout(250);
 
     await settingsFrame.getByRole('textbox', { name: 'Password' }).click();

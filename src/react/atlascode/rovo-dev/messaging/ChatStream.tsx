@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { RovoDevInitState, State } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevInitState, State, SubState } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
@@ -7,6 +7,7 @@ import { useMessagingApi } from '../../messagingApi';
 import { FollowUpActionFooter, OpenFileFunc } from '../common/common';
 import { ErrorMessageItem } from '../common/errorMessage';
 import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
+import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
 import { RovoDevLanding } from '../rovoDevLanding';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
@@ -33,10 +34,15 @@ interface ChatStreamProps {
     deepPlanCreated: boolean;
     executeCodePlan: () => void;
     state: State;
+    subState: SubState;
     initState: RovoDevInitState;
     downloadProgress: [number, number];
     onChangesGitPushed: (msg: DefaultMessage, pullRequestCreated: boolean) => void;
     onCollapsiblePanelExpanded: () => void;
+    feedbackVisible: boolean;
+    setFeedbackVisible: (visible: boolean) => void;
+    sendFeedback: (feedbackType: FeedbackType, feedack: string, canContact: boolean, lastTenMessages: boolean) => void;
+    onLoginClick: () => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -48,11 +54,16 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     deepPlanCreated,
     executeCodePlan,
     state,
+    subState,
     initState,
     downloadProgress,
     messagingApi,
     onChangesGitPushed,
     onCollapsiblePanelExpanded,
+    feedbackVisible = false,
+    setFeedbackVisible,
+    sendFeedback,
+    onLoginClick,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -60,6 +71,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     const [canCreatePR, setCanCreatePR] = React.useState(false);
     const [hasChangesInGit, setHasChangesInGit] = React.useState(false);
     const [isFormVisible, setIsFormVisible] = React.useState(false);
+    const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
 
     const checkGitChanges = React.useCallback(async () => {
         const response = await messagingApi.postMessagePromise(
@@ -178,13 +190,14 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     // Other state management effect
     React.useEffect(() => {
         if (process.env.ROVODEV_BBY && state === State.WaitingForPrompt) {
-            setCanCreatePR(true);
-            if (currentMessage) {
+            const canCreatePR = chatHistory.length > 0;
+            setCanCreatePR(canCreatePR);
+            if (canCreatePR) {
                 // Only check git changes if there's something in the chat
                 checkGitChanges();
             }
         }
-    }, [state, chatHistory, currentThinking, currentMessage, isFormVisible, pendingToolCall, checkGitChanges]);
+    }, [state, chatHistory, isFormVisible, checkGitChanges]);
 
     const handleCopyResponse = React.useCallback((text: string) => {
         if (!navigator.clipboard) {
@@ -194,11 +207,20 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         navigator.clipboard.writeText(text);
     }, []);
 
+    const handleFeedbackTrigger = React.useCallback(
+        (isPositive: boolean) => {
+            setFeedbackType(isPositive ? 'like' : 'dislike');
+            setFeedbackVisible(true);
+        },
+        [setFeedbackVisible],
+    );
+
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            <RovoDevLanding />
-            {chatHistory &&
-                chatHistory.map((block, idx) => {
+            <RovoDevLanding subState={subState} onLoginClick={onLoginClick} />
+            {(state !== State.Disabled || subState !== SubState.NeedAuth) &&
+                chatHistory &&
+                chatHistory.map((block) => {
                     if (block) {
                         if (Array.isArray(block)) {
                             return (
@@ -215,6 +237,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                     msg={block}
                                     enableActions={block.source === 'RovoDev'}
                                     onCopy={handleCopyResponse}
+                                    onFeedback={handleFeedbackTrigger}
                                 />
                             );
                         } else if (block.source === 'ToolReturn') {
@@ -291,6 +314,19 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             }}
                             isFormVisible={isFormVisible}
                             setFormVisible={setIsFormVisible}
+                        />
+                    )}
+                    {!canCreatePR && !deepPlanCreated && feedbackVisible && (
+                        <FeedbackForm
+                            type={feedbackType}
+                            onSubmit={(feedbackType, feedback, canContact, includeTenMessages) => {
+                                setFeedbackType(undefined);
+                                sendFeedback(feedbackType, feedback, canContact, includeTenMessages);
+                            }}
+                            onCancel={() => {
+                                setFeedbackType(undefined);
+                                setFeedbackVisible(false);
+                            }}
                         />
                     )}
                 </FollowUpActionFooter>
