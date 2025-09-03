@@ -18,7 +18,6 @@ interface PromptInputBoxProps {
     hideButtons?: boolean;
     state: State;
     promptText: string;
-    onPromptTextChange: (text: string) => void;
     isDeepPlanEnabled: boolean;
     onDeepPlanToggled: () => void;
     onSend: (text: string) => void;
@@ -105,6 +104,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 const value = editor.getValue();
                 if (value.trim()) {
                     onSend(value);
+                    editor.setValue('');
                 }
             },
             '!suggestWidgetVisible',
@@ -139,9 +139,6 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 return null;
             }
 
-            // Remove Monaco's color stylesheet
-            removeMonacoStyles();
-
             monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider());
 
             const editor = createMonacoPromptEditor(container);
@@ -152,6 +149,12 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             return editor;
         });
     }, [handleMemoryCommand, handleTriggerFeedbackCommand, onCopy, onSend, setEditor]);
+
+    React.useEffect(() => {
+        // Remove Monaco's color stylesheet
+        removeMonacoStyles();
+        editor?.setValue(promptText);
+    }, [editor, promptText]);
 
     React.useEffect(() => {
         if (!editor) {
