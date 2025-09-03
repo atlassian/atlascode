@@ -387,6 +387,7 @@ class RovoDevProcessInstance extends RovoDevInstance {
                 const env: NodeJS.ProcessEnv = {
                     USER: process.env.USER,
                     USER_EMAIL: username,
+                    ROVODEV_APP_INSTANCE_ID: Container.appInstanceId,
                     ...(key ? { USER_API_TOKEN: key } : {}),
                 };
 
@@ -493,6 +494,7 @@ class RovoDevTerminalInstance extends RovoDevInstance {
                     env: {
                         USER: process.env.USER,
                         USER_EMAIL: username,
+                        ROVODEV_APP_INSTANCE_ID: Container.appInstanceId,
                         ...(key ? { USER_API_TOKEN: key } : {}),
                     },
                 });
