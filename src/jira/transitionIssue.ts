@@ -11,6 +11,7 @@ import { DetailedSiteInfo, emptySiteInfo } from '../atlclients/authInfo';
 import { Commands } from '../constants';
 import { Container } from '../container';
 import { Logger } from '../logger';
+import { OnJiraEditedRefreshDelay } from '../util/time';
 
 export async function transitionIssue(
     issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>,
@@ -53,8 +54,8 @@ async function performTransition(
         const client = await Container.clientManager.jiraClient(site);
         await client.transitionIssue(issueKey, transition.id);
 
-        vscode.commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
-        vscode.commands.executeCommand(Commands.RefreshCustomJqlExplorer);
+        vscode.commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer, OnJiraEditedRefreshDelay);
+        vscode.commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
 
         issueTransitionedEvent(site, issueKey, analyticsData?.source).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);

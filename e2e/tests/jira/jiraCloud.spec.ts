@@ -1,9 +1,9 @@
 import { test } from '@playwright/test';
 import { authenticateWithJira, closeOnboardingQuickPick } from 'e2e/helpers';
-import { jiraScenarios } from 'e2e/scenarios/jira';
+import { jiraCloudScenarios } from 'e2e/scenarios/jira';
 
 test.describe('Jira Cloud', () => {
-    for (const scenario of jiraScenarios) {
+    for (const scenario of jiraCloudScenarios) {
         test(scenario.name, async ({ page, request }) => {
             await authenticateWithJira(page);
             await closeOnboardingQuickPick(page);
