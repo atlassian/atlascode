@@ -1216,13 +1216,13 @@ ${message}`;
         });
     }
 
-    public async signalProcessStarted(rovoDevPort: number, isTerminal?: boolean) {
+    public async signalProcessStarted(rovoDevPort: number) {
         // initialize the API client
         const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
         this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
 
         // enable the 'show terminal' button only when in debugging
-        setCommandContext(CommandContext.RovoDevTerminalEnabled, !!isTerminal);
+        setCommandContext(CommandContext.RovoDevTerminalEnabled, Container.isDebugging);
 
         const webView = this._webView!;
 
@@ -1308,6 +1308,10 @@ ${message}`;
     }
 
     public signalProcessTerminated(errorMessage?: string) {
+        if (this._processState === RovoDevProcessState.Terminated) {
+            return;
+        }
+
         this.signalRovoDevDisabled('other');
 
         this._processState = RovoDevProcessState.Terminated;
@@ -1320,5 +1324,10 @@ ${message}`;
 
         const error = new Error(errorMessage);
         return this.processError(error, false, true);
+    }
+
+    public async shutdownRovoDev() {
+        await this.rovoDevApiClient?.shutdown();
+        await this.signalProcessTerminated();
     }
 }
