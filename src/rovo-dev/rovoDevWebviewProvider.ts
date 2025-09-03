@@ -52,9 +52,9 @@ import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevContext, RovoDevContextItem, RovoDevInitState, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
-type ParametersSkip2<T extends (...args: any) => any> =
+type ParametersSkip3<T extends (...args: any) => any> =
     // eslint-disable-next-line no-unused-vars
-    Parameters<T> extends [infer _1, infer _2, ...infer Rest] ? Rest : never;
+    Parameters<T> extends [infer _1, infer _2, infer _3, ...infer Rest] ? Rest : never;
 
 type TelemetryFunction = keyof typeof rovoDevTelemetryEvents;
 
@@ -89,6 +89,7 @@ enum RovoDevProcessState {
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
     private readonly viewType = 'atlascodeRovoDev';
     private readonly isBoysenberry = process.env.ROVODEV_BBY;
+    private readonly appInstanceId: string;
 
     private readonly _prHandler: RovoDevPullRequestHandler | undefined;
     private readonly _perfLogger = new PerformanceLogger();
@@ -148,7 +149,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         if (this.isBoysenberry) {
             this._prHandler = new RovoDevPullRequestHandler();
+            this.appInstanceId = process.env.ROVODEV_APP_INSTANCE_ID as string;
+        } else {
+            this.appInstanceId = Container.appInstanceId;
         }
+
+        this._perfLogger.appInitialized(this.appInstanceId);
     }
 
     public resolveWebviewView(
@@ -312,7 +318,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     // This function esures that the same telemetry event is not sent twice for the same prompt
     private fireTelemetryEvent<T extends TelemetryFunction>(
         funcName: T,
-        ...params: ParametersSkip2<(typeof rovoDevTelemetryEvents)[T]>
+        ...params: ParametersSkip3<(typeof rovoDevTelemetryEvents)[T]>
     ): void {
         if (!this._chatSessionId) {
             throw new Error('Unable to send Rovo Dev telemetry: ChatSessionId not initialized');
@@ -330,7 +336,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             // add `rovoDevEnv` and `sessionId` as the first two arguments
             const rovoDevEnv: RovoDevEnv = this.isBoysenberry ? 'Boysenberry' : 'IDE';
-            params.unshift(rovoDevEnv, this._chatSessionId);
+            params.unshift(rovoDevEnv, this.appInstanceId, this._chatSessionId);
 
             const ret: ReturnType<(typeof rovoDevTelemetryEvents)[T]> = rovoDevTelemetryEvents[funcName].apply(
                 undefined,
@@ -1273,6 +1279,12 @@ ${message}`;
 
                 await this.executeChat(pendingPrompt, true);
             }
+        }
+
+        // extra sanity checks here
+
+        if (!this.appInstanceId) {
+            await this.processError(new Error('AppSessionID is not defined.'), false, false);
         }
     }
 
