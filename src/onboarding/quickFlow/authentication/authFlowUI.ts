@@ -91,32 +91,35 @@ export class AuthFlowUI {
     }
 
     public pickAuthenticationType(state: PartialData): Promise<UiResponse<AuthenticationType>> {
-        return this.baseUI.showQuickPick(
-            [
-                {
-                    iconPath: new ThemeIcon('cloud'),
-                    label: AuthenticationType.OAuth,
-                    description: 'Uses OAuth',
-                    detail: 'Get basic access to your Atlassian work items',
-                },
-                {
-                    iconPath: new ThemeIcon('cloud'),
-                    label: AuthenticationType.ApiToken,
-                    description: 'Uses API token',
-                    detail: 'Get the full power of Atlassian integration, including experimental and AI features',
-                },
-                {
-                    iconPath: new ThemeIcon('server'),
-                    label: AuthenticationType.Server,
-                    description: 'Authenticate with Jira Server or Datacenter',
-                    detail: 'Use this if you have a self-hosted Jira instance or Jira DC',
-                },
-            ],
-            {
-                placeHolder: 'How would you like to authenticate?',
-                value: state.authenticationType || '',
-            },
-        );
+        const choices: QuickPickItem[] = [];
+
+        if (!Container.isRemote) {
+            choices.push({
+                iconPath: new ThemeIcon('cloud'),
+                label: AuthenticationType.OAuth,
+                description: 'Uses OAuth',
+                detail: 'Get basic access to your Atlassian work items',
+            });
+        }
+
+        choices.push({
+            iconPath: new ThemeIcon('cloud'),
+            label: AuthenticationType.ApiToken,
+            description: 'Uses API token',
+            detail: 'Get the full power of Atlassian integration, including experimental and AI features',
+        });
+
+        choices.push({
+            iconPath: new ThemeIcon('server'),
+            label: AuthenticationType.Server,
+            description: 'Authenticate with Jira Server or Datacenter',
+            detail: 'Use this if you have a self-hosted Jira instance or Jira DC',
+        });
+
+        return this.baseUI.showQuickPick(choices, {
+            placeHolder: 'How would you like to authenticate?',
+            value: state.authenticationType || '',
+        });
     }
 
     public pickContextPathNeeded(state: PartialData): Promise<UiResponse<'Yes' | 'No'>> {

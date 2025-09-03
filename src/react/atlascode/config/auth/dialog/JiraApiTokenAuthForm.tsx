@@ -1,7 +1,7 @@
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { Box, Grid, IconButton, Link, TextField } from '@mui/material';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { BasicAuthInfo } from 'src/atlclients/authInfo';
 import { SiteWithAuthInfo } from 'src/lib/ipc/toUI/config';
 
@@ -24,6 +24,11 @@ export const JiraBasicAuthForm = ({
     updateState,
     preventClickDefault,
 }: JiraBasicAuthFormProps) => {
+    const defaultSiteUsername = useMemo(
+        () => (defaultSiteWithAuth.auth as BasicAuthInfo).username || defaultSiteWithAuth.auth.user.email,
+        [defaultSiteWithAuth],
+    );
+
     return (
         <React.Fragment>
             <Grid item>
@@ -33,7 +38,7 @@ export const JiraBasicAuthForm = ({
                     id="username"
                     name="username"
                     label="Email"
-                    defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).username}
+                    defaultValue={defaultSiteUsername}
                     helperText={errors.username ? errors.username : undefined}
                     fullWidth
                     error={!!errors.username}
