@@ -392,16 +392,12 @@ class RovoDevProcessInstance extends RovoDevInstance {
 
                 let stderrData = '';
 
-                this.rovoDevProcess = spawn(
-                    this.rovoDevBinPath,
-                    [`serve`, `${port}`, `--xid`, `com.atlassian.vscode`],
-                    {
-                        cwd: this.workspacePath,
-                        stdio: ['ignore', 'pipe', 'pipe'],
-                        detached: true,
-                        env,
-                    },
-                )
+                this.rovoDevProcess = spawn(this.rovoDevBinPath, ['serve', `${port}`, '--xid', 'rovodev-ide-vscode'], {
+                    cwd: this.workspacePath,
+                    stdio: ['ignore', 'pipe', 'pipe'],
+                    detached: true,
+                    env,
+                })
                     .on('spawn', () => rovoDevWebviewProvider.signalProcessStarted(port))
                     .on('exit', (code) => {
                         if (!this.rovoDevProcess) {
@@ -489,7 +485,7 @@ class RovoDevTerminalInstance extends RovoDevInstance {
                 this.rovoDevTerminal = window.createTerminal({
                     name: 'Rovo Dev',
                     shellPath: this.rovoDevBinPath,
-                    shellArgs: [`serve`, `${port}`, `--xid`, `com.atlassian.vscode`],
+                    shellArgs: ['serve', `${port}`, '--xid', 'rovodev-ide-vscode'],
                     cwd: this.workspacePath,
                     hideFromUser: true,
                     isTransient: true,

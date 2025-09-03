@@ -18,7 +18,6 @@ interface PromptInputBoxProps {
     hideButtons?: boolean;
     state: State;
     promptText: string;
-    onPromptTextChange: (text: string) => void;
     isDeepPlanEnabled: boolean;
     onDeepPlanToggled: () => void;
     onSend: (text: string) => void;
@@ -105,6 +104,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 const value = editor.getValue();
                 if (value.trim()) {
                     onSend(value);
+                    editor.setValue('');
                 }
             },
             '!suggestWidgetVisible',
@@ -129,32 +129,32 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     };
 
     React.useEffect(() => {
-        const container = document.getElementById('prompt-editor-container');
+        setEditor((prev) => {
+            if (prev) {
+                return prev;
+            }
 
-        // Remove Monaco's color stylesheet
-        removeMonacoStyles();
+            const container = document.getElementById('prompt-editor-container');
+            if (!container) {
+                return null;
+            }
 
-        if (container) {
-            const completionProvider = monaco.languages.registerCompletionItemProvider(
-                'plaintext',
-                createSlashCommandProvider(),
-            );
+            monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider());
+
             const editor = createMonacoPromptEditor(container);
             setupPromptKeyBindings(editor, onSend);
             setupAutoResize(editor);
             setupCommands(editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand);
 
-            editor.setValue(promptText);
+            return editor;
+        });
+    }, [handleMemoryCommand, handleTriggerFeedbackCommand, onCopy, onSend, setEditor]);
 
-            setEditor(editor);
-
-            return () => {
-                completionProvider.dispose();
-                editor.dispose();
-            };
-        }
-        return () => {};
-    }, [handleMemoryCommand, handleTriggerFeedbackCommand, onCopy, onSend, promptText]);
+    React.useEffect(() => {
+        // Remove Monaco's color stylesheet
+        removeMonacoStyles();
+        editor?.setValue(promptText);
+    }, [editor, promptText]);
 
     React.useEffect(() => {
         if (!editor) {

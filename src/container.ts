@@ -226,22 +226,26 @@ export class Container {
             setCommandContext(CommandContext.UseNewAuthFlow, false);
         }
 
+        // in Boysenberry we don't need to listen to Jira auth updates
         if (!process.env.ROVODEV_BBY) {
+            // refresh Rovo Dev when auth sites change
             this._siteManager.onDidSitesAvailableChange(async () => {
-                if (await this.updateFeatureFlagTenantId(this._siteManager.primarySite?.id)) {
-                    if (this._featureFlagClient.checkGate(Features.RovoDevEnabled)) {
-                        await this.enableRovoDev(context);
-                    } else {
-                        await this.disableRovoDev();
-                    }
-                }
+                await this.updateFeatureFlagTenantId();
+                await this.refreshRovoDev(context);
             });
+
+            // refresh Rovo Dev when Jira gets enabled or disabled
+            context.subscriptions.push(
+                configuration.onDidChange(async (e) => {
+                    if (configuration.changed(e, 'jira.enabled')) {
+                        await this.updateFeatureFlagTenantId();
+                        await this.refreshRovoDev(context);
+                    }
+                }, this),
+            );
         }
 
-        const tenantId = this._siteManager.primarySite?.id;
-        if (tenantId) {
-            await this.updateFeatureFlagTenantId(tenantId);
-        }
+        await this.updateFeatureFlagTenantId();
 
         context.subscriptions.push(AtlascodeUriHandler.create(this._analyticsApi, this._bitbucketHelper));
 
@@ -251,13 +255,18 @@ export class Container {
 
         this._onboardingProvider = new OnboardingProvider();
 
-        if (process.env.ROVODEV_BBY || this.featureFlagClient.checkGate(Features.RovoDevEnabled)) {
+        if (
+            process.env.ROVODEV_BBY ||
+            (this.config.jira.enabled && this.featureFlagClient.checkGate(Features.RovoDevEnabled))
+        ) {
             this._isRovoDevEnabled = true;
             await this.enableRovoDev(context);
         }
     }
 
-    static async updateFeatureFlagTenantId(tenantId: string | undefined): Promise<boolean> {
+    static async updateFeatureFlagTenantId(): Promise<boolean> {
+        const tenantId = Container.config.jira.enabled ? this._siteManager.primarySite?.id : undefined;
+
         try {
             await this._featureFlagClient.updateUser({ tenantId });
             this.pushFeatureUpdatesToUI();
@@ -265,6 +274,16 @@ export class Container {
         } catch (err) {
             Logger.error('RovoDev', err, "FeatureFlagClient: Failed to update user's tenantId");
             return false;
+        }
+    }
+
+    static async refreshRovoDev(context: ExtensionContext) {
+        if (this.config.jira.enabled && this._featureFlagClient.checkGate(Features.RovoDevEnabled)) {
+            this._isRovoDevEnabled = true;
+            await this.enableRovoDev(context);
+        } else {
+            this._isRovoDevEnabled = false;
+            await this.disableRovoDev();
         }
     }
 
@@ -418,8 +437,8 @@ export class Container {
         return env.machineId;
     }
 
-    private static get isRemote() {
-        return env.remoteName !== undefined;
+    public static get isRemote() {
+        return !!env.remoteName;
     }
 
     private static get isWebUI() {

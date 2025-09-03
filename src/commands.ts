@@ -228,7 +228,11 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                         authenticationType: AuthenticationType.ApiToken,
                     });
                 } else {
-                    commands.executeCommand(Commands.ShowConfigPage);
+                    Container.settingsWebviewFactory.createOrShow({
+                        section: ConfigV3Section.Auth,
+                        subSection: ConfigV3SubSection.JiraAuth,
+                        initiateApiTokenAuth: true,
+                    });
                 }
             }),
         );
@@ -250,12 +254,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 Container.settingsWebviewFactory.createOrShow({
                     section: ConfigSection.Jira,
                     subSection: ConfigSubSection.Auth,
-                }),
-            ),
-            commands.registerCommand(Commands.ShowConfigPageV3, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigV3Section.Auth,
-                    subSection: ConfigV3SubSection.JiraAuth,
                 }),
             ),
             commands.registerCommand(Commands.ShowConfigPageFromExtensionContext, () => {
@@ -442,7 +440,11 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                         authenticationType: AuthenticationType.ApiToken,
                     });
                 } else {
-                    commands.executeCommand(Commands.ShowConfigPage);
+                    Container.settingsWebviewFactory.createOrShow({
+                        section: ConfigSection.Jira,
+                        subSection: ConfigSubSection.Auth,
+                        initiateApiTokenAuth: true,
+                    });
                 }
             }),
         );

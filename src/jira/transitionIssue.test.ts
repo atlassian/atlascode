@@ -6,6 +6,7 @@ import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Commands } from '../constants';
 import { Container } from '../container';
 import { Logger } from '../logger';
+import { OnJiraEditedRefreshDelay } from '../util/time';
 import { transitionIssue } from './transitionIssue';
 
 // Mock dependencies
@@ -96,8 +97,14 @@ describe('transitionIssue', () => {
         // Verify
         expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockedSiteDetails);
         expect(mockJiraClient.transitionIssue).toHaveBeenCalledWith('TEST-123', 'transition-1');
-        expect(commands.executeCommand).toHaveBeenCalledWith(Commands.RefreshAssignedWorkItemsExplorer);
-        expect(commands.executeCommand).toHaveBeenCalledWith(Commands.RefreshCustomJqlExplorer);
+        expect(commands.executeCommand).toHaveBeenCalledWith(
+            Commands.RefreshAssignedWorkItemsExplorer,
+            OnJiraEditedRefreshDelay,
+        );
+        expect(commands.executeCommand).toHaveBeenCalledWith(
+            Commands.RefreshCustomJqlExplorer,
+            OnJiraEditedRefreshDelay,
+        );
         expect(Container.analyticsClient.sendTrackEvent).toHaveBeenCalled();
     });
 
@@ -116,8 +123,14 @@ describe('transitionIssue', () => {
         // Verify
         expect(Container.clientManager.jiraClient).toHaveBeenCalledWith(mockedSiteDetails);
         expect(mockJiraClient.transitionIssue).toHaveBeenCalledWith('TEST-123', 'transition-1');
-        expect(commands.executeCommand).toHaveBeenCalledWith(Commands.RefreshAssignedWorkItemsExplorer);
-        expect(commands.executeCommand).toHaveBeenCalledWith(Commands.RefreshCustomJqlExplorer);
+        expect(commands.executeCommand).toHaveBeenCalledWith(
+            Commands.RefreshAssignedWorkItemsExplorer,
+            OnJiraEditedRefreshDelay,
+        );
+        expect(commands.executeCommand).toHaveBeenCalledWith(
+            Commands.RefreshCustomJqlExplorer,
+            OnJiraEditedRefreshDelay,
+        );
         expect(Container.analyticsClient.sendTrackEvent).toHaveBeenCalled();
     });
 
