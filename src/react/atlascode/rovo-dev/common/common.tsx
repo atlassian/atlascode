@@ -63,7 +63,7 @@ export const renderChatHistory = (
             return <ChatMessageItem msg={msg} />;
         case 'RovoDevRetry':
             const retryMsg: DefaultMessage = {
-                text: 'Unable to process the request ' + '`' + msg.tool_name + '`',
+                text: msg.content,
                 source: 'RovoDev',
             };
             return (

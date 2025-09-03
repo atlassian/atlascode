@@ -26,7 +26,7 @@ export const ChatMessageItem: React.FC<{
         <>
             <div
                 className={`chat-message ${messageTypeStyles}`}
-                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px' }}
+                style={{ display: 'flex', flexDirection: 'row', alignItems: 'start', gap: '8px' }}
             >
                 {icon && <div className="message-icon">{icon}</div>}
                 <div className="message-content">{content}</div>
