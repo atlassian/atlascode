@@ -2,9 +2,7 @@ import { commands, Memento, window } from 'vscode';
 
 import { Commands } from '../constants';
 import { Container } from '../container';
-import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from '../lib/ipc/models/config';
 import { Logger } from '../logger';
-import { Experiments } from '../util/features';
 import { checkout } from '../views/pullrequest/gitActions';
 import { bitbucketSiteForRemote, clientForHostname } from './bbUtils';
 import { BitbucketCheckoutHelper } from './checkoutHelper';
@@ -21,9 +19,6 @@ jest.mock('../container', () => ({
         },
         settingsWebviewFactory: {
             createOrShow: jest.fn(),
-        },
-        featureFlagClient: {
-            checkExperimentValue: jest.fn(),
         },
     },
 }));
@@ -45,14 +40,6 @@ describe('BitbucketCheckoutHelper', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-
-        // Mock experiment value
-        (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockImplementation((experiment) => {
-            if (experiment === Experiments.AtlascodeNewSettingsExperiment) {
-                return true;
-            }
-            return false;
-        });
 
         // Mock global state
         mockGlobalState = {
@@ -442,10 +429,7 @@ describe('BitbucketCheckoutHelper', () => {
     });
 
     describe('showLoginMessage', () => {
-        it('should open auth settings when user chooses to and experiment is enabled', async () => {
-            // Mock experiment to return true
-            (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
-
+        it('should open auth settings when user chooses to', async () => {
             // Mock the showInformationMessage to resolve to 'Open auth settings'
             mockWindow.showInformationMessage.mockImplementation((message: string, ...items: any[]) => {
                 if (items[0] === 'Open auth settings') {
@@ -465,45 +449,7 @@ describe('BitbucketCheckoutHelper', () => {
 
             await checkoutHelper.completeBranchCheckOut();
 
-            expect(Container.featureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
-                Experiments.AtlascodeNewSettingsExperiment,
-            );
-            expect(Container.settingsWebviewFactory.createOrShow).toHaveBeenCalledWith({
-                section: ConfigV3Section.Auth,
-                subSection: ConfigV3SubSection.BbAuth,
-            });
-        });
-
-        it('should open auth settings when user chooses to and experiment is disabled', async () => {
-            // Mock experiment to return false
-            (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(false);
-
-            // Mock the showInformationMessage to resolve to 'Open auth settings'
-            mockWindow.showInformationMessage.mockImplementation((message: string, ...items: any[]) => {
-                if (items[0] === 'Open auth settings') {
-                    return Promise.resolve('Open auth settings' as any);
-                }
-                return Promise.resolve(undefined);
-            });
-
-            // Trigger the login message through completeBranchCheckOut
-            mockGlobalState.get.mockReturnValue({
-                timestamp: Date.now(),
-                cloneUrl: 'https://bitbucket.org/testowner/testrepo.git',
-                refName: 'feature-branch',
-                refType: 'branch',
-            });
-            (Container.bitbucketContext.getBitbucketCloudRepositories as jest.Mock).mockReturnValue([]);
-
-            await checkoutHelper.completeBranchCheckOut();
-
-            expect(Container.featureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
-                Experiments.AtlascodeNewSettingsExperiment,
-            );
-            expect(Container.settingsWebviewFactory.createOrShow).toHaveBeenCalledWith({
-                section: ConfigSection.Bitbucket,
-                subSection: ConfigSubSection.Auth,
-            });
+            expect(mockCommands.executeCommand).toHaveBeenCalledWith(Commands.ShowBitbucketAuth);
         });
 
         it('should not open auth settings when user cancels', async () => {
@@ -520,7 +466,7 @@ describe('BitbucketCheckoutHelper', () => {
 
             await checkoutHelper.completeBranchCheckOut();
 
-            expect(Container.settingsWebviewFactory.createOrShow).not.toHaveBeenCalled();
+            expect(mockCommands.executeCommand).not.toHaveBeenCalledWith(Commands.ShowBitbucketAuth);
         });
     });
 
