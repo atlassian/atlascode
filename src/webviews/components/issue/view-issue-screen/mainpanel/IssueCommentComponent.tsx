@@ -4,7 +4,7 @@ import TextField from '@atlaskit/textfield';
 import {
     Comment as JiraComment,
     CommentVisibility,
-    JsdInternalCommentVisibility,
+    // JsdInternalCommentVisibility,
     User,
 } from '@atlassianlabs/jira-pi-common-models';
 import { Box } from '@mui/material';
@@ -13,7 +13,8 @@ import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
 import { RenderedContent } from '../../../RenderedContent';
-import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
+// import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
+import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 
 type IssueCommentComponentProps = {
     siteDetails: DetailedSiteInfo;
@@ -98,30 +99,40 @@ const CommentComponent: React.FC<{
             content={
                 <>
                     {isEditing && !isSaving ? (
-                        <JiraIssueTextAreaEditor
-                            value={commentText}
-                            onChange={(e: string) => {
-                                setCommentText(e);
-                            }}
-                            onSave={() => {
-                                setIsSaving(true);
-                                setIsEditing(false);
-                                onSave(commentText, comment.id, undefined);
-                            }}
-                            onCancel={() => {
-                                setIsSaving(false);
-                                setIsEditing(false);
-                                setCommentText(comment.body);
-                            }}
-                            fetchUsers={fetchUsers}
-                            isServiceDeskProject={isServiceDeskProject}
-                            onInternalCommentSave={() => {
-                                setIsSaving(false);
-                                setIsEditing(false);
-                                onSave(commentText, comment.id, JsdInternalCommentVisibility);
-                            }}
-                            featureGateEnabled={isRteEnabled}
-                        />
+                        // <JiraIssueTextAreaEditor
+                        //     value={commentText}
+                        //     onChange={(e: string) => {
+                        //         setCommentText(e);
+                        //     }}
+                        //     onSave={() => {
+                        //         setIsSaving(true);
+                        //         setIsEditing(false);
+                        //         onSave(commentText, comment.id, undefined);
+                        //     }}
+                        //     onCancel={() => {
+                        //         setIsSaving(false);
+                        //         setIsEditing(false);
+                        //         setCommentText(comment.body);
+                        //     }}
+                        //     fetchUsers={fetchUsers}
+                        //     isServiceDeskProject={isServiceDeskProject}
+                        //     onInternalCommentSave={() => {
+                        //         setIsSaving(false);
+                        //         setIsEditing(false);
+                        //         onSave(commentText, comment.id, JsdInternalCommentVisibility);
+                        //     }}
+                        //     featureGateEnabled={isRteEnabled}
+                        // />
+                        <div>
+                            <div>{commentText}</div>
+                            <AtlaskitEditor
+                                onCancel={() => {
+                                    setCommentText(comment.body);
+                                    setIsSaving(false);
+                                    setIsEditing(false);
+                                }}
+                            />
+                        </div>
                     ) : (
                         <RenderedContent html={bodyText} fetchImage={fetchImage} />
                     )}
@@ -184,32 +195,41 @@ const AddCommentComponent: React.FC<{
                         placeholder="Add a comment..."
                     />
                 ) : (
-                    <JiraIssueTextAreaEditor
-                        value={commentText}
-                        onChange={(e: string) => setCommentText(e)}
-                        onSave={(i: string) => {
-                            if (i !== '') {
-                                onCreate(i, undefined);
+                    // <JiraIssueTextAreaEditor
+                    //     value={commentText}
+                    //     onChange={(e: string) => setCommentText(e)}
+                    //     onSave={(i: string) => {
+                    //         if (i !== '') {
+                    //             onCreate(i, undefined);
+                    //             setCommentText('');
+                    //             setIsEditing(false);
+                    //         }
+                    //     }}
+                    //     onCancel={() => {
+                    //         setCommentText('');
+                    //         setIsEditing(false);
+                    //     }}
+                    //     onEditorFocus={() => {
+                    //         setIsEditing(true);
+                    //     }}
+                    //     fetchUsers={fetchUsers}
+                    //     isServiceDeskProject={isServiceDeskProject}
+                    //     onInternalCommentSave={() => {
+                    //         onCreate(commentText, JsdInternalCommentVisibility);
+                    //         setCommentText('');
+                    //         setIsEditing(false);
+                    //     }}
+                    //     featureGateEnabled={isRteEnabled}
+                    // />
+                    <div>
+                        <div>{commentText}</div>
+                        <AtlaskitEditor
+                            onCancel={() => {
                                 setCommentText('');
                                 setIsEditing(false);
-                            }
-                        }}
-                        onCancel={() => {
-                            setCommentText('');
-                            setIsEditing(false);
-                        }}
-                        onEditorFocus={() => {
-                            setIsEditing(true);
-                        }}
-                        fetchUsers={fetchUsers}
-                        isServiceDeskProject={isServiceDeskProject}
-                        onInternalCommentSave={() => {
-                            onCreate(commentText, JsdInternalCommentVisibility);
-                            setCommentText('');
-                            setIsEditing(false);
-                        }}
-                        featureGateEnabled={isRteEnabled}
-                    />
+                            }}
+                        />
+                    </div>
                 )}
             </Box>
         </Box>

@@ -10,7 +10,8 @@ import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { RenderedContent } from '../../../RenderedContent';
 import { AttachmentList } from '../../AttachmentList';
 import { AttachmentsModal } from '../../AttachmentsModal';
-import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
+import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
+// import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 import WorklogForm from '../../WorklogForm';
 import Worklogs from '../../Worklogs';
 import { AddContentDropdown } from './AddContentDropDown';
@@ -160,23 +161,29 @@ const IssueMainPanel: React.FC<Props> = ({
                         {loadingField === 'description' ? <p>Saving...</p> : null}
                     </div>
                     {isEditingDescription || loadingField === 'description' ? (
-                        <JiraIssueTextAreaEditor
-                            value={descriptionText}
-                            onChange={(e: string) => {
-                                setDescriptionText(e);
-                            }}
-                            onSave={(i: string) => {
-                                handleInlineEdit(fields['description'], i);
-                                setIsEditingDescription(false);
-                            }}
+                        // <JiraIssueTextAreaEditor
+                        //     value={descriptionText}
+                        //     onChange={(e: string) => {
+                        //         setDescriptionText(e);
+                        //     }}
+                        //     onSave={(i: string) => {
+                        //         handleInlineEdit(fields['description'], i);
+                        //         setIsEditingDescription(false);
+                        //     }}
+                        //     onCancel={() => {
+                        //         setDescriptionText(defaultDescription);
+                        //         setIsEditingDescription(false);
+                        //     }}
+                        //     fetchUsers={fetchUsers}
+                        //     isDescription
+                        //     saving={loadingField === 'description'}
+                        //     featureGateEnabled={isRteEnabled}
+                        // />
+                        <AtlaskitEditor
                             onCancel={() => {
                                 setDescriptionText(defaultDescription);
                                 setIsEditingDescription(false);
                             }}
-                            fetchUsers={fetchUsers}
-                            isDescription
-                            saving={loadingField === 'description'}
-                            featureGateEnabled={isRteEnabled}
                         />
                     ) : (
                         <div
