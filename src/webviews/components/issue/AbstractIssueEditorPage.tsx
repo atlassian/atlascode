@@ -53,7 +53,7 @@ import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
-import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
+// import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
@@ -545,26 +545,27 @@ export abstract class AbstractIssueEditorPage<
                                 );
                                 if ((field as InputFieldUI).isMultiline) {
                                     markup = (
-                                        <JiraIssueTextAreaEditor
-                                            {...fieldArgs.fieldProps}
-                                            value={this.coerceToString(this.state.fieldValues[field.key])}
-                                            isDisabled={
-                                                this.state.isSomethingLoading || this.state.isGeneratingSuggestions
-                                            }
-                                            onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
-                                                this.handleInlineEdit(field, val),
-                                            )}
-                                            fetchUsers={async (input: string) =>
-                                                (await this.fetchUsers(input)).map((user) => ({
-                                                    displayName: user.displayName,
-                                                    avatarUrl: user.avatarUrls?.['48x48'],
-                                                    mention: this.state.siteDetails.isCloud
-                                                        ? `[~accountid:${user.accountId}]`
-                                                        : `[~${user.name}]`,
-                                                }))
-                                            }
-                                            featureGateEnabled={this.state.isRteEnabled}
-                                        />
+                                        <div></div>
+                                        // <JiraIssueTextAreaEditor
+                                        //     {...fieldArgs.fieldProps}
+                                        //     value={this.coerceToString(this.state.fieldValues[field.key])}
+                                        //     isDisabled={
+                                        //         this.state.isSomethingLoading || this.state.isGeneratingSuggestions
+                                        //     }
+                                        //     onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
+                                        //         this.handleInlineEdit(field, val),
+                                        //     )}
+                                        //     fetchUsers={async (input: string) =>
+                                        //         (await this.fetchUsers(input)).map((user) => ({
+                                        //             displayName: user.displayName,
+                                        //             avatarUrl: user.avatarUrls?.['48x48'],
+                                        //             mention: this.state.siteDetails.isCloud
+                                        //                 ? `[~accountid:${user.accountId}]`
+                                        //                 : `[~${user.name}]`,
+                                        //         }))
+                                        //     }
+                                        //     featureGateEnabled={this.state.isRteEnabled}
+                                        // />
                                     );
                                 }
                                 return (
