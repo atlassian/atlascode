@@ -14,14 +14,12 @@ import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { ChatMessage, DefaultMessage, MessageBlockDetails, parseToolReturnMessage, scrollToEnd } from '../utils';
+import { DefaultMessage, parseToolReturnMessage, Response, scrollToEnd } from '../utils';
 import { ChatMessageItem } from './ChatMessageItem';
 import { MessageDrawer } from './MessageDrawer';
 
 interface ChatStreamProps {
-    chatHistory: MessageBlockDetails[];
-    currentThinking: ChatMessage[];
-    currentMessage: DefaultMessage | null;
+    chatHistory: Response[];
     renderProps: {
         openFile: OpenFileFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
@@ -47,8 +45,6 @@ interface ChatStreamProps {
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
     chatHistory,
-    currentThinking,
-    currentMessage,
     renderProps,
     pendingToolCall,
     deepPlanCreated,
@@ -67,7 +63,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
-    const prevChatHistoryLengthRef = React.useRef(chatHistory.length);
+    const prevChatHistoryLengthRef = React.useRef(history.length);
     const [canCreatePR, setCanCreatePR] = React.useState(false);
     const [hasChangesInGit, setHasChangesInGit] = React.useState(false);
     const [isFormVisible, setIsFormVisible] = React.useState(false);
@@ -179,8 +175,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     // Auto-scroll when content changes or when re-enabled
     React.useEffect(performAutoScroll, [
         chatHistory,
-        currentThinking,
-        currentMessage,
         isFormVisible,
         pendingToolCall,
         autoScrollEnabled,
@@ -269,16 +263,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
                     return null;
                 })}
-            {currentThinking.length > 0 && (
-                <MessageDrawer
-                    messages={currentThinking}
-                    opened={true}
-                    renderProps={renderProps}
-                    onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
-                />
-            )}
-            {currentMessage && <ChatMessageItem msg={currentMessage} />}
-
             {pendingToolCall && (
                 <div style={{ marginBottom: '16px' }}>
                     <ToolCallItem toolMessage={pendingToolCall} state={initState} downloadProgress={downloadProgress} />

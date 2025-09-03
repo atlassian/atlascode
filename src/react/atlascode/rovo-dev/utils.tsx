@@ -89,6 +89,7 @@ export interface ToolReturnParseResult {
 
 export type MessageBlockDetails = ChatMessage[] | DefaultMessage | ErrorMessage | ToolReturnGenericMessage | null;
 
+export type Response = ChatMessage | ErrorMessage | ToolReturnGenericMessage;
 interface ToolReturnInfo {
     title: string;
     type: 'modify' | 'create' | 'delete' | 'open' | 'bash';
@@ -235,7 +236,7 @@ export const scrollToEnd = (() => {
     };
 })();
 
-export function extractLastNMessages(n: number, history: MessageBlockDetails[]) {
+export function extractLastNMessages(n: number, history: Response[]) {
     let msgCount = 0;
     let idx = history.length - 1;
     const lastTenMessages = [];
