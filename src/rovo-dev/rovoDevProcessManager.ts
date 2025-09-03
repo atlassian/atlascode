@@ -392,7 +392,7 @@ class RovoDevProcessInstance extends RovoDevInstance {
 
                 let stderrData = '';
 
-                this.rovoDevProcess = spawn(this.rovoDevBinPath, [`serve`, `${port}`, `--xid`, `rovodev-ide-vscode`], {
+                this.rovoDevProcess = spawn(this.rovoDevBinPath, ['serve', `${port}`, '--xid', 'rovodev-ide-vscode'], {
                     cwd: this.workspacePath,
                     stdio: ['ignore', 'pipe', 'pipe'],
                     detached: true,
@@ -485,7 +485,7 @@ class RovoDevTerminalInstance extends RovoDevInstance {
                 this.rovoDevTerminal = window.createTerminal({
                     name: 'Rovo Dev',
                     shellPath: this.rovoDevBinPath,
-                    shellArgs: [`serve`, `${port}`, `--xid`, `rovodev-ide-vscode`],
+                    shellArgs: ['serve', `${port}`, '--xid', 'rovodev-ide-vscode'],
                     cwd: this.workspacePath,
                     hideFromUser: true,
                     isTransient: true,
