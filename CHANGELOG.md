@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 3.8.15
+
+### Bug Fixes
+
+- Fixed a bug that prevented authenticated sites from being individually logged out, which caused all sites sharing the same credentials to be logged out
+
 ## What's new in 3.8.13
 
 ### Features
@@ -15,10 +21,6 @@
 - Fixed style issues on feedback modal
 
 ## What's new in 3.8.11
-
-### Bug Fixes
-
-- Fixed a bug that prevented authenticated sites from being individually logged out, which caused all sites sharing the same credentials to be logged out
 
 ### Features
 
