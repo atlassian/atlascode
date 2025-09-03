@@ -113,6 +113,9 @@ module.exports = {
             'process.env.JEST_WORKER_ID': JSON.stringify(process.env.JEST_WORKER_ID),
             'process.env.REACT_SSR': JSON.stringify(process.env.REACT_SSR),
         }),
+        new webpack.ProvidePlugin({
+            process: 'process/browser',
+        }),
     ],
     module: {
         rules: [
