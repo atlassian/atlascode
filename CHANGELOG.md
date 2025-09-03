@@ -1,10 +1,12 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
-## What's new in 3.8.13
+## What's new in 3.8.14
 
 ### Bug Fixes
 
 - Allow editing Cloud sites authenticated with an API token
+
+## What's new in 3.8.13
 
 ### Features
 
@@ -39,8 +41,6 @@
 ### Bug Fixes
 
 - Added loading indicator to Refresh button for Jira issue auto-refreshes
-
----
 
 ## What's new in 3.8.9
 
