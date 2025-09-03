@@ -18,6 +18,7 @@ import { Container } from './container';
 
 describe('SiteManager', () => {
     let siteManager: SiteManager;
+    let siteManager_resolvePrimarySite: () => void;
     let mockGlobalStore: Memento;
     let mockAuthChangeEmitter: EventEmitter<AuthInfoEvent>;
     let mockCredentialManager: CredentialManager;
@@ -90,6 +91,7 @@ describe('SiteManager', () => {
 
         // Create a SiteManager instance
         siteManager = new SiteManager(mockGlobalStore);
+        siteManager_resolvePrimarySite = () => siteManager['resolvePrimarySite']();
     });
 
     afterEach(() => {
@@ -402,7 +404,7 @@ describe('SiteManager', () => {
             const serverSite = createDetailedSiteInfo(ProductJira, 'server', 'user1', false);
             storedSites.set(`${ProductJira.key}Sites`, [serverSite]);
 
-            siteManager.resolvePrimarySite();
+            siteManager_resolvePrimarySite();
 
             expect(siteManager.primarySite).toBeUndefined();
         });
@@ -414,7 +416,7 @@ describe('SiteManager', () => {
             cloudSiteB.name = 'Beta';
             storedSites.set(`${ProductJira.key}Sites`, [cloudSiteB, cloudSiteA]);
 
-            siteManager.resolvePrimarySite();
+            siteManager_resolvePrimarySite();
 
             expect(siteManager.primarySite).toEqual(cloudSiteA);
         });
@@ -426,11 +428,11 @@ describe('SiteManager', () => {
             cloudSiteB.name = 'Beta';
             storedSites.set(`${ProductJira.key}Sites`, [cloudSiteA, cloudSiteB]);
 
-            siteManager.resolvePrimarySite();
+            siteManager_resolvePrimarySite();
             const firstPrimary = siteManager.primarySite;
 
             // Call again, should not change
-            siteManager.resolvePrimarySite();
+            siteManager_resolvePrimarySite();
             expect(siteManager.primarySite).toBe(firstPrimary);
         });
 
@@ -439,14 +441,14 @@ describe('SiteManager', () => {
             cloudSiteA.name = 'Alpha';
             storedSites.set(`${ProductJira.key}Sites`, [cloudSiteA]);
 
-            siteManager.resolvePrimarySite();
+            siteManager_resolvePrimarySite();
             expect(siteManager.primarySite).toEqual(cloudSiteA);
 
             const cloudSiteB = createDetailedSiteInfo(ProductJira, 'cloudB', 'userB', true);
             cloudSiteB.name = 'Beta';
             storedSites.set(`${ProductJira.key}Sites`, [cloudSiteB]);
 
-            siteManager.resolvePrimarySite();
+            siteManager_resolvePrimarySite();
             expect(siteManager.primarySite).toEqual(cloudSiteB);
         });
     });
