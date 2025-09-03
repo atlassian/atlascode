@@ -171,4 +171,149 @@ describe('LinkedIssues', () => {
 
         expect(mockOnStatusChange).toHaveBeenCalledWith('TEST-123', 'In Progress');
     });
+
+    it('renders status without dropdown when onStatusChange is not provided', async () => {
+        const propsWithoutStatusChange = {
+            issuelinks: [mockLinkedIssue],
+            onIssueClick: mockOnIssueClick,
+            onDelete: mockOnDelete,
+        };
+
+        await act(async () => {
+            render(React.createElement(LinkedIssues, propsWithoutStatusChange));
+        });
+
+        expect(await screen.findByText('To Do')).toBeTruthy();
+        expect(screen.queryByRole('button', { name: /To Do/i })).toBeNull();
+    });
+
+    it('renders status as non-clickable lozenge when no valid transitions exist', async () => {
+        const linkedIssueWithNoTransitions = {
+            ...mockLinkedIssue,
+            outwardIssue: {
+                ...mockLinkedIssue.outwardIssue,
+                transitions: [
+                    {
+                        id: '1',
+                        name: 'Stay in To Do',
+                        to: {
+                            id: '1',
+                            name: 'To Do',
+                            statusCategory: {
+                                id: 1,
+                                key: 'new',
+                                colorName: 'blue-gray',
+                                name: 'New',
+                                self: 'https://test.atlassian.net/rest/api/2/statuscategory/1',
+                            },
+                        },
+                    },
+                ],
+            },
+        };
+
+        const propsWithNoValidTransitions = {
+            ...defaultProps,
+            issuelinks: [linkedIssueWithNoTransitions],
+        };
+
+        await act(async () => {
+            render(React.createElement(LinkedIssues, propsWithNoValidTransitions));
+        });
+
+        expect(await screen.findByText('To Do')).toBeTruthy();
+        expect(screen.queryByRole('button', { name: /To Do/i })).toBeNull();
+    });
+
+    it('uses default lozenge appearance when color is not mapped', async () => {
+        const linkedIssueWithUnmappedColor = {
+            ...mockLinkedIssue,
+            outwardIssue: {
+                ...mockLinkedIssue.outwardIssue,
+                status: {
+                    ...mockLinkedIssue.outwardIssue.status,
+                    statusCategory: {
+                        ...mockLinkedIssue.outwardIssue.status.statusCategory,
+                        colorName: 'unknown-color',
+                    },
+                },
+            },
+        };
+
+        const propsWithUnmappedColor = {
+            ...defaultProps,
+            issuelinks: [linkedIssueWithUnmappedColor],
+        };
+
+        await act(async () => {
+            render(React.createElement(LinkedIssues, propsWithUnmappedColor));
+        });
+
+        expect(await screen.findByText('To Do')).toBeTruthy();
+    });
+
+    it('renders issue key as clickable button', async () => {
+        await act(async () => {
+            render(React.createElement(LinkedIssues, defaultProps));
+        });
+
+        const issueButton = await screen.findByRole('button', { name: 'TEST-123' });
+        expect(issueButton).toBeTruthy();
+
+        await act(async () => {
+            fireEvent.click(issueButton);
+        });
+
+        expect(mockOnIssueClick).toHaveBeenCalledWith({
+            siteDetails: mockSiteDetails,
+            key: 'TEST-123',
+        });
+    });
+
+    it('renders priority with tooltip when priority exists', async () => {
+        await act(async () => {
+            render(React.createElement(LinkedIssues, defaultProps));
+        });
+
+        const priorityImage = await screen.findByAltText('Medium');
+        expect(priorityImage).toBeTruthy();
+        expect(priorityImage.getAttribute('src')).toBe('priority-icon.png');
+    });
+
+    it('renders issue type with tooltip when issue type exists', async () => {
+        await act(async () => {
+            render(React.createElement(LinkedIssues, defaultProps));
+        });
+
+        const issueTypeImage = await screen.findByAltText('Task');
+        expect(issueTypeImage).toBeTruthy();
+        expect(issueTypeImage.getAttribute('src')).toBe('task-icon.png');
+    });
+
+    it('handles multiple linked issues correctly', async () => {
+        const secondLinkedIssue = {
+            ...mockLinkedIssue,
+            id: 'link-2',
+            outwardIssue: {
+                ...mockLinkedIssue.outwardIssue,
+                id: 'issue-2',
+                key: 'TEST-456',
+                summary: 'Another linked issue',
+            },
+        };
+
+        const multipleLinkedIssuesProps = {
+            ...defaultProps,
+            issuelinks: [mockLinkedIssue, secondLinkedIssue],
+        };
+
+        await act(async () => {
+            render(React.createElement(LinkedIssues, multipleLinkedIssuesProps));
+        });
+
+        expect(await screen.findByText('TEST-123')).toBeTruthy();
+        expect(await screen.findByText('TEST-456')).toBeTruthy();
+        expect(await screen.findByText('Test linked issue')).toBeTruthy();
+        expect(await screen.findByText('Another linked issue')).toBeTruthy();
+    });
 });

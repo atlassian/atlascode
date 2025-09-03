@@ -252,4 +252,91 @@ describe('IssueList', () => {
 
         expect(mockOnStatusChange).toHaveBeenCalledWith('CHILD-999', 'QA Testing');
     });
+
+    it('renders status without dropdown when onStatusChange is not provided', async () => {
+        const propsWithoutStatusChange = {
+            issues: [mockChildIssue],
+            onIssueClick: mockOnIssueClick,
+        };
+
+        await act(async () => {
+            render(React.createElement(IssueList, propsWithoutStatusChange));
+        });
+
+        expect(await screen.findByText('To Do')).toBeTruthy();
+        expect(screen.queryByRole('button', { name: /To Do/i })).toBeNull();
+    });
+
+    it('renders status as non-clickable lozenge when no valid transitions exist', async () => {
+        const issueWithNoTransitions = {
+            ...mockChildIssue,
+            transitions: [
+                {
+                    id: '1',
+                    name: 'Stay in To Do',
+                    to: {
+                        id: '1',
+                        name: 'To Do',
+                        statusCategory: {
+                            id: 1,
+                            key: 'new',
+                            colorName: 'blue-gray',
+                            name: 'New',
+                            self: 'https://test.atlassian.net/rest/api/2/statuscategory/1',
+                        },
+                    },
+                },
+            ],
+        };
+
+        const propsWithNoValidTransitions = {
+            ...defaultProps,
+            issues: [issueWithNoTransitions],
+        };
+
+        await act(async () => {
+            render(React.createElement(IssueList, propsWithNoValidTransitions));
+        });
+
+        expect(await screen.findByText('To Do')).toBeTruthy();
+        expect(screen.queryByRole('button', { name: /To Do/i })).toBeNull();
+    });
+
+    it('renders priority with tooltip when priority exists', async () => {
+        await act(async () => {
+            render(React.createElement(IssueList, defaultProps));
+        });
+
+        const priorityImage = await screen.findByAltText('High');
+        expect(priorityImage).toBeTruthy();
+        expect(priorityImage.getAttribute('src')).toBe('high-priority-icon.png');
+    });
+
+    it('renders issue type with tooltip when issue type exists', async () => {
+        await act(async () => {
+            render(React.createElement(IssueList, defaultProps));
+        });
+
+        const issueTypeImage = await screen.findByAltText('Subtask');
+        expect(issueTypeImage).toBeTruthy();
+        expect(issueTypeImage.getAttribute('src')).toBe('subtask-icon.png');
+    });
+
+    it('renders multiple issues correctly', async () => {
+        const multipleIssuesProps = {
+            ...defaultProps,
+            issues: [mockChildIssue, mockChildIssueWithCustomStatus],
+        };
+
+        await act(async () => {
+            render(React.createElement(IssueList, multipleIssuesProps));
+        });
+
+        expect(await screen.findByText('CHILD-456')).toBeTruthy();
+        expect(await screen.findByText('CHILD-999')).toBeTruthy();
+        expect(await screen.findByText('Test child issue')).toBeTruthy();
+        expect(await screen.findByText('Issue in review')).toBeTruthy();
+        expect(await screen.findByText('To Do')).toBeTruthy();
+        expect(await screen.findByText('Code Review')).toBeTruthy();
+    });
 });
