@@ -144,7 +144,7 @@ module.exports = {
             'process.browser': JSON.stringify(true),
         }),
         new webpack.ProvidePlugin({
-            process: [require.resolve('./process-polyfill.js')],
+            process: 'process/browser',
         }),
     ],
     performance: {
