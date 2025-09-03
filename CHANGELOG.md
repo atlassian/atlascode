@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 3.8.14
+
+### Features
+
+- Add the ability to update the Status column from the child issues table tree
+
 ## What's new in 3.8.13
 
 ### Features
