@@ -129,32 +129,29 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     };
 
     React.useEffect(() => {
-        const container = document.getElementById('prompt-editor-container');
+        setEditor((prev) => {
+            if (prev) {
+                return prev;
+            }
 
-        // Remove Monaco's color stylesheet
-        removeMonacoStyles();
+            const container = document.getElementById('prompt-editor-container');
+            if (!container) {
+                return null;
+            }
 
-        if (container) {
-            const completionProvider = monaco.languages.registerCompletionItemProvider(
-                'plaintext',
-                createSlashCommandProvider(),
-            );
+            // Remove Monaco's color stylesheet
+            removeMonacoStyles();
+
+            monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider());
+
             const editor = createMonacoPromptEditor(container);
             setupPromptKeyBindings(editor, onSend);
             setupAutoResize(editor);
             setupCommands(editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand);
 
-            editor.setValue(promptText);
-
-            setEditor(editor);
-
-            return () => {
-                completionProvider.dispose();
-                editor.dispose();
-            };
-        }
-        return () => {};
-    }, [handleMemoryCommand, handleTriggerFeedbackCommand, onCopy, onSend, promptText]);
+            return editor;
+        });
+    }, [handleMemoryCommand, handleTriggerFeedbackCommand, onCopy, onSend, setEditor]);
 
     React.useEffect(() => {
         if (!editor) {
