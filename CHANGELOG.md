@@ -2,6 +2,10 @@
 
 ## What's new in 3.8.13
 
+### Bug Fixes
+
+- Allow editing Cloud sites authenticated with an API token
+
 ### Features
 
 - Autocomplete the site URL for API token authentication using already OAuth authenticated sites
