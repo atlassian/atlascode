@@ -1,10 +1,16 @@
 import { ComposableEditor, EditorNextProps } from '@atlaskit/editor-core/composable-editor';
 import { useUniversalPreset } from '@atlaskit/editor-core/preset-universal';
 import { usePreset } from '@atlaskit/editor-core/use-preset';
+import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
 
-const AtlaskitEditor: React.FC<Partial<EditorNextProps>> = (props: EditorNextProps) => {
-    const { appearance = 'comment', onCancel } = props;
+interface AtlaskitEditorProps extends Partial<EditorNextProps> {
+    onSave?: () => void;
+    onCancel?: () => void;
+}
+
+const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProps) => {
+    const { appearance = 'comment', onCancel, onSave } = props;
     const universalPreset = useUniversalPreset({
         props: {
             appearance,
@@ -27,14 +33,39 @@ const AtlaskitEditor: React.FC<Partial<EditorNextProps>> = (props: EditorNextPro
     });
     const { preset } = usePreset(() => universalPreset);
     return (
-        <ComposableEditor
-            appearance={appearance}
-            useStickyToolbar={true}
-            assistiveLabel="assistiveLabel for editor"
-            allowUndoRedoButtons={true}
-            preset={preset}
-            onCancel={onCancel}
-        />
+        <div>
+            <ComposableEditor
+                appearance={appearance}
+                useStickyToolbar={true}
+                assistiveLabel="assistiveLabel for editor"
+                allowUndoRedoButtons={true}
+                preset={preset}
+            />
+            {(onSave || onCancel) && (
+                <div
+                    data-testid="ak-editor-secondary-toolbar"
+                    style={{
+                        display: 'flex',
+                        gap: '8px',
+                        padding: '8px 0px',
+                        alignItems: 'center',
+                    }}
+                >
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        {onSave && (
+                            <VSCodeButton appearance="primary" data-testid="comment-save-button" onClick={onSave}>
+                                Save
+                            </VSCodeButton>
+                        )}
+                        {onCancel && (
+                            <VSCodeButton appearance="secondary" onClick={onCancel}>
+                                Cancel
+                            </VSCodeButton>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 export default AtlaskitEditor;
