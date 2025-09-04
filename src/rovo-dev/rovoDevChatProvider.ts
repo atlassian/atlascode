@@ -400,10 +400,6 @@ export class RovoDevChatProvider {
         });
     }
 
-    // ------------------------------------
-    //---- CHECK WHAT'S REALLY NEEDED HERE
-    // ------------------------------------
-
     private async sendUserPromptToView(text: string, context?: RovoDevContext) {
         const webview = this._webView!;
 
