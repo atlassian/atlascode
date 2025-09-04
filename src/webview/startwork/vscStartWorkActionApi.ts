@@ -5,11 +5,12 @@ import { clientForSite } from '../../bitbucket/bbUtils';
 import { emptyRepo, Repo, WorkspaceRepo } from '../../bitbucket/model';
 import { StartWorkBranchTemplate } from '../../config/model';
 import { Container } from '../../container';
-import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
+import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from '../../lib/ipc/models/config';
 import { StartWorkActionApi } from '../../lib/webview/controller/startwork/startWorkActionApi';
 import { Logger } from '../../logger';
 import { Branch, RefType } from '../../typings/git';
 import { Features } from '../../util/featureFlags';
+import { Experiments } from '../../util/featureFlags';
 
 export class VSCStartWorkActionApi implements StartWorkActionApi {
     getWorkspaceRepos(): WorkspaceRepo[] {
@@ -96,10 +97,22 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         };
     }
 
-    openSettings(section?: ConfigSection, subsection?: ConfigSubSection): void {
-        Container.settingsWebviewFactory.createOrShow(
-            section ? { section: section, subSection: subsection } : undefined,
-        );
+    openSettings(section?: ConfigSection | ConfigV3Section, subsection?: ConfigSubSection | ConfigV3SubSection): void {
+        if (section) {
+            if (Container.featureFlagClient.checkExperimentValue(Experiments.AtlascodeNewSettingsExperiment)) {
+                Container.settingsWebviewFactory.createOrShow({
+                    section: ConfigV3Section.AdvancedConfig,
+                    subSection: ConfigV3SubSection.StartWork,
+                });
+            } else {
+                Container.settingsWebviewFactory.createOrShow({
+                    section: ConfigSection.Jira,
+                    subSection: ConfigSubSection.StartWork,
+                });
+            }
+        } else {
+            Container.settingsWebviewFactory.createOrShow(undefined);
+        }
     }
 
     closePage() {

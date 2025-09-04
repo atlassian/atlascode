@@ -4,11 +4,11 @@ import { createEmptyMinimalIssue, MinimalIssue, Transition } from '@atlassianlab
 import { DetailedSiteInfo, emptySiteInfo, ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel, WorkspaceRepo } from '../../../../bitbucket/model';
 import { Container } from '../../../../container';
+import { Experiments } from '../../../../util/featureFlags';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { StartWorkAction, StartWorkActionType } from '../../../ipc/fromUI/startWork';
 import { WebViewID } from '../../../ipc/models/common';
-import { ConfigSection, ConfigSubSection } from '../../../ipc/models/config';
 import { CommonMessageType } from '../../../ipc/toUI/common';
 import {
     emptyStartWorkIssueMessage,
@@ -33,6 +33,9 @@ jest.mock('../../../../util/featureFlags', () => ({
     },
     Features: {
         StartWorkV3: 'startWorkV3',
+    },
+    Experiments: {
+        AtlascodeNewSettingsExperiment: 'atlascode_new_settings_experiment',
     },
 }));
 
@@ -163,6 +166,12 @@ describe('StartWorkWebviewController', () => {
         // Mock FeatureFlagClient to return false by default (old version)
         (Container.featureFlagClient as any) = {
             checkGate: jest.fn().mockReturnValue(false),
+            checkExperimentValue: jest.fn().mockImplementation((experiment) => {
+                if (experiment === Experiments.AtlascodeNewSettingsExperiment) {
+                    return true;
+                }
+                return false;
+            }),
         };
 
         controller = new StartWorkWebviewController(
@@ -349,13 +358,38 @@ describe('StartWorkWebviewController', () => {
         });
 
         describe('OpenSettings action', () => {
-            it('should call api.openSettings with section and subsection', async () => {
-                await controller.onMessageReceived({
+            it('should call api.openSettings when experiment is enabled', async () => {
+                // Mock experiment to return true
+                (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
+
+                const openSettingsAction = {
                     type: StartWorkActionType.OpenSettings,
-                    section: ConfigSection.Jira,
-                    subsection: ConfigSubSection.Issues,
-                });
-                expect(mockApi.openSettings).toHaveBeenCalledWith(ConfigSection.Jira, ConfigSubSection.Issues);
+                    nonce: 'test-nonce',
+                } as StartWorkAction;
+
+                await controller.onMessageReceived(openSettingsAction);
+
+                expect(Container.featureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
+                    Experiments.AtlascodeNewSettingsExperiment,
+                );
+                expect(mockApi.openSettings).toHaveBeenCalled();
+            });
+
+            it('should call api.openSettings when experiment is disabled', async () => {
+                // Mock experiment to return false
+                (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(false);
+
+                const openSettingsAction = {
+                    type: StartWorkActionType.OpenSettings,
+                    nonce: 'test-nonce',
+                } as StartWorkAction;
+
+                await controller.onMessageReceived(openSettingsAction);
+
+                expect(Container.featureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
+                    Experiments.AtlascodeNewSettingsExperiment,
+                );
+                expect(mockApi.openSettings).toHaveBeenCalled();
             });
         });
 
