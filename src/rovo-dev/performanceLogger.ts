@@ -5,11 +5,8 @@ import Perf from '../util/perf';
 
 export class PerformanceLogger {
     private currentSessionId: string = '';
-    private appInstanceId: string = '';
 
-    public appInitialized(appInstanceId: string) {
-        this.appInstanceId = appInstanceId;
-    }
+    constructor(private readonly appInstanceId: string) {}
 
     public sessionStarted(sessionId: string) {
         this.currentSessionId = sessionId;

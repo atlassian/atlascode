@@ -25,7 +25,7 @@ export type RovoDevContext = {
 
 export interface RovoDevPrompt {
     text: string;
-    enable_deep_plan?: boolean;
+    enable_deep_plan: boolean;
     context?: RovoDevContext;
 }
 
