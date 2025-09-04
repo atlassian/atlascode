@@ -55,7 +55,7 @@ export class RovoDevChatProvider {
     private async internalExecuteChat(
         { text, enable_deep_plan, context }: RovoDevPrompt,
         revertedFiles: string[],
-        suppressEcho?: boolean,
+        flushingPendingPrompt: boolean,
     ) {
         if (!text) {
             return;
@@ -66,7 +66,7 @@ export class RovoDevChatProvider {
             context = undefined;
         }
 
-        if (!suppressEcho) {
+        if (!flushingPendingPrompt) {
             await this.sendUserPromptToView(text, context);
         }
 
