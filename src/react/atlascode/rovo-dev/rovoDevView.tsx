@@ -800,7 +800,6 @@ const RovoDevView: React.FC = () => {
                             hideButtons={workspaceCount === 0}
                             state={currentState}
                             promptText={promptText}
-                            onPromptTextChange={(element) => setPromptText(element)}
                             isDeepPlanEnabled={isDeepPlanToggled}
                             onDeepPlanToggled={() => setIsDeepPlanToggled(!isDeepPlanToggled)}
                             onSend={sendPrompt}

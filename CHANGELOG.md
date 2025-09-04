@@ -1,10 +1,16 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
-## What's new in 3.8.15
+## What's new in 3.8.16
 
 ### Bug Fixes
 
 - Fixed a bug that prevented authenticated sites from being individually logged out, which caused all sites sharing the same credentials to be logged out
+
+## What's new in 3.8.14
+
+### Bug Fixes
+
+- Allow editing Cloud sites authenticated with an API token
 
 ## What's new in 3.8.13
 
@@ -41,8 +47,6 @@
 ### Bug Fixes
 
 - Added loading indicator to Refresh button for Jira issue auto-refreshes
-
----
 
 ## What's new in 3.8.9
 

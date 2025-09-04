@@ -1,6 +1,7 @@
 import { LoadingButton } from '@atlaskit/button';
 import SendIcon from '@atlaskit/icon/core/arrow-up';
 import StopIcon from '@atlaskit/icon/core/video-stop';
+import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
@@ -18,7 +19,6 @@ interface PromptInputBoxProps {
     hideButtons?: boolean;
     state: State;
     promptText: string;
-    onPromptTextChange: (text: string) => void;
     isDeepPlanEnabled: boolean;
     onDeepPlanToggled: () => void;
     onSend: (text: string) => void;
@@ -105,6 +105,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 const value = editor.getValue();
                 if (value.trim()) {
                     onSend(value);
+                    editor.setValue('');
                 }
             },
             '!suggestWidgetVisible',
@@ -139,9 +140,6 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 return null;
             }
 
-            // Remove Monaco's color stylesheet
-            removeMonacoStyles();
-
             monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider());
 
             const editor = createMonacoPromptEditor(container);
@@ -152,6 +150,12 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             return editor;
         });
     }, [handleMemoryCommand, handleTriggerFeedbackCommand, onCopy, onSend, setEditor]);
+
+    React.useEffect(() => {
+        // Remove Monaco's color stylesheet
+        removeMonacoStyles();
+        editor?.setValue(promptText);
+    }, [editor, promptText]);
 
     React.useEffect(() => {
         if (!editor) {
@@ -187,16 +191,18 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 {/* Left-side Add Context Button */}
                 {!hideButtons && (
                     <>
-                        <LoadingButton
-                            style={{
-                                ...rovoDevPromptButtonStyles,
-                            }}
-                            spacing="compact"
-                            label="Add context"
-                            iconBefore={<i className="codicon codicon-add" />}
-                            isDisabled={disabled}
-                            onClick={() => onAddContext()}
-                        />
+                        <Tooltip content="Add context">
+                            <LoadingButton
+                                style={{
+                                    ...rovoDevPromptButtonStyles,
+                                }}
+                                spacing="compact"
+                                label="Add context"
+                                iconBefore={<i className="codicon codicon-add" />}
+                                isDisabled={disabled}
+                                onClick={() => onAddContext()}
+                            />
+                        </Tooltip>
                         <div style={{ display: 'flex', gap: 8 }}>
                             <LoadingButton
                                 style={{
