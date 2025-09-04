@@ -126,6 +126,11 @@ const CommentComponent: React.FC<{
                         <div>
                             <div>{commentText}</div>
                             <AtlaskitEditor
+                                onSave={() => {
+                                    setIsSaving(true);
+                                    setIsEditing(false);
+                                    onSave(commentText, comment.id, undefined);
+                                }}
                                 onCancel={() => {
                                     setCommentText(comment.body);
                                     setIsSaving(false);
@@ -224,6 +229,11 @@ const AddCommentComponent: React.FC<{
                     <div>
                         <div>{commentText}</div>
                         <AtlaskitEditor
+                            onSave={() => {
+                                onCreate(commentText, undefined);
+                                setCommentText('');
+                                setIsEditing(false);
+                            }}
                             onCancel={() => {
                                 setCommentText('');
                                 setIsEditing(false);
