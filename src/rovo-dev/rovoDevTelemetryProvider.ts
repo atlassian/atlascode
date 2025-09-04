@@ -12,6 +12,7 @@ import {
     rovoDevStopActionEvent,
     rovoDevTechnicalPlanningShownEvent,
 } from '../../src/analytics';
+import { PerformanceLogger } from './performanceLogger';
 
 const rovoDevTelemetryEvents = {
     rovoDevFileChangedActionEvent,
@@ -40,10 +41,17 @@ export class RovoDevTelemetryProvider {
 
     private _firedTelemetryForCurrentPrompt: TelemetryRecord<boolean> = {};
 
+    private readonly _perfLogger: PerformanceLogger;
+    public get perfLogger() {
+        return this._perfLogger;
+    }
+
     constructor(
         private readonly rovoDevEnv: RovoDevEnv,
         private readonly appInstanceId: string,
-    ) {}
+    ) {
+        this._perfLogger = new PerformanceLogger(this.appInstanceId);
+    }
 
     public startNewSession(chatSessionId: string, manuallyCreated: boolean) {
         this._chatSessionId = chatSessionId;
@@ -51,6 +59,8 @@ export class RovoDevTelemetryProvider {
         this._firedTelemetryForCurrentPrompt = {};
 
         this.fireTelemetryEvent('rovoDevNewSessionActionEvent', manuallyCreated);
+
+        this.perfLogger.sessionStarted(this._chatSessionId);
     }
 
     public startNewPrompt(promptId: string) {

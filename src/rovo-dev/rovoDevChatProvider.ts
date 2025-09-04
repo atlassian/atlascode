@@ -3,7 +3,6 @@ import { RovoDevViewResponse } from 'src/react/atlascode/rovo-dev/rovoDevViewMes
 import { v4 } from 'uuid';
 import { Event, Webview } from 'vscode';
 
-import { PerformanceLogger } from './performanceLogger';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient } from './rovoDevApiClient';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
@@ -33,10 +32,7 @@ export class RovoDevChatProvider {
         return this._pendingCancellation;
     }
 
-    constructor(
-        private _perfLogger: PerformanceLogger,
-        private _telemetryProvider: RovoDevTelemetryProvider,
-    ) {}
+    constructor(private _telemetryProvider: RovoDevTelemetryProvider) {}
 
     public setWebview(webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined) {
         this._webView = webView;
@@ -196,7 +192,7 @@ export class RovoDevChatProvider {
         }
 
         if (fireTelemetry) {
-            this._perfLogger.promptStarted(this._currentPromptId);
+            this._telemetryProvider.perfLogger.promptStarted(this._currentPromptId);
         }
 
         const reader = response.body.getReader();
@@ -211,14 +207,14 @@ export class RovoDevChatProvider {
             const { done, value } = await reader.read();
 
             if (fireTelemetry && isFirstByte) {
-                this._perfLogger.promptFirstByteReceived(this._currentPromptId);
+                this._telemetryProvider.perfLogger.promptFirstByteReceived(this._currentPromptId);
                 isFirstByte = false;
             }
 
             if (done) {
                 // last response of the stream -> fire performance telemetry event
                 if (fireTelemetry) {
-                    this._perfLogger.promptLastMessageReceived(this._currentPromptId);
+                    this._telemetryProvider.perfLogger.promptLastMessageReceived(this._currentPromptId);
                 }
 
                 for (const msg of parser.flush()) {
@@ -230,7 +226,7 @@ export class RovoDevChatProvider {
             const data = decoder.decode(value, { stream: true });
             for (const msg of parser.parse(data)) {
                 if (fireTelemetry && isFirstMessage) {
-                    this._perfLogger.promptFirstMessageReceived(this._currentPromptId);
+                    this._telemetryProvider.perfLogger.promptFirstMessageReceived(this._currentPromptId);
                     isFirstMessage = false;
                 }
 
@@ -277,7 +273,7 @@ export class RovoDevChatProvider {
 
             case 'tool-return':
                 if (fireTelemetry && response.tool_name === 'create_technical_plan' && response.parsedContent) {
-                    this._perfLogger.promptTechnicalPlanReceived(this._currentPromptId);
+                    this._telemetryProvider.perfLogger.promptTechnicalPlanReceived(this._currentPromptId);
 
                     const parsedContent = response.parsedContent as TechnicalPlan;
                     const stepsCount = parsedContent.logicalChanges.length;

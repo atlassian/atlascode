@@ -32,7 +32,6 @@ import {
 } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { GitErrorCodes } from '../typings/git';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
-import { PerformanceLogger } from './performanceLogger';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
@@ -61,7 +60,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private readonly appInstanceId: string;
 
     private readonly _prHandler: RovoDevPullRequestHandler | undefined;
-    private readonly _perfLogger: PerformanceLogger;
     private readonly _telemetryProvider: RovoDevTelemetryProvider;
     private readonly _chatProvider: RovoDevChatProvider;
 
@@ -69,8 +67,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _rovoDevApiClient?: RovoDevApiClient;
     private _processState = RovoDevProcessState.NotStarted;
     private _initialized = false;
-
-    private _chatSessionId: string = '';
 
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
@@ -119,12 +115,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this.appInstanceId = Container.appInstanceId;
         }
 
-        this._perfLogger = new PerformanceLogger(this.appInstanceId);
         this._telemetryProvider = new RovoDevTelemetryProvider(
             this.isBoysenberry ? 'Boysenberry' : 'IDE',
             this.appInstanceId,
         );
-        this._chatProvider = new RovoDevChatProvider(this._perfLogger, this._telemetryProvider);
+        this._chatProvider = new RovoDevChatProvider(this._telemetryProvider);
     }
 
     public resolveWebviewView(
@@ -285,10 +280,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private beginNewSession(sessionId: string | null | undefined, manuallyCreated: boolean): void {
-        this._chatSessionId = sessionId ?? v4();
-        this._perfLogger.sessionStarted(this._chatSessionId);
-        this._telemetryProvider.startNewSession(this._chatSessionId, manuallyCreated);
+    private beginNewSession(sessionId: string | null, manuallyCreated: boolean): void {
+        this._telemetryProvider.startNewSession(sessionId ?? v4(), manuallyCreated);
     }
 
     // Helper to get openFile info from a document
@@ -825,7 +818,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         try {
             if (result) {
                 const info = await this.executeHealthcheckInfo();
-                const sessionId = (info || {}).sessionId;
+                const sessionId = (info || {}).sessionId || null;
 
                 this.beginNewSession(sessionId, false);
                 if (this.isBoysenberry) {
