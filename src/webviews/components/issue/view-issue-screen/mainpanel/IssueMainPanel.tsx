@@ -180,6 +180,10 @@ const IssueMainPanel: React.FC<Props> = ({
                         //     featureGateEnabled={isRteEnabled}
                         // />
                         <AtlaskitEditor
+                            onSave={() => {
+                                handleInlineEdit(fields['description'], descriptionText);
+                                setIsEditingDescription(false);
+                            }}
                             onCancel={() => {
                                 setDescriptionText(defaultDescription);
                                 setIsEditingDescription(false);
