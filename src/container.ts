@@ -1,3 +1,4 @@
+import { v4 } from 'uuid';
 import { env, ExtensionContext, languages, UIKind, workspace } from 'vscode';
 import * as vscode from 'vscode';
 
@@ -467,6 +468,18 @@ export class Container {
 
     public static set configTarget(target: ConfigTarget) {
         this._context.globalState.update(ConfigTargetKey, target);
+    }
+
+    private static _appInstanceId: string;
+    /**
+     * An instance ID randomly generated to identify this specific instance.
+     * Note: closing/opening a workspace causes this ID to change.
+     */
+    public static get appInstanceId() {
+        if (!this._appInstanceId) {
+            this._appInstanceId = v4();
+        }
+        return this._appInstanceId;
     }
 
     private static _featureFlagClient: FeatureFlagClient;

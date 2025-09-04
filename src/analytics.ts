@@ -203,6 +203,7 @@ type JiraPerfEvents =
     | 'ui.jira.editJiraIssue.update.lcp';
 
 interface RovoDevCommonParams {
+    appInstanceId: string;
     rovoDevSessionId: string;
     rovoDevPromptId: string;
 }
@@ -230,25 +231,32 @@ export function performanceEvent(tag: string, measure: number, params?: Record<s
 
 export type RovoDevEnv = 'IDE' | 'Boysenberry';
 
-export function rovoDevNewSessionActionEvent(rovoDevEnv: RovoDevEnv, sessionId: string, isManuallyCreated: boolean) {
+export function rovoDevNewSessionActionEvent(
+    rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
+    sessionId: string,
+    isManuallyCreated: boolean,
+) {
     return trackEvent('rovoDevNewSessionAction', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, isManuallyCreated },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, isManuallyCreated },
     });
 }
 
 export function rovoDevPromptSentEvent(
     rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
     sessionId: string,
     promptId: string,
     deepPlanEnabled: boolean,
 ) {
     return trackEvent('rovoDevPromptSent', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, promptId, deepPlanEnabled },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, deepPlanEnabled },
     });
 }
 
 export function rovoDevTechnicalPlanningShownEvent(
     rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
     sessionId: string,
     promptId: string,
     stepsCount: number,
@@ -256,53 +264,67 @@ export function rovoDevTechnicalPlanningShownEvent(
     questionsCount: number,
 ) {
     return trackEvent('rovoDevTechnicalPlanningShown', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, promptId, stepsCount, filesCount, questionsCount },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, stepsCount, filesCount, questionsCount },
     });
 }
 
 export function rovoDevFilesSummaryShownEvent(
     rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
     sessionId: string,
     promptId: string,
     filesCount: number,
 ) {
     return trackEvent('rovoDevFilesSummaryShown', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, promptId, filesCount },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, filesCount },
     });
 }
 
 export function rovoDevFileChangedActionEvent(
     rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
     sessionId: string,
     promptId: string,
     action: 'undo' | 'keep',
     filesCount: number,
 ) {
     return trackEvent('rovoDevFileChangedAction', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, promptId, action, filesCount },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, action, filesCount },
     });
 }
 
-export function rovoDevStopActionEvent(rovoDevEnv: RovoDevEnv, sessionId: string, promptId: string, failed?: boolean) {
+export function rovoDevStopActionEvent(
+    rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
+    sessionId: string,
+    promptId: string,
+    failed?: boolean,
+) {
     return trackEvent('rovoDevStopAction', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, promptId, failed },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, failed },
     });
 }
 
 export function rovoDevGitPushActionEvent(
     rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
     sessionId: string,
     promptId: string,
     prCreated: boolean,
 ) {
     return trackEvent('rovoDevGitPushAction', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, promptId, prCreated },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, prCreated },
     });
 }
 
-export function rovoDevDetailsExpandedEvent(rovoDevEnv: RovoDevEnv, sessionId: string, promptId: string) {
+export function rovoDevDetailsExpandedEvent(
+    rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
+    sessionId: string,
+    promptId: string,
+) {
     return trackEvent('rovoDevDetailsExpanded', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, promptId },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId },
     });
 }
 

@@ -4,7 +4,7 @@ import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import { Repo, WorkspaceRepo } from '../../../../bitbucket/model';
 import { StartWorkBranchTemplate } from '../../../../config/model';
 import { Branch } from '../../../../typings/git';
-import { ConfigSection, ConfigSubSection } from '../../../ipc/models/config';
+import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from '../../../ipc/models/config';
 
 export interface StartWorkActionApi {
     getWorkspaceRepos(): WorkspaceRepo[];
@@ -26,5 +26,5 @@ export interface StartWorkActionApi {
     ): Promise<void>;
     closePage(): void;
     getStartWorkConfig(): StartWorkBranchTemplate;
-    openSettings(section?: ConfigSection, subsection?: ConfigSubSection): void;
+    openSettings(section?: ConfigSection | ConfigV3Section, subsection?: ConfigSubSection | ConfigV3SubSection): void;
 }

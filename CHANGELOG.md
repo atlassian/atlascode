@@ -6,6 +6,10 @@
 
 - Add the ability to update the Status column from the child issues table tree
 
+### Bug Fixes
+
+- Allow editing Cloud sites authenticated with an API token
+
 ## What's new in 3.8.13
 
 ### Features
@@ -41,8 +45,6 @@
 ### Bug Fixes
 
 - Added loading indicator to Refresh button for Jira issue auto-refreshes
-
----
 
 ## What's new in 3.8.9
 
