@@ -1,5 +1,6 @@
-import CheckIcon from '@atlaskit/icon/glyph/check';
-import CrossIcon from '@atlaskit/icon/glyph/cross';
+import CheckMarkIcon from '@atlaskit/icon/core/check-mark';
+import UndoIcon from '@atlaskit/icon/core/undo';
+import Tooltip from '@atlaskit/tooltip';
 import React from 'react';
 
 import { ToolReturnParseResult } from '../../utils';
@@ -47,7 +48,9 @@ export const ModifiedFileItem: React.FC<{
                     onClick={handleUndo}
                     aria-label="Undo changes to this file"
                 >
-                    <CrossIcon size="small" label="Undo" />
+                    <Tooltip content="Undo" position="top">
+                        <UndoIcon size="small" label="Undo" />
+                    </Tooltip>
                 </button>
                 <button
                     disabled={!actionsEnabled}
@@ -55,7 +58,9 @@ export const ModifiedFileItem: React.FC<{
                     onClick={handleKeep}
                     aria-label="Keep changes to this file"
                 >
-                    <CheckIcon size="small" label="Keep" />
+                    <Tooltip content="Keep" position="top">
+                        <CheckMarkIcon size="small" label="Keep" />
+                    </Tooltip>
                 </button>
             </div>
         </div>
