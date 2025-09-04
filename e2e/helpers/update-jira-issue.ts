@@ -1,5 +1,5 @@
 import { defaultComment } from '../mock-data/comments';
-import type { FieldUpdater } from './types';
+import type { DescriptionObject, FieldUpdater } from './types';
 
 const updateAttachment: FieldUpdater = (issue, value) => {
     issue.fields.attachment.push(value);
@@ -21,10 +21,9 @@ const updateComment: FieldUpdater = (issue, value: string) => {
     return issue;
 };
 
-const updateDescription: FieldUpdater = (issue, value: string) => {
-    issue.renderedFields.description = `<p>${value}</p>`;
-    issue.fields.description = value;
-
+const updateDescription: FieldUpdater = (issue, value: DescriptionObject) => {
+    issue.fields.description = value.fields.description;
+    issue.renderedFields.description = value.renderedFields.description;
     return issue;
 };
 

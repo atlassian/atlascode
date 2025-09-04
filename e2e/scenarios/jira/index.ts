@@ -30,10 +30,13 @@ export const jiraDCScenarios = [
     { name: 'Authenticate with Jira', run: authFlowJira },
     { name: 'Create issue', run: createIssue },
     { name: 'Update issue description', run: updateDescription },
+    { name: 'Update issue status', run: updateIssueStatus },
     { name: 'Add comment to issue', run: addComment },
     { name: 'View comment with image in issue', run: viewCommentWithImage },
     { name: 'Attach file to issue', run: attachFile },
+    { name: 'Assigning issue to myself', run: assigningFlow },
     { name: 'Add and remove existing labels', run: updateLabelsFlow },
+    { name: 'Check image in description', run: checkImageInDescription },
     { name: 'Start work on Jira issue', run: startWorkFlow },
     { name: 'Rename Issue', run: renameIssue },
 ];
