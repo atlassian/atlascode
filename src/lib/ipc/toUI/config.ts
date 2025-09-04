@@ -10,14 +10,7 @@ import { flatten } from 'flatten-anything';
 import { AuthInfo, DetailedSiteInfo, emptyBasicAuthInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import { emptyConfig } from '../../../config/model';
 import { emptyFeedbackUser, FeedbackUser } from '../models/common';
-import {
-    ConfigSection,
-    ConfigSubSection,
-    ConfigTarget,
-    ConfigV3Section,
-    ConfigV3SubSection,
-    FlattenedConfig,
-} from '../models/config';
+import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '../models/config';
 
 export enum ConfigMessageType {
     Init = 'init',
@@ -34,12 +27,6 @@ export type ConfigMessage =
     | ReducerAction<ConfigMessageType.Init, ConfigInitMessage>
     | ReducerAction<ConfigMessageType.Update, ConfigUpdateMessage>
     | ReducerAction<ConfigMessageType.SectionChange, SectionChangeMessage>
-    | ReducerAction<ConfigMessageType.SitesUpdate, SitesUpdateMessage>;
-
-export type ConfigV3Message =
-    | ReducerAction<ConfigMessageType.Init, ConfigV3InitMessage>
-    | ReducerAction<ConfigMessageType.Update, ConfigUpdateMessage>
-    | ReducerAction<ConfigMessageType.SectionChange, SectionV3ChangeMessage>
     | ReducerAction<ConfigMessageType.SitesUpdate, SitesUpdateMessage>;
 
 export type ConfigResponse =
@@ -61,19 +48,6 @@ export interface ConfigInitMessage {
     initiateApiTokenAuth?: boolean;
     machineId?: string;
 }
-export interface ConfigV3InitMessage {
-    config: FlattenedConfig;
-    jiraSites: SiteWithAuthInfo[];
-    bitbucketSites: SiteWithAuthInfo[];
-    feedbackUser: FeedbackUser;
-    isRemote: boolean;
-    showTunnelOption: boolean;
-    target: ConfigTarget;
-    section?: ConfigV3Section;
-    subSection?: ConfigV3SubSection;
-    initiateApiTokenAuth?: boolean;
-    machineId?: string;
-}
 
 export const emptyConfigInitMessage: ConfigInitMessage = {
     config: flatten(emptyConfig),
@@ -84,17 +58,6 @@ export const emptyConfigInitMessage: ConfigInitMessage = {
     showTunnelOption: false,
     target: ConfigTarget.User,
     section: ConfigSection.Jira,
-};
-
-export const emptyConfigV3InitMessage: ConfigV3InitMessage = {
-    config: flatten(emptyConfig),
-    jiraSites: [],
-    bitbucketSites: [],
-    feedbackUser: emptyFeedbackUser,
-    isRemote: false,
-    showTunnelOption: false,
-    target: ConfigTarget.User,
-    section: ConfigV3Section.Auth,
 };
 
 export interface ConfigUpdateMessage {
@@ -136,11 +99,5 @@ export interface ValidateJqlResponseMessage {
 export interface SectionChangeMessage {
     section: ConfigSection;
     subSection: ConfigSubSection | undefined;
-    initiateApiTokenAuth?: boolean;
-}
-
-export interface SectionV3ChangeMessage {
-    section: ConfigV3Section;
-    subSection: ConfigV3SubSection | undefined;
     initiateApiTokenAuth?: boolean;
 }

@@ -299,11 +299,6 @@ export class VSCConfigActionApi implements ConfigActionApi {
         Container.explorerFocusManager.fireEvent(FocusEventActions.VIEWPULLREQUEST, true);
     }
 
-    public async openNativeSettings(): Promise<void> {
-        await commands.executeCommand('workbench.action.openSettings', '@ext:atlassian.atlascode');
-        this._analyticsApi.fireOpenSettingsButtonEvent('advancedConfigsPanel');
-    }
-
     private openWorkspaceSettingsJson(rootPath: string) {
         const editor = new WorkspaceEdit();
 

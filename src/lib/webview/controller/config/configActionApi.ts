@@ -45,5 +45,4 @@ export interface ConfigActionApi {
     viewJiraIssue(): void;
     createPullRequest(): void;
     viewPullRequest(): void;
-    openNativeSettings(): Promise<void>;
 }
