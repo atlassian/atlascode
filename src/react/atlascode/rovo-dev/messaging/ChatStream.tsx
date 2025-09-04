@@ -229,7 +229,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             return (
                                 <ChatMessageItem
                                     msg={block}
-                                    enableActions={block.source === 'RovoDev'}
+                                    enableActions={block.source === 'RovoDev' && state === State.WaitingForPrompt}
                                     onCopy={handleCopyResponse}
                                     onFeedback={handleFeedbackTrigger}
                                 />

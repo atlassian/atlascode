@@ -6,6 +6,7 @@ export type ToolReturnMessage =
     | ToolReturnTechnicalPlanMessage
     | ToolReturnGrepFileContentMessage
     | ToolReturnGenericMessage;
+
 export type ChatMessage = DefaultMessage | ErrorMessage | ToolCallMessage | ToolReturnGenericMessage;
 
 export interface DefaultMessage {
@@ -87,9 +88,8 @@ export interface ToolReturnParseResult {
     type?: 'modify' | 'create' | 'delete' | 'open' | 'bash';
 }
 
-export type MessageBlockDetails = ChatMessage[] | DefaultMessage | ErrorMessage | ToolReturnGenericMessage | null;
+export type Response = ChatMessage | ChatMessage[] | null;
 
-export type Response = ChatMessage | ErrorMessage | ToolReturnGenericMessage;
 interface ToolReturnInfo {
     title: string;
     type: 'modify' | 'create' | 'delete' | 'open' | 'bash';

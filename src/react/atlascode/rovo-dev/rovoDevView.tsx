@@ -73,7 +73,8 @@ const RovoDevView: React.FC = () => {
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
     const [workspaceCount, setWorkspaceCount] = useState(process.env.ROVODEV_BBY ? 1 : 0);
 
-    const [history, setHistory] = useState<Response[]>([]); // For debugging purposes only
+    const [history, setHistory] = useState<Response[]>([]);
+    const [streamStartIndex, setStreamStartIndex] = useState(0);
 
     const [isFeedbackFormVisible, setIsFeedbackFormVisible] = React.useState(false);
 
@@ -153,7 +154,40 @@ const RovoDevView: React.FC = () => {
     const finalizeResponse = useCallback(() => {
         setPendingToolCallMessage('');
         setCurrentState(State.WaitingForPrompt);
-    }, []);
+
+        setHistory((prev) => {
+            const last = prev.pop();
+            if (!last) {
+                return prev;
+            }
+
+            if (Array.isArray(last) || last.source !== 'RovoDev') {
+                return [...prev, last];
+            }
+
+            const messageBlock = prev.splice(streamStartIndex);
+
+            if (messageBlock.length > 0) {
+                const thinkingGroup = messageBlock
+                    .map((msg) => {
+                        if (Array.isArray(msg)) {
+                            return null;
+                        }
+                        return msg;
+                    })
+                    .filter((msg) => msg !== null) as ChatMessage[];
+
+                if (thinkingGroup.length === 0) {
+                    return [...prev, ...messageBlock, last];
+                }
+
+                setStreamStartIndex(prev.length);
+                return [...prev, thinkingGroup, last];
+            }
+
+            return [...prev, last];
+        });
+    }, [streamStartIndex]);
 
     const clearChatHistory = useCallback(() => {
         setHistory([]);
@@ -202,22 +236,27 @@ const RovoDevView: React.FC = () => {
     const appendResponse = useCallback(
         (response: Response) => {
             setHistory((prev) => {
+                if (!response) {
+                    return prev;
+                }
+
                 const latest = prev.pop();
 
-                // Streaming text response, append to current message
-                if (latest && latest.source === 'RovoDev' && response.source === 'RovoDev') {
-                    latest.text += response.text;
-                    return [...prev, latest];
-                }
+                if (!Array.isArray(latest) && !Array.isArray(response)) {
+                    // Streaming text response, append to current message
+                    if (latest && latest.source === 'RovoDev' && response.source === 'RovoDev') {
+                        latest.text += response.text;
+                        return [...prev, latest];
+                    }
 
-                if (latest) {
-                    return [...prev, latest, response];
-                }
+                    if (response.source === 'ToolReturn') {
+                        handleAppendModifiedFileToolReturns(response);
+                    }
 
-                if (response.source === 'ToolReturn') {
-                    handleAppendModifiedFileToolReturns(response);
+                    if (latest) {
+                        return [...prev, latest, response];
+                    }
                 }
-
                 return [...prev, response];
             });
         },
@@ -251,6 +290,7 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.UserChatMessage:
                     appendResponse(event.message);
+                    setStreamStartIndex(history.length + 1);
                     break;
 
                 case RovoDevProviderMessageType.CompleteMessage:
@@ -416,7 +456,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [currentState, appendResponse, clearChatHistory, finalizeResponse, validateResponseFinalized],
+        [currentState, appendResponse, history.length, clearChatHistory, finalizeResponse, validateResponseFinalized],
     );
 
     const { postMessage, postMessagePromise } = useMessagingApi<
