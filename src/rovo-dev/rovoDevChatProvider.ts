@@ -68,8 +68,9 @@ export class RovoDevChatProvider {
 
         if (!suppressEcho) {
             await this.sendUserPromptToView(text, context);
-            await this.sendPromptSentToView(text, enable_deep_plan, context);
         }
+
+        await this.sendPromptSentToView(text, enable_deep_plan, context);
 
         if (!this._rovoDevApiClient) {
             this._pendingPrompt = { text, enable_deep_plan, context };
