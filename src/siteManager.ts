@@ -44,7 +44,7 @@ export class SiteManager extends Disposable {
     /**
      * Fallback logic to resolve a primary tenant for feature flag purposes
      */
-    public resolvePrimarySite(): DetailedSiteInfo | undefined {
+    private resolvePrimarySite(): DetailedSiteInfo | undefined {
         const allSites = this.readSitesFromGlobalStore(ProductJira.key);
         const cloudSites = allSites?.filter((site) => site.isCloud);
 

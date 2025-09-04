@@ -212,7 +212,11 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                     authenticationType: AuthenticationType.ApiToken,
                 });
             } else {
-                commands.executeCommand(Commands.ShowConfigPage);
+                Container.settingsWebviewFactory.createOrShow({
+                    section: ConfigV3Section.Auth,
+                    subSection: ConfigV3SubSection.JiraAuth,
+                    initiateApiTokenAuth: true,
+                });
             }
         }),
     );

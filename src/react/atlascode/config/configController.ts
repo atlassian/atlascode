@@ -186,6 +186,7 @@ function configReducerV3(state: ConfigV3State, action: ConfigV3UIAction): Config
                 ...action.data,
                 openSection: action.data.section ? action.data.section : ConfigV3Section.Auth,
                 openSubSections: action.data.subSection ? [action.data.subSection] : [],
+                initiateApiTokenAuth: action.data.initiateApiTokenAuth,
                 isSomethingLoading: false,
                 isErrorBannerOpen: false,
                 machineId: action.data.machineId,

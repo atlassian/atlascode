@@ -4,7 +4,7 @@ import { expect } from '@playwright/test';
 import { closeAllNotifications, openAtlassianSettings } from './common';
 
 const BASE_URL_CLOUD: string = 'https://mockedteams.atlassian.net';
-const BASE_URL_DC: string = 'https://mockedteams.atlassian.net'; // THIS IS WRONG! But it works for testing, should be some URL without "atlassian.net" in it
+const BASE_URL_DC: string = 'https://jira.mockeddomain.com';
 const USERNAME: string = 'mock@atlassian.code';
 const PASSWORD: string = '12345';
 
@@ -75,10 +75,10 @@ export const authenticateWithJiraDC = async (
     await settingsFrame.getByRole('textbox', { name: 'Base URL' }).fill(baseUrl);
     await page.waitForTimeout(250);
 
-    await settingsFrame.getByRole('textbox', { name: 'Email' }).click();
+    await settingsFrame.getByRole('textbox', { name: 'Username' }).click();
     await page.waitForTimeout(250);
 
-    await settingsFrame.getByRole('textbox', { name: 'Email' }).fill(username);
+    await settingsFrame.getByRole('textbox', { name: 'Username' }).fill(username);
     await page.waitForTimeout(250);
 
     await settingsFrame.getByRole('textbox', { name: 'Password' }).click();

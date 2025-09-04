@@ -2,7 +2,6 @@ import { commands, Memento, window } from 'vscode';
 
 import { Commands } from '../constants';
 import { Container } from '../container';
-import { ConfigV3Section, ConfigV3SubSection } from '../lib/ipc/models/config';
 import { Logger } from '../logger';
 import { checkout } from '../views/pullrequest/gitActions';
 import { bitbucketSiteForRemote, clientForHostname } from './bbUtils';
@@ -450,10 +449,7 @@ describe('BitbucketCheckoutHelper', () => {
 
             await checkoutHelper.completeBranchCheckOut();
 
-            expect(Container.settingsWebviewFactory.createOrShow).toHaveBeenCalledWith({
-                section: ConfigV3Section.Auth,
-                subSection: ConfigV3SubSection.BbAuth,
-            });
+            expect(mockCommands.executeCommand).toHaveBeenCalledWith(Commands.ShowBitbucketAuth);
         });
 
         it('should not open auth settings when user cancels', async () => {
@@ -470,7 +466,7 @@ describe('BitbucketCheckoutHelper', () => {
 
             await checkoutHelper.completeBranchCheckOut();
 
-            expect(Container.settingsWebviewFactory.createOrShow).not.toHaveBeenCalled();
+            expect(mockCommands.executeCommand).not.toHaveBeenCalledWith(Commands.ShowBitbucketAuth);
         });
     });
 

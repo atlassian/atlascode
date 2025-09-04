@@ -45,6 +45,7 @@ export interface ConfigV3InitMessage {
     target: ConfigTarget;
     section?: ConfigV3Section;
     subSection?: ConfigV3SubSection;
+    initiateApiTokenAuth?: boolean;
     machineId?: string;
 }
 
@@ -98,4 +99,5 @@ export interface ValidateJqlResponseMessage {
 export interface SectionV3ChangeMessage {
     section: ConfigV3Section;
     subSection: ConfigV3SubSection | undefined;
+    initiateApiTokenAuth?: boolean;
 }

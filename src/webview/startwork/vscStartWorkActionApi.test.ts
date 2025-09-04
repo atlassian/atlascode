@@ -15,7 +15,6 @@ jest.mock('../../container');
 jest.mock('../../util/featureFlags', () => ({
     FeatureFlagClient: {
         checkGate: jest.fn(),
-        checkExperimentValue: jest.fn(),
     },
     Features: {
         StartWorkV3: 'startWorkV3',

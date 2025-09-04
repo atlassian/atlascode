@@ -1,3 +1,4 @@
+import { setGlobalTheme } from '@atlaskit/tokens';
 import * as React from 'react';
 import { v4 } from 'uuid';
 
@@ -74,6 +75,18 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
             bodyStyle.setProperty('--vscode-button-background--darken-05', darken(color, 5));
             bodyStyle.setProperty('--vscode-button-background--50', opacity(color, 50));
             bodyStyle.setProperty('--vscode-button-background--75', opacity(color, 75));
+
+            //set atlaskit components theme
+            const isDark: boolean =
+                body.getAttribute('class') === 'vscode-dark' ||
+                (body.classList.contains('vscode-high-contrast') &&
+                    !body.classList.contains('vscode-high-contrast-light'));
+            setGlobalTheme({
+                light: 'light',
+                dark: 'dark',
+                colorMode: isDark ? 'dark' : 'light',
+                typography: 'typography-modernized',
+            });
         };
 
         const observer = new MutationObserver(onColorThemeChanged);

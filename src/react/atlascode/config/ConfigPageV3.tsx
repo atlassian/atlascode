@@ -79,7 +79,8 @@ const ConfigPageV3: React.FunctionComponent = () => {
         return { ...emptySubsections, [state.openSection]: state.openSubSections };
     });
 
-    const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry } = useAuthDialog();
+    const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry, allSitesWithAuth } =
+        useAuthDialog();
     const handleTabChange = useCallback((event: React.ChangeEvent<{}>, section: ConfigV3Section) => {
         setOpenSection(section);
     }, []);
@@ -250,6 +251,16 @@ const ConfigPageV3: React.FunctionComponent = () => {
                                                 jiraSites={state.jiraSites}
                                                 bitbucketSites={state.bitbucketSites}
                                                 isRemote={state.isRemote}
+                                                initiateJiraApiTokenAuth={
+                                                    openSection === ConfigV3Section.Auth &&
+                                                    state.openSubSections[0] === ConfigV3SubSection.JiraAuth &&
+                                                    !!state.initiateApiTokenAuth
+                                                }
+                                                initiateBitbucketApiTokenAuth={
+                                                    openSection === ConfigV3Section.Auth &&
+                                                    state.openSubSections[0] === ConfigV3SubSection.BbAuth &&
+                                                    !!state.initiateApiTokenAuth
+                                                }
                                                 config={state.config}
                                                 jiraToggle={handleJiraToggle}
                                                 bbToggle={handleBitbucketToggle}
@@ -282,6 +293,7 @@ const ConfigPageV3: React.FunctionComponent = () => {
                             open={authDialogOpen}
                             save={controller.login}
                             onExited={authDialogController.onExited}
+                            allSitesWithAuth={allSitesWithAuth}
                         />
                     </AtlascodeErrorBoundary>
                 </AuthDialogControllerContext.Provider>

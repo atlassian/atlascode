@@ -1,4 +1,5 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import { ConfigV3Section, ConfigV3SubSection } from 'src/lib/ipc/models/config';
 import * as vscode from 'vscode';
 
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
@@ -169,7 +170,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 break;
             }
             case StartWorkActionType.OpenSettings: {
-                this.api.openSettings(msg.section, msg.subsection);
+                this.api.openSettings(ConfigV3Section.AdvancedConfig, ConfigV3SubSection.StartWork);
                 break;
             }
             case StartWorkActionType.GetImage: {

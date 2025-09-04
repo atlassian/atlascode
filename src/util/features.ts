@@ -8,7 +8,7 @@ export enum Features {
 }
 
 export const enum Experiments {
-    AtlascodeExperiment = '', // When new experiment starts, replace this line
+    AtlascodeExperiment = '', // When new experiment starts, replace this line and the ExperimentGates below
 }
 
 export const ExperimentGates: Record<Experiments, ExperimentPayload> = {

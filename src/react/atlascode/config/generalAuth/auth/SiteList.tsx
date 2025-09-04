@@ -1,9 +1,9 @@
 import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
 import CloudIcon from '@mui/icons-material/Cloud';
-import DeleteIcon from '@mui/icons-material/Delete';
 import DomainIcon from '@mui/icons-material/Domain';
 import EditIcon from '@mui/icons-material/Edit';
 import ErrorIcon from '@mui/icons-material/Error';
+import LogoutIcon from '@mui/icons-material/Logout';
 import {
     Avatar,
     Box,
@@ -28,6 +28,7 @@ import {
     AuthInfoState,
     DetailedSiteInfo,
     emptyUserInfo,
+    isOAuthInfo,
     Product,
     ProductJira,
 } from '../../../../../atlclients/authInfo';
@@ -98,14 +99,18 @@ function generateListItems(
                                 </IconButton>
                             </Tooltip>
                         )}
-                        {!swa.site.isCloud && (
-                            <IconButton edge="end" aria-label="edit" onClick={() => edit(swa)} size="large">
-                                <EditIcon fontSize="small" color="inherit" />
-                            </IconButton>
+                        {!isOAuthInfo(swa.auth) && (
+                            <Tooltip title="Edit">
+                                <IconButton edge="end" aria-label="edit" onClick={() => edit(swa)} size="large">
+                                    <EditIcon fontSize="small" color="inherit" />
+                                </IconButton>
+                            </Tooltip>
                         )}
-                        <IconButton edge="end" aria-label="delete" onClick={() => logout(swa.site)} size="large">
-                            <DeleteIcon fontSize="small" color="inherit" />
-                        </IconButton>
+                        <Tooltip title="Logout">
+                            <IconButton edge="end" aria-label="delete" onClick={() => logout(swa.site)} size="large">
+                                <LogoutIcon fontSize="small" color="inherit" />
+                            </IconButton>
+                        </Tooltip>
                     </ListItemSecondaryAction>
                 </ListItem>
                 {sites.length !== i + 1 && <Divider />}
@@ -121,9 +126,8 @@ export const SiteList: React.FunctionComponent<SiteListProps> = ({ sites, produc
     const classes = useStyles();
 
     const editOrLogout = (siteWithAuth: SiteWithAuthInfo) => {
-        const site = siteWithAuth.site;
-        if (site.isCloud) {
-            controller.logout(site);
+        if (isOAuthInfo(siteWithAuth.auth)) {
+            controller.logout(siteWithAuth.site);
             const hostname = product.key === ProductJira.key ? 'atlassian.net' : 'bitbucket.org';
             controller.login({ host: hostname, product: product }, { user: emptyUserInfo, state: AuthInfoState.Valid });
         } else {
