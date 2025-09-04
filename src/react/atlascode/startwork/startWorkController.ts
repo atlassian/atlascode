@@ -6,7 +6,7 @@ import { WorkspaceRepo } from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { StartWorkAction, StartWorkActionType } from '../../../lib/ipc/fromUI/startWork';
 import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
-import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
+import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from '../../../lib/ipc/models/config';
 import {
     emptyStartWorkInitMessage,
     StartWorkInitMessage,
@@ -35,7 +35,10 @@ export interface StartWorkControllerApi {
     ) => Promise<{ transistionStatus?: string; branch?: string; upstream?: string }>;
     closePage: () => void;
     openJiraIssue: () => void;
-    openSettings: (section?: ConfigSection, subsection?: ConfigSubSection) => void;
+    openSettings: (
+        section?: ConfigSection | ConfigV3Section,
+        subsection?: ConfigSubSection | ConfigV3SubSection,
+    ) => void;
 }
 
 const emptyApi: StartWorkControllerApi = {

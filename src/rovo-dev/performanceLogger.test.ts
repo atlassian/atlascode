@@ -78,6 +78,7 @@ describe('PerformanceLogger', () => {
 
     describe('promptFirstByteReceived', () => {
         beforeEach(() => {
+            performanceLogger.appInitialized('test-instance-123');
             performanceLogger.sessionStarted('test-session-123');
         });
 
@@ -96,6 +97,7 @@ describe('PerformanceLogger', () => {
                 'api.rovodev.chat.response.timeToFirstByte',
                 measureValue,
                 {
+                    appInstanceId: 'test-instance-123',
                     rovoDevSessionId: 'test-session-123',
                     rovoDevPromptId,
                 },
@@ -116,6 +118,7 @@ describe('PerformanceLogger', () => {
 
     describe('promptFirstMessageReceived', () => {
         beforeEach(() => {
+            performanceLogger.appInitialized('test-instance-123');
             performanceLogger.sessionStarted('test-session-123');
         });
 
@@ -134,6 +137,7 @@ describe('PerformanceLogger', () => {
                 'api.rovodev.chat.response.timeToFirstMessage',
                 measureValue,
                 {
+                    appInstanceId: 'test-instance-123',
                     rovoDevSessionId: 'test-session-123',
                     rovoDevPromptId,
                 },
@@ -147,6 +151,7 @@ describe('PerformanceLogger', () => {
 
     describe('promptTechnicalPlanReceived', () => {
         beforeEach(() => {
+            performanceLogger.appInitialized('test-instance-123');
             performanceLogger.sessionStarted('test-session-123');
         });
 
@@ -165,6 +170,7 @@ describe('PerformanceLogger', () => {
                 'api.rovodev.chat.response.timeToTechPlan',
                 measureValue,
                 {
+                    appInstanceId: 'test-instance-123',
                     rovoDevSessionId: 'test-session-123',
                     rovoDevPromptId,
                 },
@@ -178,6 +184,7 @@ describe('PerformanceLogger', () => {
 
     describe('promptLastMessageReceived', () => {
         beforeEach(() => {
+            performanceLogger.appInitialized('test-instance-123');
             performanceLogger.sessionStarted('test-session-123');
         });
 
@@ -197,6 +204,7 @@ describe('PerformanceLogger', () => {
                 'api.rovodev.chat.response.timeToLastMessage',
                 measureValue,
                 {
+                    appInstanceId: 'test-instance-123',
                     rovoDevSessionId: 'test-session-123',
                     rovoDevPromptId,
                 },

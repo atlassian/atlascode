@@ -177,4 +177,9 @@ export class RovoDevApiClient {
             return false;
         }
     }
+
+    /** Invokes the GET `/shutdown` API. */
+    public async shutdown(): Promise<void> {
+        await this.fetchApi('/shutdown', 'GET');
+    }
 }

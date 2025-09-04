@@ -91,6 +91,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
 
         const handleSave = useCallback(
             (data: any) => {
+                const baseUrl = data.baseUrl.includes('://') ? data.baseUrl : `https://${data.baseUrl}`;
                 const customSSLCerts =
                     data.customSSLEnabled && data.customSSLType === 'customServerSSL' ? data.sslCertPaths : undefined;
                 const pfxCert =
@@ -99,7 +100,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                     data.customSSLEnabled && data.customSSLType === 'customClientSSL' ? data.pfxPassphrase : undefined;
                 const contextPath = data.contextPathEnabled ? normalizeContextPath(data.contextPath) : undefined;
 
-                const url = new URL(data.baseUrl);
+                const url = new URL(baseUrl);
 
                 const siteInfo: SiteInfo = {
                     host: url.host,
@@ -140,7 +141,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                         }
                         break;
                     default:
-                        if (data.baseUrl && !isCustomUrl(data.baseUrl)) {
+                        if (baseUrl && !isCustomUrl(baseUrl)) {
                             save(siteInfo, emptyAuthInfo);
                         }
                         break;
