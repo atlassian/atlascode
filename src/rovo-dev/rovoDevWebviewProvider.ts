@@ -883,6 +883,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._processState = RovoDevProcessState.Terminated;
         this._initialized = false;
         this._rovoDevApiClient = undefined;
+        this._chatProvider.shutdown();
+        this._telemetryProvider.shutdown();
 
         errorMessage = errorMessage
             ? `Agent process terminated:\n${errorMessage}\n\nPlease start a new chat session to continue.`
