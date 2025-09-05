@@ -819,11 +819,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             if (result) {
                 const info = await this.executeHealthcheckInfo();
                 const sessionId = (info || {}).sessionId || null;
-
                 this.beginNewSession(sessionId, false);
-                if (this.isBoysenberry) {
-                    await this._chatProvider.executeReplay();
-                }
             } else {
                 throw new Error(
                     `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within 10000ms`,
@@ -845,6 +841,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             await this.processError(thrownError, false);
         } else {
             await this._chatProvider.setReady(this._rovoDevApiClient);
+        }
+
+        if (this.isBoysenberry) {
+            await this._chatProvider.executeReplay();
         }
 
         // extra sanity checks here
