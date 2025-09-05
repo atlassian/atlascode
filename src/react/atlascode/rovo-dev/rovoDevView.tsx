@@ -422,6 +422,7 @@ const RovoDevView: React.FC = () => {
                         if (event.message.isProcessTerminated) {
                             setCurrentState(State.ProcessTerminated);
                         }
+                        finalizeResponse();
                     }
                     const msg = event.message;
                     setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
