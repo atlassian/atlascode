@@ -24,6 +24,18 @@ export interface EditIssueAction extends Action {
     fields: FieldValues;
 }
 
+export interface EditChildIssueAction extends Action {
+    action: 'editChildIssue';
+    issueKey: string;
+    fields: FieldValues;
+}
+
+export interface TransitionChildIssueAction extends Action {
+    action: 'transitionChildIssue';
+    issueKey: string;
+    statusName: string;
+}
+
 export interface TransitionIssueAction extends Action {
     action: 'transitionIssue';
     issue: MinimalIssueOrKeyAndSite<DetailedSiteInfo>;

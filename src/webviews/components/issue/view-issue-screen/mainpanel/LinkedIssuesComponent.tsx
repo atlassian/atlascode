@@ -26,6 +26,7 @@ type Props = {
     onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => void;
     onDelete: (issueLink: any) => void;
     enableLinkedIssues: { enable: boolean; setEnableLinkedIssues: (enable: boolean) => void };
+    onStatusChange?: (issueKey: string, statusName: string) => void;
 };
 
 const SmallAddIcon = (iconProps: GlyphProps) => <AddIcon {...iconProps} size="small" />;
@@ -40,6 +41,7 @@ export const LinkedIssuesComponent: React.FC<Props> = ({
     onIssueClick,
     onDelete,
     enableLinkedIssues,
+    onStatusChange,
 }) => {
     const [isEditing, setIsEditing] = React.useState(false);
     const [selectedIssue, setSelectedIssue] = React.useState<IssuePickerIssue | undefined>(undefined);
@@ -138,7 +140,12 @@ export const LinkedIssuesComponent: React.FC<Props> = ({
                     </Box>
                 </Box>
             )}
-            <LinkedIssues onIssueClick={onIssueClick} issuelinks={issuelinks} onDelete={onDelete} />
+            <LinkedIssues
+                onIssueClick={onIssueClick}
+                issuelinks={issuelinks}
+                onDelete={onDelete}
+                onStatusChange={onStatusChange}
+            />
         </Box>
     );
 };

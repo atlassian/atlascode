@@ -12,6 +12,7 @@ export const mdParser = new MarkdownIt({
     html: true,
     breaks: true,
     typographer: true,
+    linkify: true,
 });
 
 export interface OpenFileFunc {

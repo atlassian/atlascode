@@ -49,6 +49,9 @@ jest.mock('../container', () => ({
 }));
 
 jest.mock('../jira/fetchIssue');
+jest.mock('../jira/fetchIssueWithTransitions', () => ({
+    fetchMultipleIssuesWithTransitions: jest.fn(),
+}));
 jest.mock('../jira/transitionIssue', () => ({
     transitionIssue: jest.fn().mockResolvedValue(undefined),
 }));
@@ -1228,10 +1231,35 @@ describe('JiraIssueWebview', () => {
     });
 });
 
-// Additional tests for JiraIssueWebview methods
 describe('JiraIssueWebview - Additional Method Tests', () => {
     let webview: JiraIssueWebview;
     const mockExtensionPath = '/test/path';
+
+    const mockSiteDetails = {
+        id: 'site-1',
+        name: 'Test Jira Site',
+        baseLinkUrl: 'https://test-jira.com',
+        baseApiUrl: 'https://test-jira.com/rest/api/2',
+        isCloud: true,
+        product: ProductJira,
+    } as any;
+    const mockIssue = {
+        key: 'TEST-123',
+        id: 'issue-123',
+        summary: 'Test Issue',
+        siteDetails: mockSiteDetails,
+        isEpic: false,
+        issuetype: {
+            id: '1',
+            name: 'Task',
+            subtask: false,
+            avatarId: 1,
+            description: 'Task issue type',
+            iconUrl: 'https://example.com/task-icon.png',
+            self: 'https://example.com/rest/api/2/issuetype/1',
+            epic: false,
+        },
+    };
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -1380,6 +1408,266 @@ describe('JiraIssueWebview - Additional Method Tests', () => {
 
             expect(mockClient.editIssue).toHaveBeenCalled();
             expect(postMessageSpy).toHaveBeenCalled();
+        });
+    });
+
+    describe('enhanceChildAndLinkedIssuesWithTransitions', () => {
+        const mockFetchMultipleIssuesWithTransitions =
+            require('../jira/fetchIssueWithTransitions').fetchMultipleIssuesWithTransitions;
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+        });
+
+        it('should enhance subtasks with transitions data', async () => {
+            const mockEnhancedIssues = [
+                {
+                    key: 'SUBTASK-1',
+                    transitions: [
+                        {
+                            id: '2',
+                            name: 'Start Progress',
+                            to: { id: '2', name: 'In Progress' },
+                        },
+                    ],
+                    status: { id: '1', name: 'To Do' },
+                    assignee: { id: 'user1', displayName: 'John Doe' },
+                    priority: { id: '2', name: 'High' },
+                },
+                {
+                    key: 'SUBTASK-2',
+                    transitions: [
+                        {
+                            id: '3',
+                            name: 'Complete',
+                            to: { id: '3', name: 'Done' },
+                        },
+                    ],
+                    status: { id: '2', name: 'In Progress' },
+                    assignee: { id: 'user2', displayName: 'Jane Smith' },
+                    priority: { id: '1', name: 'Medium' },
+                },
+            ];
+
+            mockFetchMultipleIssuesWithTransitions.mockResolvedValue(mockEnhancedIssues);
+
+            (webview as any)._editUIData = {
+                fieldValues: {
+                    subtasks: [
+                        { key: 'SUBTASK-1', summary: 'First subtask' },
+                        { key: 'SUBTASK-2', summary: 'Second subtask' },
+                    ],
+                },
+            };
+
+            (webview as any)._issue = mockIssue;
+
+            await (webview as any).enhanceChildAndLinkedIssuesWithTransitions();
+
+            expect(mockFetchMultipleIssuesWithTransitions).toHaveBeenCalledWith(
+                ['SUBTASK-1', 'SUBTASK-2'],
+                mockIssue.siteDetails,
+            );
+
+            const subtasks = (webview as any)._editUIData.fieldValues.subtasks;
+            expect(subtasks[0]).toEqual({
+                key: 'SUBTASK-1',
+                summary: 'First subtask',
+                transitions: mockEnhancedIssues[0].transitions,
+                status: mockEnhancedIssues[0].status,
+                assignee: mockEnhancedIssues[0].assignee,
+                priority: mockEnhancedIssues[0].priority,
+            });
+
+            expect(subtasks[1]).toEqual({
+                key: 'SUBTASK-2',
+                summary: 'Second subtask',
+                transitions: mockEnhancedIssues[1].transitions,
+                status: mockEnhancedIssues[1].status,
+                assignee: mockEnhancedIssues[1].assignee,
+                priority: mockEnhancedIssues[1].priority,
+            });
+        });
+
+        it('should enhance linked issues with transitions data', async () => {
+            const mockEnhancedIssues = [
+                {
+                    key: 'LINKED-1',
+                    transitions: [
+                        {
+                            id: '2',
+                            name: 'Start Progress',
+                            to: { id: '2', name: 'In Progress' },
+                        },
+                    ],
+                    status: { id: '1', name: 'To Do' },
+                    assignee: { id: 'user1', displayName: 'John Doe' },
+                    priority: { id: '2', name: 'High' },
+                },
+                {
+                    key: 'LINKED-2',
+                    transitions: [
+                        {
+                            id: '3',
+                            name: 'Complete',
+                            to: { id: '3', name: 'Done' },
+                        },
+                    ],
+                    status: { id: '2', name: 'In Progress' },
+                    assignee: { id: 'user2', displayName: 'Jane Smith' },
+                    priority: { id: '1', name: 'Medium' },
+                },
+            ];
+
+            mockFetchMultipleIssuesWithTransitions.mockResolvedValue(mockEnhancedIssues);
+
+            (webview as any)._editUIData = {
+                fieldValues: {
+                    issuelinks: [
+                        {
+                            id: 'link-1',
+                            type: { name: 'Blocks' },
+                            outwardIssue: { key: 'LINKED-1', summary: 'First linked issue' },
+                        },
+                        {
+                            id: 'link-2',
+                            type: { name: 'Relates' },
+                            inwardIssue: { key: 'LINKED-2', summary: 'Second linked issue' },
+                        },
+                    ],
+                },
+            };
+
+            (webview as any)._issue = mockIssue;
+
+            await (webview as any).enhanceChildAndLinkedIssuesWithTransitions();
+
+            expect(mockFetchMultipleIssuesWithTransitions).toHaveBeenCalledWith(
+                ['LINKED-1', 'LINKED-2'],
+                mockIssue.siteDetails,
+            );
+
+            const issuelinks = (webview as any)._editUIData.fieldValues.issuelinks;
+            expect(issuelinks[0].outwardIssue).toEqual({
+                key: 'LINKED-1',
+                summary: 'First linked issue',
+                transitions: mockEnhancedIssues[0].transitions,
+                status: mockEnhancedIssues[0].status,
+                assignee: mockEnhancedIssues[0].assignee,
+                priority: mockEnhancedIssues[0].priority,
+            });
+
+            expect(issuelinks[1].inwardIssue).toEqual({
+                key: 'LINKED-2',
+                summary: 'Second linked issue',
+                transitions: mockEnhancedIssues[1].transitions,
+                status: mockEnhancedIssues[1].status,
+                assignee: mockEnhancedIssues[1].assignee,
+                priority: mockEnhancedIssues[1].priority,
+            });
+        });
+
+        it('should return early when _editUIData is not available', async () => {
+            (webview as any)._editUIData = null;
+
+            await (webview as any).enhanceChildAndLinkedIssuesWithTransitions();
+
+            expect(mockFetchMultipleIssuesWithTransitions).not.toHaveBeenCalled();
+        });
+
+        it('should return early when fieldValues is not available', async () => {
+            (webview as any)._editUIData = {};
+
+            await (webview as any).enhanceChildAndLinkedIssuesWithTransitions();
+
+            expect(mockFetchMultipleIssuesWithTransitions).not.toHaveBeenCalled();
+        });
+
+        it('should handle empty arrays gracefully', async () => {
+            (webview as any)._editUIData = {
+                fieldValues: {
+                    subtasks: [],
+                    issuelinks: [],
+                },
+            };
+
+            await (webview as any).enhanceChildAndLinkedIssuesWithTransitions();
+
+            expect(mockFetchMultipleIssuesWithTransitions).not.toHaveBeenCalled();
+        });
+
+        it('should handle fetchMultipleIssuesWithTransitions errors gracefully', async () => {
+            const error = new Error('Network error');
+            mockFetchMultipleIssuesWithTransitions.mockRejectedValue(error);
+
+            (webview as any)._editUIData = {
+                fieldValues: {
+                    subtasks: [{ key: 'SUBTASK-1', summary: 'Subtask' }],
+                },
+            };
+
+            (webview as any)._issue = mockIssue;
+
+            await (webview as any).enhanceChildAndLinkedIssuesWithTransitions();
+
+            expect(mockFetchMultipleIssuesWithTransitions).toHaveBeenCalledWith(['SUBTASK-1'], mockIssue.siteDetails);
+
+            expect(Logger.error).toHaveBeenCalledWith(
+                error,
+                'Error enhancing child and linked issues with transitions',
+            );
+
+            const subtasks = (webview as any)._editUIData.fieldValues.subtasks;
+            expect(subtasks[0]).toEqual({ key: 'SUBTASK-1', summary: 'Subtask' });
+        });
+
+        it('should handle both subtasks and linked issues together', async () => {
+            const mockEnhancedIssues = [
+                {
+                    key: 'SUBTASK-1',
+                    transitions: [{ id: '2', name: 'Start Progress' }],
+                    status: { id: '1', name: 'To Do' },
+                    assignee: { id: 'user1' },
+                    priority: { id: '2', name: 'High' },
+                },
+                {
+                    key: 'LINKED-1',
+                    transitions: [{ id: '3', name: 'Complete' }],
+                    status: { id: '2', name: 'In Progress' },
+                    assignee: { id: 'user2' },
+                    priority: { id: '1', name: 'Medium' },
+                },
+            ];
+
+            mockFetchMultipleIssuesWithTransitions.mockResolvedValue(mockEnhancedIssues);
+
+            (webview as any)._editUIData = {
+                fieldValues: {
+                    subtasks: [{ key: 'SUBTASK-1', summary: 'Subtask' }],
+                    issuelinks: [
+                        {
+                            id: 'link-1',
+                            type: { name: 'Blocks' },
+                            outwardIssue: { key: 'LINKED-1', summary: 'Linked issue' },
+                        },
+                    ],
+                },
+            };
+
+            (webview as any)._issue = mockIssue;
+
+            await (webview as any).enhanceChildAndLinkedIssuesWithTransitions();
+
+            expect(mockFetchMultipleIssuesWithTransitions).toHaveBeenCalledWith(
+                ['SUBTASK-1', 'LINKED-1'],
+                mockIssue.siteDetails,
+            );
+
+            const subtasks = (webview as any)._editUIData.fieldValues.subtasks;
+            const issuelinks = (webview as any)._editUIData.fieldValues.issuelinks;
+
+            expect(subtasks[0].transitions).toEqual(mockEnhancedIssues[0].transitions);
+            expect(issuelinks[0].outwardIssue.transitions).toEqual(mockEnhancedIssues[1].transitions);
         });
     });
 });

@@ -1,12 +1,13 @@
 import { APIRequestContext, expect, Page } from '@playwright/test';
 import { getIssueFrame, setupIssueMock, setupSearchMock } from 'e2e/helpers';
+import { JiraTypes } from 'e2e/helpers/types';
 import { AtlascodeDrawer, JiraIssuePage, StartWorkPage } from 'e2e/page-objects';
 
 const ISSUE_NAME = 'BTS-1 - User Interface Bugs';
 const CURRENT_STATUS = 'To Do';
 const NEXT_STATUS = 'In Progress';
 
-export const startWorkFlow = async (page: Page, request: APIRequestContext) => {
+export const startWorkFlow = async (page: Page, request: APIRequestContext, type: JiraTypes) => {
     await page.getByRole('tab', { name: 'Atlassian Settings' }).getByLabel(/close/i).click();
 
     const atlascodeDrawer = new AtlascodeDrawer(page);
@@ -32,7 +33,7 @@ export const startWorkFlow = async (page: Page, request: APIRequestContext) => {
 
     // setup mocks for next status
     const cleanupIssueMock = await setupIssueMock(request, { status: NEXT_STATUS });
-    const cleanupSearchMock = await setupSearchMock(request, NEXT_STATUS);
+    const cleanupSearchMock = await setupSearchMock(request, NEXT_STATUS, type);
 
     await page.getByRole('tab', { name: 'Start work on BTS-1', exact: true }).getByLabel(/close/i).click();
 

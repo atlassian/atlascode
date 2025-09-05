@@ -2,6 +2,10 @@
 
 ## What's new in 3.8.14
 
+### Features
+
+- Add the ability to update the Status column from the child issues table tree
+
 ### Bug Fixes
 
 - Allow editing Cloud sites authenticated with an API token

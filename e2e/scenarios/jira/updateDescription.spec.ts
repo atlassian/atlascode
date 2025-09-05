@@ -1,5 +1,6 @@
 import { APIRequestContext, Page } from '@playwright/test';
 import { getIssueFrame, setupIssueMock } from 'e2e/helpers';
+import { updatedDescription } from 'e2e/mock-data/description';
 import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
 
 const OLD_DESCRIPTION = 'Track and resolve bugs related to the user interface.';
@@ -16,7 +17,7 @@ export async function updateDescription(page: Page, request: APIRequestContext) 
     await issuePage.description.changeTo(NEW_DESCRIPTION);
     await page.waitForTimeout(500);
 
-    const cleanupIssueMock = await setupIssueMock(request, { description: NEW_DESCRIPTION });
+    const cleanupIssueMock = await setupIssueMock(request, { description: updatedDescription(NEW_DESCRIPTION) });
 
     await issuePage.saveChanges();
     await page.waitForTimeout(1_000);
