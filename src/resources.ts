@@ -37,6 +37,7 @@ export enum iconSet {
     PIPELINESTOPPED = 'stopped',
     PIPELINEPAUSED = 'paused',
     TWITTERLOGOBLUE = 'twitterLogoBlue',
+    ROVODEV = 'rovodev',
 }
 
 export function registerResources(vscodeContext: ExtensionContext) {
@@ -114,6 +115,7 @@ export function registerResources(vscodeContext: ExtensionContext) {
         iconSet.PIPELINEPAUSED,
         Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-paused.svg'))),
     );
+    Resources.icons.set(iconSet.ROVODEV, Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'rovo.png'))));
 
     Resources.charlesCert = vscodeContext.asAbsolutePath('charles-ssl-proxying-certificate.pem');
 

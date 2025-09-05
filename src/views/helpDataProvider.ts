@@ -1,6 +1,7 @@
 import { Container } from 'src/container';
 import { Experiments } from 'src/util/featureFlags';
 
+import { ProductJira } from '../atlclients/authInfo';
 import { Commands } from '../constants';
 import { KnownLinkID } from '../lib/ipc/models/common';
 import { iconSet } from '../resources';
@@ -53,6 +54,14 @@ export class HelpDataProvider extends BaseTreeDataProvider {
                         title: 'Open Explore Page',
                     },
                 ),
+                ...(Container.isRovoDevEnabled && Container.siteManager.productHasAtLeastOneSite(ProductJira)
+                    ? [
+                          new InternalLinkNode('Rovo Dev', 'Chat with Atlassian coding agent', iconSet.ROVODEV, {
+                              command: 'workbench.view.extension.atlascode-rovo-dev',
+                              title: 'Open Rovo Dev Chat',
+                          }),
+                      ]
+                    : []),
             ];
         } else {
             return [
@@ -75,6 +84,14 @@ export class HelpDataProvider extends BaseTreeDataProvider {
                     KnownLinkID.Contribute,
                 ),
                 new LinkNode('Report an Issue', 'Report and vote on issues', iconSet.ISSUES, KnownLinkID.ReportAnIssue),
+                ...(Container.isRovoDevEnabled && Container.siteManager.productHasAtLeastOneSite(ProductJira)
+                    ? [
+                          new InternalLinkNode('Rovo Dev', 'Chat with Atlassian coding agent', iconSet.ROVODEV, {
+                              command: 'workbench.view.extension.atlascode-rovo-dev',
+                              title: 'Open Rovo Dev Chat',
+                          }),
+                      ]
+                    : []),
             ];
         }
     }
