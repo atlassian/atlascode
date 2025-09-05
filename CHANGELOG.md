@@ -9,6 +9,7 @@
 ### Bug Fixes
 
 - Allow editing Cloud sites authenticated with an API token
+- Fixed issue when Rovo Dev icon doesn’t show up in Cursor IDE
 
 ## What's new in 3.8.13
 
