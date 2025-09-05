@@ -319,7 +319,14 @@ export class SiteManager extends Disposable {
                 this.resolvePrimarySite();
 
                 if (removeCredentials) {
-                    await Container.credentialManager.removeAuthInfo(deletedSite);
+                    if (
+                        !Container.credentialManager.isSiteCredentialShared(
+                            deletedSite,
+                            this.getSitesAvailable(deletedSite.product),
+                        )
+                    ) {
+                        await Container.credentialManager.removeAuthInfo(deletedSite);
+                    }
                 }
                 if (fireEvent) {
                     this._onDidSitesAvailableChange.fire({
