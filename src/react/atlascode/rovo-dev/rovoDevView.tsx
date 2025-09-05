@@ -151,43 +151,115 @@ const RovoDevView: React.FC = () => {
         [dispatch, removeModifiedFileToolReturns],
     );
 
-    const finalizeResponse = useCallback(() => {
-        setPendingToolCallMessage('');
-        setCurrentState(State.WaitingForPrompt);
-
-        setHistory((prev) => {
-            const last = prev.pop();
-            if (!last) {
-                return prev;
-            }
-
-            if (Array.isArray(last) || last.source !== 'RovoDev') {
-                return [...prev, last];
-            }
-
-            const messageBlock = prev.splice(streamStartIndex);
-
-            if (messageBlock.length > 0) {
-                const thinkingGroup = messageBlock
-                    .map((msg) => {
-                        if (Array.isArray(msg)) {
-                            return null;
+    const groupMessages = useCallback(
+        (isReplay?: boolean) => {
+            if (isReplay) {
+                const stream: Response[] = [];
+                let userIdx = 0;
+                let parseIdx = 0;
+                while (parseIdx < history.length) {
+                    const msg = history[parseIdx];
+                    if (parseIdx === userIdx) {
+                        if (!Array.isArray(msg) && msg?.source === 'User') {
+                            stream.push(history[parseIdx]);
                         }
-                        return msg;
-                    })
-                    .filter((msg) => msg !== null) as ChatMessage[];
+                        parseIdx++;
+                        continue;
+                    }
+                    // If parsing index finds another user message or end of stream, look back and group messages
+                    if ((!Array.isArray(msg) && msg?.source === 'User') || parseIdx === history.length - 1) {
+                        if (userIdx < parseIdx) {
+                            const endIndex = parseIdx === history.length - 1 ? parseIdx + 1 : parseIdx;
+                            const messageBlock = history.slice(userIdx + 1, endIndex);
+                            const summary = messageBlock.pop();
+                            console.log('messageBlock', messageBlock, 'summary', summary, 'msg', msg, {
+                                userIdx,
+                                parseIdx,
+                            });
+                            userIdx = parseIdx;
+                            if (!summary) {
+                                parseIdx++;
+                                continue;
+                            }
 
-                if (thinkingGroup.length === 0) {
-                    return [...prev, ...messageBlock, last];
+                            if (Array.isArray(summary) || summary.source !== 'RovoDev') {
+                                parseIdx++;
+                                continue;
+                            }
+
+                            if (messageBlock.length > 0) {
+                                const thinkingGroup = messageBlock
+                                    .map((msg) => {
+                                        if (Array.isArray(msg)) {
+                                            return null;
+                                        }
+                                        return msg;
+                                    })
+                                    .filter((msg) => msg !== null) as ChatMessage[];
+                                if (thinkingGroup.length > 0) {
+                                    stream.push(thinkingGroup);
+                                }
+                                stream.push(summary);
+                                parseIdx !== history.length - 1 && stream.push(msg);
+
+                                parseIdx++;
+                                continue;
+                            }
+
+                            stream.push(summary);
+                            parseIdx !== history.length - 1 && stream.push(msg);
+                        }
+                    }
+                    parseIdx++;
+                }
+                setHistory(stream);
+                return;
+            }
+
+            setHistory((prev) => {
+                const last = prev.pop();
+                if (!last) {
+                    return prev;
                 }
 
-                setStreamStartIndex(prev.length);
-                return [...prev, thinkingGroup, last];
-            }
+                if (Array.isArray(last) || last.source !== 'RovoDev') {
+                    return [...prev, last];
+                }
 
-            return [...prev, last];
-        });
-    }, [streamStartIndex]);
+                const messageBlock = prev.splice(streamStartIndex);
+
+                if (messageBlock.length > 0) {
+                    const thinkingGroup = messageBlock
+                        .map((msg) => {
+                            if (Array.isArray(msg)) {
+                                return null;
+                            }
+                            return msg;
+                        })
+                        .filter((msg) => msg !== null) as ChatMessage[];
+
+                    if (thinkingGroup.length === 0) {
+                        return [...prev, ...messageBlock, last];
+                    }
+
+                    setStreamStartIndex(prev.length);
+                    return [...prev, thinkingGroup, last];
+                }
+
+                return [...prev, last];
+            });
+        },
+        [history, streamStartIndex],
+    );
+
+    const finalizeResponse = useCallback(
+        (isReplay?: boolean) => {
+            setPendingToolCallMessage('');
+            setCurrentState(State.WaitingForPrompt);
+            groupMessages(isReplay);
+        },
+        [groupMessages],
+    );
 
     const clearChatHistory = useCallback(() => {
         setHistory([]);
@@ -299,7 +371,7 @@ const RovoDevView: React.FC = () => {
                         currentState === State.ExecutingPlan ||
                         currentState === State.CancellingResponse
                     ) {
-                        finalizeResponse();
+                        finalizeResponse(event.isReplay);
                         if (!event.isReplay) {
                             validateResponseFinalized();
                         }
@@ -456,7 +528,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [currentState, appendResponse, history.length, clearChatHistory, finalizeResponse, validateResponseFinalized],
+        [currentState, history.length, appendResponse, clearChatHistory, finalizeResponse, validateResponseFinalized],
     );
 
     const { postMessage, postMessagePromise } = useMessagingApi<
