@@ -316,7 +316,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             setFormVisible={setIsFormVisible}
                         />
                     )}
-                    {!canCreatePR && !deepPlanCreated && feedbackVisible && (
+                    {feedbackVisible && (
                         <FeedbackForm
                             type={feedbackType}
                             onSubmit={(feedbackType, feedback, canContact, includeTenMessages) => {

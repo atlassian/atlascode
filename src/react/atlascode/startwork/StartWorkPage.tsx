@@ -38,7 +38,6 @@ import { AnalyticsView } from 'src/analyticsTypes';
 import { v4 } from 'uuid';
 
 import { StartWorkAction, StartWorkActionType } from '../../../lib/ipc/fromUI/startWork';
-import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
 import { BranchType, emptyRepoData, RepoData } from '../../../lib/ipc/toUI/startWork';
 import { Branch } from '../../../typings/git';
 import { OnMessageEventPromise } from '../../../util/reactpromise';
@@ -289,7 +288,7 @@ const StartWorkPage: React.FunctionComponent = () => {
     ]);
 
     const handleOpenSettings = useCallback(() => {
-        controller.openSettings(ConfigSection.Jira, ConfigSubSection.StartWork);
+        controller.openSettings();
     }, [controller]);
 
     useEffect(() => {

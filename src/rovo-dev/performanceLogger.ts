@@ -5,6 +5,11 @@ import Perf from '../util/perf';
 
 export class PerformanceLogger {
     private currentSessionId: string = '';
+    private appInstanceId: string = '';
+
+    public appInitialized(appInstanceId: string) {
+        this.appInstanceId = appInstanceId;
+    }
 
     public sessionStarted(sessionId: string) {
         this.currentSessionId = sessionId;
@@ -21,6 +26,7 @@ export class PerformanceLogger {
     public async promptFirstByteReceived(promptId: string) {
         const measure = Perf.measure(promptId);
         const evt = await performanceEvent('api.rovodev.chat.response.timeToFirstByte', measure, {
+            appInstanceId: this.appInstanceId,
             rovoDevSessionId: this.currentSessionId,
             rovoDevPromptId: promptId,
         });
@@ -32,6 +38,7 @@ export class PerformanceLogger {
     public async promptFirstMessageReceived(promptId: string) {
         const measure = Perf.measure(promptId);
         const evt = await performanceEvent('api.rovodev.chat.response.timeToFirstMessage', measure, {
+            appInstanceId: this.appInstanceId,
             rovoDevSessionId: this.currentSessionId,
             rovoDevPromptId: promptId,
         });
@@ -43,6 +50,7 @@ export class PerformanceLogger {
     public async promptTechnicalPlanReceived(promptId: string) {
         const measure = Perf.measure(promptId);
         const evt = await performanceEvent('api.rovodev.chat.response.timeToTechPlan', measure, {
+            appInstanceId: this.appInstanceId,
             rovoDevSessionId: this.currentSessionId,
             rovoDevPromptId: promptId,
         });
@@ -54,6 +62,7 @@ export class PerformanceLogger {
     public async promptLastMessageReceived(promptId: string) {
         const measure = Perf.measure(promptId);
         const evt = await performanceEvent('api.rovodev.chat.response.timeToLastMessage', measure, {
+            appInstanceId: this.appInstanceId,
             rovoDevSessionId: this.currentSessionId,
             rovoDevPromptId: promptId,
         });

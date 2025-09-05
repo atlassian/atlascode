@@ -11,7 +11,7 @@ import { updateIssueStatus } from './updateIssueStatus.spec';
 import { updateLabelsFlow } from './updateLabelsFlow.spec';
 import { viewCommentWithImage } from './viewCommentWithImage.spec';
 
-export const jiraScenarios = [
+export const jiraCloudScenarios = [
     { name: 'Authenticate with Jira', run: authFlowJira },
     { name: 'Create issue', run: createIssue },
     { name: 'Update issue description', run: updateDescription },
@@ -22,6 +22,18 @@ export const jiraScenarios = [
     { name: 'Assigning issue to myself', run: assigningFlow },
     { name: 'Add and remove existing labels', run: updateLabelsFlow },
     { name: 'Check image in description', run: checkImageInDescription },
+    { name: 'Start work on Jira issue', run: startWorkFlow },
+    { name: 'Rename Issue', run: renameIssue },
+];
+
+export const jiraDCScenarios = [
+    { name: 'Authenticate with Jira', run: authFlowJira },
+    { name: 'Create issue', run: createIssue },
+    { name: 'Update issue description', run: updateDescription },
+    { name: 'Add comment to issue', run: addComment },
+    { name: 'View comment with image in issue', run: viewCommentWithImage },
+    { name: 'Attach file to issue', run: attachFile },
+    { name: 'Add and remove existing labels', run: updateLabelsFlow },
     { name: 'Start work on Jira issue', run: startWorkFlow },
     { name: 'Rename Issue', run: renameIssue },
 ];

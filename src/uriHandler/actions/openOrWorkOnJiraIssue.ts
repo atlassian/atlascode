@@ -1,11 +1,11 @@
 import { IssueKeyAndSite, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import { Uri, window } from 'vscode';
+import { Commands } from 'src/constants';
+import { commands, Uri, window } from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { showIssue } from '../../commands/jira/showIssue';
 import { startWorkOnIssue } from '../../commands/jira/startWorkOnIssue';
 import { Container } from '../../container';
-import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
 import { Logger } from '../../logger';
 import { BasicUriHandler } from './basicUriHandler';
 
@@ -70,10 +70,7 @@ export class OpenOrWorkOnJiraIssueUriHandler extends BasicUriHandler {
             )
             .then((userChoice) => {
                 if (userChoice === 'Open auth settings') {
-                    Container.settingsWebviewFactory.createOrShow({
-                        section: ConfigSection.Jira,
-                        subSection: ConfigSubSection.Auth,
-                    });
+                    commands.executeCommand(Commands.AddJiraSite);
                 }
             });
     }
