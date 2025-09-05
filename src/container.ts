@@ -27,7 +27,7 @@ import { PipelineSummaryAction } from './lib/ipc/fromUI/pipelineSummary';
 import { PullRequestDetailsAction } from './lib/ipc/fromUI/pullRequestDetails';
 import { StartWorkAction } from './lib/ipc/fromUI/startWork';
 import { ConfigTarget } from './lib/ipc/models/config';
-import { SectionChangeMessage, SectionV3ChangeMessage } from './lib/ipc/toUI/config';
+import { SectionV3ChangeMessage } from './lib/ipc/toUI/config';
 import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { Logger } from './logger';
@@ -40,7 +40,7 @@ import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
-import { Experiments, FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
+import { FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -53,7 +53,6 @@ import { VSCAnalyticsApi } from './vscAnalyticsApi';
 import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
 import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
 import { VSCConfigV3WebviewControllerFactory } from './webview/config/vscConfigV3WebviewControllerFactory';
-import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
 import { ExplorerFocusManager } from './webview/ExplorerFocusManager';
 import { MultiWebview } from './webview/multiViewFactory';
 import { PipelineSummaryActionImplementation } from './webview/pipelines/pipelineSummaryActionImplementation';
@@ -124,17 +123,6 @@ export class Container {
         context.subscriptions.push(new AuthStatusBar());
         context.subscriptions.push((this._jqlManager = new JQLManager()));
         context.subscriptions.push((this._explorerFocusManager = new ExplorerFocusManager()));
-
-        const settingsV2ViewFactory = new SingleWebview<SectionChangeMessage, ConfigAction>(
-            context.extensionPath,
-            new VSCConfigWebviewControllerFactory(
-                new VSCConfigActionApi(this._analyticsApi, this._cancellationManager),
-                this._commonMessageHandler,
-                this._analyticsApi,
-                SETTINGS_URL,
-            ),
-            this._analyticsApi,
-        );
 
         const settingsV3ViewFactory = new SingleWebview<SectionV3ChangeMessage, ConfigAction>(
             context.extensionPath,
@@ -214,11 +202,7 @@ export class Container {
                 this.analyticsClient.sendTrackEvent(e);
             });
         }
-        if (this._featureFlagClient.checkExperimentValue(Experiments.AtlascodeNewSettingsExperiment)) {
-            context.subscriptions.push((this._settingsWebviewFactory = settingsV3ViewFactory));
-        } else {
-            context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
-        }
+        context.subscriptions.push((this._settingsWebviewFactory = settingsV3ViewFactory));
 
         if (this._featureFlagClient.checkGate(Features.UseNewAuthFlow)) {
             setCommandContext(CommandContext.UseNewAuthFlow, true);
@@ -527,7 +511,7 @@ export class Container {
         return this._explorerFocusManager;
     }
 
-    private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage | SectionV3ChangeMessage, ConfigAction>;
+    private static _settingsWebviewFactory: SingleWebview<SectionV3ChangeMessage, ConfigAction>;
     public static get settingsWebviewFactory() {
         return this._settingsWebviewFactory;
     }

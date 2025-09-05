@@ -4,6 +4,8 @@ export enum ConfigTarget {
     WorkspaceFolder = 'workspacefolder',
 }
 
+// Any "V3" is for UI
+// Regular ConfigSection and ConfigSubSection provide functionality for Settings
 export enum ConfigSection {
     Jira = 'jira',
     Bitbucket = 'bitbucket',
@@ -12,9 +14,8 @@ export enum ConfigSection {
 }
 
 export enum ConfigV3Section {
-    Auth = 'generalAuth', // For UI
-    AdvancedConfig = 'advancedConfigs', // For UI
-    Explore = 'explore', // UI and functionality
+    Auth = 'generalAuth',
+    AdvancedConfig = 'advancedConfigs',
 }
 
 export enum ConfigSubSection {
