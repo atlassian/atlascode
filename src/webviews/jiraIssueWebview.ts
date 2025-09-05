@@ -96,6 +96,11 @@ export class JiraIssueWebview
 
     async initialize(issue: MinimalIssue<DetailedSiteInfo>) {
         this._issue = issue;
+
+        this.fireAdditionalSettings({
+            rovoDevEnabled: Container.isRovoDevEnabled,
+        });
+
         this.invalidate();
 
         NotificationManagerImpl.getInstance().clearNotificationsByUri(getJiraIssueUri(issue));
@@ -255,6 +260,10 @@ export class JiraIssueWebview
             const updatesDuration = timer.measureAndClear(updatePerfMarker);
             performanceEvent(EditJiraIssueUpdatesEventName, updatesDuration, epicFlag).then((event) => {
                 Container.analyticsClient.sendTrackEvent(event);
+            });
+
+            this.fireAdditionalSettings({
+                rovoDevEnabled: Container.isRovoDevEnabled,
             });
         } catch (e) {
             Logger.error(e, 'Error updating issue');

@@ -1,6 +1,7 @@
 import { LoadingButton } from '@atlaskit/button';
 import SendIcon from '@atlaskit/icon/core/arrow-up';
 import StopIcon from '@atlaskit/icon/core/video-stop';
+import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
@@ -190,16 +191,18 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 {/* Left-side Add Context Button */}
                 {!hideButtons && (
                     <>
-                        <LoadingButton
-                            style={{
-                                ...rovoDevPromptButtonStyles,
-                            }}
-                            spacing="compact"
-                            label="Add context"
-                            iconBefore={<i className="codicon codicon-add" />}
-                            isDisabled={disabled}
-                            onClick={() => onAddContext()}
-                        />
+                        <Tooltip content="Add context">
+                            <LoadingButton
+                                style={{
+                                    ...rovoDevPromptButtonStyles,
+                                }}
+                                spacing="compact"
+                                label="Add context"
+                                iconBefore={<i className="codicon codicon-add" />}
+                                isDisabled={disabled}
+                                onClick={() => onAddContext()}
+                            />
+                        </Tooltip>
                         <div style={{ display: 'flex', gap: 8 }}>
                             <LoadingButton
                                 style={{
