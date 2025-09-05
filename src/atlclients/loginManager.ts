@@ -113,6 +113,10 @@ export class LoginManager {
 
             // Add all sites at once to prevent race condition
             this._siteManager.addSites(siteDetails);
+
+            for (const siteDetail of siteDetails) {
+                await this.triggerPostAuthenticationRefresh(siteDetail);
+            }
         } catch (e) {
             Logger.error(e, `Error authenticating with provider '${provider}'`);
             vscode.window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
@@ -148,6 +152,8 @@ export class LoginManager {
                 authenticatedEvent(siteDetails, isOnboarding, source).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
+
+                await this.triggerPostAuthenticationRefresh(siteDetails);
             } catch (err) {
                 Logger.error(err, `Error authenticating with ${site.product.name}`);
                 return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
@@ -162,6 +168,8 @@ export class LoginManager {
                 editedEvent(siteDetails).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
+
+                await this.triggerPostAuthenticationRefresh(siteDetails);
             } catch (err) {
                 Logger.error(err, `Error authenticating with ${site.product.name}`);
                 return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
@@ -287,5 +295,23 @@ export class LoginManager {
         const response = await fetch(`https://${host}/_edge/tenant_info`);
         const data = await response.json();
         return data.cloudId;
+    }
+
+    private async triggerPostAuthenticationRefresh(siteDetails: DetailedSiteInfo): Promise<void> {
+        try {
+            if (siteDetails.product.key === 'jira') {
+                Logger.debug(`Triggering post-authentication refresh for ${siteDetails.name}`);
+
+                const { Container } = await import('../container');
+
+                await Container.updateFeatureFlagTenantId();
+
+                await Container.refreshRovoDev(Container.context);
+
+                Logger.debug(`Post-authentication refresh completed for ${siteDetails.name}`);
+            }
+        } catch (error) {
+            Logger.error(error, 'Error during post-authentication refresh');
+        }
     }
 }
