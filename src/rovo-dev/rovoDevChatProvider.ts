@@ -295,7 +295,6 @@ export class RovoDevChatProvider {
                 return webview.postMessage({
                     type: RovoDevProviderMessageType.ToolReturn,
                     dataObject: response,
-                    isReplay: sourceApi === 'replay',
                 });
 
             case 'retry-prompt':

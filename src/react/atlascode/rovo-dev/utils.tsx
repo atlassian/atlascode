@@ -6,6 +6,7 @@ export type ToolReturnMessage =
     | ToolReturnTechnicalPlanMessage
     | ToolReturnGrepFileContentMessage
     | ToolReturnGenericMessage;
+
 export type ChatMessage = DefaultMessage | ErrorMessage | ToolCallMessage | ToolReturnGenericMessage;
 
 export interface DefaultMessage {
@@ -87,7 +88,7 @@ export interface ToolReturnParseResult {
     type?: 'modify' | 'create' | 'delete' | 'open' | 'bash';
 }
 
-export type MessageBlockDetails = ChatMessage[] | DefaultMessage | ErrorMessage | ToolReturnGenericMessage | null;
+export type Response = ChatMessage | ChatMessage[] | null;
 
 interface ToolReturnInfo {
     title: string;
@@ -235,7 +236,7 @@ export const scrollToEnd = (() => {
     };
 })();
 
-export function extractLastNMessages(n: number, history: MessageBlockDetails[]) {
+export function extractLastNMessages(n: number, history: Response[]) {
     let msgCount = 0;
     let idx = history.length - 1;
     const lastTenMessages = [];
