@@ -171,13 +171,10 @@ export class JiraIssueWebview
                     subtasks.forEach((subtask: any, index: number) => {
                         const enhanced = enhancedIssuesMap.get(subtask.key);
                         if (enhanced) {
-                            this._editUIData.fieldValues['subtasks'][index] = {
-                                ...subtask,
-                                transitions: enhanced.transitions,
-                                status: enhanced.status,
-                                assignee: enhanced.assignee,
-                                priority: enhanced.priority,
-                            };
+                            this._editUIData.fieldValues['subtasks'][index] = this.enhanceIssueWithTransitions(
+                                subtask,
+                                enhanced,
+                            );
                         }
                     });
                 }
@@ -185,28 +182,12 @@ export class JiraIssueWebview
                 if (Array.isArray(issuelinks)) {
                     issuelinks.forEach((issuelink: any, index: number) => {
                         if (issuelink.inwardIssue?.key) {
-                            const enhanced = enhancedIssuesMap.get(issuelink.inwardIssue.key);
-                            if (enhanced) {
-                                this._editUIData.fieldValues['issuelinks'][index].inwardIssue = {
-                                    ...issuelink.inwardIssue,
-                                    transitions: enhanced.transitions,
-                                    status: enhanced.status,
-                                    assignee: enhanced.assignee,
-                                    priority: enhanced.priority,
-                                };
-                            }
+                            this._editUIData.fieldValues['issuelinks'][index].inwardIssue =
+                                this.enhanceIssueIfAvailable(issuelink.inwardIssue, enhancedIssuesMap);
                         }
                         if (issuelink.outwardIssue?.key) {
-                            const enhanced = enhancedIssuesMap.get(issuelink.outwardIssue.key);
-                            if (enhanced) {
-                                this._editUIData.fieldValues['issuelinks'][index].outwardIssue = {
-                                    ...issuelink.outwardIssue,
-                                    transitions: enhanced.transitions,
-                                    status: enhanced.status,
-                                    assignee: enhanced.assignee,
-                                    priority: enhanced.priority,
-                                };
-                            }
+                            this._editUIData.fieldValues['issuelinks'][index].outwardIssue =
+                                this.enhanceIssueIfAvailable(issuelink.outwardIssue, enhancedIssuesMap);
                         }
                     });
                 }
@@ -389,6 +370,44 @@ export class JiraIssueWebview
         return '';
     }
 
+    private findMatchingTransition(transitions: any[] | undefined, statusName: string): any | undefined {
+        if (!transitions) {
+            return undefined;
+        }
+
+        return transitions.find((transition: any) => {
+            const targetStatus = transition.to.name.toLowerCase();
+            const desiredStatus = statusName.toLowerCase();
+
+            return (
+                targetStatus.includes(desiredStatus) ||
+                (desiredStatus.includes('todo') && targetStatus.includes('todo')) ||
+                (desiredStatus.includes('to do') && targetStatus.includes('todo')) ||
+                (desiredStatus.includes('progress') && targetStatus.includes('progress')) ||
+                (desiredStatus.includes('done') && (targetStatus.includes('done') || targetStatus.includes('closed')))
+            );
+        });
+    }
+
+    private enhanceIssueWithTransitions(originalIssue: any, enhancedIssue: any): any {
+        return {
+            ...originalIssue,
+            transitions: enhancedIssue.transitions,
+            status: enhancedIssue.status,
+            assignee: enhancedIssue.assignee,
+            priority: enhancedIssue.priority,
+        };
+    }
+
+    private enhanceIssueIfAvailable(originalIssue: any, enhancedIssuesMap: Map<string, any>): any {
+        if (!originalIssue?.key) {
+            return originalIssue;
+        }
+
+        const enhanced = enhancedIssuesMap.get(originalIssue.key);
+        return enhanced ? this.enhanceIssueWithTransitions(originalIssue, enhanced) : originalIssue;
+    }
+
     protected override async onMessageReceived(msg: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(msg);
 
@@ -507,19 +526,7 @@ export class JiraIssueWebview
 
                         const childIssue = await fetchMinimalIssue(issueKey, this._issue.siteDetails);
 
-                        const targetTransition = childIssue.transitions?.find((transition: any) => {
-                            const targetStatus = transition.to.name.toLowerCase();
-                            const desiredStatus = statusName.toLowerCase();
-
-                            return (
-                                targetStatus.includes(desiredStatus) ||
-                                (desiredStatus.includes('todo') && targetStatus.includes('todo')) ||
-                                (desiredStatus.includes('to do') && targetStatus.includes('todo')) ||
-                                (desiredStatus.includes('progress') && targetStatus.includes('progress')) ||
-                                (desiredStatus.includes('done') &&
-                                    (targetStatus.includes('done') || targetStatus.includes('closed')))
-                            );
-                        });
+                        const targetTransition = this.findMatchingTransition(childIssue.transitions, statusName);
 
                         if (targetTransition) {
                             await client.transitionIssue(issueKey, targetTransition.id);
