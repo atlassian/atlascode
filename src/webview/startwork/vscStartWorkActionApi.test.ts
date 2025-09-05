@@ -4,10 +4,9 @@ import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, emptyRepo, Repo, WorkspaceRepo } from '../../bitbucket/model';
 import { Container } from '../../container';
-import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from '../../lib/ipc/models/config';
+import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
 import { Logger } from '../../logger';
 import { Branch, RefType } from '../../typings/git';
-import { Experiments } from '../../util/featureFlags';
 import { VSCStartWorkActionApi } from './vscStartWorkActionApi';
 
 // Mock external dependencies
@@ -17,13 +16,9 @@ jest.mock('../../container');
 jest.mock('../../util/featureFlags', () => ({
     FeatureFlagClient: {
         checkGate: jest.fn(),
-        checkExperimentValue: jest.fn(),
     },
     Features: {
         StartWorkV3: 'startWorkV3',
-    },
-    Experiments: {
-        AtlascodeNewSettingsExperiment: 'atlascode_new_settings_experiment',
     },
 }));
 
@@ -189,12 +184,6 @@ describe('VSCStartWorkActionApi', () => {
 
         (Container.featureFlagClient as any) = {
             checkGate: jest.fn().mockReturnValue(false),
-            checkExperimentValue: jest.fn().mockImplementation((experiment) => {
-                if (experiment === Experiments.AtlascodeNewSettingsExperiment) {
-                    return true;
-                }
-                return false;
-            }),
         };
 
         api = new VSCStartWorkActionApi();
@@ -426,30 +415,9 @@ describe('VSCStartWorkActionApi', () => {
     });
 
     describe('openSettings', () => {
-        it('should open settings webview with section and subsection when experiment is enabled', () => {
-            // Mock experiment to return true
-            (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(true);
-
-            api.openSettings(ConfigV3Section.AdvancedConfig, ConfigV3SubSection.StartWork);
-
-            expect(Container.featureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
-                Experiments.AtlascodeNewSettingsExperiment,
-            );
-            expect(mockSettingsWebviewFactory.createOrShow).toHaveBeenCalledWith({
-                section: ConfigV3Section.AdvancedConfig,
-                subSection: ConfigV3SubSection.StartWork,
-            });
-        });
-
-        it('should open settings webview with section and subsection when experiment is disabled', () => {
-            // Mock experiment to return false
-            (Container.featureFlagClient.checkExperimentValue as jest.Mock).mockReturnValue(false);
-
+        it('should open settings webview with section and subsection', () => {
             api.openSettings(ConfigSection.Jira, ConfigSubSection.StartWork);
 
-            expect(Container.featureFlagClient.checkExperimentValue).toHaveBeenCalledWith(
-                Experiments.AtlascodeNewSettingsExperiment,
-            );
             expect(mockSettingsWebviewFactory.createOrShow).toHaveBeenCalledWith({
                 section: ConfigSection.Jira,
                 subSection: ConfigSubSection.StartWork,

@@ -81,7 +81,6 @@ describe('configController', () => {
                 createPullRequest: expect.any(Function),
                 viewPullRequest: expect.any(Function),
                 viewJiraIssue: expect.any(Function),
-                openNativeSettings: expect.any(Function),
                 startAuthFlow: expect.any(Function),
             });
         });
@@ -175,10 +174,6 @@ describe('configController', () => {
 
         it('should have viewJiraIssue that does nothing', () => {
             expect(() => emptyApi.viewJiraIssue()).not.toThrow();
-        });
-
-        it('should have openNativeSettings that does nothing', () => {
-            expect(() => emptyApi.openNativeSettings()).not.toThrow();
         });
     });
 
