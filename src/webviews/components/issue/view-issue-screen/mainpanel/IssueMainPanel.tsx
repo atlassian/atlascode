@@ -36,6 +36,7 @@ type Props = {
     fetchUsers: (input: string) => Promise<any[]>;
     fetchImage: (url: string) => Promise<string>;
     isRteEnabled?: boolean;
+    onIssueUpdate?: (issueKey: string, fieldKey: string, newValue: any) => void;
 };
 
 const IssueMainPanel: React.FC<Props> = ({
@@ -57,6 +58,7 @@ const IssueMainPanel: React.FC<Props> = ({
     fetchUsers,
     fetchImage,
     isRteEnabled = false,
+    onIssueUpdate,
 }) => {
     //field values
     const attachments = fields['attachment'] && fieldValues['attachment'] ? fieldValues['attachment'] : undefined;
@@ -77,6 +79,12 @@ const IssueMainPanel: React.FC<Props> = ({
     const [isInlineDialogOpen, setIsInlineDialogOpen] = React.useState(false);
     const [descriptionText, setDescriptionText] = React.useState(defaultDescription);
     const [isEditingDescription, setIsEditingDescription] = React.useState(false);
+
+    const handleStatusChange = (issueKey: string, statusName: string) => {
+        if (onIssueUpdate) {
+            onIssueUpdate(issueKey, 'status', statusName);
+        }
+    };
 
     const addContentDropDown = (
         <Tooltip content="Add content">
@@ -219,6 +227,7 @@ const IssueMainPanel: React.FC<Props> = ({
                         handleOpenIssue={handleOpenIssue}
                         issues={subtasks}
                         isEpic={isEpic}
+                        onStatusChange={handleStatusChange}
                     />
                 </div>
             )}
@@ -235,6 +244,7 @@ const IssueMainPanel: React.FC<Props> = ({
                         handleOpenIssue={handleOpenIssue}
                         issues={epicChildren}
                         isEpic={isEpic}
+                        onStatusChange={handleStatusChange}
                     />
                 </div>
             )}
@@ -250,6 +260,7 @@ const IssueMainPanel: React.FC<Props> = ({
                         onFetchIssues={onFetchIssues}
                         onDelete={onDelete}
                         enableLinkedIssues={{ enable: enableLinkedIssues, setEnableLinkedIssues }}
+                        onStatusChange={handleStatusChange}
                     />
                 </div>
             )}

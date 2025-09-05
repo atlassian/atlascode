@@ -350,6 +350,29 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         );
     };
 
+    handleChildIssueUpdate = async (issueKey: string, fieldKey: string, newValue: any) => {
+        const nonce = v4();
+
+        const payload =
+            fieldKey === 'status'
+                ? {
+                      action: 'transitionChildIssue' as const,
+                      issueKey: issueKey,
+                      statusName: newValue,
+                      nonce: nonce,
+                  }
+                : {
+                      action: 'editChildIssue' as const,
+                      issueKey: issueKey,
+                      fields: {
+                          [fieldKey]: newValue,
+                      },
+                      nonce: nonce,
+                  };
+
+        await this.postMessageWithEventPromise(payload, 'editIssueDone', ConnectionTimeout, nonce);
+    };
+
     protected override handleCreateComment = (commentBody: string, restriction?: CommentVisibility) => {
         this.setState({ isSomethingLoading: true, loadingField: 'comment', commentText: '', isEditingComment: false });
         const commentAction: IssueCommentAction = {
@@ -644,6 +667,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     }
                     fetchImage={(img) => this.fetchImage(img)}
                     isRteEnabled={this.state.isRteEnabled}
+                    onIssueUpdate={this.handleChildIssueUpdate}
                 />
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (

@@ -1,9 +1,10 @@
 import { APIRequestContext, expect, Page, test } from '@playwright/test';
 import { cleanupWireMockMapping, getIssueFrame, setupWireMockMapping } from 'e2e/helpers';
+import { JiraTypes } from 'e2e/helpers/types';
 import { createSearchResponse } from 'e2e/mock-data/search';
 import { AtlascodeDrawer, AtlassianSettings } from 'e2e/page-objects';
 
-export async function assigningFlow(page: Page, request: APIRequestContext) {
+export async function assigningFlow(page: Page, request: APIRequestContext, type: JiraTypes) {
     // This test is large and may run longer on slower machines,
     // so we extend the timeout to 50 seconds (default is 30s).
     // See: https://playwright.dev/docs/test-timeouts#set-timeout-for-a-single-test
@@ -31,12 +32,8 @@ export async function assigningFlow(page: Page, request: APIRequestContext) {
 
     await assigneeInput.fill('Another');
     await page.waitForTimeout(1000);
-    const { id: searchMappingId } = await setupWireMockMapping(
-        request,
-        'GET',
-        createSearchResponse(false),
-        '/rest/api/3/search/jql',
-    );
+    const urlPath = type === JiraTypes.DC ? '/rest/api/2/search' : '/rest/api/3/search/jql';
+    const { id: searchMappingId } = await setupWireMockMapping(request, 'GET', createSearchResponse(false), urlPath);
     const menu = issueFrame.locator('.ac-select__menu');
     await expect(menu).toBeVisible();
 
@@ -57,7 +54,7 @@ export async function assigningFlow(page: Page, request: APIRequestContext) {
         request,
         'GET',
         createSearchResponse(true),
-        '/rest/api/3/search/jql',
+        urlPath,
     );
     await expect(menu).toBeVisible();
 
