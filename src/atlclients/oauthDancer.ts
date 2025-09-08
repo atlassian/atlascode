@@ -150,6 +150,7 @@ export class OAuthDancer implements Disposable {
                             errMessage: 'Authorization did not complete in the time alotted.',
                             actionMessage: 'Please try again.',
                             vscodeurl: callback,
+                            ideName: vscode.env.appName,
                         }),
                     );
                     reject(`Authorization did not complete in the time alotted for '${respEvent.provider}'`);
@@ -187,6 +188,7 @@ export class OAuthDancer implements Disposable {
                             Mustache.render(Resources.html.get('authSuccessHtml')!, {
                                 product: product,
                                 vscodeurl: callback,
+                                ideName: vscode.env.appName,
                             }),
                         );
 
@@ -210,6 +212,7 @@ export class OAuthDancer implements Disposable {
                                 errMessage: `Error authenticating with ${provider}: ${err}`,
                                 actionMessage: 'Give it a moment and try again.',
                                 vscodeurl: callback,
+                                ideName: vscode.env.appName,
                             }),
                         );
 
