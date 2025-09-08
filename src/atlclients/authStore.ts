@@ -444,6 +444,16 @@ export class CredentialManager implements Disposable {
     }
 
     /**
+     * Determines if a site's credential id is shared among other sites
+     * @param site The site for the credential we want to look up
+     * @param allSites All sites (`site` will be excluded from the search)
+     * @returns True if the credential is shared, false otherwise
+     */
+    public isSiteCredentialShared(site: DetailedSiteInfo, allSites: DetailedSiteInfo[]): boolean {
+        return !!allSites.find((x) => x !== site && x.credentialId === site.credentialId);
+    }
+
+    /**
      * Removes an auth item from both the in-memory store and the secretstorage.
      */
     public async removeAuthInfo(site: DetailedSiteInfo): Promise<boolean> {
