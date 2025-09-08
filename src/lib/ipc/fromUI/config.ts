@@ -19,7 +19,6 @@ export enum ConfigActionType {
     ViewJiraIssue = 'viewJiraIssue',
     CreatePullRequest = 'createPullRequest',
     ViewPullRequest = 'viewPullRequest',
-    OpenNativeSettings = 'openNativeSettings',
     StartAuthFlow = 'StartAuthFlow',
 }
 
@@ -38,7 +37,6 @@ export type ConfigAction =
     | ReducerAction<ConfigActionType.ViewJiraIssue>
     | ReducerAction<ConfigActionType.CreatePullRequest>
     | ReducerAction<ConfigActionType.ViewPullRequest>
-    | ReducerAction<ConfigActionType.OpenNativeSettings>
     | ReducerAction<ConfigActionType.StartAuthFlow>
     | CommonAction;
 

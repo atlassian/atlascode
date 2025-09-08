@@ -81,7 +81,6 @@ describe('ConfigWebviewController', () => {
             viewJiraIssue: jest.fn(),
             createPullRequest: jest.fn(),
             viewPullRequest: jest.fn(),
-            openNativeSettings: jest.fn(),
         };
         mockLogger = {
             debug: jest.fn(),
