@@ -1,8 +1,8 @@
 name: Release Nightly
 
 on:
-  schedule:
-    - cron: '0 9 * * *'
+#  schedule:
+#    - cron: '0 9 * * *'
   workflow_call: {}
   # Can be triggered manually if needed
   workflow_dispatch: {}
