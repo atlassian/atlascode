@@ -295,9 +295,6 @@ export class LoginManager {
         return data.cloudId;
     }
 
-    /**
-     * Fires an explicit site change event for Jira sites to ensure immediate RovoDev refresh
-     */
     private fireExplicitSiteChangeEvent(siteDetails: DetailedSiteInfo): void {
         if (siteDetails.product.key === 'jira') {
             this._siteManager.fireSitesAvailableChangeEvent({
