@@ -1,3 +1,5 @@
+import './styles/JiraIssueTextArea.css';
+
 import { ButtonProps } from '@atlaskit/button';
 import TextArea from '@atlaskit/textarea';
 import Toggle from '@atlaskit/toggle';
