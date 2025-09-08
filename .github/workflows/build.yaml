@@ -27,8 +27,8 @@ jobs:
         run: |
           npm ci --no-audit
       
-#      - name: Run vulnerability audit
-#        run: npm audit
+      - name: Run vulnerability audit
+        run: npm audit
       
       - name: Run linter
         run: npm run lint
