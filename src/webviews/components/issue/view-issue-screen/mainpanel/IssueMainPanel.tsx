@@ -7,7 +7,7 @@ import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atla
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
-import { RenderedContent } from '../../../RenderedContent';
+import { AdfAwareContent } from '../../../AdfAwareContent';
 import { AttachmentList } from '../../AttachmentList';
 import { AttachmentsModal } from '../../AttachmentsModal';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
@@ -72,13 +72,52 @@ const IssueMainPanel: React.FC<Props> = ({
     const defaultDescription = fieldValues['description'] ? fieldValues['description'] : '';
     const renderedDescription = fieldValues['description.rendered'] ? fieldValues['description.rendered'] : undefined;
 
+    // Smart description content selection: Use ADF from description if it's ADF object/JSON
+    const getDescriptionDisplayContent = () => {
+        if (defaultDescription) {
+            // Handle ADF object directly
+            if (
+                typeof defaultDescription === 'object' &&
+                defaultDescription.version === 1 &&
+                defaultDescription.type === 'doc'
+            ) {
+                return JSON.stringify(defaultDescription); // Convert ADF object to JSON string for AdfAwareContent
+            }
+
+            // Handle ADF JSON string
+            if (typeof defaultDescription === 'string') {
+                const trimmed = defaultDescription.trim();
+                if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+                    const parsed = JSON.parse(trimmed);
+                    if (parsed.version === 1 && parsed.type === 'doc') {
+                        // This is ADF JSON, use it for rendering
+                        return defaultDescription;
+                    }
+                }
+            }
+        }
+        // Fallback to original logic
+        return renderedDescription ? renderedDescription : defaultDescription;
+    };
+
     //states
     const [enableSubtasks, setEnableSubtasks] = React.useState(false);
     const [enableEpicChildren, setEnableEpicChildren] = React.useState(false);
     const [enableLinkedIssues, setEnableLinkedIssues] = React.useState(false);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [isInlineDialogOpen, setIsInlineDialogOpen] = React.useState(false);
-    const [descriptionText, setDescriptionText] = React.useState(defaultDescription);
+    // Handle descriptionText - convert ADF object to JSON string for editor input
+    const getDescriptionTextForEditor = () => {
+        if (
+            typeof defaultDescription === 'object' &&
+            defaultDescription.version === 1 &&
+            defaultDescription.type === 'doc'
+        ) {
+            return JSON.stringify(defaultDescription);
+        }
+        return defaultDescription || '';
+    };
+    const [descriptionText, setDescriptionText] = React.useState(getDescriptionTextForEditor());
     const [isEditingDescription, setIsEditingDescription] = React.useState(false);
 
     const handleStatusChange = (issueKey: string, statusName: string) => {
@@ -180,13 +219,17 @@ const IssueMainPanel: React.FC<Props> = ({
                         //     featureGateEnabled={isRteEnabled}
                         // />
                         <AtlaskitEditor
-                            onSave={() => {
-                                handleInlineEdit(fields['description'], descriptionText);
+                            defaultValue={descriptionText}
+                            onSave={(content) => {
+                                handleInlineEdit(fields['description'], content);
                                 setIsEditingDescription(false);
                             }}
                             onCancel={() => {
-                                setDescriptionText(defaultDescription);
+                                setDescriptionText(getDescriptionTextForEditor());
                                 setIsEditingDescription(false);
+                            }}
+                            onContentChange={(content) => {
+                                setDescriptionText(content);
                             }}
                         />
                     ) : (
@@ -205,11 +248,7 @@ const IssueMainPanel: React.FC<Props> = ({
                             onClick={() => setIsEditingDescription(true)}
                             className="ac-inline-input-view-p"
                         >
-                            {renderedDescription ? (
-                                <RenderedContent html={renderedDescription} fetchImage={fetchImage} />
-                            ) : (
-                                <p style={{ margin: 0 }}>{descriptionText}</p>
-                            )}
+                            <AdfAwareContent content={getDescriptionDisplayContent()} fetchImage={fetchImage} />
                         </div>
                     )}
                 </div>

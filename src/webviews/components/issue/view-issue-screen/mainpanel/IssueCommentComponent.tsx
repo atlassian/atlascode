@@ -12,7 +12,7 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
-import { RenderedContent } from '../../../RenderedContent';
+import { AdfAwareContent } from '../../../AdfAwareContent';
 // import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 
@@ -53,7 +53,22 @@ const CommentComponent: React.FC<{
 }) => {
     const [isEditing, setIsEditing] = React.useState(false);
     const [isSaving, setIsSaving] = React.useState(false);
-    const bodyText = comment.renderedBody ? comment.renderedBody : comment.body;
+    // Smart content selection: Use ADF from body if it's ADF JSON, otherwise use renderedBody or body
+    const getDisplayContent = () => {
+        if (comment.body) {
+            const trimmed = comment.body.trim();
+            if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+                const parsed = JSON.parse(trimmed);
+                if (parsed.version === 1 && parsed.type === 'doc') {
+                    // This is ADF JSON, use it for rendering
+                    return comment.body;
+                }
+            }
+        }
+        // Fallback to original logic
+        return comment.renderedBody ? comment.renderedBody : comment.body;
+    };
+    const bodyText = getDisplayContent();
     const [commentText, setCommentText] = React.useState(comment.body);
     const baseActions: JSX.Element[] = [
         <CommentAction
@@ -123,23 +138,24 @@ const CommentComponent: React.FC<{
                         //     }}
                         //     featureGateEnabled={isRteEnabled}
                         // />
-                        <div>
-                            <div>{commentText}</div>
-                            <AtlaskitEditor
-                                onSave={() => {
-                                    setIsSaving(true);
-                                    setIsEditing(false);
-                                    onSave(commentText, comment.id, undefined);
-                                }}
-                                onCancel={() => {
-                                    setCommentText(comment.body);
-                                    setIsSaving(false);
-                                    setIsEditing(false);
-                                }}
-                            />
-                        </div>
+                        <AtlaskitEditor
+                            defaultValue={commentText}
+                            onSave={(content) => {
+                                setIsSaving(true);
+                                setIsEditing(false);
+                                onSave(content, comment.id, undefined);
+                            }}
+                            onCancel={() => {
+                                setCommentText(comment.body);
+                                setIsSaving(false);
+                                setIsEditing(false);
+                            }}
+                            onContentChange={(content) => {
+                                setCommentText(content);
+                            }}
+                        />
                     ) : (
-                        <RenderedContent html={bodyText} fetchImage={fetchImage} />
+                        <AdfAwareContent content={bodyText} fetchImage={fetchImage} />
                     )}
                 </>
             }
@@ -226,20 +242,23 @@ const AddCommentComponent: React.FC<{
                     //     }}
                     //     featureGateEnabled={isRteEnabled}
                     // />
-                    <div>
-                        <div>{commentText}</div>
-                        <AtlaskitEditor
-                            onSave={() => {
-                                onCreate(commentText, undefined);
+                    <AtlaskitEditor
+                        defaultValue={commentText}
+                        onSave={(content) => {
+                            if (content && content.trim() !== '') {
+                                onCreate(content, undefined);
                                 setCommentText('');
                                 setIsEditing(false);
-                            }}
-                            onCancel={() => {
-                                setCommentText('');
-                                setIsEditing(false);
-                            }}
-                        />
-                    </div>
+                            }
+                        }}
+                        onCancel={() => {
+                            setCommentText('');
+                            setIsEditing(false);
+                        }}
+                        onContentChange={(content) => {
+                            setCommentText(content);
+                        }}
+                    />
                 )}
             </Box>
         </Box>
