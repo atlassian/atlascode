@@ -28,9 +28,9 @@ import { ErrorDisplay } from '../common/ErrorDisplay';
 import { FeatureFlagProvider } from '../common/FeatureFlagContext';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { AdvancedConfigsPanel } from './advancedConfigs/advancedConfigsPanel';
-import { AuthDialog } from './auth/dialog/AuthDialog';
-import { AuthDialogControllerContext, useAuthDialog } from './auth/useAuthDialog';
 import { ConfigControllerContext, useConfigControllerV3 } from './configController';
+import { AuthDialog } from './generalAuth/auth/dialog/AuthDialog';
+import { AuthDialogControllerContext, useAuthDialog } from './generalAuth/auth/useAuthDialog';
 import { AuthenticationPanel } from './generalAuth/AuthenticationPanel';
 import { SidebarButtons } from './SidebarButtons';
 

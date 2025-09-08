@@ -10,8 +10,8 @@ import { ConfigV3Section, ConfigV3SubSection } from '../../../../lib/ipc/models/
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { PanelSubtitle } from '../../common/PanelSubtitle';
 import { PanelTitle } from '../../common/PanelTitle';
-import { SiteAuthenticator } from './../auth/SiteAuthenticator';
 import { ProductEnabler } from './../ProductEnabler';
+import { SiteAuthenticator } from './auth/SiteAuthenticator';
 
 const useStyles = makeStyles(
     (theme: Theme) =>
