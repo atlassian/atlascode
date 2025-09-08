@@ -809,6 +809,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             () => !this.rovoDevApiClient,
         );
 
+        // if the client becomes undefined, it means the process terminated while we were polling the healtcheck
         if (!this._rovoDevApiClient) {
             return;
         }
@@ -819,12 +820,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             if (result) {
                 const info = await this.executeHealthcheckInfo();
                 const sessionId = (info || {}).sessionId || null;
-
                 this.beginNewSession(sessionId, false);
-                if (this.isBoysenberry) {
-                    await this._chatProvider.executeReplay();
-                }
             } else {
+                // TODO - this scenario needs a better handling
                 throw new Error(
                     `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within 10000ms`,
                 );
@@ -845,6 +843,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             await this.processError(thrownError, false);
         } else {
             await this._chatProvider.setReady(this._rovoDevApiClient);
+        }
+
+        if (this.isBoysenberry) {
+            await this._chatProvider.executeReplay();
         }
 
         // extra sanity checks here
