@@ -135,9 +135,6 @@ export class SiteManager extends Disposable {
                 primarySite: this._primarySite,
             };
 
-            Logger.debug(
-                `SiteManager firing site change event for ${event.product.key} - ${newSites.length} new sites`,
-            );
             this._onDidSitesAvailableChange.fire(event);
         }
     }
@@ -159,7 +156,6 @@ export class SiteManager extends Disposable {
                     primarySite: this._primarySite,
                 };
 
-                Logger.debug(`SiteManager firing site update event for ${event.product.key}`);
                 this._onDidSitesAvailableChange.fire(event);
             }
         }

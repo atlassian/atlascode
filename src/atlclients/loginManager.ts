@@ -114,16 +114,7 @@ export class LoginManager {
             // Add all sites at once to prevent race condition
             this._siteManager.addSites(siteDetails);
 
-            for (const siteDetail of siteDetails) {
-                if (siteDetail.product.key === 'jira') {
-                    this._siteManager.fireSitesAvailableChangeEvent({
-                        sites: [siteDetail],
-                        newSites: [siteDetail],
-                        product: siteDetail.product,
-                        primarySite: this._siteManager.primarySite,
-                    });
-                }
-            }
+            siteDetails.forEach((siteDetail) => this.fireExplicitSiteChangeEvent(siteDetail));
         } catch (e) {
             Logger.error(e, `Error authenticating with provider '${provider}'`);
             vscode.window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
@@ -160,14 +151,7 @@ export class LoginManager {
                     this._analyticsClient.sendTrackEvent(e);
                 });
 
-                if (siteDetails.product.key === 'jira') {
-                    this._siteManager.fireSitesAvailableChangeEvent({
-                        sites: [siteDetails],
-                        newSites: [siteDetails],
-                        product: siteDetails.product,
-                        primarySite: this._siteManager.primarySite,
-                    });
-                }
+                this.fireExplicitSiteChangeEvent(siteDetails);
             } catch (err) {
                 Logger.error(err, `Error authenticating with ${site.product.name}`);
                 return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
@@ -183,14 +167,7 @@ export class LoginManager {
                     this._analyticsClient.sendTrackEvent(e);
                 });
 
-                if (siteDetails.product.key === 'jira') {
-                    this._siteManager.fireSitesAvailableChangeEvent({
-                        sites: [siteDetails],
-                        newSites: [siteDetails],
-                        product: siteDetails.product,
-                        primarySite: this._siteManager.primarySite,
-                    });
-                }
+                this.fireExplicitSiteChangeEvent(siteDetails);
             } catch (err) {
                 Logger.error(err, `Error authenticating with ${site.product.name}`);
                 return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
@@ -316,5 +293,19 @@ export class LoginManager {
         const response = await fetch(`https://${host}/_edge/tenant_info`);
         const data = await response.json();
         return data.cloudId;
+    }
+
+    /**
+     * Fires an explicit site change event for Jira sites to ensure immediate RovoDev refresh
+     */
+    private fireExplicitSiteChangeEvent(siteDetails: DetailedSiteInfo): void {
+        if (siteDetails.product.key === 'jira') {
+            this._siteManager.fireSitesAvailableChangeEvent({
+                sites: [siteDetails],
+                newSites: [siteDetails],
+                product: siteDetails.product,
+                primarySite: this._siteManager.primarySite,
+            });
+        }
     }
 }
