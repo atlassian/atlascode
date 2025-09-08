@@ -115,7 +115,14 @@ export class LoginManager {
             this._siteManager.addSites(siteDetails);
 
             for (const siteDetail of siteDetails) {
-                await this.triggerPostAuthenticationRefresh(siteDetail);
+                if (siteDetail.product.key === 'jira') {
+                    this._siteManager.fireSitesAvailableChangeEvent({
+                        sites: [siteDetail],
+                        newSites: [siteDetail],
+                        product: siteDetail.product,
+                        primarySite: this._siteManager.primarySite,
+                    });
+                }
             }
         } catch (e) {
             Logger.error(e, `Error authenticating with provider '${provider}'`);
@@ -153,7 +160,14 @@ export class LoginManager {
                     this._analyticsClient.sendTrackEvent(e);
                 });
 
-                await this.triggerPostAuthenticationRefresh(siteDetails);
+                if (siteDetails.product.key === 'jira') {
+                    this._siteManager.fireSitesAvailableChangeEvent({
+                        sites: [siteDetails],
+                        newSites: [siteDetails],
+                        product: siteDetails.product,
+                        primarySite: this._siteManager.primarySite,
+                    });
+                }
             } catch (err) {
                 Logger.error(err, `Error authenticating with ${site.product.name}`);
                 return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
@@ -169,7 +183,14 @@ export class LoginManager {
                     this._analyticsClient.sendTrackEvent(e);
                 });
 
-                await this.triggerPostAuthenticationRefresh(siteDetails);
+                if (siteDetails.product.key === 'jira') {
+                    this._siteManager.fireSitesAvailableChangeEvent({
+                        sites: [siteDetails],
+                        newSites: [siteDetails],
+                        product: siteDetails.product,
+                        primarySite: this._siteManager.primarySite,
+                    });
+                }
             } catch (err) {
                 Logger.error(err, `Error authenticating with ${site.product.name}`);
                 return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
@@ -295,23 +316,5 @@ export class LoginManager {
         const response = await fetch(`https://${host}/_edge/tenant_info`);
         const data = await response.json();
         return data.cloudId;
-    }
-
-    private async triggerPostAuthenticationRefresh(siteDetails: DetailedSiteInfo): Promise<void> {
-        try {
-            if (siteDetails.product.key === 'jira') {
-                Logger.debug(`Triggering post-authentication refresh for ${siteDetails.name}`);
-
-                const { Container } = await import('../container');
-
-                await Container.updateFeatureFlagTenantId();
-
-                await Container.refreshRovoDev(Container.context);
-
-                Logger.debug(`Post-authentication refresh completed for ${siteDetails.name}`);
-            }
-        } catch (error) {
-            Logger.error(error, 'Error during post-authentication refresh');
-        }
     }
 }

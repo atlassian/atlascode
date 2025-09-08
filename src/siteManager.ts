@@ -128,12 +128,17 @@ export class SiteManager extends Disposable {
         this.resolvePrimarySite();
 
         if (notify) {
-            this._onDidSitesAvailableChange.fire({
+            const event = {
                 sites: allSites,
                 newSites: newSites,
                 product: allSites[0].product,
                 primarySite: this._primarySite,
-            });
+            };
+
+            Logger.debug(
+                `SiteManager firing site change event for ${event.product.key} - ${newSites.length} new sites`,
+            );
+            this._onDidSitesAvailableChange.fire(event);
         }
     }
 
@@ -147,11 +152,15 @@ export class SiteManager extends Disposable {
                 this._globalStore.update(`${newSite.product.key}${SitesSuffix}`, allSites);
                 this._sitesAvailable.set(newSite.product.key, allSites);
                 this.resolvePrimarySite();
-                this._onDidSitesAvailableChange.fire({
+
+                const event = {
                     sites: [newSite],
                     product: newSite.product,
                     primarySite: this._primarySite,
-                });
+                };
+
+                Logger.debug(`SiteManager firing site update event for ${event.product.key}`);
+                this._onDidSitesAvailableChange.fire(event);
             }
         }
     }
@@ -338,5 +347,9 @@ export class SiteManager extends Disposable {
         }
 
         return false;
+    }
+
+    public fireSitesAvailableChangeEvent(event: SitesAvailableUpdateEvent): void {
+        this._onDidSitesAvailableChange.fire(event);
     }
 }
