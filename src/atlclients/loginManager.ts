@@ -114,7 +114,7 @@ export class LoginManager {
             // Add all sites at once to prevent race condition
             this._siteManager.addSites(siteDetails);
 
-            siteDetails.forEach((siteDetail) => this.fireExplicitSiteChangeEvent(siteDetail));
+            this.fireExplicitSiteChangeEvent(siteDetails);
         } catch (e) {
             Logger.error(e, `Error authenticating with provider '${provider}'`);
             vscode.window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
@@ -151,7 +151,7 @@ export class LoginManager {
                     this._analyticsClient.sendTrackEvent(e);
                 });
 
-                this.fireExplicitSiteChangeEvent(siteDetails);
+                this.fireExplicitSiteChangeEvent([siteDetails]);
             } catch (err) {
                 Logger.error(err, `Error authenticating with ${site.product.name}`);
                 return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
@@ -167,7 +167,7 @@ export class LoginManager {
                     this._analyticsClient.sendTrackEvent(e);
                 });
 
-                this.fireExplicitSiteChangeEvent(siteDetails);
+                this.fireExplicitSiteChangeEvent([siteDetails]);
             } catch (err) {
                 Logger.error(err, `Error authenticating with ${site.product.name}`);
                 return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
@@ -295,12 +295,14 @@ export class LoginManager {
         return data.cloudId;
     }
 
-    private fireExplicitSiteChangeEvent(siteDetails: DetailedSiteInfo): void {
-        if (siteDetails.product.key === 'jira') {
+    private fireExplicitSiteChangeEvent(siteDetails: DetailedSiteInfo[]): void {
+        const jiraSites = siteDetails.filter((site) => site.product.key === 'jira');
+
+        if (jiraSites.length > 0) {
             this._siteManager.fireSitesAvailableChangeEvent({
-                sites: [siteDetails],
-                newSites: [siteDetails],
-                product: siteDetails.product,
+                sites: jiraSites,
+                newSites: jiraSites,
+                product: jiraSites[0].product,
                 primarySite: this._siteManager.primarySite,
             });
         }
