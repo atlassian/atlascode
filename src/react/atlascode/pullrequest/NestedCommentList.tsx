@@ -2,7 +2,7 @@ import { Grid } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import React from 'react';
 
-import { Comment, User } from '../../../bitbucket/model';
+import { Comment, PullRequestState, User } from '../../../bitbucket/model';
 import { NestedComment } from './NestedComment';
 
 type NestedCommentListProps = {
@@ -10,6 +10,7 @@ type NestedCommentListProps = {
     currentUser: User;
     fetchUsers: (input: string) => Promise<User[]>;
     onDelete: (comment: Comment) => Promise<void>;
+    pullRequestState: PullRequestState;
 };
 
 const useStyles = makeStyles({
@@ -23,6 +24,7 @@ export const NestedCommentList: React.FunctionComponent<NestedCommentListProps> 
     currentUser,
     fetchUsers,
     onDelete,
+    pullRequestState,
 }) => {
     const classes = useStyles();
     return (
@@ -34,6 +36,7 @@ export const NestedCommentList: React.FunctionComponent<NestedCommentListProps> 
                         currentUser={currentUser}
                         fetchUsers={fetchUsers}
                         onDelete={onDelete}
+                        pullRequestState={pullRequestState}
                     />
                 </Grid>
             ))}

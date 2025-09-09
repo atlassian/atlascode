@@ -1,0 +1,38 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/rest/api/1.0/projects/mocked-project/repos/dc-mocked-repo/pull-requests/123/activities"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "size": 1,
+            "limit": 25,
+            "isLastPage": true,
+            "values": [{
+                "id": 13,
+                "createdDate": 1756997398384,
+                "user": {
+                    "name": "mockuser",
+                    "emailAddress": "mockuser@atlassian.code",
+                    "active": true,
+                    "displayName": "Mock User",
+                    "id": 2,
+                    "slug": "mockuser",
+                    "type": "NORMAL",
+                    "links": {
+                        "self": [{
+                            "href": "https://bitbucket.mockeddomain.com/users/mockuser"
+                        }]
+                    },
+                    "avatarUrl": "https://example.com/avatar.png"
+                },
+                "action": "OPENED"
+            }],
+            "start": 0
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

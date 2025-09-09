@@ -387,7 +387,7 @@ class RovoDevTerminalInstance extends RovoDevInstance {
                     env: {
                         USER: process.env.USER,
                         USER_EMAIL: username,
-                        ROVODEV_APP_INSTANCE_ID: Container.appInstanceId,
+                        ROVODEV_SANDBOX_ID: Container.appInstanceId,
                         ...(key ? { USER_API_TOKEN: key } : {}),
                     },
                 });

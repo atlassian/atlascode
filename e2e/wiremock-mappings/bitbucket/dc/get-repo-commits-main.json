@@ -1,0 +1,47 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/rest/api/1.0/projects/mocked-project/repos/dc-mocked-repo/commits",
+        "queryParameters": {
+            "until": {
+                "equalTo": "main"
+            },
+            "since": {
+                "equalTo": "main"
+            }
+        }
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "values": [
+                {
+                    "id": "abcdef1234567890abcdef1234567890abcdef12",
+                    "displayId": "abcdef1",
+                    "author": {
+                        "name": "mockuser",
+                        "emailAddress": "mockuser@atlassian.code",
+                        "displayName": "Mock User"
+                    },
+                    "authorTimestamp": 1720017200000,
+                    "committer": {
+                        "name": "mockuser",
+                        "emailAddress": "mockuser@atlassian.code",
+                        "displayName": "Mock User"
+                    },
+                    "committerTimestamp": 1720017200000,
+                    "message": "Update project configuration and dependencies",
+                    "parents": []
+                }
+            ],
+            "size": 1,
+            "limit": 25,
+            "isLastPage": true,
+            "start": 0,
+            "nextPageStart": null
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

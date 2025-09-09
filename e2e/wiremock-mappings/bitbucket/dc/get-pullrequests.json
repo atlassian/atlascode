@@ -1,0 +1,25 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/rest/api/1.0/projects/mocked-project/repos/dc-mocked-repo/pull-requests",
+        "queryParameters": {
+            "markup": {
+                "equalTo": "true"
+            }
+        }
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "values": [],
+            "size": 0,
+            "limit": 25,
+            "isLastPage": true,
+            "start": 0,
+            "nextPageStart": null
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}
