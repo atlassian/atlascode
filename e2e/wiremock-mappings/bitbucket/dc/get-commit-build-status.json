@@ -1,0 +1,19 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/rest/build-status/1.0/commits/def456abc789012345678901234567890123456"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "size": 0,
+            "limit": 25,
+            "isLastPage": true,
+            "values": [],
+            "start": 0
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}
