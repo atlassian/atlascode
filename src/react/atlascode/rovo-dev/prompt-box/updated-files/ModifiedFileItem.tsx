@@ -40,7 +40,12 @@ export const ModifiedFileItem: React.FC<{
 
     return (
         <div aria-label="modified-file-item" className="modified-file-item" onClick={() => onFileClick(filePath)}>
-            <div className={getClassName(msg)}>{filePath}</div>
+            <div className={getClassName(msg)}>
+                <span className="file-name">{filePath.split('/').pop()}</span>
+                <span className="file-path" title={filePath}>
+                    {filePath.split('/').slice(0, -1).join('/')}
+                </span>
+            </div>
             <div className="modified-file-actions">
                 <button
                     disabled={!actionsEnabled}
