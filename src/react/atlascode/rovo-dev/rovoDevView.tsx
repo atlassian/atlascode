@@ -100,6 +100,9 @@ const RovoDevView: React.FC = () => {
         if (currentMessage) {
             setChatStream((prev) => [...prev, currentMessage]);
         }
+        if (isDeepPlanCreated) {
+            setIsDeepPlanCreated(false);
+        }
         setCurrentMessage(null);
 
         const changedFilesCount = totalModifiedFiles.filter(
@@ -122,6 +125,7 @@ const RovoDevView: React.FC = () => {
         curThinkingMessages,
         currentMessage,
         totalModifiedFiles,
+        isDeepPlanCreated,
     ]);
 
     const handleAppendError = useCallback(
@@ -141,12 +145,15 @@ const RovoDevView: React.FC = () => {
             else if (currentState === State.WaitingForPrompt) {
                 finalizeResponse();
             }
+            if (isDeepPlanCreated) {
+                setIsDeepPlanCreated(false);
+            }
             setChatStream((prev) => {
                 setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
                 return [...prev, msg];
             });
         },
-        [curThinkingMessages, currentMessage, currentState, finalizeResponse],
+        [curThinkingMessages, currentMessage, currentState, finalizeResponse, isDeepPlanCreated],
     );
 
     const validateResponseFinalized = useCallback(() => {
@@ -626,12 +633,15 @@ const RovoDevView: React.FC = () => {
         }
 
         setCurrentState(State.CancellingResponse);
+        if (isDeepPlanCreated) {
+            setIsDeepPlanCreated(false);
+        }
 
         // Send the signal to cancel the response
         postMessage({
             type: RovoDevViewResponseType.CancelResponse,
         });
-    }, [postMessage, currentState, setCurrentState]);
+    }, [postMessage, currentState, setCurrentState, isDeepPlanCreated]);
 
     const openFile = useCallback(
         (filePath: string, tryShowDiff?: boolean, range?: number[]) => {

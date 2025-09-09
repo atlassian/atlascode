@@ -1,0 +1,19 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/rest/api/1.0/projects/mocked-project/repos/dc-mocked-repo/pull-requests/123/blocker-comments"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "size": 0,
+            "limit": 25,
+            "isLastPage": true,
+            "values": [],
+            "start": 0
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

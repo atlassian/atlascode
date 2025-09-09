@@ -1,0 +1,46 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/rest/api/1.0/projects/mocked-project/repos/dc-mocked-repo"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "slug": "dc-mocked-repo",
+            "id": 1,
+            "name": "dc-mocked-repo",
+            "description": "Mocked repository for Data Center testing",
+            "hierarchyId": "e7e4f0a7-38bb-4b8c-b34d-6b9b949e6a6e",
+            "scmId": "git",
+            "state": "AVAILABLE",
+            "statusMessage": "Available",
+            "forkable": true,
+            "project": {
+                "key": "mocked-project",
+                "id": 1,
+                "name": "Mocked Project",
+                "description": "Mocked project for testing",
+                "public": false,
+                "type": "NORMAL",
+                "links": {
+                    "self": [
+                        {
+                            "href": "https://bitbucket.mockeddomain.com/projects/mocked-project"
+                        }
+                    ]
+                }
+            },
+            "public": false,
+            "links": {
+                "self": [
+                    {
+                        "href": "https://bitbucket.mockeddomain.com/projects/mocked-project/repos/dc-mocked-repo/browse"
+                    }
+                ]
+            }
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}
