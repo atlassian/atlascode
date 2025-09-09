@@ -308,12 +308,11 @@ export class RovoDevChatProvider {
 
             case 'user-prompt':
                 if (this._replayInProgress) {
-                    const cleanedText = this.stripContextTags(response.content);
                     this._currentPrompt = {
-                        text: cleanedText,
+                        text: response.content,
                         enable_deep_plan: false,
                     };
-                    return this.sendUserPromptToView(cleanedText);
+                    return this.sendUserPromptToView(response.content);
                 }
                 return Promise.resolve(false);
 
@@ -354,17 +353,6 @@ export class RovoDevChatProvider {
             default:
                 return Promise.resolve(false);
         }
-    }
-
-    private stripContextTags(text: string): string {
-        // Remove content between <context> and </context> tags (including the tags themselves)
-        // This regex handles multiline content and nested tags
-        let cleanedText = text.replace(/<context>[\s\S]*?<\/context>/gi, '');
-
-        // Clean up excessive whitespace that might be left behind
-        cleanedText = cleanedText.replace(/\n\s*\n\s*\n/g, '\n\n'); // Replace 3+ newlines with 2
-
-        return cleanedText.trim();
     }
 
     private async executeApiWithErrorHandling<T>(
@@ -442,7 +430,7 @@ export class RovoDevChatProvider {
                     type: 'file' as const,
                     file_path: x.file.absolutePath,
                     selection: x.selection,
-                    note: 'The user is looking at this file',
+                    note: 'I currently have this file open in my IDE',
                 }));
             fileContext.push(...moreFiles);
         }
@@ -458,7 +446,7 @@ export class RovoDevChatProvider {
         const revertedFileEntries = revertedFiles.map((x) => ({
             type: 'file' as const,
             file_path: x,
-            note: 'The user has reverted the changes on this file',
+            note: 'I have reverted the changes you have done on this file',
         }));
 
         requestPayload.context.push(...revertedFileEntries);
