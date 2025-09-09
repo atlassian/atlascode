@@ -25,6 +25,7 @@ export type ExtraOptions = {
     value?: string;
     prompt?: string;
     debounceValidationMs?: number;
+    preAcceptValidationFunc?: (value: string) => Promise<string | undefined>;
 };
 
 export class BaseUI {
@@ -64,24 +65,33 @@ export class BaseUI {
         input.buttons = [QuickInputButtons.Back, ...(props.buttons || [])];
 
         return new Promise((resolve, reject) => {
-            if (props.validateInput !== undefined) {
-                if (props.debounceValidationMs) {
-                    const debouncer = new Debouncer(input, props.validateInput, props.debounceValidationMs);
-                    input.onDidChangeValue(async (value) => {
-                        if (props.validateInput !== undefined) {
-                            const result = await debouncer.run(value);
-                            input.validationMessage = result === null ? undefined : result;
-                        }
-                    });
-                } else {
-                    input.onDidChangeValue(async (value) => {
-                        const errorMessage = await props.validateInput?.(value);
-                        input.validationMessage = errorMessage || undefined;
-                    });
-                }
+            if (props.debounceValidationMs) {
+                const debouncer = new Debouncer(input, props.validateInput, props.debounceValidationMs);
+                input.onDidChangeValue(async (value) => {
+                    if (props.validateInput !== undefined) {
+                        const result = await debouncer.run(value);
+                        input.validationMessage = result === null ? undefined : result;
+                    } else {
+                        input.validationMessage = undefined;
+                    }
+                });
+            } else {
+                input.onDidChangeValue(async (value) => {
+                    const errorMessage = await props.validateInput?.(value);
+                    input.validationMessage = errorMessage || undefined;
+                });
             }
 
-            input.onDidAccept(() => {
+            input.onDidAccept(async () => {
+                if (props.preAcceptValidationFunc) {
+                    input.busy = true;
+                    input.enabled = false;
+                    const result = await props.preAcceptValidationFunc(input.value);
+                    input.validationMessage = result;
+                    input.busy = false;
+                    input.enabled = true;
+                }
+
                 // According to the docs, `string` validation errors should in
                 // theory prevent accepting the form, but somehow they don't
                 if (!this.isInputValid(input)) {
@@ -221,7 +231,7 @@ class Debouncer<T> {
 
     constructor(
         private input: QuickInput,
-        private validator: (value: string) => T,
+        private validator?: (value: string) => T,
         private delay: number = 1000,
     ) {}
 
@@ -238,7 +248,7 @@ class Debouncer<T> {
             }
             this.lastPromise = new Promise((resolve) => {
                 this.timeout = setTimeout(async () => {
-                    resolve(await this.validator(value));
+                    resolve(this.validator ? await this.validator(value) : undefined);
                     this.input.busy = false;
                 }, this.delay);
             });

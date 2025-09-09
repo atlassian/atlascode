@@ -1,3 +1,6 @@
+import { BasicAuthInfo, PATAuthInfo, ProductJira } from 'src/atlclients/authInfo';
+import { Container } from 'src/container';
+
 import { UiAction } from '../../baseUI';
 import { Transition } from '../../types';
 import { AuthFlowUI } from '../authFlowUI';
@@ -6,6 +9,7 @@ import {
     AuthenticationType,
     AuthState,
     PartialAuthData,
+    ServerCredentialType,
     SpecialSiteOptions,
 } from '../types';
 import { ServerAuthStates } from './server';
@@ -149,7 +153,11 @@ export class CommonAuthStates {
             }
 
             const passwordType = data.authenticationType === AuthenticationType.ApiToken ? 'API Token' : 'Password';
-            const { value, action } = await ui.inputPassword(data, passwordType);
+
+            const { value, action } = await ui.inputPassword(data, passwordType, (password) =>
+                testCredentials(data, password),
+            );
+
             if (action === UiAction.Back) {
                 return Transition.back();
             }
@@ -189,3 +197,30 @@ export class CommonAuthStates {
         },
     };
 }
+
+const testCredentials = async (data: PartialAuthData, password: string) => {
+    const authInfo =
+        data.serverCredentialType === ServerCredentialType.PAT
+            ? ({
+                  token: password,
+              } as PATAuthInfo)
+            : ({
+                  // Works for API token and server Basic Auth
+                  username: data.username,
+                  password: password,
+              } as BasicAuthInfo);
+
+    const { isOk, reason } = await Container.loginManager.testCredentials(
+        {
+            host: data.site!,
+            product: ProductJira,
+            contextPath: data.contextPath,
+            customSSLCertPaths: data.sslCertsPath,
+            pfxPath: data.pfxPath,
+            pfxPassphrase: data.pfxPassphrase,
+        },
+        authInfo,
+    );
+
+    return isOk ? undefined : `Failed to authenticate with ${data.site}: ${reason}`;
+};
