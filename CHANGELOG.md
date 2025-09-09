@@ -5,6 +5,7 @@
 ### Bug Fixes
 
 - Fix issue with create task functionality
+- Fix issue when Rovo Dev ui is not visible in high contrast themes
 
 ## What's new in 3.8.14
 
