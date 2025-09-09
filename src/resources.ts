@@ -36,7 +36,6 @@ export enum iconSet {
     PIPELINEFAILED = 'failed',
     PIPELINESTOPPED = 'stopped',
     PIPELINEPAUSED = 'paused',
-    TWITTERLOGOBLUE = 'twitterLogoBlue',
     ROVODEV = 'rovodev',
 }
 
