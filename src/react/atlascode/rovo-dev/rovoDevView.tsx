@@ -74,7 +74,6 @@ const RovoDevView: React.FC = () => {
     const [workspaceCount, setWorkspaceCount] = useState(process.env.ROVODEV_BBY ? 1 : 0);
 
     const [history, setHistory] = useState<Response[]>([]);
-    const [streamStartIndex, setStreamStartIndex] = useState(0);
 
     const [isFeedbackFormVisible, setIsFeedbackFormVisible] = React.useState(false);
 
@@ -151,115 +150,10 @@ const RovoDevView: React.FC = () => {
         [dispatch, removeModifiedFileToolReturns],
     );
 
-    const groupMessages = useCallback(
-        (isReplay?: boolean) => {
-            if (isReplay) {
-                const stream: Response[] = [];
-                let userIdx = 0;
-                let parseIdx = 0;
-                while (parseIdx < history.length) {
-                    const msg = history[parseIdx];
-                    if (parseIdx === userIdx) {
-                        if (!Array.isArray(msg) && msg?.source === 'User') {
-                            stream.push(history[parseIdx]);
-                        }
-                        parseIdx++;
-                        continue;
-                    }
-                    // If parsing index finds another user message or end of stream, look back and group messages
-                    if ((!Array.isArray(msg) && msg?.source === 'User') || parseIdx === history.length - 1) {
-                        if (userIdx < parseIdx) {
-                            const endIndex = parseIdx === history.length - 1 ? parseIdx + 1 : parseIdx;
-                            const messageBlock = history.slice(userIdx + 1, endIndex);
-                            const summary = messageBlock.pop();
-                            console.log('messageBlock', messageBlock, 'summary', summary, 'msg', msg, {
-                                userIdx,
-                                parseIdx,
-                            });
-                            userIdx = parseIdx;
-                            if (!summary) {
-                                parseIdx++;
-                                continue;
-                            }
-
-                            if (Array.isArray(summary) || summary.source !== 'RovoDev') {
-                                parseIdx++;
-                                continue;
-                            }
-
-                            if (messageBlock.length > 0) {
-                                const thinkingGroup = messageBlock
-                                    .map((msg) => {
-                                        if (Array.isArray(msg)) {
-                                            return null;
-                                        }
-                                        return msg;
-                                    })
-                                    .filter((msg) => msg !== null) as ChatMessage[];
-                                if (thinkingGroup.length > 0) {
-                                    stream.push(thinkingGroup);
-                                }
-                                stream.push(summary);
-                                parseIdx !== history.length - 1 && stream.push(msg);
-
-                                parseIdx++;
-                                continue;
-                            }
-
-                            stream.push(summary);
-                            parseIdx !== history.length - 1 && stream.push(msg);
-                        }
-                    }
-                    parseIdx++;
-                }
-                setHistory(stream);
-                return;
-            }
-
-            setHistory((prev) => {
-                const last = prev.pop();
-                if (!last) {
-                    return prev;
-                }
-
-                if (Array.isArray(last) || last.source !== 'RovoDev') {
-                    return [...prev, last];
-                }
-
-                const messageBlock = prev.splice(streamStartIndex);
-
-                if (messageBlock.length > 0) {
-                    const thinkingGroup = messageBlock
-                        .map((msg) => {
-                            if (Array.isArray(msg)) {
-                                return null;
-                            }
-                            return msg;
-                        })
-                        .filter((msg) => msg !== null) as ChatMessage[];
-
-                    if (thinkingGroup.length === 0) {
-                        return [...prev, ...messageBlock, last];
-                    }
-
-                    setStreamStartIndex(prev.length);
-                    return [...prev, thinkingGroup, last];
-                }
-
-                return [...prev, last];
-            });
-        },
-        [history, streamStartIndex],
-    );
-
-    const finalizeResponse = useCallback(
-        (isReplay?: boolean) => {
-            setPendingToolCallMessage('');
-            setCurrentState(State.WaitingForPrompt);
-            groupMessages(isReplay);
-        },
-        [groupMessages],
-    );
+    const finalizeResponse = useCallback(() => {
+        setPendingToolCallMessage('');
+        setCurrentState(State.WaitingForPrompt);
+    }, []);
 
     const clearChatHistory = useCallback(() => {
         setHistory([]);
@@ -314,22 +208,57 @@ const RovoDevView: React.FC = () => {
 
                 const latest = prev.pop();
 
-                if (!Array.isArray(latest) && !Array.isArray(response)) {
-                    // Streaming text response, append to current message
-                    if (latest && latest.source === 'RovoDev' && response.source === 'RovoDev') {
-                        latest.text += response.text;
-                        return [...prev, latest];
-                    }
+                if (!Array.isArray(response)) {
+                    if (!Array.isArray(latest)) {
+                        // Streaming text response, append to current message
+                        if (latest && latest.source === 'RovoDev' && response.source === 'RovoDev') {
+                            latest.text += response.text;
+                            return [...prev, latest];
+                        }
+                        // Group tool return with previous message if applicable
+                        if (response.source === 'ToolReturn') {
+                            handleAppendModifiedFileToolReturns(response);
+                            if (response.tool_name !== 'create_technical_plan') {
+                                // Do not group if User or Error message is the latest
+                                const canGroup =
+                                    latest &&
+                                    latest.source !== 'User' &&
+                                    latest.source !== 'RovoDevError' &&
+                                    latest.source !== 'PullRequest';
 
-                    if (response.source === 'ToolReturn') {
-                        handleAppendModifiedFileToolReturns(response);
-                    }
+                                let thinkingGroup: ChatMessage[] = canGroup ? [latest, response] : [response];
 
-                    if (latest) {
+                                if (canGroup) {
+                                    const prevGroup = prev.pop();
+                                    // if previous message is also a thinking group, merge them
+                                    if (Array.isArray(prevGroup)) {
+                                        thinkingGroup = [...prevGroup, ...thinkingGroup];
+                                    } else {
+                                        if (prevGroup) {
+                                            prev.push(prevGroup);
+                                        }
+                                    }
+                                }
+                                return [...prev, thinkingGroup];
+                            }
+                        }
+                    } else {
+                        if (response.source === 'ToolReturn') {
+                            handleAppendModifiedFileToolReturns(response);
+                            if (response.tool_name !== 'create_technical_plan') {
+                                latest.push(response);
+                                return [...prev, latest];
+                            }
+                        }
                         return [...prev, latest, response];
                     }
                 }
-                return [...prev, response];
+
+                if (latest) {
+                    return [...prev, latest, response];
+                } else {
+                    return [...prev, response];
+                }
             });
         },
         [handleAppendModifiedFileToolReturns],
@@ -362,7 +291,6 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.UserChatMessage:
                     appendResponse(event.message);
-                    setStreamStartIndex(history.length + 1);
                     break;
 
                 case RovoDevProviderMessageType.CompleteMessage:
@@ -371,7 +299,7 @@ const RovoDevView: React.FC = () => {
                         currentState === State.ExecutingPlan ||
                         currentState === State.CancellingResponse
                     ) {
-                        finalizeResponse(event.isReplay);
+                        finalizeResponse();
                         if (!event.isReplay) {
                             validateResponseFinalized();
                         }
@@ -529,7 +457,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [currentState, history.length, appendResponse, clearChatHistory, finalizeResponse, validateResponseFinalized],
+        [currentState, appendResponse, clearChatHistory, finalizeResponse, validateResponseFinalized],
     );
 
     const { postMessage, postMessagePromise } = useMessagingApi<
