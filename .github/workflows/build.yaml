@@ -47,6 +47,8 @@ jobs:
             target: jira-dc
           - kind: e2e
             target: bitbucket-cloud
+          - kind: e2e
+            target: bitbucket-dc
 
     env:
       ATLASCODE_FX3_API_KEY: ${{ secrets.ATLASCODE_FX3_API_KEY }}
