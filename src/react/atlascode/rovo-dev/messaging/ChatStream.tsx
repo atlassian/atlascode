@@ -215,12 +215,16 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
             {(state !== State.Disabled || subState !== SubState.NeedAuth) &&
                 chatHistory &&
                 chatHistory.map((block, idx) => {
+                    const drawerOpen =
+                        idx === chatHistory.findLastIndex((msg) => Array.isArray(msg)) &&
+                        state !== State.WaitingForPrompt;
+
                     if (block) {
                         if (Array.isArray(block)) {
                             return (
                                 <MessageDrawer
                                     messages={block}
-                                    opened={idx === chatHistory.length - 1} // Only open the latest thinking group by default
+                                    opened={drawerOpen}
                                     renderProps={renderProps}
                                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                                 />
