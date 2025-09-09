@@ -214,13 +214,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
             <RovoDevLanding subState={subState} onLoginClick={onLoginClick} />
             {(state !== State.Disabled || subState !== SubState.NeedAuth) &&
                 chatHistory &&
-                chatHistory.map((block) => {
+                chatHistory.map((block, idx) => {
                     if (block) {
                         if (Array.isArray(block)) {
                             return (
                                 <MessageDrawer
                                     messages={block}
-                                    opened={false}
+                                    opened={idx === chatHistory.length - 1} // Only open the latest thinking group by default
                                     renderProps={renderProps}
                                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                                 />
