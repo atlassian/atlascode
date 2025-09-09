@@ -1,0 +1,137 @@
+{
+    "request": {
+        "method": "POST",
+        "urlPathPattern": "/rest/api/1.0/projects/mocked-project/repos/dc-mocked-repo/pull-requests"
+    },
+    "response": {
+        "status": 201,
+        "jsonBody": {
+            "id": 123,
+            "version": 0,
+            "title": "New Feature Implementation",
+            "state": "OPEN",
+            "open": true,
+            "closed": false,
+            "draft": false,
+            "createdDate": 1757000629662,
+            "updatedDate": 1757000629662,
+            "fromRef": {
+                "id": "refs/heads/test-repository",
+                "displayId": "test-repository",
+                "latestCommit": "def456abc789012345678901234567890123456",
+                "type": "BRANCH",
+                "repository": {
+                    "slug": "test-repository",
+                    "id": 4,
+                    "name": "test-repository",
+                    "hierarchyId": "bf29c75d66fd50070728",
+                    "scmId": "git",
+                    "state": "AVAILABLE",
+                    "statusMessage": "Available",
+                    "forkable": true,
+                    "project": {
+                        "key": "dc-mocked-repo",
+                        "id": 1,
+                        "name": "dc-mocked-repo",
+                        "public": false,
+                        "type": "NORMAL",
+                        "links": {
+                            "self": [{
+                                "href": "https://bitbucket.mockeddomain.com/projects/mocked-project"
+                            }]
+                        },
+                        "avatarUrl": "https://example.com/avatar.png"
+                    },
+                    "public": false,
+                    "archived": false,
+                    "links": {
+                        "clone": [{
+                            "href": "https://bitbucket.mockeddomain.com/scm/mocked-project/dc-mocked-repo.git",
+                            "name": "http"
+                        }, {
+                            "href": "ssh://git@https://bitbucket.mockeddomain.com:7999/mocked-project/dc-mocked-repo.git",
+                            "name": "ssh"
+                        }],
+                        "self": [{
+                            "href": "https://bitbucket.mockeddomain.com/projects/mocked-project/repos/dc-mocked-repo/browse"
+                        }]
+                    }
+                }
+            },
+            "toRef": {
+                "id": "refs/heads/master",
+                "displayId": "master",
+                "latestCommit": "45a7ddcd066c39d427033eea2a38deb918619bc4",
+                "type": "BRANCH",
+                "repository": {
+                    "slug": "5dk8qiq43b41v",
+                    "id": 4,
+                    "name": "5dk8qiq43b41v",
+                    "hierarchyId": "bf29c75d66fd50070728",
+                    "scmId": "git",
+                    "state": "AVAILABLE",
+                    "statusMessage": "Available",
+                    "forkable": true,
+                    "project": {
+                        "key": "dc-mocked-repo",
+                        "id": 1,
+                        "name": "dc-mocked-repo",
+                        "public": false,
+                        "type": "NORMAL",
+                        "links": {
+                            "self": [{
+                                "href": "https://bitbucket.mockeddomain.com/projects/mocked-project"
+                            }]
+                        },
+                        "avatarUrl": "https://example.com/avatar.png"
+                    },
+                    "public": false,
+                    "archived": false,
+                    "links": {
+                        "clone": [{
+                            "href": "https://bitbucket.mockeddomain.com/scm/mocked-project/dc-mocked-repo.git",
+                            "name": "http"
+                        }, {
+                            "href": "ssh://git@https://bitbucket.mockeddomain.com:7999/mocked-project/dc-mocked-repo.git",
+                            "name": "ssh"
+                        }],
+                        "self": [{
+                            "href": "https://bitbucket.mockeddomain.com/projects/mocked-project/repos/dc-mocked-repo/browse"
+                        }]
+                    }
+                }
+            },
+            "locked": false,
+            "author": {
+                "user": {
+                    "name": "mockuser",
+                    "emailAddress": "mockuser@atlassian.code",
+                    "active": true,
+                    "displayName": "Mock User",
+                    "id": 2,
+                    "slug": "mockuser",
+                    "type": "NORMAL",
+                    "links": {
+                        "self": [{
+                            "href": "https://bitbucket.mockeddomain.com/users/mockuser"
+                        }]
+                    },
+                    "avatarUrl": "https://example.com/avatar.png"
+                },
+                "role": "AUTHOR",
+                "approved": false,
+                "status": "UNAPPROVED"
+            },
+            "reviewers": [],
+            "participants": [],
+            "links": {
+                "self": [{
+                    "href": "https://bitbucket.mockeddomain.com/projects/mocked-project/repos/dc-mocked-repo/pull-requests/123"
+                }]
+            }
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

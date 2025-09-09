@@ -1,0 +1,62 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/rest/api/1.0/projects/mocked-project/repos/dc-mocked-repo/pull-requests/123/diff"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "fromHash": "abcdef1234567890abcdef1234567890abcdef12",
+            "toHash": "def456abc789012345678901234567890123456",
+            "contextLines": 10,
+            "whitespace": "SHOW",
+            "diffs": [{
+                "source": {
+                    "components": ["test2.json"],
+                    "parent": "",
+                    "name": "test2.json",
+                    "extension": "json",
+                    "toString": "test2.json"
+                },
+                "destination": {
+                    "components": ["test2.json"],
+                    "parent": "",
+                    "name": "test2.json",
+                    "extension": "json",
+                    "toString": "test2.json"
+                },
+                "hunks": [{
+                    "sourceLine": 1,
+                    "sourceSpan": 1,
+                    "destinationLine": 1,
+                    "destinationSpan": 1,
+                    "segments": [{
+                        "type": "REMOVED",
+                        "lines": [{
+                            "source": 1,
+                            "destination": 1,
+                            "line": "{\"description\": \"Configuration file for testing\", \"enabled\": true, \"settings\": {\"debug\": false, \"timeout\": 5000}}",
+                            "truncated": false
+                        }],
+                        "truncated": false
+                    }, {
+                        "type": "ADDED",
+                        "lines": [{
+                            "source": 2,
+                            "destination": 1,
+                            "line": "{\"description\": \"Updated configuration for testing\", \"enabled\": true, \"settings\": {\"debug\": true, \"timeout\": 10000, \"features\": [\"comments\", \"pullrequests\"]}}",
+                            "truncated": false
+                        }],
+                        "truncated": false
+                    }],
+                    "truncated": false
+                }],
+                "truncated": false
+            }],
+            "truncated": false
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

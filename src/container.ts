@@ -16,7 +16,6 @@ import { CommandContext, setCommandContext } from './commandContext';
 import { registerDebugCommands } from './commands';
 import { openPullRequest } from './commands/bitbucket/pullRequest';
 import { configuration, IConfig } from './config/configuration';
-import { Commands } from './constants';
 import { PmfStats } from './feedback/pmfStats';
 import { JQLManager } from './jira/jqlManager';
 import { JiraProjectManager } from './jira/projectManager';
@@ -308,7 +307,6 @@ export class Container {
                         providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
                     }),
                     (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context, context.extensionPath)),
-                    this.configureRovodevSettingsCommands(context),
                 );
 
                 context.subscriptions.push(this._rovodevDisposable);
@@ -363,38 +361,6 @@ export class Container {
                 factory.updateFeatureMetadata();
             }
         }
-    }
-
-    static configureRovodevSettingsCommands(context: ExtensionContext) {
-        async function openConfigFile(subPath: string, friendlyName: string) {
-            const home = process.env.HOME || process.env.USERPROFILE;
-            if (!home) {
-                vscode.window.showErrorMessage('Could not determine home directory.');
-                return;
-            }
-            const filePath = `${home}/${subPath}`;
-            try {
-                const doc = await workspace.openTextDocument(filePath);
-                await vscode.window.showTextDocument(doc);
-            } catch (err) {
-                vscode.window.showErrorMessage(`Could not open ${friendlyName} (${filePath}): ${err}`);
-            }
-        }
-
-        const disposable = vscode.Disposable.from(
-            vscode.commands.registerCommand(Commands.OpenRovoDevConfig, async () => {
-                await openConfigFile('.rovodev/config.yml', 'Rovo Dev settings file');
-            }),
-            vscode.commands.registerCommand(Commands.OpenRovoDevMcpJson, async () => {
-                await openConfigFile('.rovodev/mcp.json', 'Rovo Dev MCP configuration');
-            }),
-            vscode.commands.registerCommand(Commands.OpenRovoDevGlobalMemory, async () => {
-                await openConfigFile('.rovodev/.agent.md', 'Rovo Dev Global Memory file');
-            }),
-        );
-        context.subscriptions.push(disposable);
-
-        return disposable;
     }
 
     static focus() {

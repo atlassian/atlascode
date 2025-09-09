@@ -1,0 +1,39 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/rest/branch-utils/1.0/projects/mocked-project/repos/dc-mocked-repo/branchmodel"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "development": {
+                "id": "refs/heads/main",
+                "displayId": "main",
+                "type": "BRANCH",
+                "latestCommit": "abcdef1234567890abcdef1234567890abcdef12",
+                "latestChangeset": "abcdef1234567890abcdef1234567890abcdef12",
+                "isDefault": true
+            },
+            "types": [{
+                "id": "BUGFIX",
+                "displayName": "Bugfix",
+                "prefix": "bugfix/"
+            }, {
+                "id": "FEATURE",
+                "displayName": "Feature",
+                "prefix": "feature/"
+            }, {
+                "id": "HOTFIX",
+                "displayName": "Hotfix",
+                "prefix": "hotfix/"
+            }, {
+                "id": "RELEASE",
+                "displayName": "Release",
+                "prefix": "release/"
+            }]
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

@@ -4,7 +4,7 @@ import { v4 } from 'uuid';
 import { Event, Webview } from 'vscode';
 
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
-import { RovoDevApiClient } from './rovoDevApiClient';
+import { RovoDevApiClient, RovoDevChatRequest, RovoDevChatRequestContextFileEntry } from './rovoDevApiClient';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContext, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
@@ -63,6 +63,7 @@ export class RovoDevChatProvider {
 
         const isCommand = text.trim() === '/clear' || text.trim() === '/prune';
         if (isCommand) {
+            enable_deep_plan = false;
             context = undefined;
         }
 
@@ -85,15 +86,15 @@ export class RovoDevChatProvider {
             context,
         };
 
-        let payloadToSend = text;
+        const requestPayload = this.preparePayloadForChatRequest(this._currentPrompt);
+
         if (!isCommand) {
-            payloadToSend = this.addUndoContextToPrompt(payloadToSend, revertedFiles);
-            payloadToSend = this.addContextToPrompt(payloadToSend, context);
+            this.addUndoContextToPrompt(requestPayload, revertedFiles);
         }
 
         const currentPrompt = this._currentPrompt;
         const fetchOp = async (client: RovoDevApiClient) => {
-            const response = await client.chat(payloadToSend, enable_deep_plan);
+            const response = await client.chat(requestPayload);
 
             this._telemetryProvider.fireTelemetryEvent(
                 'rovoDevPromptSentEvent',
@@ -128,18 +129,19 @@ export class RovoDevChatProvider {
         this.beginNewPrompt();
 
         const currentPrompt = this._currentPrompt;
-        const payloadToSend = this.addRetryAfterErrorContextToPrompt(currentPrompt.text);
+        const requestPayload = this.preparePayloadForChatRequest(currentPrompt);
+        this.addRetryAfterErrorContextToPrompt(requestPayload);
 
         // we need to echo back the prompt to the View since it's not user submitted
-        await this.sendPromptSentToView(payloadToSend, currentPrompt.enable_deep_plan, currentPrompt.context);
+        await this.sendPromptSentToView(requestPayload.message, currentPrompt.enable_deep_plan, currentPrompt.context);
 
         const fetchOp = async (client: RovoDevApiClient) => {
-            const response = await client.chat(payloadToSend, currentPrompt.enable_deep_plan);
+            const response = await client.chat(requestPayload);
 
             this._telemetryProvider.fireTelemetryEvent(
                 'rovoDevPromptSentEvent',
                 this._currentPromptId,
-                !!currentPrompt.enable_deep_plan,
+                !!requestPayload.enable_deep_plan,
             );
 
             return this.processChatResponse('chat', response);
@@ -306,12 +308,11 @@ export class RovoDevChatProvider {
 
             case 'user-prompt':
                 if (this._replayInProgress) {
-                    const cleanedText = this.stripContextTags(response.content);
                     this._currentPrompt = {
-                        text: cleanedText,
+                        text: response.content,
                         enable_deep_plan: false,
                     };
-                    return this.sendUserPromptToView(cleanedText);
+                    return this.sendUserPromptToView(response.content);
                 }
                 return Promise.resolve(false);
 
@@ -352,17 +353,6 @@ export class RovoDevChatProvider {
             default:
                 return Promise.resolve(false);
         }
-    }
-
-    private stripContextTags(text: string): string {
-        // Remove content between <context> and </context> tags (including the tags themselves)
-        // This regex handles multiline content and nested tags
-        let cleanedText = text.replace(/<context>[\s\S]*?<\/context>/gi, '');
-
-        // Clean up excessive whitespace that might be left behind
-        cleanedText = cleanedText.replace(/\n\s*\n\s*\n/g, '\n\n'); // Replace 3+ newlines with 2
-
-        return cleanedText.trim();
     }
 
     private async executeApiWithErrorHandling<T>(
@@ -421,68 +411,52 @@ export class RovoDevChatProvider {
         });
     }
 
-    private addContextToPrompt(message: string, context?: RovoDevContext): string {
-        if (!context) {
-            return message;
+    private preparePayloadForChatRequest(prompt: RovoDevPrompt): RovoDevChatRequest {
+        const fileContext: RovoDevChatRequestContextFileEntry[] = !!prompt.context?.focusInfo?.enabled
+            ? [
+                  {
+                      type: 'file' as const,
+                      file_path: prompt.context.focusInfo.file.absolutePath,
+                      selection: prompt.context.focusInfo.selection,
+                      note: 'The user is looking at this file',
+                  },
+              ]
+            : [];
+
+        if (prompt.context?.contextItems) {
+            const moreFiles = prompt.context.contextItems
+                .filter((x) => x.enabled)
+                .map((x) => ({
+                    type: 'file' as const,
+                    file_path: x.file.absolutePath,
+                    selection: x.selection,
+                    note: 'I currently have this file open in my IDE',
+                }));
+            fileContext.push(...moreFiles);
         }
 
-        let extra = '';
-        if (context.focusInfo && context.focusInfo.enabled && !context.focusInfo.invalid) {
-            extra += `
-            <context>
-                I have this open in editor:
-                    <name>${context.focusInfo.file.name}</name>
-                        <absolute_path>${context.focusInfo.file.absolutePath}</absolute_path>
-                        <relative_path>${context.focusInfo.file.relativePath}</relative_path>
-                        ${
-                            context.focusInfo.selection
-                                ? `<lines>${context.focusInfo.selection.start}-${context.focusInfo.selection.end}</lines>`
-                                : ''
-                        }
-                        Please avoid excessively repeating the context in the response.
-                </context>`;
-        }
-
-        if (context.contextItems && context.contextItems.length > 0) {
-            extra += `
-                <context>
-                    I have these additional context items:
-                    ${context.contextItems
-                        .map(
-                            (item) => `
-                        <item>
-                            <name>${item.file.name}</name>
-                            <absolute_path>${item.file.absolutePath}</absolute_path>
-                            <relative_path>${item.file.relativePath}</relative_path>
-                            ${item.selection ? `<lines>${item.selection.start}-${item.selection.end}</lines>` : ''}
-                        </item>`,
-                        )
-                        .join('\n')}
-                </context>`;
-        }
-
-        // Trim excessive whitespace:
-        extra = extra.replace(/\s+/g, ' ').trim();
-        return `${message}\n${extra}`.trim();
+        return {
+            message: prompt.text,
+            enable_deep_plan: prompt.enable_deep_plan,
+            context: fileContext,
+        };
     }
 
-    private addUndoContextToPrompt(message: string, revertedFiles: string[]): string {
-        if (revertedFiles.length) {
-            const files = revertedFiles.join('\n');
-            return `<context>
-    The following files have been reverted:
-    ${files}
-</context>
-            
-${message}`;
-        } else {
-            return message;
-        }
+    private addUndoContextToPrompt(requestPayload: RovoDevChatRequest, revertedFiles: string[]) {
+        const revertedFileEntries = revertedFiles.map((x) => ({
+            type: 'file' as const,
+            file_path: x,
+            note: 'I have reverted the changes you have done on this file',
+        }));
+
+        requestPayload.context.push(...revertedFileEntries);
     }
 
-    private addRetryAfterErrorContextToPrompt(message: string): string {
-        return `<context>The previous response interrupted prematurely because of an error. Continue processing the previous prompt from the point where it was interrupted.
-    <previous_prompt>${message}</previous_prompt>
-</context>`;
+    private addRetryAfterErrorContextToPrompt(requestPayload: RovoDevChatRequest) {
+        requestPayload.context.push({
+            type: 'retry-after-error',
+            content:
+                'The previous response interrupted prematurely because of an error. Continue processing the previous prompt from the point where it was interrupted.',
+        });
     }
 }

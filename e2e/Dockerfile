@@ -51,7 +51,7 @@ if [[ -z "\${ONLYSERVER}" ]]; then
 else
      # Only start server if ONLYSERVER is set
     echo "No e2e tests started. Only starting code-server."
-    code-server --auth none --bind-addr 0.0.0.0:9988
+    code-server --auth none --disable-workspace-trust --bind-addr 0.0.0.0:9988
 fi
 
 EOF
