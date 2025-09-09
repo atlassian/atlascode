@@ -1,6 +1,7 @@
 import AddIcon from '@mui/icons-material/Add';
 import { makeStyles } from '@mui/styles';
 import React, { useContext } from 'react';
+import { PullRequestState } from 'src/bitbucket/model';
 
 import { EditableTextComponent } from './EditableTextComponent';
 import { PullRequestDetailsControllerContext } from './pullRequestDetailsController';
@@ -28,9 +29,17 @@ const useStyles = makeStyles({
     },
 });
 
-export const PageTaskAdder: React.FC = () => {
+type PageTaskAdderProps = {
+    pullRequestState: PullRequestState;
+};
+
+export const PageTaskAdder: React.FC<PageTaskAdderProps> = ({ pullRequestState }) => {
     const classes = useStyles();
     const controller = useContext(PullRequestDetailsControllerContext);
+
+    if (pullRequestState !== 'OPEN') {
+        return null;
+    }
 
     return (
         <div className={classes.container}>
