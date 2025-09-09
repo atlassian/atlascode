@@ -4,17 +4,18 @@ import TextField from '@atlaskit/textfield';
 import {
     Comment as JiraComment,
     CommentVisibility,
-    // JsdInternalCommentVisibility,
+    JsdInternalCommentVisibility,
     User,
 } from '@atlassianlabs/jira-pi-common-models';
 import { Box } from '@mui/material';
 import { formatDistanceToNow, parseISO } from 'date-fns';
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
 import { AdfAwareContent } from '../../../AdfAwareContent';
-// import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
-import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
+// these two components can't be imported at the same time, so use lazy loading
+const AtlaskitEditor = lazy(() => import('../../common/AtlaskitEditor/AtlaskitEditor'));
+const JiraIssueTextAreaEditor = lazy(() => import('../../common/JiraIssueTextArea'));
 
 type IssueCommentComponentProps = {
     siteDetails: DetailedSiteInfo;
@@ -31,6 +32,7 @@ type IssueCommentComponentProps = {
     onCommentTextChange: (text: string) => void;
     isEditingComment: boolean;
     onEditingCommentChange: (editing: boolean) => void;
+    isAtlaskitEditorEnabled?: boolean;
 };
 const CommentComponent: React.FC<{
     siteDetails: DetailedSiteInfo;
@@ -41,6 +43,7 @@ const CommentComponent: React.FC<{
     fetchUsers: (input: string) => Promise<any[]>;
     isServiceDeskProject?: boolean;
     isRteEnabled?: boolean;
+    isAtlaskitEditorEnabled?: boolean;
 }> = ({
     siteDetails,
     comment,
@@ -50,6 +53,7 @@ const CommentComponent: React.FC<{
     fetchUsers,
     isServiceDeskProject,
     isRteEnabled = false,
+    isAtlaskitEditorEnabled,
 }) => {
     const [isEditing, setIsEditing] = React.useState(false);
     const [isSaving, setIsSaving] = React.useState(false);
@@ -70,6 +74,8 @@ const CommentComponent: React.FC<{
     };
     const bodyText = getDisplayContent();
     const [commentText, setCommentText] = React.useState(comment.body);
+    const isAtlaskitEditorFFReceived = typeof isAtlaskitEditorEnabled === 'boolean';
+
     const baseActions: JSX.Element[] = [
         <CommentAction
             onClick={() => {
@@ -114,46 +120,56 @@ const CommentComponent: React.FC<{
             content={
                 <>
                     {isEditing && !isSaving ? (
-                        // <JiraIssueTextAreaEditor
-                        //     value={commentText}
-                        //     onChange={(e: string) => {
-                        //         setCommentText(e);
-                        //     }}
-                        //     onSave={() => {
-                        //         setIsSaving(true);
-                        //         setIsEditing(false);
-                        //         onSave(commentText, comment.id, undefined);
-                        //     }}
-                        //     onCancel={() => {
-                        //         setIsSaving(false);
-                        //         setIsEditing(false);
-                        //         setCommentText(comment.body);
-                        //     }}
-                        //     fetchUsers={fetchUsers}
-                        //     isServiceDeskProject={isServiceDeskProject}
-                        //     onInternalCommentSave={() => {
-                        //         setIsSaving(false);
-                        //         setIsEditing(false);
-                        //         onSave(commentText, comment.id, JsdInternalCommentVisibility);
-                        //     }}
-                        //     featureGateEnabled={isRteEnabled}
-                        // />
-                        <AtlaskitEditor
-                            defaultValue={commentText}
-                            onSave={(content) => {
-                                setIsSaving(true);
-                                setIsEditing(false);
-                                onSave(content, comment.id, undefined);
-                            }}
-                            onCancel={() => {
-                                setCommentText(comment.body);
-                                setIsSaving(false);
-                                setIsEditing(false);
-                            }}
-                            onContentChange={(content) => {
-                                setCommentText(content);
-                            }}
-                        />
+                        isAtlaskitEditorFFReceived ? (
+                            <Suspense fallback={<div>Loading...</div>}>
+                                {!isAtlaskitEditorEnabled && (
+                                    <JiraIssueTextAreaEditor
+                                        value={commentText}
+                                        onChange={(e: string) => {
+                                            setCommentText(e);
+                                        }}
+                                        onSave={() => {
+                                            setIsSaving(true);
+                                            setIsEditing(false);
+                                            onSave(commentText, comment.id, undefined);
+                                        }}
+                                        onCancel={() => {
+                                            setIsSaving(false);
+                                            setIsEditing(false);
+                                            setCommentText(comment.body);
+                                        }}
+                                        fetchUsers={fetchUsers}
+                                        isServiceDeskProject={isServiceDeskProject}
+                                        onInternalCommentSave={() => {
+                                            setIsSaving(false);
+                                            setIsEditing(false);
+                                            onSave(commentText, comment.id, JsdInternalCommentVisibility);
+                                        }}
+                                        featureGateEnabled={isRteEnabled}
+                                    />
+                                )}
+                                {isAtlaskitEditorEnabled && (
+                                    <AtlaskitEditor
+                                        defaultValue={commentText}
+                                        onSave={(content) => {
+                                            setIsSaving(true);
+                                            setIsEditing(false);
+                                            onSave(content, comment.id, undefined);
+                                        }}
+                                        onCancel={() => {
+                                            setCommentText(comment.body);
+                                            setIsSaving(false);
+                                            setIsEditing(false);
+                                        }}
+                                        onContentChange={(content) => {
+                                            setCommentText(content);
+                                        }}
+                                    />
+                                )}
+                            </Suspense>
+                        ) : (
+                            <div>Waiting...</div>
+                        )
                     ) : (
                         <AdfAwareContent content={bodyText} fetchImage={fetchImage} />
                     )}
@@ -173,6 +189,7 @@ const AddCommentComponent: React.FC<{
     onCreate: (t: string, restriction?: CommentVisibility) => void;
     isServiceDeskProject?: boolean;
     isRteEnabled?: boolean;
+    isAtlaskitEditorEnabled?: boolean;
     commentText: string;
     setCommentText: (text: string) => void;
     isEditing: boolean;
@@ -187,7 +204,9 @@ const AddCommentComponent: React.FC<{
     setCommentText,
     isEditing,
     setIsEditing,
+    isAtlaskitEditorEnabled,
 }) => {
+    const isAtlaskitEditorFFReceived = typeof isAtlaskitEditorEnabled === 'boolean';
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             <Box
@@ -215,50 +234,60 @@ const AddCommentComponent: React.FC<{
                         }}
                         placeholder="Add a comment..."
                     />
+                ) : isAtlaskitEditorFFReceived ? (
+                    <Suspense fallback={<div>Loading...</div>}>
+                        {!isAtlaskitEditorEnabled && (
+                            <JiraIssueTextAreaEditor
+                                value={commentText}
+                                onChange={(e: string) => setCommentText(e)}
+                                onSave={(i: string) => {
+                                    if (i !== '') {
+                                        onCreate(i, undefined);
+                                        setCommentText('');
+                                        setIsEditing(false);
+                                    }
+                                }}
+                                onCancel={() => {
+                                    setCommentText('');
+                                    setIsEditing(false);
+                                }}
+                                onEditorFocus={() => {
+                                    setIsEditing(true);
+                                }}
+                                fetchUsers={fetchUsers}
+                                isServiceDeskProject={isServiceDeskProject}
+                                onInternalCommentSave={() => {
+                                    onCreate(commentText, JsdInternalCommentVisibility);
+                                    setCommentText('');
+                                    setIsEditing(false);
+                                }}
+                                featureGateEnabled={isRteEnabled}
+                            />
+                        )}
+                        {isAtlaskitEditorEnabled && (
+                            <Box sx={{ width: '100%' }}>
+                                <AtlaskitEditor
+                                    defaultValue={commentText}
+                                    onSave={(content) => {
+                                        if (content && content.trim() !== '') {
+                                            onCreate(content, undefined);
+                                            setCommentText('');
+                                            setIsEditing(false);
+                                        }
+                                    }}
+                                    onCancel={() => {
+                                        setCommentText('');
+                                        setIsEditing(false);
+                                    }}
+                                    onContentChange={(content) => {
+                                        setCommentText(content);
+                                    }}
+                                />
+                            </Box>
+                        )}
+                    </Suspense>
                 ) : (
-                    // <JiraIssueTextAreaEditor
-                    //     value={commentText}
-                    //     onChange={(e: string) => setCommentText(e)}
-                    //     onSave={(i: string) => {
-                    //         if (i !== '') {
-                    //             onCreate(i, undefined);
-                    //             setCommentText('');
-                    //             setIsEditing(false);
-                    //         }
-                    //     }}
-                    //     onCancel={() => {
-                    //         setCommentText('');
-                    //         setIsEditing(false);
-                    //     }}
-                    //     onEditorFocus={() => {
-                    //         setIsEditing(true);
-                    //     }}
-                    //     fetchUsers={fetchUsers}
-                    //     isServiceDeskProject={isServiceDeskProject}
-                    //     onInternalCommentSave={() => {
-                    //         onCreate(commentText, JsdInternalCommentVisibility);
-                    //         setCommentText('');
-                    //         setIsEditing(false);
-                    //     }}
-                    //     featureGateEnabled={isRteEnabled}
-                    // />
-                    <AtlaskitEditor
-                        defaultValue={commentText}
-                        onSave={(content) => {
-                            if (content && content.trim() !== '') {
-                                onCreate(content, undefined);
-                                setCommentText('');
-                                setIsEditing(false);
-                            }
-                        }}
-                        onCancel={() => {
-                            setCommentText('');
-                            setIsEditing(false);
-                        }}
-                        onContentChange={(content) => {
-                            setCommentText(content);
-                        }}
-                    />
+                    <div>Waiting...</div>
                 )}
             </Box>
         </Box>
@@ -279,6 +308,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
     onCommentTextChange,
     isEditingComment,
     onEditingCommentChange,
+    isAtlaskitEditorEnabled,
 }) => {
     return (
         <Box
@@ -295,6 +325,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                 setCommentText={onCommentTextChange}
                 isEditing={isEditingComment}
                 setIsEditing={onEditingCommentChange}
+                isAtlaskitEditorEnabled={isAtlaskitEditorEnabled}
             />
             {comments
                 .sort((a, b) => (a.created > b.created ? -1 : 1))
@@ -309,6 +340,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                         fetchUsers={fetchUsers}
                         isServiceDeskProject={isServiceDeskProject}
                         isRteEnabled={isRteEnabled}
+                        isAtlaskitEditorEnabled={isAtlaskitEditorEnabled}
                     />
                 ))}
         </Box>
