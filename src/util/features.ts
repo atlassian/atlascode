@@ -6,6 +6,7 @@ export enum Features {
     RovoDevEnabled = 'rovo_dev_ff',
     UseNewAuthFlow = 'atlascode-use-new-auth-flow',
     EnableAiSuggestions = 'atlascode-enable-ai-suggestions',
+    AtlaskitEditor = 'use-new-atlaskit-editor',
 }
 
 export const enum Experiments {
