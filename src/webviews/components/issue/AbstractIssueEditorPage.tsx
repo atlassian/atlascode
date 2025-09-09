@@ -29,7 +29,7 @@ import {
 import { Tooltip } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
-import * as React from 'react';
+import React, { lazy, Suspense } from 'react';
 import EdiText, { EdiTextType } from 'react-editext';
 import { v4 } from 'uuid';
 
@@ -44,6 +44,7 @@ import {
     UserList,
 } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
+import { Features } from '../../../util/features';
 import { ConnectionTimeout } from '../../../util/time';
 import AISuggestionFooter from '../aiCreateIssue/AISuggestionFooter';
 import AISuggestionHeader from '../aiCreateIssue/AISuggestionHeader';
@@ -53,7 +54,11 @@ import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
-// import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
+
+// these two components can't be imported at the same time, so use lazy loading
+const AtlaskitEditor = lazy(() => import('./common/AtlaskitEditor/AtlaskitEditor'));
+const JiraIssueTextAreaEditor = lazy(() => import('./common/JiraIssueTextArea'));
+
 import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
@@ -82,6 +87,8 @@ export interface CommonEditorViewState extends Message {
     isRovoDevEnabled: boolean;
     isGeneratingSuggestions?: boolean;
     summaryKey: string;
+    isAtlaskitEditorEnabled?: boolean;
+    isRendered?: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -100,6 +107,7 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     isRteEnabled: false,
     isRovoDevEnabled: false,
     summaryKey: v4(),
+    isAtlaskitEditorEnabled: false,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -215,7 +223,10 @@ export abstract class AbstractIssueEditorPage<
                 break;
             }
             case 'updateFeatureFlags': {
-                this.setState({ isRteEnabled: e.featureFlags.rteEnabled });
+                this.setState({
+                    isRteEnabled: e.featureFlags.rteEnabled,
+                    isAtlaskitEditorEnabled: e.featureFlags[Features.AtlaskitEditor],
+                });
                 break;
             }
             case 'loadingStart': {
@@ -512,7 +523,8 @@ export abstract class AbstractIssueEditorPage<
                     }
                     return markup;
                 }
-
+                const isAtlaskitEditorFFReceived = typeof this.state.isAtlaskitEditorEnabled === 'boolean';
+                const isAtlaskitEditorEnabled = this.state.isAtlaskitEditorEnabled;
                 return (
                     <>
                         {field.key === 'summary' && <AISuggestionHeader vscodeApi={this._api} />}
@@ -544,36 +556,58 @@ export abstract class AbstractIssueEditorPage<
                                     />
                                 );
                                 if ((field as InputFieldUI).isMultiline) {
-                                    markup = (
-                                        <div></div>
-                                        // <JiraIssueTextAreaEditor
-                                        //     {...fieldArgs.fieldProps}
-                                        //     value={this.coerceToString(this.state.fieldValues[field.key])}
-                                        //     isDisabled={
-                                        //         this.state.isSomethingLoading || this.state.isGeneratingSuggestions
-                                        //     }
-                                        //     onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
-                                        //         this.handleInlineEdit(field, val),
-                                        //     )}
-                                        //     fetchUsers={async (input: string) =>
-                                        //         (await this.fetchUsers(input)).map((user) => ({
-                                        //             displayName: user.displayName,
-                                        //             avatarUrl: user.avatarUrls?.['48x48'],
-                                        //             mention: this.state.siteDetails.isCloud
-                                        //                 ? `[~accountid:${user.accountId}]`
-                                        //                 : `[~${user.name}]`,
-                                        //         }))
-                                        //     }
-                                        //     featureGateEnabled={this.state.isRteEnabled}
-                                        // />
+                                    markup = isAtlaskitEditorFFReceived ? (
+                                        <Suspense fallback={<div>Loading...</div>}>
+                                            {isAtlaskitEditorEnabled && (
+                                                <AtlaskitEditor
+                                                    defaultValue={this.state.fieldValues[field.key]}
+                                                    onSave={(content) => {
+                                                        //TODO: handle save
+                                                    }}
+                                                    onCancel={() => {
+                                                        //TODO: reset content to last saved on cancel
+                                                    }}
+                                                    onContentChange={(content) => {
+                                                        chain(fieldArgs.fieldProps.onChange, (val: string) =>
+                                                            this.handleInlineEdit(field, val),
+                                                        );
+                                                    }}
+                                                />
+                                            )}
+                                            {!isAtlaskitEditorEnabled && (
+                                                <JiraIssueTextAreaEditor
+                                                    {...fieldArgs.fieldProps}
+                                                    value={this.coerceToString(this.state.fieldValues[field.key])}
+                                                    isDisabled={
+                                                        this.state.isSomethingLoading ||
+                                                        this.state.isGeneratingSuggestions
+                                                    }
+                                                    onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
+                                                        this.handleInlineEdit(field, val),
+                                                    )}
+                                                    fetchUsers={async (input: string) =>
+                                                        (await this.fetchUsers(input)).map((user) => ({
+                                                            displayName: user.displayName,
+                                                            avatarUrl: user.avatarUrls?.['48x48'],
+                                                            mention: this.state.siteDetails.isCloud
+                                                                ? `[~accountid:${user.accountId}]`
+                                                                : `[~${user.name}]`,
+                                                        }))
+                                                    }
+                                                    featureGateEnabled={this.state.isRteEnabled}
+                                                />
+                                            )}
+                                        </Suspense>
+                                    ) : (
+                                        <div>Waiting...</div>
+                                    );
+                                    return (
+                                        <div>
+                                            {markup}
+                                            {errDiv}
+                                        </div>
                                     );
                                 }
-                                return (
-                                    <div>
-                                        {markup}
-                                        {errDiv}
-                                    </div>
-                                );
                             }}
                         </Field>
                         {field.key === 'description' && <AISuggestionFooter vscodeApi={this._api} />}
