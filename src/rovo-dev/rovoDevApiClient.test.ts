@@ -224,7 +224,7 @@ describe('RovoDevApiClient', () => {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message, enable_deep_plan: false }),
+                body: JSON.stringify({ message, context: [] }),
             });
             expect(response).toBe(mockResponse);
         });
@@ -238,7 +238,11 @@ describe('RovoDevApiClient', () => {
             mockFetch.mockResolvedValue(mockResponse);
 
             const message = 'Hello, how can I help?';
-            const response = await client.chat(message, true);
+            const response = await client.chat({
+                message,
+                enable_deep_plan: true,
+                context: [],
+            });
 
             expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/chat', {
                 method: 'POST',
@@ -246,7 +250,7 @@ describe('RovoDevApiClient', () => {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message, enable_deep_plan: true }),
+                body: JSON.stringify({ message, enable_deep_plan: true, context: [] }),
             });
             expect(response).toBe(mockResponse);
         });
@@ -267,7 +271,7 @@ describe('RovoDevApiClient', () => {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message: '', enable_deep_plan: false }),
+                body: JSON.stringify({ message: '', context: [] }),
             });
             expect(response).toBe(mockResponse);
         });
@@ -289,7 +293,7 @@ describe('RovoDevApiClient', () => {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message, enable_deep_plan: false }),
+                body: JSON.stringify({ message, context: [] }),
             });
             expect(response).toBe(mockResponse);
         });
