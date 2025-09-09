@@ -1,12 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { Comment, PullRequestState, User } from 'src/bitbucket/model';
+import { Comment, PullRequestState, Task, User } from 'src/bitbucket/model';
 
 import { NestedComment } from './NestedComment';
 import { PullRequestDetailsControllerApi, PullRequestDetailsControllerContext } from './pullRequestDetailsController';
 
 jest.mock('./CommentTaskList', () => ({
-    CommentTaskList: ({ tasks }: { tasks: any[] }) => <div data-testid="comment-task-list">{tasks.length} tasks</div>,
+    CommentTaskList: ({ tasks }: { tasks: Task[] }) => <div data-testid="comment-task-list">{tasks.length} tasks</div>,
 }));
 
 jest.mock('./CommentTaskAdder', () => ({
@@ -38,7 +38,7 @@ jest.mock('./EditableTextComponent', () => ({
 }));
 
 jest.mock('./NestedCommentList', () => ({
-    NestedCommentList: ({ comments }: { comments: any[] }) => (
+    NestedCommentList: ({ comments }: { comments: Comment[] }) => (
         <div data-testid="nested-comment-list">{comments.length} nested comments</div>
     ),
 }));
