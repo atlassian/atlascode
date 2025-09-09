@@ -10,7 +10,7 @@ const addRepo = async (page: Page) => {
     await pathInput.waitFor({ state: 'visible' });
     await page.waitForTimeout(250);
 
-    await pathInput.fill('/mock-repository/');
+    await pathInput.fill('/dc-repository/');
     await page.waitForTimeout(250);
 
     await page.getByRole('option', { name: '.git' }).waitFor({ state: 'visible' });
@@ -18,7 +18,7 @@ const addRepo = async (page: Page) => {
     await page.keyboard.press('Enter');
 };
 
-export async function connectRepository(page: Page, request: APIRequestContext) {
+export async function connectRepositoryDC(page: Page, request: APIRequestContext) {
     const atlascodeDrawer = new AtlascodeDrawer(page);
 
     const cleanupSetupPullrequests = await setupPullrequests(request, []);
@@ -28,7 +28,9 @@ export async function connectRepository(page: Page, request: APIRequestContext) 
     await addRepo(page);
 
     const explorerDrawer = new ExplorerDrawer(page);
+    await explorerDrawer.openExplorerDrawer();
     await explorerDrawer.waitForExplorerLoad();
+    await page.waitForTimeout(500);
     const isRepoAddFailed = await explorerDrawer.isNoRepository();
 
     await atlascodeDrawer.openAtlascodeDrawer();

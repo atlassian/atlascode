@@ -1,10 +1,7 @@
 import { Page } from '@playwright/test';
-import { closeOnboardingQuickPick } from 'e2e/helpers';
 import { AtlascodeDrawer, AtlassianSettings, PullRequestPage } from 'e2e/page-objects';
 
 export async function viewPullRequset(page: Page) {
-    await closeOnboardingQuickPick(page);
-
     await new AtlassianSettings(page).closeSettingsPage();
 
     const { pullRequests } = new AtlascodeDrawer(page);

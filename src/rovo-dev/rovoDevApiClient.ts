@@ -12,6 +12,27 @@ class RovoDevApiError extends Error {
     }
 }
 
+export interface RovoDevChatRequestContextFileEntry {
+    type: 'file';
+    file_path: string;
+    selection?: {
+        start: number;
+        end: number;
+    };
+    note?: string;
+}
+
+export interface RovoDevChatRequestContextOtherEntry {
+    type: Exclude<string, 'file'>;
+    content: string;
+}
+
+export interface RovoDevChatRequest {
+    message: string;
+    context: (RovoDevChatRequestContextFileEntry | RovoDevChatRequestContextOtherEntry)[];
+    enable_deep_plan?: boolean;
+}
+
 export interface RovoDevHealthcheckResponse {
     status: string;
     version: string;
@@ -85,16 +106,23 @@ export class RovoDevApiClient {
 
     /** Invokes the POST `/v2/chat` API.
      * @param {string} message The message (prompt) to send to Rovo Dev.
-     * @param {boolean} [enable_deep_plan=false] [optional] A value indicating if the deep planner tool should be enabled when processing this prompt. Default value is `false`.
      * @returns {Promise<Response>} An object representing the API response.
      */
-    public chat(message: string, enable_deep_plan: boolean = false): Promise<Response> {
-        const body = JSON.stringify({
-            message: message,
-            enable_deep_plan,
-        });
+    public chat(message: string): Promise<Response>;
+    /** Invokes the POST `/v2/chat` API.
+     * @param {RovoDevChatRequest} message The chat payload to send to Rovo Dev.
+     * @returns {Promise<Response>} An object representing the API response.
+     */
+    public chat(message: RovoDevChatRequest): Promise<Response>;
+    public chat(message: string | RovoDevChatRequest): Promise<Response> {
+        if (typeof message === 'string') {
+            message = {
+                message: message,
+                context: [],
+            };
+        }
 
-        return this.fetchApi('/v2/chat', 'POST', body);
+        return this.fetchApi('/v2/chat', 'POST', JSON.stringify(message));
     }
 
     /** Invokes the POST `/v2/replay` API

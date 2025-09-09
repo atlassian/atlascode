@@ -1,13 +1,13 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/rest/api/1.0/users/mockedUser"
+    "urlPathPattern": "/rest/api/1.0/users/mockuser"
   },
   "response": {
     "status": 200,
     "jsonBody": {
-      "name": "mockedUser",
-      "emailAddress": "mock@atlassian.code",
+      "name": "mockuser",
+      "emailAddress": "mockuser@atlassian.code",
       "active": true,
       "displayName": "Mock User",
       "id": 1,
@@ -16,11 +16,11 @@
       "links": {
         "self": [
           {
-            "href": "https://bitbucket.mockeddomain.com/users/mockedUser"
+            "href": "https://bitbucket.mockeddomain.com/users/mockuser"
           }
         ]
       },
-      "avatarUrl": "https://bitbucket.mockeddomain.com/users/mockedUser/avatar.png"
+      "avatarUrl": "https://bitbucket.mockeddomain.com/users/mockuser/avatar.png"
     },
     "headers": {
       "Content-Type": "application/json"

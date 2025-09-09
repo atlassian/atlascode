@@ -542,12 +542,15 @@ const RovoDevView: React.FC = () => {
         }
 
         setCurrentState(State.CancellingResponse);
+        if (isDeepPlanCreated) {
+            setIsDeepPlanCreated(false);
+        }
 
         // Send the signal to cancel the response
         postMessage({
             type: RovoDevViewResponseType.CancelResponse,
         });
-    }, [postMessage, currentState, setCurrentState]);
+    }, [postMessage, currentState, setCurrentState, isDeepPlanCreated]);
 
     const openFile = useCallback(
         (filePath: string, tryShowDiff?: boolean, range?: number[]) => {
