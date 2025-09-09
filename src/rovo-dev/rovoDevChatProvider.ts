@@ -112,6 +112,10 @@ export class RovoDevChatProvider {
     }
 
     public async executeReplay(): Promise<void> {
+        if (!this._rovoDevApiClient) {
+            throw new Error('Unable to replay the previous conversation. Rovo Dev failed to initialize');
+        }
+
         this.beginNewPrompt('replay');
         await this.sendPromptSentToView('', false);
 

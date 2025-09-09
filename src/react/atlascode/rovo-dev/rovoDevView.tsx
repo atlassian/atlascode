@@ -447,6 +447,9 @@ const RovoDevView: React.FC = () => {
                     setInitState(event.newState);
                     setCurrentState(State.WaitingForPrompt);
                     setCurrentSubState(SubState.None);
+                    if (event.newState === RovoDevInitState.Initialized) {
+                        setPendingToolCallMessage('');
+                    }
                     break;
 
                 case RovoDevProviderMessageType.ProviderReady:

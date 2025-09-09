@@ -804,7 +804,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // wait for Rovo Dev to be ready, for up to 10 seconds
         const result = await this.waitFor(
             () => this.executeHealthcheck(),
-            100000,
+            10000,
             500,
             () => !this.rovoDevApiClient,
         );
