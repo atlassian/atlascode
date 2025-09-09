@@ -110,7 +110,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         if (this.isBoysenberry) {
             this._prHandler = new RovoDevPullRequestHandler();
-            this.appInstanceId = process.env.ROVODEV_APP_INSTANCE_ID as string;
+            this.appInstanceId = process.env.ROVODEV_SANDBOX_ID as string;
         } else {
             this.appInstanceId = Container.appInstanceId;
         }
