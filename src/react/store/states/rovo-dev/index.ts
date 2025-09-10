@@ -15,17 +15,9 @@ import PromptContextReducer, {
     toggleActiveItem,
     updateUserFocus,
 } from './promptContextSlice';
-import RovoDevStatesReducer, {
-    initStateRecieced,
-    responseRecieved,
-    setCurrentState,
-    setCurrentSubState,
-    setInitState,
-} from './rovoDevStatesSlice';
+import RovoDevStatesReducer, { responseRecieved, setCurrentState } from './rovoDevStatesSlice';
 const actions = {
     setCurrentState,
-    setCurrentSubState,
-    setInitState,
     updateUserFocus,
     addContext,
     removeContext,
@@ -37,7 +29,6 @@ const actions = {
     clearChat,
     setPendingToolCall,
     removeModifiedFileToolReturns,
-    initStateRecieced,
     responseRecieved,
     validateResponseFinalized,
     setRetryAfterErrorEnabled,

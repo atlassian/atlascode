@@ -4,7 +4,9 @@ import StopIcon from '@atlaskit/icon/core/video-stop';
 import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
-import { State } from 'src/rovo-dev/rovoDevTypes';
+import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
+
+type NonDisabledState = Exclude<State, DisabledState>;
 
 import { AiGenerativeTextSummaryIcon, CloseIconDeepPlan } from '../../rovoDevView';
 import {
@@ -17,7 +19,7 @@ import { createMonacoPromptEditor, createSlashCommandProvider, removeMonacoStyle
 interface PromptInputBoxProps {
     disabled?: boolean;
     hideButtons?: boolean;
-    state: State;
+    currentState: NonDisabledState;
     isDeepPlanEnabled: boolean;
     onDeepPlanToggled: () => void;
     onSend: (text: string) => void;
@@ -29,24 +31,27 @@ interface PromptInputBoxProps {
     handleTriggerFeedbackCommand: () => void;
 }
 
-const TextAreaMessages: Record<State, string> = {
-    [State.Disabled]: 'Rovo Dev is currently disabled. Please, refer to the error message in chat',
-    [State.WaitingForPrompt]: 'Type in a question',
-    [State.NoWorkspaceOpen]: 'Please, open a folder to start a chat session with Rovo Dev',
-    [State.GeneratingResponse]: 'Generating response...',
-    [State.CancellingResponse]: 'Cancelling the response...',
-    [State.ExecutingPlan]: 'Executing the code plan...',
-    [State.ProcessTerminated]: 'Start a new session to chat',
+const TextAreaMessages: Record<NonDisabledState['state'], string> = {
+    ['Initializing']: 'Type in a question',
+    ['WaitingForPrompt']: 'Type in a question',
+    ['GeneratingResponse']: 'Generating response...',
+    ['CancellingResponse']: 'Cancelling the response...',
+    ['ExecutingPlan']: 'Executing the code plan...',
+    ['ProcessTerminated']: 'Start a new session to chat',
 };
 
-const getTextAreaPlaceholder = (state: State) => {
-    return TextAreaMessages[state];
+const getTextAreaPlaceholder = (currentState: NonDisabledState) => {
+    if (currentState.state === 'Initializing' && currentState.isPromptPending) {
+        return TextAreaMessages['GeneratingResponse'];
+    } else {
+        return TextAreaMessages[currentState.state];
+    }
 };
 
 export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     disabled,
     hideButtons,
-    state,
+    currentState,
     isDeepPlanEnabled,
     onDeepPlanToggled,
     onSend,
@@ -161,9 +166,9 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
 
         editor.updateOptions({
             readOnly: disabled,
-            placeholder: getTextAreaPlaceholder(state),
+            placeholder: getTextAreaPlaceholder(currentState),
         });
-    }, [state, editor, disabled]);
+    }, [currentState, editor, disabled]);
 
     const handleSend = () => {
         if (editor) {
@@ -205,19 +210,19 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                 style={{
                                     ...rovoDevDeepPlanStylesSelector(
                                         isDeepPlanEnabled,
-                                        state !== State.WaitingForPrompt,
+                                        currentState.state !== 'WaitingForPrompt',
                                     ),
                                 }}
                                 spacing="compact"
                                 label="Enable deep plan"
                                 iconBefore={<AiGenerativeTextSummaryIcon />}
                                 iconAfter={isDeepPlanEnabled ? <CloseIconDeepPlan /> : undefined}
-                                isDisabled={disabled || state !== State.WaitingForPrompt}
+                                isDisabled={disabled || currentState.state !== 'WaitingForPrompt'}
                                 onClick={() => onDeepPlanToggled()}
                             >
                                 {isDeepPlanEnabled ? 'Deep plan enabled' : ''}
                             </LoadingButton>
-                            {state === State.WaitingForPrompt && (
+                            {currentState.state === 'WaitingForPrompt' && (
                                 <LoadingButton
                                     style={{
                                         ...rovoDevPromptButtonStyles,
@@ -231,13 +236,13 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                     onClick={() => handleSend()}
                                 />
                             )}
-                            {state !== State.WaitingForPrompt && (
+                            {currentState.state !== 'WaitingForPrompt' && (
                                 <LoadingButton
                                     style={rovoDevPromptButtonStyles}
                                     spacing="compact"
                                     label="Stop"
                                     iconBefore={<StopIcon label="Stop" />}
-                                    isDisabled={disabled || state === State.CancellingResponse}
+                                    isDisabled={disabled || currentState.state === 'CancellingResponse'}
                                     onClick={() => onCancel()}
                                 />
                             )}
