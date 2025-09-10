@@ -134,6 +134,9 @@ describe('StartWorkWebviewController', () => {
             closePage: jest.fn(),
             getStartWorkConfig: jest.fn(),
             openSettings: jest.fn(),
+            getRovoDevPreference: jest.fn(),
+            updateRovoDevPreference: jest.fn(),
+            openRovoDev: jest.fn(),
         };
         mockCommonHandler = {
             onMessageReceived: jest.fn(),
