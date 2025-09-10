@@ -44,6 +44,13 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
         [authDialogController, product],
     );
 
+    // Reset opened state when initiateApiTokenAuth changes from false to true
+    useEffect(() => {
+        if (initiateApiTokenAuth) {
+            setOpened(false);
+        }
+    }, [initiateApiTokenAuth]);
+
     useEffect(() => {
         if (initiateApiTokenAuth && !opened) {
             setOpenDialogTimer((prev) => {
