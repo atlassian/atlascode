@@ -666,3 +666,44 @@ body {
 .form-select:focus {
     outline: var(--vscode-focusBorder) solid 1px;
 }
+
+/* High contrast theme overrides */
+
+.vscode-high-contrast .user-message {
+    border: 1px solid var(--vscode-contrastBorder);
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+}
+
+.vscode-high-contrast code {
+    border: 1px solid var(--vscode-contrastBorder);
+    background-color: var(--vscode-editor-background);
+}
+
+.vscode-high-contrast-light code {
+    border: 1px solid var(--vscode-contrastBorder);
+    background-color: var(--vscode-editor-background);
+}
+
+.vscode-high-contrast .form-cancel-button,
+.vscode-high-contrast .form-submit-button {
+    border: 2px solid var(--vscode-contrastBorder);
+}
+
+.vscode-high-contrast .form-cancel-button:hover,
+.vscode-high-contrast .form-submit-button:hover {
+    border: 2px solid var(--vscode-focusBorder);
+}
+
+.vscode-high-contrast .updated-files-action {
+    border: 2px solid var(--vscode-contrastBorder);
+}
+
+.vscode-high-contrast .updated-files-action:hover {
+    border: 2px solid var(--vscode-focusBorder);
+}
+
+.vscode-high-contrast .updated-files-action:disabled {
+    border: 2px solid var(--vscode-disabledForeground);
+    opacity: 0.5;
+}

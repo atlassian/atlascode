@@ -1,0 +1,13 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/rest/default-reviewers/1.0/projects/mocked-project/repos/dc-mocked-repo/reviewers"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": [],
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

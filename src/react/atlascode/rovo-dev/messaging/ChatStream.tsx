@@ -14,14 +14,12 @@ import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { ChatMessage, DefaultMessage, MessageBlockDetails, parseToolReturnMessage, scrollToEnd } from '../utils';
+import { DefaultMessage, parseToolReturnMessage, Response, scrollToEnd } from '../utils';
 import { ChatMessageItem } from './ChatMessageItem';
 import { MessageDrawer } from './MessageDrawer';
 
 interface ChatStreamProps {
-    chatHistory: MessageBlockDetails[];
-    currentThinking: ChatMessage[];
-    currentMessage: DefaultMessage | null;
+    chatHistory: Response[];
     renderProps: {
         openFile: OpenFileFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
@@ -47,8 +45,6 @@ interface ChatStreamProps {
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
     chatHistory,
-    currentThinking,
-    currentMessage,
     renderProps,
     pendingToolCall,
     deepPlanCreated,
@@ -179,8 +175,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     // Auto-scroll when content changes or when re-enabled
     React.useEffect(performAutoScroll, [
         chatHistory,
-        currentThinking,
-        currentMessage,
         isFormVisible,
         pendingToolCall,
         autoScrollEnabled,
@@ -220,13 +214,17 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
             <RovoDevLanding subState={subState} onLoginClick={onLoginClick} />
             {(state !== State.Disabled || subState !== SubState.NeedAuth) &&
                 chatHistory &&
-                chatHistory.map((block) => {
+                chatHistory.map((block, idx) => {
+                    const drawerOpen =
+                        idx === chatHistory.findLastIndex((msg) => Array.isArray(msg)) &&
+                        state !== State.WaitingForPrompt;
+
                     if (block) {
                         if (Array.isArray(block)) {
                             return (
                                 <MessageDrawer
                                     messages={block}
-                                    opened={false}
+                                    opened={drawerOpen}
                                     renderProps={renderProps}
                                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                                 />
@@ -235,7 +233,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             return (
                                 <ChatMessageItem
                                     msg={block}
-                                    enableActions={block.source === 'RovoDev'}
+                                    enableActions={block.source === 'RovoDev' && state === State.WaitingForPrompt}
                                     onCopy={handleCopyResponse}
                                     onFeedback={handleFeedbackTrigger}
                                 />
@@ -269,16 +267,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
                     return null;
                 })}
-            {currentThinking.length > 0 && (
-                <MessageDrawer
-                    messages={currentThinking}
-                    opened={true}
-                    renderProps={renderProps}
-                    onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
-                />
-            )}
-            {currentMessage && <ChatMessageItem msg={currentMessage} />}
-
             {pendingToolCall && (
                 <div style={{ marginBottom: '16px' }}>
                     <ToolCallItem toolMessage={pendingToolCall} state={initState} downloadProgress={downloadProgress} />

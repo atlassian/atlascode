@@ -7,7 +7,7 @@ const body = document.body;
 
 export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
     const isDark: boolean = body.getAttribute('class') === 'vscode-dark';
-    const isHighContrast: boolean = body.getAttribute('class') === 'vscode-high-contrast';
+    const isHighContrast: boolean = body.classList.contains('vscode-high-contrast');
 
     // Colors that don't appear in vscode-high-contrast
     const buttonBackground = isHighContrast ? '#0088ff' : vscStyles.buttonBackground;
@@ -198,7 +198,7 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                         '& .MuiSvgIcon-root': {
                             color: isHighContrast
                                 ? '#ffffff' // Dark high contrast: white
-                                : body.getAttribute('class') === 'vscode-high-contrast-light'
+                                : body.classList.contains('vscode-high-contrast-light')
                                   ? '#000000' // Light high contrast: black
                                   : vscStyles.foreground, // Normal: VSCode theme color
                         },
@@ -206,7 +206,7 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                         '&.Mui-selected .MuiSvgIcon-root': {
                             color: isHighContrast
                                 ? '#ffffff'
-                                : body.getAttribute('class') === 'vscode-high-contrast-light'
+                                : body.classList.contains('vscode-high-contrast-light')
                                   ? '#000000'
                                   : vscStyles.foreground,
                         },

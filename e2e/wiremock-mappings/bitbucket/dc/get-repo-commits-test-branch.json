@@ -1,0 +1,52 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/rest/api/1.0/projects/mocked-project/repos/dc-mocked-repo/commits",
+        "queryParameters": {
+            "until": {
+                "equalTo": "test-branch"
+            },
+            "since": {
+                "equalTo": "main"
+            }
+        }
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "values": [
+                {
+                    "id": "def456abc789012345678901234567890123456",
+                    "displayId": "def456a",
+                    "author": {
+                        "name": "mockuser",
+                        "emailAddress": "mockuser@atlassian.code",
+                        "displayName": "Mock User"
+                    },
+                    "authorTimestamp": 1720017460000,
+                    "committer": {
+                        "name": "mockuser",
+                        "emailAddress": "mockuser@atlassian.code",
+                        "displayName": "Mock User"
+                    },
+                    "committerTimestamp": 1720017460000,
+                    "message": "Add new feature implementation with comprehensive tests",
+                    "parents": [
+                        {
+                            "id": "abcdef1234567890abcdef1234567890abcdef12",
+                            "displayId": "abcdef1"
+                        }
+                    ]
+                }
+            ],
+            "size": 1,
+            "limit": 25,
+            "isLastPage": true,
+            "start": 0,
+            "nextPageStart": null
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}
