@@ -40,7 +40,6 @@ import { PromptInputBox } from './PromptInput';
 describe('PromptInputBox', () => {
     const defaultProps = {
         state: State.WaitingForPrompt,
-        promptText: '',
         onPromptTextChange: jest.fn(),
         isDeepPlanEnabled: false,
         onDeepPlanToggled: jest.fn(),
@@ -68,7 +67,7 @@ describe('PromptInputBox', () => {
     });
 
     it('calls onSend when Send button is clicked', () => {
-        render(<PromptInputBox {...defaultProps} promptText="test prompt" />);
+        render(<PromptInputBox {...defaultProps} />);
         fireEvent.click(screen.getByLabelText('Send prompt'));
         expect(defaultProps.onSend).toHaveBeenCalled();
     });

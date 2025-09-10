@@ -6,11 +6,30 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import { RovoDevContext, RovoDevContextItem, RovoDevInitState, State, SubState } from 'src/rovo-dev/rovoDevTypes';
+import {
+    addContext,
+    appendResponse,
+    clearChat,
+    initStateRecieced,
+    removeContext,
+    removeModifiedFileToolReturns,
+    responseRecieved,
+    setCurrentState,
+    setCurrentSubState,
+    setIsDeepPlanCreated,
+    setIsDeepPlanToggled,
+    setPendingToolCall,
+    setRetryAfterErrorEnabled,
+    toggleActiveItem,
+    updateUserFocus,
+    validateResponseFinalized,
+} from 'src/react/store/states/rovo-dev';
+import { RovoDevContextItem, State, SubState } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
+import { useAppDispatch, useAppSelector, useAppStore } from '../../store/hooks';
 import { useMessagingApi } from '../messagingApi';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 import { ChatStream } from './messaging/ChatStream';
@@ -23,11 +42,7 @@ import {
     ChatMessage,
     CODE_PLAN_EXECUTE_PROMPT,
     DefaultMessage,
-    ErrorMessage,
     extractLastNMessages,
-    isCodeChangeTool,
-    parseToolReturnMessage,
-    Response,
     ToolCallMessage,
     ToolReturnGenericMessage,
     ToolReturnParseResult,
@@ -58,26 +73,28 @@ export const CloseIconDeepPlan: React.FC<{}> = () => {
 };
 
 const RovoDevView: React.FC = () => {
-    const [currentState, setCurrentState] = useState(State.WaitingForPrompt);
-    const [currentSubState, setCurrentSubState] = useState(SubState.None);
-    const [initState, setInitState] = useState(
-        process.env.ROVODEV_BBY ? RovoDevInitState.Initialized : RovoDevInitState.NotInitialized,
-    );
-
     const [downloadProgress, setDownloadProgress] = useState<[number, number]>([0, 0]);
-    const [promptText, setPromptText] = useState('');
-    const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
-    const [retryAfterErrorEnabled, setRetryAfterErrorEnabled] = useState('');
-    const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
-    const [isDeepPlanCreated, setIsDeepPlanCreated] = useState(false);
-    const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
     const [workspaceCount, setWorkspaceCount] = useState(process.env.ROVODEV_BBY ? 1 : 0);
-
-    const [history, setHistory] = useState<Response[]>([]);
 
     const [isFeedbackFormVisible, setIsFeedbackFormVisible] = React.useState(false);
 
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
+
+    const currentState = useAppSelector((state) => state.rovoDevStates.currentState);
+    const currentSubState = useAppSelector((state) => state.rovoDevStates.currentSubState);
+    const initState = useAppSelector((state) => state.rovoDevStates.initState);
+
+    const history = useAppSelector((state) => state.chatStream.history);
+    const pendingToolCallMessage = useAppSelector((state) => state.chatStream.pendingToolCall);
+    const totalModifiedFiles = useAppSelector((state) => state.chatStream.totalModifiedFiles);
+    const retryAfterErrorEnabled = useAppSelector((state) => state.chatStream.retryAfterErrorEnabled);
+
+    const promptContextCollection = useAppSelector((state) => state.promptContextCollection.context);
+    const isDeepPlanCreated = useAppSelector((state) => state.deepPlan.isDeepPlanCreated);
+    const isDeepPlanToggled = useAppSelector((state) => state.deepPlan.isDeepPlanToggled);
+
+    const dispatchRedux = useAppDispatch();
+    const store = useAppStore();
 
     React.useEffect(() => {
         const codeBlocks = document.querySelectorAll('pre code');
@@ -85,33 +102,6 @@ const RovoDevView: React.FC = () => {
             highlightElement(block, detectLanguage(block.textContent || ''));
         });
     }, [history, currentState, pendingToolCallMessage]);
-
-    const validateResponseFinalized = useCallback(() => {
-        setHistory((prev) => {
-            const last = prev[prev.length - 1];
-            if (!Array.isArray(last) && last?.source === 'User') {
-                const msg: ErrorMessage = {
-                    source: 'RovoDevError',
-                    type: 'error',
-                    text: 'Error: something went wrong while processing the prompt',
-                    isRetriable: true,
-                    uid: v4(),
-                };
-                setRetryAfterErrorEnabled(msg.uid);
-                prev.pop();
-                return [...prev, msg];
-            } else {
-                return prev;
-            }
-        });
-    }, [setRetryAfterErrorEnabled]);
-
-    const removeModifiedFileToolReturns = useCallback(
-        (files: ToolReturnParseResult[]) => {
-            setTotalModifiedFiles((prev) => prev.filter((x) => !files.includes(x)));
-        },
-        [setTotalModifiedFiles],
-    );
 
     const keepFiles = useCallback(
         (files: ToolReturnParseResult[]) => {
@@ -128,9 +118,9 @@ const RovoDevView: React.FC = () => {
                         }) as ModifiedFile,
                 ),
             });
-            removeModifiedFileToolReturns(files);
+            dispatchRedux(removeModifiedFileToolReturns(files));
         },
-        [dispatch, removeModifiedFileToolReturns],
+        [dispatchRedux],
     );
 
     const undoFiles = useCallback(
@@ -145,124 +135,26 @@ const RovoDevView: React.FC = () => {
                         }) as ModifiedFile,
                 ),
             });
-            removeModifiedFileToolReturns(files);
+            dispatchRedux(removeModifiedFileToolReturns(files));
         },
-        [dispatch, removeModifiedFileToolReturns],
+        [dispatchRedux],
+    );
+
+    const isRetryAfterErrorButtonEnabled = useCallback(
+        (uid: string) => retryAfterErrorEnabled === uid,
+        [retryAfterErrorEnabled],
     );
 
     const finalizeResponse = useCallback(() => {
-        setPendingToolCallMessage('');
-        setCurrentState(State.WaitingForPrompt);
-    }, []);
+        dispatchRedux(setPendingToolCall(''));
+        dispatchRedux(setCurrentState(State.WaitingForPrompt));
+    }, [dispatchRedux]);
 
     const clearChatHistory = useCallback(() => {
-        setHistory([]);
         keepFiles(totalModifiedFiles);
-        setTotalModifiedFiles([]);
-        setIsDeepPlanCreated(false);
         setIsFeedbackFormVisible(false);
-    }, [totalModifiedFiles, keepFiles]);
-
-    const handleAppendModifiedFileToolReturns = useCallback(
-        (toolReturn: ToolReturnGenericMessage) => {
-            if (isCodeChangeTool(toolReturn.tool_name)) {
-                const msg = parseToolReturnMessage(toolReturn).filter((msg) => msg.filePath !== undefined);
-
-                const filesMap = new Map([...totalModifiedFiles].map((item) => [item.filePath!, item]));
-
-                // Logic for handling deletions and modifications
-                msg.forEach((file) => {
-                    if (!file.filePath) {
-                        return;
-                    }
-                    if (file.type === 'delete') {
-                        if (filesMap.has(file.filePath)) {
-                            const existingFile = filesMap.get(file.filePath);
-                            if (existingFile?.type === 'modify') {
-                                filesMap.set(file.filePath, file); // If file was only modified but not created by RovoDev, still show deletion
-                            } else {
-                                filesMap.delete(file.filePath); // If file was created by RovoDev, remove it from the map
-                            }
-                        } else {
-                            filesMap.set(file.filePath, file);
-                        }
-                    } else {
-                        if (!filesMap.has(file.filePath) || filesMap.get(file.filePath)?.type === 'delete') {
-                            filesMap.set(file.filePath, file); // Only add on first modification so we can track if file was created by RovoDev or just modified
-                        }
-                    }
-                });
-
-                setTotalModifiedFiles(Array.from(filesMap.values()));
-            }
-        },
-        [totalModifiedFiles],
-    );
-
-    const appendResponse = useCallback(
-        (response: Response) => {
-            setHistory((prev) => {
-                if (!response) {
-                    return prev;
-                }
-
-                const latest = prev.pop();
-
-                if (!Array.isArray(response)) {
-                    if (!Array.isArray(latest)) {
-                        // Streaming text response, append to current message
-                        if (latest && latest.source === 'RovoDev' && response.source === 'RovoDev') {
-                            latest.text += response.text;
-                            return [...prev, latest];
-                        }
-                        // Group tool return with previous message if applicable
-                        if (response.source === 'ToolReturn') {
-                            handleAppendModifiedFileToolReturns(response);
-                            if (response.tool_name !== 'create_technical_plan') {
-                                // Do not group if User or Error message is the latest
-                                const canGroup =
-                                    latest &&
-                                    latest.source !== 'User' &&
-                                    latest.source !== 'RovoDevError' &&
-                                    latest.source !== 'PullRequest';
-
-                                let thinkingGroup: ChatMessage[] = canGroup ? [latest, response] : [response];
-
-                                if (canGroup) {
-                                    const prevGroup = prev.pop();
-                                    // if previous message is also a thinking group, merge them
-                                    if (Array.isArray(prevGroup)) {
-                                        thinkingGroup = [...prevGroup, ...thinkingGroup];
-                                    } else {
-                                        if (prevGroup) {
-                                            prev.push(prevGroup);
-                                        }
-                                    }
-                                }
-                                return [...prev, thinkingGroup];
-                            }
-                        }
-                    } else {
-                        if (response.source === 'ToolReturn') {
-                            handleAppendModifiedFileToolReturns(response);
-                            if (response.tool_name !== 'create_technical_plan') {
-                                latest.push(response);
-                                return [...prev, latest];
-                            }
-                        }
-                        return [...prev, latest, response];
-                    }
-                }
-
-                if (latest) {
-                    return [...prev, latest, response];
-                } else {
-                    return [...prev, response];
-                }
-            });
-        },
-        [handleAppendModifiedFileToolReturns],
-    );
+        dispatchRedux(clearChat());
+    }, [keepFiles, totalModifiedFiles, dispatchRedux]);
 
     const onMessageHandler = useCallback(
         (event: RovoDevProviderMessage): void => {
@@ -270,27 +162,25 @@ const RovoDevView: React.FC = () => {
             switch (event.type) {
                 case RovoDevProviderMessageType.PromptSent:
                     // Disable the send button, and enable the pause button
-                    setIsDeepPlanToggled(event.enable_deep_plan || false);
-                    setCurrentState(State.GeneratingResponse);
-                    setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE);
+                    dispatchRedux(setIsDeepPlanToggled(event.enable_deep_plan || false));
+                    dispatchRedux(setCurrentState(State.GeneratingResponse));
+                    dispatchRedux(setPendingToolCall(DEFAULT_LOADING_MESSAGE));
                     break;
 
                 case RovoDevProviderMessageType.Response:
-                    if (currentState === State.WaitingForPrompt) {
-                        setCurrentState(State.GeneratingResponse);
-                    }
+                    dispatchRedux(responseRecieved());
                     object = event.dataObject;
                     if (object.event_kind === 'text' && object.content) {
                         const msg: ChatMessage = {
                             text: object.content || '',
                             source: 'RovoDev',
                         };
-                        appendResponse(msg);
+                        dispatchRedux(appendResponse(msg));
                     }
                     break;
 
                 case RovoDevProviderMessageType.UserChatMessage:
-                    appendResponse(event.message);
+                    dispatchRedux(appendResponse(event.message));
                     break;
 
                 case RovoDevProviderMessageType.CompleteMessage:
@@ -301,15 +191,13 @@ const RovoDevView: React.FC = () => {
                     ) {
                         finalizeResponse();
                         if (!event.isReplay) {
-                            validateResponseFinalized();
+                            dispatchRedux(validateResponseFinalized());
                         }
                     }
                     break;
 
                 case RovoDevProviderMessageType.ToolCall:
-                    if (currentState === State.WaitingForPrompt) {
-                        setCurrentState(State.GeneratingResponse);
-                    }
+                    dispatchRedux(responseRecieved());
                     object = event.dataObject;
                     if (object.event_kind !== 'tool-call') {
                         break;
@@ -321,13 +209,11 @@ const RovoDevView: React.FC = () => {
                         tool_call_id: object.tool_call_id, // Optional ID for tracking
                     };
                     const toolCallMessage = parseToolCallMessage(callMessage);
-                    setPendingToolCallMessage(toolCallMessage);
+                    dispatchRedux(setPendingToolCall(toolCallMessage));
                     break;
 
                 case RovoDevProviderMessageType.ToolReturn:
-                    if (currentState === State.WaitingForPrompt) {
-                        setCurrentState(State.GeneratingResponse);
-                    }
+                    dispatchRedux(responseRecieved());
                     object = event.dataObject;
                     if (object.event_kind !== 'tool-return') {
                         break;
@@ -341,32 +227,29 @@ const RovoDevView: React.FC = () => {
                         args: object.toolCallMessage.args,
                     };
 
-                    setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE); // Clear pending tool call
-                    appendResponse(returnMessage);
+                    dispatchRedux(setPendingToolCall(DEFAULT_LOADING_MESSAGE)); // Clear pending tool call
+                    dispatchRedux(appendResponse(returnMessage));
                     break;
 
                 case RovoDevProviderMessageType.ErrorMessage:
                     if (event.message.type === 'error') {
                         if (event.message.isProcessTerminated) {
-                            setCurrentState(State.ProcessTerminated);
+                            dispatchRedux(setCurrentState(State.ProcessTerminated));
                         }
                         finalizeResponse();
                     }
                     const msg = event.message;
                     setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
-                    appendResponse(msg);
+                    dispatchRedux(appendResponse(msg));
                     break;
 
                 case RovoDevProviderMessageType.ClearChat:
                     clearChatHistory();
-                    setPendingToolCallMessage('');
-                    setCurrentState(State.WaitingForPrompt);
+                    dispatchRedux(setCurrentState(State.WaitingForPrompt));
                     break;
 
                 case RovoDevProviderMessageType.SetInitState:
-                    setInitState(event.newState);
-                    setCurrentState(State.WaitingForPrompt);
-                    setCurrentSubState(SubState.None);
+                    dispatchRedux(initStateRecieced(event.newState));
                     break;
 
                 case RovoDevProviderMessageType.ProviderReady:
@@ -385,48 +268,19 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.RovoDevDisabled:
-                    if (
-                        currentState === State.GeneratingResponse ||
-                        currentState === State.ExecutingPlan ||
-                        currentState === State.CancellingResponse
-                    ) {
-                        finalizeResponse();
-                    }
                     clearChatHistory();
-                    setCurrentState(State.Disabled);
+                    dispatchRedux(setCurrentState(State.Disabled));
                     if (event.reason === 'needAuth') {
-                        setCurrentSubState(SubState.NeedAuth);
+                        dispatchRedux(setCurrentSubState(SubState.NeedAuth));
                     }
                     break;
 
                 case RovoDevProviderMessageType.UserFocusUpdated:
-                    setPromptContextCollection((prev) => ({
-                        ...prev,
-                        focusInfo: {
-                            ...event.userFocus,
-                            enabled: prev.focusInfo?.enabled ?? true, // Preserve enabled state if it exists
-                        },
-                    }));
+                    dispatchRedux(updateUserFocus(event.userFocus));
                     break;
 
                 case RovoDevProviderMessageType.ContextAdded:
-                    setPromptContextCollection((prev) => {
-                        const newItem = event.context;
-                        const match = (item: any) =>
-                            item.file.absolutePath === newItem.file.absolutePath &&
-                            item.selection?.start === newItem.selection?.start &&
-                            item.selection?.end === newItem.selection?.end;
-
-                        const contextItems = prev.contextItems || [];
-                        const idx = contextItems.findIndex(match);
-                        // Add new item only if it does not already exist
-                        return idx === -1
-                            ? {
-                                  ...prev,
-                                  contextItems: [...contextItems, newItem],
-                              }
-                            : prev;
-                    });
+                    dispatchRedux(addContext(event.context));
                     break;
 
                 case RovoDevProviderMessageType.CreatePRComplete:
@@ -437,7 +291,7 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.ForceStop:
                     // Signal user that Rovo Dev is stopping
                     if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
-                        setCurrentState(State.CancellingResponse);
+                        dispatchRedux(setCurrentState(State.CancellingResponse));
                     }
                     break;
 
@@ -446,18 +300,20 @@ const RovoDevView: React.FC = () => {
                     break;
                 default:
                     // this is never supposed to happen since there aren't other type of messages
-                    appendResponse({
-                        source: 'RovoDevError',
-                        type: 'error',
-                        // @ts-expect-error ts(2339) - event here should be 'never'
-                        text: `Unknown message type: ${event.type}`,
-                        isRetriable: false,
-                        uid: v4(),
-                    });
+                    dispatchRedux(
+                        appendResponse({
+                            source: 'RovoDevError',
+                            type: 'error',
+                            // @ts-expect-error ts(2339) - event here should be 'never'
+                            text: `Unknown message type: ${event.type}`,
+                            isRetriable: false,
+                            uid: v4(),
+                        }),
+                    );
                     break;
             }
         },
-        [currentState, appendResponse, clearChatHistory, finalizeResponse, validateResponseFinalized],
+        [currentState, clearChatHistory, dispatchRedux, finalizeResponse],
     );
 
     const { postMessage, postMessagePromise } = useMessagingApi<
@@ -473,9 +329,6 @@ const RovoDevView: React.FC = () => {
         }
     }, [postMessage, dispatch, outgoingMessage]);
 
-    // TODO: move this to a separate component, colocate with prompt submission
-    const [promptContextCollection, setPromptContextCollection] = useState<RovoDevContext>({});
-
     const sendPrompt = useCallback(
         (text: string): void => {
             if (text.trim() === '' || currentState !== State.WaitingForPrompt) {
@@ -489,18 +342,17 @@ const RovoDevView: React.FC = () => {
             // Disable the send button, and enable the pause button
             setCurrentState(State.GeneratingResponse);
 
+            const currentContext = store.getState().promptContextCollection.context;
             // Send the prompt to backend
+            console.log('Sending prompt:', text, 'with context:', currentContext, 'deep plan:', isDeepPlanToggled);
             dispatch({
                 type: RovoDevViewResponseType.Prompt,
                 text,
                 enable_deep_plan: isDeepPlanToggled,
-                context: { ...promptContextCollection },
+                context: { ...currentContext },
             });
-
-            // Clear the input field
-            setPromptText('');
         },
-        [currentState, isDeepPlanCreated, isDeepPlanToggled, setCurrentState, promptContextCollection],
+        [currentState, isDeepPlanCreated, isDeepPlanToggled, store],
     );
 
     // On the first render, get the context update
@@ -523,34 +375,34 @@ const RovoDevView: React.FC = () => {
         if (currentState !== State.WaitingForPrompt) {
             return;
         }
-        setCurrentState(State.ExecutingPlan);
+        dispatchRedux(setCurrentState(State.ExecutingPlan));
         sendPrompt(CODE_PLAN_EXECUTE_PROMPT);
-    }, [currentState, setCurrentState, sendPrompt]);
+    }, [currentState, dispatchRedux, sendPrompt]);
 
     const retryPromptAfterError = useCallback((): void => {
-        setCurrentState(State.GeneratingResponse);
-        setRetryAfterErrorEnabled('');
+        dispatchRedux(setCurrentState(State.GeneratingResponse));
+        dispatchRedux(setRetryAfterErrorEnabled(''));
 
         postMessage({
             type: RovoDevViewResponseType.RetryPromptAfterError,
         });
-    }, [setCurrentState, postMessage]);
+    }, [dispatchRedux, postMessage]);
 
     const cancelResponse = useCallback((): void => {
         if (currentState === State.CancellingResponse) {
             return;
         }
 
-        setCurrentState(State.CancellingResponse);
+        dispatchRedux(setCurrentState(State.CancellingResponse));
         if (isDeepPlanCreated) {
-            setIsDeepPlanCreated(false);
+            dispatchRedux(setIsDeepPlanCreated(false));
         }
 
         // Send the signal to cancel the response
         postMessage({
             type: RovoDevViewResponseType.CancelResponse,
         });
-    }, [postMessage, currentState, setCurrentState, isDeepPlanCreated]);
+    }, [currentState, dispatchRedux, isDeepPlanCreated, postMessage]);
 
     const openFile = useCallback(
         (filePath: string, tryShowDiff?: boolean, range?: number[]) => {
@@ -564,25 +416,20 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
-    const isRetryAfterErrorButtonEnabled = useCallback(
-        (uid: string) => retryAfterErrorEnabled === uid,
-        [retryAfterErrorEnabled],
-    );
-
     const onChangesGitPushed = useCallback(
         (msg: DefaultMessage, pullRequestCreated: boolean) => {
             if (totalModifiedFiles.length > 0) {
                 keepFiles(totalModifiedFiles);
             }
 
-            appendResponse(msg);
+            dispatchRedux(appendResponse(msg));
 
             postMessage({
                 type: RovoDevViewResponseType.ReportChangesGitPushed,
                 pullRequestCreated,
             });
         },
-        [totalModifiedFiles, appendResponse, postMessage, keepFiles],
+        [totalModifiedFiles, dispatchRedux, postMessage, keepFiles],
     );
 
     const onCollapsiblePanelExpanded = useCallback(() => {
@@ -687,39 +534,19 @@ const RovoDevView: React.FC = () => {
                             content={promptContextCollection}
                             readonly={false}
                             onRemoveContext={(item: RovoDevContextItem) => {
-                                setPromptContextCollection((prev) => ({
-                                    ...prev,
-                                    contextItems: prev.contextItems?.filter(
-                                        (contextItem) =>
-                                            contextItem.file.absolutePath !== item.file.absolutePath ||
-                                            contextItem.selection?.start !== item.selection?.start ||
-                                            contextItem.selection?.end !== item.selection?.end,
-                                    ),
-                                }));
+                                dispatchRedux(removeContext(item));
                             }}
                             onToggleActiveItem={(enabled) => {
-                                setPromptContextCollection((prev) => {
-                                    if (!prev.focusInfo) {
-                                        return prev;
-                                    }
-                                    return {
-                                        ...prev,
-                                        focusInfo: {
-                                            ...prev.focusInfo,
-                                            enabled,
-                                        },
-                                    };
-                                });
+                                dispatchRedux(toggleActiveItem(enabled));
                             }}
                         />
                         <PromptInputBox
                             disabled={workspaceCount === 0 || currentState === State.ProcessTerminated}
                             hideButtons={workspaceCount === 0}
                             state={currentState}
-                            promptText={promptText}
                             isDeepPlanEnabled={isDeepPlanToggled}
-                            onDeepPlanToggled={() => setIsDeepPlanToggled(!isDeepPlanToggled)}
-                            onSend={sendPrompt}
+                            onDeepPlanToggled={() => dispatchRedux(setIsDeepPlanToggled(!isDeepPlanToggled))}
+                            onSend={(text: string) => sendPrompt(text)}
                             onCancel={cancelResponse}
                             sendButtonDisabled={currentState !== State.WaitingForPrompt}
                             onAddContext={() => {

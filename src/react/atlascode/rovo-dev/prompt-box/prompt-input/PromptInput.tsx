@@ -18,7 +18,6 @@ interface PromptInputBoxProps {
     disabled?: boolean;
     hideButtons?: boolean;
     state: State;
-    promptText: string;
     isDeepPlanEnabled: boolean;
     onDeepPlanToggled: () => void;
     onSend: (text: string) => void;
@@ -48,7 +47,6 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     disabled,
     hideButtons,
     state,
-    promptText,
     isDeepPlanEnabled,
     onDeepPlanToggled,
     onSend,
@@ -154,8 +152,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     React.useEffect(() => {
         // Remove Monaco's color stylesheet
         removeMonacoStyles();
-        editor?.setValue(promptText);
-    }, [editor, promptText]);
+    }, [editor]);
 
     React.useEffect(() => {
         if (!editor) {
