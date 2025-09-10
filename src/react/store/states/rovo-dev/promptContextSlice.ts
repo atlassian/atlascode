@@ -1,10 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RovoDevContext, RovoDevContextItem } from 'src/rovo-dev/rovoDevTypes';
 
-const promptContextCollectionSlice = createSlice({
-    name: 'promptContextCollection',
+const promptContextSlice = createSlice({
+    name: 'promptContext',
     initialState: {
         context: {} as RovoDevContext,
+        isDeepPlanToggled: false,
+        isDeepPlanCreated: false,
     },
     reducers: {
         updateUserFocus(state, action: PayloadAction<RovoDevContextItem>) {
@@ -47,8 +49,21 @@ const promptContextCollectionSlice = createSlice({
             }
             state.context = { ...prev, focusInfo: { ...prev.focusInfo, enabled } };
         },
+        setIsDeepPlanToggled(state, action: PayloadAction<boolean>) {
+            state.isDeepPlanToggled = action.payload;
+        },
+        setIsDeepPlanCreated(state, action: PayloadAction<boolean>) {
+            state.isDeepPlanCreated = action.payload;
+        },
     },
 });
 
-export const { updateUserFocus, addContext, removeContext, toggleActiveItem } = promptContextCollectionSlice.actions;
-export default promptContextCollectionSlice.reducer;
+export const {
+    updateUserFocus,
+    addContext,
+    removeContext,
+    toggleActiveItem,
+    setIsDeepPlanCreated,
+    setIsDeepPlanToggled,
+} = promptContextSlice.actions;
+export default promptContextSlice.reducer;

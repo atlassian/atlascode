@@ -7,13 +7,14 @@ import ChatStreamReducer, {
     setRetryAfterErrorEnabled,
     validateResponseFinalized,
 } from './chatStreamSlice';
-import DeepPlanReducer, { setIsDeepPlanCreated, setIsDeepPlanToggled } from './deepPlanSlice';
-import PromptContextCollectionReducer, {
+import PromptContextReducer, {
     addContext,
     removeContext,
+    setIsDeepPlanCreated,
+    setIsDeepPlanToggled,
     toggleActiveItem,
     updateUserFocus,
-} from './promptContextCollectionSlice';
+} from './promptContextSlice';
 import RovoDevStatesReducer, {
     initStateRecieced,
     responseRecieved,
@@ -21,11 +22,7 @@ import RovoDevStatesReducer, {
     setCurrentSubState,
     setInitState,
 } from './rovoDevStatesSlice';
-
-export {
-    DeepPlanReducer,
-    PromptContextCollectionReducer,
-    RovoDevStatesReducer,
+const actions = {
     setCurrentState,
     setCurrentSubState,
     setInitState,
@@ -35,7 +32,6 @@ export {
     toggleActiveItem,
     setIsDeepPlanToggled,
     setIsDeepPlanCreated,
-    ChatStreamReducer,
     appendResponse,
     appendModifiedFileToolReturn,
     clearChat,
@@ -46,3 +42,4 @@ export {
     validateResponseFinalized,
     setRetryAfterErrorEnabled,
 };
+export { PromptContextReducer, RovoDevStatesReducer, ChatStreamReducer, actions };

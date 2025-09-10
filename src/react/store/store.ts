@@ -1,17 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 
-import {
-    ChatStreamReducer,
-    DeepPlanReducer,
-    PromptContextCollectionReducer,
-    RovoDevStatesReducer,
-} from './states/rovo-dev';
+import { ChatStreamReducer, PromptContextReducer, RovoDevStatesReducer } from './states/rovo-dev';
 
 const store = configureStore({
     reducer: {
         // Rovo Dev
-        promptContextCollection: PromptContextCollectionReducer,
-        deepPlan: DeepPlanReducer,
+        promptContext: PromptContextReducer,
         rovoDevStates: RovoDevStatesReducer,
         chatStream: ChatStreamReducer,
     },
