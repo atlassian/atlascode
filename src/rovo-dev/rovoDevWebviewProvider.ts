@@ -38,7 +38,7 @@ import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
 import { RovoDevProcessManager } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevContext, RovoDevContextItem, RovoDevInitState } from './rovoDevTypes';
+import { RovoDevContext, RovoDevContextItem } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
@@ -766,24 +766,36 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     public signalInitializing() {
         const webView = this._webView!;
         return webView.postMessage({
-            type: RovoDevProviderMessageType.SetInitState,
-            newState: RovoDevInitState.NotInitialized,
+            type: RovoDevProviderMessageType.SetInitializing,
+            isPromptPending: this._chatProvider.isPromptPending,
         });
     }
 
-    public signalBinaryDownloadStarted() {
+    public signalBinaryDownloadStarted(totalBytes: number) {
         const webView = this._webView!;
         return webView.postMessage({
-            type: RovoDevProviderMessageType.SetInitState,
-            newState: RovoDevInitState.UpdatingBinaries,
+            type: RovoDevProviderMessageType.SetDownloadProgress,
+            isPromptPending: this._chatProvider.isPromptPending,
+            totalBytes,
+            downloadedBytes: 0,
+        });
+    }
+
+    public signalBinaryDownloadProgress(downloadedBytes: number, totalBytes: number) {
+        const webView = this._webView!;
+        return webView.postMessage({
+            type: RovoDevProviderMessageType.SetDownloadProgress,
+            isPromptPending: this._chatProvider.isPromptPending,
+            downloadedBytes,
+            totalBytes,
         });
     }
 
     public signalBinaryDownloadEnded() {
         const webView = this._webView!;
         return webView.postMessage({
-            type: RovoDevProviderMessageType.SetInitState,
-            newState: RovoDevInitState.NotInitialized,
+            type: RovoDevProviderMessageType.SetInitializing,
+            isPromptPending: this._chatProvider.isPromptPending,
         });
     }
 
@@ -796,10 +808,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         setCommandContext(CommandContext.RovoDevTerminalEnabled, Container.isDebugging);
 
         const webView = this._webView!;
-
-        await webView.postMessage({
-            type: RovoDevProviderMessageType.ClearChat,
-        });
 
         // wait for Rovo Dev to be ready, for up to 10 seconds
         const result = await this.waitFor(
@@ -835,8 +843,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._processState = RovoDevProcessState.Started;
 
         await webView.postMessage({
-            type: RovoDevProviderMessageType.SetInitState,
-            newState: RovoDevInitState.Initialized,
+            type: RovoDevProviderMessageType.RovoDevReady,
+            isPromptPending: this._chatProvider.isPromptPending,
         });
 
         if (thrownError) {
@@ -863,15 +871,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return webView.postMessage({
             type: RovoDevProviderMessageType.RovoDevDisabled,
             reason,
-        });
-    }
-
-    public signalDownloadProgress(downloadedBytes: number, totalBytes: number) {
-        const webView = this._webView!;
-        return webView.postMessage({
-            type: RovoDevProviderMessageType.SetDownloadProgress,
-            downloadedBytes,
-            totalBytes,
         });
     }
 

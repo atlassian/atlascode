@@ -51,23 +51,29 @@ export interface TechnicalPlan {
     logicalChanges: TechnicalPlanLogicalChange[];
 }
 
-export const enum State {
-    Disabled,
-    NoWorkspaceOpen,
-    WaitingForPrompt,
-    GeneratingResponse,
-    CancellingResponse,
-    ExecutingPlan,
-    ProcessTerminated,
+// ---- Rovo Dev Chat States ----
+
+export interface BasicState {
+    state: 'WaitingForPrompt' | 'GeneratingResponse' | 'CancellingResponse' | 'ExecutingPlan' | 'ProcessTerminated';
 }
 
-export const enum SubState {
-    None,
-    NeedAuth, // for Disable state
+export interface InitializingState {
+    state: 'Initializing';
+    subState: 'Other';
+    isPromptPending: boolean;
 }
 
-export const enum RovoDevInitState {
-    NotInitialized,
-    UpdatingBinaries,
-    Initialized,
+export interface InitializingDownladingState {
+    state: 'Initializing';
+    subState: 'UpdatingBinaries';
+    isPromptPending: boolean;
+    downloadedBytes: number;
+    totalBytes: number;
 }
+
+export interface DisabledState {
+    state: 'Disabled';
+    subState: 'NeedAuth' | 'NoWorkspaceOpen' | 'Other';
+}
+
+export type State = BasicState | InitializingState | InitializingDownladingState | DisabledState;
