@@ -33,6 +33,19 @@ export function useStartWorkFormState(
         upstream?: string;
     }>({});
     const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [startWithRovoDev, setStartWithRovoDev] = useState(state.rovoDevPreference || false);
+
+    useEffect(() => {
+        controller.postMessage({
+            type: StartWorkActionType.GetRovoDevPreference,
+        });
+    }, [controller]);
+
+    useEffect(() => {
+        if (state.rovoDevPreference !== undefined) {
+            setStartWithRovoDev(state.rovoDevPreference);
+        }
+    }, [state.rovoDevPreference]);
 
     // useEffect: default values
     useEffect(() => {
@@ -96,6 +109,17 @@ export function useStartWorkFormState(
         setSnackbarOpen(false);
     }, []);
 
+    const handleStartWithRovoDevChange = useCallback(
+        (enabled: boolean) => {
+            setStartWithRovoDev(enabled);
+            controller.postMessage({
+                type: StartWorkActionType.UpdateRovoDevPreference,
+                enabled,
+            });
+        },
+        [controller],
+    );
+
     const handleCreateBranch = useCallback(async () => {
         setSubmitState('submitting');
 
@@ -116,6 +140,14 @@ export function useStartWorkFormState(
             );
 
             controller.postMessage({ type: StartWorkActionType.RefreshTreeViews });
+
+            // Open Rovo Dev if checkbox is checked
+            if (startWithRovoDev) {
+                controller.postMessage({
+                    type: StartWorkActionType.OpenRovoDev,
+                });
+            }
+
             setSubmitResponse(response);
             setSubmitState('submit-success');
             setSnackbarOpen(true);
@@ -134,6 +166,7 @@ export function useStartWorkFormState(
         localBranch,
         upstream,
         pushBranchEnabled,
+        startWithRovoDev,
         errorController,
     ]);
 
@@ -147,6 +180,7 @@ export function useStartWorkFormState(
             selectedBranchType,
             upstream,
             branchSetupEnabled,
+            startWithRovoDev,
         },
         formActions: {
             onPushBranchChange: setPushBranchEnabled,
@@ -156,6 +190,7 @@ export function useStartWorkFormState(
             onBranchTypeChange: handleBranchTypeChange,
             onUpstreamChange: handleUpstreamChange,
             onBranchSetupEnabledChange: handleBranchSetupEnabledChange,
+            onStartWithRovoDevChange: handleStartWithRovoDevChange,
         },
         updateStatusFormState: { transitionIssueEnabled, selectedTransition },
         updateStatusFormActions: {

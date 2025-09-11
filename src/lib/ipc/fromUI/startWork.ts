@@ -12,6 +12,9 @@ export enum StartWorkActionType {
     OpenSettings = 'openSettings',
     GetImage = 'getImage',
     RefreshTreeViews = 'refreshTreeViews',
+    GetRovoDevPreference = 'getRovoDevPreference',
+    UpdateRovoDevPreference = 'updateRovoDevPreference',
+    OpenRovoDev = 'openRovoDev',
 }
 
 export type StartWorkAction =
@@ -20,6 +23,9 @@ export type StartWorkAction =
     | ReducerAction<StartWorkActionType.OpenSettings, OpenSettingsAction>
     | ReducerAction<StartWorkActionType.GetImage, GetImageAction>
     | ReducerAction<StartWorkActionType.RefreshTreeViews, {}>
+    | ReducerAction<StartWorkActionType.GetRovoDevPreference, {}>
+    | ReducerAction<StartWorkActionType.UpdateRovoDevPreference, { enabled: boolean }>
+    | ReducerAction<StartWorkActionType.OpenRovoDev, {}>
     | CommonAction;
 
 export interface StartRequestAction {

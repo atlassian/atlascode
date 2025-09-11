@@ -8,9 +8,12 @@ import { Branch } from '../../../typings/git';
 export enum StartWorkMessageType {
     Init = 'init',
     StartWorkResponse = 'startWorkResponse',
+    RovoDevPreferenceResponse = 'rovoDevPreferenceResponse',
 }
 
-export type StartWorkMessage = ReducerAction<StartWorkMessageType.Init, StartWorkInitMessage>;
+export type StartWorkMessage =
+    | ReducerAction<StartWorkMessageType.Init, StartWorkInitMessage>
+    | ReducerAction<StartWorkMessageType.RovoDevPreferenceResponse, { enabled: boolean }>;
 export type StartWorkResponse = ReducerAction<StartWorkMessageType.StartWorkResponse, StartWorkResponseMessage>;
 
 export interface StartWorkIssueMessage {
@@ -22,6 +25,7 @@ export interface StartWorkInitMessage {
     repoData: RepoData[];
     customTemplate: string;
     customPrefixes: string[];
+    isRovoDevEnabled: boolean;
 }
 
 export interface StartWorkResponseMessage {
@@ -57,6 +61,7 @@ export const emptyStartWorkIssueMessage = {
 export const emptyStartWorkInitMessage = {
     issue: createEmptyMinimalIssue(emptySiteInfo),
     repoData: [],
+    isRovoDevEnabled: false,
 };
 
 export const emptyRepoData: RepoData = {

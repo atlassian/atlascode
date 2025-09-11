@@ -19,25 +19,26 @@ describe('ModifiedFileItem', () => {
             filePath,
         }) as ToolReturnParseResult;
 
-    it('renders file path and action buttons', () => {
-        const msg = createMockMsg('modify', '/path/to/file.ts');
+    it('renders file name, path and action buttons', () => {
+        const msg = createMockMsg('modify', 'path/to/file.ts');
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
-        expect(screen.getByText('/path/to/file.ts')).toBeTruthy();
+        expect(screen.getByText('file.ts')).toBeTruthy();
+        expect(screen.getByText('path/to')).toBeTruthy();
         expect(screen.getByLabelText('Undo changes to this file')).toBeTruthy();
         expect(screen.getByLabelText('Keep changes to this file')).toBeTruthy();
     });
 
     it('calls onFileClick when file item is clicked', () => {
-        const msg = createMockMsg('modify', '/path/to/file.ts');
+        const msg = createMockMsg('modify', 'path/to/file.ts');
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
-        fireEvent.click(screen.getByText('/path/to/file.ts'));
-        expect(mockOnFileClick).toHaveBeenCalledWith('/path/to/file.ts');
+        fireEvent.click(screen.getByLabelText('modified-file-item'));
+        expect(mockOnFileClick).toHaveBeenCalledWith('path/to/file.ts');
     });
 
     it('calls onUndo when undo button is clicked', () => {
-        const msg = createMockMsg('modify', '/path/to/file.ts');
+        const msg = createMockMsg('modify', 'path/to/file.ts');
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
         fireEvent.click(screen.getByLabelText('Undo changes to this file'));
@@ -46,7 +47,7 @@ describe('ModifiedFileItem', () => {
     });
 
     it('calls onKeep when keep button is clicked', () => {
-        const msg = createMockMsg('modify', '/path/to/file.ts');
+        const msg = createMockMsg('modify', 'path/to/file.ts');
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
         fireEvent.click(screen.getByLabelText('Keep changes to this file'));
@@ -55,25 +56,28 @@ describe('ModifiedFileItem', () => {
     });
 
     it('renders with deleted-file class for deletion type', () => {
-        const msg = createMockMsg('delete', '/path/to/file.ts');
+        const msg = createMockMsg('delete', 'path/to/file.ts');
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
-        expect(screen.getByText('/path/to/file.ts').className).toContain('deleted-file');
+        const container = screen.getByLabelText('modified-file-item').firstElementChild;
+        expect(container?.className).toContain('deleted-file');
     });
 
     it('renders with created-file class for creation type', () => {
-        const msg = createMockMsg('create', '/path/to/file.ts');
+        const msg = createMockMsg('create', 'path/to/file.ts');
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
-        expect(screen.getByText('/path/to/file.ts').className).toContain('created-file');
+        const container = screen.getByLabelText('modified-file-item').firstElementChild;
+        expect(container?.className).toContain('created-file');
     });
 
     it('renders without class for modify type', () => {
-        const msg = createMockMsg('modify', '/path/to/file.ts');
+        const msg = createMockMsg('modify', 'path/to/file.ts');
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
-        expect(screen.getByText('/path/to/file.ts').className).not.toContain('deleted-file');
-        expect(screen.getByText('/path/to/file.ts').className).not.toContain('created-file');
+        const container = screen.getByLabelText('modified-file-item').firstElementChild;
+        expect(container?.className).not.toContain('deleted-file');
+        expect(container?.className).not.toContain('created-file');
     });
 
     it('returns null when filePath is not provided', () => {
@@ -83,6 +87,18 @@ describe('ModifiedFileItem', () => {
         );
 
         expect(container.firstChild).toBeNull();
+    });
+
+    it('renders correctly for root level files', () => {
+        const msg = createMockMsg('modify', 'package.json');
+        render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
+
+        const fileNameElement = screen.getByText('package.json', { selector: '.file-name' });
+        expect(fileNameElement).toBeTruthy();
+
+        const pathElement = document.querySelector('.file-path');
+        // root level files have empty path (directory part)
+        expect(pathElement?.textContent).toBe('');
     });
 
     it('prevents event propagation on button clicks', () => {

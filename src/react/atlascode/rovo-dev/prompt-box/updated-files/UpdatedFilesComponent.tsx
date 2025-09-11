@@ -10,7 +10,9 @@ export const UpdatedFilesComponent: React.FC<{
     onKeep: (files: ToolReturnParseResult[]) => void;
     openDiff: OpenFileFunc;
     actionsEnabled?: boolean;
-}> = ({ modifiedFiles, onUndo, onKeep, openDiff, actionsEnabled }) => {
+    workspacePath?: string;
+    homeDir?: string;
+}> = ({ modifiedFiles, onUndo, onKeep, openDiff, actionsEnabled, workspacePath, homeDir }) => {
     if (!modifiedFiles || modifiedFiles.length === 0) {
         return null;
     }
@@ -51,6 +53,8 @@ export const UpdatedFilesComponent: React.FC<{
                             onUndo={(file: ToolReturnParseResult) => onUndo([file])}
                             onKeep={(file: ToolReturnParseResult) => onKeep([file])}
                             actionsEnabled={actionsEnabled}
+                            workspacePath={workspacePath}
+                            homeDir={homeDir}
                         />
                     );
                 })}
