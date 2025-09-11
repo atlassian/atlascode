@@ -354,9 +354,6 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.ClearChat:
                     clearChatHistory();
                     setPendingToolCallMessage('');
-                    if (event.newState === RovoDevInitState.Initialized) {
-                        setPendingToolCallMessage('');
-                    }
                     break;
 
                 case RovoDevProviderMessageType.ProviderReady:
