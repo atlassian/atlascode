@@ -98,3 +98,10 @@ jobs:
           path: ./test-results
           retention-days: 1
           if-no-files-found: ignore
+
+  finalize:
+    needs: [ci-matrix]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All steps completed
+        run: echo "All steps completed successfully"
