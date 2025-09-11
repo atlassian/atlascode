@@ -24,6 +24,11 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
 }) => {
     const [isOpen, setIsOpen] = React.useState(opened);
 
+    // Sync internal state when `opened` prop changes
+    React.useEffect(() => {
+        setIsOpen(opened);
+    }, [opened]);
+
     const openDrawer = useCallback(
         (value: boolean) => {
             setIsOpen(value);

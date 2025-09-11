@@ -14,7 +14,7 @@
     },
     "headers": {
       "Content-Type": "application/json",
-      "x-ausername": "mockedUser"
+      "x-ausername": "mockuser"
     }
   }
 }

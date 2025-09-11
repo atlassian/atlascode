@@ -1,5 +1,5 @@
 import { APIRequestContext, Page } from '@playwright/test';
-import { closeOnboardingQuickPick, setupPullrequests } from 'e2e/helpers';
+import { setupPullrequests } from 'e2e/helpers';
 import { AtlascodeDrawer, AtlassianSettings, ExplorerDrawer } from 'e2e/page-objects';
 
 const addRepo = async (page: Page) => {
@@ -15,12 +15,10 @@ const addRepo = async (page: Page) => {
 
     await page.getByRole('option', { name: '.git' }).waitFor({ state: 'visible' });
 
-    await page.getByRole('button', { name: 'Add' }).click();
+    await page.keyboard.press('Enter');
 };
 
 export async function connectRepository(page: Page, request: APIRequestContext) {
-    await closeOnboardingQuickPick(page);
-
     const atlascodeDrawer = new AtlascodeDrawer(page);
 
     const cleanupSetupPullrequests = await setupPullrequests(request, []);

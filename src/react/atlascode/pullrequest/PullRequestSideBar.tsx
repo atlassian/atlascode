@@ -109,6 +109,7 @@ export const PullRequestSidebar: React.FC<PullRequestSidebarProps> = ({ state, c
                             tasks={state.tasks}
                             onEdit={controller.editTask}
                             onDelete={controller.deleteTask}
+                            pullRequestState={state.pr.data.state}
                         />
                     </BasicPanel>
                 </Grid>

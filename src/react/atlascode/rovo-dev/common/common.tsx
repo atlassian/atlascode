@@ -15,6 +15,8 @@ export const mdParser = new MarkdownIt({
     linkify: true,
 });
 
+mdParser.linkify.set({ fuzzyLink: false });
+
 export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
 }

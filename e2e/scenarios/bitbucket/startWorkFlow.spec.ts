@@ -1,12 +1,11 @@
 import { expect, Page } from '@playwright/test';
-import { authenticateWithJira, closeOnboardingQuickPick, getIssueFrame } from 'e2e/helpers';
+import { authenticateWithJira, getIssueFrame } from 'e2e/helpers';
 import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage, StartWorkPage } from 'e2e/page-objects';
 
 const ISSUE_NAME = 'BTS-1 - User Interface Bugs';
 
 export async function startWorkFlow(page: Page) {
     await authenticateWithJira(page);
-    await closeOnboardingQuickPick(page);
     await new AtlassianSettings(page).closeSettingsPage();
 
     const atlascodeDrawer = new AtlascodeDrawer(page);

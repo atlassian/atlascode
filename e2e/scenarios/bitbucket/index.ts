@@ -1,6 +1,7 @@
 import { addCommentToPullRequest } from './addCommentToPullRequest.spec';
 import { approvePullRequest } from './approvePullRequest.spec';
 import { authFlow } from './authFlow.spec';
+import { cleanupWorkspace } from './cleanupWorkspace.spec';
 import { connectRepository } from './connectRepository.spec';
 import { createPullRequest } from './createPullRequest.spec';
 import { startWorkFlow } from './startWorkFlow.spec';
@@ -14,4 +15,9 @@ export const bitbucketScenarios = [
     { name: 'Add comment to PullRequest', run: addCommentToPullRequest },
     { name: 'Approve PullRequset', run: approvePullRequest },
     { name: 'Start work Flow', run: startWorkFlow },
+];
+
+export const bitbucketScenariosDC = [
+    { name: 'Cleanup', run: cleanupWorkspace },
+    { name: 'Authenticate with Bitbucket', run: authFlow },
 ];
