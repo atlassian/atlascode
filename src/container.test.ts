@@ -15,7 +15,6 @@ describe('Container.isRovoDevEnabled', () => {
     });
 
     it('should return false when not initialized', () => {
-        // Since the private _isRovoDevEnabled is not initialized, it should return false/undefined
         const result = Container.isRovoDevEnabled;
         expect(result).toBeFalsy();
     });
