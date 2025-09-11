@@ -38,8 +38,8 @@ const TextAreaMessages: Record<NonDisabledState['state'], string> = {
     ['ProcessTerminated']: 'Start a new session to chat',
 };
 
-const getTextAreaPlaceholder = (currentState: NonDisabledState) => {
-    if (currentState.state === 'Initializing' && currentState.isPromptPending) {
+const getTextAreaPlaceholder = (isGeneratingResponse: boolean, currentState: NonDisabledState) => {
+    if (isGeneratingResponse) {
         return TextAreaMessages['GeneratingResponse'];
     } else {
         return TextAreaMessages[currentState.state];
@@ -158,14 +158,26 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         removeMonacoStyles();
     }, [editor]);
 
+    const isWaitingForPrompt = React.useMemo(
+        () =>
+            currentState.state === 'WaitingForPrompt' ||
+            (currentState.state === 'Initializing' && !currentState.isPromptPending),
+        [currentState],
+    );
+
     React.useEffect(() => {
         if (!editor) {
             return;
         }
 
+        const isGeneratingResponse =
+            currentState.state === 'GeneratingResponse' ||
+            (currentState.state === 'Initializing' && currentState.isPromptPending);
+
         editor.updateOptions({
             readOnly: disabled,
-            placeholder: currentState.state !== 'Disabled' ? getTextAreaPlaceholder(currentState) : '',
+            placeholder:
+                currentState.state !== 'Disabled' ? getTextAreaPlaceholder(isGeneratingResponse, currentState) : '',
         });
     }, [currentState, editor, disabled]);
 
@@ -221,7 +233,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             >
                                 {isDeepPlanEnabled ? 'Deep plan enabled' : ''}
                             </LoadingButton>
-                            {currentState.state === 'WaitingForPrompt' && (
+                            {isWaitingForPrompt && (
                                 <LoadingButton
                                     style={{
                                         ...rovoDevPromptButtonStyles,
@@ -235,7 +247,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                     onClick={() => handleSend()}
                                 />
                             )}
-                            {currentState.state !== 'WaitingForPrompt' && (
+                            {!isWaitingForPrompt && (
                                 <LoadingButton
                                     style={rovoDevPromptButtonStyles}
                                     spacing="compact"

@@ -3,8 +3,6 @@ import { DisabledState, InitializingDownladingState, InitializingState, State } 
 
 import { ToolCallMessage } from '../utils';
 
-export const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
-
 export const ToolCallItem: React.FC<{
     toolMessage: string;
     currentState: Exclude<State, DisabledState>;

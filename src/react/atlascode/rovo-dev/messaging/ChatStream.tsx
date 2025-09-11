@@ -26,6 +26,7 @@ interface ChatStreamProps {
     >;
     executeCodePlan: () => void;
     onChangesGitPushed: (msg: DefaultMessage, pullRequestCreated: boolean) => void;
+    onOpenFolder: () => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -33,6 +34,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     executeCodePlan,
     messagingApi,
     onChangesGitPushed,
+    onOpenFolder,
 }) => {
     const currentState = useAppSelector((state) => state.rovoDevStates.currentState);
     const deepPlanCreated = useAppSelector((state) => state.promptContext.isDeepPlanCreated);
@@ -232,7 +234,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            <RovoDevLanding currentState={currentState} onLoginClick={onLoginClick} />
+            <RovoDevLanding currentState={currentState} onLoginClick={onLoginClick} onOpenFolder={onOpenFolder} />
             {(currentState.state !== 'Disabled' || currentState.subState !== 'NeedAuth') &&
                 chatHistory &&
                 chatHistory.map((block, idx) => {
@@ -282,7 +284,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     return null;
                 })}
 
-            {currentState.state !== 'Disabled' && pendingToolCall && (
+            {currentState.state !== 'Disabled' && currentState.state !== 'ProcessTerminated' && pendingToolCall && (
                 <div style={{ marginBottom: '16px' }}>
                     <ToolCallItem toolMessage={pendingToolCall} currentState={currentState} />
                 </div>

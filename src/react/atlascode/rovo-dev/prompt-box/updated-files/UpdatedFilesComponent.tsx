@@ -9,11 +9,12 @@ export const UpdatedFilesComponent: React.FC<{
     onUndo: (files: ToolReturnParseResult[]) => void;
     onKeep: (files: ToolReturnParseResult[]) => void;
     openDiff: OpenFileFunc;
-}> = ({ onUndo, onKeep, openDiff }) => {
+    workspacePath?: string;
+    homeDir?: string;
+}> = ({ onUndo, onKeep, openDiff, workspacePath, homeDir }) => {
     const modifiedFiles = useAppSelector((state) => state.chatStream.totalModifiedFiles);
     const currentState = useAppSelector((state) => state.rovoDevStates.currentState);
     const actionsEnabled = currentState.state === 'WaitingForPrompt';
-
     if (!modifiedFiles || modifiedFiles.length === 0) {
         return null;
     }
@@ -54,6 +55,8 @@ export const UpdatedFilesComponent: React.FC<{
                             onUndo={(file: ToolReturnParseResult) => onUndo([file])}
                             onKeep={(file: ToolReturnParseResult) => onKeep([file])}
                             actionsEnabled={actionsEnabled}
+                            workspacePath={workspacePath}
+                            homeDir={homeDir}
                         />
                     );
                 })}

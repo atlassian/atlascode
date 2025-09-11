@@ -1,6 +1,7 @@
 name: Build
 permissions:
   contents: read
+  packages: read
 
 on:
   pull_request:
@@ -13,7 +14,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -33,15 +33,23 @@ jobs:
       - name: Run linter
         run: npm run lint
 
-  tests:
+  ci-matrix:
     needs: [lint]
     runs-on: ubuntu-latest
-    
     strategy:
       fail-fast: true
       matrix:
-        test-type: [unit, e2e]
-    
+        include:
+          - kind: unit
+          - kind: e2e
+            target: jira-cloud
+          - kind: e2e
+            target: jira-dc
+          - kind: e2e
+            target: bitbucket-cloud
+          - kind: e2e
+            target: bitbucket-dc
+
     env:
       ATLASCODE_FX3_API_KEY: ${{ secrets.ATLASCODE_FX3_API_KEY }}
       ATLASCODE_FX3_ENVIRONMENT: ${{ vars.ATLASCODE_FX3_ENVIRONMENT }}
@@ -58,33 +66,42 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit
 
+      - name: Run unit tests
+        if: matrix.kind == 'unit'
+        run: npm run test
+
       - name: Build and package the extension
-        if: matrix.test-type == 'e2e'
+        if: matrix.kind == 'e2e'
         run: npm run extension:package
 
       - name: Generate SSL certs for E2E test
-        if: matrix.test-type == 'e2e'
+        if: matrix.kind == 'e2e'
         run: npm run test:e2e:sslcerts
 
       - name: Fetch E2E image
-        if: matrix.test-type == 'e2e'
+        if: matrix.kind == 'e2e'
         run: |
           docker pull ghcr.io/atlassian/atlascode-e2e:latest
           docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e
 
-      - name: Run unit tests
-        if: matrix.test-type == 'unit'
-        run: npm run test
-
-      - name: Run E2E tests
-        if: matrix.test-type == 'e2e'
+      - name: Run E2E (${{ matrix.target }})
+        if: matrix.kind == 'e2e'
         run: npm run test:e2e:docker
+        env:
+          TARGET: ${{ matrix.target }}
 
-      - name: Upload E2E artifacts
-        if: matrix.test-type == 'e2e' && failure()
+      - name: Upload E2E artifacts (${{ matrix.target }})
+        if: matrix.kind == 'e2e' && failure()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-test-results
+          name: e2e-test-results-${{ matrix.target }}
           path: ./test-results
           retention-days: 1
           if-no-files-found: ignore
+
+  finalize:
+    needs: [ci-matrix]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All steps completed
+        run: echo "All steps completed successfully"

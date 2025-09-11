@@ -19,7 +19,7 @@ import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
 import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
-import { DEFAULT_LOADING_MESSAGE, parseToolCallMessage } from './tools/ToolCallItem';
+import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
     ChatMessage,
     CODE_PLAN_EXECUTE_PROMPT,
@@ -28,6 +28,8 @@ import {
     ToolReturnGenericMessage,
     ToolReturnParseResult,
 } from './utils';
+
+const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
 
 // TODO - replace with @atlaskit/icon implementation
 export const AiGenerativeTextSummaryIcon = () => (
@@ -55,6 +57,8 @@ export const CloseIconDeepPlan: React.FC<{}> = () => {
 
 const RovoDevView: React.FC = () => {
     const [workspaceCount, setWorkspaceCount] = useState(process.env.ROVODEV_BBY ? 1 : 0);
+    const [workspacePath, setWorkspacePath] = useState<string>('');
+    const [homeDir, setHomeDir] = useState<string>('');
 
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
 
@@ -157,9 +161,6 @@ const RovoDevView: React.FC = () => {
                         currentState.state === 'CancellingResponse'
                     ) {
                         finalizeResponse();
-                        if (!event.isReplay) {
-                            dispatchRedux(actions.validateResponseFinalized());
-                        }
                     }
                     break;
 
@@ -198,11 +199,8 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ErrorMessage:
-                    if (event.message.type === 'error') {
-                        if (event.message.isProcessTerminated) {
-                            dispatchRedux(actions.setCurrentState({ state: 'ProcessTerminated' }));
-                        }
-                        finalizeResponse();
+                    if (event.message.isProcessTerminated) {
+                        dispatchRedux(actions.setCurrentState({ state: 'ProcessTerminated' }));
                     }
                     const msg = event.message;
                     dispatchRedux(actions.setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : ''));
@@ -215,11 +213,51 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.ProviderReady:
                     setWorkspaceCount(event.workspaceCount);
+                    setWorkspacePath(event.workspacePath || '');
+                    setHomeDir(event.homeDir || '');
+                    if (event.workspaceCount) {
+                        dispatchRedux(actions.setCurrentState({ state: 'WaitingForPrompt' }));
+                    } else {
+                        dispatchRedux(actions.setCurrentState({ state: 'Disabled', subState: 'NoWorkspaceOpen' }));
+                    }
+                    break;
+
+                case RovoDevProviderMessageType.SetInitializing:
+                    dispatchRedux(
+                        actions.setCurrentState({
+                            state: 'Initializing',
+                            subState: 'Other',
+                            isPromptPending: event.isPromptPending,
+                        }),
+                    );
+                    break;
+
+                case RovoDevProviderMessageType.SetDownloadProgress:
+                    dispatchRedux(
+                        actions.setCurrentState({
+                            state: 'Initializing',
+                            subState: 'UpdatingBinaries',
+                            isPromptPending: event.isPromptPending,
+                            totalBytes: event.totalBytes,
+                            downloadedBytes: event.downloadedBytes,
+                        }),
+                    );
+                    break;
+
+                case RovoDevProviderMessageType.RovoDevReady:
+                    dispatchRedux(
+                        actions.setCurrentState({
+                            state: event.isPromptPending ? 'GeneratingResponse' : 'WaitingForPrompt',
+                        }),
+                    );
+                    break;
+
+                case RovoDevProviderMessageType.CancelFailed:
                     dispatchRedux(
                         actions.setCurrentState(
-                            event.workspaceCount
-                                ? { state: 'WaitingForPrompt' }
-                                : { state: 'Disabled', subState: 'NoWorkspaceOpen' },
+                            currentState.state === 'CancellingResponse'
+                                ? { state: 'GeneratingResponse' }
+                                : currentState,
                         ),
                     );
                     break;
@@ -463,7 +501,13 @@ const RovoDevView: React.FC = () => {
             />
             {currentState.state !== 'Disabled' && (
                 <div className="input-section-container">
-                    <UpdatedFilesComponent onUndo={undoFiles} onKeep={keepFiles} openDiff={openFile} />
+                    <UpdatedFilesComponent
+                        onUndo={undoFiles}
+                        onKeep={keepFiles}
+                        openDiff={openFile}
+                        workspacePath={workspacePath}
+                        homeDir={homeDir}
+                    />
                     <div className="prompt-container">
                         <PromptContextCollection
                             content={promptContextCollection}
