@@ -171,14 +171,14 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     }, [currentState, editor, disabled]);
 
     React.useEffect(() => {
-        if (editor) {
+        if (isWaitingForPrompt && editor) {
             const value = editor.getValue().trim();
             if (value) {
                 onSend(value);
                 editor.setValue('');
             }
         }
-    }, [editor, onSend]);
+    }, [isWaitingForPrompt, editor, onSend]);
 
     return (
         <>
