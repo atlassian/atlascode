@@ -177,11 +177,22 @@ export class RovoDevChatProvider {
 
             success =
                 !!cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress');
+
+            if (!success) {
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.CancelFailed,
+                });
+            }
         } else {
             // this._rovoDevApiClient is undefined, it means this cancellation happened while
             // the provider is still initializing
             this._pendingPrompt = undefined;
             success = true;
+
+            // send a fake 'CompleteMessage' to tell the view the prompt isn't pending anymore
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.CompleteMessage,
+            });
         }
 
         // don't instrument the cancellation if it's coming from a 'New session' action
@@ -192,12 +203,6 @@ export class RovoDevChatProvider {
                 this.currentPromptId,
                 success ? undefined : true,
             );
-        }
-
-        if (!success) {
-            await webview.postMessage({
-                type: RovoDevProviderMessageType.CancelFailed,
-            });
         }
 
         return success;
