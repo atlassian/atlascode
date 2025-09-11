@@ -65,24 +65,22 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     handleTriggerFeedbackCommand,
 }) => {
     const [editor, setEditor] = React.useState<monaco.editor.IStandaloneCodeEditor | null>(null);
+    const [editorTextChanged, signalEditorTextChanged] = React.useState<number>(0);
 
     const setupCommands = (
         editor: monaco.editor.IStandaloneCodeEditor,
-        onSend: (text: string) => void,
         onCopy: () => void,
         handleMemoryCommand: () => void,
         handleTriggerFeedbackCommand: () => void,
     ) => {
         monaco.editor.registerCommand('rovo-dev.clearChat', () => {
-            editor.setValue('');
-
-            onSend('/clear');
+            editor.setValue('/clear');
+            signalEditorTextChanged((prev) => prev + 1);
         });
 
         monaco.editor.registerCommand('rovo-dev.pruneChat', () => {
-            editor.setValue('');
-
-            onSend(`/prune`);
+            editor.setValue('/prune');
+            signalEditorTextChanged((prev) => prev + 1);
         });
 
         monaco.editor.registerCommand('rovo-dev.copyResponse', () => {
@@ -92,27 +90,19 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
 
         monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
             handleMemoryCommand();
-
             editor.setValue('');
         });
 
         monaco.editor.registerCommand('rovo-dev.triggerFeedback', () => {
             handleTriggerFeedbackCommand();
-
             editor.setValue('');
         });
     };
 
-    const setupPromptKeyBindings = (editor: monaco.editor.IStandaloneCodeEditor, onSend: (text: string) => void) => {
+    const setupPromptKeyBindings = (editor: monaco.editor.IStandaloneCodeEditor) => {
         editor.addCommand(
             monaco.KeyCode.Enter,
-            () => {
-                const value = editor.getValue();
-                if (value.trim()) {
-                    onSend(value);
-                    editor.setValue('');
-                }
-            },
+            () => signalEditorTextChanged((prev) => prev + 1),
             '!suggestWidgetVisible',
         ); // Only trigger if suggestions are not visible
 
@@ -148,13 +138,13 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider());
 
             const editor = createMonacoPromptEditor(container);
-            setupPromptKeyBindings(editor, onSend);
+            setupPromptKeyBindings(editor);
             setupAutoResize(editor);
-            setupCommands(editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand);
+            setupCommands(editor, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand);
 
             return editor;
         });
-    }, [handleMemoryCommand, handleTriggerFeedbackCommand, onCopy, onSend, setEditor]);
+    }, [handleMemoryCommand, handleTriggerFeedbackCommand, onCopy, setEditor]);
 
     React.useEffect(() => {
         // Remove Monaco's color stylesheet
@@ -184,13 +174,15 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         });
     }, [currentState, editor, disabled]);
 
-    const handleSend = () => {
+    React.useEffect(() => {
         if (editor) {
-            const text = editor.getValue();
-            onSend(text);
-            editor.setValue(''); // Clear the editor after sending
+            const value = editor.getValue().trim();
+            if (value) {
+                onSend(value);
+                editor.setValue('');
+            }
         }
-    };
+    }, [editor, editorTextChanged, onSend]);
 
     return (
         <>
@@ -247,7 +239,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                     label="Send prompt"
                                     iconBefore={<SendIcon label="Send prompt" />}
                                     isDisabled={disabled || sendButtonDisabled}
-                                    onClick={() => handleSend()}
+                                    onClick={() => signalEditorTextChanged((prev) => prev + 1)}
                                 />
                             )}
                             {!isWaitingForPrompt && (
