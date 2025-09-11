@@ -65,7 +65,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     handleTriggerFeedbackCommand,
 }) => {
     const [editor, setEditor] = React.useState<monaco.editor.IStandaloneCodeEditor | null>(null);
-    const [editorTextChanged, signalEditorTextChanged] = React.useState<number>(0);
+    const [, signalEditorSubmit] = React.useState<number>(0);
 
     const setupCommands = (
         editor: monaco.editor.IStandaloneCodeEditor,
@@ -75,12 +75,12 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     ) => {
         monaco.editor.registerCommand('rovo-dev.clearChat', () => {
             editor.setValue('/clear');
-            signalEditorTextChanged((prev) => prev + 1);
+            signalEditorSubmit((prev) => prev + 1);
         });
 
         monaco.editor.registerCommand('rovo-dev.pruneChat', () => {
             editor.setValue('/prune');
-            signalEditorTextChanged((prev) => prev + 1);
+            signalEditorSubmit((prev) => prev + 1);
         });
 
         monaco.editor.registerCommand('rovo-dev.copyResponse', () => {
@@ -100,11 +100,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     };
 
     const setupPromptKeyBindings = (editor: monaco.editor.IStandaloneCodeEditor) => {
-        editor.addCommand(
-            monaco.KeyCode.Enter,
-            () => signalEditorTextChanged((prev) => prev + 1),
-            '!suggestWidgetVisible',
-        ); // Only trigger if suggestions are not visible
+        editor.addCommand(monaco.KeyCode.Enter, () => signalEditorSubmit((prev) => prev + 1), '!suggestWidgetVisible'); // Only trigger if suggestions are not visible
 
         editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
             editor.trigger('keyboard', 'type', { text: '\n' });
@@ -182,7 +178,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 editor.setValue('');
             }
         }
-    }, [editor, editorTextChanged, onSend]);
+    }, [editor, onSend]);
 
     return (
         <>
@@ -239,7 +235,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                     label="Send prompt"
                                     iconBefore={<SendIcon label="Send prompt" />}
                                     isDisabled={disabled || sendButtonDisabled}
-                                    onClick={() => signalEditorTextChanged((prev) => prev + 1)}
+                                    onClick={() => signalEditorSubmit((prev) => prev + 1)}
                                 />
                             )}
                             {!isWaitingForPrompt && (
