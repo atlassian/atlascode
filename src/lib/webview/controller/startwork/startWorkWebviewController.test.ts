@@ -119,6 +119,7 @@ describe('StartWorkWebviewController', () => {
         repoData: [mockRepoData],
         customTemplate: '{issueKey}',
         customPrefixes: ['feature/', 'bugfix/'],
+        isRovoDevEnabled: true,
     };
 
     beforeEach(() => {

@@ -69,12 +69,14 @@ const StartWorkPageV3: React.FunctionComponent = () => {
 
                     {submitState !== 'submit-success' && (
                         <Box>
-                            <Box marginBottom={2}>
-                                <RovoDevToggle
-                                    checked={formState.startWithRovoDev}
-                                    onChange={formActions.onStartWithRovoDevChange}
-                                />
-                            </Box>
+                            {state.isRovoDevEnabled && (
+                                <Box marginBottom={2}>
+                                    <RovoDevToggle
+                                        checked={formState.startWithRovoDev}
+                                        onChange={formActions.onStartWithRovoDevChange}
+                                    />
+                                </Box>
+                            )}
                             <Button
                                 variant="contained"
                                 color="primary"

@@ -25,6 +25,7 @@ export interface StartWorkInitMessage {
     repoData: RepoData[];
     customTemplate: string;
     customPrefixes: string[];
+    isRovoDevEnabled: boolean;
 }
 
 export interface StartWorkResponseMessage {
@@ -60,6 +61,7 @@ export const emptyStartWorkIssueMessage = {
 export const emptyStartWorkInitMessage = {
     issue: createEmptyMinimalIssue(emptySiteInfo),
     repoData: [],
+    isRovoDevEnabled: false,
 };
 
 export const emptyRepoData: RepoData = {

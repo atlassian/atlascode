@@ -787,21 +787,23 @@ const StartWorkPage: React.FunctionComponent = () => {
                                             </Collapse>
                                         </Grid>
                                         <Grid item hidden={submitState === 'submit-success'}>
-                                            <FormControlLabel
-                                                control={
-                                                    <Checkbox
-                                                        checked={startWithRovoDev}
-                                                        onChange={toggleStartWithRovoDev}
-                                                        color="primary"
-                                                        style={{ marginLeft: 38 }}
-                                                    />
-                                                }
-                                                label={
-                                                    <Typography variant="h5" style={{ marginRight: 10 }}>
-                                                        Start work with Rovo Dev
-                                                    </Typography>
-                                                }
-                                            />
+                                            {state.isRovoDevEnabled && (
+                                                <FormControlLabel
+                                                    control={
+                                                        <Checkbox
+                                                            checked={startWithRovoDev}
+                                                            onChange={toggleStartWithRovoDev}
+                                                            color="primary"
+                                                            style={{ marginLeft: 38 }}
+                                                        />
+                                                    }
+                                                    label={
+                                                        <Typography variant="h5" style={{ marginRight: 10 }}>
+                                                            Start work with Rovo Dev
+                                                        </Typography>
+                                                    }
+                                                />
+                                            )}
                                             <Button
                                                 data-testid="start-work.start-button"
                                                 variant="contained"

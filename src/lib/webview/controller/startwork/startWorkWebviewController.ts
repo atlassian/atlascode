@@ -119,6 +119,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 ...this.initData!,
                 repoData,
                 ...this.api.getStartWorkConfig(),
+                isRovoDevEnabled: Container.isRovoDevEnabled,
             });
         } catch (e) {
             this.logger.error(e, 'Error updating start work page');
