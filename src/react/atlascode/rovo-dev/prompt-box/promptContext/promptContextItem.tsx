@@ -1,6 +1,13 @@
 import React from 'react';
 import { RovoDevContextItem } from 'src/rovo-dev/rovoDevTypes';
 
+const isHighContrastTheme = (): boolean => {
+    return (
+        document.body.classList.contains('vscode-high-contrast') ||
+        document.body.classList.contains('vscode-high-contrast-light')
+    );
+};
+
 // Shared styles for context chips and buttons
 const chipStyle: React.CSSProperties = {
     display: 'inline-flex',
@@ -8,7 +15,9 @@ const chipStyle: React.CSSProperties = {
     padding: '1.5px 6px',
     backgroundColor: 'var(--vscode-editorWidget-background)',
     color: 'var(--vscode-editorWidget-foreground)',
-    border: '1px solid var(--vscode-editorWidget-border)',
+    border: isHighContrastTheme()
+        ? '2px solid var(--vscode-contrastBorder)'
+        : '1px solid var(--vscode-editorWidget-border)',
     borderRadius: 5,
     fontWeight: 400,
     fontSize: 11,

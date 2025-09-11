@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { SubState } from 'src/rovo-dev/rovoDevTypes';
+import { State } from 'src/rovo-dev/rovoDevTypes';
 
 import { inChatButtonStyles } from './rovoDevViewStyles';
 
@@ -69,8 +69,8 @@ const RovoDevImg = () => {
     );
 };
 
-export const RovoDevLanding: React.FC<{ subState: SubState; onLoginClick: () => void }> = ({
-    subState,
+export const RovoDevLanding: React.FC<{ currentState: State; onLoginClick: () => void }> = ({
+    currentState,
     onLoginClick,
 }) => {
     if (process.env.ROVODEV_BBY) {
@@ -97,12 +97,18 @@ export const RovoDevLanding: React.FC<{ subState: SubState; onLoginClick: () => 
                 Rovo Dev can help you understand context of your repository, suggest and make updates.
             </div>
 
-            {subState === SubState.NeedAuth && (
+            {currentState.state === 'Disabled' && currentState.subState === 'NeedAuth' && (
                 <div style={{ marginTop: '24px' }}>
                     <div>Please authenticate with a Jira site using an API token to enable Rovo Dev.</div>
                     <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={onLoginClick}>
                         Login with Jira API Token
                     </button>
+                </div>
+            )}
+
+            {currentState.state === 'Disabled' && currentState.subState === 'NoWorkspaceOpen' && (
+                <div style={{ marginTop: '24px' }}>
+                    <div>Please open a folder to start a chat session with Rovo Dev.</div>
                 </div>
             )}
         </div>

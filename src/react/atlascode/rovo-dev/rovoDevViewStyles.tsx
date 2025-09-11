@@ -1,5 +1,12 @@
 import React from 'react';
 
+const isHighContrastTheme = (): boolean => {
+    return (
+        document.body.classList.contains('vscode-high-contrast') ||
+        document.body.classList.contains('vscode-high-contrast-light')
+    );
+};
+
 export const rovoDevTextareaStyles: React.CSSProperties = {
     width: '100%',
     minHeight: '20px',
@@ -14,7 +21,7 @@ export const rovoDevTextareaStyles: React.CSSProperties = {
 
 export const rovoDevPromptButtonStyles: React.CSSProperties = {
     color: 'var(--vscode-input-foreground) !important',
-    border: '1px solid var(--vscode-button-border)',
+    border: isHighContrastTheme() ? '2px solid var(--vscode-contrastBorder)' : '1px solid var(--vscode-button-border)',
     backgroundColor: 'var(--vscode-input-background)',
     marginLeft: '4px',
     marginTop: '1px',
@@ -37,7 +44,9 @@ export const rovoDevPromptButtonToggledStyles: React.CSSProperties = {
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: '4px',
-    border: '1px solid var(--vscode-inputOption-activeBorder)',
+    border: isHighContrastTheme()
+        ? '2px solid var(--vscode-contrastBorder)'
+        : '1px solid var(--vscode-inputOption-activeBorder)',
 };
 
 export function rovoDevDeepPlanStylesSelector(isClicked: boolean, isDisabled: boolean): React.CSSProperties {
@@ -69,7 +78,9 @@ export const agentMessageStyles: React.CSSProperties = {
 export const errorMessageStyles: React.CSSProperties = {
     alignSelf: 'flex-start',
     width: '100%',
-    border: '1px solid var(--vscode-editorWidget-border)',
+    border: isHighContrastTheme()
+        ? '2px solid var(--vscode-contrastBorder)'
+        : '1px solid var(--vscode-editorWidget-border)',
     borderBottomLeftRadius: '8px',
     padding: '8px',
     display: 'flex',
@@ -87,6 +98,6 @@ export const inChatButtonStyles: React.CSSProperties = {
     padding: '6px 12px',
     background: 'var(--vscode-button-background)',
     color: 'var(--vscode-button-foreground)',
-    border: '1px solid var(--vscode-button-border)',
+    border: isHighContrastTheme() ? '2px solid var(--vscode-contrastBorder)' : '1px solid var(--vscode-button-border)',
     borderRadius: '4px',
 };

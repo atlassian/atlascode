@@ -26,6 +26,7 @@ import { Logger } from './logger';
 import { AuthenticationType } from './onboarding/quickFlow/authentication/types';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevContext } from './rovo-dev/rovoDevTypes';
+import { openRovoDevConfigFile } from './rovo-dev/rovoDevUtils';
 import { Experiments, Features } from './util/featureFlags';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
@@ -492,8 +493,6 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             }
             Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
-    );
-    vscodeContext.subscriptions.push(
         commands.registerCommand(Commands.RovodevAsk, (prompt: string, context?: RovoDevContext) => {
             Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
@@ -504,8 +503,6 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(Commands.RovodevShareFeedback, () =>
             Container.rovodevWebviewProvider.executeTriggerFeedback(),
         ),
-    );
-    vscodeContext.subscriptions.push(
         commands.registerCommand(Commands.RovodevAddToContext, async () => {
             const context = buildContext(window.activeTextEditor, vscodeContext);
             if (!context || !context.contextItems || context.contextItems.length === 0) {
@@ -516,6 +513,15 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             context.contextItems.forEach((item) => {
                 Container.rovodevWebviewProvider.addToContext(item);
             });
+        }),
+        commands.registerCommand(Commands.OpenRovoDevConfig, async () => {
+            await openRovoDevConfigFile('.rovodev/config.yml', 'Rovo Dev settings file');
+        }),
+        commands.registerCommand(Commands.OpenRovoDevMcpJson, async () => {
+            await openRovoDevConfigFile('.rovodev/mcp.json', 'Rovo Dev MCP configuration');
+        }),
+        commands.registerCommand(Commands.OpenRovoDevGlobalMemory, async () => {
+            await openRovoDevConfigFile('.rovodev/.agent.md', 'Rovo Dev Global Memory file');
         }),
     );
 }
