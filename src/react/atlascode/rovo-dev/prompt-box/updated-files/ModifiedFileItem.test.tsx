@@ -96,9 +96,9 @@ describe('ModifiedFileItem', () => {
         const fileNameElement = screen.getByText('package.json', { selector: '.file-name' });
         expect(fileNameElement).toBeTruthy();
 
-        const pathElement = screen.getByTitle('package.json');
-        // we don't have a path for root level files
-        expect(pathElement.textContent).toBe('');
+        const pathElement = document.querySelector('.file-path');
+        // root level files have empty path (directory part)
+        expect(pathElement?.textContent).toBe('');
     });
 
     it('prevents event propagation on button clicks', () => {

@@ -69,6 +69,8 @@ const RovoDevView: React.FC = () => {
     const [isDeepPlanCreated, setIsDeepPlanCreated] = useState(false);
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
     const [workspaceCount, setWorkspaceCount] = useState(process.env.ROVODEV_BBY ? 1 : 0);
+    const [workspacePath, setWorkspacePath] = useState<string>('');
+    const [homeDir, setHomeDir] = useState<string>('');
 
     const [history, setHistory] = useState<Response[]>([]);
 
@@ -357,6 +359,8 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.ProviderReady:
                     setWorkspaceCount(event.workspaceCount);
+                    setWorkspacePath(event.workspacePath || '');
+                    setHomeDir(event.homeDir || '');
                     if (event.workspaceCount) {
                         setCurrentState({ state: 'WaitingForPrompt' });
                     } else {
@@ -697,6 +701,8 @@ const RovoDevView: React.FC = () => {
                         onKeep={keepFiles}
                         openDiff={openFile}
                         actionsEnabled={currentState.state === 'WaitingForPrompt'}
+                        workspacePath={workspacePath}
+                        homeDir={homeDir}
                     />
                     <div className="prompt-container">
                         <PromptContextCollection

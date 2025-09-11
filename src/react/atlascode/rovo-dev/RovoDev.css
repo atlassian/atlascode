@@ -516,10 +516,6 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
     margin-left: 8px;
-    display: none;
-}
-
-.modified-file-item:hover .file-path {
     display: inline;
 }
 
