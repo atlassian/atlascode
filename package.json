@@ -45,7 +45,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.11.16"
+        "version": "0.11.18"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -629,8 +629,24 @@
                     "group": "navigation@2"
                 },
                 {
+                    "command": "atlascode.openRovoDevConfig",
+                    "when": "view == atlascode.views.rovoDev.webView",
+                    "group": "rovoDevContextMenu1@1"
+                },
+                {
+                    "command": "atlascode.openRovoDevGlobalMemory",
+                    "when": "view == atlascode.views.rovoDev.webView",
+                    "group": "rovoDevContextMenu1@2"
+                },
+                {
+                    "command": "atlascode.openRovoDevMcpJson",
+                    "when": "view == atlascode.views.rovoDev.webView",
+                    "group": "rovoDevContextMenu1@3"
+                },
+                {
                     "command": "atlascode.rovodev.shareFeedback",
-                    "when": "view == atlascode.views.rovoDev.webView"
+                    "when": "view == atlascode.views.rovoDev.webView",
+                    "group": "rovoDevContextMenu2@1"
                 },
                 {
                     "command": "atlascode.jira.createIssue",

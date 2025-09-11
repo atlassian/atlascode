@@ -1,0 +1,20 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/rest/api/1.0/projects/mocked-project/repos/dc-mocked-repo/branches/default"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "id": "refs/heads/main",
+            "displayId": "main",
+            "type": "BRANCH",
+            "latestCommit": "abcdef1234567890abcdef1234567890abcdef12",
+            "latestChangeset": "abcdef1234567890abcdef1234567890abcdef12",
+            "isDefault": true
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

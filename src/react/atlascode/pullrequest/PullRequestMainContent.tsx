@@ -85,6 +85,7 @@ export const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
                                     currentUser={state.currentUser}
                                     fetchUsers={handleFetchUsers}
                                     onDelete={controller.deleteComment}
+                                    pullRequestState={state.pr.data.state}
                                 />
                             </Grid>
                             <Grid item>

@@ -33,13 +33,13 @@ jest.mock('monaco-editor', () => ({
 
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
-import { State } from 'src/rovo-dev/rovoDevTypes';
+import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 
 import { PromptInputBox } from './PromptInput';
 
 describe('PromptInputBox', () => {
     const defaultProps = {
-        state: State.WaitingForPrompt,
+        currentState: { state: 'WaitingForPrompt' } as Exclude<State, DisabledState>,
         promptText: '',
         onPromptTextChange: jest.fn(),
         isDeepPlanEnabled: false,
@@ -63,7 +63,7 @@ describe('PromptInputBox', () => {
     });
 
     it('renders Stop button when state is not WaitingForPrompt', () => {
-        render(<PromptInputBox {...defaultProps} state={State.GeneratingResponse} />);
+        render(<PromptInputBox {...defaultProps} currentState={{ state: 'GeneratingResponse' }} />);
         expect(screen.getByLabelText('Stop')).toBeTruthy();
     });
 
@@ -74,8 +74,8 @@ describe('PromptInputBox', () => {
     });
 
     it('calls onCancel when Stop button is clicked', () => {
-        render(<PromptInputBox {...defaultProps} state={State.GeneratingResponse} />);
-        fireEvent.click(screen.getByLabelText('Stop generating'));
+        render(<PromptInputBox {...defaultProps} currentState={{ state: 'GeneratingResponse' }} />);
+        fireEvent.click(screen.getByLabelText('Stop'));
         expect(defaultProps.onCancel).toHaveBeenCalled();
     });
 
@@ -86,8 +86,8 @@ describe('PromptInputBox', () => {
     });
 
     it('disables Stop button when state is CancellingResponse', () => {
-        render(<PromptInputBox {...defaultProps} state={State.CancellingResponse} />);
-        fireEvent.click(screen.getByLabelText('Stop generating'));
+        render(<PromptInputBox {...defaultProps} currentState={{ state: 'CancellingResponse' }} />);
+        fireEvent.click(screen.getByLabelText('Stop'));
         expect(defaultProps.onCancel).toHaveBeenCalledTimes(0);
     });
 
@@ -98,7 +98,7 @@ describe('PromptInputBox', () => {
     });
 
     it('disables deep plan button when state is not WaitingForPrompt', () => {
-        render(<PromptInputBox {...defaultProps} state={State.GeneratingResponse} />);
+        render(<PromptInputBox {...defaultProps} currentState={{ state: 'GeneratingResponse' }} />);
         fireEvent.click(screen.getAllByRole('button', { name: '' })[1]);
         expect(defaultProps.onDeepPlanToggled).toHaveBeenCalledTimes(0);
     });

@@ -113,6 +113,8 @@ export class LoginManager {
 
             // Add all sites at once to prevent race condition
             this._siteManager.addSites(siteDetails);
+
+            this.fireExplicitSiteChangeEvent(siteDetails);
         } catch (e) {
             Logger.error(e, `Error authenticating with provider '${provider}'`);
             vscode.window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
@@ -148,6 +150,8 @@ export class LoginManager {
                 authenticatedEvent(siteDetails, isOnboarding, source).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
+
+                this.fireExplicitSiteChangeEvent([siteDetails]);
             } catch (err) {
                 Logger.error(err, `Error authenticating with ${site.product.name}`);
                 return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
@@ -162,6 +166,8 @@ export class LoginManager {
                 editedEvent(siteDetails).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
+
+                this.fireExplicitSiteChangeEvent([siteDetails]);
             } catch (err) {
                 Logger.error(err, `Error authenticating with ${site.product.name}`);
                 return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
@@ -287,5 +293,18 @@ export class LoginManager {
         const response = await fetch(`https://${host}/_edge/tenant_info`);
         const data = await response.json();
         return data.cloudId;
+    }
+
+    private fireExplicitSiteChangeEvent(siteDetails: DetailedSiteInfo[]): void {
+        const jiraSites = siteDetails.filter((site) => site.product.key === 'jira');
+
+        if (jiraSites.length > 0) {
+            this._siteManager.fireSitesAvailableChangeEvent({
+                sites: jiraSites,
+                newSites: jiraSites,
+                product: jiraSites[0].product,
+                primarySite: this._siteManager.primarySite,
+            });
+        }
     }
 }
