@@ -32,6 +32,10 @@ export class RovoDevChatProvider {
         return this._pendingCancellation;
     }
 
+    public get isPromptPending() {
+        return !!this._pendingPrompt;
+    }
+
     constructor(private _telemetryProvider: RovoDevTelemetryProvider) {}
 
     public setWebview(webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined) {
@@ -314,7 +318,6 @@ export class RovoDevChatProvider {
                 return webview.postMessage({
                     type: RovoDevProviderMessageType.ToolReturn,
                     dataObject: response,
-                    isReplay: sourceApi === 'replay',
                 });
 
             case 'retry-prompt':

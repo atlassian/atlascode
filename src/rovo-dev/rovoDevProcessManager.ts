@@ -175,7 +175,7 @@ export class RovoDevProcessManager {
         this.rovoDevInstance = undefined;
     }
 
-    private static async downloadBinaryThenInitialize(context: ExtensionContext, rovoDevURIs: RovoDevURIs) {
+    private static async downloadBinaryThenInitialize(rovoDevURIs: RovoDevURIs) {
         const baseDir = rovoDevURIs.RovoDevBaseDir;
         const versionDir = rovoDevURIs.RovoDevVersionDir;
         const zipUrl = rovoDevURIs.RovoDevZipUrl;
@@ -190,6 +190,8 @@ export class RovoDevProcessManager {
             return;
         }
 
+        this.rovoDevWebviewProvider.signalBinaryDownloadStarted(0);
+
         try {
             if (fs.existsSync(baseDir)) {
                 await getFsPromise((callback) => fs.rm(baseDir, { recursive: true, force: true }, callback));
@@ -197,7 +199,7 @@ export class RovoDevProcessManager {
 
             const onProgressChange = (downloadedBytes: number, totalBytes: number | undefined) => {
                 if (totalBytes) {
-                    this.rovoDevWebviewProvider.signalDownloadProgress(downloadedBytes, totalBytes);
+                    this.rovoDevWebviewProvider.signalBinaryDownloadProgress(downloadedBytes, totalBytes);
                 }
             };
 
@@ -235,8 +237,7 @@ export class RovoDevProcessManager {
 
         try {
             if (!fs.existsSync(rovoDevURIs.RovoDevBinPath)) {
-                this.rovoDevWebviewProvider.signalBinaryDownloadStarted();
-                await this.downloadBinaryThenInitialize(context, rovoDevURIs);
+                await this.downloadBinaryThenInitialize(rovoDevURIs);
             }
 
             await this.startRovoDev(credentials, rovoDevURIs);

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { RovoDevInitState, State, SubState } from 'src/rovo-dev/rovoDevTypes';
+import { State } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
@@ -14,14 +14,12 @@ import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { ChatMessage, DefaultMessage, MessageBlockDetails, parseToolReturnMessage, scrollToEnd } from '../utils';
+import { DefaultMessage, parseToolReturnMessage, Response, scrollToEnd } from '../utils';
 import { ChatMessageItem } from './ChatMessageItem';
 import { MessageDrawer } from './MessageDrawer';
 
 interface ChatStreamProps {
-    chatHistory: MessageBlockDetails[];
-    currentThinking: ChatMessage[];
-    currentMessage: DefaultMessage | null;
+    chatHistory: Response[];
     renderProps: {
         openFile: OpenFileFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
@@ -33,10 +31,7 @@ interface ChatStreamProps {
     pendingToolCall: string;
     deepPlanCreated: boolean;
     executeCodePlan: () => void;
-    state: State;
-    subState: SubState;
-    initState: RovoDevInitState;
-    downloadProgress: [number, number];
+    currentState: State;
     onChangesGitPushed: (msg: DefaultMessage, pullRequestCreated: boolean) => void;
     onCollapsiblePanelExpanded: () => void;
     feedbackVisible: boolean;
@@ -47,16 +42,11 @@ interface ChatStreamProps {
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
     chatHistory,
-    currentThinking,
-    currentMessage,
     renderProps,
     pendingToolCall,
     deepPlanCreated,
     executeCodePlan,
-    state,
-    subState,
-    initState,
-    downloadProgress,
+    currentState,
     messagingApi,
     onChangesGitPushed,
     onCollapsiblePanelExpanded,
@@ -179,8 +169,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     // Auto-scroll when content changes or when re-enabled
     React.useEffect(performAutoScroll, [
         chatHistory,
-        currentThinking,
-        currentMessage,
         isFormVisible,
         pendingToolCall,
         autoScrollEnabled,
@@ -189,7 +177,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     // Other state management effect
     React.useEffect(() => {
-        if (process.env.ROVODEV_BBY && state === State.WaitingForPrompt) {
+        if (process.env.ROVODEV_BBY && currentState.state === 'WaitingForPrompt') {
             const canCreatePR = chatHistory.length > 0;
             setCanCreatePR(canCreatePR);
             if (canCreatePR) {
@@ -197,7 +185,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 checkGitChanges();
             }
         }
-    }, [state, chatHistory, isFormVisible, checkGitChanges]);
+    }, [currentState, chatHistory, isFormVisible, checkGitChanges]);
 
     const handleCopyResponse = React.useCallback((text: string) => {
         if (!navigator.clipboard) {
@@ -217,16 +205,20 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            <RovoDevLanding subState={subState} onLoginClick={onLoginClick} />
-            {(state !== State.Disabled || subState !== SubState.NeedAuth) &&
+            <RovoDevLanding currentState={currentState} onLoginClick={onLoginClick} />
+            {(currentState.state !== 'Disabled' || currentState.subState !== 'NeedAuth') &&
                 chatHistory &&
-                chatHistory.map((block) => {
+                chatHistory.map((block, idx) => {
+                    const drawerOpen =
+                        idx === chatHistory.findLastIndex((msg) => Array.isArray(msg)) &&
+                        currentState.state !== 'WaitingForPrompt';
+
                     if (block) {
                         if (Array.isArray(block)) {
                             return (
                                 <MessageDrawer
                                     messages={block}
-                                    opened={false}
+                                    opened={drawerOpen}
                                     renderProps={renderProps}
                                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                                 />
@@ -235,7 +227,9 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             return (
                                 <ChatMessageItem
                                     msg={block}
-                                    enableActions={block.source === 'RovoDev'}
+                                    enableActions={
+                                        block.source === 'RovoDev' && currentState.state === 'WaitingForPrompt'
+                                    }
                                     onCopy={handleCopyResponse}
                                     onFeedback={handleFeedbackTrigger}
                                 />
@@ -269,27 +263,16 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
                     return null;
                 })}
-            {currentThinking.length > 0 && (
-                <MessageDrawer
-                    messages={currentThinking}
-                    opened={true}
-                    renderProps={renderProps}
-                    onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
-                />
-            )}
-            {currentMessage && <ChatMessageItem msg={currentMessage} />}
 
-            {pendingToolCall && (
+            {currentState.state !== 'Disabled' && pendingToolCall && (
                 <div style={{ marginBottom: '16px' }}>
-                    <ToolCallItem toolMessage={pendingToolCall} state={initState} downloadProgress={downloadProgress} />
+                    <ToolCallItem toolMessage={pendingToolCall} currentState={currentState} />
                 </div>
             )}
 
-            {state === State.WaitingForPrompt && (
+            {currentState.state === 'WaitingForPrompt' && (
                 <FollowUpActionFooter>
-                    {deepPlanCreated && (
-                        <CodePlanButton execute={executeCodePlan} disabled={state !== State.WaitingForPrompt} />
-                    )}
+                    {deepPlanCreated && <CodePlanButton execute={executeCodePlan} />}
                     {canCreatePR && !deepPlanCreated && hasChangesInGit && (
                         <PullRequestForm
                             onCancel={() => {
