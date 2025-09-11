@@ -237,6 +237,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             await webview.postMessage({
                                 type: RovoDevProviderMessageType.ProviderReady,
                                 workspaceCount: workspace.workspaceFolders?.length || 0,
+                                workspacePath: workspace.workspaceFolders?.[0]?.uri.fsPath,
+                                homeDir: process.env.HOME || process.env.USERPROFILE,
                             });
                         }
 
@@ -272,6 +274,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.LaunchJiraAuth:
                         await commands.executeCommand(Commands.JiraAPITokenLogin);
+                        break;
+
+                    case RovoDevViewResponseType.OpenFolder:
+                        await commands.executeCommand(Commands.WorkbenchOpenFolder);
                         break;
                 }
             } catch (error) {

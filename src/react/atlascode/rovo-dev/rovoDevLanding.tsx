@@ -69,10 +69,11 @@ const RovoDevImg = () => {
     );
 };
 
-export const RovoDevLanding: React.FC<{ currentState: State; onLoginClick: () => void }> = ({
-    currentState,
-    onLoginClick,
-}) => {
+export const RovoDevLanding: React.FC<{
+    currentState: State;
+    onLoginClick: () => void;
+    onOpenFolder: () => void;
+}> = ({ currentState, onLoginClick, onOpenFolder }) => {
     if (process.env.ROVODEV_BBY) {
         return null;
     }
@@ -109,6 +110,9 @@ export const RovoDevLanding: React.FC<{ currentState: State; onLoginClick: () =>
             {currentState.state === 'Disabled' && currentState.subState === 'NoWorkspaceOpen' && (
                 <div style={{ marginTop: '24px' }}>
                     <div>Please open a folder to start a chat session with Rovo Dev.</div>
+                    <button style={{ ...inChatButtonStyles, marginTop: '12px' }} onClick={onOpenFolder}>
+                        Open folder
+                    </button>
                 </div>
             )}
         </div>

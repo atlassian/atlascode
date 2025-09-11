@@ -42,7 +42,10 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.ToolReturn, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ErrorMessage, { message: ErrorMessage }>
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
-    | ReducerAction<RovoDevProviderMessageType.ProviderReady, { workspaceCount: number }>
+    | ReducerAction<
+          RovoDevProviderMessageType.ProviderReady,
+          { workspaceCount: number; workspacePath?: string; homeDir?: string }
+      >
     | ReducerAction<RovoDevProviderMessageType.SetInitializing, { isPromptPending: boolean }>
     | ReducerAction<
           RovoDevProviderMessageType.SetDownloadProgress,
