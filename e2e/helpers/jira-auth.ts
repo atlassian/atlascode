@@ -11,7 +11,7 @@ const PASSWORD: string = '12345';
 /**
  * Helper function to authenticate with Jira using the provided credentials
  */
-export const authenticateWithJira = async (
+export const authenticateWithJiraCloud = async (
     page: Page,
     baseUrl: string = BASE_URL_CLOUD,
     username: string = USERNAME,
