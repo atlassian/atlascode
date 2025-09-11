@@ -665,6 +665,12 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
+    const onOpenFolder = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.OpenFolder,
+        });
+    }, [postMessage]);
+
     return (
         <div className="rovoDevChat">
             <ChatStream
@@ -688,6 +694,7 @@ const RovoDevView: React.FC = () => {
                 setFeedbackVisible={setIsFeedbackFormVisible}
                 sendFeedback={executeSendFeedback}
                 onLoginClick={onLoginClick}
+                onOpenFolder={onOpenFolder}
             />
             {currentState.state !== 'Disabled' && (
                 <div className="input-section-container">

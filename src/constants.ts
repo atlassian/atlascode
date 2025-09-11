@@ -78,6 +78,7 @@ export const enum Commands {
     DebugBitbucketSites = 'atlascode.debug.bitbucketSites',
     WorkbenchOpenRepository = 'atlascode.workbenchOpenRepository',
     WorkbenchOpenWorkspace = 'atlascode.workbenchOpenWorkspace',
+    WorkbenchOpenFolder = 'workbench.action.files.openFolder',
     CloneRepository = 'atlascode.cloneRepository',
     DisableHelpExplorer = 'atlascode.disableHelpExplorer',
     CreateNewJql = 'atlascode.jira.createNewJql',

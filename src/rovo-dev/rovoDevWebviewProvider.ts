@@ -273,6 +273,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     case RovoDevViewResponseType.LaunchJiraAuth:
                         await commands.executeCommand(Commands.JiraAPITokenLogin);
                         break;
+
+                    case RovoDevViewResponseType.OpenFolder:
+                        await commands.executeCommand(Commands.WorkbenchOpenFolder);
+                        break;
                 }
             } catch (error) {
                 this.processError(error, false);

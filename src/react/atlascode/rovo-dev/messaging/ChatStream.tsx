@@ -38,6 +38,7 @@ interface ChatStreamProps {
     setFeedbackVisible: (visible: boolean) => void;
     sendFeedback: (feedbackType: FeedbackType, feedack: string, canContact: boolean, lastTenMessages: boolean) => void;
     onLoginClick: () => void;
+    onOpenFolder: () => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -54,6 +55,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     setFeedbackVisible,
     sendFeedback,
     onLoginClick,
+    onOpenFolder,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -205,7 +207,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            <RovoDevLanding currentState={currentState} onLoginClick={onLoginClick} />
+            <RovoDevLanding currentState={currentState} onLoginClick={onLoginClick} onOpenFolder={onOpenFolder} />
             {(currentState.state !== 'Disabled' || currentState.subState !== 'NeedAuth') &&
                 chatHistory &&
                 chatHistory.map((block, idx) => {
