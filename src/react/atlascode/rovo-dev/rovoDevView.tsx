@@ -18,7 +18,7 @@ import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
 import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
-import { DEFAULT_LOADING_MESSAGE, parseToolCallMessage } from './tools/ToolCallItem';
+import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
     ChatMessage,
     CODE_PLAN_EXECUTE_PROMPT,
@@ -32,6 +32,8 @@ import {
     ToolReturnGenericMessage,
     ToolReturnParseResult,
 } from './utils';
+
+const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
 
 // TODO - replace with @atlaskit/icon implementation
 export const AiGenerativeTextSummaryIcon = () => (
@@ -340,11 +342,8 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ErrorMessage:
-                    if (event.message.type === 'error') {
-                        if (event.message.isProcessTerminated) {
-                            setCurrentState({ state: 'ProcessTerminated' });
-                        }
-                        finalizeResponse();
+                    if (event.message.isProcessTerminated) {
+                        setCurrentState({ state: 'ProcessTerminated' });
                     }
                     const msg = event.message;
                     setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
