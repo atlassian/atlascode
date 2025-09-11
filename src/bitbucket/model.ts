@@ -390,3 +390,5 @@ export interface BitbucketApi {
     repositories: RepositoriesApi;
     pullrequests: PullRequestApi;
 }
+
+export type PullRequestState = 'MERGED' | 'SUPERSEDED' | 'OPEN' | 'DECLINED';

@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 3.8.15
+
+### Bug Fixes
+
+- Fix issue with create task functionality
+
 ## What's new in 3.8.14
 
 ### Features

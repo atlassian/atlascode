@@ -12,8 +12,29 @@ class RovoDevApiError extends Error {
     }
 }
 
+export interface RovoDevChatRequestContextFileEntry {
+    type: 'file';
+    file_path: string;
+    selection?: {
+        start: number;
+        end: number;
+    };
+    note?: string;
+}
+
+export interface RovoDevChatRequestContextOtherEntry {
+    type: Exclude<string, 'file'>;
+    content: string;
+}
+
+export interface RovoDevChatRequest {
+    message: string;
+    context: (RovoDevChatRequestContextFileEntry | RovoDevChatRequestContextOtherEntry)[];
+    enable_deep_plan?: boolean;
+}
+
 export interface RovoDevHealthcheckResponse {
-    status: string;
+    status: 'healthy' | 'unhealthy' | 'entitlement check failed' | 'pending user review';
     version: string;
     sessionId: string | null; // from response header
 }
@@ -85,16 +106,23 @@ export class RovoDevApiClient {
 
     /** Invokes the POST `/v2/chat` API.
      * @param {string} message The message (prompt) to send to Rovo Dev.
-     * @param {boolean} [enable_deep_plan=false] [optional] A value indicating if the deep planner tool should be enabled when processing this prompt. Default value is `false`.
      * @returns {Promise<Response>} An object representing the API response.
      */
-    public chat(message: string, enable_deep_plan: boolean = false): Promise<Response> {
-        const body = JSON.stringify({
-            message: message,
-            enable_deep_plan,
-        });
+    public chat(message: string): Promise<Response>;
+    /** Invokes the POST `/v2/chat` API.
+     * @param {RovoDevChatRequest} message The chat payload to send to Rovo Dev.
+     * @returns {Promise<Response>} An object representing the API response.
+     */
+    public chat(message: RovoDevChatRequest): Promise<Response>;
+    public chat(message: string | RovoDevChatRequest): Promise<Response> {
+        if (typeof message === 'string') {
+            message = {
+                message: message,
+                context: [],
+            };
+        }
 
-        return this.fetchApi('/v2/chat', 'POST', body);
+        return this.fetchApi('/v2/chat', 'POST', JSON.stringify(message));
     }
 
     /** Invokes the POST `/v2/replay` API
@@ -159,27 +187,15 @@ export class RovoDevApiClient {
     /** Invokes the GET `/healthcheck` API.
      * @returns {Promise<RovoDevHealthcheckResponse>} An object representing the API response.
      */
-    public async healtcheckInfo(): Promise<RovoDevHealthcheckResponse> {
+    public async healthcheck(): Promise<RovoDevHealthcheckResponse> {
         const response = await this.fetchApi('/healthcheck', 'GET');
         const jsonResponse = (await response.json()) as RovoDevHealthcheckResponse;
         jsonResponse.sessionId = response.headers.get('x-session-id');
         return jsonResponse;
     }
 
-    /** Invokes the GET `/healthcheck` API.
-     * @returns {Promise<boolean>} A value indicating if the service is healthy.
-     */
-    public async healthcheck(): Promise<boolean> {
-        try {
-            const data = await this.healtcheckInfo();
-            return data.status === 'healthy';
-        } catch {
-            return false;
-        }
-    }
-
     /** Invokes the GET `/shutdown` API. */
     public async shutdown(): Promise<void> {
-        await this.fetchApi('/shutdown', 'GET');
+        await this.fetchApi('/shutdown', 'POST');
     }
 }

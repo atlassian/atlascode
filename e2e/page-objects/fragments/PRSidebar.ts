@@ -23,8 +23,8 @@ export class PRSidebar {
         this.reviewersSectionButton = this.sidebar.getByRole('button', { name: 'Reviewers' });
         this.approvedIcon = this.sidebar.getByLabel('Approved');
         this.addReviewerInput = this.sidebar.getByPlaceholder('Add reviewer');
-        this.createdDate = this.sidebar.locator('div:has(strong:text("Created")):has(p[aria-label*="2025-07-03"])');
-        this.updatedDate = this.sidebar.locator('div:has(strong:text("Updated")):has(p[aria-label*="2025-07-03"])');
+        this.createdDate = this.sidebar.locator('div:has(strong:text("Created"))').filter({ hasText: '2025-' });
+        this.updatedDate = this.sidebar.locator('div:has(strong:text("Updated"))').filter({ hasText: '2025-' });
         this.tasksSectionButton = this.sidebar.getByRole('button', { name: 'Tasks' });
         this.createTaskInput = this.sidebar.locator('div[data-placeholder="Create task"]');
     }

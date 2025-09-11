@@ -104,7 +104,12 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
             });
 
             if (this._initialSection) {
-                this._initialSection = undefined;
+                // Clear the initiateApiTokenAuth flag after it's been sent to prevent it from being reused
+                if (this._initialSection.initiateApiTokenAuth) {
+                    this._initialSection = { ...this._initialSection, initiateApiTokenAuth: undefined };
+                } else {
+                    this._initialSection = undefined;
+                }
             }
         } catch (e) {
             this._logger.error(e, 'Error updating configuration');
@@ -115,7 +120,17 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
     }
 
     public update(section: SectionV3ChangeMessage) {
-        this.postMessage({ type: ConfigMessageType.SectionChange, ...section });
+        // Store the section data for potential invalidate calls
+        this._initialSection = section;
+
+        // If the update includes initiateApiTokenAuth, use invalidate() to ensure reliable delivery
+        // This sends an Init message with all the section data, avoiding race conditions
+        if (section.initiateApiTokenAuth) {
+            this.invalidate();
+        } else {
+            // Only send SectionChange for non-auth updates to avoid duplicate messages
+            this.postMessage({ type: ConfigMessageType.SectionChange, ...section });
+        }
     }
 
     public async onMessageReceived(msg: ConfigAction) {
