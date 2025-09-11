@@ -23,7 +23,6 @@ import {
     ChatMessage,
     CODE_PLAN_EXECUTE_PROMPT,
     DefaultMessage,
-    ErrorMessage,
     extractLastNMessages,
     isCodeChangeTool,
     parseToolReturnMessage,
@@ -84,26 +83,6 @@ const RovoDevView: React.FC = () => {
             highlightElement(block, detectLanguage(block.textContent || ''));
         });
     }, [history, currentState, pendingToolCallMessage]);
-
-    const validateResponseFinalized = useCallback(() => {
-        setHistory((prev) => {
-            const last = prev[prev.length - 1];
-            if (!Array.isArray(last) && last?.source === 'User') {
-                const msg: ErrorMessage = {
-                    source: 'RovoDevError',
-                    type: 'error',
-                    text: 'Error: something went wrong while processing the prompt',
-                    isRetriable: true,
-                    uid: v4(),
-                };
-                setRetryAfterErrorEnabled(msg.uid);
-                prev.pop();
-                return [...prev, msg];
-            } else {
-                return prev;
-            }
-        });
-    }, [setRetryAfterErrorEnabled]);
 
     const removeModifiedFileToolReturns = useCallback(
         (files: ToolReturnParseResult[]) => {
@@ -298,9 +277,6 @@ const RovoDevView: React.FC = () => {
                         currentState.state === 'CancellingResponse'
                     ) {
                         finalizeResponse();
-                        if (!event.isReplay) {
-                            validateResponseFinalized();
-                        }
                     }
                     break;
 
@@ -471,7 +447,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [currentState, appendResponse, clearChatHistory, finalizeResponse, validateResponseFinalized],
+        [currentState, appendResponse, clearChatHistory, finalizeResponse],
     );
 
     const { postMessage, postMessagePromise } = useMessagingApi<

@@ -850,8 +850,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             return;
         }
 
-        let thrownError: Error | undefined = undefined;
-
         // if result is undefined, it means we didn't manage to contact Rovo Dev within the allotted time
         // TODO - this scenario needs a better handling
         if (!result) {
@@ -906,25 +904,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             throw new Error(`Invalid healthcheck's response: ${result.status.toString()}`);
         }
 
-        try {
-            this.beginNewSession(result.sessionId || null, false);
-        } catch (error) {
-            thrownError = error;
-        }
-
         this._initialized = true;
         this._processState = RovoDevProcessState.Started;
+        this.beginNewSession(result.sessionId || null, false);
 
         await webView.postMessage({
             type: RovoDevProviderMessageType.RovoDevReady,
             isPromptPending: this._chatProvider.isPromptPending,
         });
 
-        if (thrownError) {
-            await this.processError(thrownError, false);
-        } else {
-            await this._chatProvider.setReady(this._rovoDevApiClient);
-        }
+        await this._chatProvider.setReady(this._rovoDevApiClient);
 
         if (this.isBoysenberry) {
             await this._chatProvider.executeReplay();
@@ -957,6 +946,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._processState = RovoDevProcessState.Terminated;
         this._initialized = false;
         this._rovoDevApiClient = undefined;
+        this._chatProvider.shutdown();
+        this._telemetryProvider.shutdown();
 
         if (!overrideFullMessage) {
             errorMessage = errorMessage
