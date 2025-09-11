@@ -14,7 +14,7 @@ export class PRHeader {
     constructor(frame: FrameLocator) {
         this.frame = frame;
 
-        this.title = this.frame.getByText('test-repository: Pull request #123');
+        this.title = this.frame.getByText('Pull request #123');
         this.copyButton = this.frame.getByRole('button', { name: 'copy link' });
         this.requestChangesButton = this.frame.getByRole('button', { name: 'Request Changes' });
         this.approveButton = this.frame.getByRole('button', { name: 'Approve' });

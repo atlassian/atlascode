@@ -40,6 +40,10 @@ export class PullRequestsNavigation {
         await this.addRepoButton.or(this.createPRButton).waitFor({ state: 'visible' });
     }
 
+    async waitForConnectedState() {
+        await this.createPRButton.waitFor({ state: 'visible' });
+    }
+
     async expectMenuItems(items = EXPECTED_TREE_ITEMS) {
         for (const item of items) {
             await expect(this.bbPrTree.getByRole('treeitem', { name: item })).toBeVisible();
@@ -55,5 +59,16 @@ export class PullRequestsNavigation {
         await this.mockRepo.waitFor({ state: 'visible', timeout: 5_000 });
         await expect(this.mockRepo).toHaveCount(1);
         await expect(this.mockRepo).toHaveText(/.+/, { timeout: 5_000 });
+    }
+}
+
+export class PullRequestsNavigationDC extends PullRequestsNavigation {
+    override readonly mockRepo: Locator;
+    override readonly prTreeitem: Locator;
+
+    constructor(page: Page) {
+        super(page);
+        this.mockRepo = this.bbPrTree.getByRole('treeitem', { name: 'dc-repository' }).first();
+        this.prTreeitem = this.bbPrTree.getByRole('treeitem', { name: 'test-branch' });
     }
 }

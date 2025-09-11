@@ -1,5 +1,6 @@
 import { expect, FrameLocator, Locator } from '@playwright/test';
 
+const COMMENT_LIST_TES_ID = 'pullrequest.comment-list';
 const FORM_TEST_ID = 'common.comment-form';
 const RICH_EDITOR_TEST_ID = 'common.rich-markdown-editor';
 
@@ -13,6 +14,8 @@ export class PRComments {
     readonly editorConfirmButton: Locator;
     readonly editorCancelButton: Locator;
     readonly richEditorCheckbox: Locator;
+    readonly commentList: Locator;
+    readonly testComment: Locator;
 
     constructor(frame: FrameLocator) {
         this.frame = frame;
@@ -24,6 +27,8 @@ export class PRComments {
         this.editorConfirmButton = this.form.getByRole('button', { name: 'save' });
         this.editorCancelButton = this.form.getByRole('button', { name: 'cancel' });
         this.richEditorCheckbox = this.form.getByRole('checkbox');
+        this.commentList = this.frame.getByTestId(COMMENT_LIST_TES_ID);
+        this.testComment = this.commentList.locator('div.MuiBox-root p').filter({ hasText: 'test comment' }).first();
     }
 
     async expectCommentsSectionLoaded() {
