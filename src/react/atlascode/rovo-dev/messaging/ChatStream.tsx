@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { State } from 'src/rovo-dev/rovoDevTypes';
+import { useAppDispatch, useAppSelector } from 'src/react/store/hooks';
+import { actions } from 'src/react/store/states/rovo-dev';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
@@ -14,47 +15,33 @@ import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { DefaultMessage, parseToolReturnMessage, Response, scrollToEnd } from '../utils';
+import { DefaultMessage, extractLastNMessages, parseToolReturnMessage, scrollToEnd } from '../utils';
 import { ChatMessageItem } from './ChatMessageItem';
 import { MessageDrawer } from './MessageDrawer';
 
 interface ChatStreamProps {
-    chatHistory: Response[];
-    renderProps: {
-        openFile: OpenFileFunc;
-        isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
-        retryPromptAfterError: () => void;
-    };
+    openFile: OpenFileFunc;
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
     >;
-    pendingToolCall: string;
-    deepPlanCreated: boolean;
     executeCodePlan: () => void;
-    currentState: State;
     onChangesGitPushed: (msg: DefaultMessage, pullRequestCreated: boolean) => void;
-    onCollapsiblePanelExpanded: () => void;
-    feedbackVisible: boolean;
-    setFeedbackVisible: (visible: boolean) => void;
-    sendFeedback: (feedbackType: FeedbackType, feedack: string, canContact: boolean, lastTenMessages: boolean) => void;
-    onLoginClick: () => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
-    chatHistory,
-    renderProps,
-    pendingToolCall,
-    deepPlanCreated,
+    openFile,
     executeCodePlan,
-    currentState,
     messagingApi,
     onChangesGitPushed,
-    onCollapsiblePanelExpanded,
-    feedbackVisible = false,
-    setFeedbackVisible,
-    sendFeedback,
-    onLoginClick,
 }) => {
+    const currentState = useAppSelector((state) => state.rovoDevStates.currentState);
+    const deepPlanCreated = useAppSelector((state) => state.promptContext.isDeepPlanCreated);
+    const pendingToolCall = useAppSelector((state) => state.chatStream.pendingToolCall);
+    const chatHistory = useAppSelector((state) => state.chatStream.history);
+    const feedbackFormVisible = useAppSelector((state) => state.chatStream.isFeedbackVisible);
+
+    const dispatch = useAppDispatch();
+
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
     const prevChatHistoryLengthRef = React.useRef(chatHistory.length);
@@ -62,6 +49,15 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     const [hasChangesInGit, setHasChangesInGit] = React.useState(false);
     const [isFormVisible, setIsFormVisible] = React.useState(false);
     const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
+
+    const retryPromptAfterError = React.useCallback((): void => {
+        dispatch(actions.setCurrentState({ state: 'GeneratingResponse' }));
+        dispatch(actions.setRetryAfterErrorEnabled(''));
+
+        messagingApi.postMessage({
+            type: RovoDevViewResponseType.RetryPromptAfterError,
+        });
+    }, [dispatch, messagingApi]);
 
     const checkGitChanges = React.useCallback(async () => {
         const response = await messagingApi.postMessagePromise(
@@ -198,10 +194,41 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     const handleFeedbackTrigger = React.useCallback(
         (isPositive: boolean) => {
             setFeedbackType(isPositive ? 'like' : 'dislike');
-            setFeedbackVisible(true);
+            dispatch(actions.setIsFeedbackFormVisible(true));
         },
-        [setFeedbackVisible],
+        [dispatch],
     );
+
+    const executeSendFeedback = React.useCallback(
+        (feedbackType: FeedbackType, feedack: string, canContact: boolean, includeTenMessages: boolean) => {
+            let lastTenMessages: string[] | undefined = undefined;
+            if (includeTenMessages) {
+                lastTenMessages = extractLastNMessages(10, chatHistory);
+            }
+
+            messagingApi.postMessage({
+                type: RovoDevViewResponseType.SendFeedback,
+                feedbackType,
+                feedbackMessage: feedack,
+                lastTenMessages,
+                canContact,
+            });
+            dispatch(actions.setIsFeedbackFormVisible(false));
+        },
+        [chatHistory, dispatch, messagingApi],
+    );
+
+    const onCollapsiblePanelExpanded = React.useCallback(() => {
+        messagingApi.postMessage({
+            type: RovoDevViewResponseType.ReportThinkingDrawerExpanded,
+        });
+    }, [messagingApi]);
+
+    const onLoginClick = React.useCallback(() => {
+        messagingApi.postMessage({
+            type: RovoDevViewResponseType.LaunchJiraAuth,
+        });
+    }, [messagingApi]);
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
@@ -219,7 +246,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                 <MessageDrawer
                                     messages={block}
                                     opened={drawerOpen}
-                                    renderProps={renderProps}
+                                    renderProps={{ openFile, retryPromptAfterError }}
                                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                                 />
                             );
@@ -240,22 +267,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             return parsedMessages.map((message) => {
                                 if (message.technicalPlan) {
                                     return (
-                                        <TechnicalPlanComponent
-                                            content={message.technicalPlan}
-                                            openFile={renderProps.openFile}
-                                        />
+                                        <TechnicalPlanComponent content={message.technicalPlan} openFile={openFile} />
                                     );
                                 }
-                                return <ToolReturnParsedItem msg={message} openFile={renderProps.openFile} />;
+                                return <ToolReturnParsedItem msg={message} openFile={openFile} />;
                             });
                         } else if (block.source === 'RovoDevError') {
-                            return (
-                                <ErrorMessageItem
-                                    msg={block}
-                                    isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
-                                    retryAfterError={renderProps.retryPromptAfterError}
-                                />
-                            );
+                            return <ErrorMessageItem msg={block} retryAfterError={retryPromptAfterError} />;
                         } else if (block.source === 'PullRequest') {
                             return <PullRequestChatItem msg={block} />;
                         }
@@ -299,16 +317,16 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             setFormVisible={setIsFormVisible}
                         />
                     )}
-                    {feedbackVisible && (
+                    {feedbackFormVisible && (
                         <FeedbackForm
                             type={feedbackType}
                             onSubmit={(feedbackType, feedback, canContact, includeTenMessages) => {
                                 setFeedbackType(undefined);
-                                sendFeedback(feedbackType, feedback, canContact, includeTenMessages);
+                                executeSendFeedback(feedbackType, feedback, canContact, includeTenMessages);
                             }}
                             onCancel={() => {
                                 setFeedbackType(undefined);
-                                setFeedbackVisible(false);
+                                dispatch(actions.setIsFeedbackFormVisible(false));
                             }}
                         />
                     )}

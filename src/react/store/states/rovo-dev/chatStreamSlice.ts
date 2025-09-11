@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { DEFAULT_LOADING_MESSAGE } from 'src/react/atlascode/rovo-dev/tools/ToolCallItem';
 import {
     ChatMessage,
     ErrorMessage,
@@ -10,6 +11,9 @@ import {
 } from 'src/react/atlascode/rovo-dev/utils';
 import { v4 } from 'uuid';
 
+import { AppDispatch } from '../../store';
+import { setIsDeepPlanCreated } from './promptContextSlice';
+
 const chatStreamSlice = createSlice({
     name: 'chatStream',
     initialState: {
@@ -17,6 +21,7 @@ const chatStreamSlice = createSlice({
         pendingToolCall: '' as string,
         totalModifiedFiles: [] as ToolReturnParseResult[],
         retryAfterErrorEnabled: '' as string,
+        isFeedbackVisible: false,
     },
     reducers: {
         appendResponse(state, action: PayloadAction<Response>) {
@@ -44,7 +49,6 @@ const chatStreamSlice = createSlice({
 
                     // Group tool return with previous message if applicable
                     if (response.source === 'ToolReturn') {
-                        chatStreamSlice.actions.appendModifiedFileToolReturn(response);
                         if (response.tool_name !== 'create_technical_plan') {
                             // Do not group if User or Error message is the latest
                             const canGroup =
@@ -72,7 +76,6 @@ const chatStreamSlice = createSlice({
                     }
                 } else {
                     if (response.source === 'ToolReturn') {
-                        chatStreamSlice.actions.appendModifiedFileToolReturn(response);
                         if (response.tool_name !== 'create_technical_plan') {
                             latest.push(response);
                             state.history = [...prev, latest];
@@ -90,6 +93,8 @@ const chatStreamSlice = createSlice({
             state.history = [];
             state.pendingToolCall = '';
             state.totalModifiedFiles = [];
+            state.retryAfterErrorEnabled = '';
+            state.isFeedbackVisible = false;
         },
         appendModifiedFileToolReturn(state, action: PayloadAction<ToolReturnGenericMessage>) {
             const toolReturn = action.payload;
@@ -130,7 +135,8 @@ const chatStreamSlice = createSlice({
             if (filesToRemove.length === 0) {
                 return;
             }
-            state.totalModifiedFiles = prev.filter((x) => !filesToRemove.includes(x));
+            const filePathsToRemove = filesToRemove.map((file) => file.filePath);
+            state.totalModifiedFiles = prev.filter((x) => !filePathsToRemove.includes(x.filePath));
         },
         setPendingToolCall(state, action: PayloadAction<string>) {
             if (!action.payload) {
@@ -160,8 +166,23 @@ const chatStreamSlice = createSlice({
         setRetryAfterErrorEnabled(state, action: PayloadAction<string>) {
             state.retryAfterErrorEnabled = action.payload;
         },
+        setIsFeedbackFormVisible(state, action: PayloadAction<boolean>) {
+            state.isFeedbackVisible = action.payload;
+        },
     },
 });
+
+//Thunks
+export const toolReturnReceived = (response: ToolReturnGenericMessage) => {
+    return (dispatch: AppDispatch) => {
+        dispatch(setPendingToolCall(DEFAULT_LOADING_MESSAGE));
+        dispatch(appendResponse(response));
+        dispatch(appendModifiedFileToolReturn(response));
+        if (response.tool_name === 'create_technical_plan') {
+            dispatch(setIsDeepPlanCreated(true));
+        }
+    };
+};
 
 export const {
     appendResponse,
@@ -171,5 +192,6 @@ export const {
     removeModifiedFileToolReturns,
     validateResponseFinalized,
     setRetryAfterErrorEnabled,
+    setIsFeedbackFormVisible,
 } = chatStreamSlice.actions;
 export default chatStreamSlice.reducer;

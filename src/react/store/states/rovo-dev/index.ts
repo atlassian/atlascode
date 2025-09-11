@@ -3,8 +3,10 @@ import ChatStreamReducer, {
     appendResponse,
     clearChat,
     removeModifiedFileToolReturns,
+    setIsFeedbackFormVisible,
     setPendingToolCall,
     setRetryAfterErrorEnabled,
+    toolReturnReceived,
     validateResponseFinalized,
 } from './chatStreamSlice';
 import PromptContextReducer, {
@@ -32,5 +34,7 @@ const actions = {
     responseRecieved,
     validateResponseFinalized,
     setRetryAfterErrorEnabled,
+    toolReturnReceived,
+    setIsFeedbackFormVisible,
 };
 export { PromptContextReducer, RovoDevStatesReducer, ChatStreamReducer, actions };

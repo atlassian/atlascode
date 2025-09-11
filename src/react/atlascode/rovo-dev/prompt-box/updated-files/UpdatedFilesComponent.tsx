@@ -1,16 +1,19 @@
 import React from 'react';
+import { useAppSelector } from 'src/react/store/hooks';
 
 import { OpenFileFunc } from '../../common/common';
 import { ToolReturnParseResult } from '../../utils';
 import { ModifiedFileItem } from './ModifiedFileItem';
 
 export const UpdatedFilesComponent: React.FC<{
-    modifiedFiles: ToolReturnParseResult[];
     onUndo: (files: ToolReturnParseResult[]) => void;
     onKeep: (files: ToolReturnParseResult[]) => void;
     openDiff: OpenFileFunc;
-    actionsEnabled?: boolean;
-}> = ({ modifiedFiles, onUndo, onKeep, openDiff, actionsEnabled }) => {
+}> = ({ onUndo, onKeep, openDiff }) => {
+    const modifiedFiles = useAppSelector((state) => state.chatStream.totalModifiedFiles);
+    const currentState = useAppSelector((state) => state.rovoDevStates.currentState);
+    const actionsEnabled = currentState.state === 'WaitingForPrompt';
+
     if (!modifiedFiles || modifiedFiles.length === 0) {
         return null;
     }

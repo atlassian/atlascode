@@ -41,7 +41,6 @@ export const renderChatHistory = (
     msg: ChatMessage,
     index: number,
     openFile: OpenFileFunc,
-    isRetryAfterErrorButtonEnabled: (uid: string) => boolean,
     retryAfterError: () => void,
 ) => {
     switch (msg.source) {
@@ -54,13 +53,7 @@ export const renderChatHistory = (
                 return <ToolReturnParsedItem msg={message} openFile={openFile} />;
             });
         case 'RovoDevError':
-            return (
-                <ErrorMessageItem
-                    msg={msg}
-                    isRetryAfterErrorButtonEnabled={isRetryAfterErrorButtonEnabled}
-                    retryAfterError={retryAfterError}
-                />
-            );
+            return <ErrorMessageItem msg={msg} retryAfterError={retryAfterError} />;
         case 'RovoDev':
         case 'User':
             return <ChatMessageItem msg={msg} />;

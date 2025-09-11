@@ -8,6 +8,9 @@ import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 
 type NonDisabledState = Exclude<State, DisabledState>;
 
+import { useAppDispatch, useAppSelector } from 'src/react/store/hooks';
+import { actions } from 'src/react/store/states/rovo-dev';
+
 import { AiGenerativeTextSummaryIcon, CloseIconDeepPlan } from '../../rovoDevView';
 import {
     rovoDevDeepPlanStylesSelector,
@@ -19,16 +22,11 @@ import { createMonacoPromptEditor, createSlashCommandProvider, removeMonacoStyle
 interface PromptInputBoxProps {
     disabled?: boolean;
     hideButtons?: boolean;
-    currentState: NonDisabledState;
-    isDeepPlanEnabled: boolean;
-    onDeepPlanToggled: () => void;
     onSend: (text: string) => void;
     onCancel: () => void;
-    sendButtonDisabled?: boolean;
     onAddContext: () => void;
     onCopy: () => void;
     handleMemoryCommand: () => void;
-    handleTriggerFeedbackCommand: () => void;
 }
 
 const TextAreaMessages: Record<NonDisabledState['state'], string> = {
@@ -51,18 +49,17 @@ const getTextAreaPlaceholder = (currentState: NonDisabledState) => {
 export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     disabled,
     hideButtons,
-    currentState,
-    isDeepPlanEnabled,
-    onDeepPlanToggled,
     onSend,
     onCancel,
-    sendButtonDisabled = false,
     onAddContext,
     onCopy,
     handleMemoryCommand,
-    handleTriggerFeedbackCommand,
 }) => {
     const [editor, setEditor] = React.useState<monaco.editor.IStandaloneCodeEditor | null>(null);
+    const currentState = useAppSelector((state) => state.rovoDevStates.currentState);
+    const isDeepPlanEnabled = useAppSelector((state) => state.promptContext.isDeepPlanToggled);
+
+    const dispatch = useAppDispatch();
 
     const setupCommands = (
         editor: monaco.editor.IStandaloneCodeEditor,
@@ -148,11 +145,13 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             const editor = createMonacoPromptEditor(container);
             setupPromptKeyBindings(editor, onSend);
             setupAutoResize(editor);
-            setupCommands(editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand);
+            setupCommands(editor, onSend, onCopy, handleMemoryCommand, () => {
+                dispatch(actions.setIsFeedbackFormVisible(true));
+            });
 
             return editor;
         });
-    }, [handleMemoryCommand, handleTriggerFeedbackCommand, onCopy, onSend, setEditor]);
+    }, [dispatch, handleMemoryCommand, onCopy, onSend, setEditor]);
 
     React.useEffect(() => {
         // Remove Monaco's color stylesheet
@@ -166,7 +165,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
 
         editor.updateOptions({
             readOnly: disabled,
-            placeholder: getTextAreaPlaceholder(currentState),
+            placeholder: currentState.state !== 'Disabled' ? getTextAreaPlaceholder(currentState) : '',
         });
     }, [currentState, editor, disabled]);
 
@@ -218,7 +217,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                 iconBefore={<AiGenerativeTextSummaryIcon />}
                                 iconAfter={isDeepPlanEnabled ? <CloseIconDeepPlan /> : undefined}
                                 isDisabled={disabled || currentState.state !== 'WaitingForPrompt'}
-                                onClick={() => onDeepPlanToggled()}
+                                onClick={() => dispatch(actions.setIsDeepPlanToggled(!isDeepPlanEnabled))}
                             >
                                 {isDeepPlanEnabled ? 'Deep plan enabled' : ''}
                             </LoadingButton>
@@ -232,7 +231,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                     spacing="compact"
                                     label="Send prompt"
                                     iconBefore={<SendIcon label="Send prompt" />}
-                                    isDisabled={disabled || sendButtonDisabled}
+                                    isDisabled={disabled || currentState.state !== 'WaitingForPrompt'}
                                     onClick={() => handleSend()}
                                 />
                             )}
