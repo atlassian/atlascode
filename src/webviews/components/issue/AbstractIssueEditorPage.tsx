@@ -7,6 +7,7 @@ import Lozenge from '@atlaskit/lozenge';
 import { RadioGroup } from '@atlaskit/radio';
 import Select, { AsyncCreatableSelect, AsyncSelect, CreatableSelect } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
+import TextArea from '@atlaskit/textarea';
 import Textfield from '@atlaskit/textfield';
 import {
     CommentVisibility,
@@ -29,7 +30,7 @@ import {
 import { Tooltip } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import EdiText, { EdiTextType } from 'react-editext';
 import { v4 } from 'uuid';
 
@@ -54,12 +55,6 @@ import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
-
-// these two components can't be imported at the same time, so use lazy loading
-const AtlaskitEditor = lazy(() => import('./common/AtlaskitEditor/AtlaskitEditor'));
-const JiraIssueTextAreaEditor = lazy(() => import('./common/JiraIssueTextArea'));
-
-import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
 import { ParticipantList } from './ParticipantList';
@@ -87,8 +82,8 @@ export interface CommonEditorViewState extends Message {
     isRovoDevEnabled: boolean;
     isGeneratingSuggestions?: boolean;
     summaryKey: string;
-    isAtlaskitEditorEnabled?: boolean;
     isRendered?: boolean;
+    isAtlaskitEditorEnabled: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -107,6 +102,7 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     isRteEnabled: false,
     isRovoDevEnabled: false,
     summaryKey: v4(),
+    isRendered: false,
     isAtlaskitEditorEnabled: false,
 };
 
@@ -225,7 +221,7 @@ export abstract class AbstractIssueEditorPage<
             case 'updateFeatureFlags': {
                 this.setState({
                     isRteEnabled: e.featureFlags.rteEnabled,
-                    isAtlaskitEditorEnabled: e.featureFlags[Features.AtlaskitEditor],
+                    isAtlaskitEditorEnabled: e.featureFlags[Features.AtlaskitEditor] || false,
                 });
                 break;
             }
@@ -484,23 +480,15 @@ export abstract class AbstractIssueEditorPage<
 
                     if ((field as InputFieldUI).isMultiline) {
                         markup = (
-                            <EditRenderedTextArea
-                                text={this.coerceToString(this.state.fieldValues[`${field.key}`])}
-                                renderedText={this.coerceToString(this.state.fieldValues[`${field.key}.rendered`])}
-                                fetchUsers={async (input: string) =>
-                                    (await this.fetchUsers(input)).map((user) => ({
-                                        displayName: user.displayName,
-                                        avatarUrl: user.avatarUrls?.['48x48'],
-                                        mention: this.state.siteDetails.isCloud
-                                            ? `[~accountid:${user.accountId}]`
-                                            : `[~${user.name}]`,
-                                    }))
-                                }
-                                onSave={async (val: string) => {
-                                    await this.handleInlineEdit(field, val);
-                                }}
-                                fetchImage={(img) => this.fetchImage(img)}
-                            />
+                            <div role="textbox" aria-label={`${field.name} editor`}>
+                                <TextArea
+                                    value={this.state.fieldValues[`${field.key}`] || ''}
+                                    onChange={(e) => this.handleInlineEdit(field, e.target.value)}
+                                    isDisabled={this.state.isSomethingLoading}
+                                    minimumRows={4}
+                                    placeholder={`Enter ${field.name.toLowerCase()}...`}
+                                />
+                            </div>
                         );
                     } else {
                         markup = (
@@ -523,8 +511,6 @@ export abstract class AbstractIssueEditorPage<
                     }
                     return markup;
                 }
-                const isAtlaskitEditorFFReceived = typeof this.state.isAtlaskitEditorEnabled === 'boolean';
-                const isAtlaskitEditorEnabled = this.state.isAtlaskitEditorEnabled;
                 return (
                     <>
                         {field.key === 'summary' && <AISuggestionHeader vscodeApi={this._api} />}
@@ -543,8 +529,8 @@ export abstract class AbstractIssueEditorPage<
                                     errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
                                 }
 
-                                let markup = (
-                                    <Textfield
+                            let markup = (
+                                 <Textfield
                                         {...fieldArgs.fieldProps}
                                         value={defaultVal}
                                         className="ac-inputField"
@@ -554,60 +540,28 @@ export abstract class AbstractIssueEditorPage<
                                         )}
                                         placeholder={field.key === 'summary' && 'What needs to be done?'}
                                     />
+                            );
+                            if ((field as InputFieldUI).isMultiline) {
+                                markup = (
+                                    <div role="textbox" aria-label={`${field.name} editor`}>
+                                        <TextArea
+                                            {...fieldArgs.fieldProps}
+                                            isDisabled={this.state.isSomethingLoading}
+                                            onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
+                                                this.handleInlineEdit(field, e.target.value),
+                                            )}
+                                            minimumRows={4}
+                                            placeholder={`Enter ${field.name.toLowerCase()}...`}
+                                        />
+                                    </div>
                                 );
-                                if ((field as InputFieldUI).isMultiline) {
-                                    markup = isAtlaskitEditorFFReceived ? (
-                                        <Suspense fallback={<div>Loading...</div>}>
-                                            {isAtlaskitEditorEnabled && (
-                                                <AtlaskitEditor
-                                                    defaultValue={this.state.fieldValues[field.key]}
-                                                    onSave={(content) => {
-                                                        //TODO: handle save
-                                                    }}
-                                                    onCancel={() => {
-                                                        //TODO: reset content to last saved on cancel
-                                                    }}
-                                                    onContentChange={(content) => {
-                                                        chain(fieldArgs.fieldProps.onChange, (val: string) =>
-                                                            this.handleInlineEdit(field, val),
-                                                        );
-                                                    }}
-                                                />
-                                            )}
-                                            {!isAtlaskitEditorEnabled && (
-                                                <JiraIssueTextAreaEditor
-                                                    {...fieldArgs.fieldProps}
-                                                    value={this.coerceToString(this.state.fieldValues[field.key])}
-                                                    isDisabled={
-                                                        this.state.isSomethingLoading ||
-                                                        this.state.isGeneratingSuggestions
-                                                    }
-                                                    onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
-                                                        this.handleInlineEdit(field, val),
-                                                    )}
-                                                    fetchUsers={async (input: string) =>
-                                                        (await this.fetchUsers(input)).map((user) => ({
-                                                            displayName: user.displayName,
-                                                            avatarUrl: user.avatarUrls?.['48x48'],
-                                                            mention: this.state.siteDetails.isCloud
-                                                                ? `[~accountid:${user.accountId}]`
-                                                                : `[~${user.name}]`,
-                                                        }))
-                                                    }
-                                                    featureGateEnabled={this.state.isRteEnabled}
-                                                />
-                                            )}
-                                        </Suspense>
-                                    ) : (
-                                        <div>Waiting...</div>
-                                    );
-                                    return (
-                                        <div>
-                                            {markup}
-                                            {errDiv}
-                                        </div>
-                                    );
-                                }
+                            }
+                            return (
+                                <div>
+                                    {markup}
+                                    {errDiv}
+                                </div>
+                            );
                             }}
                         </Field>
                         {field.key === 'description' && <AISuggestionFooter vscodeApi={this._api} />}
