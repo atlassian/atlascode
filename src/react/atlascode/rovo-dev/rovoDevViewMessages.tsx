@@ -7,6 +7,7 @@ export const enum RovoDevViewResponseType {
     Prompt = 'prompt',
     CancelResponse = 'cancelResponse',
     OpenFile = 'openFile',
+    OpenFolder = 'openFolder',
     UndoFileChanges = 'undoFileChanges',
     KeepFileChanges = 'keepFileChanges',
     CreatePR = 'createPR',
@@ -34,6 +35,7 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.Prompt, RovoDevPrompt>
     | ReducerAction<RovoDevViewResponseType.CancelResponse>
     | ReducerAction<RovoDevViewResponseType.OpenFile, { filePath: string; tryShowDiff: boolean; range?: number[] }>
+    | ReducerAction<RovoDevViewResponseType.OpenFolder>
     | ReducerAction<RovoDevViewResponseType.UndoFileChanges, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.KeepFileChanges, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage: string } }>

@@ -10,11 +10,13 @@ import {
     Button,
     Card,
     CardContent,
+    Checkbox,
     Chip,
     CircularProgress,
     Collapse,
     Container,
     Divider,
+    FormControlLabel,
     Grid,
     IconButton,
     Link,
@@ -116,6 +118,7 @@ const StartWorkPage: React.FunctionComponent = () => {
         upstream?: string;
     }>({});
     const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
+    const [startWithRovoDev, setStartWithRovoDev] = useState(state.rovoDevPreference || false);
 
     const toggleTransitionIssueEnabled = useCallback(
         () => setTransitionIssueEnabled(!transitionIssueEnabled),
@@ -128,6 +131,15 @@ const StartWorkPage: React.FunctionComponent = () => {
     );
 
     const togglePushBranchEnabled = useCallback(() => setPushBranchEnabled(!pushBranchEnabled), [pushBranchEnabled]);
+
+    const toggleStartWithRovoDev = useCallback(() => {
+        const newValue = !startWithRovoDev;
+        setStartWithRovoDev(newValue);
+        controller.postMessage({
+            type: StartWorkActionType.UpdateRovoDevPreference,
+            enabled: newValue,
+        });
+    }, [startWithRovoDev, controller]);
 
     const handleTransitionChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
@@ -269,6 +281,14 @@ const StartWorkPage: React.FunctionComponent = () => {
             controller.postMessage({
                 type: StartWorkActionType.RefreshTreeViews,
             });
+
+            // Open Rovo Dev if checkbox is checked
+            if (startWithRovoDev) {
+                controller.postMessage({
+                    type: StartWorkActionType.OpenRovoDev,
+                });
+            }
+
             setSubmitState('submit-success');
             setSubmitResponse(response);
             setSuccessSnackbarOpen(true);
@@ -285,6 +305,7 @@ const StartWorkPage: React.FunctionComponent = () => {
         localBranch,
         upstream,
         pushBranchEnabled,
+        startWithRovoDev,
     ]);
 
     const handleOpenSettings = useCallback(() => {
@@ -327,7 +348,10 @@ const StartWorkPage: React.FunctionComponent = () => {
 
     useEffect(() => {
         setSubmitState('initial');
-    }, []);
+        controller.postMessage({
+            type: StartWorkActionType.GetRovoDevPreference,
+        });
+    }, [controller]);
 
     useEffect(() => {
         // best effort to default to a transition that will move the issue to `In progress` state
@@ -338,6 +362,12 @@ const StartWorkPage: React.FunctionComponent = () => {
             emptyTransition;
         setTransition(inProgressTransitionGuess);
     }, [state.issue]);
+
+    useEffect(() => {
+        if (state.rovoDevPreference !== undefined) {
+            setStartWithRovoDev(state.rovoDevPreference);
+        }
+    }, [state.rovoDevPreference]);
 
     const postMessageWithEventPromise = (
         send: StartWorkAction,
@@ -757,6 +787,23 @@ const StartWorkPage: React.FunctionComponent = () => {
                                             </Collapse>
                                         </Grid>
                                         <Grid item hidden={submitState === 'submit-success'}>
+                                            {state.isRovoDevEnabled && (
+                                                <FormControlLabel
+                                                    control={
+                                                        <Checkbox
+                                                            checked={startWithRovoDev}
+                                                            onChange={toggleStartWithRovoDev}
+                                                            color="primary"
+                                                            style={{ marginLeft: 38 }}
+                                                        />
+                                                    }
+                                                    label={
+                                                        <Typography variant="h5" style={{ marginRight: 10 }}>
+                                                            Start work with Rovo Dev
+                                                        </Typography>
+                                                    }
+                                                />
+                                            )}
                                             <Button
                                                 data-testid="start-work.start-button"
                                                 variant="contained"
