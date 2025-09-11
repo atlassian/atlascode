@@ -3,7 +3,7 @@ import SendIcon from '@atlaskit/icon/core/arrow-up';
 import StopIcon from '@atlaskit/icon/core/video-stop';
 import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
-import React, { useMemo } from 'react';
+import React from 'react';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 
 type NonDisabledState = Exclude<State, DisabledState>;
@@ -162,7 +162,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         editor?.setValue(promptText);
     }, [editor, promptText]);
 
-    const isWaitingForPrompt = useMemo(
+    const isWaitingForPrompt = React.useMemo(
         () =>
             currentState.state === 'WaitingForPrompt' ||
             (currentState.state === 'Initializing' && !currentState.isPromptPending),
