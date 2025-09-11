@@ -28,6 +28,10 @@ export class PullRequestsNavigation {
         this.prDetails = this.bbPrTree.getByRole('treeitem', { name: 'Open pull request details' });
     }
 
+    async checkIsRepoConnected() {
+        return await this.mockRepo.isVisible();
+    }
+
     async addRepository() {
         await this.addRepoButton.click();
     }
