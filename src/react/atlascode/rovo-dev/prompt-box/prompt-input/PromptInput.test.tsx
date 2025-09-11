@@ -75,7 +75,7 @@ describe('PromptInputBox', () => {
 
     it('calls onCancel when Stop button is clicked', () => {
         render(<PromptInputBox {...defaultProps} state={State.GeneratingResponse} />);
-        fireEvent.click(screen.getByLabelText('Stop'));
+        fireEvent.click(screen.getByLabelText('Stop generating'));
         expect(defaultProps.onCancel).toHaveBeenCalled();
     });
 
@@ -87,7 +87,7 @@ describe('PromptInputBox', () => {
 
     it('disables Stop button when state is CancellingResponse', () => {
         render(<PromptInputBox {...defaultProps} state={State.CancellingResponse} />);
-        fireEvent.click(screen.getByLabelText('Stop'));
+        fireEvent.click(screen.getByLabelText('Stop generating'));
         expect(defaultProps.onCancel).toHaveBeenCalledTimes(0);
     });
 

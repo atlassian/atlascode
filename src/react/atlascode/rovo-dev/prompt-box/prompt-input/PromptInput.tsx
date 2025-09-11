@@ -242,7 +242,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                             maxHeight: '20px',
                                         }}
                                         spacing="compact"
-                                        label="Stop"
+                                        label="Stop generating"
                                         isDisabled={disabled || state === State.CancellingResponse}
                                         onClick={() => onCancel()}
                                     />
