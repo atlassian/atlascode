@@ -45,6 +45,7 @@ services:
         environment:
             - NODE_TLS_REJECT_UNAUTHORIZED=0
             - ONLYSERVER
+            - TARGET
         depends_on:
             - wiremock-mockedteams
             - wiremock-bitbucket
