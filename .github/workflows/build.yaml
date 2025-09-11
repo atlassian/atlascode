@@ -98,3 +98,16 @@ jobs:
           path: ./test-results
           retention-days: 1
           if-no-files-found: ignore
+
+  finalize:
+    needs: [ci-matrix]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check if all jobs succeeded
+        run: |
+          if [[ "${{ needs.ci-matrix.result }}" != "success" ]]; then
+            echo "One or more test jobs failed"
+            exit 1
+          fi
+          echo "All jobs passed successfully"
