@@ -57,22 +57,8 @@ const CommentComponent: React.FC<{
 }) => {
     const [isEditing, setIsEditing] = React.useState(false);
     const [isSaving, setIsSaving] = React.useState(false);
-    // Smart content selection: Use ADF from body if it's ADF JSON, otherwise use renderedBody or body
-    const getDisplayContent = () => {
-        if (comment.body) {
-            const trimmed = comment.body.trim();
-            if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-                const parsed = JSON.parse(trimmed);
-                if (parsed.version === 1 && parsed.type === 'doc') {
-                    // This is ADF JSON, use it for rendering
-                    return comment.body;
-                }
-            }
-        }
-        // Fallback to original logic
-        return comment.renderedBody ? comment.renderedBody : comment.body;
-    };
-    const bodyText = getDisplayContent();
+    const bodyText = comment.renderedBody ? comment.renderedBody : comment.body;
+
     const [commentText, setCommentText] = React.useState(comment.body);
     const isAtlaskitEditorFFReceived = typeof isAtlaskitEditorEnabled === 'boolean';
 

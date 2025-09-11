@@ -1445,7 +1445,7 @@
         "@atlaskit/editor-common": "^108.1.1",
         "@atlaskit/editor-core": "^211.2.1",
         "@atlaskit/editor-json-transformer": "^8.27.2",
-        "@atlaskit/editor-markdown-transformer": "^5.16.6",
+        "@atlaskit/editor-wikimarkup-transformer": "^11.16.4",
         "@atlaskit/feature-gate-js-client": "^5.5.5",
         "@atlaskit/form": "^12.2.1",
         "@atlaskit/icon": "^27.12.0",
