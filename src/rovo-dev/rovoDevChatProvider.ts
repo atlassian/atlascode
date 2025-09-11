@@ -32,6 +32,10 @@ export class RovoDevChatProvider {
         return this._pendingCancellation;
     }
 
+    public get isPromptPending() {
+        return !!this._pendingPrompt;
+    }
+
     constructor(private _telemetryProvider: RovoDevTelemetryProvider) {}
 
     public setWebview(webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined) {

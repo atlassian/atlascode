@@ -45,7 +45,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.11.16"
+        "version": "0.11.18"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -160,6 +160,12 @@
             {
                 "command": "atlascode.rovodev.shareFeedback",
                 "title": "Share feedback",
+                "category": "Rovo Dev",
+                "enablement": "atlascode:rovoDevEnabled"
+            },
+            {
+                "command": "atlascode.rovodev.startWorkWithRovoDev",
+                "title": "Start work with Rovo Dev",
                 "category": "Rovo Dev",
                 "enablement": "atlascode:rovoDevEnabled"
             },
@@ -747,6 +753,11 @@
                     "group": "jiraContextMenuGroup1"
                 },
                 {
+                    "command": "atlascode.rovodev.startWorkWithRovoDev",
+                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated && atlascode:rovoDevEnabled",
+                    "group": "jiraContextMenuGroup1"
+                },
+                {
                     "command": "atlascode.viewInWebBrowser",
                     "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
@@ -990,6 +1001,10 @@
                 },
                 {
                     "command": "atlascode.showExploreSettings",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.rovodev.startWorkWithRovoDev",
                     "when": "false"
                 }
             ]
