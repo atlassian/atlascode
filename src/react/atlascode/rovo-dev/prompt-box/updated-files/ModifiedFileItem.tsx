@@ -1,6 +1,7 @@
 import CheckMarkIcon from '@atlaskit/icon/core/check-mark';
 import UndoIcon from '@atlaskit/icon/core/undo';
 import Tooltip from '@atlaskit/tooltip';
+import { isAbsolute, join } from 'path';
 import React from 'react';
 
 import { ToolReturnParseResult } from '../../utils';
@@ -40,7 +41,6 @@ export const ModifiedFileItem: React.FC<{
         onKeep(msg);
     };
 
-    // Create display path with ~ for tooltip
     const getDisplayPath = (): string => {
         if (!filePath) {
             return '';
@@ -48,8 +48,8 @@ export const ModifiedFileItem: React.FC<{
 
         let fullPath = filePath;
 
-        if (!filePath.startsWith('/') && workspacePath) {
-            fullPath = `${workspacePath}/${filePath}`;
+        if (!isAbsolute(filePath) && workspacePath) {
+            fullPath = join(workspacePath, filePath);
         }
 
         if (homeDir && fullPath.startsWith(homeDir)) {
