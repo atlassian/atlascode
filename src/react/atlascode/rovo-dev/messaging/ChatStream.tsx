@@ -264,7 +264,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     return null;
                 })}
 
-            {currentState.state !== 'Disabled' && pendingToolCall && (
+            {currentState.state !== 'Disabled' && currentState.state !== 'ProcessTerminated' && pendingToolCall && (
                 <div style={{ marginBottom: '16px' }}>
                     <ToolCallItem toolMessage={pendingToolCall} currentState={currentState} />
                 </div>
