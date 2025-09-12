@@ -27,7 +27,6 @@ interface PromptInputBoxProps {
     disabled?: boolean;
     hideButtons?: boolean;
     currentState: NonDisabledState;
-    promptText: string;
     isDeepPlanEnabled: boolean;
     onDeepPlanToggled: () => void;
     onSend: (text: string) => boolean;
@@ -71,7 +70,6 @@ function createEditor() {
 export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     disabled,
     currentState,
-    promptText,
     isDeepPlanEnabled,
     onDeepPlanToggled,
     onSend,
@@ -85,6 +83,11 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
 
     // create the editor only once - use onSend hook to retry
     React.useEffect(() => setEditor((prev) => prev ?? createEditor()), [onSend]);
+
+    React.useEffect(() => {
+        // Remove Monaco's color stylesheet
+        removeMonacoStyles();
+    }, [editor]);
 
     const handleSend = React.useCallback(() => {
         const value = editor && editor.getValue();
@@ -104,12 +107,6 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             setupMonacoCommands(editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand);
         }
     }, [editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand]);
-
-    React.useEffect(() => {
-        // Remove Monaco's color stylesheet
-        removeMonacoStyles();
-        editor?.setValue(promptText);
-    }, [editor, promptText]);
 
     React.useEffect(() => {
         if (!editor) {

@@ -70,7 +70,7 @@ describe('PromptInputBox', () => {
     });
 
     it('calls onSend when Send button is clicked', () => {
-        render(<PromptInputBox {...defaultProps} promptText="test prompt" />);
+        render(<PromptInputBox {...defaultProps} />);
         jest.spyOn(editor, 'getValue').mockReturnValue('text prompt');
         fireEvent.click(screen.getByLabelText('Send prompt'));
         expect(defaultProps.onSend).toHaveBeenCalled();

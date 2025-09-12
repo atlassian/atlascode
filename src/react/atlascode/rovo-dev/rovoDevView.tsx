@@ -78,7 +78,6 @@ function mapRovoDevDisabledReasonToSubState(reason: RovoDevDisabledReason): Disa
 
 const RovoDevView: React.FC = () => {
     const [currentState, setCurrentState] = useState<State>({ state: 'WaitingForPrompt' });
-    const [promptText, setPromptText] = useState('');
     const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
     const [retryAfterErrorEnabled, setRetryAfterErrorEnabled] = useState('');
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
@@ -500,8 +499,6 @@ const RovoDevView: React.FC = () => {
                 context: promptContextCollection.filter((x) => x.enabled),
             });
 
-            // Clear the input field
-            setPromptText('');
             return true;
         },
         [
@@ -512,7 +509,6 @@ const RovoDevView: React.FC = () => {
             setIsDeepPlanCreated,
             setCurrentState,
             postMessage,
-            setPromptText,
         ],
     );
 
@@ -726,7 +722,6 @@ const RovoDevView: React.FC = () => {
                         <PromptInputBox
                             disabled={currentState.state === 'ProcessTerminated'}
                             currentState={currentState}
-                            promptText={promptText}
                             isDeepPlanEnabled={isDeepPlanToggled}
                             onDeepPlanToggled={() => setIsDeepPlanToggled(!isDeepPlanToggled)}
                             onSend={sendPrompt}
