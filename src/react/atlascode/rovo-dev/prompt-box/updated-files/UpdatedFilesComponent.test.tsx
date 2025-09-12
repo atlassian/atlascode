@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import React from 'react';
+import { renderWithStore } from 'src/react/store/test-utils';
 
 import { ToolReturnParseResult } from '../../utils';
 import { UpdatedFilesComponent } from './UpdatedFilesComponent';
@@ -20,112 +21,66 @@ describe('UpdatedFilesComponent', () => {
     });
 
     it('renders null when no modified files', () => {
-        const { container } = render(
-            <UpdatedFilesComponent
-                modifiedFiles={[]}
-                onUndo={mockOnUndo}
-                onKeep={mockOnKeep}
-                openDiff={mockOpenDiff}
-                actionsEnabled={true}
-            />,
+        const { container } = renderWithStore(
+            <UpdatedFilesComponent onUndo={mockOnUndo} onKeep={mockOnKeep} openDiff={mockOpenDiff} />,
+            { preloadedState: { chatStream: { totalModifiedFiles: [] } } },
         );
         expect(container.firstChild).toBeNull();
     });
 
     it('renders null when modifiedFiles is undefined', () => {
-        const { container } = render(
-            <UpdatedFilesComponent
-                modifiedFiles={undefined as any}
-                onUndo={mockOnUndo}
-                onKeep={mockOnKeep}
-                openDiff={mockOpenDiff}
-                actionsEnabled={true}
-            />,
+        const { container } = renderWithStore(
+            <UpdatedFilesComponent onUndo={mockOnUndo} onKeep={mockOnKeep} openDiff={mockOpenDiff} />,
+            { preloadedState: { chatStream: { totalModifiedFiles: undefined } } },
         );
         expect(container.firstChild).toBeNull();
     });
 
     it('renders correct file count in header', () => {
-        render(
-            <UpdatedFilesComponent
-                modifiedFiles={mockModifiedFiles}
-                onUndo={mockOnUndo}
-                onKeep={mockOnKeep}
-                openDiff={mockOpenDiff}
-                actionsEnabled={true}
-            />,
-        );
+        renderWithStore(<UpdatedFilesComponent onUndo={mockOnUndo} onKeep={mockOnKeep} openDiff={mockOpenDiff} />, {
+            preloadedState: { chatStream: { totalModifiedFiles: mockModifiedFiles } },
+        });
         expect(screen.getByText('3 Updated files')).toBeTruthy();
     });
 
     it('renders singular file text for single file', () => {
-        render(
-            <UpdatedFilesComponent
-                modifiedFiles={[mockModifiedFiles[0]]}
-                onUndo={mockOnUndo}
-                onKeep={mockOnKeep}
-                openDiff={mockOpenDiff}
-                actionsEnabled={true}
-            />,
-        );
+        renderWithStore(<UpdatedFilesComponent onUndo={mockOnUndo} onKeep={mockOnKeep} openDiff={mockOpenDiff} />, {
+            preloadedState: { chatStream: { totalModifiedFiles: [mockModifiedFiles[0]] } },
+        });
         expect(screen.getByText('1 Updated file')).toBeTruthy();
     });
 
     it('calls onUndo with all file paths when Undo All is clicked', () => {
-        render(
-            <UpdatedFilesComponent
-                modifiedFiles={mockModifiedFiles}
-                onUndo={mockOnUndo}
-                onKeep={mockOnKeep}
-                openDiff={mockOpenDiff}
-                actionsEnabled={true}
-            />,
-        );
+        renderWithStore(<UpdatedFilesComponent onUndo={mockOnUndo} onKeep={mockOnKeep} openDiff={mockOpenDiff} />, {
+            preloadedState: { chatStream: { totalModifiedFiles: mockModifiedFiles } },
+        });
 
         fireEvent.click(screen.getByText('Undo'));
         expect(mockOnUndo).toHaveBeenCalledWith(mockModifiedFiles);
     });
 
     it('calls onKeep with all file paths when Keep All is clicked', () => {
-        render(
-            <UpdatedFilesComponent
-                modifiedFiles={mockModifiedFiles}
-                onUndo={mockOnUndo}
-                onKeep={mockOnKeep}
-                openDiff={mockOpenDiff}
-                actionsEnabled={true}
-            />,
-        );
+        renderWithStore(<UpdatedFilesComponent onUndo={mockOnUndo} onKeep={mockOnKeep} openDiff={mockOpenDiff} />, {
+            preloadedState: { chatStream: { totalModifiedFiles: mockModifiedFiles } },
+        });
 
         fireEvent.click(screen.getByText('Keep'));
         expect(mockOnKeep).toHaveBeenCalledWith(mockModifiedFiles);
     });
 
     it('renders ModifiedFileItem for each file', () => {
-        render(
-            <UpdatedFilesComponent
-                modifiedFiles={mockModifiedFiles}
-                onUndo={mockOnUndo}
-                onKeep={mockOnKeep}
-                openDiff={mockOpenDiff}
-                actionsEnabled={true}
-            />,
-        );
+        renderWithStore(<UpdatedFilesComponent onUndo={mockOnUndo} onKeep={mockOnKeep} openDiff={mockOpenDiff} />, {
+            preloadedState: { chatStream: { totalModifiedFiles: mockModifiedFiles } },
+        });
 
         const fileItems = screen.getAllByLabelText('modified-file-item');
         expect(fileItems).toHaveLength(3);
     });
 
     it('renders with correct CSS classes', () => {
-        render(
-            <UpdatedFilesComponent
-                modifiedFiles={mockModifiedFiles}
-                onUndo={mockOnUndo}
-                onKeep={mockOnKeep}
-                openDiff={mockOpenDiff}
-                actionsEnabled={true}
-            />,
-        );
+        renderWithStore(<UpdatedFilesComponent onUndo={mockOnUndo} onKeep={mockOnKeep} openDiff={mockOpenDiff} />, {
+            preloadedState: { chatStream: { totalModifiedFiles: mockModifiedFiles } },
+        });
 
         expect(document.querySelector('.updated-files-container')).toBeTruthy();
         expect(document.querySelector('.updated-files-header')).toBeTruthy();
@@ -133,29 +88,20 @@ describe('UpdatedFilesComponent', () => {
     });
 
     it('renders source control icon', () => {
-        render(
-            <UpdatedFilesComponent
-                modifiedFiles={mockModifiedFiles}
-                onUndo={mockOnUndo}
-                onKeep={mockOnKeep}
-                openDiff={mockOpenDiff}
-                actionsEnabled={true}
-            />,
-        );
+        renderWithStore(<UpdatedFilesComponent onUndo={mockOnUndo} onKeep={mockOnKeep} openDiff={mockOpenDiff} />, {
+            preloadedState: { chatStream: { totalModifiedFiles: mockModifiedFiles } },
+        });
 
         expect(document.querySelector('.codicon.codicon-source-control')).toBeTruthy();
     });
 
     it('disables buttons when actionsEnabled is false', () => {
-        render(
-            <UpdatedFilesComponent
-                modifiedFiles={mockModifiedFiles}
-                onUndo={mockOnUndo}
-                onKeep={mockOnKeep}
-                openDiff={mockOpenDiff}
-                actionsEnabled={false}
-            />,
-        );
+        renderWithStore(<UpdatedFilesComponent onUndo={mockOnUndo} onKeep={mockOnKeep} openDiff={mockOpenDiff} />, {
+            preloadedState: {
+                chatStream: { totalModifiedFiles: mockModifiedFiles },
+                rovoDevStates: { currentState: { state: 'GeneratingResponse' } },
+            },
+        });
 
         expect(screen.getByText('Undo').closest('button')?.disabled).toBe(true);
         expect(screen.getByText('Keep').closest('button')?.disabled).toBe(true);

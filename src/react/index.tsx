@@ -2,6 +2,7 @@ import { CssBaseline } from '@mui/material';
 import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import React, { useCallback, useEffect, useState } from 'react';
 import * as ReactDOM from 'react-dom/client';
+import { Provider } from 'react-redux';
 import useConstant from 'use-constant';
 
 import AtlGlobalStyles from './atlascode/common/AtlGlobalStyles';
@@ -10,6 +11,7 @@ import { ErrorControllerContext, ErrorStateContext, useErrorController } from '.
 import { PMFControllerContext, PMFStateContext, usePMFController } from './atlascode/common/pmf/pmfController';
 import { atlascodeTheme } from './atlascode/theme/atlascodeTheme';
 import { attachImageErrorHandler } from './imageErrorHandler';
+import store from './store/store';
 import { computeStyles, VSCodeStylesContext } from './vscode/theme/styles';
 import { createVSCodeTheme } from './vscode/theme/vscodeTheme';
 
@@ -100,4 +102,8 @@ const App = () => {
 };
 
 const reactRoot = ReactDOM.createRoot(root);
-reactRoot.render(<App />);
+reactRoot.render(
+    <Provider store={store}>
+        <App />
+    </Provider>,
+);

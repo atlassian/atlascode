@@ -2,15 +2,17 @@ import StatusErrorIcon from '@atlaskit/icon/core/error';
 import StatusInfoIcon from '@atlaskit/icon/core/information';
 import StatusWarningIcon from '@atlaskit/icon/core/warning';
 import React, { useCallback } from 'react';
+import { useAppSelector } from 'src/react/store/hooks';
 
 import { chatMessageStyles, errorMessageStyles, inChatButtonStyles, messageContentStyles } from '../rovoDevViewStyles';
 import { ErrorMessage } from '../utils';
 
 export const ErrorMessageItem: React.FC<{
     msg: ErrorMessage;
-    isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
     retryAfterError: () => void;
-}> = ({ msg, isRetryAfterErrorButtonEnabled, retryAfterError }) => {
+}> = ({ msg, retryAfterError }) => {
+    const retryAfterErrorEnabled = useAppSelector((state) => state.chatStream.retryAfterErrorEnabled);
+
     const getColor = useCallback(() => {
         switch (msg.type) {
             case 'error':
@@ -32,6 +34,11 @@ export const ErrorMessageItem: React.FC<{
                 return msg.title ?? 'Rovo Dev';
         }
     }, [msg.type, msg.title]);
+
+    const isRetryAfterErrorButtonEnabled = React.useCallback(
+        (uid: string) => retryAfterErrorEnabled === uid,
+        [retryAfterErrorEnabled],
+    );
 
     return (
         <div style={{ ...chatMessageStyles, ...errorMessageStyles }}>
