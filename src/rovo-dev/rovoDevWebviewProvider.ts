@@ -64,6 +64,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private readonly _chatProvider: RovoDevChatProvider;
 
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
+    private _webviewView?: WebviewView;
     private _rovoDevApiClient?: RovoDevApiClient;
     private _processState = RovoDevProcessState.NotStarted;
     private _initialized = false;
@@ -85,6 +86,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private get isDisabled() {
         return this._processState === RovoDevProcessState.Disabled;
+    }
+
+    public get isVisible(): boolean {
+        return this._webviewView?.visible ?? false;
     }
 
     constructor(context: ExtensionContext, extensionPath: string) {
@@ -134,6 +139,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     ): Thenable<void> | void {
         const webview = webviewView.webview;
         this._webView = webview;
+        this._webviewView = webviewView;
 
         this._chatProvider.setWebview(webview);
 
