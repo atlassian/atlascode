@@ -14,7 +14,14 @@ import {
     rovoDevPromptButtonStyles,
     rovoDevTextareaStyles,
 } from '../../rovoDevViewStyles';
-import { createMonacoPromptEditor, createSlashCommandProvider, removeMonacoStyles } from './utils';
+import {
+    createMonacoPromptEditor,
+    createSlashCommandProvider,
+    removeMonacoStyles,
+    setupAutoResize,
+    setupMonacoCommands,
+    setupPromptKeyBindings,
+} from './utils';
 
 interface PromptInputBoxProps {
     disabled?: boolean;
@@ -49,6 +56,19 @@ const getTextAreaPlaceholder = (isGeneratingResponse: boolean, currentState: Non
     }
 };
 
+function createEditor() {
+    const container = document.getElementById('prompt-editor-container');
+    if (!container) {
+        return undefined;
+    }
+
+    monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider());
+
+    const editor = createMonacoPromptEditor(container);
+    setupAutoResize(editor);
+    return editor;
+}
+
 export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     disabled,
     hideButtons,
@@ -64,96 +84,36 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     handleMemoryCommand,
     handleTriggerFeedbackCommand,
 }) => {
-    const [editor, setEditor] = React.useState<monaco.editor.IStandaloneCodeEditor | null>(null);
-    const [, signalEditorSubmit] = React.useState<number>(0);
+    const [editor, setEditor] = React.useState<ReturnType<typeof createEditor>>(undefined);
 
-    const setupCommands = (
-        editor: monaco.editor.IStandaloneCodeEditor,
-        onCopy: () => void,
-        handleMemoryCommand: () => void,
-        handleTriggerFeedbackCommand: () => void,
-    ) => {
-        monaco.editor.registerCommand('rovo-dev.clearChat', () => {
-            editor.setValue('/clear');
-            signalEditorSubmit((prev) => prev + 1);
-        });
+    // create the editor only once - use onSend hook to retry
+    React.useEffect(() => setEditor((prev) => prev ?? createEditor()), [onSend]);
 
-        monaco.editor.registerCommand('rovo-dev.pruneChat', () => {
-            editor.setValue('/prune');
-            signalEditorSubmit((prev) => prev + 1);
-        });
-
-        monaco.editor.registerCommand('rovo-dev.copyResponse', () => {
+    const handleSend = React.useCallback(() => {
+        const value = editor && editor.getValue().trim();
+        if (value) {
+            onSend(value);
             editor.setValue('');
-            onCopy();
-        });
-
-        monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
-            handleMemoryCommand();
-            editor.setValue('');
-        });
-
-        monaco.editor.registerCommand('rovo-dev.triggerFeedback', () => {
-            handleTriggerFeedbackCommand();
-            editor.setValue('');
-        });
-    };
-
-    const setupPromptKeyBindings = (editor: monaco.editor.IStandaloneCodeEditor) => {
-        editor.addCommand(monaco.KeyCode.Enter, () => signalEditorSubmit((prev) => prev + 1), '!suggestWidgetVisible'); // Only trigger if suggestions are not visible
-
-        editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
-            editor.trigger('keyboard', 'type', { text: '\n' });
-        });
-    };
-
-    // Auto-resize functionality
-    const setupAutoResize = (editor: monaco.editor.IStandaloneCodeEditor, maxHeight = 200) => {
-        const updateHeight = () => {
-            const contentHeight = Math.min(maxHeight, editor.getContentHeight());
-            const container = editor.getContainerDomNode();
-            container.style.height = `${contentHeight}px`;
-            editor.layout();
-        };
-
-        editor.onDidContentSizeChange(updateHeight);
-        updateHeight();
-    };
+        }
+    }, [editor, onSend]);
 
     React.useEffect(() => {
-        setEditor((prev) => {
-            if (prev) {
-                return prev;
-            }
+        if (editor) {
+            setupPromptKeyBindings(editor, handleSend);
+        }
+    }, [editor, handleSend]);
 
-            const container = document.getElementById('prompt-editor-container');
-            if (!container) {
-                return null;
-            }
-
-            monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider());
-
-            const editor = createMonacoPromptEditor(container);
-            setupPromptKeyBindings(editor);
-            setupAutoResize(editor);
-            setupCommands(editor, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand);
-
-            return editor;
-        });
-    }, [handleMemoryCommand, handleTriggerFeedbackCommand, onCopy, setEditor]);
+    React.useEffect(() => {
+        if (editor) {
+            setupMonacoCommands(editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand);
+        }
+    }, [editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand]);
 
     React.useEffect(() => {
         // Remove Monaco's color stylesheet
         removeMonacoStyles();
         editor?.setValue(promptText);
     }, [editor, promptText]);
-
-    const isWaitingForPrompt = React.useMemo(
-        () =>
-            currentState.state === 'WaitingForPrompt' ||
-            (currentState.state === 'Initializing' && !currentState.isPromptPending),
-        [currentState],
-    );
 
     React.useEffect(() => {
         if (!editor) {
@@ -170,15 +130,12 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         });
     }, [currentState, editor, disabled]);
 
-    React.useEffect(() => {
-        if (isWaitingForPrompt && editor) {
-            const value = editor.getValue().trim();
-            if (value) {
-                onSend(value);
-                editor.setValue('');
-            }
-        }
-    }, [isWaitingForPrompt, editor, onSend]);
+    const isWaitingForPrompt = React.useMemo(
+        () =>
+            currentState.state === 'WaitingForPrompt' ||
+            (currentState.state === 'Initializing' && !currentState.isPromptPending),
+        [currentState],
+    );
 
     return (
         <>
@@ -235,7 +192,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                     label="Send prompt"
                                     iconBefore={<SendIcon label="Send prompt" />}
                                     isDisabled={disabled || sendButtonDisabled}
-                                    onClick={() => signalEditorSubmit((prev) => prev + 1)}
+                                    onClick={() => handleSend()}
                                 />
                             )}
                             {!isWaitingForPrompt && (
