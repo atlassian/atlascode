@@ -170,16 +170,29 @@ export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolRe
             }
             break;
 
-        case 'grep_file_content':
-            const grepArgs = msg.args && JSON.parse(msg.args);
-            if (grepArgs?.pattern) {
-                const pattern = grepArgs.pattern;
-                resp.push({
-                    content: `Searched file content${pattern ? ` for pattern:` : ''}`,
-                    title: `"${pattern}"`,
-                    type: 'open',
-                });
+        case 'grep':
+            const toolCallArgs = msg.args;
+            const searchPattern = toolCallArgs ? JSON.parse(toolCallArgs).content_pattern : undefined;
+            const pathGlob = toolCallArgs ? JSON.parse(toolCallArgs).path_glob : undefined;
+            const matches = msg.content.split('\n').filter((line) => line.trim() !== '');
+            let content = 'Searched files';
+            if (searchPattern && pathGlob) {
+                content = `Searched for \`${searchPattern}\` in files matching \`${pathGlob}\``;
+            } else if (pathGlob) {
+                content = `Searched files matching \`${pathGlob}\``;
+            } else if (searchPattern) {
+                content = `Searched for \`${searchPattern}\``;
             }
+
+            resp.push({
+                title:
+                    matches.length > 0
+                        ? `${matches.length} ${matches.length > 1 ? 'matches' : 'match'} found`
+                        : 'No matches found',
+                content: content,
+                type: 'open',
+            });
+
             break;
 
         case 'create_technical_plan':
