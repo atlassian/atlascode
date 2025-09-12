@@ -57,6 +57,7 @@ const emptyState: ViewState = {
     isEditingComment: false,
     hierarchyLoading: false,
     hierarchy: [],
+    isRendered: false,
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -667,6 +668,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     }
                     fetchImage={(img) => this.fetchImage(img)}
                     isRteEnabled={this.state.isRteEnabled}
+                    isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}
+                    isAtlaskitEditorFFReceived={this.state.isAtlaskitEditorFFReceived}
                     onIssueUpdate={this.handleChildIssueUpdate}
                 />
                 {this.advancedMain()}
@@ -695,6 +698,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 this.state.fieldValues['project'].projectTypeKey === 'service_desk'
                             }
                             isRteEnabled={this.state.isRteEnabled}
+                            isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}
+                            isAtlaskitEditorFFReceived={this.state.isAtlaskitEditorFFReceived}
                             commentText={this.state.commentText}
                             onCommentTextChange={this.handleCommentTextChange}
                             isEditingComment={this.state.isEditingComment}
@@ -841,6 +846,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     public override render() {
+        if (!this.state.isRendered) {
+            this.postMessage({ action: 'getFeatureFlags' });
+            this.setState({ isRendered: true });
+        }
         if (
             (Object.keys(this.state.fields).length < 1 || Object.keys(this.state.fieldValues).length < 1) &&
             !this.state.isErrorBannerOpen &&

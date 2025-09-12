@@ -4,13 +4,16 @@ import InlineDialog from '@atlaskit/inline-dialog';
 import Tooltip from '@atlaskit/tooltip';
 import { IssueType, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atlassianlabs/jira-pi-meta-models';
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
-import { RenderedContent } from '../../../RenderedContent';
+import { AdfAwareContent } from '../../../AdfAwareContent';
 import { AttachmentList } from '../../AttachmentList';
 import { AttachmentsModal } from '../../AttachmentsModal';
-import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
+// these two components can't be imported at the same time, so use lazy loading
+const AtlaskitEditor = lazy(() => import('../../common/AtlaskitEditor/AtlaskitEditor'));
+const JiraIssueTextAreaEditor = lazy(() => import('../../common/JiraIssueTextArea'));
+
 import WorklogForm from '../../WorklogForm';
 import Worklogs from '../../Worklogs';
 import { AddContentDropdown } from './AddContentDropDown';
@@ -37,6 +40,8 @@ type Props = {
     fetchImage: (url: string) => Promise<string>;
     isRteEnabled?: boolean;
     onIssueUpdate?: (issueKey: string, fieldKey: string, newValue: any) => void;
+    isAtlaskitEditorEnabled?: boolean;
+    isAtlaskitEditorFFReceived?: boolean;
 };
 
 const IssueMainPanel: React.FC<Props> = ({
@@ -59,6 +64,8 @@ const IssueMainPanel: React.FC<Props> = ({
     fetchImage,
     isRteEnabled = false,
     onIssueUpdate,
+    isAtlaskitEditorEnabled,
+    isAtlaskitEditorFFReceived = false,
 }) => {
     //field values
     const attachments = fields['attachment'] && fieldValues['attachment'] ? fieldValues['attachment'] : undefined;
@@ -71,14 +78,61 @@ const IssueMainPanel: React.FC<Props> = ({
     const defaultDescription = fieldValues['description'] ? fieldValues['description'] : '';
     const renderedDescription = fieldValues['description.rendered'] ? fieldValues['description.rendered'] : undefined;
 
+    // Smart description content selection: Use ADF from description if it's ADF object/JSON
+    const getDescriptionDisplayContent = () => {
+        if (defaultDescription) {
+            // Handle ADF object directly
+            if (
+                typeof defaultDescription === 'object' &&
+                defaultDescription.version === 1 &&
+                defaultDescription.type === 'doc'
+            ) {
+                return JSON.stringify(defaultDescription); // Convert ADF object to JSON string for AdfAwareContent
+            }
+
+            // Handle ADF JSON string
+            if (typeof defaultDescription === 'string') {
+                const trimmed = defaultDescription.trim();
+                if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+                    const parsed = JSON.parse(trimmed);
+                    if (parsed.version === 1 && parsed.type === 'doc') {
+                        // This is ADF JSON, use it for rendering
+                        return defaultDescription;
+                    }
+                }
+            }
+        }
+        // Fallback to original logic
+        return renderedDescription ? renderedDescription : defaultDescription;
+    };
+
     //states
     const [enableSubtasks, setEnableSubtasks] = React.useState(false);
     const [enableEpicChildren, setEnableEpicChildren] = React.useState(false);
     const [enableLinkedIssues, setEnableLinkedIssues] = React.useState(false);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [isInlineDialogOpen, setIsInlineDialogOpen] = React.useState(false);
-    const [descriptionText, setDescriptionText] = React.useState(defaultDescription);
+    // Handle descriptionText - convert ADF object to JSON string for editor input
+    const getDescriptionTextForEditor = React.useCallback(() => {
+        if (
+            typeof defaultDescription === 'object' &&
+            defaultDescription.version === 1 &&
+            defaultDescription.type === 'doc'
+        ) {
+            return JSON.stringify(defaultDescription);
+        }
+        return defaultDescription || '';
+    }, [defaultDescription]);
+
+    const [descriptionText, setDescriptionText] = React.useState(() => getDescriptionTextForEditor());
     const [isEditingDescription, setIsEditingDescription] = React.useState(false);
+
+    // Update descriptionText when defaultDescription changes (after save)
+    React.useEffect(() => {
+        if (!isEditingDescription) {
+            setDescriptionText(getDescriptionTextForEditor());
+        }
+    }, [defaultDescription, isEditingDescription, getDescriptionTextForEditor]);
 
     const handleStatusChange = (issueKey: string, statusName: string) => {
         if (onIssueUpdate) {
@@ -160,24 +214,47 @@ const IssueMainPanel: React.FC<Props> = ({
                         {loadingField === 'description' ? <p>Saving...</p> : null}
                     </div>
                     {isEditingDescription || loadingField === 'description' ? (
-                        <JiraIssueTextAreaEditor
-                            value={descriptionText}
-                            onChange={(e: string) => {
-                                setDescriptionText(e);
-                            }}
-                            onSave={(i: string) => {
-                                handleInlineEdit(fields['description'], i);
-                                setIsEditingDescription(false);
-                            }}
-                            onCancel={() => {
-                                setDescriptionText(defaultDescription);
-                                setIsEditingDescription(false);
-                            }}
-                            fetchUsers={fetchUsers}
-                            isDescription
-                            saving={loadingField === 'description'}
-                            featureGateEnabled={isRteEnabled}
-                        />
+                        isAtlaskitEditorFFReceived ? (
+                            <Suspense fallback={<div>Loading...</div>}>
+                                {isAtlaskitEditorEnabled ? (
+                                    <AtlaskitEditor
+                                        defaultValue={descriptionText}
+                                        onSave={(content) => {
+                                            handleInlineEdit(fields['description'], content);
+                                            setIsEditingDescription(false);
+                                        }}
+                                        onCancel={() => {
+                                            setDescriptionText(getDescriptionTextForEditor());
+                                            setIsEditingDescription(false);
+                                        }}
+                                        onContentChange={(content) => {
+                                            setDescriptionText(content);
+                                        }}
+                                    />
+                                ) : (
+                                    <JiraIssueTextAreaEditor
+                                        value={descriptionText}
+                                        onChange={(e: string) => {
+                                            setDescriptionText(e);
+                                        }}
+                                        onSave={(i: string) => {
+                                            handleInlineEdit(fields['description'], i);
+                                            setIsEditingDescription(false);
+                                        }}
+                                        onCancel={() => {
+                                            setDescriptionText(getDescriptionTextForEditor());
+                                            setIsEditingDescription(false);
+                                        }}
+                                        fetchUsers={fetchUsers}
+                                        isDescription
+                                        saving={loadingField === 'description'}
+                                        featureGateEnabled={isRteEnabled}
+                                    />
+                                )}
+                            </Suspense>
+                        ) : (
+                            <div>Waiting...</div>
+                        )
                     ) : (
                         <div
                             data-testid="issue.description"
@@ -194,11 +271,7 @@ const IssueMainPanel: React.FC<Props> = ({
                             onClick={() => setIsEditingDescription(true)}
                             className="ac-inline-input-view-p"
                         >
-                            {renderedDescription ? (
-                                <RenderedContent html={renderedDescription} fetchImage={fetchImage} />
-                            ) : (
-                                <p style={{ margin: 0 }}>{descriptionText}</p>
-                            )}
+                            <AdfAwareContent content={getDescriptionDisplayContent()} fetchImage={fetchImage} />
                         </div>
                     )}
                 </div>
