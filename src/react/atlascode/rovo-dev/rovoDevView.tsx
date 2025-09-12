@@ -483,7 +483,7 @@ const RovoDevView: React.FC = () => {
                 type: RovoDevViewResponseType.Prompt,
                 text,
                 enable_deep_plan: isDeepPlanToggled,
-                context: promptContextCollection,
+                context: promptContextCollection.filter((x) => x.enabled),
             });
 
             // Clear the input field
