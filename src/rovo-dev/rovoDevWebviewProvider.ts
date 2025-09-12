@@ -115,9 +115,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this.appInstanceId = Container.appInstanceId;
         }
 
+        const onTelemetryError = Container.isDebugging
+            ? (error: Error) => this.processError(error, false)
+            : (error: Error) => Logger.error(error);
+
         this._telemetryProvider = new RovoDevTelemetryProvider(
             this.isBoysenberry ? 'Boysenberry' : 'IDE',
             this.appInstanceId,
+            onTelemetryError,
         );
         this._chatProvider = new RovoDevChatProvider(this._telemetryProvider);
     }

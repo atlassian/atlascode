@@ -76,7 +76,6 @@ export class RovoDevChatProvider {
         }
 
         if (!flushingPendingPrompt) {
-            this.beginNewPrompt();
             await this.sendUserPromptToView(text, context);
         }
 
@@ -86,6 +85,8 @@ export class RovoDevChatProvider {
             this._pendingPrompt = { text, enable_deep_plan, context };
             return;
         }
+
+        this.beginNewPrompt();
 
         this._currentPrompt = {
             text,
