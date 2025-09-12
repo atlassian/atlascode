@@ -264,12 +264,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.SendFeedback:
                         console.log('Send feedback message received in provider');
-                        RovoDevFeedbackManager.submitFeedback({
-                            feedbackType: e.feedbackType,
-                            feedbackMessage: e.feedbackMessage,
-                            canContact: e.canContact,
-                            lastTenMessages: e.lastTenMessages,
-                        });
+                        RovoDevFeedbackManager.submitFeedback(
+                            {
+                                feedbackType: e.feedbackType,
+                                feedbackMessage: e.feedbackMessage,
+                                canContact: e.canContact,
+                                lastTenMessages: e.lastTenMessages,
+                            },
+                            !!this.isBoysenberry,
+                        );
                         break;
 
                     case RovoDevViewResponseType.LaunchJiraAuth:

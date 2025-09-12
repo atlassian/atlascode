@@ -4,6 +4,8 @@ import { getAxiosInstance } from 'src/jira/jira-client/providers';
 import { Logger } from 'src/logger';
 import * as vscode from 'vscode';
 
+import { MIN_SUPPORTED_ROVODEV_VERSION } from './rovoDevProcessManager';
+
 interface FeedbackObject {
     feedbackType: 'bug' | 'reportContent' | 'general';
     feedbackMessage: string;
@@ -14,9 +16,9 @@ interface FeedbackObject {
 const FEEDBACK_ENDPOINT = `https://jsd-widget.atlassian.com/api/embeddable/57037b9e-743e-407d-bb03-441a13c7afd0/request?requestTypeId=3066`;
 
 export class RovoDevFeedbackManager {
-    public static async submitFeedback(feedback: FeedbackObject): Promise<void> {
+    public static async submitFeedback(feedback: FeedbackObject, isBBY: boolean = false): Promise<void> {
         const transport = getAxiosInstance();
-        const context = this.getContext();
+        const context = this.getContext(isBBY);
 
         let userEmail = 'do-not-reply@atlassian.com';
         let userName = 'unknown';
@@ -99,11 +101,12 @@ export class RovoDevFeedbackManager {
         vscode.window.showInformationMessage('Thank you for your feedback!');
     }
 
-    private static getContext() {
+    private static getContext(isBBY: boolean = false): any {
         return {
-            component: 'Boysenberry - vscode',
+            component: isBBY ? 'Boysenberry - vscode' : 'IDE - vscode',
             extensionVersion: Container.version,
             vscodeVersion: vscode.version,
+            rovoDevVersion: MIN_SUPPORTED_ROVODEV_VERSION,
         };
     }
 }
