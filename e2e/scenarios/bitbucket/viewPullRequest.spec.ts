@@ -1,10 +1,11 @@
 import { Page } from '@playwright/test';
+import { JiraTypes as BitbucketTypes } from 'e2e/helpers/types';
 import { AtlascodeDrawer, AtlassianSettings, PullRequestPage } from 'e2e/page-objects';
 
-export async function viewPullRequset(page: Page) {
+export async function viewPullRequest(page: Page, type: BitbucketTypes) {
     await new AtlassianSettings(page).closeSettingsPage();
 
-    const { pullRequests } = new AtlascodeDrawer(page);
+    const { pullRequests } = new AtlascodeDrawer(page, type);
 
     await pullRequests.prTreeitem.click();
     await pullRequests.prDetails.waitFor({ state: 'visible' });

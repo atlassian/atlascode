@@ -111,6 +111,17 @@ export async function setupPullrequests(request: APIRequestContext, values: Arra
     return () => cleanupWireMockMapping(request, id);
 }
 
+export async function setupPullrequestsDC(request: APIRequestContext, values: Array<any>) {
+    const { id } = await setupWireMockMappingBitbucket(
+        request,
+        'GET',
+        { values, limit: 25, size: 0, start: 0, isLastPage: true, nextPageStart: null },
+        '/rest/api/1.0/projects/mocked-project/repos/dc-mocked-repo/pull-requests',
+    );
+
+    return () => cleanupWireMockMapping(request, id);
+}
+
 export async function setupPRComments(request: APIRequestContext, comments: Array<PullRequestComment>) {
     const { id } = await setupWireMockMappingBitbucket(
         request,

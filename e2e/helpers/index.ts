@@ -8,6 +8,7 @@ export {
     setupSearchMock,
     setupIssueMock,
     setupPullrequests,
+    setupPullrequestsDC,
     setupPRComments,
     setupPRCommentPost,
 } from './setup-mock';

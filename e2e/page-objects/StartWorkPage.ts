@@ -45,11 +45,11 @@ export class StartWorkPage {
 
     async expectGitBranchSetup() {
         await expect(this.repositorySelect).toBeVisible();
-        await expect(this.repositorySelect).toHaveText('mock-repository');
+        await expect(this.repositorySelect).toHaveText(/(mock|dc)-repository/);
         await expect(this.sourceBranchSelect).toBeVisible();
         await expect(this.sourceBranchSelect).toHaveValue('main');
         await expect(this.branchPrefixSelect).toBeVisible();
-        await expect(this.branchPrefixSelect).toHaveValue('bugfix');
+        await expect(this.branchPrefixSelect).toHaveValue(/bugfix/i);
         await expect(this.localBranchInput).toBeVisible();
         await expect(this.localBranchInput).toHaveValue('bugfix/BTS-1-sample-user-interface-bugs');
     }

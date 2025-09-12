@@ -1,5 +1,6 @@
 import { expect, FrameLocator, Locator } from '@playwright/test';
 
+const SUMMARY_TEST_ID = 'pullrequest.summary-panel';
 export class PRSummary {
     readonly frame: FrameLocator;
 
@@ -10,9 +11,7 @@ export class PRSummary {
         this.frame = frame;
 
         this.sectionButton = this.frame.getByRole('button', { name: 'Summary' });
-        this.input = this.frame.getByText(
-            'This pull request implements a new feature with comprehensive tests and documentation.',
-        );
+        this.input = this.frame.getByTestId(SUMMARY_TEST_ID);
     }
 
     async expectSummarySectionLoaded() {

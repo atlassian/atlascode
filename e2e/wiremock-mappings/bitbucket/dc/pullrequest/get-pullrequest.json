@@ -104,16 +104,16 @@
             "locked": false,
             "author": {
                 "user": {
-                    "name": "mockuser",
-                    "emailAddress": "mockuser@atlassian.code",
+                    "name": "mockuser2",
+                    "emailAddress": "mockuser2@atlassian.code",
                     "active": true,
                     "displayName": "Mock User",
                     "id": 2,
-                    "slug": "mockuser",
+                    "slug": "mockuser2",
                     "type": "NORMAL",
                     "links": {
                         "self": [{
-                            "href": "https://bitbucket.mockeddomain.com/users/mockuser"
+                            "href": "https://bitbucket.mockeddomain.com/users/mockuser2"
                         }]
                     },
                     "avatarUrl": "https://example.com/avatar.png"

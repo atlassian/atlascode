@@ -12,6 +12,7 @@ interface BasicPanelProps {
     title: string;
     subtitle?: string;
     isDefaultExpanded?: boolean;
+    dataTestId?: string;
     hidden?: boolean;
     isLoading: boolean;
     children?: React.ReactNode;
@@ -48,14 +49,14 @@ const useStyles = makeStyles(() => ({
 }));
 
 export const BasicPanel: React.FC<BasicPanelProps> = memo(
-    ({ title, subtitle, isDefaultExpanded = true, isLoading, hidden, children }) => {
+    ({ title, subtitle, isDefaultExpanded = true, dataTestId, isLoading, hidden, children }) => {
         const classes = useStyles();
         const [internalExpanded, setInternalExpanded] = useState<boolean>(!!isDefaultExpanded);
         const expansionHandler = useCallback((event: React.ChangeEvent<{}>, expanded: boolean) => {
             setInternalExpanded(expanded);
         }, []);
         return (
-            <Box hidden={!isLoading && hidden} className={classes.root}>
+            <Box hidden={!isLoading && hidden} className={classes.root} data-testid={dataTestId}>
                 <Accordion
                     square={false}
                     expanded={internalExpanded}

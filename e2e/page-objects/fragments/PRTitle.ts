@@ -4,13 +4,17 @@ export class PRTitle {
     readonly frame: FrameLocator;
 
     readonly input: Locator;
+    readonly inputDC: Locator;
     readonly checkoutButton: Locator;
     readonly checkedOutButton: Locator;
 
     constructor(frame: FrameLocator) {
         this.frame = frame;
 
-        this.input = this.frame.locator('input[value="New Feature Implementation"]');
+        this.input = this.frame
+            .locator('input[value="New Feature Implementation"]')
+            .or(this.frame.locator('input[value="test-branch"]'));
+        this.inputDC = this.frame.locator('input[value="test-branch"]');
         this.checkoutButton = this.frame.getByRole('button', { name: 'Checkout source branch' });
         this.checkedOutButton = this.frame.getByRole('button', { name: 'Source branch checked out' });
     }

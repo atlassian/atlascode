@@ -1,0 +1,35 @@
+{
+    "request": {
+        "method": "PUT",
+        "urlPathPattern": "/rest/api/1.0/projects/mocked-project/repos/dc-mocked-repo/pull-requests/123/participants/mockuser",
+        "bodyPatterns" : [{
+            "equalToJson" : { "status": "UNAPPROVED" }
+        }]
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "user": {
+                "name": "mockuser",
+                "emailAddress": "mockuser@atlassian.code",
+                "active": true,
+                "displayName": "Mock User",
+                "id": 4,
+                "slug": "mockuser",
+                "type": "NORMAL",
+                "links": {
+                    "self": [{
+                        "href": "https://bitbucket.mockeddomain.com/users/mockuser"
+                    }]
+                }
+            },
+            "lastReviewedCommit": "def456abc789012345678901234567890123456",
+            "role": "REVIEWER",
+            "approved": true,
+            "status": "UNAPPROVED"
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

@@ -19,7 +19,7 @@
                     "type": "NORMAL",
                     "avatarUrl": "https://example.com/avatar.png"
                 },
-                "authorTimestamp": 1756988194000,
+                "authorTimestamp": 1751541460000,
                 "committer": {
                     "name": "mockuser",
                     "emailAddress": "mockuser@atlassian.code",
@@ -30,8 +30,8 @@
                     "type": "NORMAL",
                     "avatarUrl": "https://example.com/avatar.png"
                 },
-                "committerTimestamp": 1756988194000,
-                "message": "Add new feature implementation with comprehensive tests",
+                "committerTimestamp": 1751541460000,
+                "message": "added example.json",
                 "parents": [{
                     "id": "abcdef1234567890abcdef1234567890abcdef12",
                     "displayId": "abcdef12345"
