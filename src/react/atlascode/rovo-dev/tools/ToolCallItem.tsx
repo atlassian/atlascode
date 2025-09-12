@@ -1,11 +1,11 @@
 import React, { useCallback } from 'react';
-import { DisabledState, InitializingDownladingState, InitializingState, State } from 'src/rovo-dev/rovoDevTypes';
+import { InitializingDownladingState, InitializingState, State } from 'src/rovo-dev/rovoDevTypes';
 
 import { ToolCallMessage } from '../utils';
 
 export const ToolCallItem: React.FC<{
     toolMessage: string;
-    currentState: Exclude<State, DisabledState>;
+    currentState: State;
 }> = ({ toolMessage, currentState }) => {
     const getMessage = useCallback(
         () => (currentState.state === 'Initializing' ? getInitStatusMessage(currentState) : toolMessage),
