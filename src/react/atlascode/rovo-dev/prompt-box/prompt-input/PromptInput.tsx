@@ -87,11 +87,9 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     React.useEffect(() => setEditor((prev) => prev ?? createEditor()), [onSend]);
 
     const handleSend = React.useCallback(() => {
-        const value = editor && editor.getValue().trim();
-        if (value) {
-            if (onSend(value)) {
-                editor.setValue('');
-            }
+        const value = editor && editor.getValue();
+        if (value && onSend(value)) {
+            editor.setValue('');
         }
     }, [editor, onSend]);
 
