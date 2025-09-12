@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { RovoDevInitState, State, SubState } from 'src/rovo-dev/rovoDevTypes';
+import { State } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
@@ -31,16 +31,14 @@ interface ChatStreamProps {
     pendingToolCall: string;
     deepPlanCreated: boolean;
     executeCodePlan: () => void;
-    state: State;
-    subState: SubState;
-    initState: RovoDevInitState;
-    downloadProgress: [number, number];
+    currentState: State;
     onChangesGitPushed: (msg: DefaultMessage, pullRequestCreated: boolean) => void;
     onCollapsiblePanelExpanded: () => void;
     feedbackVisible: boolean;
     setFeedbackVisible: (visible: boolean) => void;
     sendFeedback: (feedbackType: FeedbackType, feedack: string, canContact: boolean, lastTenMessages: boolean) => void;
     onLoginClick: () => void;
+    onOpenFolder: () => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -49,10 +47,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     pendingToolCall,
     deepPlanCreated,
     executeCodePlan,
-    state,
-    subState,
-    initState,
-    downloadProgress,
+    currentState,
     messagingApi,
     onChangesGitPushed,
     onCollapsiblePanelExpanded,
@@ -60,6 +55,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     setFeedbackVisible,
     sendFeedback,
     onLoginClick,
+    onOpenFolder,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -183,7 +179,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     // Other state management effect
     React.useEffect(() => {
-        if (process.env.ROVODEV_BBY && state === State.WaitingForPrompt) {
+        if (process.env.ROVODEV_BBY && currentState.state === 'WaitingForPrompt') {
             const canCreatePR = chatHistory.length > 0;
             setCanCreatePR(canCreatePR);
             if (canCreatePR) {
@@ -191,7 +187,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 checkGitChanges();
             }
         }
-    }, [state, chatHistory, isFormVisible, checkGitChanges]);
+    }, [currentState, chatHistory, isFormVisible, checkGitChanges]);
 
     const handleCopyResponse = React.useCallback((text: string) => {
         if (!navigator.clipboard) {
@@ -211,13 +207,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            <RovoDevLanding subState={subState} onLoginClick={onLoginClick} />
-            {(state !== State.Disabled || subState !== SubState.NeedAuth) &&
+            <RovoDevLanding currentState={currentState} onLoginClick={onLoginClick} onOpenFolder={onOpenFolder} />
+            {(currentState.state !== 'Disabled' || currentState.subState !== 'NeedAuth') &&
                 chatHistory &&
                 chatHistory.map((block, idx) => {
                     const drawerOpen =
                         idx === chatHistory.findLastIndex((msg) => Array.isArray(msg)) &&
-                        state !== State.WaitingForPrompt;
+                        currentState.state !== 'WaitingForPrompt';
 
                     if (block) {
                         if (Array.isArray(block)) {
@@ -233,7 +229,9 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             return (
                                 <ChatMessageItem
                                     msg={block}
-                                    enableActions={block.source === 'RovoDev' && state === State.WaitingForPrompt}
+                                    enableActions={
+                                        block.source === 'RovoDev' && currentState.state === 'WaitingForPrompt'
+                                    }
                                     onCopy={handleCopyResponse}
                                     onFeedback={handleFeedbackTrigger}
                                 />
@@ -267,17 +265,16 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
                     return null;
                 })}
-            {pendingToolCall && (
+
+            {currentState.state !== 'Disabled' && currentState.state !== 'ProcessTerminated' && pendingToolCall && (
                 <div style={{ marginBottom: '16px' }}>
-                    <ToolCallItem toolMessage={pendingToolCall} state={initState} downloadProgress={downloadProgress} />
+                    <ToolCallItem toolMessage={pendingToolCall} currentState={currentState} />
                 </div>
             )}
 
-            {state === State.WaitingForPrompt && (
+            {currentState.state === 'WaitingForPrompt' && (
                 <FollowUpActionFooter>
-                    {deepPlanCreated && (
-                        <CodePlanButton execute={executeCodePlan} disabled={state !== State.WaitingForPrompt} />
-                    )}
+                    {deepPlanCreated && <CodePlanButton execute={executeCodePlan} />}
                     {canCreatePR && !deepPlanCreated && hasChangesInGit && (
                         <PullRequestForm
                             onCancel={() => {

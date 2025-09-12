@@ -119,6 +119,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 ...this.initData!,
                 repoData,
                 ...this.api.getStartWorkConfig(),
+                isRovoDevEnabled: Container.isRovoDevEnabled,
             });
         } catch (e) {
             this.logger.error(e, 'Error updating start work page');
@@ -219,6 +220,46 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                         imgData: '',
                         nonce: msg.nonce,
                     } as any);
+                }
+                break;
+            }
+            case StartWorkActionType.GetRovoDevPreference: {
+                try {
+                    const enabled = await this.api.getRovoDevPreference();
+                    this.postMessage({
+                        type: StartWorkMessageType.RovoDevPreferenceResponse,
+                        enabled,
+                    });
+                } catch (e) {
+                    this.logger.error(e, 'Error getting RovoDev preference');
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error getting RovoDev preference'),
+                    });
+                }
+                break;
+            }
+            case StartWorkActionType.UpdateRovoDevPreference: {
+                try {
+                    await this.api.updateRovoDevPreference(msg.enabled);
+                } catch (e) {
+                    this.logger.error(e, 'Error updating RovoDev preference');
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error updating RovoDev preference'),
+                    });
+                }
+                break;
+            }
+            case StartWorkActionType.OpenRovoDev: {
+                try {
+                    await this.api.openRovoDev();
+                } catch (e) {
+                    this.logger.error(e, 'Error opening RovoDev');
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error opening RovoDev'),
+                    });
                 }
                 break;
             }

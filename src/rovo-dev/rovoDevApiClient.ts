@@ -34,7 +34,7 @@ export interface RovoDevChatRequest {
 }
 
 export interface RovoDevHealthcheckResponse {
-    status: string;
+    status: 'healthy' | 'unhealthy' | 'entitlement check failed' | 'pending user review';
     version: string;
     sessionId: string | null; // from response header
 }
@@ -187,27 +187,15 @@ export class RovoDevApiClient {
     /** Invokes the GET `/healthcheck` API.
      * @returns {Promise<RovoDevHealthcheckResponse>} An object representing the API response.
      */
-    public async healtcheckInfo(): Promise<RovoDevHealthcheckResponse> {
+    public async healthcheck(): Promise<RovoDevHealthcheckResponse> {
         const response = await this.fetchApi('/healthcheck', 'GET');
         const jsonResponse = (await response.json()) as RovoDevHealthcheckResponse;
         jsonResponse.sessionId = response.headers.get('x-session-id');
         return jsonResponse;
     }
 
-    /** Invokes the GET `/healthcheck` API.
-     * @returns {Promise<boolean>} A value indicating if the service is healthy.
-     */
-    public async healthcheck(): Promise<boolean> {
-        try {
-            const data = await this.healtcheckInfo();
-            return data.status === 'healthy';
-        } catch {
-            return false;
-        }
-    }
-
     /** Invokes the GET `/shutdown` API. */
     public async shutdown(): Promise<void> {
-        await this.fetchApi('/shutdown', 'GET');
+        await this.fetchApi('/shutdown', 'POST');
     }
 }

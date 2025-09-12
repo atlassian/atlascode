@@ -497,19 +497,43 @@ body {
     width: 100%;
 }
 
+.modified-file-item > div {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+    margin-right: 8px;
+}
+
+.modified-file-item .file-name {
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.modified-file-item .file-path {
+    color: var(--vscode-descriptionForeground);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-left: 8px;
+    display: inline;
+}
+
 .modified-file-item:hover {
     background-color: var(--vscode-list-hoverBackground);
 }
 
 .modified-file-actions {
-    display: none;
+    visibility: hidden;
+    display: flex;
     align-items: center;
     flex-direction: row;
     gap: 4px;
+    flex-shrink: 0;
 }
 
 .modified-file-item:hover .modified-file-actions {
-    display: flex;
+    visibility: visible;
 }
 
 .modified-file-action {

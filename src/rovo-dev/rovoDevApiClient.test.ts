@@ -484,7 +484,7 @@ describe('RovoDevApiClient', () => {
 
             mockFetch.mockResolvedValue(mockResponse);
 
-            const result = await client.healtcheckInfo();
+            const result = await client.healthcheck();
 
             expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/healthcheck', {
                 method: 'GET',
@@ -511,7 +511,7 @@ describe('RovoDevApiClient', () => {
 
             mockFetch.mockResolvedValue(mockResponse);
 
-            const result = await client.healtcheckInfo();
+            const result = await client.healthcheck();
 
             expect(result).toEqual(mockHealthcheckResponse);
             expect(result.status).toBe('unhealthy');
@@ -526,7 +526,7 @@ describe('RovoDevApiClient', () => {
 
             mockFetch.mockResolvedValue(mockResponse);
 
-            await expect(client.healtcheckInfo()).rejects.toThrow("Failed to fetch '/healthcheck API: HTTP 503");
+            await expect(client.healthcheck()).rejects.toThrow("Failed to fetch '/healthcheck API: HTTP 503");
         });
 
         it('should throw error when healthcheck endpoint returns 404', async () => {
@@ -538,81 +538,7 @@ describe('RovoDevApiClient', () => {
 
             mockFetch.mockResolvedValue(mockResponse);
 
-            await expect(client.healtcheckInfo()).rejects.toThrow("Failed to fetch '/healthcheck API: HTTP 404");
-        });
-    });
-
-    describe('healthcheck method', () => {
-        it('should return true when service is healthy', async () => {
-            const mockResponse = {
-                status: 200,
-                json: jest.fn().mockResolvedValue({ status: 'healthy' }),
-                headers: mockStandardResponseHeaders(),
-            } as unknown as Response;
-
-            mockFetch.mockResolvedValue(mockResponse);
-
-            const result = await client.healthcheck();
-
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/healthcheck', {
-                method: 'GET',
-                headers: {
-                    accept: 'text/event-stream',
-                    'Content-Type': 'application/json',
-                },
-                body: undefined,
-            });
-            expect(result).toBe(true);
-        });
-
-        it('should return false when service is unhealthy', async () => {
-            const mockResponse = {
-                status: 200,
-                json: jest.fn().mockResolvedValue({ status: 'unhealthy' }),
-                headers: mockStandardResponseHeaders(),
-            } as unknown as Response;
-
-            mockFetch.mockResolvedValue(mockResponse);
-
-            const result = await client.healthcheck();
-
-            expect(result).toBe(false);
-        });
-
-        it('should return false when service returns non-healthy status', async () => {
-            const mockResponse = {
-                status: 200,
-                json: jest.fn().mockResolvedValue({ status: 'maintenance' }),
-                headers: mockStandardResponseHeaders(),
-            } as unknown as Response;
-
-            mockFetch.mockResolvedValue(mockResponse);
-
-            const result = await client.healthcheck();
-
-            expect(result).toBe(false);
-        });
-
-        it('should return false when healthcheck fails', async () => {
-            const mockResponse = {
-                status: 500,
-                statusText: 'Internal Server Error',
-                headers: mockStandardResponseHeaders(),
-            } as Response;
-
-            mockFetch.mockResolvedValue(mockResponse);
-
-            const result = await client.healthcheck();
-
-            expect(result).toBe(false);
-        });
-
-        it('should handle network errors and return false', async () => {
-            mockFetch.mockRejectedValue(new Error('Network error'));
-
-            const result = await client.healthcheck();
-
-            expect(result).toBe(false);
+            await expect(client.healthcheck()).rejects.toThrow("Failed to fetch '/healthcheck API: HTTP 404");
         });
     });
 

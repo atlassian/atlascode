@@ -27,4 +27,7 @@ export interface StartWorkActionApi {
     closePage(): void;
     getStartWorkConfig(): StartWorkBranchTemplate;
     openSettings(section?: ConfigSection | ConfigV3Section, subsection?: ConfigSubSection | ConfigV3SubSection): void;
+    getRovoDevPreference(): Promise<boolean>;
+    updateRovoDevPreference(enabled: boolean): Promise<void>;
+    openRovoDev(): Promise<void>;
 }

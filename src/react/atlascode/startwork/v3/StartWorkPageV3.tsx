@@ -8,6 +8,7 @@ import { ErrorDisplay } from '../../common/ErrorDisplay';
 import { StartWorkControllerContext, useStartWorkController } from '../startWorkController';
 import {
     CreateBranchSection,
+    RovoDevToggle,
     SnackbarNotification,
     SuccessAlert,
     TaskInfoSection,
@@ -67,17 +68,27 @@ const StartWorkPageV3: React.FunctionComponent = () => {
                     />
 
                     {submitState !== 'submit-success' && (
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            disabled={submitState === 'submitting'}
-                            onClick={handleCreateBranch}
-                            endIcon={
-                                submitState === 'submitting' ? <CircularProgress color="inherit" size={20} /> : null
-                            }
-                        >
-                            Create branch
-                        </Button>
+                        <Box>
+                            {state.isRovoDevEnabled && (
+                                <Box marginBottom={2}>
+                                    <RovoDevToggle
+                                        checked={formState.startWithRovoDev}
+                                        onChange={formActions.onStartWithRovoDevChange}
+                                    />
+                                </Box>
+                            )}
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                disabled={submitState === 'submitting'}
+                                onClick={handleCreateBranch}
+                                endIcon={
+                                    submitState === 'submitting' ? <CircularProgress color="inherit" size={20} /> : null
+                                }
+                            >
+                                Create branch
+                            </Button>
+                        </Box>
                     )}
 
                     {submitState === 'submit-success' && (

@@ -121,4 +121,16 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
             : Container.startWorkWebviewFactory;
         factory.hide();
     }
+
+    async getRovoDevPreference(): Promise<boolean> {
+        return Container.context.globalState.get<boolean>('startWorkWithRovoDev', false);
+    }
+
+    async updateRovoDevPreference(enabled: boolean): Promise<void> {
+        await Container.context.globalState.update('startWorkWithRovoDev', enabled);
+    }
+
+    async openRovoDev(): Promise<void> {
+        await Container.rovodevWebviewProvider.invokeRovoDevAskCommand('', undefined);
+    }
 }
