@@ -84,6 +84,7 @@ export interface CommonEditorViewState extends Message {
     summaryKey: string;
     isRendered?: boolean;
     isAtlaskitEditorEnabled: boolean;
+    isAtlaskitEditorFFReceived: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -104,6 +105,7 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     summaryKey: v4(),
     isRendered: false,
     isAtlaskitEditorEnabled: false,
+    isAtlaskitEditorFFReceived: false,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -222,6 +224,7 @@ export abstract class AbstractIssueEditorPage<
                 this.setState({
                     isRteEnabled: e.featureFlags.rteEnabled,
                     isAtlaskitEditorEnabled: e.featureFlags[Features.AtlaskitEditor] || false,
+                    isAtlaskitEditorFFReceived: true,
                 });
                 break;
             }
