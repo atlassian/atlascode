@@ -71,7 +71,6 @@ function createEditor() {
 
 export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     disabled,
-    hideButtons,
     currentState,
     promptText,
     isDeepPlanEnabled,
@@ -150,64 +149,60 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 }}
             >
                 {/* Left-side Add Context Button */}
-                {!hideButtons && (
-                    <>
-                        <Tooltip content="Add context">
-                            <LoadingButton
-                                style={{
-                                    ...rovoDevPromptButtonStyles,
-                                }}
-                                spacing="compact"
-                                label="Add context"
-                                iconBefore={<i className="codicon codicon-add" />}
-                                isDisabled={disabled}
-                                onClick={() => onAddContext()}
-                            />
-                        </Tooltip>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            <LoadingButton
-                                style={{
-                                    ...rovoDevDeepPlanStylesSelector(
-                                        isDeepPlanEnabled,
-                                        currentState.state !== 'WaitingForPrompt',
-                                    ),
-                                }}
-                                spacing="compact"
-                                label="Enable deep plan"
-                                iconBefore={<AiGenerativeTextSummaryIcon />}
-                                iconAfter={isDeepPlanEnabled ? <CloseIconDeepPlan /> : undefined}
-                                isDisabled={disabled || currentState.state !== 'WaitingForPrompt'}
-                                onClick={() => onDeepPlanToggled()}
-                            >
-                                {isDeepPlanEnabled ? 'Deep plan enabled' : ''}
-                            </LoadingButton>
-                            {isWaitingForPrompt && (
-                                <LoadingButton
-                                    style={{
-                                        ...rovoDevPromptButtonStyles,
-                                        color: 'var(--vscode-button-foreground) !important',
-                                        backgroundColor: 'var(--vscode-button-background)',
-                                    }}
-                                    spacing="compact"
-                                    label="Send prompt"
-                                    iconBefore={<SendIcon label="Send prompt" />}
-                                    isDisabled={disabled || sendButtonDisabled}
-                                    onClick={() => handleSend()}
-                                />
-                            )}
-                            {!isWaitingForPrompt && (
-                                <LoadingButton
-                                    style={rovoDevPromptButtonStyles}
-                                    spacing="compact"
-                                    label="Stop"
-                                    iconBefore={<StopIcon label="Stop" />}
-                                    isDisabled={disabled || currentState.state === 'CancellingResponse'}
-                                    onClick={() => onCancel()}
-                                />
-                            )}
-                        </div>
-                    </>
-                )}
+                <Tooltip content="Add context">
+                    <LoadingButton
+                        style={{
+                            ...rovoDevPromptButtonStyles,
+                        }}
+                        spacing="compact"
+                        label="Add context"
+                        iconBefore={<i className="codicon codicon-add" />}
+                        isDisabled={disabled}
+                        onClick={() => onAddContext()}
+                    />
+                </Tooltip>
+                <div style={{ display: 'flex', gap: 8 }}>
+                    <LoadingButton
+                        style={{
+                            ...rovoDevDeepPlanStylesSelector(
+                                isDeepPlanEnabled,
+                                currentState.state !== 'WaitingForPrompt',
+                            ),
+                        }}
+                        spacing="compact"
+                        label="Enable deep plan"
+                        iconBefore={<AiGenerativeTextSummaryIcon />}
+                        iconAfter={isDeepPlanEnabled ? <CloseIconDeepPlan /> : undefined}
+                        isDisabled={disabled || currentState.state !== 'WaitingForPrompt'}
+                        onClick={() => onDeepPlanToggled()}
+                    >
+                        {isDeepPlanEnabled ? 'Deep plan enabled' : ''}
+                    </LoadingButton>
+                    {isWaitingForPrompt && (
+                        <LoadingButton
+                            style={{
+                                ...rovoDevPromptButtonStyles,
+                                color: 'var(--vscode-button-foreground) !important',
+                                backgroundColor: 'var(--vscode-button-background)',
+                            }}
+                            spacing="compact"
+                            label="Send prompt"
+                            iconBefore={<SendIcon label="Send prompt" />}
+                            isDisabled={disabled || sendButtonDisabled}
+                            onClick={() => handleSend()}
+                        />
+                    )}
+                    {!isWaitingForPrompt && (
+                        <LoadingButton
+                            style={rovoDevPromptButtonStyles}
+                            spacing="compact"
+                            label="Stop"
+                            iconBefore={<StopIcon label="Stop" />}
+                            isDisabled={disabled || currentState.state === 'CancellingResponse'}
+                            onClick={() => onCancel()}
+                        />
+                    )}
+                </div>
             </div>
         </>
     );

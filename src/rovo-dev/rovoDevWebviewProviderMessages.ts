@@ -41,8 +41,10 @@ interface NonFocusedContextRemovedResponse {
     context: RovoDevContextItem;
 }
 
+export type RovoDevDisabledReason = 'noOpenFolder' | 'needAuth' | 'other';
+
 export type RovoDevProviderMessage =
-    | ReducerAction<RovoDevProviderMessageType.RovoDevDisabled, { reason: 'needAuth' | 'other' }>
+    | ReducerAction<RovoDevProviderMessageType.RovoDevDisabled, { reason: RovoDevDisabledReason }>
     | ReducerAction<RovoDevProviderMessageType.PromptSent, RovoDevPrompt>
     | ReducerAction<RovoDevProviderMessageType.Response, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.UserChatMessage, { message: ChatMessage }>
@@ -51,10 +53,7 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.ToolReturn, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ErrorMessage, { message: ErrorMessage }>
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
-    | ReducerAction<
-          RovoDevProviderMessageType.ProviderReady,
-          { workspaceCount: number; workspacePath?: string; homeDir?: string }
-      >
+    | ReducerAction<RovoDevProviderMessageType.ProviderReady, { workspacePath?: string; homeDir?: string }>
     | ReducerAction<RovoDevProviderMessageType.SetInitializing, { isPromptPending: boolean }>
     | ReducerAction<
           RovoDevProviderMessageType.SetDownloadProgress,

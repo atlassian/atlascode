@@ -39,7 +39,11 @@ import { RovoDevProcessManager } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem } from './rovoDevTypes';
-import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
+import {
+    RovoDevDisabledReason,
+    RovoDevProviderMessage,
+    RovoDevProviderMessageType,
+} from './rovoDevWebviewProviderMessages';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;
@@ -132,8 +136,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         _context: WebviewViewResolveContext,
         _token: CancellationToken,
     ): Thenable<void> | void {
-        const webview = webviewView.webview;
-        this._webView = webview;
+        this._webView = webviewView.webview;
+        // grab the webview from the instance field, so it's properly typed
+        const webview = this._webView;
 
         this._chatProvider.setWebview(webview);
 
@@ -239,12 +244,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.WebviewReady:
                         if (!this.isBoysenberry && !this.isDisabled) {
-                            await webview.postMessage({
-                                type: RovoDevProviderMessageType.ProviderReady,
-                                workspaceCount: workspace.workspaceFolders?.length || 0,
-                                workspacePath: workspace.workspaceFolders?.[0]?.uri.fsPath,
-                                homeDir: process.env.HOME || process.env.USERPROFILE,
-                            });
+                            if (!workspace.workspaceFolders?.length) {
+                                this.signalRovoDevDisabled('noOpenFolder');
+                                return;
+                            } else {
+                                await webview.postMessage({
+                                    type: RovoDevProviderMessageType.ProviderReady,
+                                    workspacePath: workspace.workspaceFolders?.[0]?.uri.fsPath,
+                                    homeDir: process.env.HOME || process.env.USERPROFILE,
+                                });
+                            }
                         }
 
                         const fixedPort = parseInt(process.env[rovodevInfo.envVars.port] || '0');
@@ -942,7 +951,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    public signalRovoDevDisabled(reason: 'needAuth' | 'other') {
+    public signalRovoDevDisabled(reason: RovoDevDisabledReason) {
         this._processState = RovoDevProcessState.Disabled;
 
         const webView = this._webView!;

@@ -6,11 +6,15 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import { RovoDevContextItem, State } from 'src/rovo-dev/rovoDevTypes';
+import { DisabledState, RovoDevContextItem, State } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
-import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
+import {
+    RovoDevDisabledReason,
+    RovoDevProviderMessage,
+    RovoDevProviderMessageType,
+} from '../../../rovo-dev/rovoDevWebviewProviderMessages';
 import { useMessagingApi } from '../messagingApi';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 import { ChatStream } from './messaging/ChatStream';
@@ -58,6 +62,20 @@ export const CloseIconDeepPlan: React.FC<{}> = () => {
     );
 };
 
+function mapRovoDevDisabledReasonToSubState(reason: RovoDevDisabledReason): DisabledState['subState'] {
+    switch (reason) {
+        case 'needAuth':
+            return 'NeedAuth';
+        case 'noOpenFolder':
+            return 'NoWorkspaceOpen';
+        case 'other':
+            return 'Other';
+        default:
+            // @ts-expect-error ts(2339) - reason here should be 'never'
+            throw new Error(reason.toString());
+    }
+}
+
 const RovoDevView: React.FC = () => {
     const [currentState, setCurrentState] = useState<State>({ state: 'WaitingForPrompt' });
     const [promptText, setPromptText] = useState('');
@@ -66,7 +84,6 @@ const RovoDevView: React.FC = () => {
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
     const [isDeepPlanCreated, setIsDeepPlanCreated] = useState(false);
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
-    const [workspaceCount, setWorkspaceCount] = useState(process.env.ROVODEV_BBY ? 1 : 0);
     const [workspacePath, setWorkspacePath] = useState<string>('');
     const [homeDir, setHomeDir] = useState<string>('');
     const [history, setHistory] = useState<Response[]>([]);
@@ -331,14 +348,9 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ProviderReady:
-                    setWorkspaceCount(event.workspaceCount);
                     setWorkspacePath(event.workspacePath || '');
                     setHomeDir(event.homeDir || '');
-                    if (event.workspaceCount) {
-                        setCurrentState({ state: 'WaitingForPrompt' });
-                    } else {
-                        setCurrentState({ state: 'Disabled', subState: 'NoWorkspaceOpen' });
-                    }
+                    setCurrentState({ state: 'WaitingForPrompt' });
                     break;
 
                 case RovoDevProviderMessageType.SetInitializing:
@@ -382,7 +394,7 @@ const RovoDevView: React.FC = () => {
                     clearChatHistory();
                     setCurrentState({
                         state: 'Disabled',
-                        subState: event.reason === 'needAuth' ? 'NeedAuth' : 'Other',
+                        subState: mapRovoDevDisabledReasonToSubState(event.reason),
                     });
                     break;
 
@@ -708,8 +720,7 @@ const RovoDevView: React.FC = () => {
                             }}
                         />
                         <PromptInputBox
-                            disabled={workspaceCount === 0 || currentState.state === 'ProcessTerminated'}
-                            hideButtons={workspaceCount === 0}
+                            disabled={currentState.state === 'ProcessTerminated'}
                             currentState={currentState}
                             promptText={promptText}
                             isDeepPlanEnabled={isDeepPlanToggled}
