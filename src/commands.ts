@@ -26,7 +26,7 @@ import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } 
 import { Logger } from './logger';
 import { AuthenticationType } from './onboarding/quickFlow/authentication/types';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
-import { RovoDevContext } from './rovo-dev/rovoDevTypes';
+import { RovoDevContextItem } from './rovo-dev/rovoDevTypes';
 import { openRovoDevConfigFile } from './rovo-dev/rovoDevUtils';
 import { Experiments, Features } from './util/featureFlags';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
@@ -459,7 +459,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
     }
 }
 
-const buildContext = (editor?: TextEditor, vscodeContext?: ExtensionContext): RovoDevContext | undefined => {
+const buildContext = (editor?: TextEditor, vscodeContext?: ExtensionContext): RovoDevContextItem[] | undefined => {
     if (!editor || !vscodeContext) {
         return undefined;
     }
@@ -476,13 +476,12 @@ const buildContext = (editor?: TextEditor, vscodeContext?: ExtensionContext): Ro
             : document.fileName,
     };
     const selections = editor.selections && editor.selections.length > 0 ? editor.selections : [editor.selection];
-    return {
-        contextItems: selections.map((selection) => ({
-            file: fileInfo,
-            selection: selection ? { start: selection.start.line, end: selection.end.line } : undefined,
-            enabled: true,
-        })),
-    };
+    return selections.map((selection) => ({
+        isFocus: false,
+        file: fileInfo,
+        selection: selection ? { start: selection.start.line, end: selection.end.line } : undefined,
+        enabled: true,
+    }));
 };
 
 export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
@@ -500,7 +499,7 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             }
             Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
-        commands.registerCommand(Commands.RovodevAsk, (prompt: string, context?: RovoDevContext) => {
+        commands.registerCommand(Commands.RovodevAsk, (prompt: string, context?: RovoDevContextItem[]) => {
             Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
         commands.registerCommand(Commands.RovodevNewSession, () => {
@@ -512,12 +511,12 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
         ),
         commands.registerCommand(Commands.RovodevAddToContext, async () => {
             const context = buildContext(window.activeTextEditor, vscodeContext);
-            if (!context || !context.contextItems || context.contextItems.length === 0) {
+            if (!context || context.length === 0) {
                 // Do nothing, this should only have effect in editor context
                 return;
             }
             commands.executeCommand('atlascode.views.rovoDev.webView.focus');
-            context.contextItems.forEach((item) => {
+            context.forEach((item) => {
                 Container.rovodevWebviewProvider.addToContext(item);
             });
         }),

@@ -274,8 +274,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
             {currentState.state === 'WaitingForPrompt' && (
                 <FollowUpActionFooter>
-                    {deepPlanCreated && <CodePlanButton execute={executeCodePlan} />}
-                    {canCreatePR && !deepPlanCreated && hasChangesInGit && (
+                    {deepPlanCreated && !feedbackVisible && <CodePlanButton execute={executeCodePlan} />}
+                    {canCreatePR && !deepPlanCreated && !feedbackVisible && hasChangesInGit && (
                         <PullRequestForm
                             onCancel={() => {
                                 setCanCreatePR(false);

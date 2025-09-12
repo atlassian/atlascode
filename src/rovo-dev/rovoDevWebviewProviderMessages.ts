@@ -21,8 +21,8 @@ export const enum RovoDevProviderMessageType {
     CancelFailed = 'cancelFailed',
     CreatePRComplete = 'createPRComplete',
     GetCurrentBranchNameComplete = 'getCurrentBranchNameComplete',
-    UserFocusUpdated = 'userFocusUpdated',
     ContextAdded = 'contextAdded',
+    ContextRemoved = 'contextRemoved',
     CheckGitChangesComplete = 'checkGitChangesComplete',
     ForceStop = 'forceStop',
     ShowFeedbackForm = 'showFeedbackForm',
@@ -30,6 +30,15 @@ export const enum RovoDevProviderMessageType {
 
 export interface RovoDevObjectResponse {
     dataObject: RovoDevResponse;
+}
+
+interface FocusedContextRemovedResponse {
+    isFocus: true;
+}
+
+interface NonFocusedContextRemovedResponse {
+    isFocus: false;
+    context: RovoDevContextItem;
 }
 
 export type RovoDevProviderMessage =
@@ -55,8 +64,11 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.CancelFailed>
     | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string; error?: string } }>
     | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>
-    | ReducerAction<RovoDevProviderMessageType.UserFocusUpdated, { userFocus: RovoDevContextItem }>
     | ReducerAction<RovoDevProviderMessageType.ContextAdded, { context: RovoDevContextItem }>
+    | ReducerAction<
+          RovoDevProviderMessageType.ContextRemoved,
+          FocusedContextRemovedResponse | NonFocusedContextRemovedResponse
+      >
     | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
     | ReducerAction<RovoDevProviderMessageType.ForceStop>
     | ReducerAction<RovoDevProviderMessageType.ShowFeedbackForm>;

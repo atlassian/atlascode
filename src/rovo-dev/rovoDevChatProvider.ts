@@ -6,7 +6,7 @@ import { Event, Webview } from 'vscode';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevChatRequest, RovoDevChatRequestContextFileEntry } from './rovoDevApiClient';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevContext, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
+import { RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
@@ -52,6 +52,10 @@ export class RovoDevChatProvider {
         }
     }
 
+    public shutdown() {
+        this._rovoDevApiClient = undefined;
+    }
+
     public executeChat(prompt: RovoDevPrompt, revertedFiles: string[]) {
         return this.internalExecuteChat(prompt, revertedFiles, false);
     }
@@ -68,7 +72,7 @@ export class RovoDevChatProvider {
         const isCommand = text.trim() === '/clear' || text.trim() === '/prune';
         if (isCommand) {
             enable_deep_plan = false;
-            context = undefined;
+            context = [];
         }
 
         if (!flushingPendingPrompt) {
@@ -113,8 +117,12 @@ export class RovoDevChatProvider {
     }
 
     public async executeReplay(): Promise<void> {
+        if (!this._rovoDevApiClient) {
+            throw new Error('Unable to replay the previous conversation. Rovo Dev failed to initialize');
+        }
+
         this.beginNewPrompt('replay');
-        await this.sendPromptSentToView('', false);
+        await this.sendPromptSentToView('', false, []);
 
         this._replayInProgress = true;
 
@@ -157,30 +165,45 @@ export class RovoDevChatProvider {
     public async executeCancel(fromNewSession: boolean): Promise<boolean> {
         const webview = this._webView!;
 
-        if (this._pendingCancellation) {
-            throw new Error('Cancellation already in progress');
+        let success: boolean;
+        if (this._rovoDevApiClient) {
+            if (this._pendingCancellation) {
+                throw new Error('Cancellation already in progress');
+            }
+            this._pendingCancellation = true;
+
+            const cancelResponse = await this.executeApiWithErrorHandling((client) => client.cancel(), false);
+
+            this._pendingCancellation = false;
+
+            success =
+                !!cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress');
+
+            if (!success) {
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.CancelFailed,
+                });
+            }
+        } else {
+            // this._rovoDevApiClient is undefined, it means this cancellation happened while
+            // the provider is still initializing
+            this._pendingPrompt = undefined;
+            success = true;
+
+            // send a fake 'CompleteMessage' to tell the view the prompt isn't pending anymore
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.CompleteMessage,
+            });
         }
-        this._pendingCancellation = true;
 
-        const cancelResponse = await this.executeApiWithErrorHandling((client) => client.cancel(), false);
-
-        this._pendingCancellation = false;
-
-        const success =
-            !!cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress');
-
-        if (!fromNewSession) {
+        // don't instrument the cancellation if it's coming from a 'New session' action
+        // also, don't instrument the cancellation if it's done before initialization
+        if (!fromNewSession && this._rovoDevApiClient) {
             this._telemetryProvider.fireTelemetryEvent(
                 'rovoDevStopActionEvent',
                 this.currentPromptId,
                 success ? undefined : true,
             );
-        }
-
-        if (!success) {
-            await webview.postMessage({
-                type: RovoDevProviderMessageType.CancelFailed,
-            });
         }
 
         return success;
@@ -314,6 +337,7 @@ export class RovoDevChatProvider {
                     this._currentPrompt = {
                         text: response.content,
                         enable_deep_plan: false,
+                        context: [],
                     };
                     return this.sendUserPromptToView(response.content);
                 }
@@ -390,7 +414,7 @@ export class RovoDevChatProvider {
         });
     }
 
-    private async sendUserPromptToView(text: string, context?: RovoDevContext) {
+    private async sendUserPromptToView(text: string, context?: RovoDevContextItem[]) {
         const webview = this._webView!;
 
         return await webview.postMessage({
@@ -403,40 +427,26 @@ export class RovoDevChatProvider {
         });
     }
 
-    private async sendPromptSentToView(text: string, enable_deep_plan: boolean, context?: RovoDevContext) {
+    private async sendPromptSentToView(text: string, enable_deep_plan: boolean, context: RovoDevContextItem[]) {
         const webview = this._webView!;
 
         return await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
             text,
             enable_deep_plan,
-            context: context,
+            context,
         });
     }
 
     private preparePayloadForChatRequest(prompt: RovoDevPrompt): RovoDevChatRequest {
-        const fileContext: RovoDevChatRequestContextFileEntry[] = !!prompt.context?.focusInfo?.enabled
-            ? [
-                  {
-                      type: 'file' as const,
-                      file_path: prompt.context.focusInfo.file.absolutePath,
-                      selection: prompt.context.focusInfo.selection,
-                      note: 'The user is looking at this file',
-                  },
-              ]
-            : [];
-
-        if (prompt.context?.contextItems) {
-            const moreFiles = prompt.context.contextItems
-                .filter((x) => x.enabled)
-                .map((x) => ({
-                    type: 'file' as const,
-                    file_path: x.file.absolutePath,
-                    selection: x.selection,
-                    note: 'I currently have this file open in my IDE',
-                }));
-            fileContext.push(...moreFiles);
-        }
+        const fileContext: RovoDevChatRequestContextFileEntry[] = (prompt.context || [])
+            .filter((x) => x.enabled)
+            .map((x) => ({
+                type: 'file' as const,
+                file_path: x.file.absolutePath,
+                selection: x.selection,
+                note: 'I currently have this file open in my IDE',
+            }));
 
         return {
             message: prompt.text,

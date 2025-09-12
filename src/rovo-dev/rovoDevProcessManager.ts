@@ -13,7 +13,7 @@ import { rovodevInfo } from '../constants';
 import { Container } from '../container';
 import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
 
-const MIN_SUPPORTED_ROVODEV_VERSION = packageJson.rovoDev.version;
+export const MIN_SUPPORTED_ROVODEV_VERSION = packageJson.rovoDev.version;
 
 function GetRovoDevURIs(context: ExtensionContext) {
     const extensionPath = context.storageUri!.fsPath;
