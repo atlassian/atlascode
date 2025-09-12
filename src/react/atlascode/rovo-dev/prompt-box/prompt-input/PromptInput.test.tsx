@@ -82,12 +82,6 @@ describe('PromptInputBox', () => {
         expect(defaultProps.onCancel).toHaveBeenCalled();
     });
 
-    it('disables Send button when sendButtonDisabled is true', () => {
-        render(<PromptInputBox {...defaultProps} sendButtonDisabled={true} />);
-        fireEvent.click(screen.getByLabelText('Send prompt'));
-        expect(defaultProps.onSend).toHaveBeenCalledTimes(0);
-    });
-
     it('disables Stop button when state is CancellingResponse', () => {
         render(<PromptInputBox {...defaultProps} currentState={{ state: 'CancellingResponse' }} />);
         fireEvent.click(screen.getByLabelText('Stop'));

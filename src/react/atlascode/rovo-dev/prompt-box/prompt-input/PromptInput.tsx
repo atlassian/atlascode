@@ -30,9 +30,8 @@ interface PromptInputBoxProps {
     promptText: string;
     isDeepPlanEnabled: boolean;
     onDeepPlanToggled: () => void;
-    onSend: (text: string) => void;
+    onSend: (text: string) => boolean;
     onCancel: () => void;
-    sendButtonDisabled?: boolean;
     onAddContext: () => void;
     onCopy: () => void;
     handleMemoryCommand: () => void;
@@ -77,7 +76,6 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     onDeepPlanToggled,
     onSend,
     onCancel,
-    sendButtonDisabled = false,
     onAddContext,
     onCopy,
     handleMemoryCommand,
@@ -91,8 +89,9 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     const handleSend = React.useCallback(() => {
         const value = editor && editor.getValue().trim();
         if (value) {
-            onSend(value);
-            editor.setValue('');
+            if (onSend(value)) {
+                editor.setValue('');
+            }
         }
     }, [editor, onSend]);
 
@@ -136,6 +135,14 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         [currentState],
     );
 
+    const showCancelButton = React.useMemo(
+        () =>
+            currentState.state === 'GeneratingResponse' ||
+            currentState.state === 'CancellingResponse' ||
+            (currentState.state === 'Initializing' && currentState.isPromptPending),
+        [currentState],
+    );
+
     return (
         <>
             <div id="prompt-editor-container" style={{ ...{ fieldSizing: 'content' }, ...rovoDevTextareaStyles }} />
@@ -164,21 +171,18 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 <div style={{ display: 'flex', gap: 8 }}>
                     <LoadingButton
                         style={{
-                            ...rovoDevDeepPlanStylesSelector(
-                                isDeepPlanEnabled,
-                                currentState.state !== 'WaitingForPrompt',
-                            ),
+                            ...rovoDevDeepPlanStylesSelector(isDeepPlanEnabled, !isWaitingForPrompt),
                         }}
                         spacing="compact"
                         label="Enable deep plan"
                         iconBefore={<AiGenerativeTextSummaryIcon />}
                         iconAfter={isDeepPlanEnabled ? <CloseIconDeepPlan /> : undefined}
-                        isDisabled={disabled || currentState.state !== 'WaitingForPrompt'}
+                        isDisabled={disabled || !isWaitingForPrompt}
                         onClick={() => onDeepPlanToggled()}
                     >
                         {isDeepPlanEnabled ? 'Deep plan enabled' : ''}
                     </LoadingButton>
-                    {isWaitingForPrompt && (
+                    {!showCancelButton && (
                         <LoadingButton
                             style={{
                                 ...rovoDevPromptButtonStyles,
@@ -188,11 +192,11 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             spacing="compact"
                             label="Send prompt"
                             iconBefore={<SendIcon label="Send prompt" />}
-                            isDisabled={disabled || sendButtonDisabled}
+                            isDisabled={disabled || !isWaitingForPrompt}
                             onClick={() => handleSend()}
                         />
                     )}
-                    {!isWaitingForPrompt && (
+                    {showCancelButton && (
                         <LoadingButton
                             style={rovoDevPromptButtonStyles}
                             spacing="compact"

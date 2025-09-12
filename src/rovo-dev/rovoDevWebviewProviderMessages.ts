@@ -1,14 +1,13 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 
-import { ChatMessage, ErrorMessage } from '../react/atlascode/rovo-dev/utils';
+import { ErrorMessage } from '../react/atlascode/rovo-dev/utils';
 import { RovoDevResponse } from './responseParser';
 import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
 export const enum RovoDevProviderMessageType {
     RovoDevDisabled = 'rovoDevDisabled',
-    PromptSent = 'promptSent',
+    SignalPromptSent = 'signalPromptSent',
     Response = 'response',
-    UserChatMessage = 'userChatMessage',
     CompleteMessage = 'completeMessage',
     ToolCall = 'toolCall',
     ToolReturn = 'toolReturn',
@@ -45,9 +44,8 @@ export type RovoDevDisabledReason = 'noOpenFolder' | 'needAuth' | 'other';
 
 export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.RovoDevDisabled, { reason: RovoDevDisabledReason }>
-    | ReducerAction<RovoDevProviderMessageType.PromptSent, RovoDevPrompt>
+    | ReducerAction<RovoDevProviderMessageType.SignalPromptSent, RovoDevPrompt & { echoMessage: boolean }>
     | ReducerAction<RovoDevProviderMessageType.Response, RovoDevObjectResponse>
-    | ReducerAction<RovoDevProviderMessageType.UserChatMessage, { message: ChatMessage }>
     | ReducerAction<RovoDevProviderMessageType.CompleteMessage, { isReplay?: boolean }>
     | ReducerAction<RovoDevProviderMessageType.ToolCall, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ToolReturn, RovoDevObjectResponse>

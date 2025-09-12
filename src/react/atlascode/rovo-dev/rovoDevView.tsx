@@ -260,10 +260,12 @@ const RovoDevView: React.FC = () => {
         (event: RovoDevProviderMessage): void => {
             let object: RovoDevResponse;
             switch (event.type) {
-                case RovoDevProviderMessageType.PromptSent:
-                    // Disable the send button, and enable the pause button
+                case RovoDevProviderMessageType.SignalPromptSent:
                     setIsDeepPlanToggled(event.enable_deep_plan || false);
                     setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE);
+                    if (event.echoMessage) {
+                        appendResponse({ source: 'User', text: event.text, context: event.context });
+                    }
                     break;
 
                 case RovoDevProviderMessageType.Response:
@@ -278,10 +280,6 @@ const RovoDevView: React.FC = () => {
                         };
                         appendResponse(msg);
                     }
-                    break;
-
-                case RovoDevProviderMessageType.UserChatMessage:
-                    appendResponse(event.message);
                     break;
 
                 case RovoDevProviderMessageType.CompleteMessage:
@@ -469,12 +467,16 @@ const RovoDevView: React.FC = () => {
     }, [postMessage, dispatch, outgoingMessage]);
 
     const sendPrompt = useCallback(
-        (text: string): void => {
-            if (
-                text.trim() === '' ||
-                (currentState.state !== 'WaitingForPrompt' && currentState.state !== 'Initializing')
-            ) {
-                return;
+        (text: string): boolean => {
+            if (text.trim() === '') {
+                return false;
+            }
+
+            const isWaitingForPrompt =
+                currentState.state === 'WaitingForPrompt' ||
+                (currentState.state === 'Initializing' && !currentState.isPromptPending);
+            if (!isWaitingForPrompt) {
+                return false;
             }
 
             if (isDeepPlanCreated) {
@@ -500,9 +502,10 @@ const RovoDevView: React.FC = () => {
 
             // Clear the input field
             setPromptText('');
+            return true;
         },
         [
-            currentState.state,
+            currentState,
             isDeepPlanCreated,
             isDeepPlanToggled,
             promptContextCollection,
@@ -533,8 +536,9 @@ const RovoDevView: React.FC = () => {
         if (currentState.state !== 'WaitingForPrompt') {
             return;
         }
-        setCurrentState({ state: 'ExecutingPlan' });
-        sendPrompt(CODE_PLAN_EXECUTE_PROMPT);
+        if (sendPrompt(CODE_PLAN_EXECUTE_PROMPT)) {
+            setCurrentState({ state: 'ExecutingPlan' });
+        }
     }, [currentState, setCurrentState, sendPrompt]);
 
     const retryPromptAfterError = useCallback((): void => {
@@ -727,7 +731,6 @@ const RovoDevView: React.FC = () => {
                             onDeepPlanToggled={() => setIsDeepPlanToggled(!isDeepPlanToggled)}
                             onSend={sendPrompt}
                             onCancel={cancelResponse}
-                            sendButtonDisabled={currentState.state !== 'WaitingForPrompt'}
                             onAddContext={() => {
                                 postMessage({
                                     type: RovoDevViewResponseType.AddContext,
