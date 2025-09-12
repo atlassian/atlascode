@@ -38,7 +38,7 @@ import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
 import { RovoDevProcessManager } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevContext, RovoDevContextItem } from './rovoDevTypes';
+import { RovoDevContextItem } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
@@ -197,7 +197,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.AddContext:
-                        await this.executeAddContext(e.currentContext);
+                        await this.executeAddContext();
                         break;
 
                     case RovoDevViewResponseType.ReportChangedFilesPanelShown:
@@ -309,30 +309,22 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         selection = selection || (editor ? editor.selection : undefined);
 
         if (!editor) {
-            await this._webView.postMessage({
-                type: RovoDevProviderMessageType.UserFocusUpdated,
-                userFocus: {
-                    file: { name: '', absolutePath: '', relativePath: '' },
-                    selection: undefined,
-                    invalid: true,
-                },
-            });
+            await this.removeContextItem(true);
             return;
         }
 
         const fileInfo = this.getOpenFileInfo(editor.document);
+        if (fileInfo.absolutePath !== '' && fs.existsSync(fileInfo.absolutePath)) {
+            const fileSelection =
+                selection && !selection.isEmpty ? { start: selection.start.line, end: selection.end.line } : undefined;
 
-        await this._webView.postMessage({
-            type: RovoDevProviderMessageType.UserFocusUpdated,
-            userFocus: {
+            await this.addContextItem({
+                isFocus: true,
                 file: fileInfo,
-                selection:
-                    selection && !selection.isEmpty
-                        ? { start: selection.start.line, end: selection.end.line }
-                        : undefined,
-                invalid: fileInfo.absolutePath === '' || !fs.existsSync(fileInfo.absolutePath),
-            },
-        });
+                selection: fileSelection,
+                enabled: true,
+            });
+        }
     }
 
     // Listen to active editor and selection changes
@@ -378,12 +370,31 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private async addContextItem(contextItem: RovoDevContextItem): Promise<void> {
+    private addContextItem(contextItem: RovoDevContextItem): Thenable<boolean> {
         const webview = this._webView!;
-        await webview.postMessage({
+        return webview.postMessage({
             type: RovoDevProviderMessageType.ContextAdded,
             context: contextItem,
         });
+    }
+
+    private removeContextItem(isFocus: true): Thenable<boolean>;
+    private removeContextItem(isFocus: false, contextItem: RovoDevContextItem): Thenable<boolean>;
+    private removeContextItem(isFocus: boolean, contextItem?: RovoDevContextItem): Thenable<boolean> {
+        const webview = this._webView!;
+
+        if (isFocus) {
+            return webview.postMessage({
+                type: RovoDevProviderMessageType.ContextRemoved,
+                isFocus,
+            });
+        } else {
+            return webview.postMessage({
+                type: RovoDevProviderMessageType.ContextRemoved,
+                isFocus,
+                context: contextItem!,
+            });
+        }
     }
 
     private async selectContextItem(): Promise<RovoDevContextItem | undefined> {
@@ -419,31 +430,25 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
 
         return {
+            isFocus: false,
             file: {
                 name: picked.name,
                 absolutePath: picked.absolutePath,
                 relativePath: picked.relativePath,
             },
             selection: undefined,
+            enabled: true,
         };
     }
 
-    private async executeAddContext(currentContext?: RovoDevContext): Promise<void> {
+    private async executeAddContext(): Promise<void> {
         // Get all workspace files
         const picked = await this.selectContextItem();
         if (!picked) {
             return;
         }
 
-        // Do nothing if the new item is already present in the context
-        if (
-            currentContext?.focusInfo?.file.absolutePath === picked.file.absolutePath ||
-            currentContext?.contextItems?.some((item) => item.file.absolutePath === picked.file.absolutePath)
-        ) {
-            return;
-        }
-
-        return await this.addContextItem(picked);
+        await this.addContextItem(picked);
     }
 
     public async executeNewSession(): Promise<void> {
@@ -697,7 +702,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    public async invokeRovoDevAskCommand(prompt: string, context?: RovoDevContext): Promise<void> {
+    public async invokeRovoDevAskCommand(prompt: string, context?: RovoDevContextItem[]): Promise<void> {
         if (this.isDisabled) {
             return;
         }
@@ -721,7 +726,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Actually invoke the rovodev service, feed responses to the webview as normal
         const revertedChanges = this._revertedChanges;
         this._revertedChanges = [];
-        await this._chatProvider.executeChat({ text: prompt, enable_deep_plan: false, context }, revertedChanges);
+        await this._chatProvider.executeChat(
+            { text: prompt, enable_deep_plan: false, context: context || [] },
+            revertedChanges,
+        );
     }
 
     /**

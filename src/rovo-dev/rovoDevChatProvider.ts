@@ -6,7 +6,7 @@ import { Event, Webview } from 'vscode';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevChatRequest, RovoDevChatRequestContextFileEntry } from './rovoDevApiClient';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevContext, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
+import { RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
@@ -72,7 +72,7 @@ export class RovoDevChatProvider {
         const isCommand = text.trim() === '/clear' || text.trim() === '/prune';
         if (isCommand) {
             enable_deep_plan = false;
-            context = undefined;
+            context = [];
         }
 
         if (!flushingPendingPrompt) {
@@ -121,7 +121,7 @@ export class RovoDevChatProvider {
         }
 
         this.beginNewPrompt('replay');
-        await this.sendPromptSentToView('', false);
+        await this.sendPromptSentToView('', false, []);
 
         this._replayInProgress = true;
 
@@ -336,6 +336,7 @@ export class RovoDevChatProvider {
                     this._currentPrompt = {
                         text: response.content,
                         enable_deep_plan: false,
+                        context: [],
                     };
                     return this.sendUserPromptToView(response.content);
                 }
@@ -412,7 +413,7 @@ export class RovoDevChatProvider {
         });
     }
 
-    private async sendUserPromptToView(text: string, context?: RovoDevContext) {
+    private async sendUserPromptToView(text: string, context?: RovoDevContextItem[]) {
         const webview = this._webView!;
 
         return await webview.postMessage({
@@ -425,40 +426,26 @@ export class RovoDevChatProvider {
         });
     }
 
-    private async sendPromptSentToView(text: string, enable_deep_plan: boolean, context?: RovoDevContext) {
+    private async sendPromptSentToView(text: string, enable_deep_plan: boolean, context: RovoDevContextItem[]) {
         const webview = this._webView!;
 
         return await webview.postMessage({
             type: RovoDevProviderMessageType.PromptSent,
             text,
             enable_deep_plan,
-            context: context,
+            context,
         });
     }
 
     private preparePayloadForChatRequest(prompt: RovoDevPrompt): RovoDevChatRequest {
-        const fileContext: RovoDevChatRequestContextFileEntry[] = !!prompt.context?.focusInfo?.enabled
-            ? [
-                  {
-                      type: 'file' as const,
-                      file_path: prompt.context.focusInfo.file.absolutePath,
-                      selection: prompt.context.focusInfo.selection,
-                      note: 'The user is looking at this file',
-                  },
-              ]
-            : [];
-
-        if (prompt.context?.contextItems) {
-            const moreFiles = prompt.context.contextItems
-                .filter((x) => x.enabled)
-                .map((x) => ({
-                    type: 'file' as const,
-                    file_path: x.file.absolutePath,
-                    selection: x.selection,
-                    note: 'I currently have this file open in my IDE',
-                }));
-            fileContext.push(...moreFiles);
-        }
+        const fileContext: RovoDevChatRequestContextFileEntry[] = (prompt.context || [])
+            .filter((x) => x.enabled)
+            .map((x) => ({
+                type: 'file' as const,
+                file_path: x.file.absolutePath,
+                selection: x.selection,
+                note: 'I currently have this file open in my IDE',
+            }));
 
         return {
             message: prompt.text,

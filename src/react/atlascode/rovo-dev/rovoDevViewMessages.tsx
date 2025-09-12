@@ -1,5 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { RovoDevContext, RovoDevPrompt } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevPrompt } from 'src/rovo-dev/rovoDevTypes';
 
 import { FeedbackType } from './feedback-form/FeedbackForm';
 
@@ -41,7 +41,7 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage: string } }>
     | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>
     | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>
-    | ReducerAction<RovoDevViewResponseType.AddContext, { currentContext: RovoDevContext }>
+    | ReducerAction<RovoDevViewResponseType.AddContext>
     | ReducerAction<RovoDevViewResponseType.ForceUserFocusUpdate>
     | ReducerAction<RovoDevViewResponseType.ReportChangedFilesPanelShown, { filesCount: number }>
     | ReducerAction<RovoDevViewResponseType.ReportChangesGitPushed, { pullRequestCreated: boolean }>

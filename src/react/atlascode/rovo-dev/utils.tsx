@@ -1,4 +1,4 @@
-import { RovoDevContext, TechnicalPlan } from '../../../../src/rovo-dev/rovoDevTypes';
+import { RovoDevContextItem, TechnicalPlan } from '../../../../src/rovo-dev/rovoDevTypes';
 
 export type ToolReturnMessage =
     | ToolReturnFileMessage
@@ -12,7 +12,7 @@ export type ChatMessage = DefaultMessage | ErrorMessage | ToolCallMessage | Tool
 export interface DefaultMessage {
     text: string;
     source: 'User' | 'RovoDev' | 'PullRequest';
-    context?: RovoDevContext;
+    context?: RovoDevContextItem[];
 }
 
 export interface ErrorMessage {

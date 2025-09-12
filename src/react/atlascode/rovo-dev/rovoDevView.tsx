@@ -6,7 +6,7 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import { RovoDevContext, RovoDevContextItem, State } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevContextItem, State } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
@@ -60,7 +60,6 @@ export const CloseIconDeepPlan: React.FC<{}> = () => {
 
 const RovoDevView: React.FC = () => {
     const [currentState, setCurrentState] = useState<State>({ state: 'WaitingForPrompt' });
-
     const [promptText, setPromptText] = useState('');
     const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
     const [retryAfterErrorEnabled, setRetryAfterErrorEnabled] = useState('');
@@ -70,12 +69,10 @@ const RovoDevView: React.FC = () => {
     const [workspaceCount, setWorkspaceCount] = useState(process.env.ROVODEV_BBY ? 1 : 0);
     const [workspacePath, setWorkspacePath] = useState<string>('');
     const [homeDir, setHomeDir] = useState<string>('');
-
     const [history, setHistory] = useState<Response[]>([]);
-
     const [isFeedbackFormVisible, setIsFeedbackFormVisible] = React.useState(false);
-
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
+    const [promptContextCollection, setPromptContextCollection] = useState<RovoDevContextItem[]>([]);
 
     React.useEffect(() => {
         const codeBlocks = document.querySelectorAll('pre code');
@@ -389,33 +386,29 @@ const RovoDevView: React.FC = () => {
                     });
                     break;
 
-                case RovoDevProviderMessageType.UserFocusUpdated:
-                    setPromptContextCollection((prev) => ({
-                        ...prev,
-                        focusInfo: {
-                            ...event.userFocus,
-                            enabled: prev.focusInfo?.enabled ?? true, // Preserve enabled state if it exists
-                        },
-                    }));
-                    break;
-
                 case RovoDevProviderMessageType.ContextAdded:
                     setPromptContextCollection((prev) => {
                         const newItem = event.context;
-                        const match = (item: any) =>
-                            item.file.absolutePath === newItem.file.absolutePath &&
-                            item.selection?.start === newItem.selection?.start &&
-                            item.selection?.end === newItem.selection?.end;
+                        const idx = prev.findIndex((x) => x.file.absolutePath === newItem.file.absolutePath);
+                        if (idx < 0) {
+                            return [...prev, newItem];
+                        } else if (!newItem.isFocus || prev[idx].isFocus) {
+                            // never replace explicitely added with focused
+                            prev[idx] = newItem;
+                            return [...prev];
+                        } else {
+                            return prev;
+                        }
+                    });
+                    break;
 
-                        const contextItems = prev.contextItems || [];
-                        const idx = contextItems.findIndex(match);
-                        // Add new item only if it does not already exist
-                        return idx === -1
-                            ? {
-                                  ...prev,
-                                  contextItems: [...contextItems, newItem],
-                              }
-                            : prev;
+                case RovoDevProviderMessageType.ContextRemoved:
+                    setPromptContextCollection((prev) => {
+                        if (event.isFocus) {
+                            return [...prev.filter((x) => !x.isFocus)];
+                        } else {
+                            return [...prev.filter((x) => x.file.absolutePath !== event.context.file.absolutePath)];
+                        }
                     });
                     break;
 
@@ -463,9 +456,6 @@ const RovoDevView: React.FC = () => {
         }
     }, [postMessage, dispatch, outgoingMessage]);
 
-    // TODO: move this to a separate component, colocate with prompt submission
-    const [promptContextCollection, setPromptContextCollection] = useState<RovoDevContext>({});
-
     const sendPrompt = useCallback(
         (text: string): void => {
             if (
@@ -493,13 +483,22 @@ const RovoDevView: React.FC = () => {
                 type: RovoDevViewResponseType.Prompt,
                 text,
                 enable_deep_plan: isDeepPlanToggled,
-                context: { ...promptContextCollection },
+                context: promptContextCollection,
             });
 
             // Clear the input field
             setPromptText('');
         },
-        [currentState, isDeepPlanCreated, isDeepPlanToggled, setCurrentState, postMessage, promptContextCollection],
+        [
+            currentState.state,
+            isDeepPlanCreated,
+            isDeepPlanToggled,
+            promptContextCollection,
+            setIsDeepPlanCreated,
+            setCurrentState,
+            postMessage,
+            setPromptText,
+        ],
     );
 
     // On the first render, get the context update
@@ -692,28 +691,19 @@ const RovoDevView: React.FC = () => {
                             content={promptContextCollection}
                             readonly={false}
                             onRemoveContext={(item: RovoDevContextItem) => {
-                                setPromptContextCollection((prev) => ({
-                                    ...prev,
-                                    contextItems: prev.contextItems?.filter(
-                                        (contextItem) =>
-                                            contextItem.file.absolutePath !== item.file.absolutePath ||
-                                            contextItem.selection?.start !== item.selection?.start ||
-                                            contextItem.selection?.end !== item.selection?.end,
-                                    ),
-                                }));
+                                setPromptContextCollection((prev) => {
+                                    return [...prev.filter((x) => x.file.absolutePath !== item.file.absolutePath)];
+                                });
                             }}
                             onToggleActiveItem={(enabled) => {
                                 setPromptContextCollection((prev) => {
-                                    if (!prev.focusInfo) {
+                                    const idx = prev.findIndex((x) => x.isFocus);
+                                    if (idx < 0) {
                                         return prev;
+                                    } else {
+                                        prev[idx].enabled = enabled;
+                                        return [...prev];
                                     }
-                                    return {
-                                        ...prev,
-                                        focusInfo: {
-                                            ...prev.focusInfo,
-                                            enabled,
-                                        },
-                                    };
                                 });
                             }}
                         />
@@ -730,7 +720,6 @@ const RovoDevView: React.FC = () => {
                             onAddContext={() => {
                                 postMessage({
                                     type: RovoDevViewResponseType.AddContext,
-                                    currentContext: promptContextCollection,
                                 });
                             }}
                             onCopy={handleCopyResponse}
