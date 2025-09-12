@@ -165,6 +165,7 @@ export class RovoDevChatProvider {
                 const cancelResponse = await this._rovoDevApiClient.cancel();
                 success = cancelResponse.cancelled || cancelResponse.message === 'No chat in progress';
             } catch {
+                this.processError(new Error('Failed to cancel the current response. Please try again.'), false);
                 success = false;
             }
 
