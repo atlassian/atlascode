@@ -71,7 +71,6 @@ function generateListItems(
     return sites.map((swa: SiteWithAuthInfo, i: number) => {
         // Get username from auth info
         const username = swa.auth.user.email || swa.auth.user.displayName || swa.auth.user.id || 'Unknown User';
-        const displayText = `${username}      ${swa.site.name}`;
 
         return (
             <React.Fragment key={uid(swa, i)}>
@@ -83,7 +82,8 @@ function generateListItems(
                             <DomainIcon fontSize="small" className={iconClassName} />
                         )}
                     </ListItemIcon>
-                    <ListItemText primary={displayText} />
+                    <ListItemText primary={username} />
+                    <ListItemText secondary={swa.site.name} />
                     <ListItemSecondaryAction>
                         {swa.auth.state === AuthInfoState.Invalid && (
                             <Tooltip title="Credential Error">
