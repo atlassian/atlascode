@@ -1,12 +1,14 @@
 import * as fs from 'fs';
 import path from 'path';
 import { CommandContext, setCommandContext } from 'src/commandContext';
+import { configuration } from 'src/config/configuration';
 import { getFsPromise } from 'src/util/fsPromises';
 import { setTimeout } from 'timers/promises';
 import { v4 } from 'uuid';
 import {
     CancellationToken,
     commands,
+    ConfigurationChangeEvent,
     Disposable,
     Event,
     ExtensionContext,
@@ -71,6 +73,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _rovoDevApiClient?: RovoDevApiClient;
     private _processState = RovoDevProcessState.NotStarted;
     private _initialized = false;
+    private _debugPanelEnabled = false;
 
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
@@ -99,11 +102,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._extensionPath = extensionPath;
         this._extensionUri = Uri.file(this._extensionPath);
         this._context = context;
+        this._debugPanelEnabled = Container.config.rovodev.debugPanelEnabled;
+
         // Register the webview view provider
         this._disposables.push(
             window.registerWebviewViewProvider('atlascode.views.rovoDev.webView', this, {
                 webviewOptions: { retainContextWhenHidden: true },
             }),
+            configuration.onDidChange(this.onConfigurationChanged, this),
         );
 
         // Register editor listeners
@@ -129,6 +135,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             onTelemetryError,
         );
         this._chatProvider = new RovoDevChatProvider(this._telemetryProvider);
+    }
+
+    private onConfigurationChanged(e: ConfigurationChangeEvent): void {
+        if (configuration.changed(e, 'rovodev.debugPanelEnabled')) {
+            this._debugPanelEnabled = Container.config.rovodev.debugPanelEnabled;
+            this._webView?.postMessage({
+                type: RovoDevProviderMessageType.SetDebugPanel,
+                enabled: this._debugPanelEnabled,
+            });
+        }
     }
 
     public resolveWebviewView(
@@ -243,6 +259,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.WebviewReady:
+                        await webview.postMessage({
+                            type: RovoDevProviderMessageType.SetDebugPanel,
+                            enabled: this._debugPanelEnabled,
+                        });
+
                         if (!this.isBoysenberry && !this.isDisabled) {
                             if (!workspace.workspaceFolders?.length) {
                                 this.signalRovoDevDisabled('noOpenFolder');
