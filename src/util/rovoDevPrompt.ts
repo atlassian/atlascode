@@ -2,6 +2,10 @@
  * Utility functions for building Rovo Dev prompts from Jira issues
  */
 
+/**
+ * Removes Jira-specific markup from text to make it readable for Rovo Dev prompts.
+ * Converts: +bold text+ → bold text, [~accountid:123:user] → @user, !image.png! → [image attachment]
+ */
 const cleanJiraMarkup = (text: string): string => {
     return text
         .replace(/\+([^+]+)\+/g, '$1') // Remove bold markup
