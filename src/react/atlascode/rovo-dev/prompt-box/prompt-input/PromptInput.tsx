@@ -195,7 +195,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         <LoadingButton
                             style={rovoDevPromptButtonStyles}
                             spacing="compact"
-                            label="Stop"
+                            label="Stop generating"
                             iconBefore={<StopIcon label="Stop" />}
                             isDisabled={disabled || currentState.state === 'CancellingResponse'}
                             onClick={() => onCancel()}
