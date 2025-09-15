@@ -49,6 +49,7 @@ export class RovoDevTelemetryProvider {
     constructor(
         private readonly rovoDevEnv: RovoDevEnv,
         private readonly appInstanceId: string,
+        private readonly onError: (error: Error) => void,
     ) {
         this._perfLogger = new PerformanceLogger(this.appInstanceId);
     }
@@ -68,17 +69,25 @@ export class RovoDevTelemetryProvider {
         this._firedTelemetryForCurrentPrompt = {};
     }
 
+    public shutdown() {
+        this._chatSessionId = '';
+        this._currentPromptId = '';
+        this._firedTelemetryForCurrentPrompt = {};
+    }
+
     // This function esures that the same telemetry event is not sent twice for the same prompt
     public fireTelemetryEvent<T extends TelemetryFunction>(
         funcName: T,
         ...params: ParametersSkip3<(typeof rovoDevTelemetryEvents)[T]>
     ): void {
         if (!this._chatSessionId) {
-            throw new Error('Unable to send Rovo Dev telemetry: ChatSessionId not initialized');
+            this.onError(new Error('Unable to send Rovo Dev telemetry: ChatSessionId not initialized'));
+            return;
         }
         // rovoDevNewSessionActionEvent is the only event that doesn't need the promptId
         if (funcName !== 'rovoDevNewSessionActionEvent' && !this._currentPromptId) {
-            throw new Error('Unable to send Rovo Dev telemetry: PromptId not initialized');
+            this.onError(new Error('Unable to send Rovo Dev telemetry: PromptId not initialized'));
+            return;
         }
 
         // the following events can be fired multiple times during the same prompt

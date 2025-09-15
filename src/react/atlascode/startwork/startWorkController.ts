@@ -57,6 +57,7 @@ export const StartWorkControllerContext = React.createContext(emptyApi);
 
 export interface StartWorkState extends StartWorkInitMessage {
     isSomethingLoading: boolean;
+    rovoDevPreference?: boolean;
 }
 
 const emptyState: StartWorkState = {
@@ -64,16 +65,19 @@ const emptyState: StartWorkState = {
     isSomethingLoading: false,
     customTemplate: '{{prefix}}/{{issueKey}}-{{summary}}',
     customPrefixes: [],
+    rovoDevPreference: false,
 };
 
 enum StartWorkUIActionType {
     Init = 'init',
     Loading = 'loading',
+    SetRovoDevPreference = 'setRovoDevPreference',
 }
 
 type StartWorkUIAction =
     | ReducerAction<StartWorkUIActionType.Init, { data: StartWorkInitMessage }>
-    | ReducerAction<StartWorkUIActionType.Loading, {}>;
+    | ReducerAction<StartWorkUIActionType.Loading, {}>
+    | ReducerAction<StartWorkUIActionType.SetRovoDevPreference, { enabled: boolean }>;
 
 function reducer(state: StartWorkState, action: StartWorkUIAction): StartWorkState {
     switch (action.type) {
@@ -91,6 +95,9 @@ function reducer(state: StartWorkState, action: StartWorkUIAction): StartWorkSta
         case StartWorkUIActionType.Loading: {
             return { ...state, ...{ isSomethingLoading: true } };
         }
+        case StartWorkUIActionType.SetRovoDevPreference: {
+            return { ...state, rovoDevPreference: action.enabled };
+        }
         default:
             return defaultStateGuard(state, action);
     }
@@ -103,6 +110,10 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
         switch (message.type) {
             case StartWorkMessageType.Init: {
                 dispatch({ type: StartWorkUIActionType.Init, data: message });
+                break;
+            }
+            case StartWorkMessageType.RovoDevPreferenceResponse: {
+                dispatch({ type: StartWorkUIActionType.SetRovoDevPreference, enabled: message.enabled });
                 break;
             }
             default: {

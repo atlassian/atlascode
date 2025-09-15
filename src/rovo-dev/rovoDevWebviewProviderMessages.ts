@@ -1,14 +1,13 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 
-import { ChatMessage, ErrorMessage } from '../react/atlascode/rovo-dev/utils';
+import { ErrorMessage } from '../react/atlascode/rovo-dev/utils';
 import { RovoDevResponse } from './responseParser';
 import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
 export const enum RovoDevProviderMessageType {
     RovoDevDisabled = 'rovoDevDisabled',
-    PromptSent = 'promptSent',
+    SignalPromptSent = 'signalPromptSent',
     Response = 'response',
-    UserChatMessage = 'userChatMessage',
     CompleteMessage = 'completeMessage',
     ToolCall = 'toolCall',
     ToolReturn = 'toolReturn',
@@ -21,8 +20,8 @@ export const enum RovoDevProviderMessageType {
     CancelFailed = 'cancelFailed',
     CreatePRComplete = 'createPRComplete',
     GetCurrentBranchNameComplete = 'getCurrentBranchNameComplete',
-    UserFocusUpdated = 'userFocusUpdated',
     ContextAdded = 'contextAdded',
+    ContextRemoved = 'contextRemoved',
     CheckGitChangesComplete = 'checkGitChangesComplete',
     ForceStop = 'forceStop',
     ShowFeedbackForm = 'showFeedbackForm',
@@ -32,17 +31,27 @@ export interface RovoDevObjectResponse {
     dataObject: RovoDevResponse;
 }
 
+interface FocusedContextRemovedResponse {
+    isFocus: true;
+}
+
+interface NonFocusedContextRemovedResponse {
+    isFocus: false;
+    context: RovoDevContextItem;
+}
+
+export type RovoDevDisabledReason = 'noOpenFolder' | 'needAuth' | 'other';
+
 export type RovoDevProviderMessage =
-    | ReducerAction<RovoDevProviderMessageType.RovoDevDisabled, { reason: 'needAuth' | 'other' }>
-    | ReducerAction<RovoDevProviderMessageType.PromptSent, RovoDevPrompt>
+    | ReducerAction<RovoDevProviderMessageType.RovoDevDisabled, { reason: RovoDevDisabledReason }>
+    | ReducerAction<RovoDevProviderMessageType.SignalPromptSent, RovoDevPrompt & { echoMessage: boolean }>
     | ReducerAction<RovoDevProviderMessageType.Response, RovoDevObjectResponse>
-    | ReducerAction<RovoDevProviderMessageType.UserChatMessage, { message: ChatMessage }>
     | ReducerAction<RovoDevProviderMessageType.CompleteMessage, { isReplay?: boolean }>
     | ReducerAction<RovoDevProviderMessageType.ToolCall, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ToolReturn, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ErrorMessage, { message: ErrorMessage }>
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
-    | ReducerAction<RovoDevProviderMessageType.ProviderReady, { workspaceCount: number }>
+    | ReducerAction<RovoDevProviderMessageType.ProviderReady, { workspacePath?: string; homeDir?: string }>
     | ReducerAction<RovoDevProviderMessageType.SetInitializing, { isPromptPending: boolean }>
     | ReducerAction<
           RovoDevProviderMessageType.SetDownloadProgress,
@@ -52,8 +61,11 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.CancelFailed>
     | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string; error?: string } }>
     | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>
-    | ReducerAction<RovoDevProviderMessageType.UserFocusUpdated, { userFocus: RovoDevContextItem }>
     | ReducerAction<RovoDevProviderMessageType.ContextAdded, { context: RovoDevContextItem }>
+    | ReducerAction<
+          RovoDevProviderMessageType.ContextRemoved,
+          FocusedContextRemovedResponse | NonFocusedContextRemovedResponse
+      >
     | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
     | ReducerAction<RovoDevProviderMessageType.ForceStop>
     | ReducerAction<RovoDevProviderMessageType.ShowFeedbackForm>;

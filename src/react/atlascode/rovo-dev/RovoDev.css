@@ -2,12 +2,17 @@ body {
     padding: 0 !important;
 }
 
+.rovoDevChat * {
+    scrollbar-width: auto;
+    scrollbar-color: var(--vscode-scrollbarSlider-background) transparent;
+}
+
 .rovoDevChat {
     display: flex;
     flex-direction: column;
     align-items: center;
     box-sizing: border-box;
-    background-color: var(--vscode-editor-background);
+    background-color: var(--vscode-sideBar-background);
     font-size: var(--vscode-font-size);
     font-family: var(--vscode-font-family);
     height: 100vh;
@@ -497,19 +502,43 @@ body {
     width: 100%;
 }
 
+.modified-file-item > div {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+    margin-right: 8px;
+}
+
+.modified-file-item .file-name {
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.modified-file-item .file-path {
+    color: var(--vscode-descriptionForeground);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-left: 8px;
+    display: inline;
+}
+
 .modified-file-item:hover {
     background-color: var(--vscode-list-hoverBackground);
 }
 
 .modified-file-actions {
-    display: none;
+    visibility: hidden;
+    display: flex;
     align-items: center;
     flex-direction: row;
     gap: 4px;
+    flex-shrink: 0;
 }
 
 .modified-file-item:hover .modified-file-actions {
-    display: flex;
+    visibility: visible;
 }
 
 .modified-file-action {
@@ -548,8 +577,12 @@ body {
     flex-direction: column;
     width: 100%;
     gap: 8px;
-    background: var(--vscode-sideBar-background);
+    padding-top: 8px;
+    border: solid 1px var(--vscode-dropdown-border);
+    border-bottom: none;
+    margin-bottom: -4px;
     padding-bottom: 4px;
+    border-radius: 4px 4px 0 0;
 }
 
 .updated-files-header {
@@ -605,7 +638,7 @@ body {
 .input-section-container {
     width: 100%;
     background-color: var(--vscode-sideBar-background);
-    padding: 16px 16px 6px 16px;
+    padding: 8px 16px 6px 16px;
     border-radius: 12px 12px 0 0;
 }
 

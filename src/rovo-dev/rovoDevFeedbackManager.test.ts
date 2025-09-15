@@ -169,7 +169,31 @@ describe('RovoDevFeedbackManager', () => {
             expect(vscode.window.showInformationMessage).not.toHaveBeenCalled();
         });
 
-        it('should include context information in payload', async () => {
+        it('should include context information in payload: BBY', async () => {
+            const feedback = {
+                feedbackType: 'general' as const,
+                feedbackMessage: 'Test feedback',
+                canContact: false,
+            };
+
+            await RovoDevFeedbackManager.submitFeedback(feedback, true);
+
+            expect(mockTransport).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.objectContaining({
+                    data: expect.objectContaining({
+                        fields: expect.arrayContaining([
+                            expect.objectContaining({
+                                id: 'customfield_10047',
+                                value: expect.stringContaining('"component": "Boysenberry - vscode"'),
+                            }),
+                        ]),
+                    }),
+                }),
+            );
+        });
+
+        it('should include context information in payload: IDE', async () => {
             const feedback = {
                 feedbackType: 'general' as const,
                 feedbackMessage: 'Test feedback',
@@ -185,7 +209,7 @@ describe('RovoDevFeedbackManager', () => {
                         fields: expect.arrayContaining([
                             expect.objectContaining({
                                 id: 'customfield_10047',
-                                value: expect.stringContaining('"component": "Boysenberry - vscode"'),
+                                value: expect.stringContaining('"component": "IDE - vscode"'),
                             }),
                         ]),
                     }),

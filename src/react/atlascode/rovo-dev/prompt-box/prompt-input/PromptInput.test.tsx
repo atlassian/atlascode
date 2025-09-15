@@ -1,3 +1,19 @@
+const editor = {
+    addCommand: jest.fn(),
+    dispose: jest.fn(),
+    setValue: jest.fn(),
+    getValue: jest.fn(),
+    onDidChangeModelContent: jest.fn(),
+    onDidContentSizeChange: jest.fn(),
+    getContentHeight: jest.fn(() => 100),
+    getContainerDomNode: jest.fn(() => ({ style: { height: '' } })),
+    getModel: jest.fn(),
+    focus: jest.fn(),
+    layout: jest.fn(),
+    updateOptions: jest.fn(),
+    trigger: jest.fn(),
+};
+
 jest.mock('monaco-editor', () => ({
     languages: {
         registerCompletionItemProvider: jest.fn(() => ({
@@ -5,21 +21,7 @@ jest.mock('monaco-editor', () => ({
         })),
     },
     editor: {
-        create: jest.fn(() => ({
-            addCommand: jest.fn(),
-            dispose: jest.fn(),
-            setValue: jest.fn(),
-            getValue: jest.fn(),
-            onDidChangeModelContent: jest.fn(),
-            onDidContentSizeChange: jest.fn(),
-            getContentHeight: jest.fn(() => 100),
-            getContainerDomNode: jest.fn(() => ({ style: { height: '' } })),
-            getModel: jest.fn(),
-            focus: jest.fn(),
-            layout: jest.fn(),
-            updateOptions: jest.fn(),
-            trigger: jest.fn(),
-        })),
+        create: jest.fn(() => editor),
         registerCommand: jest.fn(),
         defineTheme: jest.fn(),
     },
@@ -68,7 +70,8 @@ describe('PromptInputBox', () => {
     });
 
     it('calls onSend when Send button is clicked', () => {
-        render(<PromptInputBox {...defaultProps} promptText="test prompt" />);
+        render(<PromptInputBox {...defaultProps} />);
+        jest.spyOn(editor, 'getValue').mockReturnValue('text prompt');
         fireEvent.click(screen.getByLabelText('Send prompt'));
         expect(defaultProps.onSend).toHaveBeenCalled();
     });
@@ -77,12 +80,6 @@ describe('PromptInputBox', () => {
         render(<PromptInputBox {...defaultProps} state={State.GeneratingResponse} />);
         fireEvent.click(screen.getByLabelText('Stop'));
         expect(defaultProps.onCancel).toHaveBeenCalled();
-    });
-
-    it('disables Send button when sendButtonDisabled is true', () => {
-        render(<PromptInputBox {...defaultProps} sendButtonDisabled={true} />);
-        fireEvent.click(screen.getByLabelText('Send prompt'));
-        expect(defaultProps.onSend).toHaveBeenCalledTimes(0);
     });
 
     it('disables Stop button when state is CancellingResponse', () => {

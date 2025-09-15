@@ -62,7 +62,17 @@ jobs:
           docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e
 
       - name: Run E2E tests
-        run: npm run test:e2e:docker
+        run: |
+          cd e2e
+          for target in jira-cloud jira-dc bitbucket-cloud bitbucket-dc; do
+            TARGET=$target docker compose run --rm atlascode-e2e
+            status=$?
+            docker compose down
+            if [ $status -ne 0 ]; then
+              echo "E2E tests failed for target: $target"
+              exit $status
+            fi
+          done
 
       - name: Publish the pre-release extension
         run: |

@@ -10,23 +10,16 @@ export type RovoDevContextSelectionInfo = {
 };
 
 export type RovoDevContextItem = {
+    isFocus: boolean;
     file: RovoDevContextFileInfo;
     selection?: RovoDevContextSelectionInfo;
-    enabled?: boolean;
-    // Optional indication of the editor pointing to an invalid file
-    // e.g. welcome page, webview tab, etc
-    invalid?: boolean;
-};
-
-export type RovoDevContext = {
-    focusInfo?: RovoDevContextItem;
-    contextItems?: RovoDevContextItem[];
+    enabled: boolean;
 };
 
 export interface RovoDevPrompt {
     text: string;
     enable_deep_plan: boolean;
-    context?: RovoDevContext;
+    context: RovoDevContextItem[];
 }
 
 export interface CodeSnippetToChange {
