@@ -1,3 +1,4 @@
+import { basename } from 'path';
 import { Disposable, TextEditor, window } from 'vscode';
 
 import { RovoDevApiClient } from './rovoDevApiClient';
@@ -19,7 +20,7 @@ export class RovoDevDwellTracker implements Disposable {
     constructor(
         private readonly telemetry: RovoDevTelemetryProvider,
         private readonly getCurrentPromptId: () => string,
-        private readonly getApiClient: () => RovoDevApiClient | undefined,
+        private readonly rovodevApiClient: RovoDevApiClient | undefined,
         private readonly dwellMs: number = 5000,
     ) {
         this.activeEditor = window.activeTextEditor;
@@ -77,18 +78,15 @@ export class RovoDevDwellTracker implements Disposable {
                 return;
             }
 
+            if (this.rovodevApiClient === undefined) {
+                return;
+            }
+
             try {
-                const client = this.getApiClient();
-                if (!client) {
-                    return;
-                }
-                const filename = this.getFileNamefromPath(current.document.uri.fsPath);
-                if (filename === undefined) {
-                    return;
-                }
+                const filename = basename(current.document.uri.fsPath);
 
                 // If this succeeds, the file has a pre-Rovo Dev cached version, meaning it was modified by Rovo Dev
-                await client.getCacheFilePath(filename);
+                await this.rovodevApiClient.getCacheFilePath(filename);
 
                 // Fire analytics: one-per-prompt deduping is handled by telemetry provider
                 this.telemetry.fireTelemetryEvent('rovoDevAiResultViewedEvent', promptId, this.dwellMs);
@@ -96,15 +94,6 @@ export class RovoDevDwellTracker implements Disposable {
                 // Not a Rovo Dev modified file or API not ready; ignore silently
             }
         }, this.dwellMs);
-    }
-
-    private getFileNamefromPath(path: string): string | undefined {
-        if (path === undefined) {
-            return undefined;
-        }
-        // Support windows and unix paths
-        const parts = path.split('\\')?.pop()?.split('/');
-        return parts?.pop();
     }
 
     dispose(): void {

@@ -35,7 +35,7 @@ describe('RovoDevDwellTracker', () => {
         mockApiClient.getCacheFilePath.mockResolvedValue('/tmp/cache.txt');
         expansionCastTo<any>(vscode.window).activeTextEditor = makeEditor('/workspace/fileA.ts');
 
-        const tracker = new RovoDevDwellTracker(mockTelemetry, getCurrentPromptId, () => mockApiClient, 1000);
+        const tracker = new RovoDevDwellTracker(mockTelemetry, getCurrentPromptId, mockApiClient, 1000);
 
         await jest.advanceTimersByTimeAsync(1100);
 
@@ -48,7 +48,7 @@ describe('RovoDevDwellTracker', () => {
         mockApiClient.getCacheFilePath.mockRejectedValue(new Error('no cache'));
         expansionCastTo<any>(vscode.window).activeTextEditor = makeEditor('/workspace/fileB.ts');
 
-        const tracker = new RovoDevDwellTracker(mockTelemetry, getCurrentPromptId, () => mockApiClient, 1000);
+        const tracker = new RovoDevDwellTracker(mockTelemetry, getCurrentPromptId, mockApiClient, 1000);
 
         await jest.advanceTimersByTimeAsync(1100);
 
@@ -61,12 +61,7 @@ describe('RovoDevDwellTracker', () => {
         mockApiClient.getCacheFilePath.mockResolvedValue('/tmp/cache.txt');
         expansionCastTo<any>(vscode.window).activeTextEditor = makeEditor('/workspace/fileC.ts');
 
-        const tracker = new RovoDevDwellTracker(
-            mockTelemetry,
-            () => '',
-            () => mockApiClient,
-            1000,
-        );
+        const tracker = new RovoDevDwellTracker(mockTelemetry, () => '', mockApiClient, 1000);
 
         await jest.advanceTimersByTimeAsync(1100);
 

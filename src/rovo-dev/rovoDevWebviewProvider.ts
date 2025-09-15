@@ -954,7 +954,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this._dwellTracker = new RovoDevDwellTracker(
                 this._telemetryProvider,
                 () => this._chatProvider.currentPromptId,
-                () => this._rovoDevApiClient,
+                this._rovoDevApiClient,
             );
             await this._chatProvider.executeReplay();
         }
