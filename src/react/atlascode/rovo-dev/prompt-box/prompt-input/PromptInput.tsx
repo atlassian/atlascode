@@ -27,12 +27,10 @@ interface PromptInputBoxProps {
     disabled?: boolean;
     hideButtons?: boolean;
     currentState: NonDisabledState;
-    promptText: string;
     isDeepPlanEnabled: boolean;
     onDeepPlanToggled: () => void;
-    onSend: (text: string) => void;
+    onSend: (text: string) => boolean;
     onCancel: () => void;
-    sendButtonDisabled?: boolean;
     onAddContext: () => void;
     onCopy: () => void;
     handleMemoryCommand: () => void;
@@ -71,14 +69,11 @@ function createEditor() {
 
 export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     disabled,
-    hideButtons,
     currentState,
-    promptText,
     isDeepPlanEnabled,
     onDeepPlanToggled,
     onSend,
     onCancel,
-    sendButtonDisabled = false,
     onAddContext,
     onCopy,
     handleMemoryCommand,
@@ -89,10 +84,14 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     // create the editor only once - use onSend hook to retry
     React.useEffect(() => setEditor((prev) => prev ?? createEditor()), [onSend]);
 
+    React.useEffect(() => {
+        // Remove Monaco's color stylesheet
+        removeMonacoStyles();
+    }, [editor]);
+
     const handleSend = React.useCallback(() => {
-        const value = editor && editor.getValue().trim();
-        if (value) {
-            onSend(value);
+        const value = editor && editor.getValue();
+        if (value && onSend(value)) {
             editor.setValue('');
         }
     }, [editor, onSend]);
@@ -108,12 +107,6 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             setupMonacoCommands(editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand);
         }
     }, [editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand]);
-
-    React.useEffect(() => {
-        // Remove Monaco's color stylesheet
-        removeMonacoStyles();
-        editor?.setValue(promptText);
-    }, [editor, promptText]);
 
     React.useEffect(() => {
         if (!editor) {
@@ -137,6 +130,14 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         [currentState],
     );
 
+    const showCancelButton = React.useMemo(
+        () =>
+            currentState.state === 'GeneratingResponse' ||
+            currentState.state === 'CancellingResponse' ||
+            (currentState.state === 'Initializing' && currentState.isPromptPending),
+        [currentState],
+    );
+
     return (
         <>
             <div id="prompt-editor-container" style={{ ...{ fieldSizing: 'content' }, ...rovoDevTextareaStyles }} />
@@ -150,64 +151,57 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 }}
             >
                 {/* Left-side Add Context Button */}
-                {!hideButtons && (
-                    <>
-                        <Tooltip content="Add context">
-                            <LoadingButton
-                                style={{
-                                    ...rovoDevPromptButtonStyles,
-                                }}
-                                spacing="compact"
-                                label="Add context"
-                                iconBefore={<i className="codicon codicon-add" />}
-                                isDisabled={disabled}
-                                onClick={() => onAddContext()}
-                            />
-                        </Tooltip>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            <LoadingButton
-                                style={{
-                                    ...rovoDevDeepPlanStylesSelector(
-                                        isDeepPlanEnabled,
-                                        currentState.state !== 'WaitingForPrompt',
-                                    ),
-                                }}
-                                spacing="compact"
-                                label="Enable deep plan"
-                                iconBefore={<AiGenerativeTextSummaryIcon />}
-                                iconAfter={isDeepPlanEnabled ? <CloseIconDeepPlan /> : undefined}
-                                isDisabled={disabled || currentState.state !== 'WaitingForPrompt'}
-                                onClick={() => onDeepPlanToggled()}
-                            >
-                                {isDeepPlanEnabled ? 'Deep plan enabled' : ''}
-                            </LoadingButton>
-                            {isWaitingForPrompt && (
-                                <LoadingButton
-                                    style={{
-                                        ...rovoDevPromptButtonStyles,
-                                        color: 'var(--vscode-button-foreground) !important',
-                                        backgroundColor: 'var(--vscode-button-background)',
-                                    }}
-                                    spacing="compact"
-                                    label="Send prompt"
-                                    iconBefore={<SendIcon label="Send prompt" />}
-                                    isDisabled={disabled || sendButtonDisabled}
-                                    onClick={() => handleSend()}
-                                />
-                            )}
-                            {!isWaitingForPrompt && (
-                                <LoadingButton
-                                    style={rovoDevPromptButtonStyles}
-                                    spacing="compact"
-                                    label="Stop"
-                                    iconBefore={<StopIcon label="Stop" />}
-                                    isDisabled={disabled || currentState.state === 'CancellingResponse'}
-                                    onClick={() => onCancel()}
-                                />
-                            )}
-                        </div>
-                    </>
-                )}
+                <Tooltip content="Add context">
+                    <LoadingButton
+                        style={{
+                            ...rovoDevPromptButtonStyles,
+                        }}
+                        spacing="compact"
+                        label="Add context"
+                        iconBefore={<i className="codicon codicon-add" />}
+                        isDisabled={disabled}
+                        onClick={() => onAddContext()}
+                    />
+                </Tooltip>
+                <div style={{ display: 'flex', gap: 8 }}>
+                    <LoadingButton
+                        style={{
+                            ...rovoDevDeepPlanStylesSelector(isDeepPlanEnabled, !isWaitingForPrompt),
+                        }}
+                        spacing="compact"
+                        label="Enable deep plan"
+                        iconBefore={<AiGenerativeTextSummaryIcon />}
+                        iconAfter={isDeepPlanEnabled ? <CloseIconDeepPlan /> : undefined}
+                        isDisabled={disabled || !isWaitingForPrompt}
+                        onClick={() => onDeepPlanToggled()}
+                    >
+                        {isDeepPlanEnabled ? 'Deep plan enabled' : ''}
+                    </LoadingButton>
+                    {!showCancelButton && (
+                        <LoadingButton
+                            style={{
+                                ...rovoDevPromptButtonStyles,
+                                color: 'var(--vscode-button-foreground) !important',
+                                backgroundColor: 'var(--vscode-button-background)',
+                            }}
+                            spacing="compact"
+                            label="Send prompt"
+                            iconBefore={<SendIcon label="Send prompt" />}
+                            isDisabled={disabled || !isWaitingForPrompt}
+                            onClick={() => handleSend()}
+                        />
+                    )}
+                    {showCancelButton && (
+                        <LoadingButton
+                            style={rovoDevPromptButtonStyles}
+                            spacing="compact"
+                            label="Stop"
+                            iconBefore={<StopIcon label="Stop" />}
+                            isDisabled={disabled || currentState.state === 'CancellingResponse'}
+                            onClick={() => onCancel()}
+                        />
+                    )}
+                </div>
             </div>
         </>
     );

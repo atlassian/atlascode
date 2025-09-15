@@ -70,7 +70,7 @@ describe('PromptInputBox', () => {
     });
 
     it('calls onSend when Send button is clicked', () => {
-        render(<PromptInputBox {...defaultProps} promptText="test prompt" />);
+        render(<PromptInputBox {...defaultProps} />);
         jest.spyOn(editor, 'getValue').mockReturnValue('text prompt');
         fireEvent.click(screen.getByLabelText('Send prompt'));
         expect(defaultProps.onSend).toHaveBeenCalled();
@@ -80,12 +80,6 @@ describe('PromptInputBox', () => {
         render(<PromptInputBox {...defaultProps} currentState={{ state: 'GeneratingResponse' }} />);
         fireEvent.click(screen.getByLabelText('Stop'));
         expect(defaultProps.onCancel).toHaveBeenCalled();
-    });
-
-    it('disables Send button when sendButtonDisabled is true', () => {
-        render(<PromptInputBox {...defaultProps} sendButtonDisabled={true} />);
-        fireEvent.click(screen.getByLabelText('Send prompt'));
-        expect(defaultProps.onSend).toHaveBeenCalledTimes(0);
     });
 
     it('disables Stop button when state is CancellingResponse', () => {

@@ -205,6 +205,19 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         [setFeedbackVisible],
     );
 
+    const shouldShowToolCall = React.useMemo(() => {
+        switch (currentState.state) {
+            case 'Disabled':
+            case 'ProcessTerminated':
+            case 'WaitingForPrompt':
+                return false;
+            case 'Initializing':
+                return currentState.isPromptPending;
+            default:
+                return true;
+        }
+    }, [currentState]);
+
     return (
         <div ref={chatEndRef} className="chat-message-container">
             <RovoDevLanding currentState={currentState} onLoginClick={onLoginClick} onOpenFolder={onOpenFolder} />
@@ -266,7 +279,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     return null;
                 })}
 
-            {currentState.state !== 'Disabled' && currentState.state !== 'ProcessTerminated' && pendingToolCall && (
+            {shouldShowToolCall && pendingToolCall && (
                 <div style={{ marginBottom: '16px' }}>
                     <ToolCallItem toolMessage={pendingToolCall} currentState={currentState} />
                 </div>

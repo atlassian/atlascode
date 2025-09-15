@@ -152,19 +152,21 @@ export function removeMonacoStyles() {
 
 export function setupMonacoCommands(
     editor: monaco.editor.IStandaloneCodeEditor,
-    onSend: (text: string) => void,
+    onSend: (text: string) => boolean,
     onCopy: () => void,
     handleMemoryCommand: () => void,
     handleTriggerFeedbackCommand: () => void,
 ) {
     monaco.editor.registerCommand('rovo-dev.clearChat', () => {
-        editor.setValue('');
-        onSend('/clear');
+        if (onSend('/clear')) {
+            editor.setValue('');
+        }
     });
 
     monaco.editor.registerCommand('rovo-dev.pruneChat', () => {
-        editor.setValue('');
-        onSend('/prune');
+        if (onSend('/prune')) {
+            editor.setValue('');
+        }
     });
 
     monaco.editor.registerCommand('rovo-dev.copyResponse', () => {

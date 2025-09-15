@@ -6,13 +6,15 @@ import { Event, Webview } from 'vscode';
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevChatRequest, RovoDevChatRequestContextFileEntry } from './rovoDevApiClient';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
+import { RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;
     postMessage(message: MessageOut): Thenable<boolean>;
 }
+
+type StreamingApi = 'chat' | 'replay';
 
 export class RovoDevChatProvider {
     private _pendingPrompt: RovoDevPrompt | undefined;
@@ -75,18 +77,13 @@ export class RovoDevChatProvider {
             context = [];
         }
 
-        if (!flushingPendingPrompt) {
-            await this.sendUserPromptToView(text, context);
-        }
-
-        await this.sendPromptSentToView(text, enable_deep_plan, context);
+        // when flushing a pending prompt, we don't want to echo the prompt in chat again
+        await this.signalPromptSent({ text, enable_deep_plan, context }, !flushingPendingPrompt);
 
         if (!this._rovoDevApiClient) {
             this._pendingPrompt = { text, enable_deep_plan, context };
             return;
         }
-
-        this.beginNewPrompt();
 
         this._currentPrompt = {
             text,
@@ -100,37 +97,7 @@ export class RovoDevChatProvider {
             this.addUndoContextToPrompt(requestPayload, revertedFiles);
         }
 
-        const currentPrompt = this._currentPrompt;
-        const fetchOp = async (client: RovoDevApiClient) => {
-            const response = await client.chat(requestPayload);
-
-            this._telemetryProvider.fireTelemetryEvent(
-                'rovoDevPromptSentEvent',
-                this._currentPromptId,
-                !!currentPrompt.enable_deep_plan,
-            );
-
-            return this.processChatResponse('chat', response);
-        };
-
-        await this.executeApiWithErrorHandling(fetchOp, true);
-    }
-
-    public async executeReplay(): Promise<void> {
-        if (!this._rovoDevApiClient) {
-            throw new Error('Unable to replay the previous conversation. Rovo Dev failed to initialize');
-        }
-
-        this.beginNewPrompt('replay');
-        await this.sendPromptSentToView('', false, []);
-
-        this._replayInProgress = true;
-
-        await this.executeApiWithErrorHandling(async (client) => {
-            return this.processChatResponse('replay', client.replay());
-        }, false);
-
-        this._replayInProgress = false;
+        await this.sendPromptToRovoDev(requestPayload);
     }
 
     public async executeRetryPromptAfterError() {
@@ -138,14 +105,17 @@ export class RovoDevChatProvider {
             return;
         }
 
-        this.beginNewPrompt();
+        // we need to echo back the prompt to the View since it's not submitted via prompt box
+        await this.signalPromptSent(this._currentPrompt, true);
 
-        const currentPrompt = this._currentPrompt;
-        const requestPayload = this.preparePayloadForChatRequest(currentPrompt);
+        const requestPayload = this.preparePayloadForChatRequest(this._currentPrompt);
         this.addRetryAfterErrorContextToPrompt(requestPayload);
 
-        // we need to echo back the prompt to the View since it's not user submitted
-        await this.sendPromptSentToView(requestPayload.message, currentPrompt.enable_deep_plan, currentPrompt.context);
+        await this.sendPromptToRovoDev(requestPayload);
+    }
+
+    private async sendPromptToRovoDev(requestPayload: RovoDevChatRequest) {
+        this.beginNewPrompt();
 
         const fetchOp = async (client: RovoDevApiClient) => {
             const response = await client.chat(requestPayload);
@@ -159,7 +129,26 @@ export class RovoDevChatProvider {
             return this.processChatResponse('chat', response);
         };
 
-        await this.executeApiWithErrorHandling(fetchOp, true);
+        await this.executeStreamingApiWithErrorHandling('chat', fetchOp);
+    }
+
+    public async executeReplay(): Promise<void> {
+        if (!this._rovoDevApiClient) {
+            throw new Error('Unable to replay the previous conversation. Rovo Dev failed to initialize');
+        }
+
+        this.beginNewPrompt('replay');
+
+        this._replayInProgress = true;
+
+        const fetchOp = async (client: RovoDevApiClient) => {
+            const response = client.replay();
+            return this.processChatResponse('replay', response);
+        };
+
+        await this.executeStreamingApiWithErrorHandling('replay', fetchOp);
+
+        this._replayInProgress = false;
     }
 
     public async executeCancel(fromNewSession: boolean): Promise<boolean> {
@@ -172,12 +161,15 @@ export class RovoDevChatProvider {
             }
             this._pendingCancellation = true;
 
-            const cancelResponse = await this.executeApiWithErrorHandling((client) => client.cancel(), false);
+            try {
+                const cancelResponse = await this._rovoDevApiClient.cancel();
+                success = cancelResponse.cancelled || cancelResponse.message === 'No chat in progress';
+            } catch {
+                await this.processError(new Error('Failed to cancel the current response. Please try again.'), false);
+                success = false;
+            }
 
             this._pendingCancellation = false;
-
-            success =
-                !!cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress');
 
             if (!success) {
                 await webview.postMessage({
@@ -214,7 +206,7 @@ export class RovoDevChatProvider {
         this._telemetryProvider.startNewPrompt(this._currentPromptId);
     }
 
-    private async processChatResponse(sourceApi: 'chat' | 'replay', fetchOp: Promise<Response> | Response) {
+    private async processChatResponse(sourceApi: StreamingApi, fetchOp: Promise<Response> | Response) {
         const fireTelemetry = sourceApi === 'chat';
         const response = await fetchOp;
         if (!response.body) {
@@ -263,24 +255,9 @@ export class RovoDevChatProvider {
                 await this.processRovoDevResponse(sourceApi, msg);
             }
         }
-
-        // Send final complete message when stream ends
-        await this.completeChatResponse(sourceApi);
     }
 
-    private completeChatResponse(sourceApi: 'replay' | 'chat' | 'error') {
-        // if (this._processState === RovoDevProcessState.Disabled) {
-        //     return Promise.resolve(false);
-        // }
-
-        const webview = this._webView!;
-        return webview.postMessage({
-            type: RovoDevProviderMessageType.CompleteMessage,
-            isReplay: sourceApi === 'replay',
-        });
-    }
-
-    private processRovoDevResponse(sourceApi: 'chat' | 'replay', response: RovoDevResponse): Thenable<boolean> {
+    private processRovoDevResponse(sourceApi: StreamingApi, response: RovoDevResponse): Thenable<boolean> {
         // if (this._processState === RovoDevProcessState.Disabled) {
         //     return Promise.resolve(false);
         // }
@@ -339,7 +316,10 @@ export class RovoDevChatProvider {
                         enable_deep_plan: false,
                         context: [],
                     };
-                    return this.sendUserPromptToView(response.content);
+                    return this.signalPromptSent(
+                        { text: response.content, enable_deep_plan: false, context: [] },
+                        true,
+                    );
                 }
                 return Promise.resolve(false);
 
@@ -382,19 +362,29 @@ export class RovoDevChatProvider {
         }
     }
 
-    private async executeApiWithErrorHandling<T>(
-        func: (client: RovoDevApiClient) => Promise<T>,
-        isErrorRetriable: boolean,
-    ): Promise<T | void> {
+    private async executeStreamingApiWithErrorHandling(
+        sourceApi: StreamingApi,
+        func: (client: RovoDevApiClient) => Promise<any>,
+    ): Promise<void> {
+        const webview = this._webView!;
+
         if (this._rovoDevApiClient) {
             try {
-                return await func(this._rovoDevApiClient);
+                await func(this._rovoDevApiClient);
             } catch (error) {
-                await this.processError(error, isErrorRetriable);
+                // the error is retriable only when it happens during the streaming of a 'chat' response
+                await this.processError(error, sourceApi === 'chat');
             }
         } else {
             await this.processError(new Error('RovoDev client not initialized'), false);
         }
+
+        // whatever happens, at the end of the streaming API we need to tell the webview
+        // that the generation of the response has finished
+        await webview.postMessage({
+            type: RovoDevProviderMessageType.CompleteMessage,
+            isReplay: sourceApi === 'replay',
+        });
     }
 
     private processError(error: Error, isRetriable: boolean, isProcessTerminated?: boolean) {
@@ -414,24 +404,11 @@ export class RovoDevChatProvider {
         });
     }
 
-    private async sendUserPromptToView(text: string, context?: RovoDevContextItem[]) {
+    private async signalPromptSent({ text, enable_deep_plan, context }: RovoDevPrompt, echoMessage: boolean) {
         const webview = this._webView!;
-
         return await webview.postMessage({
-            type: RovoDevProviderMessageType.UserChatMessage,
-            message: {
-                text: text,
-                source: 'User',
-                context: context,
-            },
-        });
-    }
-
-    private async sendPromptSentToView(text: string, enable_deep_plan: boolean, context: RovoDevContextItem[]) {
-        const webview = this._webView!;
-
-        return await webview.postMessage({
-            type: RovoDevProviderMessageType.PromptSent,
+            type: RovoDevProviderMessageType.SignalPromptSent,
+            echoMessage,
             text,
             enable_deep_plan,
             context,
