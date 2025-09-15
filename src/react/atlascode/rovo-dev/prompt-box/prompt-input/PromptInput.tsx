@@ -1,5 +1,6 @@
 import { LoadingButton } from '@atlaskit/button';
 import SendIcon from '@atlaskit/icon/core/arrow-up';
+import StopIcon from '@atlaskit/icon/core/video-stop';
 import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
@@ -249,20 +250,15 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                     onClick={() => handleSend()}
                                 />
                             )}
-                            {!isWaitingForPrompt && (
-                                <Tooltip content="Stop generating" position="top">
-                                    <LoadingButton
-                                        style={{
-                                            ...rovoDevPromptButtonStyles,
-                                            backgroundColor: 'var(--vscode-terminal-ansiBrightRed)',
-                                            maxHeight: '20px',
-                                        }}
-                                        spacing="compact"
-                                        label="Stop"
-                                        isDisabled={disabled || currentState.state === 'CancellingResponse'}
-                                        onClick={() => onCancel()}
-                                    />
-                                </Tooltip>
+                            {state !== State.WaitingForPrompt && (
+                                <LoadingButton
+                                    style={rovoDevPromptButtonStyles}
+                                    spacing="compact"
+                                    label="Stop"
+                                    iconBefore={<StopIcon label="Stop" />}
+                                    isDisabled={disabled || state === State.CancellingResponse}
+                                    onClick={() => onCancel()}
+                                />
                             )}
                         </div>
                     </>
