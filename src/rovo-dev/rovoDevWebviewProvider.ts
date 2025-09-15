@@ -224,6 +224,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             this._chatProvider.currentPromptId,
                             e.pullRequestCreated,
                         );
+                        if (this.isBoysenberry && e.pullRequestCreated) {
+                            await this._chatProvider.executeChat(
+                                {
+                                    text: 'No action needed, PR has been created.',
+                                    context: [],
+                                    enable_deep_plan: false,
+                                },
+                                [],
+                            );
+                        }
                         break;
 
                     case RovoDevViewResponseType.CheckGitChanges:
