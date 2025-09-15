@@ -89,18 +89,6 @@ const IssueMainPanel: React.FC<Props> = ({
             ) {
                 return JSON.stringify(defaultDescription); // Convert ADF object to JSON string for AdfAwareContent
             }
-
-            // Handle ADF JSON string
-            if (typeof defaultDescription === 'string') {
-                const trimmed = defaultDescription.trim();
-                if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-                    const parsed = JSON.parse(trimmed);
-                    if (parsed.version === 1 && parsed.type === 'doc') {
-                        // This is ADF JSON, use it for rendering
-                        return defaultDescription;
-                    }
-                }
-            }
         }
         // Fallback to original logic
         return renderedDescription ? renderedDescription : defaultDescription;

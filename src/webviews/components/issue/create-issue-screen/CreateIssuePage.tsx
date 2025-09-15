@@ -27,6 +27,7 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
+import AtlaskitEditor from '../common/AtlaskitEditor/AtlaskitEditor';
 import { Panel } from './Panel';
 
 type Emit = CommonEditorPageEmit;
@@ -371,7 +372,38 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                     </div>
                 );
             }
-            return <div key={index}>{this.getInputMarkup(field)}</div>;
+            return (
+                <div key={index}>
+                    {field.key === 'description' ? (
+                        this.state.isAtlaskitEditorFFReceived ? (
+                            this.state.isAtlaskitEditorEnabled ? (
+                                <div style={{ marginTop: '8px' }}>
+                                    <label className="ac-field-label" style={{ marginBottom: '4px', display: 'block' }}>
+                                        Description
+                                    </label>
+                                    <AtlaskitEditor
+                                        defaultValue={this.state.fieldValues['description'] || ''}
+                                        onBlur={(content: string) => {
+                                            const descriptionField = this.commonFields.find(
+                                                (f) => f.key === 'description',
+                                            );
+                                            if (descriptionField) {
+                                                this.handleInlineEdit(descriptionField, content);
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                this.getInputMarkup(field)
+                            )
+                        ) : (
+                            <div>Waiting...</div>
+                        )
+                    ) : (
+                        this.getInputMarkup(field)
+                    )}
+                </div>
+            );
         });
     }
 
@@ -402,6 +434,10 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     };
 
     public override render() {
+        if (!this.state.isRendered) {
+            this.postMessage({ action: 'getFeatureFlags' });
+            this.setState({ isRendered: true });
+        }
         if (!this.state.fieldValues['issuetype']?.id && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refresh' });
             return <AtlLoader />;
