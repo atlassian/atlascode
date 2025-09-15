@@ -5,7 +5,7 @@ export { IssueQuickContent } from './IssueQuickContent';
 export { IssueStatus } from './IssueStatus';
 export { IssueTitle } from './IssueTitle';
 export { JiraNavigation } from './JiraNavigation';
-export { PullRequestsNavigation } from './PullRequestsNavigation';
+export { PullRequestsNavigation, PullRequestsNavigationDC } from './PullRequestsNavigation';
 export { PRHeader } from './PRHeader';
 export { PRTitle } from './PRTitle';
 export { PRSummary } from './PRSummary';
