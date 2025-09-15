@@ -1,6 +1,7 @@
 import { LoadingButton } from '@atlaskit/button';
 import SendIcon from '@atlaskit/icon/core/arrow-up';
-import StopIcon from '@atlaskit/icon/core/video-stop';
+import VideoStopOverlayIcon from '@atlaskit/icon/core/video-stop-overlay';
+import { token } from '@atlaskit/tokens';
 import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
@@ -192,14 +193,16 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         />
                     )}
                     {showCancelButton && (
-                        <LoadingButton
-                            style={rovoDevPromptButtonStyles}
-                            spacing="compact"
-                            label="Stop generating"
-                            iconBefore={<StopIcon label="Stop" />}
-                            isDisabled={disabled || currentState.state === 'CancellingResponse'}
-                            onClick={() => onCancel()}
-                        />
+                        <Tooltip content="Stop generating">
+                            <LoadingButton
+                                style={rovoDevPromptButtonStyles}
+                                spacing="compact"
+                                label="Stop"
+                                iconBefore={<VideoStopOverlayIcon color={token('color.icon.danger')} label="Stop" />}
+                                isDisabled={disabled || currentState.state === 'CancellingResponse'}
+                                onClick={() => onCancel()}
+                            />
+                        </Tooltip>
                     )}
                 </div>
             </div>

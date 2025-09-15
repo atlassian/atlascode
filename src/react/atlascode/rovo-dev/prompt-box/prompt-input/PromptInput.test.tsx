@@ -66,7 +66,7 @@ describe('PromptInputBox', () => {
 
     it('renders Stop button when state is not WaitingForPrompt', () => {
         render(<PromptInputBox {...defaultProps} currentState={{ state: 'GeneratingResponse' }} />);
-        expect(screen.getByLabelText('Stop generating')).toBeTruthy();
+        expect(screen.getByLabelText('Stop')).toBeTruthy();
     });
 
     it('calls onSend when Send button is clicked', () => {
@@ -78,13 +78,13 @@ describe('PromptInputBox', () => {
 
     it('calls onCancel when Stop button is clicked', () => {
         render(<PromptInputBox {...defaultProps} currentState={{ state: 'GeneratingResponse' }} />);
-        fireEvent.click(screen.getByLabelText('Stop generating'));
+        fireEvent.click(screen.getByLabelText('Stop'));
         expect(defaultProps.onCancel).toHaveBeenCalled();
     });
 
     it('disables Stop button when state is CancellingResponse', () => {
         render(<PromptInputBox {...defaultProps} currentState={{ state: 'CancellingResponse' }} />);
-        fireEvent.click(screen.getByLabelText('Stop generating'));
+        fireEvent.click(screen.getByLabelText('Stop'));
         expect(defaultProps.onCancel).toHaveBeenCalledTimes(0);
     });
 
