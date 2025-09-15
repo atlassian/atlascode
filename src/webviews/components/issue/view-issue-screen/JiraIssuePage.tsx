@@ -16,6 +16,7 @@ import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../../i
 import { LegacyPMFData } from '../../../../ipc/messaging';
 import { AtlascodeErrorBoundary } from '../../../../react/atlascode/common/ErrorBoundary';
 import { readFilesContentAsync } from '../../../../util/files';
+import { buildRovoDevPrompt } from '../../../../util/rovoDevPrompt';
 import { ConnectionTimeout } from '../../../../util/time';
 import { AtlLoader } from '../../AtlLoader';
 import ErrorBanner from '../../ErrorBanner';
@@ -168,33 +169,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     };
 
-    buildPrompt = (summary: string, description: string): string => {
-        // Make the issue summary and description into a prompt for RovoDev
-        return (
-            `
-            Let's work on this issue:
-
-            Summary:
-            ${summary}
-            ` +
-            (description
-                ? `
-            Description:
-            ${description}
-            `
-                : '') +
-            `
-            Please provide a detailed plan to resolve this issue, including any necessary steps, code snippets, or references to documentation.
-            Make sure to consider the context of the issue and provide a comprehensive solution.
-            Feel free to ask for any additional information if needed.
-        `
-        );
-    };
-
     handleInvokeRovodev = () => {
         const summary = this.state.fieldValues['summary'] || '';
         const description = this.state.fieldValues['description'] || '';
-        const prompt = this.buildPrompt(summary, description);
+        const prompt = buildRovoDevPrompt(summary, description);
 
         this.postMessage({
             action: 'invokeRovodev',
