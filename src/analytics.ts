@@ -328,6 +328,30 @@ export function rovoDevDetailsExpandedEvent(
     });
 }
 
+export function rovoDevAiResultViewedEvent(
+    rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
+    sessionId: string,
+    promptId: string,
+    dwellMs: number,
+) {
+    return trackEvent('viewed', 'aiResult', {
+        attributes: {
+            rovoDevEnv,
+            appInstanceId,
+            sessionId,
+            promptId,
+            dwellMs,
+            xid: 'rovodev-sessions',
+            singleInstrumentationID: promptId,
+            aiFeatureName: 'rovodevSessions',
+            proactiveGeneratedAI: 0,
+            userGeneratedAI: 1,
+            isAIFeature: 1,
+        },
+    });
+}
+
 // Jira issue events
 
 export async function issueCreatedEvent(site: DetailedSiteInfo, issueKey: string): Promise<TrackEvent> {

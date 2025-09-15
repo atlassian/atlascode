@@ -2,6 +2,7 @@ import { Container } from 'src/container';
 import { Logger } from 'src/logger';
 
 import {
+    rovoDevAiResultViewedEvent,
     rovoDevDetailsExpandedEvent,
     RovoDevEnv,
     rovoDevFileChangedActionEvent,
@@ -23,6 +24,7 @@ const rovoDevTelemetryEvents = {
     rovoDevStopActionEvent,
     rovoDevTechnicalPlanningShownEvent,
     rovoDevDetailsExpandedEvent,
+    rovoDevAiResultViewedEvent,
 };
 
 type ParametersSkip3<T extends (...args: any) => any> =
