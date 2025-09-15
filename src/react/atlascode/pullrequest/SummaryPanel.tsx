@@ -30,7 +30,12 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = memo(
         );
 
         return (
-            <BasicPanel title="Summary" isLoading={isLoading} isDefaultExpanded={isDefaultExpanded}>
+            <BasicPanel
+                title="Summary"
+                isLoading={isLoading}
+                isDefaultExpanded={isDefaultExpanded}
+                dataTestId="pullrequest.summary-panel"
+            >
                 <InlineRenderedTextEditor
                     rawContent={rawSummary}
                     htmlContent={htmlSummary}
