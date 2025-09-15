@@ -21,7 +21,9 @@ export const rovoDevTextareaStyles: React.CSSProperties = {
 
 export const rovoDevPromptButtonStyles: React.CSSProperties = {
     color: 'var(--vscode-input-foreground) !important',
-    border: isHighContrastTheme() ? '2px solid var(--vscode-contrastBorder)' : '1px solid var(--vscode-button-border)',
+    border: isHighContrastTheme()
+        ? '2px solid var(--vscode-contrastBorder)'
+        : '1px solid var(--vscode-editorWidget-border)',
     backgroundColor: 'var(--vscode-input-background)',
     marginLeft: '4px',
     marginTop: '1px',
@@ -98,6 +100,8 @@ export const inChatButtonStyles: React.CSSProperties = {
     padding: '6px 12px',
     background: 'var(--vscode-button-background)',
     color: 'var(--vscode-button-foreground)',
-    border: isHighContrastTheme() ? '2px solid var(--vscode-contrastBorder)' : '1px solid var(--vscode-button-border)',
+    border: isHighContrastTheme()
+        ? '2px solid var(--vscode-contrastBorder)'
+        : '1px solid var(--vscode-editorWidget-border)',
     borderRadius: '4px',
 };
