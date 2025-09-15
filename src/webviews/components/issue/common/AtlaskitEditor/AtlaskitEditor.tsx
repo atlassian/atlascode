@@ -10,10 +10,12 @@ interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' 
     onCancel?: () => void;
     defaultValue?: string;
     onContentChange?: (content: string) => void;
+    onChange?: (content: string) => void;
+    onBlur?: (content: string) => void;
 }
 
 const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProps) => {
-    const { appearance = 'comment', onCancel, onSave, defaultValue = '' } = props;
+    const { appearance = 'comment', onCancel, onSave, defaultValue = '', onChange, onBlur, onContentChange } = props;
 
     const universalPreset = useUniversalPreset({
         props: {
@@ -36,6 +38,88 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
         },
     });
     const { preset, editorApi } = usePreset(() => universalPreset);
+
+    // Helper function to get current document content
+    const getCurrentContent = React.useCallback(async (): Promise<string | null> => {
+        try {
+            if (!editorApi) {
+                return null;
+            }
+
+            return new Promise((resolve) => {
+                editorApi.core.actions.requestDocument(
+                    (document) => {
+                        if (!document) {
+                            resolve(null);
+                            return;
+                        }
+                        // document is in wiki markup format because of transformer passed below
+                        resolve(document);
+                    },
+                    {
+                        transformer: editorApi.core.actions.createTransformer(
+                            (scheme) => new WikiMarkupTransformer(scheme),
+                        ),
+                    },
+                );
+            });
+        } catch (error) {
+            console.error(error);
+            return null;
+        }
+    }, [editorApi]);
+
+    // Track previous content for change detection
+    const previousContentRef = React.useRef<string>('');
+
+    // Polling mechanism to detect content changes (for onChange support)
+    React.useEffect(() => {
+        if (!editorApi || (!onChange && !onContentChange)) {
+            return;
+        }
+
+        const checkForChanges = async () => {
+            const content = await getCurrentContent();
+            if (content !== null && content !== previousContentRef.current) {
+                previousContentRef.current = content;
+                onChange?.(content);
+                onContentChange?.(content);
+            }
+        };
+
+        // Poll for changes every 500ms
+        const interval = setInterval(checkForChanges, 500);
+
+        return () => {
+            clearInterval(interval);
+        };
+    }, [editorApi, onChange, onContentChange, getCurrentContent]);
+
+    // Handle blur events using DOM events with a ref to the editor container
+    const editorContainerRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        if (!onBlur || !editorContainerRef.current) {
+            return;
+        }
+
+        const handleDOMBlur = async (event: FocusEvent) => {
+            // Check if focus is moving outside the editor container
+            if (!editorContainerRef.current?.contains(event.relatedTarget as Node)) {
+                const content = await getCurrentContent();
+                if (content !== null) {
+                    onBlur(content);
+                }
+            }
+        };
+
+        const container = editorContainerRef.current;
+        container.addEventListener('focusout', handleDOMBlur);
+
+        return () => {
+            container.removeEventListener('focusout', handleDOMBlur);
+        };
+    }, [onBlur, getCurrentContent]);
 
     // Handle save button click using EditorActions
     const handleSave = async () => {
@@ -65,7 +149,7 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
     };
 
     return (
-        <div>
+        <div ref={editorContainerRef}>
             <ComposableEditor
                 appearance={appearance}
                 useStickyToolbar={true}
