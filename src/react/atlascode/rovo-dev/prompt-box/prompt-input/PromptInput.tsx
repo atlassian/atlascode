@@ -193,7 +193,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         />
                     )}
                     {showCancelButton && (
-                        <Tooltip content="Stop generating">
+                        <Tooltip content="Stop generating" position="top">
                             <LoadingButton
                                 style={rovoDevPromptButtonStyles}
                                 spacing="compact"
