@@ -1,15 +1,15 @@
 import React from 'react';
-import { RovoDevContextItem, State } from 'src/rovo-dev/rovoDevTypes';
+import { State } from 'src/rovo-dev/rovoDevTypes';
 
 export const DebugPanel: React.FC<{
     currentState: State;
-    context: RovoDevContextItem[];
-}> = ({ currentState, context }) => {
+    debugContext: Record<string, string>;
+}> = ({ currentState, debugContext }) => {
     return (
         <div style={{ width: '100%', border: '1px solid var(--vscode-inputValidation-errorBorder)', padding: '4px' }}>
             <DebugStatePanel currentState={currentState} />
             <hr />
-            <DebugContextPanel context={context} />
+            <DebugContextPanel debugContext={debugContext} />
         </div>
     );
 };
@@ -40,12 +40,24 @@ const DebugStatePanel: React.FC<{
 };
 
 const DebugContextPanel: React.FC<{
-    context: RovoDevContextItem[];
-}> = ({ context }) => {
+    debugContext: Record<string, string>;
+}> = ({ debugContext }) => {
+    const props = React.useMemo(() => {
+        const p: [string, string][] = [];
+        for (const key in debugContext) {
+            p.push([key, debugContext[key]]);
+        }
+        return p;
+    }, [debugContext]);
+
     return (
-        <div>
-            <label>Enabled/Total context files:</label>
-            <label>{` ${context.filter((x) => x.enabled).length}/${context.length}`}</label>
-        </div>
+        <table>
+            {props.map(([key, value]) => (
+                <tr>
+                    <td>{key}</td>
+                    <td>{value}</td>
+                </tr>
+            ))}
+        </table>
     );
 };

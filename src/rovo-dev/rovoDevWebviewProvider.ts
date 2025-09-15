@@ -74,6 +74,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _processState = RovoDevProcessState.NotStarted;
     private _initialized = false;
     private _debugPanelEnabled = false;
+    private _debugPanelContext: Record<string, string> = {};
 
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
@@ -140,9 +141,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
         if (configuration.changed(e, 'rovodev.debugPanelEnabled')) {
             this._debugPanelEnabled = Container.config.rovodev.debugPanelEnabled;
-            this._webView?.postMessage({
+            this.refreshDebugPanel(true);
+        }
+    }
+
+    private async refreshDebugPanel(force?: boolean) {
+        if (this._debugPanelEnabled || force) {
+            await this._webView?.postMessage({
                 type: RovoDevProviderMessageType.SetDebugPanel,
                 enabled: this._debugPanelEnabled,
+                context: this._debugPanelContext,
             });
         }
     }
@@ -259,11 +267,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.WebviewReady:
-                        await webview.postMessage({
-                            type: RovoDevProviderMessageType.SetDebugPanel,
-                            enabled: this._debugPanelEnabled,
-                        });
-
+                        this.refreshDebugPanel(true);
                         if (!this.isBoysenberry && !this.isDisabled) {
                             if (!workspace.workspaceFolders?.length) {
                                 this.signalRovoDevDisabled('noOpenFolder');
@@ -285,6 +289,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             throw new Error('Rovo Dev port not set');
                         } else {
                             this._processState = RovoDevProcessState.Starting;
+                            this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
+                            this.refreshDebugPanel();
+
                             RovoDevProcessManager.initializeRovoDev(this._context);
                         }
                         break;
@@ -506,6 +513,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             await RovoDevProcessManager.initializeRovoDev(this._context);
 
             this._processState = RovoDevProcessState.Starting;
+            this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
+            this.refreshDebugPanel();
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.ClearChat,
@@ -870,6 +879,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
         this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
 
+        this._debugPanelContext['RovoDevHost'] = rovoDevHost;
+        this._debugPanelContext['RovoDevPort'] = `${rovoDevPort}`;
+        this._debugPanelContext['RovoDevHealthcheck'] = '???';
+        this.refreshDebugPanel();
+
         // enable the 'show terminal' button only when in debugging
         setCommandContext(CommandContext.RovoDevTerminalEnabled, Container.isDebugging);
 
@@ -893,6 +907,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         // if the client becomes undefined, it means the process terminated while we were polling the healtcheck
         if (!rovoDevClient) {
+            delete this._debugPanelContext['RovoDevHost'];
+            delete this._debugPanelContext['RovoDevPort'];
+            delete this._debugPanelContext['RovoDevHealthcheck'];
+            this.refreshDebugPanel();
             return;
         }
 
@@ -907,6 +925,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             );
             return;
         }
+
+        this._debugPanelContext['RovoDevHealthcheck'] = result.status;
+        this.refreshDebugPanel();
 
         // if result is unhealthy, it means Rovo Dev has failed during initialization (e.g., some MCP servers failed to start)
         // we can't continue - shutdown and set the process as terminated so the user can try again.
@@ -954,6 +975,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._processState = RovoDevProcessState.Started;
         this.beginNewSession(result.sessionId || null, false);
 
+        this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
+        this.refreshDebugPanel();
+
         await webView.postMessage({
             type: RovoDevProviderMessageType.RovoDevReady,
             isPromptPending: this._chatProvider.isPromptPending,
@@ -975,6 +999,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     public signalRovoDevDisabled(reason: RovoDevDisabledReason) {
         this._processState = RovoDevProcessState.Disabled;
 
+        this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
+        this.refreshDebugPanel();
+
         const webView = this._webView!;
         return webView.postMessage({
             type: RovoDevProviderMessageType.RovoDevDisabled,
@@ -994,6 +1021,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._rovoDevApiClient = undefined;
         this._chatProvider.shutdown();
         this._telemetryProvider.shutdown();
+
+        delete this._debugPanelContext['RovoDevHost'];
+        delete this._debugPanelContext['RovoDevPort'];
+        this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
+        this.refreshDebugPanel();
 
         if (!overrideFullMessage) {
             errorMessage = errorMessage

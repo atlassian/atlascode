@@ -91,6 +91,7 @@ const RovoDevView: React.FC = () => {
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
     const [promptContextCollection, setPromptContextCollection] = useState<RovoDevContextItem[]>([]);
     const [debugPanelEnabled, setDebugPanelEnabled] = useState(false);
+    const [debugPanelContext, setDebugPanelContext] = useState<Record<string, string>>({});
 
     React.useEffect(() => {
         const codeBlocks = document.querySelectorAll('pre code');
@@ -354,6 +355,7 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.SetDebugPanel:
                     setDebugPanelEnabled(event.enabled);
+                    setDebugPanelContext(event.context);
                     break;
 
                 case RovoDevProviderMessageType.SetInitializing:
@@ -670,7 +672,7 @@ const RovoDevView: React.FC = () => {
 
     return (
         <div className="rovoDevChat">
-            {debugPanelEnabled && <DebugPanel currentState={currentState} context={promptContextCollection} />}
+            {debugPanelEnabled && <DebugPanel currentState={currentState} debugContext={debugPanelContext} />}
             <ChatStream
                 chatHistory={history}
                 renderProps={{

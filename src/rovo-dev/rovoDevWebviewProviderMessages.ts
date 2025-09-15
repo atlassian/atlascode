@@ -70,4 +70,4 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
     | ReducerAction<RovoDevProviderMessageType.ForceStop>
     | ReducerAction<RovoDevProviderMessageType.ShowFeedbackForm>
-    | ReducerAction<RovoDevProviderMessageType.SetDebugPanel, { enabled: boolean }>;
+    | ReducerAction<RovoDevProviderMessageType.SetDebugPanel, { enabled: boolean; context: Record<string, string> }>;
