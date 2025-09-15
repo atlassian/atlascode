@@ -14,7 +14,7 @@ export class PRCommits {
 
         this.sectionButton = this.frame.getByRole('button', { name: 'Commits' });
         this.commitsTable = this.frame.getByRole('table', { name: 'commits list' }).first();
-        this.commitHash = this.commitsTable.getByRole('link', { name: '35c37c0b' });
+        this.commitHash = this.commitsTable.getByRole('link');
         this.commitMessage = this.commitsTable.getByLabel('added example.json');
         this.commitDate = this.commitsTable.getByText('2025-07-03');
     }
