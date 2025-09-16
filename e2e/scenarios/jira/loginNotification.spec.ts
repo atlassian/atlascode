@@ -8,5 +8,6 @@ export async function loginNotification(page: Page) {
 
     // Verify initial unauthenticated state: login prompt is visible in both sidebar and notifications
     await new AtlascodeDrawer(page).jira.expectLoginToJiraItemExists();
-    await new AppNotifications(page).expectNotification(/Log in to Jira/);
+    // await new AppNotifications(page).expectNotification(/Log in to Jira/);
+    await new AppNotifications(page).expectNotification(/Error for test/);
 }
