@@ -233,11 +233,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.CheckGitChanges:
-                        await this._prHandler!.isGitStateClean().then((isClean) => {
-                            this._webView?.postMessage({
-                                type: RovoDevProviderMessageType.CheckGitChangesComplete,
-                                hasChanges: !isClean,
-                            });
+                        const isClean = await this._prHandler!.isGitStateClean();
+                        await webview.postMessage({
+                            type: RovoDevProviderMessageType.CheckGitChangesComplete,
+                            hasChanges: !isClean,
                         });
                         break;
 
@@ -251,7 +250,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     case RovoDevViewResponseType.WebviewReady:
                         if (!this.isBoysenberry && !this.isDisabled) {
                             if (!workspace.workspaceFolders?.length) {
-                                this.signalRovoDevDisabled('noOpenFolder');
+                                await this.signalRovoDevDisabled('noOpenFolder');
                                 return;
                             } else {
                                 await webview.postMessage({
@@ -264,13 +263,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                         const fixedPort = parseInt(process.env[rovodevInfo.envVars.port] || '0');
                         if (fixedPort) {
-                            this.signalProcessStarted(fixedPort);
+                            await this.signalProcessStarted(fixedPort);
                         } else if (this.isBoysenberry) {
-                            this.signalRovoDevDisabled('other');
+                            await this.signalRovoDevDisabled('other');
                             throw new Error('Rovo Dev port not set');
                         } else {
                             this._processState = RovoDevProcessState.Starting;
-                            RovoDevProcessManager.initializeRovoDev(this._context);
+                            await RovoDevProcessManager.initializeRovoDev(this._context);
                         }
                         break;
 
@@ -283,8 +282,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.SendFeedback:
-                        console.log('Send feedback message received in provider');
-                        RovoDevFeedbackManager.submitFeedback(
+                        await RovoDevFeedbackManager.submitFeedback(
                             {
                                 feedbackType: e.feedbackType,
                                 feedbackMessage: e.feedbackMessage,
@@ -304,7 +302,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
                 }
             } catch (error) {
-                this.processError(error, false);
+                await this.processError(error, false);
             }
         });
     }
@@ -742,7 +740,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         );
 
         if (!initialized) {
-            console.error('Webview is not initialized after waiting.');
             return;
         }
 
