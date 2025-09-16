@@ -724,11 +724,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     public async invokeRovoDevAskCommand(prompt: string, context?: RovoDevContextItem[]): Promise<void> {
-        if (this.isDisabled) {
-            return;
-        }
-
-        // focus on the specific vscode view
+        // Always focus on the specific vscode view, even if disabled (so user can see the login prompt)
         commands.executeCommand('atlascode.views.rovoDev.webView.focus');
 
         // Wait for the webview to initialize, up to 5 seconds
@@ -740,6 +736,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         );
 
         if (!initialized) {
+            return;
+        }
+
+        // If disabled, we still want to show the webview but don't execute the chat
+        // The webview will show the appropriate login prompt
+        if (this.isDisabled) {
             return;
         }
 
