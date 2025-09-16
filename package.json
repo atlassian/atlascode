@@ -520,7 +520,7 @@
                 {
                     "id": "atlascode-rovo-dev",
                     "title": "Rovo Dev",
-                    "icon": "resources/rovodev-icon.svg"
+                    "icon": "resources/light/rovodev-icon.svg"
                 }
             ]
         },
