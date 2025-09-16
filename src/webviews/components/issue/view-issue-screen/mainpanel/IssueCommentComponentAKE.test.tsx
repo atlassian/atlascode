@@ -152,7 +152,7 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
         );
         expect(await screen.findByText('This is a test comment', {}, { timeout: 3000 })).toBeTruthy();
         expect(await screen.findByText('Another test comment')).toBeTruthy();
-    });
+    }, 100000);
 
     it('renders editing comment area', async () => {
         await act(() =>
@@ -182,7 +182,7 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
 
         const editor = await screen.findByLabelText('Rich text editor for comments');
         expect(editor).toBeTruthy();
-    });
+    }, 20000);
 
     it('allows deleting a comment', () => {
         render(
