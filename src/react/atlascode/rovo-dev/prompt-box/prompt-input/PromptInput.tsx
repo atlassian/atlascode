@@ -1,7 +1,8 @@
 import AddIcon from '@atlaskit/icon/core/add';
 import SendIcon from '@atlaskit/icon/core/arrow-up';
 import CrossIcon from '@atlaskit/icon/core/cross';
-import StopIcon from '@atlaskit/icon/core/video-stop';
+import VideoStopOverlayIcon from '@atlaskit/icon/core/video-stop-overlay';
+import { token } from '@atlaskit/tokens';
 import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
@@ -191,14 +192,16 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         </button>
                     )}
                     {showCancelButton && (
-                        <button
-                            className="prompt-button-secondary"
-                            aria-label="stop"
-                            onClick={() => onCancel()}
-                            disabled={disabled || currentState.state === 'CancellingResponse'}
-                        >
-                            <StopIcon label="Stop" />
-                        </button>
+                        <Tooltip content="Stop generating" position="top">
+                            <button
+                                className="prompt-button-secondary"
+                                aria-label="stop"
+                                onClick={() => onCancel()}
+                                disabled={disabled || currentState.state === 'CancellingResponse'}
+                            >
+                                <VideoStopOverlayIcon color={token('color.icon.danger')} label="Stop" />
+                            </button>
+                        </Tooltip>
                     )}
                 </div>
             </div>
