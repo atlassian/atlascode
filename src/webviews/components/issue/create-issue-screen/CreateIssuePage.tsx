@@ -146,8 +146,14 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                         }
                     }
 
-                    this.updateInternals(issueData);
-                    this.setState(issueData, () => {
+                    // Merge new field values over existing to avoid losing values
+                    const mergedFieldValues = fieldValues
+                        ? { ...this.state.fieldValues, ...fieldValues }
+                        : this.state.fieldValues;
+                    const mergedIssueData: CreateIssueData = { ...issueData, fieldValues: mergedFieldValues };
+
+                    this.updateInternals(mergedIssueData);
+                    this.setState(mergedIssueData, () => {
                         this.setState({
                             isSomethingLoading: false,
                             loadingField: '',

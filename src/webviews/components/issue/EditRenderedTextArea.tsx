@@ -22,7 +22,7 @@ export const EditRenderedTextArea: React.FC<Props> = ({
     fetchImage,
 }: Props) => {
     const [editing, setEditing] = useState(false);
-    const [commentInputValue, setCommentInputValue] = useState(text);
+    const [commentInputValue, setCommentInputValue] = useState(text ?? '');
     const [isSaving, setIsSaving] = useState(false);
 
     const handleSave = async () => {
@@ -57,7 +57,7 @@ export const EditRenderedTextArea: React.FC<Props> = ({
                         appearance="default"
                         onClick={() => {
                             setEditing(false);
-                            setCommentInputValue(text);
+                            setCommentInputValue(text ?? '');
                         }}
                     >
                         Cancel
