@@ -102,6 +102,12 @@ jobs:
   finalize:
     needs: [ci-matrix]
     runs-on: ubuntu-latest
+    if: always()
     steps:
-      - name: All steps completed
-        run: echo "All steps completed successfully"
+      - name: Check if all jobs succeeded
+        run: |
+          if [[ "${{ needs.ci-matrix.result }}" != "success" ]]; then
+            echo "One of the ci-matrix jobs failed"
+            exit 1
+          fi
+          echo "All steps completed successfully"
