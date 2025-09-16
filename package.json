@@ -200,6 +200,11 @@
                 "category": "Jira"
             },
             {
+                "command": "atlascode.jira.searchAllIssues",
+                "title": "Search All Jira Issues Results",
+                "category": "Jira"
+            },
+            {
                 "command": "atlascode.bb.deleteComment",
                 "title": "Delete",
                 "icon": {
