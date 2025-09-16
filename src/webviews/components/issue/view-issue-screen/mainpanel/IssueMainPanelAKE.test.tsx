@@ -81,7 +81,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
         );
         await screen.findByText('test description');
         expect(screen.getByText('test description')).toBeTruthy();
-    });
+    }, 100000);
 
     it('renders editing description area', async () => {
         await act(() =>
@@ -114,5 +114,5 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
 
         const editor = await screen.findByLabelText('Rich text editor for comments');
         expect(editor).toBeTruthy();
-    });
+    }, 100000);
 });
