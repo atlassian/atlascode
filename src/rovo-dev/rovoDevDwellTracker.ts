@@ -27,13 +27,6 @@ export class RovoDevDwellTracker implements Disposable {
 
         // Listen for editor changes and visible range changes (scrolling)
         this.disposables.push(window.onDidChangeActiveTextEditor((e) => this.onEditorFocusChanged(e)));
-        this.disposables.push(
-            window.onDidChangeTextEditorVisibleRanges((e) => {
-                if (e.textEditor === this.activeEditor) {
-                    this.startDwellTimer();
-                }
-            }),
-        );
 
         this.startDwellTimer();
     }
