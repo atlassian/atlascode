@@ -21,6 +21,7 @@ export const baseConfigFor = (project: string, testExtension: string): Config =>
         '^testsutil(/.+)?': '<rootDir>/testsutil$1',
         'monaco-editor': '<rootDir>/__mocks__/monaco-editor.ts',
         'package.json': '<rootDir>/__mocks__/packagejson.ts',
+        '^clipboard-polyfill': '<rootDir>/node_modules/@atlaskit/editor-common/dist/cjs/clipboard/index.js',
     },
 
     testMatch: [`**/*.test.${testExtension}`],
@@ -46,6 +47,7 @@ export const baseConfigFor = (project: string, testExtension: string): Config =>
         'merge-anything',
         'is-what/',
         'axios-curlirize/',
+        'clipboard-polyfill/',
     ),
 
     collectCoverage: true,

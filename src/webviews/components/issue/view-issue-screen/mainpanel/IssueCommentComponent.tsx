@@ -12,10 +12,21 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 import React, { lazy, Suspense } from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
-import { AdfAwareContent } from '../../../AdfAwareContent';
-// these two components can't be imported at the same time, so use lazy loading
-const AtlaskitEditor = lazy(() => import('../../common/AtlaskitEditor/AtlaskitEditor'));
-const JiraIssueTextAreaEditor = lazy(() => import('../../common/JiraIssueTextArea'));
+// these four components can't be imported at the same time, so use lazy loading
+const AtlaskitEditor = lazy(() => {
+    return import('../../common/AtlaskitEditor/AtlaskitEditor');
+});
+const JiraIssueTextAreaEditor = lazy(() => {
+    return import('../../common/JiraIssueTextArea');
+});
+
+const RenderedContent = lazy(() => {
+    return import('../../../RenderedContent').then((module) => ({ default: module.RenderedContent }));
+});
+
+const AdfAwareContent = lazy(() => {
+    return import('../../../AdfAwareContent').then((module) => ({ default: module.AdfAwareContent }));
+});
 
 type IssueCommentComponentProps = {
     siteDetails: DetailedSiteInfo;
@@ -63,7 +74,6 @@ const CommentComponent: React.FC<{
     const bodyText = comment.renderedBody ? comment.renderedBody : comment.body;
 
     const [commentText, setCommentText] = React.useState(comment.body);
-
     // Update commentText when comment.body changes (after save)
     React.useEffect(() => {
         if (!isEditing) {
@@ -164,8 +174,16 @@ const CommentComponent: React.FC<{
                         ) : (
                             <div>Waiting...</div>
                         )
+                    ) : isAtlaskitEditorFFReceived ? (
+                        <Suspense fallback={<div>Loading comment content ...</div>}>
+                            {isAtlaskitEditorEnabled ? (
+                                <AdfAwareContent content={comment.body} fetchImage={fetchImage} />
+                            ) : (
+                                <RenderedContent html={bodyText} fetchImage={fetchImage} />
+                            )}
+                        </Suspense>
                     ) : (
-                        <AdfAwareContent content={bodyText} fetchImage={fetchImage} />
+                        <div>Waiting...</div>
                     )}
                 </>
             }

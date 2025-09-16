@@ -7,12 +7,18 @@ import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atla
 import React, { lazy, Suspense } from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
-import { AdfAwareContent } from '../../../AdfAwareContent';
 import { AttachmentList } from '../../AttachmentList';
 import { AttachmentsModal } from '../../AttachmentsModal';
-// these two components can't be imported at the same time, so use lazy loading
+// these four components can't be imported at the same time, so use lazy loading
 const AtlaskitEditor = lazy(() => import('../../common/AtlaskitEditor/AtlaskitEditor'));
 const JiraIssueTextAreaEditor = lazy(() => import('../../common/JiraIssueTextArea'));
+
+const RenderedContent = lazy(() => {
+    return import('../../../RenderedContent').then((module) => ({ default: module.RenderedContent }));
+});
+const AdfAwareContent = lazy(() => {
+    return import('../../../AdfAwareContent').then((module) => ({ default: module.AdfAwareContent }));
+});
 
 import WorklogForm from '../../WorklogForm';
 import Worklogs from '../../Worklogs';
@@ -67,7 +73,6 @@ const IssueMainPanel: React.FC<Props> = ({
     isAtlaskitEditorEnabled,
     isAtlaskitEditorFFReceived = false,
 }) => {
-    //field values
     const attachments = fields['attachment'] && fieldValues['attachment'] ? fieldValues['attachment'] : undefined;
     const subtasks =
         fields['subtasks'] && fieldValues['subtasks'] && !isEpic && !fieldValues['issuetype'].subtask
@@ -77,22 +82,6 @@ const IssueMainPanel: React.FC<Props> = ({
     const issuelinks = fields['issuelinks'] && fieldValues['issuelinks'] ? fieldValues['issuelinks'] : undefined;
     const defaultDescription = fieldValues['description'] ? fieldValues['description'] : '';
     const renderedDescription = fieldValues['description.rendered'] ? fieldValues['description.rendered'] : undefined;
-
-    // Smart description content selection: Use ADF from description if it's ADF object/JSON
-    const getDescriptionDisplayContent = () => {
-        if (defaultDescription) {
-            // Handle ADF object directly
-            if (
-                typeof defaultDescription === 'object' &&
-                defaultDescription.version === 1 &&
-                defaultDescription.type === 'doc'
-            ) {
-                return JSON.stringify(defaultDescription); // Convert ADF object to JSON string for AdfAwareContent
-            }
-        }
-        // Fallback to original logic
-        return renderedDescription ? renderedDescription : defaultDescription;
-    };
 
     //states
     const [enableSubtasks, setEnableSubtasks] = React.useState(false);
@@ -256,10 +245,24 @@ const IssueMainPanel: React.FC<Props> = ({
                                 display: 'flex',
                                 alignItems: 'flex-start',
                             }}
-                            onClick={() => setIsEditingDescription(true)}
+                            onClick={() => {
+                                setIsEditingDescription(true);
+                            }}
                             className="ac-inline-input-view-p"
                         >
-                            <AdfAwareContent content={getDescriptionDisplayContent()} fetchImage={fetchImage} />
+                            {isAtlaskitEditorFFReceived ? (
+                                <Suspense fallback={<div>Loading description content...</div>}>
+                                    {isAtlaskitEditorEnabled ? (
+                                        <AdfAwareContent content={descriptionText} fetchImage={fetchImage} />
+                                    ) : renderedDescription ? (
+                                        <RenderedContent html={renderedDescription} fetchImage={fetchImage} />
+                                    ) : (
+                                        <p style={{ margin: 0 }}>{descriptionText}</p>
+                                    )}
+                                </Suspense>
+                            ) : (
+                                <div>Waiting description content...</div>
+                            )}
                         </div>
                     )}
                 </div>
