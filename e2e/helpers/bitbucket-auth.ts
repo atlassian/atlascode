@@ -91,5 +91,5 @@ export const authenticateWithBitbucketCloud = async (
         await page.waitForTimeout(1000);
     }
 
-    await expect(settingsFrame.getByText('Bitbucket Cloud')).toBeVisible();
+    await expect(settingsFrame.getByText('mock@atlassian.code')).toBeVisible();
 };

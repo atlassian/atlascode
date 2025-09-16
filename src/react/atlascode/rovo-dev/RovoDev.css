@@ -1,5 +1,6 @@
 body {
     padding: 0 !important;
+    background-color: var(--vscode-sideBar-background) !important;
 }
 
 .rovoDevChat * {
@@ -681,6 +682,66 @@ body {
     outline: var(--vscode-focusBorder) solid 1px;
 }
 
+.prompt-button-primary,
+.prompt-button-secondary {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--vscode-button-border);
+    border-radius: 2px;
+    padding: 2px 6px;
+    height: 100%;
+}
+
+.prompt-button-primary {
+    color: var(--vscode-button-foreground);
+    background-color: var(--vscode-button-background);
+}
+
+.prompt-button-primary:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+.prompt-button-secondary {
+    color: var(--vscode-input-foreground);
+    background-color: var(--vscode-input-background);
+}
+
+.prompt-button-secondary:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+
+.prompt-settings-item {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+    background-color: var(--vscode-sideBar-background);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.prompt-settings-action {
+    --ds-icon-inverse: var(--vscode-sideBar-background);
+}
+
+.prompt-settings-logo {
+    display: flex;
+    padding-top: 4px;
+}
+
+.deep-plan-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--vscode-focusBorder);
+    padding: 2px 6px;
+    border-radius: 2px;
+    background-color: var(--vscode-inputOption-activeBackground);
+    color: var(--vscode-inputOption-activeForeground);
+    cursor: pointer;
+}
+
 .ai-disclaimer {
     text-align: center;
     font-size: 11px;
@@ -739,4 +800,11 @@ body {
 .vscode-high-contrast .updated-files-action:disabled {
     border: 2px solid var(--vscode-disabledForeground);
     opacity: 0.5;
+}
+
+.vscode-high-contrast .prompt-button {
+    border: 2px solid var(--vscode-contrastBorder);
+}
+.vscode-high-contrast .prompt-button:hover {
+    border: 2px solid var(--vscode-focusBorder);
 }

@@ -1450,6 +1450,7 @@
         "@atlaskit/modal-dialog": "^14.3.4",
         "@atlaskit/page": "^14.0.1",
         "@atlaskit/page-header": "^12.1.1",
+        "@atlaskit/popup": "^4.4.0",
         "@atlaskit/pragmatic-drag-and-drop": "^1.0.0",
         "@atlaskit/pragmatic-drag-and-drop-flourish": "^2.0.4",
         "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",

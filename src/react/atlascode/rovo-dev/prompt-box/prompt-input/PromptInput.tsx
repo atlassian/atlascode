@@ -1,5 +1,6 @@
-import { LoadingButton } from '@atlaskit/button';
+import AddIcon from '@atlaskit/icon/core/add';
 import SendIcon from '@atlaskit/icon/core/arrow-up';
+import CrossIcon from '@atlaskit/icon/core/cross';
 import StopIcon from '@atlaskit/icon/core/video-stop';
 import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
@@ -8,12 +9,9 @@ import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 
 type NonDisabledState = Exclude<State, DisabledState>;
 
-import { AiGenerativeTextSummaryIcon, CloseIconDeepPlan } from '../../rovoDevView';
-import {
-    rovoDevDeepPlanStylesSelector,
-    rovoDevPromptButtonStyles,
-    rovoDevTextareaStyles,
-} from '../../rovoDevViewStyles';
+import { AiGenerativeTextSummaryIcon } from '../../rovoDevView';
+import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
+import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
 import {
     createMonacoPromptEditor,
     createSlashCommandProvider,
@@ -150,56 +148,57 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     flexWrap: 'wrap',
                 }}
             >
-                {/* Left-side Add Context Button */}
-                <Tooltip content="Add context">
-                    <LoadingButton
-                        style={{
-                            ...rovoDevPromptButtonStyles,
-                        }}
-                        spacing="compact"
-                        label="Add context"
-                        iconBefore={<i className="codicon codicon-add" />}
-                        isDisabled={disabled}
-                        onClick={() => onAddContext()}
-                    />
-                </Tooltip>
-                <div style={{ display: 'flex', gap: 8 }}>
-                    <LoadingButton
-                        style={{
-                            ...rovoDevDeepPlanStylesSelector(isDeepPlanEnabled, !isWaitingForPrompt),
-                        }}
-                        spacing="compact"
-                        label="Enable deep plan"
-                        iconBefore={<AiGenerativeTextSummaryIcon />}
-                        iconAfter={isDeepPlanEnabled ? <CloseIconDeepPlan /> : undefined}
-                        isDisabled={disabled || !isWaitingForPrompt}
-                        onClick={() => onDeepPlanToggled()}
-                    >
-                        {isDeepPlanEnabled ? 'Deep plan enabled' : ''}
-                    </LoadingButton>
-                    {!showCancelButton && (
-                        <LoadingButton
-                            style={{
-                                ...rovoDevPromptButtonStyles,
-                                color: 'var(--vscode-button-foreground) !important',
-                                backgroundColor: 'var(--vscode-button-background)',
-                            }}
-                            spacing="compact"
-                            label="Send prompt"
-                            iconBefore={<SendIcon label="Send prompt" />}
-                            isDisabled={disabled || !isWaitingForPrompt}
-                            onClick={() => handleSend()}
+                <div style={{ display: 'flex', gap: 4 }}>
+                    <Tooltip content="Add context">
+                        <button
+                            className="prompt-button-secondary"
+                            onClick={() => onAddContext()}
+                            aria-label="Add context"
+                            disabled={disabled}
+                        >
+                            <AddIcon label="Add context" />
+                        </button>
+                    </Tooltip>
+                    <Tooltip content="Prompt customizations">
+                        <PromptSettingsPopup
+                            onToggleDeepPlan={onDeepPlanToggled}
+                            isDeepPlanEnabled={isDeepPlanEnabled}
+                            onClose={() => {}}
                         />
+                    </Tooltip>
+                    {isDeepPlanEnabled && (
+                        <Tooltip content="Disable deep plan">
+                            <div
+                                className="deep-plan-indicator"
+                                title="Deep plan is enabled"
+                                onClick={() => onDeepPlanToggled()}
+                            >
+                                <AiGenerativeTextSummaryIcon />
+                                <CrossIcon size="small" label="disable deep plan" />
+                            </div>
+                        </Tooltip>
+                    )}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                    {!showCancelButton && (
+                        <button
+                            className="prompt-button-primary"
+                            aria-label="send"
+                            onClick={() => handleSend()}
+                            disabled={disabled || !isWaitingForPrompt}
+                        >
+                            <SendIcon label="Send prompt" />
+                        </button>
                     )}
                     {showCancelButton && (
-                        <LoadingButton
-                            style={rovoDevPromptButtonStyles}
-                            spacing="compact"
-                            label="Stop"
-                            iconBefore={<StopIcon label="Stop" />}
-                            isDisabled={disabled || currentState.state === 'CancellingResponse'}
+                        <button
+                            className="prompt-button-secondary"
+                            aria-label="stop"
                             onClick={() => onCancel()}
-                        />
+                            disabled={disabled || currentState.state === 'CancellingResponse'}
+                        >
+                            <StopIcon label="Stop" />
+                        </button>
                     )}
                 </div>
             </div>
