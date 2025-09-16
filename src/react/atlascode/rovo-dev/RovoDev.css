@@ -21,6 +21,14 @@ body {
     max-width: 800px;
 }
 
+#rovoDevLogo > path {
+    fill: #6A9A23;
+}
+
+.vscode-dark #rovoDevLogo > path {
+    fill: #94C748;
+}
+
 #prompt-editor-container * {
     font-size: var(--vscode-font-size) !important;
 }

@@ -20,7 +20,7 @@ function GetRovoDevURIs(context: ExtensionContext) {
     const rovoDevBaseDir = path.join(extensionPath, 'atlascode-rovodev-bin');
     const rovoDevVersionDir = path.join(rovoDevBaseDir, MIN_SUPPORTED_ROVODEV_VERSION);
     const rovoDevBinPath = path.join(rovoDevVersionDir, 'atlassian_cli_rovodev');
-    const rovoDevIconUri = Uri.file(context.asAbsolutePath(path.join('resources', 'rovodev-icon.svg')));
+    const rovoDevIconUri = Uri.file(context.asAbsolutePath(path.join('resources', 'rovodev-terminal-icon.svg')));
 
     const platform = process.platform;
     const arch = process.arch;
