@@ -1,5 +1,5 @@
 import { basename } from 'path';
-import { Disposable, TextEditor, window } from 'vscode';
+import { Disposable, window } from 'vscode';
 
 import { RovoDevApiClient } from './rovoDevApiClient';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
@@ -13,8 +13,6 @@ import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
  */
 export class RovoDevDwellTracker implements Disposable {
     private disposables: Disposable[] = [];
-
-    private activeEditor: TextEditor | undefined;
     private dwellTimer: NodeJS.Timeout | undefined;
 
     constructor(
@@ -23,16 +21,13 @@ export class RovoDevDwellTracker implements Disposable {
         private readonly rovodevApiClient: RovoDevApiClient | undefined,
         private readonly dwellMs: number = 5000,
     ) {
-        this.activeEditor = window.activeTextEditor;
-
-        // Listen for editor changes and visible range changes (scrolling)
-        this.disposables.push(window.onDidChangeActiveTextEditor((e) => this.onEditorFocusChanged(e)));
+        // Listen for editor changes
+        this.disposables.push(window.onDidChangeActiveTextEditor(() => this.onEditorFocusChanged()));
 
         this.startDwellTimer();
     }
 
-    private onEditorFocusChanged(editor: TextEditor | undefined) {
-        this.activeEditor = editor;
+    private onEditorFocusChanged() {
         this.startDwellTimer();
     }
 
@@ -46,16 +41,17 @@ export class RovoDevDwellTracker implements Disposable {
     public startDwellTimer() {
         this.clearDwellTimer();
 
-        if (!this.activeEditor) {
+        const editorAtStart = window.activeTextEditor;
+
+        if (!editorAtStart) {
             return;
         }
 
-        const doc = this.activeEditor.document;
+        const doc = editorAtStart.document;
         if (!doc || doc.isUntitled || (doc.uri.scheme !== 'file' && doc.uri.scheme !== 'vscode-userdata')) {
             return;
         }
 
-        const editorAtStart = this.activeEditor;
         const uriAtStart = doc.uri.toString();
 
         this.dwellTimer = setTimeout(async () => {
