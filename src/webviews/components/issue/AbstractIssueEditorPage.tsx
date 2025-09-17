@@ -45,7 +45,7 @@ import {
 } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
 import { ConnectionTimeout } from '../../../util/time';
-import AISuggestionFooter from '../aiCreateIssue/AISuggestionFooter';
+// import AISuggestionFooter from '../aiCreateIssue/AISuggestionFooter';
 import AISuggestionHeader from '../aiCreateIssue/AISuggestionHeader';
 import { colorToLozengeAppearanceMap } from '../colors';
 import * as FieldValidators from '../fieldValidators';
@@ -528,48 +528,49 @@ export abstract class AbstractIssueEditorPage<
                                     errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
                                 }
 
-                            let markup = (
-                                <Textfield
-                                    {...fieldArgs.fieldProps}
-                                    value={this.coerceToString(fieldArgs.fieldProps.value)}
-                                    className="ac-inputField"
-                                    isDisabled={this.state.isSomethingLoading}
-                                    onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
-                                        this.handleInlineEdit(field, e.currentTarget.value),
-                                    )}
-                                    placeholder={field.key === 'summary' && 'What needs to be done?'}
-                                />
-                            );
-                            if ((field as InputFieldUI).isMultiline) {
-                                markup = (
-                                    <JiraIssueTextAreaEditor
+                                let markup = (
+                                    <Textfield
                                         {...fieldArgs.fieldProps}
-                                        value={this.coerceToString(this.state.fieldValues[field.key])}
+                                        value={this.coerceToString(fieldArgs.fieldProps.value)}
+                                        className="ac-inputField"
                                         isDisabled={this.state.isSomethingLoading}
-                                        onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
-                                            this.handleInlineEdit(field, val),
+                                        onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
+                                            this.handleInlineEdit(field, e.currentTarget.value),
                                         )}
-                                        fetchUsers={async (input: string) =>
-                                            (await this.fetchUsers(input)).map((user) => ({
-                                                displayName: user.displayName,
-                                                avatarUrl: user.avatarUrls?.['48x48'],
-                                                mention: this.state.siteDetails.isCloud
-                                                    ? `[~accountid:${user.accountId}]`
-                                                    : `[~${user.name}]`,
-                                            }))
-                                        }
-                                        featureGateEnabled={this.state.isRteEnabled}
+                                        placeholder={field.key === 'summary' && 'What needs to be done?'}
                                     />
                                 );
-                            }
-                            return (
-                                <div>
-                                    {markup}
-                                    {errDiv}
-                                </div>
-                            );
-                        }}
-                    </Field>
+                                if ((field as InputFieldUI).isMultiline) {
+                                    markup = (
+                                        <JiraIssueTextAreaEditor
+                                            {...fieldArgs.fieldProps}
+                                            value={this.coerceToString(this.state.fieldValues[field.key])}
+                                            isDisabled={this.state.isSomethingLoading}
+                                            onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
+                                                this.handleInlineEdit(field, val),
+                                            )}
+                                            fetchUsers={async (input: string) =>
+                                                (await this.fetchUsers(input)).map((user) => ({
+                                                    displayName: user.displayName,
+                                                    avatarUrl: user.avatarUrls?.['48x48'],
+                                                    mention: this.state.siteDetails.isCloud
+                                                        ? `[~accountid:${user.accountId}]`
+                                                        : `[~${user.name}]`,
+                                                }))
+                                            }
+                                            featureGateEnabled={this.state.isRteEnabled}
+                                        />
+                                    );
+                                }
+                                return (
+                                    <div>
+                                        {markup}
+                                        {errDiv}
+                                    </div>
+                                );
+                            }}
+                        </Field>
+                    </>
                 );
             }
             case UIType.Date: {

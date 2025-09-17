@@ -60,6 +60,7 @@ describe('createIssue', () => {
                 summary: 'Test summary',
                 uri: Uri.file('/test/path'),
                 insertionPoint: new Position(10, 20),
+                context: 'This is a test context',
             };
 
             createIssue(todoData);
@@ -134,6 +135,7 @@ describe('createIssue', () => {
                 summary: 'Test summary',
                 uri: Uri.file('/test/path'),
                 insertionPoint: new Position(10, 20),
+                context: 'This is a test context',
             };
 
             createIssue(todoData);
@@ -178,6 +180,7 @@ describe('createIssue', () => {
                 summary: 'Test summary',
                 uri: Uri.file('/test/path'),
                 insertionPoint: new Position(10, 20),
+                context: 'This is a test context',
             };
 
             createIssue(todoData);

@@ -9,6 +9,7 @@ import {
     viewScreenEvent,
 } from './analytics';
 import { BasicAuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
+import { fetchIssueSuggestions } from './atlclients/issueBuilder';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
 import { rerunPipeline } from './commands/bitbucket/rerunPipeline';
 import { runPipeline } from './commands/bitbucket/runPipeline';
@@ -548,6 +549,12 @@ export function registerDebugCommands(vscodeContext: ExtensionContext): Disposab
             window.showInformationMessage('[DEBUG] Atlascode: Quick command');
 
             // Add your logic here
+            try {
+                const result = await fetchIssueSuggestions('TODO: refactor this');
+                window.showInformationMessage(`[DEBUG] Result: ${JSON.stringify(result)}`);
+            } catch (e) {
+                window.showErrorMessage(`[DEBUG] Error: ${e}`);
+            }
         }),
 
         // Login to a cloud site with API token

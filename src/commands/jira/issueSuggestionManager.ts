@@ -1,12 +1,13 @@
+import { Container } from 'src/container';
 import { window, workspace } from 'vscode';
 
 import { fetchIssueSuggestions, isSiteCloudWithApiKey } from '../../atlclients/issueBuilder';
 import { IssueSuggestionContextLevel, IssueSuggestionSettings, SimplifiedTodoIssueData } from '../../config/model';
-import { FeatureFlagClient, Features } from '../../util/featureFlags';
+import { Features } from '../../util/featureFlags';
 
 export class IssueSuggestionManager {
     static getSuggestionEnabled(): boolean {
-        if (!FeatureFlagClient.checkGate(Features.EnableAiSuggestions)) {
+        if (!Container.featureFlagClient.checkGate(Features.EnableAiSuggestions)) {
             return false;
         }
 
@@ -23,7 +24,7 @@ export class IssueSuggestionManager {
     }
 
     static async getSuggestionAvailable(): Promise<boolean> {
-        const isFeatureEnabled = FeatureFlagClient.checkGate(Features.EnableAiSuggestions);
+        const isFeatureEnabled = Container.featureFlagClient.checkGate(Features.EnableAiSuggestions);
 
         const selectedSite = workspace
             .getConfiguration('atlascode')

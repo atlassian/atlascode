@@ -9,8 +9,8 @@ import { commands, ConfigurationTarget, Position, Uri, ViewColumn, window } from
 import { issueCreatedEvent } from '../analytics';
 import { performanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
-import { showIssue } from '../commands/jira/showIssue';
 import { IssueSuggestionManager } from '../commands/jira/issueSuggestionManager';
+import { showIssue } from '../commands/jira/showIssue';
 import {
     configuration,
     IssueSuggestionContextLevel,
@@ -31,9 +31,9 @@ import { Action } from '../ipc/messaging';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { WebViewID } from '../lib/ipc/models/common';
 import { Logger } from '../logger';
+import { Features } from '../util/featureFlags';
 import { OnJiraEditedRefreshDelay } from '../util/time';
 import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
-import { FeatureFlagClient, Features } from '../util/featureFlags';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
 
@@ -752,11 +752,10 @@ export class CreateIssueWebview
 
                 case 'webviewReady': {
                     handled = true;
-                    const val = FeatureFlagClient.checkGate(Features.EnableAiSuggestions);
-                    console.log(val);
+                    const areSuggestionsEnabled = Container.featureFlagClient.checkGate(Features.EnableAiSuggestions);
                     this.postMessage({
                         type: 'updateFeatureFlag',
-                        value: FeatureFlagClient.checkGate(Features.EnableAiSuggestions),
+                        value: areSuggestionsEnabled,
                     });
                     await this.updateSuggestionData({
                         suggestions: this._issueSuggestionSettings,

@@ -18,7 +18,7 @@ export type SuggestedIssuesResponse = {
 
 type SiteId = string;
 
-const ASSIST_API = '/api/assist/api/ai/v2/ai-feature/jira/issue/source-type/conversation/suggestions';
+const ASSIST_API = '/gateway/api/assist/api/ai/v2/ai-feature/jira/issue/source-type/code/suggestions';
 
 export const isSiteCloudWithApiKey = async (site?: DetailedSiteInfo | SiteId): Promise<boolean> => {
     const siteToCheck = typeof site === 'string' ? Container.siteManager.getSiteForId(ProductJira, site) : site;
@@ -67,13 +67,9 @@ export const fetchIssueSuggestions = async (prompt: string): Promise<SuggestedIs
             throw new Error('No valid auth info found for site');
         }
 
-        const response = await axiosInstance.post(
-            `https://${site.host}/gateway` + ASSIST_API,
-            buildRequestBody(prompt),
-            {
-                headers: buildRequestHeaders(authInfo),
-            },
-        );
+        const response = await axiosInstance.post(`https://${site.host}` + ASSIST_API, buildRequestBody(prompt), {
+            headers: buildRequestHeaders(authInfo),
+        });
         const content = response.data.ai_feature_output;
 
         const responseData: SuggestedIssuesResponse = {
@@ -99,14 +95,19 @@ export const fetchIssueSuggestions = async (prompt: string): Promise<SuggestedIs
 
 const buildRequestBody = (prompt: string): any => ({
     ai_feature_input: {
-        source: 'SLACK',
+        source: 'IDE',
         locale: 'en-US',
         context: {
-            primary_message: {
-                text: prompt,
-                sender: '',
-                timestamp: '',
-            },
+            primary_context: [
+                {
+                    value: prompt,
+                },
+            ],
+            supporting_context: [
+                {
+                    value: 'void foo() { console.log("hello world"); }',
+                },
+            ],
         },
         suggested_issues_config: {
             max_issues: 1,
@@ -130,9 +131,7 @@ const buildRequestBody = (prompt: string): any => ({
 });
 
 const buildRequestHeaders = (authInfo: BasicAuthInfo): any => ({
-    'Content-Type': 'application/json;charset=UTF-8',
-    Accept: 'application/json;charset=UTF-8',
-    'X-Experience-Id': 'ai-issue-create-slack',
-    'X-Product': ProductJira,
+    'Content-Type': 'application/json',
+    'X-Product': ProductJira.key,
     Authorization: 'Basic ' + Buffer.from(`${authInfo.username}:${authInfo.password}`).toString('base64'),
 });
