@@ -6,7 +6,7 @@ import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
 import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, FieldValues, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
-import React, { lazy, Suspense } from 'react';
+import * as React from 'react';
 import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
@@ -28,9 +28,6 @@ import {
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
 import { Panel } from './Panel';
-
-// Use lazy loading to prevent ProseMirror conflicts
-const AtlaskitEditor = lazy(() => import('../common/AtlaskitEditor/AtlaskitEditor'));
 
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;
@@ -374,40 +371,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                     </div>
                 );
             }
-            return (
-                <div key={index}>
-                    {field.key === 'description' ? (
-                        this.state.isAtlaskitEditorFFReceived ? (
-                            this.state.isAtlaskitEditorEnabled ? (
-                                <div style={{ marginTop: '8px' }}>
-                                    <label className="ac-field-label" style={{ marginBottom: '4px', display: 'block' }}>
-                                        Description
-                                    </label>
-                                    <Suspense fallback={<div>Loading editor...</div>}>
-                                        <AtlaskitEditor
-                                            defaultValue={this.state.fieldValues['description'] || ''}
-                                            onBlur={(content: string) => {
-                                                const descriptionField = this.commonFields.find(
-                                                    (f) => f.key === 'description',
-                                                );
-                                                if (descriptionField) {
-                                                    this.handleInlineEdit(descriptionField, content);
-                                                }
-                                            }}
-                                        />
-                                    </Suspense>
-                                </div>
-                            ) : (
-                                this.getInputMarkup(field)
-                            )
-                        ) : (
-                            <div>Waiting...</div>
-                        )
-                    ) : (
-                        this.getInputMarkup(field)
-                    )}
-                </div>
-            );
+            return <div key={index}>{this.getInputMarkup(field)}</div>;
         });
     }
 
