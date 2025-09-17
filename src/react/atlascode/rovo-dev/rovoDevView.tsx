@@ -352,6 +352,10 @@ const RovoDevView: React.FC = () => {
                         args: object.toolCallMessage.args,
                     };
 
+                    if (object.tool_name === 'create_technical_plan') {
+                        setIsDeepPlanCreated(true);
+                    }
+
                     setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE); // Clear pending tool call
                     appendResponse(returnMessage);
                     break;
