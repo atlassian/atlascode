@@ -39,6 +39,8 @@ interface ChatStreamProps {
     sendFeedback: (feedbackType: FeedbackType, feedack: string, canContact: boolean, lastTenMessages: boolean) => void;
     onLoginClick: () => void;
     onOpenFolder: () => void;
+    onMcpAccept: (serverName?: string, all?: boolean) => void;
+    onMcpDecline: (serverName?: string, all?: boolean) => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -56,6 +58,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     sendFeedback,
     onLoginClick,
     onOpenFolder,
+    onMcpAccept,
+    onMcpDecline,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -205,23 +209,26 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         [setFeedbackVisible],
     );
 
-    const shouldShowToolCall = React.useMemo(() => {
-        switch (currentState.state) {
-            case 'Disabled':
-            case 'ProcessTerminated':
-            case 'WaitingForPrompt':
-                return false;
-            case 'Initializing':
-                return currentState.isPromptPending;
-            default:
-                return true;
-        }
-    }, [currentState]);
+    const isChatHistoryDisabled =
+        (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance') ||
+        currentState.state === 'Disabled';
+
+    const shouldShowToolCall =
+        currentState.state !== 'Disabled' &&
+        currentState.state !== 'ProcessTerminated' &&
+        currentState.state !== 'WaitingForPrompt' &&
+        (currentState.state !== 'Initializing' || currentState.isPromptPending);
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            <RovoDevLanding currentState={currentState} onLoginClick={onLoginClick} onOpenFolder={onOpenFolder} />
-            {(currentState.state !== 'Disabled' || currentState.subState !== 'NeedAuth') &&
+            <RovoDevLanding
+                currentState={currentState}
+                onLoginClick={onLoginClick}
+                onOpenFolder={onOpenFolder}
+                onMcpAccept={onMcpAccept}
+                onMcpDecline={onMcpDecline}
+            />
+            {!isChatHistoryDisabled &&
                 chatHistory &&
                 chatHistory.map((block, idx) => {
                     const drawerOpen =
@@ -279,13 +286,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     return null;
                 })}
 
-            {shouldShowToolCall && pendingToolCall && (
+            {!isChatHistoryDisabled && shouldShowToolCall && pendingToolCall && (
                 <div style={{ marginBottom: '16px' }}>
                     <ToolCallItem toolMessage={pendingToolCall} currentState={currentState} />
                 </div>
             )}
 
-            {currentState.state === 'WaitingForPrompt' && (
+            {!isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && (
                 <FollowUpActionFooter>
                     {deepPlanCreated && !feedbackVisible && <CodePlanButton execute={executeCodePlan} />}
                     {canCreatePR && !deepPlanCreated && !feedbackVisible && hasChangesInGit && (

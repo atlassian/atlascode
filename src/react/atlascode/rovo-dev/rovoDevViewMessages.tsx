@@ -4,6 +4,7 @@ import { RovoDevPrompt } from 'src/rovo-dev/rovoDevTypes';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 
 export const enum RovoDevViewResponseType {
+    Refresh = 'refresh',
     Prompt = 'prompt',
     CancelResponse = 'cancelResponse',
     OpenFile = 'openFile',
@@ -24,6 +25,7 @@ export const enum RovoDevViewResponseType {
     TriggerFeedback = 'triggerFeedback',
     SendFeedback = 'sendFeedback',
     LaunchJiraAuth = 'launchJiraAuth',
+    McpAcceptance = 'mcpAcceptance',
 }
 
 export interface ModifiedFile {
@@ -32,6 +34,7 @@ export interface ModifiedFile {
 }
 
 export type RovoDevViewResponse =
+    | ReducerAction<RovoDevViewResponseType.Refresh>
     | ReducerAction<RovoDevViewResponseType.Prompt, RovoDevPrompt>
     | ReducerAction<RovoDevViewResponseType.CancelResponse>
     | ReducerAction<RovoDevViewResponseType.OpenFile, { filePath: string; tryShowDiff: boolean; range?: number[] }>
@@ -54,4 +57,8 @@ export type RovoDevViewResponse =
           RovoDevViewResponseType.SendFeedback,
           { feedbackType: FeedbackType; feedbackMessage: string; lastTenMessages?: string[]; canContact: boolean }
       >
-    | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>;
+    | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>
+    | ReducerAction<
+          RovoDevViewResponseType.McpAcceptance,
+          { action: 'accept' | 'acceptAll' | 'deny' | 'denyAll'; serverName?: string }
+      >;

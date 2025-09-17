@@ -16,6 +16,7 @@ export const enum RovoDevProviderMessageType {
     ProviderReady = 'providerReady',
     SetInitializing = 'setInitializing',
     SetDownloadProgress = 'setDownloadProgress',
+    SetMcpAcceptanceRequired = 'setMcpAcceptanceRequired',
     RovoDevReady = 'rovoDevReady',
     CancelFailed = 'cancelFailed',
     CreatePRComplete = 'createPRComplete',
@@ -57,6 +58,7 @@ export type RovoDevProviderMessage =
           RovoDevProviderMessageType.SetDownloadProgress,
           { isPromptPending: boolean; downloadedBytes: number; totalBytes: number }
       >
+    | ReducerAction<RovoDevProviderMessageType.SetMcpAcceptanceRequired, { isPromptPending: boolean; mcpIds: string[] }>
     | ReducerAction<RovoDevProviderMessageType.RovoDevReady, { isPromptPending: boolean }>
     | ReducerAction<RovoDevProviderMessageType.CancelFailed>
     | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string; error?: string } }>
