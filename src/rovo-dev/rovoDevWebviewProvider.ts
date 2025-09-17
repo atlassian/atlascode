@@ -291,6 +291,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                                 feedbackMessage: e.feedbackMessage,
                                 canContact: e.canContact,
                                 lastTenMessages: e.lastTenMessages,
+                                rovoDevSessionId: process.env.SANDBOX_SESSION_ID,
                             },
                             !!this.isBoysenberry,
                         );
