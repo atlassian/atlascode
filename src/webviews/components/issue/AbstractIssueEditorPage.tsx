@@ -158,6 +158,21 @@ export abstract class AbstractIssueEditorPage<
         return val;
     }
 
+    private coerceToString(value: any): string {
+        if (value === undefined || value === null) {
+            return '';
+        }
+        const t = typeof value;
+        if (t === 'string') {
+            return value as string;
+        }
+        if (t === 'number' || t === 'boolean') {
+            return String(value);
+        }
+        // For any other type (objects, symbols, functions), render empty string
+        return '';
+    }
+
     onMessageReceived(e: any): boolean {
         let handled: boolean = false;
         switch (e.type) {
@@ -430,8 +445,7 @@ export abstract class AbstractIssueEditorPage<
                 let validationFailMessage = '';
                 const valType = field.valueType;
 
-                const defaultVal =
-                    this.state.fieldValues[field.key] === undefined ? '' : this.state.fieldValues[field.key];
+                const defaultVal = this.coerceToString(this.state.fieldValues[field.key]);
                 switch (valType) {
                     case ValueType.Number: {
                         validationFailMessage = `${field.name} must be a number`;
@@ -455,8 +469,8 @@ export abstract class AbstractIssueEditorPage<
                     if ((field as InputFieldUI).isMultiline) {
                         markup = (
                             <EditRenderedTextArea
-                                text={this.state.fieldValues[`${field.key}`]}
-                                renderedText={this.state.fieldValues[`${field.key}.rendered`]}
+                                text={this.coerceToString(this.state.fieldValues[`${field.key}`])}
+                                renderedText={this.coerceToString(this.state.fieldValues[`${field.key}.rendered`])}
                                 fetchUsers={async (input: string) =>
                                     (await this.fetchUsers(input)).map((user) => ({
                                         displayName: user.displayName,
@@ -512,6 +526,7 @@ export abstract class AbstractIssueEditorPage<
                             let markup = (
                                 <Textfield
                                     {...fieldArgs.fieldProps}
+                                    value={this.coerceToString(fieldArgs.fieldProps.value)}
                                     className="ac-inputField"
                                     isDisabled={this.state.isSomethingLoading}
                                     onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
@@ -524,7 +539,7 @@ export abstract class AbstractIssueEditorPage<
                                 markup = (
                                     <JiraIssueTextAreaEditor
                                         {...fieldArgs.fieldProps}
-                                        value={this.state.fieldValues[field.key]}
+                                        value={this.coerceToString(this.state.fieldValues[field.key])}
                                         isDisabled={this.state.isSomethingLoading}
                                         onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
                                             this.handleInlineEdit(field, val),
@@ -561,7 +576,7 @@ export abstract class AbstractIssueEditorPage<
                             id={field.key}
                             name={field.key}
                             isLoading={this.state.loadingField === field.key}
-                            defaultValue={this.state.fieldValues[field.key]}
+                            defaultValue={this.coerceToString(this.state.fieldValues[field.key])}
                             isDisabled={this.state.isSomethingLoading}
                             className="ac-select-container"
                             selectProps={{ className: 'ac-select-container', classNamePrefix: 'ac-select' }}
@@ -619,7 +634,7 @@ export abstract class AbstractIssueEditorPage<
                         <DateTimePicker
                             id={field.key}
                             name={field.key}
-                            defaultValue={this.state.fieldValues[field.key]}
+                            defaultValue={this.coerceToString(this.state.fieldValues[field.key])}
                             isDisabled={this.state.isSomethingLoading}
                             className="ac-select-container"
                             datePickerSelectProps={{

@@ -105,6 +105,15 @@ describe('fieldValidators', () => {
             expect(validateString('test', state)).toBeUndefined();
             expect(validateString('', state)).toBe('EMPTY');
         });
+
+        it('should return "EMPTY" for non-string values (objects, arrays, numbers, booleans)', () => {
+            expect(validateString({} as any)).toBe('EMPTY');
+            expect(validateString([] as any)).toBe('EMPTY');
+            expect(validateString(123 as any)).toBe('EMPTY');
+            expect(validateString(0 as any)).toBe('EMPTY');
+            expect(validateString(true as any)).toBe('EMPTY');
+            expect(validateString(false as any)).toBe('EMPTY');
+        });
     });
 
     describe('isValidString', () => {
