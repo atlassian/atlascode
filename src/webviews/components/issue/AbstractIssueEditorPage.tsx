@@ -30,7 +30,7 @@ import {
 import { Tooltip } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import EdiText, { EdiTextType } from 'react-editext';
 import { v4 } from 'uuid';
 
@@ -55,6 +55,10 @@ import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
+import { EditRenderedTextArea } from './EditRenderedTextArea';
+
+// Use lazy loading for JiraIssueTextAreaEditor to avoid conflicts
+const JiraIssueTextAreaEditor = lazy(() => import('./common/JiraIssueTextArea'));
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
 import { ParticipantList } from './ParticipantList';
@@ -483,15 +487,23 @@ export abstract class AbstractIssueEditorPage<
 
                     if ((field as InputFieldUI).isMultiline) {
                         markup = (
-                            <div role="textbox" aria-label={`${field.name} editor`}>
-                                <TextArea
-                                    value={this.state.fieldValues[`${field.key}`] || ''}
-                                    onChange={(e) => this.handleInlineEdit(field, e.target.value)}
-                                    isDisabled={this.state.isSomethingLoading}
-                                    minimumRows={4}
-                                    placeholder={`Enter ${field.name.toLowerCase()}...`}
-                                />
-                            </div>
+                            <EditRenderedTextArea
+                                text={this.state.fieldValues[`${field.key}`]}
+                                renderedText={this.state.fieldValues[`${field.key}.rendered`]}
+                                fetchUsers={async (input: string) =>
+                                    (await this.fetchUsers(input)).map((user) => ({
+                                        displayName: user.displayName,
+                                        avatarUrl: user.avatarUrls?.['48x48'],
+                                        mention: this.state.siteDetails.isCloud
+                                            ? `[~accountid:${user.accountId}]`
+                                            : `[~${user.name}]`,
+                                    }))
+                                }
+                                onSave={async (val: string) => {
+                                    await this.handleInlineEdit(field, val);
+                                }}
+                                fetchImage={(img) => this.fetchImage(img)}
+                            />
                         );
                     } else {
                         markup = (
@@ -545,18 +557,43 @@ export abstract class AbstractIssueEditorPage<
                                     />
                             );
                             if ((field as InputFieldUI).isMultiline) {
-                                markup = (
-                                    <div role="textbox" aria-label={`${field.name} editor`}>
-                                        <TextArea
-                                            {...fieldArgs.fieldProps}
-                                            isDisabled={this.state.isSomethingLoading}
-                                            onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
-                                                this.handleInlineEdit(field, e.target.value),
-                                            )}
-                                            minimumRows={4}
-                                            placeholder={`Enter ${field.name.toLowerCase()}...`}
-                                        />
-                                    </div>
+                                markup = this.state.isAtlaskitEditorFFReceived ? (
+                                    this.state.isAtlaskitEditorEnabled ? (
+                                        <div role="textbox" aria-label={`${field.name} editor`}>
+                                            <TextArea
+                                                {...fieldArgs.fieldProps}
+                                                isDisabled={this.state.isSomethingLoading}
+                                                onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
+                                                    this.handleInlineEdit(field, e.target.value),
+                                                )}
+                                                minimumRows={4}
+                                                placeholder={`Enter ${field.name.toLowerCase()}...`}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <Suspense fallback={<div>Loading...</div>}>
+                                            <JiraIssueTextAreaEditor
+                                                {...fieldArgs.fieldProps}
+                                                value={this.state.fieldValues[field.key]}
+                                                isDisabled={this.state.isSomethingLoading}
+                                                onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
+                                                    this.handleInlineEdit(field, val),
+                                                )}
+                                                fetchUsers={async (input: string) =>
+                                                    (await this.fetchUsers(input)).map((user) => ({
+                                                        displayName: user.displayName,
+                                                        avatarUrl: user.avatarUrls?.['48x48'],
+                                                        mention: this.state.siteDetails.isCloud
+                                                            ? `[~accountid:${user.accountId}]`
+                                                            : `[~${user.name}]`,
+                                                    }))
+                                                }
+                                                featureGateEnabled={this.state.isRteEnabled}
+                                            />
+                                        </Suspense>
+                                    )
+                                ) : (
+                                    <div>Waiting...</div>
                                 );
                             }
                             return (
