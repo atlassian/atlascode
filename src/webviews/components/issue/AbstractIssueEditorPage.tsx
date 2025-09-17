@@ -7,7 +7,6 @@ import Lozenge from '@atlaskit/lozenge';
 import { RadioGroup } from '@atlaskit/radio';
 import Select, { AsyncCreatableSelect, AsyncSelect, CreatableSelect } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
-import TextArea from '@atlaskit/textarea';
 import Textfield from '@atlaskit/textfield';
 import {
     CommentVisibility,
@@ -57,7 +56,8 @@ import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
 
-// Use lazy loading for JiraIssueTextAreaEditor to avoid conflicts
+// Use lazy loading for editor components to avoid conflicts
+const AtlaskitEditor = lazy(() => import('./common/AtlaskitEditor/AtlaskitEditor'));
 const JiraIssueTextAreaEditor = lazy(() => import('./common/JiraIssueTextArea'));
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
@@ -559,17 +559,14 @@ export abstract class AbstractIssueEditorPage<
                             if ((field as InputFieldUI).isMultiline) {
                                 markup = this.state.isAtlaskitEditorFFReceived ? (
                                     this.state.isAtlaskitEditorEnabled ? (
-                                        <div role="textbox" aria-label={`${field.name} editor`}>
-                                            <TextArea
-                                                {...fieldArgs.fieldProps}
-                                                isDisabled={this.state.isSomethingLoading}
-                                                onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
-                                                    this.handleInlineEdit(field, e.target.value),
-                                                )}
-                                                minimumRows={4}
-                                                placeholder={`Enter ${field.name.toLowerCase()}...`}
+                                        <Suspense fallback={<div>Loading editor...</div>}>
+                                            <AtlaskitEditor
+                                                defaultValue={this.state.fieldValues[field.key] || ''}
+                                                onBlur={(content: string) => {
+                                                    this.handleInlineEdit(field, content);
+                                                }}
                                             />
-                                        </div>
+                                        </Suspense>
                                     ) : (
                                         <Suspense fallback={<div>Loading...</div>}>
                                             <JiraIssueTextAreaEditor
