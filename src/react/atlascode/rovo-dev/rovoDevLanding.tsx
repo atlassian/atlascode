@@ -106,7 +106,7 @@ export const RovoDevLanding: React.FC<{
                         ))}
                     </table>
                     {currentState.mcpIds.length > 1 && (
-                        <div style={{ textAlign: 'right' }}>
+                        <div style={{ width: '100%', textAlign: 'right' }}>
                             <button style={inChatButtonStyles} onClick={() => onMcpAccept(undefined, true)}>
                                 Accept all
                             </button>
