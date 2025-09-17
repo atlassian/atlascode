@@ -53,7 +53,7 @@ export class RovoDevTelemetryProvider {
         private readonly appInstanceId: string,
         private readonly onError: (error: Error) => void,
     ) {
-        this._perfLogger = new PerformanceLogger(this.appInstanceId);
+        this._perfLogger = new PerformanceLogger(this.rovoDevEnv, this.appInstanceId);
     }
 
     public startNewSession(chatSessionId: string, manuallyCreated: boolean) {

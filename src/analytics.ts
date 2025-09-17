@@ -203,6 +203,7 @@ type JiraPerfEvents =
     | 'ui.jira.editJiraIssue.update.lcp';
 
 interface RovoDevCommonParams {
+    rovoDevEnv: RovoDevEnv;
     appInstanceId: string;
     rovoDevSessionId: string;
     rovoDevPromptId: string;
