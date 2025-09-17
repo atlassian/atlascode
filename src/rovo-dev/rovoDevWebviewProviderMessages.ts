@@ -25,6 +25,7 @@ export const enum RovoDevProviderMessageType {
     CheckGitChangesComplete = 'checkGitChangesComplete',
     ForceStop = 'forceStop',
     ShowFeedbackForm = 'showFeedbackForm',
+    CheckFileExistsComplete = 'checkFileExistsComplete',
 }
 
 export interface RovoDevObjectResponse {
@@ -68,4 +69,8 @@ export type RovoDevProviderMessage =
       >
     | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
     | ReducerAction<RovoDevProviderMessageType.ForceStop>
-    | ReducerAction<RovoDevProviderMessageType.ShowFeedbackForm>;
+    | ReducerAction<RovoDevProviderMessageType.ShowFeedbackForm>
+    | ReducerAction<
+          RovoDevProviderMessageType.CheckFileExistsComplete,
+          { requestId: string; filePath: string; exists: boolean }
+      >;

@@ -1,28 +1,31 @@
 import React from 'react';
 
-import { FileLozenge, mdParser, OpenFileFunc } from '../common/common';
+import { CheckFileExistsFunc, FileLozenge, mdParser, OpenFileFunc } from '../common/common';
 
 interface FileToChangeComponentProps {
     filePath: string;
     openFile: OpenFileFunc;
+    checkFileExists: CheckFileExistsFunc;
     descriptionOfChange?: string;
 }
 
 export const FileToChangeComponent: React.FC<FileToChangeComponentProps> = ({
     filePath,
     openFile,
+    checkFileExists,
     descriptionOfChange,
 }) => {
     const renderDescription = (description: string) => {
         return <span dangerouslySetInnerHTML={{ __html: mdParser.render(description) }} />;
     };
+    const fileExists = checkFileExists(filePath);
     return (
         <div className="file-to-change">
             {descriptionOfChange && renderDescription(descriptionOfChange)}
             <div className="file-to-change-info">
                 <div className="lozenge-container">
-                    <p>File to modify: </p>
-                    <FileLozenge filePath={filePath} openFile={openFile} />
+                    <p>File to {fileExists === false ? 'create' : 'modify'}: </p>
+                    <FileLozenge filePath={filePath} openFile={openFile} isDisabled={fileExists === false} />
                 </div>
             </div>
         </div>
