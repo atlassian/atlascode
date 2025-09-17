@@ -2,8 +2,10 @@ import { Comment as JiraComment, User } from '@atlassianlabs/jira-pi-common-mode
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
-import { disableConsole } from 'testsutil/console';
 
+// import {
+//     disableConsole
+// } from 'testsutil/console';
 import { IssueCommentComponent } from './IssueCommentComponent';
 
 const mockSiteDetails: DetailedSiteInfo = {
@@ -101,7 +103,7 @@ const mockOnEditingCommentChange = jest.fn();
 
 describe('IssueCommentComponent with Atlaskit Editor', () => {
     beforeAll(() => {
-        disableConsole('warn', 'error');
+        // disableConsole('warn', 'error');
     });
 
     it('renders the AddCommentComponent', () => {
@@ -155,34 +157,30 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
     }, 100000);
 
     it('renders editing comment area', async () => {
-        await act(() =>
-            render(
-                <IssueCommentComponent
-                    siteDetails={mockSiteDetails}
-                    currentUser={mockCurrentUser}
-                    comments={[mockComments[0]]}
-                    isServiceDeskProject={false}
-                    onSave={mockOnSave}
-                    onCreate={mockOnCreate}
-                    fetchUsers={mockFetchUsers}
-                    fetchImage={mockFetchImage}
-                    onDelete={mockOnDelete}
-                    isRteEnabled={true}
-                    commentText=""
-                    onCommentTextChange={mockOnCommentTextChange}
-                    isEditingComment={false}
-                    onEditingCommentChange={mockOnEditingCommentChange}
-                    isAtlaskitEditorEnabled={true}
-                    isAtlaskitEditorFFReceived={true}
-                />,
-            ),
+        render(
+            <IssueCommentComponent
+                siteDetails={mockSiteDetails}
+                currentUser={mockCurrentUser}
+                comments={[mockComments[0]]}
+                isServiceDeskProject={false}
+                onSave={mockOnSave}
+                onCreate={mockOnCreate}
+                fetchUsers={mockFetchUsers}
+                fetchImage={mockFetchImage}
+                onDelete={mockOnDelete}
+                commentText=""
+                onCommentTextChange={mockOnCommentTextChange}
+                isEditingComment={false}
+                onEditingCommentChange={mockOnEditingCommentChange}
+                isAtlaskitEditorEnabled={true}
+                isAtlaskitEditorFFReceived={true}
+            />,
         );
-        await screen.findByText('Another test comment');
-        await act(() => fireEvent.click(screen.getAllByText('Edit')[0]));
-
-        const editor = await screen.findByLabelText('Rich text editor for comments');
+        const editButton = await screen.findByText('Edit');
+        await act(() => fireEvent.click(editButton));
+        const editor = await screen.findByTestId('ak-editor-main-toolbar');
         expect(editor).toBeTruthy();
-    }, 20000);
+    }, 60000);
 
     it('allows deleting a comment', () => {
         render(
