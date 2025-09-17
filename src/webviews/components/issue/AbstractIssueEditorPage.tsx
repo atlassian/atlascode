@@ -574,7 +574,7 @@ export abstract class AbstractIssueEditorPage<
                                         <Suspense fallback={<div>Loading...</div>}>
                                             <JiraIssueTextAreaEditor
                                                 {...fieldArgs.fieldProps}
-                                                value={this.state.fieldValues[field.key]}
+                                                value={this.coerceToString(this.state.fieldValues[field.key])}
                                                 isDisabled={this.state.isSomethingLoading}
                                                 onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
                                                     this.handleInlineEdit(field, val),
