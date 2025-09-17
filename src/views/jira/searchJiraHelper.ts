@@ -7,7 +7,8 @@ import { AssignedJiraItemsViewId, Commands } from '../../constants';
 import { Container } from '../../container';
 
 interface QuickPickIssue extends QuickPickItem {
-    issue: MinimalORIssueLink<DetailedSiteInfo>;
+    issue: MinimalORIssueLink<DetailedSiteInfo> | null;
+    searchTerm?: string;
 }
 
 export class SearchJiraHelper {
@@ -92,15 +93,48 @@ export class SearchJiraHelper {
             });
         });
 
-        window
-            .showQuickPick<QuickPickIssue>(quickPickIssues, {
-                matchOnDescription: true,
-                placeHolder: 'Search for issue key or summary',
-            })
-            .then((quickPickIssue: QuickPickIssue | undefined) => {
-                if (quickPickIssue) {
-                    commands.executeCommand(Commands.ShowIssue, quickPickIssue.issue);
-                }
-            });
+        const quickPick = window.createQuickPick<QuickPickIssue>();
+        quickPick.items = quickPickIssues;
+        quickPick.matchOnDescription = true;
+        quickPick.placeholder = 'Search for issue key or summary';
+
+        quickPick.onDidChangeValue((value) => {
+            if (!value.trim()) {
+                quickPick.items = quickPickIssues;
+                return;
+            }
+
+            const visibleMatches = quickPick.items.filter(
+                (item) =>
+                    item.label.toLowerCase().includes(value.toLowerCase()) ||
+                    item.description?.toLowerCase().includes(value.toLowerCase()),
+            );
+
+            if (visibleMatches.length === 0) {
+                quickPick.items = [
+                    {
+                        label: `🔍 Search "${value}" through all connected sites`,
+                        issue: null,
+                        searchTerm: value,
+                    },
+                ];
+            }
+        });
+
+        quickPick.onDidAccept(() => {
+            const selectedItem = quickPick.selectedItems[0];
+            if (!selectedItem) {
+                return;
+            }
+
+            if (selectedItem.searchTerm) {
+                commands.executeCommand(Commands.JiraSearchAllIssues, selectedItem.searchTerm);
+            } else {
+                commands.executeCommand(Commands.ShowIssue, selectedItem.issue);
+            }
+            quickPick.hide();
+        });
+
+        quickPick.show();
     }
 }

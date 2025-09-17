@@ -143,7 +143,7 @@ describe('SearchAllJiraHelper', () => {
         it('handles missing summary gracefully', () => {
             const issueNoSummary = createMockIssue('TEST-3', '', mockSite1);
             const items = SearchAllJiraHelper['mapToQuickPickItems']([issueNoSummary]);
-            expect(items[0].description).toBe(' (test1.atlassian.net)');
+            expect(items[0].description).toBe('');
         });
         it('returns empty array if no issues', () => {
             const items = SearchAllJiraHelper['mapToQuickPickItems']([]);

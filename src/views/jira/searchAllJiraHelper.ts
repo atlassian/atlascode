@@ -13,11 +13,11 @@ export class SearchAllJiraHelper {
     static searchTimeout: NodeJS.Timeout | undefined;
 
     public static initialize(): void {
-        commands.registerCommand(Commands.JiraSearchAllIssues, () => {
-            this.createAllIssuesQuickPick();
+        commands.registerCommand(Commands.JiraSearchAllIssues, (searchTerm?: string) => {
+            this.createAllIssuesQuickPick(searchTerm);
         });
     }
-    private static async createAllIssuesQuickPick(): Promise<void> {
+    private static async createAllIssuesQuickPick(searchTerm?: string): Promise<void> {
         const sites = Container.siteManager.getSitesAvailable(ProductJira);
         if (sites.length === 0) {
             window.showInformationMessage('No Jira sites connected. Please connect to a Jira site first.');
@@ -28,6 +28,11 @@ export class SearchAllJiraHelper {
         quickPick.placeholder = 'Search for issue key or summary across all connected sites';
         quickPick.matchOnDescription = true;
         quickPick.matchOnDetail = true;
+
+        if (searchTerm) {
+            quickPick.value = searchTerm;
+        }
+
         quickPick.show();
 
         quickPick.onDidChangeValue((value) => this.handleInputChange(value, quickPick, sites));
@@ -111,7 +116,7 @@ export class SearchAllJiraHelper {
     static mapToQuickPickItems(issues: MinimalIssue<DetailedSiteInfo>[]): QuickPickIssue[] {
         return issues.map((issue) => ({
             label: issue.key,
-            description: `${issue.summary ?? ''} (${issue.siteDetails.host})`,
+            description: `${issue.summary ?? ''}`,
             issue,
         }));
     }
