@@ -6,7 +6,7 @@ import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
 import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, FieldValues, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
-import * as React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
@@ -27,8 +27,10 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
-import AtlaskitEditor from '../common/AtlaskitEditor/AtlaskitEditor';
 import { Panel } from './Panel';
+
+// Use lazy loading to prevent ProseMirror conflicts
+const AtlaskitEditor = lazy(() => import('../common/AtlaskitEditor/AtlaskitEditor'));
 
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;
@@ -393,17 +395,19 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                     <label className="ac-field-label" style={{ marginBottom: '4px', display: 'block' }}>
                                         Description
                                     </label>
-                                    <AtlaskitEditor
-                                        defaultValue={this.state.fieldValues['description'] || ''}
-                                        onBlur={(content: string) => {
-                                            const descriptionField = this.commonFields.find(
-                                                (f) => f.key === 'description',
-                                            );
-                                            if (descriptionField) {
-                                                this.handleInlineEdit(descriptionField, content);
-                                            }
-                                        }}
-                                    />
+                                    <Suspense fallback={<div>Loading editor...</div>}>
+                                        <AtlaskitEditor
+                                            defaultValue={this.state.fieldValues['description'] || ''}
+                                            onBlur={(content: string) => {
+                                                const descriptionField = this.commonFields.find(
+                                                    (f) => f.key === 'description',
+                                                );
+                                                if (descriptionField) {
+                                                    this.handleInlineEdit(descriptionField, content);
+                                                }
+                                            }}
+                                        />
+                                    </Suspense>
                                 </div>
                             ) : (
                                 this.getInputMarkup(field)
