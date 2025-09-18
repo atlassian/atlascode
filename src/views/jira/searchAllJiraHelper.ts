@@ -25,7 +25,7 @@ export class SearchAllJiraHelper {
         }
 
         const quickPick = window.createQuickPick<QuickPickIssue>();
-        quickPick.placeholder = 'Search for issue key or summary across all connected sites';
+        quickPick.placeholder = 'Search all Jira work items';
         quickPick.matchOnDescription = true;
         quickPick.matchOnDetail = true;
 
@@ -55,7 +55,7 @@ export class SearchAllJiraHelper {
 
         this.searchTimeout = setTimeout(() => {
             this.executeSearch(value, quickPick, sites);
-        }, 400);
+        }, 100);
     }
 
     static async executeSearch(value: string, quickPick: QuickPick<QuickPickIssue>, sites: DetailedSiteInfo[]) {
@@ -116,7 +116,8 @@ export class SearchAllJiraHelper {
     static mapToQuickPickItems(issues: MinimalIssue<DetailedSiteInfo>[]): QuickPickIssue[] {
         return issues.map((issue) => ({
             label: issue.key,
-            description: `${issue.summary ?? ''}`,
+            description: issue.status.name,
+            detail: issue.summary,
             issue,
         }));
     }

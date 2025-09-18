@@ -1,5 +1,5 @@
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
-import { commands, QuickPickItem, window } from 'vscode';
+import { commands, QuickPickItem, ThemeIcon, window } from 'vscode';
 
 import { searchIssuesEvent } from '../../analytics';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
@@ -85,7 +85,9 @@ export class SearchJiraHelper {
                 if (!issueSet.has(issue.key)) {
                     issueSet.add(issue.key);
                     quickPickIssues.push({
-                        label: `${issue.key} ${issue.summary}`,
+                        label: issue.key,
+                        description: issue.status.name,
+                        detail: issue.summary,
                         issue: issue,
                     });
                 }
@@ -93,11 +95,13 @@ export class SearchJiraHelper {
         });
 
         const quickPick = window.createQuickPick<QuickPickIssue>();
-        quickPick.placeholder = 'Search for issue key or summary';
+        quickPick.matchOnDescription = true;
+        quickPick.matchOnDetail = true;
+        quickPick.placeholder = 'Search Jira work items locally';
 
-        let searchAllOption: QuickPickIssue = {
-            label: '',
-            description: '🔍 Search across all connected sites',
+        const searchAllOption: QuickPickIssue = {
+            label: 'Search all Jira work items',
+            iconPath: new ThemeIcon('search'),
             issue: null,
             searchTerm: '',
             alwaysShow: true,
@@ -106,26 +110,11 @@ export class SearchJiraHelper {
         quickPick.items = [...quickPickIssues, searchAllOption];
 
         quickPick.onDidChangeValue((value) => {
-            if (!value.trim()) {
-                searchAllOption = {
-                    label: '',
-                    description: '🔍 Search across all connected sites',
-                    issue: null,
-                    searchTerm: '',
-                    alwaysShow: true,
-                };
-
-                quickPick.items = [...quickPickIssues, searchAllOption];
+            const searchAllOption = quickPick.items.find((item) => 'searchTerm' in item);
+            if (!searchAllOption) {
                 return;
             }
-            searchAllOption = {
-                label: '',
-                description: `🔍 Search "${value}" through all connected sites`,
-                issue: null,
-                searchTerm: value,
-                alwaysShow: true,
-            };
-            quickPick.items = [...quickPickIssues, searchAllOption];
+            searchAllOption.searchTerm = value;
         });
 
         quickPick.onDidAccept(() => {
