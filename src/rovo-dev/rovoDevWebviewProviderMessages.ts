@@ -26,6 +26,7 @@ export const enum RovoDevProviderMessageType {
     ForceStop = 'forceStop',
     ShowFeedbackForm = 'showFeedbackForm',
     CheckFileExistsComplete = 'checkFileExistsComplete',
+    SetDebugPanel = 'setDebugPanel',
 }
 
 export interface RovoDevObjectResponse {
@@ -73,4 +74,5 @@ export type RovoDevProviderMessage =
     | ReducerAction<
           RovoDevProviderMessageType.CheckFileExistsComplete,
           { requestId: string; filePath: string; exists: boolean }
-      >;
+      >
+    | ReducerAction<RovoDevProviderMessageType.SetDebugPanel, { enabled: boolean; context: Record<string, string> }>;

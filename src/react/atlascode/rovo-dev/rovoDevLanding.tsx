@@ -51,9 +51,18 @@ export const RovoDevLanding: React.FC<{
 
             {currentState.state === 'Disabled' && currentState.subState === 'NeedAuth' && (
                 <div style={{ marginTop: '24px' }}>
-                    <div>Please authenticate with a Jira site using an API token to enable Rovo Dev.</div>
+                    <div>
+                        <a
+                            href="https://id.atlassian.com/manage-profile/security/api-token"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Create an API token
+                        </a>{' '}
+                        and then add it here to use RovoDev beta
+                    </div>
                     <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={onLoginClick}>
-                        Login with Jira API Token
+                        Add API Token
                     </button>
                 </div>
             )}

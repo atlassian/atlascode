@@ -1019,9 +1019,10 @@
                     "description": "Show the Rovo Dev keybinding annotation in the editor when a selection is present.",
                     "scope": "window"
                 },
-                "atlascode.rovodev.executablePath": {
-                    "type": "string",
-                    "description": "The absolute path to the Rovo Dev executable"
+                "atlascode.rovodev.debugPanelEnabled": {
+                    "type": "boolean",
+                    "description": "Enable Rovo Dev debug panel",
+                    "scope": "window"
                 },
                 "atlascode.outputLevel": {
                     "type": "string",

@@ -1,12 +1,14 @@
 import * as fs from 'fs';
 import path from 'path';
 import { CommandContext, setCommandContext } from 'src/commandContext';
+import { configuration } from 'src/config/configuration';
 import { getFsPromise } from 'src/util/fsPromises';
 import { setTimeout } from 'timers/promises';
 import { v4 } from 'uuid';
 import {
     CancellationToken,
     commands,
+    ConfigurationChangeEvent,
     Disposable,
     Event,
     ExtensionContext,
@@ -73,6 +75,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _rovoDevApiClient?: RovoDevApiClient;
     private _processState = RovoDevProcessState.NotStarted;
     private _initialized = false;
+    private _debugPanelEnabled = false;
+    private _debugPanelContext: Record<string, string> = {};
 
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
@@ -107,11 +111,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._extensionPath = extensionPath;
         this._extensionUri = Uri.file(this._extensionPath);
         this._context = context;
+        this._debugPanelEnabled = Container.config.rovodev.debugPanelEnabled;
+
         // Register the webview view provider
         this._disposables.push(
             window.registerWebviewViewProvider('atlascode.views.rovoDev.webView', this, {
                 webviewOptions: { retainContextWhenHidden: true },
             }),
+            configuration.onDidChange(this.onConfigurationChanged, this),
         );
 
         // Register editor listeners
@@ -137,6 +144,23 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             onTelemetryError,
         );
         this._chatProvider = new RovoDevChatProvider(this._telemetryProvider);
+    }
+
+    private onConfigurationChanged(e: ConfigurationChangeEvent): void {
+        if (configuration.changed(e, 'rovodev.debugPanelEnabled')) {
+            this._debugPanelEnabled = Container.config.rovodev.debugPanelEnabled;
+            this.refreshDebugPanel(true);
+        }
+    }
+
+    private async refreshDebugPanel(force?: boolean) {
+        if (this._debugPanelEnabled || force) {
+            await this._webView?.postMessage({
+                type: RovoDevProviderMessageType.SetDebugPanel,
+                enabled: this._debugPanelEnabled,
+                context: this._debugPanelContext,
+            });
+        }
     }
 
     public resolveWebviewView(
@@ -251,6 +275,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.WebviewReady:
+                        this.refreshDebugPanel(true);
                         if (!this.isBoysenberry && !this.isDisabled) {
                             if (!workspace.workspaceFolders?.length) {
                                 await this.signalRovoDevDisabled('noOpenFolder');
@@ -272,6 +297,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             throw new Error('Rovo Dev port not set');
                         } else {
                             this._processState = RovoDevProcessState.Starting;
+                            this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
+                            this.refreshDebugPanel();
+
                             await RovoDevProcessManager.initializeRovoDev(this._context);
                         }
                         break;
@@ -291,6 +319,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                                 feedbackMessage: e.feedbackMessage,
                                 canContact: e.canContact,
                                 lastTenMessages: e.lastTenMessages,
+                                rovoDevSessionId: process.env.SANDBOX_SESSION_ID,
                             },
                             !!this.isBoysenberry,
                         );
@@ -496,6 +525,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             await RovoDevProcessManager.initializeRovoDev(this._context);
 
             this._processState = RovoDevProcessState.Starting;
+            this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
+            this.refreshDebugPanel();
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.ClearChat,
@@ -756,11 +787,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     public async invokeRovoDevAskCommand(prompt: string, context?: RovoDevContextItem[]): Promise<void> {
-        if (this.isDisabled) {
-            return;
-        }
-
-        // focus on the specific vscode view
+        // Always focus on the specific vscode view, even if disabled (so user can see the login prompt)
         commands.executeCommand('atlascode.views.rovoDev.webView.focus');
 
         // Wait for the webview to initialize, up to 5 seconds
@@ -772,6 +799,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         );
 
         if (!initialized) {
+            return;
+        }
+
+        // If disabled, we still want to show the webview but don't execute the chat
+        // The webview will show the appropriate login prompt
+        if (this.isDisabled) {
             return;
         }
 
@@ -884,6 +917,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
         this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
 
+        this._debugPanelContext['RovoDevHost'] = rovoDevHost;
+        this._debugPanelContext['RovoDevPort'] = `${rovoDevPort}`;
+        this._debugPanelContext['RovoDevHealthcheck'] = '???';
+        this.refreshDebugPanel();
+
         // enable the 'show terminal' button only when in debugging
         setCommandContext(CommandContext.RovoDevTerminalEnabled, Container.isDebugging);
 
@@ -907,6 +945,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         // if the client becomes undefined, it means the process terminated while we were polling the healtcheck
         if (!rovoDevClient) {
+            delete this._debugPanelContext['RovoDevHost'];
+            delete this._debugPanelContext['RovoDevPort'];
+            delete this._debugPanelContext['RovoDevHealthcheck'];
+            this.refreshDebugPanel();
             return;
         }
 
@@ -921,6 +963,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             );
             return;
         }
+
+        this._debugPanelContext['RovoDevHealthcheck'] = result.status;
+        this.refreshDebugPanel();
 
         // if result is unhealthy, it means Rovo Dev has failed during initialization (e.g., some MCP servers failed to start)
         // we can't continue - shutdown and set the process as terminated so the user can try again.
@@ -968,6 +1013,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._processState = RovoDevProcessState.Started;
         this.beginNewSession(result.sessionId || null, false);
 
+        this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
+        this.refreshDebugPanel();
+
         await webView.postMessage({
             type: RovoDevProviderMessageType.RovoDevReady,
             isPromptPending: this._chatProvider.isPromptPending,
@@ -996,6 +1044,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     public signalRovoDevDisabled(reason: RovoDevDisabledReason) {
         this._processState = RovoDevProcessState.Disabled;
 
+        this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
+        this.refreshDebugPanel();
+
         const webView = this._webView!;
         return webView.postMessage({
             type: RovoDevProviderMessageType.RovoDevDisabled,
@@ -1017,6 +1068,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._telemetryProvider.shutdown();
         this._dwellTracker?.dispose();
         this._dwellTracker = undefined;
+
+        delete this._debugPanelContext['RovoDevHost'];
+        delete this._debugPanelContext['RovoDevPort'];
+        this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
+        this.refreshDebugPanel();
 
         if (!overrideFullMessage) {
             errorMessage = errorMessage
