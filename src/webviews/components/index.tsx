@@ -32,17 +32,46 @@ const root = document.getElementById('root') as HTMLElement;
 window.addEventListener(
     'error',
     (ee: ErrorEvent) => {
-        const targetEL = ee.target as HTMLElement;
-        if (ee && targetEL && targetEL.nodeName === 'IMG') {
-            const originalSrc = targetEL.getAttribute('src');
-            targetEL.setAttribute('atlascode-original-src', `${originalSrc}`);
-            targetEL.setAttribute('src', 'images/no-image.svg');
-            targetEL.setAttribute('alt', `Unable to load image: ${originalSrc}`);
-            targetEL.setAttribute('title', `Unable to load image: ${originalSrc}`);
-            targetEL.setAttribute('class', 'ac-broken-img');
-            targetEL.setAttribute('width', '24');
-            targetEL.setAttribute('height', '24');
+        const targetEL = ee.target as HTMLImageElement;
+        if (!ee || !targetEL || targetEL.nodeName !== 'IMG') {
+            return;
         }
+
+        const originalSrc = targetEL.getAttribute('src') || '';
+        if (originalSrc === 'images/no-image.svg') {
+            return;
+        }
+
+        try {
+            const computed = window.getComputedStyle(targetEL);
+            const width = parseFloat(computed.width);
+            const height = parseFloat(computed.height);
+            if (width > 0 && height > 0) {
+                targetEL.style.width = `${width}px`;
+                targetEL.style.height = `${height}px`;
+            }
+        } catch {}
+
+        targetEL.setAttribute('atlascode-original-src', `${originalSrc}`);
+        targetEL.setAttribute('src', 'images/no-image.svg');
+
+        const className = targetEL.getAttribute('class') || '';
+        const isDecorative =
+            targetEL.getAttribute('role') === 'presentation' ||
+            targetEL.getAttribute('aria-hidden') === 'true' ||
+            /(^|\s)(atl-loader|ac-atl-loader)(\s|$)/.test(className);
+
+        if (isDecorative) {
+            targetEL.setAttribute('alt', '');
+            targetEL.removeAttribute('title');
+        } else {
+            targetEL.setAttribute('alt', 'Unable to load image');
+            targetEL.setAttribute('title', `Unable to load image: ${originalSrc}`);
+        }
+
+        targetEL.classList.add('ac-broken-img');
+        targetEL.removeAttribute('width');
+        targetEL.removeAttribute('height');
     },
     { capture: true },
 );

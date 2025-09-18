@@ -6,6 +6,7 @@ import useConstant from 'use-constant';
 
 import AtlGlobalStyles from './atlascode/common/AtlGlobalStyles';
 import { AtlLoader } from './atlascode/common/AtlLoader';
+import { DelayedFallback } from './atlascode/common/DelayedFallback';
 import { ErrorControllerContext, ErrorStateContext, useErrorController } from './atlascode/common/errorController';
 import { PMFControllerContext, PMFStateContext, usePMFController } from './atlascode/common/pmf/pmfController';
 import { atlascodeTheme } from './atlascode/theme/atlascodeTheme';
@@ -77,7 +78,7 @@ const App = () => {
     }, [themeObserver]);
 
     return (
-        <React.Suspense fallback={<AtlLoader />}>
+        <React.Suspense fallback={<DelayedFallback><AtlLoader /></DelayedFallback>>
             <VSCodeStylesContext.Provider value={vscStyles}>
                 <ThemeProvider theme={currentTheme}>
                     <ErrorControllerContext.Provider value={errorController}>
