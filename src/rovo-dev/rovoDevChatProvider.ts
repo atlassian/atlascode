@@ -56,6 +56,7 @@ export class RovoDevChatProvider {
 
     public shutdown() {
         this._rovoDevApiClient = undefined;
+        this._pendingPrompt = undefined;
     }
 
     public executeChat(prompt: RovoDevPrompt, revertedFiles: string[]) {

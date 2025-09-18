@@ -1,13 +1,20 @@
 import { APIRequestContext, Page } from '@playwright/test';
-import { setupPullrequests } from 'e2e/helpers';
+import { setupPullrequests, setupPullrequestsDC } from 'e2e/helpers';
+import { JiraTypes as BitbucketTypes } from 'e2e/helpers/types';
 import { pullrequest } from 'e2e/mock-data/pullrequest';
+import { pullrequestDC } from 'e2e/mock-data/pullrequestDC';
 import { AtlascodeDrawer, AtlassianSettings, CreatePullRequestPage, PullRequestPage } from 'e2e/page-objects';
 
-export async function createPullRequest(page: Page, request: APIRequestContext) {
-    await setupPullrequests(request, [pullrequest]);
+export async function createPullRequest(page: Page, type: BitbucketTypes, request: APIRequestContext) {
+    if (type === BitbucketTypes.Cloud) {
+        await setupPullrequests(request, [pullrequest]);
+    } else if (type === BitbucketTypes.DC) {
+        await setupPullrequestsDC(request, [pullrequestDC]);
+    }
+
     await new AtlassianSettings(page).closeSettingsPage();
 
-    const atlascodeDrawer = new AtlascodeDrawer(page);
+    const atlascodeDrawer = new AtlascodeDrawer(page, type);
 
     await atlascodeDrawer.pullRequests.createPRButton.click();
     await page.waitForTimeout(250);
@@ -27,6 +34,7 @@ export async function createPullRequest(page: Page, request: APIRequestContext) 
     await createPullRequestPage.createPullRequestButton.click();
     await page.waitForTimeout(250);
 
+    // For DC PullRequest creator is mockuser2 for next steps (approve/unapprove)
     await new PullRequestPage(page).expectPRPageLoaded();
 
     await atlascodeDrawer.pullRequests.expectPRTreeitem();

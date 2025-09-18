@@ -20,7 +20,7 @@ function GetRovoDevURIs(context: ExtensionContext) {
     const rovoDevBaseDir = path.join(extensionPath, 'atlascode-rovodev-bin');
     const rovoDevVersionDir = path.join(rovoDevBaseDir, MIN_SUPPORTED_ROVODEV_VERSION);
     const rovoDevBinPath = path.join(rovoDevVersionDir, 'atlassian_cli_rovodev');
-    const rovoDevIconUri = Uri.file(context.asAbsolutePath(path.join('resources', 'rovodev-icon.svg')));
+    const rovoDevIconUri = Uri.file(context.asAbsolutePath(path.join('resources', 'rovodev-terminal-icon.svg')));
 
     const platform = process.platform;
     const arch = process.arch;
@@ -375,42 +375,46 @@ class RovoDevTerminalInstance extends RovoDevInstance {
                     return;
                 }
 
-                const { username, key } = credentials;
+                try {
+                    const { username, key } = credentials;
 
-                this.rovoDevTerminal = window.createTerminal({
-                    name: 'Rovo Dev',
-                    shellPath: this.rovoDevBinPath,
-                    shellArgs: ['serve', `${port}`, '--xid', 'rovodev-ide-vscode'],
-                    cwd: this.workspacePath,
-                    hideFromUser: true,
-                    isTransient: true,
-                    iconPath: this.rovoDevIconUri,
-                    env: {
-                        USER: process.env.USER,
-                        USER_EMAIL: username,
-                        ROVODEV_SANDBOX_ID: Container.appInstanceId,
-                        ...(key ? { USER_API_TOKEN: key } : {}),
-                    },
-                });
+                    this.rovoDevTerminal = window.createTerminal({
+                        name: 'Rovo Dev',
+                        shellPath: this.rovoDevBinPath,
+                        shellArgs: ['serve', `${port}`, '--xid', 'rovodev-ide-vscode'],
+                        cwd: this.workspacePath,
+                        hideFromUser: true,
+                        isTransient: true,
+                        iconPath: this.rovoDevIconUri,
+                        env: {
+                            USER: process.env.USER,
+                            USER_EMAIL: username,
+                            ROVODEV_SANDBOX_ID: Container.appInstanceId,
+                            ...(key ? { USER_API_TOKEN: key } : {}),
+                        },
+                    });
 
-                const onDidCloseTerminal = window.onDidCloseTerminal((event) => {
-                    if (event === this.rovoDevTerminal) {
-                        this.finalizeStop();
+                    const onDidCloseTerminal = window.onDidCloseTerminal((event) => {
+                        if (event === this.rovoDevTerminal) {
+                            this.finalizeStop();
 
-                        const code = event.exitStatus?.code;
-                        if (code) {
-                            rovoDevWebviewProvider.signalProcessTerminated(
-                                `Rovo Dev exited with code ${code}, see the log for details.`,
-                            );
-                        } else {
-                            rovoDevWebviewProvider.signalProcessTerminated();
+                            const code = event.exitStatus?.code;
+                            if (code) {
+                                rovoDevWebviewProvider.signalProcessTerminated(
+                                    `Rovo Dev exited with code ${code}, see the log for details.`,
+                                );
+                            } else {
+                                rovoDevWebviewProvider.signalProcessTerminated();
+                            }
                         }
-                    }
-                });
-                this.disposables.push(onDidCloseTerminal);
+                    });
+                    this.disposables.push(onDidCloseTerminal);
 
-                rovoDevWebviewProvider.signalProcessStarted(port);
-                resolve();
+                    rovoDevWebviewProvider.signalProcessStarted(port);
+                    resolve();
+                } catch (error) {
+                    reject(new Error(`failed to execute Rovo Dev: ${error.message || error.toString()}`));
+                }
             });
         });
     }

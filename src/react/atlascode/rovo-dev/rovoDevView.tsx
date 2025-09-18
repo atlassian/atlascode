@@ -2,6 +2,7 @@ import './RovoDev.css';
 import './RovoDevCodeHighlighting.css';
 
 import CloseIcon from '@atlaskit/icon/core/close';
+import { setGlobalTheme } from '@atlaskit/tokens';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
@@ -92,6 +93,31 @@ const RovoDevView: React.FC = () => {
     const [promptContextCollection, setPromptContextCollection] = useState<RovoDevContextItem[]>([]);
     const [debugPanelEnabled, setDebugPanelEnabled] = useState(false);
     const [debugPanelContext, setDebugPanelContext] = useState<Record<string, string>>({});
+
+    // Initialize atlaskit theme for proper token support
+    React.useEffect(() => {
+        const initializeTheme = () => {
+            const body = document.body;
+            const isDark: boolean =
+                body.getAttribute('class') === 'vscode-dark' ||
+                (body.classList.contains('vscode-high-contrast') &&
+                    !body.classList.contains('vscode-high-contrast-light'));
+
+            setGlobalTheme({
+                light: 'light',
+                dark: 'dark',
+                colorMode: isDark ? 'dark' : 'light',
+                typography: 'typography-modernized',
+            });
+        };
+
+        initializeTheme();
+
+        const observer = new MutationObserver(initializeTheme);
+        observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+        return () => observer.disconnect();
+    }, []);
 
     React.useEffect(() => {
         const codeBlocks = document.querySelectorAll('pre code');

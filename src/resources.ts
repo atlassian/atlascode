@@ -88,6 +88,11 @@ export function registerResources(vscodeContext: ExtensionContext) {
         light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'add.svg'))),
         dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'add.svg'))),
     });
+    Resources.icons.set(iconSet.ROVODEV, {
+        light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'rovodev-icon.svg'))),
+        dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'rovodev-icon.svg'))),
+    });
+
     Resources.icons.set(iconSet.ISSUES, Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'issues.svg'))));
 
     Resources.icons.set(
@@ -114,7 +119,6 @@ export function registerResources(vscodeContext: ExtensionContext) {
         iconSet.PIPELINEPAUSED,
         Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-paused.svg'))),
     );
-    Resources.icons.set(iconSet.ROVODEV, Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'rovo.png'))));
 
     Resources.charlesCert = vscodeContext.asAbsolutePath('charles-ssl-proxying-certificate.pem');
 

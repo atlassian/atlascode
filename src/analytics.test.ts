@@ -806,6 +806,7 @@ describe('analytics', () => {
             it('should create a performance event with correct tag and measure', async () => {
                 const measure = 150;
                 const params = {
+                    rovoDevEnv: 'IDE' as const,
                     appInstanceId: 'app-123',
                     rovoDevSessionId: 'test-session-123',
                     rovoDevPromptId: 'test-prompt-123',
@@ -830,6 +831,7 @@ describe('analytics', () => {
             it('should create a performance event with correct tag and measure', async () => {
                 const measure = 250;
                 const params = {
+                    rovoDevEnv: 'IDE' as const,
                     appInstanceId: 'app-456',
                     rovoDevSessionId: 'session-456',
                     rovoDevPromptId: 'prompt-456',
@@ -855,6 +857,7 @@ describe('analytics', () => {
             it('should create a performance event with correct tag and measure', async () => {
                 const measure = 500;
                 const params = {
+                    rovoDevEnv: 'IDE' as const,
                     appInstanceId: 'app-789',
                     rovoDevSessionId: 'session-789',
                     rovoDevPromptId: 'prompt-789',
@@ -880,6 +883,7 @@ describe('analytics', () => {
             it('should create a performance event with correct tag and measure', async () => {
                 const measure = 1000;
                 const params = {
+                    rovoDevEnv: 'IDE' as const,
                     appInstanceId: 'app-999',
                     rovoDevSessionId: 'session-999',
                     rovoDevPromptId: 'prompt-999',
@@ -905,6 +909,7 @@ describe('analytics', () => {
             it('should include platform information based on process.platform', async () => {
                 setProcessPlatform('darwin');
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToFirstByte', 100, {
+                    rovoDevEnv: 'IDE',
                     appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
@@ -915,6 +920,7 @@ describe('analytics', () => {
 
             it('should include origin information', async () => {
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToFirstByte', 100, {
+                    rovoDevEnv: 'IDE',
                     appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
@@ -925,6 +931,7 @@ describe('analytics', () => {
 
             it('should handle empty string parameters', async () => {
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToFirstByte', 100, {
+                    rovoDevEnv: 'IDE',
                     appInstanceId: 'test-app-id',
                     rovoDevSessionId: '',
                     rovoDevPromptId: '',
@@ -936,6 +943,7 @@ describe('analytics', () => {
 
             it('should handle additional parameters in params object', async () => {
                 const params = {
+                    rovoDevEnv: 'IDE' as const,
                     appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
@@ -1005,6 +1013,7 @@ describe('analytics', () => {
         describe('event structure validation', () => {
             it('should return a valid TrackEvent structure', async () => {
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToFirstByte', 100, {
+                    rovoDevEnv: 'IDE',
                     appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
@@ -1026,6 +1035,7 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToFirstByte', async () => {
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToFirstByte', 100, {
+                    rovoDevEnv: 'IDE',
                     appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
@@ -1037,6 +1047,7 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToFirstMessage', async () => {
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToFirstMessage', 100, {
+                    rovoDevEnv: 'IDE',
                     appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
@@ -1048,6 +1059,7 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToTechPlan', async () => {
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToTechPlan', 100, {
+                    rovoDevEnv: 'IDE',
                     appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
@@ -1059,6 +1071,7 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToLastMessage', async () => {
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToLastMessage', 100, {
+                    rovoDevEnv: 'IDE',
                     appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
@@ -1627,6 +1640,7 @@ describe('analytics', () => {
                     'api.rovodev.chat.response.timeToFirstByte',
                     100,
                     {
+                        rovoDevEnv: 'IDE',
                         appInstanceId: 'test-app-id',
                         rovoDevSessionId: 'test-session',
                         rovoDevPromptId: 'test-prompt',

@@ -88,26 +88,14 @@ describe('PromptInputBox', () => {
         expect(defaultProps.onCancel).toHaveBeenCalledTimes(0);
     });
 
-    it('calls onDeepPlanToggled when deep plan button is clicked', () => {
-        render(<PromptInputBox {...defaultProps} />);
-        fireEvent.click(screen.getAllByRole('button', { name: '' })[1]);
-        expect(defaultProps.onDeepPlanToggled).toHaveBeenCalled();
-    });
-
-    it('disables deep plan button when state is not WaitingForPrompt', () => {
-        render(<PromptInputBox {...defaultProps} currentState={{ state: 'GeneratingResponse' }} />);
-        fireEvent.click(screen.getAllByRole('button', { name: '' })[1]);
-        expect(defaultProps.onDeepPlanToggled).toHaveBeenCalledTimes(0);
-    });
-
     it('shows "Deep plan enabled" text when deep plan is enabled', () => {
         render(<PromptInputBox {...defaultProps} isDeepPlanEnabled={true} />);
-        expect(screen.getByText('Deep plan enabled')).toBeTruthy();
+        expect(screen.getByTitle('Deep plan is enabled')).toBeTruthy();
     });
 
     it('calls onAddContext when Add Context button is clicked', () => {
         render(<PromptInputBox {...defaultProps} />);
-        fireEvent.click(screen.getAllByRole('button', { name: '' })[0]);
+        fireEvent.click(screen.getAllByRole('button', { name: 'Add context' })[0]);
         expect(defaultProps.onAddContext).toHaveBeenCalled();
     });
 });
