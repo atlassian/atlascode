@@ -340,10 +340,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.McpConsentChoiceSubmit:
-                        if (e.action === 'acceptAll') {
+                        if (e.choice === 'acceptAll') {
                             await this.acceptMcpServer(true);
                         } else {
-                            await this.acceptMcpServer(false, e.serverName!, e.action);
+                            await this.acceptMcpServer(false, e.serverName!, e.choice);
                         }
                         break;
 

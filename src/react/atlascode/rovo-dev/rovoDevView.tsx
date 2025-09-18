@@ -22,7 +22,7 @@ import { ChatStream } from './messaging/ChatStream';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
-import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
+import { McpConsentChoice, ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import { DebugPanel } from './tools/DebugPanel';
 import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
@@ -706,22 +706,11 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
-    const onMcpAccept = useCallback(
-        (serverName?: string, all?: boolean) => {
+    const onMcpChoice = useCallback(
+        (choice: McpConsentChoice, serverName?: string) => {
             postMessage({
                 type: RovoDevViewResponseType.McpConsentChoiceSubmit,
-                action: all ? 'acceptAll' : 'accept',
-                serverName,
-            });
-        },
-        [postMessage],
-    );
-
-    const onMcpDeny = useCallback(
-        (serverName?: string) => {
-            postMessage({
-                type: RovoDevViewResponseType.McpConsentChoiceSubmit,
-                action: 'deny',
+                choice,
                 serverName,
             });
         },
@@ -757,8 +746,7 @@ const RovoDevView: React.FC = () => {
                 sendFeedback={executeSendFeedback}
                 onLoginClick={onLoginClick}
                 onOpenFolder={onOpenFolder}
-                onMcpAccept={onMcpAccept}
-                onMcpDeny={onMcpDeny}
+                onMcpChoice={onMcpChoice}
             />
             {!hidePromptBox && (
                 <div className="input-section-container">

@@ -33,6 +33,8 @@ export interface ModifiedFile {
     type: 'modify' | 'create' | 'delete';
 }
 
+export type McpConsentChoice = 'accept' | 'acceptAll' | 'deny';
+
 export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.Refresh>
     | ReducerAction<RovoDevViewResponseType.Prompt, RovoDevPrompt>
@@ -58,7 +60,4 @@ export type RovoDevViewResponse =
           { feedbackType: FeedbackType; feedbackMessage: string; lastTenMessages?: string[]; canContact: boolean }
       >
     | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>
-    | ReducerAction<
-          RovoDevViewResponseType.McpConsentChoiceSubmit,
-          { action: 'accept' | 'acceptAll' | 'deny'; serverName?: string }
-      >;
+    | ReducerAction<RovoDevViewResponseType.McpConsentChoiceSubmit, { choice: McpConsentChoice; serverName?: string }>;

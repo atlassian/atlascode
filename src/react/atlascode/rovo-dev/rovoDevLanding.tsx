@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 
+import { McpConsentChoice } from './rovoDevViewMessages';
 import { inChatButtonStyles } from './rovoDevViewStyles';
 
 const RovoDevImg = () => {
@@ -24,9 +25,8 @@ export const RovoDevLanding: React.FC<{
     currentState: State;
     onLoginClick: () => void;
     onOpenFolder: () => void;
-    onMcpAccept: (serverName?: string, all?: boolean) => void;
-    onMcpDeny: (serverName?: string) => void;
-}> = ({ currentState, onLoginClick, onOpenFolder, onMcpAccept, onMcpDeny }) => {
+    onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
+}> = ({ currentState, onLoginClick, onOpenFolder, onMcpChoice }) => {
     if (process.env.ROVODEV_BBY) {
         return null;
     }
@@ -93,12 +93,15 @@ export const RovoDevLanding: React.FC<{
                             <tr>
                                 <td style={{ width: '100%' }}>{serverName}</td>
                                 <td>
-                                    <button style={inChatButtonStyles} onClick={() => onMcpAccept(serverName, false)}>
-                                        Accept
+                                    <button
+                                        style={inChatButtonStyles}
+                                        onClick={() => onMcpChoice('accept', serverName)}
+                                    >
+                                        Allow
                                     </button>
                                 </td>
                                 <td>
-                                    <button style={inChatButtonStyles} onClick={() => onMcpDeny(serverName)}>
+                                    <button style={inChatButtonStyles} onClick={() => onMcpChoice('deny', serverName)}>
                                         Deny
                                     </button>
                                 </td>
@@ -107,8 +110,8 @@ export const RovoDevLanding: React.FC<{
                     </table>
                     {currentState.mcpIds.length > 1 && (
                         <div style={{ width: '100%', textAlign: 'right' }}>
-                            <button style={inChatButtonStyles} onClick={() => onMcpAccept(undefined, true)}>
-                                Accept all
+                            <button style={inChatButtonStyles} onClick={() => onMcpChoice('acceptAll')}>
+                                Allow all
                             </button>
                         </div>
                     )}

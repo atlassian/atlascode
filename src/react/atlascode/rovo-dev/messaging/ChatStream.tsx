@@ -9,7 +9,7 @@ import { ErrorMessageItem } from '../common/errorMessage';
 import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
 import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
 import { RovoDevLanding } from '../rovoDevLanding';
-import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
+import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
@@ -39,8 +39,7 @@ interface ChatStreamProps {
     sendFeedback: (feedbackType: FeedbackType, feedack: string, canContact: boolean, lastTenMessages: boolean) => void;
     onLoginClick: () => void;
     onOpenFolder: () => void;
-    onMcpAccept: (serverName?: string, all?: boolean) => void;
-    onMcpDeny: (serverName?: string) => void;
+    onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -58,8 +57,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     sendFeedback,
     onLoginClick,
     onOpenFolder,
-    onMcpAccept,
-    onMcpDeny,
+    onMcpChoice,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -225,8 +223,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 currentState={currentState}
                 onLoginClick={onLoginClick}
                 onOpenFolder={onOpenFolder}
-                onMcpAccept={onMcpAccept}
-                onMcpDeny={onMcpDeny}
+                onMcpChoice={onMcpChoice}
             />
             {!isChatHistoryDisabled &&
                 chatHistory &&
