@@ -26,12 +26,15 @@ export class IssueSuggestionManager {
 
     static async getSuggestionAvailable(): Promise<boolean> {
         const isFeatureEnabled = Container.featureFlagClient.checkGate(Features.EnableAiSuggestions);
+        if (!isFeatureEnabled) {
+            return false;
+        }
 
         const selectedSite = workspace
             .getConfiguration('atlascode')
             .get<string>('jira.lastCreateSiteAndProject.siteId');
 
-        return Boolean(isFeatureEnabled && (await isSiteCloudWithApiKey(selectedSite)));
+        return await isSiteCloudWithApiKey(selectedSite);
     }
 
     static async buildSettings(): Promise<IssueSuggestionSettings> {
