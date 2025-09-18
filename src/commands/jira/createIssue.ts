@@ -16,7 +16,7 @@ export interface TodoIssueData {
     context: string;
 }
 
-const simplify = (data: TodoIssueData): SimplifiedTodoIssueData => {
+function simplify(data: TodoIssueData): SimplifiedTodoIssueData {
     return {
         summary: data.summary,
         context: data.context,
@@ -26,7 +26,7 @@ const simplify = (data: TodoIssueData): SimplifiedTodoIssueData => {
         },
         uri: data.uri.toString(),
     };
-};
+}
 
 export async function createIssue(data: Uri | TodoIssueData | undefined, source?: string) {
     if (isTodoIssueData(data)) {
@@ -92,6 +92,16 @@ function annotateComment(data: CommentData) {
     const we = new WorkspaceEdit();
 
     const summary = data.summary && data.summary.length > 0 ? ` ${data.summary}` : '';
+    if (data.summary) {
+        // Clear the original TODO  comment if there's a summary to avoid duplication
+        const line = data.position.line;
+        const start = data.position;
+        const doc = workspace.textDocuments.find((doc) => doc.uri.toString() === data.uri.toString());
+        if (doc) {
+            const lineEnd = doc.lineAt(line).range.end;
+            we.delete(data.uri, new Range(start, lineEnd));
+        }
+    }
     we.insert(data.uri, data.position, ` [${data.issueKey}]${summary}`);
     workspace.applyEdit(we);
 }

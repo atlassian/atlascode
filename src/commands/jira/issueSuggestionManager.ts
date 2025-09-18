@@ -47,17 +47,25 @@ export class IssueSuggestionManager {
 
     constructor(private readonly settings: IssueSuggestionSettings) {}
 
-    createSuggestionPrompt(data: SimplifiedTodoIssueData, contextLevel?: IssueSuggestionContextLevel): string {
+    createSuggestionPrompt(
+        data: SimplifiedTodoIssueData,
+        contextLevel?: IssueSuggestionContextLevel,
+    ): { prompt: string; context?: string } {
         if (!contextLevel) {
             throw new Error('Context level is not defined');
         }
 
         switch (contextLevel) {
             case IssueSuggestionContextLevel.TodoOnly: {
-                return `Create a Jira issue based on the following TODO comment:\n\n${data.summary}`;
+                return {
+                    prompt: data.summary,
+                };
             }
             case IssueSuggestionContextLevel.CodeContext: {
-                return `Create a Jira issue based on the following TODO comment:\n\n${data.summary}. The code context in which it appears is:\n\n${data.context}`;
+                return {
+                    prompt: data.summary,
+                    context: data.context,
+                };
             }
             default:
                 throw new Error(`Unknown context level: ${contextLevel}`);
@@ -69,9 +77,9 @@ export class IssueSuggestionManager {
     }
 
     async generateIssueSuggestion(data: SimplifiedTodoIssueData) {
-        const prompt = this.createSuggestionPrompt(data, this.settings.level);
+        const { prompt, context } = this.createSuggestionPrompt(data, this.settings.level);
         try {
-            const response = await fetchIssueSuggestions(prompt);
+            const response = await fetchIssueSuggestions(prompt, context);
             const issue = response.suggestedIssues[0];
             if (!issue) {
                 return {

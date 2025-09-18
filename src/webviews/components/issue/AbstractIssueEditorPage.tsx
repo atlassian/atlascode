@@ -81,6 +81,7 @@ export interface CommonEditorViewState extends Message {
     isRteEnabled: boolean;
     isRovoDevEnabled: boolean;
     isGeneratingSuggestions?: boolean;
+    summaryKey: string;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -98,6 +99,7 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     commentInputValue: '',
     isRteEnabled: false,
     isRovoDevEnabled: false,
+    summaryKey: v4(),
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -515,6 +517,7 @@ export abstract class AbstractIssueEditorPage<
                     <>
                         {field.key === 'summary' && <AISuggestionHeader vscodeApi={this._api} />}
                         <Field
+                            key={this.state.summaryKey}
                             defaultValue={defaultVal}
                             label={<span>{field.name}</span>}
                             isRequired={field.required}

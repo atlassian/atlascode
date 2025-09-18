@@ -168,7 +168,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                             isSomethingLoading: false,
                             loadingField: '',
                             isGeneratingSuggestions: false,
-                            formKey: v4(), // reset form to clear validation errors
+                            summaryKey: v4(), // reset summary to clear validation errors
                         });
                     });
 

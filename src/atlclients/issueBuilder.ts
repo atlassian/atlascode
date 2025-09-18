@@ -52,7 +52,7 @@ export const findCloudSiteWithApiKey = async (): Promise<DetailedSiteInfo | unde
     return sites.length > 0 ? sites[0] : undefined;
 };
 
-export const fetchIssueSuggestions = async (prompt: string): Promise<SuggestedIssuesResponse> => {
+export const fetchIssueSuggestions = async (prompt: string, context?: string): Promise<SuggestedIssuesResponse> => {
     const axiosInstance: AxiosInstance = getAxiosInstance();
 
     try {
@@ -67,9 +67,13 @@ export const fetchIssueSuggestions = async (prompt: string): Promise<SuggestedIs
             throw new Error('No valid auth info found for site');
         }
 
-        const response = await axiosInstance.post(`https://${site.host}` + ASSIST_API, buildRequestBody(prompt), {
-            headers: buildRequestHeaders(authInfo),
-        });
+        const response = await axiosInstance.post(
+            `https://${site.host}` + ASSIST_API,
+            buildRequestBody(prompt, context),
+            {
+                headers: buildRequestHeaders(authInfo),
+            },
+        );
         const content = response.data.ai_feature_output;
 
         const responseData: SuggestedIssuesResponse = {
@@ -93,7 +97,7 @@ export const fetchIssueSuggestions = async (prompt: string): Promise<SuggestedIs
     }
 };
 
-const buildRequestBody = (prompt: string): any => ({
+const buildRequestBody = (prompt: string, context?: string): any => ({
     ai_feature_input: {
         source: 'IDE',
         locale: 'en-US',
@@ -105,7 +109,7 @@ const buildRequestBody = (prompt: string): any => ({
             ],
             supporting_context: [
                 {
-                    value: 'void foo() { console.log("hello world"); }',
+                    value: context || '',
                 },
             ],
         },
