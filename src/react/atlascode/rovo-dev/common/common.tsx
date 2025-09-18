@@ -15,7 +15,21 @@ export const mdParser = new MarkdownIt({
     linkify: true,
 });
 
+// Only linkify full URLs (not fuzzy/"www.")
 mdParser.linkify.set({ fuzzyLink: false });
+
+// Ensure all links open externally and are safe
+const linkOpen = mdParser.renderer.rules.link_open || ((tokens, idx, options, _env, self) => self.renderToken(tokens, idx, options));
+mdParser.renderer.rules.link_open = (tokens, idx, options, env, self) => {
+    // Optionally only apply to http(s) links
+    const href = tokens[idx].attrGet('href') || '';
+    if (/^https?:\/\//i.test(href)) {
+        tokens[idx].attrSet('target', '_blank');
+        tokens[idx].attrSet('rel', 'noopener noreferrer');
+    }
+
+    return linkOpen(tokens, idx, options, env, self);
+};
 
 export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
