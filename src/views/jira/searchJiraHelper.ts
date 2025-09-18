@@ -85,8 +85,7 @@ export class SearchJiraHelper {
                 if (!issueSet.has(issue.key)) {
                     issueSet.add(issue.key);
                     quickPickIssues.push({
-                        label: issue.key,
-                        description: issue.summary,
+                        label: `${issue.key} ${issue.summary}`,
                         issue: issue,
                     });
                 }
@@ -94,31 +93,39 @@ export class SearchJiraHelper {
         });
 
         const quickPick = window.createQuickPick<QuickPickIssue>();
-        quickPick.items = quickPickIssues;
-        quickPick.matchOnDescription = true;
         quickPick.placeholder = 'Search for issue key or summary';
+
+        let searchAllOption: QuickPickIssue = {
+            label: '',
+            description: '🔍 Search across all connected sites',
+            issue: null,
+            searchTerm: '',
+            alwaysShow: true,
+        };
+
+        quickPick.items = [...quickPickIssues, searchAllOption];
 
         quickPick.onDidChangeValue((value) => {
             if (!value.trim()) {
-                quickPick.items = quickPickIssues;
+                searchAllOption = {
+                    label: '',
+                    description: '🔍 Search across all connected sites',
+                    issue: null,
+                    searchTerm: '',
+                    alwaysShow: true,
+                };
+
+                quickPick.items = [...quickPickIssues, searchAllOption];
                 return;
             }
-
-            const visibleMatches = quickPick.items.filter(
-                (item) =>
-                    item.label.toLowerCase().includes(value.toLowerCase()) ||
-                    item.description?.toLowerCase().includes(value.toLowerCase()),
-            );
-
-            if (visibleMatches.length === 0) {
-                quickPick.items = [
-                    {
-                        label: `🔍 Search "${value}" through all connected sites`,
-                        issue: null,
-                        searchTerm: value,
-                    },
-                ];
-            }
+            searchAllOption = {
+                label: '',
+                description: `🔍 Search "${value}" through all connected sites`,
+                issue: null,
+                searchTerm: value,
+                alwaysShow: true,
+            };
+            quickPick.items = [...quickPickIssues, searchAllOption];
         });
 
         quickPick.onDidAccept(() => {
@@ -127,8 +134,10 @@ export class SearchJiraHelper {
                 return;
             }
 
-            if (selectedItem.searchTerm) {
-                commands.executeCommand(Commands.JiraSearchAllIssues, selectedItem.searchTerm);
+            if ('searchTerm' in selectedItem) {
+                selectedItem.searchTerm
+                    ? commands.executeCommand(Commands.JiraSearchAllIssues, selectedItem.searchTerm)
+                    : commands.executeCommand(Commands.JiraSearchAllIssues);
             } else {
                 commands.executeCommand(Commands.ShowIssue, selectedItem.issue);
             }
