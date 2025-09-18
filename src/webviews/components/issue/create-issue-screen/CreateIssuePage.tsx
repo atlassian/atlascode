@@ -157,7 +157,10 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                     const mergedFieldValues = fieldValues
                         ? { ...this.state.fieldValues, ...fieldValues }
                         : this.state.fieldValues;
-                    const mergedIssueData: CreateIssueData = { ...issueData, fieldValues: mergedFieldValues };
+                    const mergedIssueData: CreateIssueData = {
+                        ...issueData,
+                        fieldValues: mergedFieldValues,
+                    };
 
                     this.updateInternals(mergedIssueData);
                     this.setState(mergedIssueData, () => {
@@ -165,6 +168,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                             isSomethingLoading: false,
                             loadingField: '',
                             isGeneratingSuggestions: false,
+                            formKey: v4(), // reset form to clear validation errors
                         });
                     });
 

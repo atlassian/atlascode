@@ -45,7 +45,7 @@ import {
 } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
 import { ConnectionTimeout } from '../../../util/time';
-// import AISuggestionFooter from '../aiCreateIssue/AISuggestionFooter';
+import AISuggestionFooter from '../aiCreateIssue/AISuggestionFooter';
 import AISuggestionHeader from '../aiCreateIssue/AISuggestionHeader';
 import { colorToLozengeAppearanceMap } from '../colors';
 import * as FieldValidators from '../fieldValidators';
@@ -531,9 +531,9 @@ export abstract class AbstractIssueEditorPage<
                                 let markup = (
                                     <Textfield
                                         {...fieldArgs.fieldProps}
-                                        value={this.coerceToString(fieldArgs.fieldProps.value)}
+                                        value={defaultVal}
                                         className="ac-inputField"
-                                        isDisabled={this.state.isSomethingLoading}
+                                        isDisabled={this.state.isSomethingLoading || this.state.isGeneratingSuggestions}
                                         onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
                                             this.handleInlineEdit(field, e.currentTarget.value),
                                         )}
@@ -545,7 +545,9 @@ export abstract class AbstractIssueEditorPage<
                                         <JiraIssueTextAreaEditor
                                             {...fieldArgs.fieldProps}
                                             value={this.coerceToString(this.state.fieldValues[field.key])}
-                                            isDisabled={this.state.isSomethingLoading}
+                                            isDisabled={
+                                                this.state.isSomethingLoading || this.state.isGeneratingSuggestions
+                                            }
                                             onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
                                                 this.handleInlineEdit(field, val),
                                             )}
@@ -570,6 +572,7 @@ export abstract class AbstractIssueEditorPage<
                                 );
                             }}
                         </Field>
+                        {field.key === 'description' && <AISuggestionFooter vscodeApi={this._api} />}
                     </>
                 );
             }
