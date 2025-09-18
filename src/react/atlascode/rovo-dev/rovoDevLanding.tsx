@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 
+import { McpConsentChoice } from './rovoDevViewMessages';
 import { inChatButtonStyles } from './rovoDevViewStyles';
 
 const RovoDevImg = () => {
@@ -24,7 +25,8 @@ export const RovoDevLanding: React.FC<{
     currentState: State;
     onLoginClick: () => void;
     onOpenFolder: () => void;
-}> = ({ currentState, onLoginClick, onOpenFolder }) => {
+    onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
+}> = ({ currentState, onLoginClick, onOpenFolder, onMcpChoice }) => {
     if (process.env.ROVODEV_BBY) {
         return null;
     }
@@ -73,6 +75,47 @@ export const RovoDevLanding: React.FC<{
                     <button style={{ ...inChatButtonStyles, marginTop: '12px' }} onClick={onOpenFolder}>
                         Open folder
                     </button>
+                </div>
+            )}
+
+            {currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance' && (
+                <div className="form-container" style={{ marginTop: '24px', textAlign: 'left', gap: '18px' }}>
+                    <div className="form-header">
+                        <span className="codicon codicon-mcp"></span>
+                        Third-party MCP server
+                    </div>
+                    <div>
+                        Would you like to allow the use of the following third-party MCP{' '}
+                        {currentState.mcpIds.length > 1 ? 'servers' : 'server'}?
+                    </div>
+                    <table style={{ border: '0' }}>
+                        {currentState.mcpIds.map((serverName) => (
+                            <tr>
+                                <td style={{ width: '100%' }}>{serverName}</td>
+                                <td>
+                                    <button
+                                        style={inChatButtonStyles}
+                                        onClick={() => onMcpChoice('accept', serverName)}
+                                    >
+                                        Allow
+                                    </button>
+                                </td>
+                                <td>
+                                    <button style={inChatButtonStyles} onClick={() => onMcpChoice('deny', serverName)}>
+                                        Deny
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </table>
+                    {currentState.mcpIds.length > 1 && (
+                        <div style={{ width: '100%', textAlign: 'right' }}>
+                            <button style={inChatButtonStyles} onClick={() => onMcpChoice('acceptAll')}>
+                                Allow all
+                            </button>
+                        </div>
+                    )}
+                    <div>When integrating with third-party products, please comply with their terms of use.</div>
                 </div>
             )}
         </div>

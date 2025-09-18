@@ -564,4 +564,83 @@ describe('RovoDevApiClient', () => {
             expect(error).toBeInstanceOf(Error);
         });
     });
+
+    describe('acceptMcpTerms method', () => {
+        it('should send accept all terms request', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Accepted all terms' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.acceptMcpTerms(true)).resolves.toBeUndefined();
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/accept-mcp-terms', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ servers: [], accept_all: 'true' }),
+            });
+        });
+
+        it('should send accept decision for a server', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Accepted server terms' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.acceptMcpTerms('server1', 'accept')).resolves.toBeUndefined();
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/accept-mcp-terms', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    servers: [{ server_name: 'server1', decision: 'accept' }],
+                    accept_all: 'false',
+                }),
+            });
+        });
+
+        it('should send deny decision for a server', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Denied server terms' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.acceptMcpTerms('server2', 'deny')).resolves.toBeUndefined();
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/accept-mcp-terms', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ servers: [{ server_name: 'server2', decision: 'deny' }], accept_all: 'false' }),
+            });
+        });
+
+        it('should throw error if API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.acceptMcpTerms(true)).rejects.toThrow(
+                "Failed to fetch '/accept-mcp-terms API: HTTP 500",
+            );
+        });
+    });
 });

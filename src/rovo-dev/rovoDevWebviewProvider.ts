@@ -199,6 +199,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         webview.onDidReceiveMessage(async (e) => {
             try {
                 switch (e.type) {
+                    case RovoDevViewResponseType.Refresh:
+                        // this message is being sent from messagingApi.ts
+                        break;
+
                     case RovoDevViewResponseType.Prompt:
                         const revertedChanges = this._revertedChanges;
                         this._revertedChanges = [];
@@ -291,7 +295,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                         const fixedPort = parseInt(process.env[rovodevInfo.envVars.port] || '0');
                         if (fixedPort) {
-                            await this.signalProcessStarted(fixedPort);
+                            const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
+                            const rovoDevApiClient = new RovoDevApiClient(rovoDevHost, fixedPort);
+                            await this.initializeWithHealthcheck(rovoDevApiClient);
                         } else if (this.isBoysenberry) {
                             await this.signalRovoDevDisabled('other');
                             throw new Error('Rovo Dev port not set');
@@ -331,6 +337,19 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.OpenFolder:
                         await commands.executeCommand(Commands.WorkbenchOpenFolder);
+                        break;
+
+                    case RovoDevViewResponseType.McpConsentChoiceSubmit:
+                        if (e.choice === 'acceptAll') {
+                            await this.acceptMcpServer(true);
+                        } else {
+                            await this.acceptMcpServer(false, e.serverName!, e.choice);
+                        }
+                        break;
+
+                    default:
+                        // @ts-expect-error ts(2339) - e here should be 'never'
+                        this.processError(new Error(`Unknown message type: ${e.type}`));
                         break;
                 }
             } catch (error) {
@@ -841,6 +860,22 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
+    private async acceptMcpServer(acceptAll: true): Promise<void>;
+    private async acceptMcpServer(acceptAll: false, serverName: string, decision: 'accept' | 'deny'): Promise<void>;
+    private async acceptMcpServer(
+        acceptAll: boolean,
+        serverName?: string,
+        decision?: 'accept' | 'deny',
+    ): Promise<void> {
+        if (acceptAll) {
+            await this.rovoDevApiClient!.acceptMcpTerms(true);
+        } else {
+            await this.rovoDevApiClient!.acceptMcpTerms(serverName!, decision!);
+        }
+
+        await this.initializeWithHealthcheck(this.rovoDevApiClient!, 1000);
+    }
+
     /**
      * Sends an error message to the chat history instead of showing a VS Code notification
      * @param errorMessage The error message to display in chat
@@ -878,17 +913,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     public signalBinaryDownloadEnded() {
-        const webView = this._webView!;
-        return webView.postMessage({
-            type: RovoDevProviderMessageType.SetInitializing,
-            isPromptPending: this._chatProvider.isPromptPending,
-        });
+        return this.signalInitializing();
     }
 
-    public async signalProcessStarted(rovoDevPort: number) {
+    public signalProcessStarted(rovoDevPort: number) {
         // initialize the API client
         const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
-        this._rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
+        const rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
 
         this._debugPanelContext['RovoDevHost'] = rovoDevHost;
         this._debugPanelContext['RovoDevPort'] = `${rovoDevPort}`;
@@ -896,7 +927,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this.refreshDebugPanel();
 
         // enable the 'show terminal' button only when in debugging
-        setCommandContext(CommandContext.RovoDevTerminalEnabled, Container.isDebugging);
+        setCommandContext(CommandContext.RovoDevTerminalEnabled, !this.isBoysenberry && Container.isDebugging);
+
+        return this.initializeWithHealthcheck(rovoDevApiClient);
+    }
+
+    private async initializeWithHealthcheck(rovoDevApiClient: RovoDevApiClient, timeout = 10000) {
+        this._rovoDevApiClient = rovoDevApiClient;
 
         const webView = this._webView!;
 
@@ -906,7 +943,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             result = await this.waitFor(
                 (info) => !!info,
                 () => this.executeHealthcheckInfo(),
-                10000,
+                timeout,
                 500,
                 () => !this.rovoDevApiClient,
             );
@@ -931,7 +968,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             await rovoDevClient.shutdown();
 
             this.signalProcessTerminated(
-                `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within 10000ms`,
+                `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within ${timeout} ms`,
                 true,
             );
             return;
@@ -965,14 +1002,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
 
         // this scenario is when the user needs to accept/decline the usage of some MCP server before Rovo Dev can start
-        // TODO - handle this better: AXON-747
         if (result.status === 'pending user review') {
-            await rovoDevClient.shutdown();
-
-            this.signalProcessTerminated(
-                'Failed to initialize Rovo Dev.\nSome MCP servers require acceptance, but this functionality is not available yet.',
-                true,
+            const serversToReview = Object.keys(result.mcp_servers).filter(
+                (x) => result.mcp_servers[x] === 'pending user review',
             );
+            webView.postMessage({
+                type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
+                isPromptPending: this._chatProvider.isPromptPending,
+                mcpIds: serversToReview,
+            });
+
             return;
         }
 

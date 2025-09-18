@@ -22,7 +22,7 @@ import { ChatStream } from './messaging/ChatStream';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
-import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
+import { McpConsentChoice, ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import { DebugPanel } from './tools/DebugPanel';
 import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
@@ -360,11 +360,12 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ErrorMessage:
-                    if (event.message.isProcessTerminated) {
-                        setCurrentState({ state: 'ProcessTerminated' });
-                    }
                     const msg = event.message;
-                    setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
+                    if (msg.isProcessTerminated) {
+                        setCurrentState({ state: 'ProcessTerminated' });
+                    } else {
+                        setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
+                    }
                     appendResponse(msg);
                     break;
 
@@ -399,6 +400,15 @@ const RovoDevView: React.FC = () => {
                         isPromptPending: event.isPromptPending,
                         totalBytes: event.totalBytes,
                         downloadedBytes: event.downloadedBytes,
+                    });
+                    break;
+
+                case RovoDevProviderMessageType.SetMcpAcceptanceRequired:
+                    setCurrentState({
+                        state: 'Initializing',
+                        subState: 'MCPAcceptance',
+                        mcpIds: event.mcpIds,
+                        isPromptPending: event.isPromptPending,
                     });
                     break;
 
@@ -696,6 +706,21 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
+    const onMcpChoice = useCallback(
+        (choice: McpConsentChoice, serverName?: string) => {
+            postMessage({
+                type: RovoDevViewResponseType.McpConsentChoiceSubmit,
+                choice,
+                serverName,
+            });
+        },
+        [postMessage],
+    );
+
+    const hidePromptBox =
+        currentState.state === 'Disabled' ||
+        (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance');
+
     return (
         <div className="rovoDevChat">
             {debugPanelEnabled && <DebugPanel currentState={currentState} debugContext={debugPanelContext} />}
@@ -721,8 +746,9 @@ const RovoDevView: React.FC = () => {
                 sendFeedback={executeSendFeedback}
                 onLoginClick={onLoginClick}
                 onOpenFolder={onOpenFolder}
+                onMcpChoice={onMcpChoice}
             />
-            {currentState.state !== 'Disabled' && (
+            {!hidePromptBox && (
                 <div className="input-section-container">
                     <UpdatedFilesComponent
                         modifiedFiles={totalModifiedFiles}

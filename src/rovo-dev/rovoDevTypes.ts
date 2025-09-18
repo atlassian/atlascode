@@ -46,22 +46,30 @@ export interface TechnicalPlan {
 
 // ---- Rovo Dev Chat States ----
 
-export interface BasicState {
-    state: 'WaitingForPrompt' | 'GeneratingResponse' | 'CancellingResponse' | 'ExecutingPlan' | 'ProcessTerminated';
+export interface AbstractInitializingState {
+    state: 'Initializing';
+    isPromptPending: boolean;
 }
 
-export interface InitializingState {
-    state: 'Initializing';
+export interface InitializingOtherState extends AbstractInitializingState {
     subState: 'Other';
-    isPromptPending: boolean;
 }
 
-export interface InitializingDownladingState {
-    state: 'Initializing';
+export interface InitializingDownladingState extends AbstractInitializingState {
     subState: 'UpdatingBinaries';
-    isPromptPending: boolean;
     downloadedBytes: number;
     totalBytes: number;
+}
+
+export interface InitializingMcpAcceptanceState extends AbstractInitializingState {
+    subState: 'MCPAcceptance';
+    mcpIds: string[];
+}
+
+export type InitializingState = InitializingOtherState | InitializingDownladingState | InitializingMcpAcceptanceState;
+
+export interface BasicState {
+    state: 'WaitingForPrompt' | 'GeneratingResponse' | 'CancellingResponse' | 'ExecutingPlan' | 'ProcessTerminated';
 }
 
 export interface DisabledState {
@@ -69,4 +77,4 @@ export interface DisabledState {
     subState: 'NeedAuth' | 'NoWorkspaceOpen' | 'Other';
 }
 
-export type State = BasicState | InitializingState | InitializingDownladingState | DisabledState;
+export type State = BasicState | InitializingState | DisabledState;
