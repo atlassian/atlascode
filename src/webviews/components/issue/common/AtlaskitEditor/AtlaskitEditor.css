@@ -9,15 +9,6 @@
     z-index: 1 !important;
 }
 
-/*!* Editor dropdown menu items and containers *!*/
-[class*="css-yeqd62"],
-[data-testid*="dropdown-item"],
-[role="group"][data-section="true"],
-.css-np0ioa > div,
-div[data-role="droplistContent"] > div {
-    z-index: 999;
-}
-
 /*!* All Atlaskit editor popup menus *!*/
 [data-testid*="dropdown"],
 [aria-label*="Bold"],
