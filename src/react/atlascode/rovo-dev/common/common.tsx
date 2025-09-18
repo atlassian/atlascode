@@ -8,14 +8,18 @@ import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import { ChatMessage, DefaultMessage, parseToolReturnMessage } from '../utils';
 import { ErrorMessageItem } from './errorMessage';
 
-export const mdParser = new MarkdownIt({
-    html: true,
+const mdParser = new MarkdownIt({
+    html: false,
     breaks: true,
     typographer: true,
     linkify: true,
 });
 
 mdParser.linkify.set({ fuzzyLink: false });
+
+export const MarkedDown: React.FC<{ value: string }> = ({ value }) => {
+    return <span dangerouslySetInnerHTML={{ __html: mdParser.render(value) }} />;
+};
 
 export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
