@@ -718,7 +718,8 @@ body {
 }
 
 .prompt-button-primary,
-.prompt-button-secondary {
+.prompt-button-secondary,
+.prompt-button-secondary-open {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -741,7 +742,6 @@ body {
 .prompt-button-primary:disabled,
 .prompt-button-secondary:disabled {
     cursor: not-allowed;
-    opacity: 0.5;
 }
 
 .prompt-button-primary:disabled {
@@ -755,9 +755,15 @@ body {
 }
 
 .prompt-button-secondary:hover {
+    color: var(--vscode-button-secondaryForeground);
     background-color: var(--vscode-button-secondaryHoverBackground);
 }
 
+.prompt-button-secondary-open {
+    color: var(--vscode-inputOption-activeForeground);
+    background-color: var(--vscode-inputOption-activeBackground);
+    border: 1px solid var(--vscode-focusBorder);
+}
 
 .prompt-settings-item {
     display: flex;
@@ -785,7 +791,7 @@ body {
     border: 1px solid var(--vscode-focusBorder);
     height: 32px;
     padding: 2px 6px;
-    border-radius: 8px;
+    border-radius: 16px;
     background-color: var(--vscode-inputOption-activeBackground);
     color: var(--vscode-inputOption-activeForeground);
     cursor: pointer;
@@ -857,5 +863,12 @@ body {
     border: 2px solid var(--vscode-contrastBorder);
 }
 .vscode-high-contrast .code-plan-button:hover {
+    border: 2px solid var(--vscode-focusBorder);
+}
+
+.vscode-high-contrast .deep-plan-indicator {
+    border: 2px solid var(--vscode-contrastBorder);
+}
+.vscode-high-contrast .deep-plan-indicator:hover {
     border: 2px solid var(--vscode-focusBorder);
 }
