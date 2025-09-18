@@ -1,4 +1,5 @@
 import { AxiosInstance } from 'axios';
+import { Logger } from 'src/logger';
 
 import { Container } from '../container';
 import { getAxiosInstance } from '../jira/jira-client/providers';
@@ -92,7 +93,7 @@ export const fetchIssueSuggestions = async (prompt: string, context?: string): P
 
         return responseData;
     } catch (error) {
-        console.error('Error fetching issue suggestions:', error);
+        Logger.error(error, 'Error fetching issue suggestions');
         throw error;
     }
 };

@@ -170,10 +170,6 @@ export function useEditor<T extends UserType>(props: {
     const view = useRef<EditorView | null>(null);
     const [content, setContent] = useState(props.value || '');
 
-    if (props.value !== content) {
-        setContent(props.value);
-    }
-
     // Prevents unnecessary calls to fetchUsers
     const debouncedFetch = props.fetchUsers && debounce(props.fetchUsers, 1500, { leading: true, maxWait: 1 });
 

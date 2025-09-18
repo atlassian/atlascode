@@ -1,4 +1,5 @@
 import { Container } from 'src/container';
+import { Logger } from 'src/logger';
 import { window, workspace } from 'vscode';
 
 import { fetchIssueSuggestions, isSiteCloudWithApiKey } from '../../atlclients/issueBuilder';
@@ -95,7 +96,7 @@ export class IssueSuggestionManager {
                 error: '',
             };
         } catch (error) {
-            console.error('Error fetching issue suggestions:', error);
+            Logger.error(error, 'Error fetching issue suggestions');
             window.showErrorMessage('Error fetching issue suggestions: ' + error.message);
             return {
                 summary: '',
@@ -125,7 +126,7 @@ export class IssueSuggestionManager {
             // TODO: actually send an analytics event
             window.showInformationMessage(`Thank you for your feedback!`);
         } catch (error) {
-            console.error('Error sending feedback:', error);
+            Logger.error(error, 'Error sending feedback');
             window.showErrorMessage('Error sending feedback: ' + error.message);
         }
     }
