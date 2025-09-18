@@ -1,3 +1,5 @@
+import './AtlaskitEditor.css';
+
 import { ComposableEditor, EditorNextProps } from '@atlaskit/editor-core/composable-editor';
 import { useUniversalPreset } from '@atlaskit/editor-core/preset-universal';
 import { usePreset } from '@atlaskit/editor-core/use-preset';

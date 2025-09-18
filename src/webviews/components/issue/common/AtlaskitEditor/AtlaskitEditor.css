@@ -1,0 +1,30 @@
+/*!*-------------------- Atlaskit Editor Styles --------------------*!*/
+
+/*!* Fix for editor component button spacing *!*/
+.js-text-format-wrap span div div button {
+    margin: 0 2px;
+}
+
+/*!* Editor dropdown menu items and containers *!*/
+[class*="css-yeqd62"],
+[data-testid*="dropdown-item"],
+[role="group"][data-section="true"],
+.css-np0ioa > div,
+div[data-role="droplistContent"] > div {
+    z-index: 99999 !important;
+}
+
+/*!* All Atlaskit editor popup menus *!*/
+[data-testid*="dropdown"],
+[aria-label*="Bold"],
+[aria-label*="Italic"],
+[aria-label*="Underline"] {
+    z-index: 99999 !important;
+}
+
+/*!* Override any conflicting z-index from other components *!*/
+.ac-form-select__menu,
+.ac-select__menu,
+[class*="Select__menu"] {
+    z-index: 1000 !important;
+}
