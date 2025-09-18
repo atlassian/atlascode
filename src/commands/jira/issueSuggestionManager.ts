@@ -7,48 +7,6 @@ import { IssueSuggestionContextLevel, IssueSuggestionSettings, SimplifiedTodoIss
 import { Features } from '../../util/featureFlags';
 
 export class IssueSuggestionManager {
-    static getSuggestionEnabled(): boolean {
-        if (!Container.featureFlagClient.checkGate(Features.EnableAiSuggestions)) {
-            return false;
-        }
-
-        const config = workspace.getConfiguration('atlascode.issueSuggestion').get<boolean>('enabled');
-        return Boolean(config);
-    }
-
-    static getSuggestionContextLevel(): IssueSuggestionContextLevel {
-        const config = workspace
-            .getConfiguration('atlascode')
-            .get<IssueSuggestionContextLevel>('issueSuggestion.contextLevel');
-
-        return config || IssueSuggestionContextLevel.CodeContext;
-    }
-
-    static async getSuggestionAvailable(): Promise<boolean> {
-        const isFeatureEnabled = Container.featureFlagClient.checkGate(Features.EnableAiSuggestions);
-        if (!isFeatureEnabled) {
-            return false;
-        }
-
-        const selectedSite = workspace
-            .getConfiguration('atlascode')
-            .get<string>('jira.lastCreateSiteAndProject.siteId');
-
-        return await isSiteCloudWithApiKey(selectedSite);
-    }
-
-    static async buildSettings(): Promise<IssueSuggestionSettings> {
-        const isSuggestionEnabled = this.getSuggestionEnabled();
-        const contextLevel = this.getSuggestionContextLevel();
-        const isSuggestionAvailable = await this.getSuggestionAvailable();
-
-        return {
-            isAvailable: isSuggestionAvailable,
-            isEnabled: isSuggestionEnabled,
-            level: contextLevel,
-        };
-    }
-
     constructor(private readonly settings: IssueSuggestionSettings) {}
 
     createSuggestionPrompt(
@@ -133,4 +91,43 @@ export class IssueSuggestionManager {
             window.showErrorMessage('Error sending feedback: ' + error.message);
         }
     }
+}
+
+export async function buildSuggestionSettings(): Promise<IssueSuggestionSettings> {
+    const isSuggestionEnabled = getSuggestionEnabled();
+    const contextLevel = getSuggestionContextLevel();
+    const isSuggestionAvailable = await getSuggestionAvailable();
+
+    return {
+        isAvailable: isSuggestionAvailable,
+        isEnabled: isSuggestionEnabled,
+        level: contextLevel,
+    };
+}
+function getSuggestionEnabled(): boolean {
+    if (!Container.featureFlagClient.checkGate(Features.EnableAiSuggestions)) {
+        return false;
+    }
+
+    const config = workspace.getConfiguration('atlascode.issueSuggestion').get<boolean>('enabled');
+    return Boolean(config);
+}
+
+function getSuggestionContextLevel(): IssueSuggestionContextLevel {
+    const config = workspace
+        .getConfiguration('atlascode')
+        .get<IssueSuggestionContextLevel>('issueSuggestion.contextLevel');
+
+    return config || IssueSuggestionContextLevel.CodeContext;
+}
+
+async function getSuggestionAvailable(): Promise<boolean> {
+    const isFeatureEnabled = Container.featureFlagClient.checkGate(Features.EnableAiSuggestions);
+    if (!isFeatureEnabled) {
+        return false;
+    }
+
+    const selectedSite = workspace.getConfiguration('atlascode').get<string>('jira.lastCreateSiteAndProject.siteId');
+
+    return await isSiteCloudWithApiKey(selectedSite);
 }

@@ -7,7 +7,7 @@ import { SimplifiedTodoIssueData } from '../../config/model';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { CommentData } from '../../webviews/createIssueWebview';
-import { IssueSuggestionManager } from './issueSuggestionManager';
+import { buildSuggestionSettings, IssueSuggestionManager } from './issueSuggestionManager';
 
 export interface TodoIssueData {
     summary: string;
@@ -30,7 +30,7 @@ function simplify(data: TodoIssueData): SimplifiedTodoIssueData {
 
 export async function createIssue(data: Uri | TodoIssueData | undefined, source?: string) {
     if (isTodoIssueData(data)) {
-        const settings = await IssueSuggestionManager.buildSettings();
+        const settings = await buildSuggestionSettings();
         const todoData = simplify(data);
 
         await Container.createIssueWebview.createOrShow(
