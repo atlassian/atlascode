@@ -339,11 +339,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await commands.executeCommand(Commands.WorkbenchOpenFolder);
                         break;
 
-                    case RovoDevViewResponseType.McpAcceptance:
+                    case RovoDevViewResponseType.McpConsentChoiceSubmit:
                         if (e.action === 'acceptAll') {
                             await this.acceptMcpServer(true);
-                        } else if (e.action === 'denyAll') {
-                            throw new Error('API for declining all MCP servers not implemented');
                         } else {
                             await this.acceptMcpServer(false, e.serverName!, e.action);
                         }

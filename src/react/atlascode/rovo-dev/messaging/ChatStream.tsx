@@ -40,7 +40,7 @@ interface ChatStreamProps {
     onLoginClick: () => void;
     onOpenFolder: () => void;
     onMcpAccept: (serverName?: string, all?: boolean) => void;
-    onMcpDecline: (serverName?: string, all?: boolean) => void;
+    onMcpDeny: (serverName?: string) => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -59,7 +59,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onLoginClick,
     onOpenFolder,
     onMcpAccept,
-    onMcpDecline,
+    onMcpDeny,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -226,7 +226,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 onLoginClick={onLoginClick}
                 onOpenFolder={onOpenFolder}
                 onMcpAccept={onMcpAccept}
-                onMcpDecline={onMcpDecline}
+                onMcpDeny={onMcpDeny}
             />
             {!isChatHistoryDisabled &&
                 chatHistory &&

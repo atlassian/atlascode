@@ -709,7 +709,7 @@ const RovoDevView: React.FC = () => {
     const onMcpAccept = useCallback(
         (serverName?: string, all?: boolean) => {
             postMessage({
-                type: RovoDevViewResponseType.McpAcceptance,
+                type: RovoDevViewResponseType.McpConsentChoiceSubmit,
                 action: all ? 'acceptAll' : 'accept',
                 serverName,
             });
@@ -717,11 +717,11 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
-    const onMcpDecline = useCallback(
-        (serverName?: string, all?: boolean) => {
+    const onMcpDeny = useCallback(
+        (serverName?: string) => {
             postMessage({
-                type: RovoDevViewResponseType.McpAcceptance,
-                action: all ? 'denyAll' : 'deny',
+                type: RovoDevViewResponseType.McpConsentChoiceSubmit,
+                action: 'deny',
                 serverName,
             });
         },
@@ -758,7 +758,7 @@ const RovoDevView: React.FC = () => {
                 onLoginClick={onLoginClick}
                 onOpenFolder={onOpenFolder}
                 onMcpAccept={onMcpAccept}
-                onMcpDecline={onMcpDecline}
+                onMcpDeny={onMcpDeny}
             />
             {!hidePromptBox && (
                 <div className="input-section-container">

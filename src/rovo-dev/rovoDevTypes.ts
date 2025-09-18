@@ -46,22 +46,22 @@ export interface TechnicalPlan {
 
 // ---- Rovo Dev Chat States ----
 
-export interface InitializingState_Base {
+export interface AbstractInitializingState {
     state: 'Initializing';
     isPromptPending: boolean;
 }
 
-export interface InitializingOtherState extends InitializingState_Base {
+export interface InitializingOtherState extends AbstractInitializingState {
     subState: 'Other';
 }
 
-export interface InitializingDownladingState extends InitializingState_Base {
+export interface InitializingDownladingState extends AbstractInitializingState {
     subState: 'UpdatingBinaries';
     downloadedBytes: number;
     totalBytes: number;
 }
 
-export interface InitializingMcpAcceptanceState extends InitializingState_Base {
+export interface InitializingMcpAcceptanceState extends AbstractInitializingState {
     subState: 'MCPAcceptance';
     mcpIds: string[];
 }

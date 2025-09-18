@@ -33,16 +33,16 @@ export interface RovoDevChatRequest {
     enable_deep_plan?: boolean;
 }
 
-export interface RovoDevHealthcheckResponse_Base {
+export interface AbstractRovoDevHealthcheckResponse {
     version: string;
     sessionId: string | null; // from response header
 }
 
-export interface RovoDevHealthcheckBasicResponse extends RovoDevHealthcheckResponse_Base {
+export interface RovoDevHealthcheckBasicResponse extends AbstractRovoDevHealthcheckResponse {
     status: 'healthy' | 'unhealthy' | 'entitlement check failed';
 }
 
-export interface RovoDevHealthcheckEntitlementCheckFailedResponse extends RovoDevHealthcheckResponse_Base {
+export interface RovoDevHealthcheckEntitlementCheckFailedResponse extends AbstractRovoDevHealthcheckResponse {
     status: 'pending user review';
     mcp_servers: Record<string, string>;
 }

@@ -25,8 +25,8 @@ export const RovoDevLanding: React.FC<{
     onLoginClick: () => void;
     onOpenFolder: () => void;
     onMcpAccept: (serverName?: string, all?: boolean) => void;
-    onMcpDecline: (serverName?: string, all?: boolean) => void;
-}> = ({ currentState, onLoginClick, onOpenFolder, onMcpAccept, onMcpDecline }) => {
+    onMcpDeny: (serverName?: string) => void;
+}> = ({ currentState, onLoginClick, onOpenFolder, onMcpAccept, onMcpDeny }) => {
     if (process.env.ROVODEV_BBY) {
         return null;
     }
@@ -98,8 +98,8 @@ export const RovoDevLanding: React.FC<{
                                     </button>
                                 </td>
                                 <td>
-                                    <button style={inChatButtonStyles} onClick={() => onMcpDecline(serverName, false)}>
-                                        Decline
+                                    <button style={inChatButtonStyles} onClick={() => onMcpDeny(serverName)}>
+                                        Deny
                                     </button>
                                 </td>
                             </tr>

@@ -25,7 +25,7 @@ export const enum RovoDevViewResponseType {
     TriggerFeedback = 'triggerFeedback',
     SendFeedback = 'sendFeedback',
     LaunchJiraAuth = 'launchJiraAuth',
-    McpAcceptance = 'mcpAcceptance',
+    McpConsentChoiceSubmit = 'mcpConsentChoiceSubmit',
 }
 
 export interface ModifiedFile {
@@ -59,6 +59,6 @@ export type RovoDevViewResponse =
       >
     | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>
     | ReducerAction<
-          RovoDevViewResponseType.McpAcceptance,
-          { action: 'accept' | 'acceptAll' | 'deny' | 'denyAll'; serverName?: string }
+          RovoDevViewResponseType.McpConsentChoiceSubmit,
+          { action: 'accept' | 'acceptAll' | 'deny'; serverName?: string }
       >;
