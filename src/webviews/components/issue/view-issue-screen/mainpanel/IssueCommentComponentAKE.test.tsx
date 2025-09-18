@@ -154,7 +154,7 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
         );
         expect(await screen.findByText('This is a test comment', {}, { timeout: 3000 })).toBeTruthy();
         expect(await screen.findByText('Another test comment')).toBeTruthy();
-    }, 10000);
+    }, 20000);
     // TODO: uncomment when we understand reason of long test execution time on CI
     // it('renders editing comment area', async () => {
     //     render(
@@ -237,8 +237,8 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
 
         await act(() => render(<IssueCommentComponentWrapper />));
 
-        fireEvent.click(screen.getByPlaceholderText('Add a comment...'));
+        await act(() => fireEvent.click(screen.getByPlaceholderText('Add a comment...')));
         const editor = await screen.findByLabelText('Rich text editor for comments');
         expect(editor).toBeTruthy();
-    });
+    }, 30000);
 });
