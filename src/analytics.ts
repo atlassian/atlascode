@@ -203,6 +203,7 @@ type JiraPerfEvents =
     | 'ui.jira.editJiraIssue.update.lcp';
 
 interface RovoDevCommonParams {
+    rovoDevEnv: RovoDevEnv;
     appInstanceId: string;
     rovoDevSessionId: string;
     rovoDevPromptId: string;
@@ -325,6 +326,30 @@ export function rovoDevDetailsExpandedEvent(
 ) {
     return trackEvent('rovoDevDetailsExpanded', 'atlascode', {
         attributes: { rovoDevEnv, appInstanceId, sessionId, promptId },
+    });
+}
+
+export function rovoDevAiResultViewedEvent(
+    rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
+    sessionId: string,
+    promptId: string,
+    dwellMs: number,
+) {
+    return trackEvent('viewed', 'aiResult', {
+        attributes: {
+            rovoDevEnv,
+            appInstanceId,
+            sessionId,
+            promptId,
+            dwellMs,
+            xid: 'rovodev-sessions',
+            singleInstrumentationID: promptId,
+            aiFeatureName: 'rovodevSessions',
+            proactiveGeneratedAI: 0,
+            userGeneratedAI: 1,
+            isAIFeature: 1,
+        },
     });
 }
 

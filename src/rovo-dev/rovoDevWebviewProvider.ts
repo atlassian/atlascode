@@ -34,6 +34,7 @@ import { GitErrorCodes } from '../typings/git';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
+import { RovoDevDwellTracker } from './rovoDevDwellTracker';
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
 import { RovoDevProcessManager } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
@@ -78,6 +79,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _revertedChanges: string[] = [];
 
     private _disposables: Disposable[] = [];
+
+    private _dwellTracker?: RovoDevDwellTracker;
 
     private _extensionPath: string;
     private _extensionUri: Uri;
@@ -578,6 +581,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 Uri.file(resolvedPath),
                 `${filePath} (Rovo Dev)`,
             );
+            this._dwellTracker?.startDwellTimer();
         } else {
             let range: Range | undefined;
             if (_range && Array.isArray(_range)) {
@@ -592,6 +596,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     preview: true,
                     selection: range || undefined,
                 });
+                this._dwellTracker?.startDwellTimer();
             } catch (error) {
                 if (createOnFail) {
                     await getFsPromise((callback) => fs.writeFile(resolvedPath, '', callback));
@@ -944,6 +949,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await this._chatProvider.setReady(this._rovoDevApiClient);
 
         if (this.isBoysenberry) {
+            // Initialize global dwell tracker now that API client exists
+            this._dwellTracker?.dispose();
+            this._dwellTracker = new RovoDevDwellTracker(
+                this._telemetryProvider,
+                () => this._chatProvider.currentPromptId,
+                this._rovoDevApiClient,
+            );
             await this._chatProvider.executeReplay();
         }
 
@@ -976,6 +988,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._rovoDevApiClient = undefined;
         this._chatProvider.shutdown();
         this._telemetryProvider.shutdown();
+        this._dwellTracker?.dispose();
+        this._dwellTracker = undefined;
 
         if (!overrideFullMessage) {
             errorMessage = errorMessage

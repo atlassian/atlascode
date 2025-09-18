@@ -2,6 +2,7 @@ import { Container } from 'src/container';
 import { Logger } from 'src/logger';
 
 import {
+    rovoDevAiResultViewedEvent,
     rovoDevDetailsExpandedEvent,
     RovoDevEnv,
     rovoDevFileChangedActionEvent,
@@ -23,6 +24,7 @@ const rovoDevTelemetryEvents = {
     rovoDevStopActionEvent,
     rovoDevTechnicalPlanningShownEvent,
     rovoDevDetailsExpandedEvent,
+    rovoDevAiResultViewedEvent,
 };
 
 type ParametersSkip3<T extends (...args: any) => any> =
@@ -51,7 +53,7 @@ export class RovoDevTelemetryProvider {
         private readonly appInstanceId: string,
         private readonly onError: (error: Error) => void,
     ) {
-        this._perfLogger = new PerformanceLogger(this.appInstanceId);
+        this._perfLogger = new PerformanceLogger(this.rovoDevEnv, this.appInstanceId);
     }
 
     public startNewSession(chatSessionId: string, manuallyCreated: boolean) {
