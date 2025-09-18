@@ -544,8 +544,8 @@ export abstract class AbstractIssueEditorPage<
                                     errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
                                 }
 
-                            let markup = (
-                                 <Textfield
+                                let markup = (
+                                    <Textfield
                                         {...fieldArgs.fieldProps}
                                         value={defaultVal}
                                         className="ac-inputField"
@@ -555,50 +555,53 @@ export abstract class AbstractIssueEditorPage<
                                         )}
                                         placeholder={field.key === 'summary' && 'What needs to be done?'}
                                     />
-                            );
-                            if ((field as InputFieldUI).isMultiline) {
-                                markup = this.state.isAtlaskitEditorFFReceived ? (
-                                    this.state.isAtlaskitEditorEnabled ? (
-                                        <Suspense fallback={<div>Loading editor...</div>}>
-                                            <AtlaskitEditor
-                                                defaultValue={this.state.fieldValues[field.key] || ''}
-                                                onBlur={(content: string) => {
-                                                    this.handleInlineEdit(field, content);
-                                                }}
-                                            />
-                                        </Suspense>
-                                    ) : (
-                                        <Suspense fallback={<div>Loading...</div>}>
-                                            <JiraIssueTextAreaEditor
-                                                {...fieldArgs.fieldProps}
-                                                value={this.coerceToString(this.state.fieldValues[field.key])}
-                                                isDisabled={this.state.isSomethingLoading}
-                                                onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
-                                                    this.handleInlineEdit(field, val),
-                                                )}
-                                                fetchUsers={async (input: string) =>
-                                                    (await this.fetchUsers(input)).map((user) => ({
-                                                        displayName: user.displayName,
-                                                        avatarUrl: user.avatarUrls?.['48x48'],
-                                                        mention: this.state.siteDetails.isCloud
-                                                            ? `[~accountid:${user.accountId}]`
-                                                            : `[~${user.name}]`,
-                                                    }))
-                                                }
-                                                featureGateEnabled={this.state.isRteEnabled}
-                                            />
-                                        </Suspense>
-                                    )
-                                ) : (
-                                    <div>Waiting...</div>
                                 );
-                            }
-                            return (
-                                <div>
-                                    {markup}
-                                    {errDiv}
-                                </div>
-                            );
+                                if ((field as InputFieldUI).isMultiline) {
+                                    markup = this.state.isAtlaskitEditorFFReceived ? (
+                                        this.state.isAtlaskitEditorEnabled ? (
+                                            <Suspense fallback={<div>Loading editor...</div>}>
+                                                <AtlaskitEditor
+                                                    defaultValue={this.state.fieldValues[field.key] || ''}
+                                                    onBlur={(content: string) => {
+                                                        this.handleInlineEdit(field, content);
+                                                    }}
+                                                />
+                                            </Suspense>
+                                        ) : (
+                                            <Suspense fallback={<div>Loading...</div>}>
+                                                <JiraIssueTextAreaEditor
+                                                    {...fieldArgs.fieldProps}
+                                                    value={this.coerceToString(this.state.fieldValues[field.key])}
+                                                    isDisabled={
+                                                        this.state.isSomethingLoading ||
+                                                        this.state.isGeneratingSuggestions
+                                                    }
+                                                    onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
+                                                        this.handleInlineEdit(field, val),
+                                                    )}
+                                                    fetchUsers={async (input: string) =>
+                                                        (await this.fetchUsers(input)).map((user) => ({
+                                                            displayName: user.displayName,
+                                                            avatarUrl: user.avatarUrls?.['48x48'],
+                                                            mention: this.state.siteDetails.isCloud
+                                                                ? `[~accountid:${user.accountId}]`
+                                                                : `[~${user.name}]`,
+                                                        }))
+                                                    }
+                                                    featureGateEnabled={this.state.isRteEnabled}
+                                                />
+                                            </Suspense>
+                                        )
+                                    ) : (
+                                        <div>Waiting...</div>
+                                    );
+                                }
+                                return (
+                                    <div>
+                                        {markup}
+                                        {errDiv}
+                                    </div>
+                                );
                             }}
                         </Field>
                         {field.key === 'description' && <AISuggestionFooter vscodeApi={this._api} />}
