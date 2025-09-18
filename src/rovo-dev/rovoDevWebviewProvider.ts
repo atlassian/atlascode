@@ -332,6 +332,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     case RovoDevViewResponseType.OpenFolder:
                         await commands.executeCommand(Commands.WorkbenchOpenFolder);
                         break;
+
+                    case RovoDevViewResponseType.CheckFileExists:
+                        await this.checkFileExists(e.filePath, e.requestId);
+                        break;
                 }
             } catch (error) {
                 await this.processError(error, false);
@@ -585,6 +589,29 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 throw new Error('No workspace folder found');
             }
             return path.join(workspaceRoot, filePath);
+        }
+    }
+
+    private async checkFileExists(filePath: string, requestId: string): Promise<void> {
+        const webview = this._webView!;
+
+        try {
+            const resolvedPath = this.makeRelativePathAbsolute(filePath);
+            const exists = fs.existsSync(resolvedPath);
+
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.CheckFileExistsComplete,
+                requestId,
+                filePath,
+                exists,
+            });
+        } catch {
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.CheckFileExistsComplete,
+                requestId,
+                filePath,
+                exists: false,
+            });
         }
     }
 

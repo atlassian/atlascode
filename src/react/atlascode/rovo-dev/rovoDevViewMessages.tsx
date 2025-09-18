@@ -24,6 +24,7 @@ export const enum RovoDevViewResponseType {
     TriggerFeedback = 'triggerFeedback',
     SendFeedback = 'sendFeedback',
     LaunchJiraAuth = 'launchJiraAuth',
+    CheckFileExists = 'checkFileExists',
 }
 
 export interface ModifiedFile {
@@ -54,4 +55,5 @@ export type RovoDevViewResponse =
           RovoDevViewResponseType.SendFeedback,
           { feedbackType: FeedbackType; feedbackMessage: string; lastTenMessages?: string[]; canContact: boolean }
       >
-    | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>;
+    | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>
+    | ReducerAction<RovoDevViewResponseType.CheckFileExists, { filePath: string; requestId: string }>;
