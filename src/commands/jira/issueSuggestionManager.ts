@@ -75,7 +75,9 @@ export class IssueSuggestionManager {
     }
 
     async generate(data: SimplifiedTodoIssueData) {
-        return this.settings.isEnabled ? this.generateIssueSuggestion(data) : this.generateDummyIssueSuggestion(data);
+        return this.settings.isEnabled && this.settings.isAvailable
+            ? this.generateIssueSuggestion(data)
+            : this.generateDummyIssueSuggestion(data);
     }
 
     async sendFeedback(isPositive: boolean, data: SimplifiedTodoIssueData) {

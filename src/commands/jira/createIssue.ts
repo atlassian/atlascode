@@ -32,11 +32,12 @@ export async function createIssue(data: Uri | TodoIssueData | undefined, source?
     if (isTodoIssueData(data)) {
         const settings = await buildSuggestionSettings();
         const todoData = simplify(data);
+        const suggestionManager = new IssueSuggestionManager(settings);
 
         await Container.createIssueWebview.createOrShow(
             ViewColumn.Beside,
             {
-                description: descriptionForUri(data.uri),
+                ...(await suggestionManager.generateDummyIssueSuggestion(todoData)),
                 uri: data.uri,
                 position: data.insertionPoint,
                 onCreated: annotateComment,
@@ -46,8 +47,6 @@ export async function createIssue(data: Uri | TodoIssueData | undefined, source?
         );
 
         try {
-            const suggestionManager = new IssueSuggestionManager(settings);
-
             await suggestionManager.generate(todoData).then(async (suggestion) => {
                 await Container.createIssueWebview.fastUpdateFields({
                     summary: suggestion.summary,
