@@ -1,7 +1,6 @@
 import './RovoDev.css';
 import './RovoDevCodeHighlighting.css';
 
-import CloseIcon from '@atlaskit/icon/core/close';
 import { setGlobalTheme } from '@atlaskit/tokens';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
@@ -39,30 +38,6 @@ import {
 } from './utils';
 
 const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
-
-// TODO - replace with @atlaskit/icon implementation
-export const AiGenerativeTextSummaryIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 16 16"
-        fill="none"
-        role="presentation"
-        style={{ width: '16px', height: '16px', overflow: 'hidden', verticalAlign: 'bottom' }}
-    >
-        <path
-            d="M0 0H14V1.5H0V0ZM0 4.1663H14V5.6663H0V4.1663ZM10.7958 8.49428C10.9038 8.19825 11.1853 8.00129 11.5004 8.00129C11.8155 8.00129 12.0975 8.19825 12.2055 8.49428L12.8206 10.1807L14.507 10.7958C14.803 10.9038 15 11.1853 15 11.5004C15 11.8155 14.803 12.0975 14.507 12.2055L12.8206 12.8206L12.2055 14.507C12.0975 14.803 11.816 15 11.5009 15C11.1858 15 10.9038 14.803 10.7958 14.507L10.1807 12.8206L8.49428 12.2055C8.19825 12.0975 8.00129 11.816 8.00129 11.5009C8.00129 11.1858 8.19825 10.9038 8.49428 10.7958L10.1807 10.1807L10.7958 8.49428ZM0 8.3326H7V9.8326H0V8.3326ZM0 12.4989H5V13.9989H0V12.4989Z"
-            fill="currentColor"
-        />
-    </svg>
-);
-
-export const CloseIconDeepPlan: React.FC<{}> = () => {
-    return (
-        <span style={{ zoom: '0.5' }}>
-            <CloseIcon label="" />
-        </span>
-    );
-};
 
 function mapRovoDevDisabledReasonToSubState(reason: RovoDevDisabledReason): DisabledState['subState'] {
     switch (reason) {
