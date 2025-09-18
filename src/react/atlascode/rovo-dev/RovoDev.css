@@ -633,7 +633,7 @@ body {
 }
 
 .updated-files-action {
-    color: var(--vscode-button-secondaryForeground);
+    color: var(--vscode-input-foreground);
     background-color: inherit;
     border: none;
     border-radius: 4px;
@@ -641,7 +641,7 @@ body {
 }
 
 #bordered-button {
-    border: 1px solid var(--vscode-button-border);
+    border: 1px solid var(--vscode-editorWidget-border);
 }
 
 .updated-files-action:disabled {
@@ -650,6 +650,7 @@ body {
 
 .updated-files-action:hover {
     background-color: var(--vscode-button-secondaryHoverBackground);
+    color: var(--vscode-button-secondaryForeground)
 }
 
 .secondary {
@@ -851,11 +852,13 @@ body {
 }
 
 .vscode-high-contrast .prompt-button-primary,
-.vscode-high-contrast .prompt-button-secondary {
+.vscode-high-contrast .prompt-button-secondary,
+.vscode-high-contrast .prompt-button-secondary-open {
     border: 2px solid var(--vscode-contrastBorder);
 }
 .vscode-high-contrast .prompt-button-primary:hover,
-.vscode-high-contrast .prompt-button-secondary:hover {
+.vscode-high-contrast .prompt-button-secondary:hover,
+.vscode-high-contrast .prompt-button-secondary-open:hover {
     border: 2px solid var(--vscode-focusBorder);
 }
 
