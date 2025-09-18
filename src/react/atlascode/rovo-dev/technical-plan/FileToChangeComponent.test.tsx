@@ -10,9 +10,7 @@ jest.mock('../common/common', () => ({
             {filePath}
         </button>
     ),
-    mdParser: {
-        render: (text: string) => `<p>${text}</p>`,
-    },
+    MarkedDown: ({ value }: { value: string }) => <span>{value}</span>,
 }));
 
 describe('FileToChangeComponent', () => {
