@@ -147,6 +147,10 @@ describe('PullRequestChatItem', () => {
         });
 
         render(<PullRequestChatItem msg={mockMessage} />);
+        const link = screen.getByRole('link');
+        expect(link).toHaveAttribute('target', '_blank');
+        expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'));
+        expect(link).toHaveAttribute('rel', expect.stringContaining('noreferrer'));
 
         expect(screen.getByText(/Bold text/)).toBeTruthy();
         expect(screen.getByText(/and normal text/)).toBeTruthy();

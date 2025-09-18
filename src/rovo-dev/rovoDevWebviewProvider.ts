@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import path from 'path';
 import { CommandContext, setCommandContext } from 'src/commandContext';
+import { env, Uri } from 'vscode';
 import { configuration } from 'src/config/configuration';
 import { getFsPromise } from 'src/util/fsPromises';
 import { setTimeout } from 'timers/promises';
@@ -209,6 +210,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         if (!this._chatProvider.pendingCancellation) {
                             await this._chatProvider.executeCancel(false);
                         }
+                        break;
+
+                    case RovoDevViewResponseType.OpenExternalLink:
+                        env.openExternal(Uri.parse(e.url));
                         break;
 
                     case RovoDevViewResponseType.OpenFile:

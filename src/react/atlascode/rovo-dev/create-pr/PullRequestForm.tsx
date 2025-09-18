@@ -146,9 +146,18 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
 };
 
 export const PullRequestChatItem: React.FC<{ msg: DefaultMessage }> = ({ msg }) => {
+    const { postMessage } = useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>();
     const content = (
         <div
             style={{ display: 'flex', flexDirection: 'column' }}
+            onClick={(e) => {
+                const target = e.target as HTMLElement;
+                const anchor = target.closest('a') as HTMLAnchorElement | null;
+                if (anchor && anchor.href && /^https?:\/\//i.test(anchor.href)) {
+                    e.preventDefault();
+                    postMessage({ type: RovoDevViewResponseType.OpenExternalLink, url: anchor.href });
+                }
+            }}
             dangerouslySetInnerHTML={{ __html: mdParser.render(msg.text || '') }}
         />
     );

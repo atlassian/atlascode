@@ -4,6 +4,7 @@ import { RovoDevPrompt } from 'src/rovo-dev/rovoDevTypes';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 
 export const enum RovoDevViewResponseType {
+    OpenExternalLink = 'openExternalLink',
     Prompt = 'prompt',
     CancelResponse = 'cancelResponse',
     OpenFile = 'openFile',
@@ -32,6 +33,8 @@ export interface ModifiedFile {
 }
 
 export type RovoDevViewResponse =
+    | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { url: string }>
+    |
     | ReducerAction<RovoDevViewResponseType.Prompt, RovoDevPrompt>
     | ReducerAction<RovoDevViewResponseType.CancelResponse>
     | ReducerAction<RovoDevViewResponseType.OpenFile, { filePath: string; tryShowDiff: boolean; range?: number[] }>
