@@ -11,6 +11,7 @@ interface FeedbackObject {
     feedbackMessage: string;
     canContact: boolean;
     lastTenMessages?: string[];
+    rovoDevSessionId?: string;
 }
 
 const FEEDBACK_ENDPOINT = `https://jsd-widget.atlassian.com/api/embeddable/57037b9e-743e-407d-bb03-441a13c7afd0/request?requestTypeId=3066`;
@@ -18,7 +19,7 @@ const FEEDBACK_ENDPOINT = `https://jsd-widget.atlassian.com/api/embeddable/57037
 export class RovoDevFeedbackManager {
     public static async submitFeedback(feedback: FeedbackObject, isBBY: boolean = false): Promise<void> {
         const transport = getAxiosInstance();
-        const context = this.getContext(isBBY);
+        const context = this.getContext(isBBY, feedback.rovoDevSessionId);
 
         let userEmail = 'do-not-reply@atlassian.com';
         let userName = 'unknown';
@@ -101,12 +102,13 @@ export class RovoDevFeedbackManager {
         vscode.window.showInformationMessage('Thank you for your feedback!');
     }
 
-    private static getContext(isBBY: boolean = false): any {
+    private static getContext(isBBY: boolean = false, rovoDevSessionId?: string): any {
         return {
             component: isBBY ? 'Boysenberry - vscode' : 'IDE - vscode',
             extensionVersion: Container.version,
             vscodeVersion: vscode.version,
             rovoDevVersion: MIN_SUPPORTED_ROVODEV_VERSION,
+            ...(rovoDevSessionId && { rovoDevSessionId }),
         };
     }
 }

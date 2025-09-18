@@ -17,6 +17,12 @@ export interface IConfig {
     enableCurlLogging: boolean;
     enableHttpsTunnel: boolean;
     helpExplorerEnabled: boolean;
+    rovodev: RovoDevConfig;
+}
+
+export interface RovoDevConfig {
+    showKeybinding: boolean;
+    debugPanelEnabled: boolean;
 }
 
 export interface JiraConfig {
@@ -187,6 +193,11 @@ const emptyJiraConfig: JiraConfig = {
     showCreateIssueProblems: false,
 };
 
+const emptyRovoDevConfig: RovoDevConfig = {
+    showKeybinding: false,
+    debugPanelEnabled: false,
+};
+
 const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {
     enabled: true,
 };
@@ -254,4 +265,5 @@ export const emptyConfig: IConfig = {
     enableCurlLogging: false,
     enableHttpsTunnel: false,
     helpExplorerEnabled: true,
+    rovodev: emptyRovoDevConfig,
 };

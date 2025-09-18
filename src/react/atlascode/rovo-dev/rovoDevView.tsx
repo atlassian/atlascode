@@ -23,6 +23,7 @@ import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
 import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
+import { DebugPanel } from './tools/DebugPanel';
 import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
     ChatMessage,
@@ -90,6 +91,8 @@ const RovoDevView: React.FC = () => {
     const [isFeedbackFormVisible, setIsFeedbackFormVisible] = React.useState(false);
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
     const [promptContextCollection, setPromptContextCollection] = useState<RovoDevContextItem[]>([]);
+    const [debugPanelEnabled, setDebugPanelEnabled] = useState(false);
+    const [debugPanelContext, setDebugPanelContext] = useState<Record<string, string>>({});
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -374,6 +377,11 @@ const RovoDevView: React.FC = () => {
                     setWorkspacePath(event.workspacePath || '');
                     setHomeDir(event.homeDir || '');
                     setCurrentState({ state: 'WaitingForPrompt' });
+                    break;
+
+                case RovoDevProviderMessageType.SetDebugPanel:
+                    setDebugPanelEnabled(event.enabled);
+                    setDebugPanelContext(event.context);
                     break;
 
                 case RovoDevProviderMessageType.SetInitializing:
@@ -690,6 +698,7 @@ const RovoDevView: React.FC = () => {
 
     return (
         <div className="rovoDevChat">
+            {debugPanelEnabled && <DebugPanel currentState={currentState} debugContext={debugPanelContext} />}
             <ChatStream
                 chatHistory={history}
                 renderProps={{
