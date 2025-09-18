@@ -135,7 +135,7 @@ const buildRequestBody = (prompt: string, context?: string): any => ({
     },
 });
 
-const buildRequestHeaders = (authInfo: BasicAuthInfo): any => ({
+const buildRequestHeaders = (authInfo: BasicAuthInfo): Record<string, string> => ({
     'Content-Type': 'application/json',
     'X-Product': ProductJira.key,
     Authorization: 'Basic ' + Buffer.from(`${authInfo.username}:${authInfo.password}`).toString('base64'),
