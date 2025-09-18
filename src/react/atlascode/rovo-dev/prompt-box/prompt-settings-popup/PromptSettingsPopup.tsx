@@ -1,9 +1,9 @@
+import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-summary';
+import CrossIcon from '@atlaskit/icon/core/cross';
 import CustomizeIcon from '@atlaskit/icon/core/customize';
 import Popup, { PopupComponentProps } from '@atlaskit/popup';
 import Toggle from '@atlaskit/toggle';
 import React from 'react';
-
-import { AiGenerativeTextSummaryIcon } from '../../rovoDevView';
 interface PromptSettingsPopupProps {
     onToggleDeepPlan: () => void;
     isDeepPlanEnabled: boolean;
@@ -37,23 +37,27 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({ onToggleDeepP
             shouldRenderToParent
             isOpen={isOpen}
             trigger={(props) => (
-                <button
-                    {...props}
-                    onClick={() => setIsOpen((prev) => !prev)}
-                    aria-selected={isOpen}
-                    className="prompt-button-secondary"
-                    aria-label="Prompt settings"
-                    style={
-                        isOpen
-                            ? {
-                                  border: '1px solid var(--vscode-focusBorder)',
-                                  backgroundColor: 'var(--vscode-inputOption-activeBackground)',
-                              }
-                            : {}
-                    }
-                >
-                    <CustomizeIcon label="Prompt settings" />
-                </button>
+                <>
+                    {isOpen ? (
+                        <button
+                            {...props}
+                            onClick={() => setIsOpen((prev) => !prev)}
+                            className="prompt-button-secondary-open"
+                            aria-label="Prompt settings (open)"
+                        >
+                            <CrossIcon label="Close prompt settings" />
+                        </button>
+                    ) : (
+                        <button
+                            {...props}
+                            onClick={() => setIsOpen((prev) => !prev)}
+                            className="prompt-button-secondary"
+                            aria-label="Prompt settings"
+                        >
+                            <CustomizeIcon label="Prompt settings" />
+                        </button>
+                    )}
+                </>
             )}
             content={() => (
                 <PromptSettingsItem
@@ -87,7 +91,7 @@ const PromptSettingsItem: React.FC<{
                 {(() => {
                     switch (label) {
                         case 'Plan':
-                            return <AiGenerativeTextSummaryIcon />;
+                            return <AiGenerativeTextSummaryIcon label="Deep plan" />;
                         default:
                             return <CustomizeIcon label="Customize prompt" />;
                     }

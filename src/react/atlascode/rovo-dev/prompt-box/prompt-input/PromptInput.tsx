@@ -1,4 +1,5 @@
 import AddIcon from '@atlaskit/icon/core/add';
+import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-summary';
 import SendIcon from '@atlaskit/icon/core/arrow-up';
 import CrossIcon from '@atlaskit/icon/core/cross';
 import VideoStopOverlayIcon from '@atlaskit/icon/core/video-stop-overlay';
@@ -7,10 +8,8 @@ import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
-
 type NonDisabledState = Exclude<State, DisabledState>;
 
-import { AiGenerativeTextSummaryIcon } from '../../rovoDevView';
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
 import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
 import {
@@ -168,7 +167,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             <AddIcon label="Add context" />
                         </button>
                     </Tooltip>
-                    <Tooltip content="Prompt customizations">
+                    <Tooltip content="Preferences">
                         <PromptSettingsPopup
                             onToggleDeepPlan={onDeepPlanToggled}
                             isDeepPlanEnabled={isDeepPlanEnabled}
@@ -182,7 +181,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                 title="Deep plan is enabled"
                                 onClick={() => onDeepPlanToggled()}
                             >
-                                <AiGenerativeTextSummaryIcon />
+                                <AiGenerativeTextSummaryIcon label="deep plan icon" />
                                 <CrossIcon size="small" label="disable deep plan" />
                             </div>
                         </Tooltip>
