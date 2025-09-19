@@ -73,9 +73,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                     onFetchIssues={mockOnFetchIssues}
                     fetchUsers={mockFetchUsers}
                     fetchImage={mockFetchImage}
-                    isRteEnabled={false}
                     isAtlaskitEditorEnabled={true}
-                    isAtlaskitEditorFFReceived={true}
                 />,
             ),
         );
@@ -101,9 +99,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                     onFetchIssues={mockOnFetchIssues}
                     fetchUsers={mockFetchUsers}
                     fetchImage={mockFetchImage}
-                    isRteEnabled={false}
                     isAtlaskitEditorEnabled={true}
-                    isAtlaskitEditorFFReceived={true}
                 />,
             ),
         );

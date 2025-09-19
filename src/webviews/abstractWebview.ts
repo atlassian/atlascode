@@ -140,7 +140,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
         }
 
         // The webview might not be ready at this point; see getFeatureFlags usage in `onMessageReceived`
-        this.fireFeatureGates([Features.JiraRichText]);
+        this.fireFeatureGates([Features.AtlaskitEditor]);
         this.fireExperimentGates([]);
         this.fireAdditionalSettings({
             rovoDevEnabled: Container.isRovoDevEnabled,
@@ -237,7 +237,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 }
                 case 'getFeatureFlags': {
                     // Ensures the page is rendered and AbstractIssueEditorPage added listener for FF
-                    this.fireFeatureGates([Features.JiraRichText, Features.AtlaskitEditor]);
+                    this.fireFeatureGates([Features.AtlaskitEditor]);
                     this.fireExperimentGates([]);
                 }
             }

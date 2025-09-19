@@ -121,7 +121,6 @@ describe('IssueCommentComponent', () => {
                 isEditingComment={false}
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
-                isAtlaskitEditorFFReceived={true}
             />,
         );
 
@@ -145,7 +144,6 @@ describe('IssueCommentComponent', () => {
                 isEditingComment={false}
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
-                isAtlaskitEditorFFReceived={true}
             />,
         );
 
@@ -166,22 +164,17 @@ describe('IssueCommentComponent', () => {
                     fetchUsers={mockFetchUsers}
                     fetchImage={mockFetchImage}
                     onDelete={mockOnDelete}
-                    isRteEnabled={true}
                     commentText=""
                     onCommentTextChange={mockOnCommentTextChange}
                     isEditingComment={false}
                     onEditingCommentChange={mockOnEditingCommentChange}
                     isAtlaskitEditorEnabled={false}
-                    isAtlaskitEditorFFReceived={true}
                 />,
             ),
         );
         await screen.findByText('Another test comment');
 
         await act(() => fireEvent.click(screen.getAllByText('Edit')[0]));
-        const rteToggle = await screen.findByLabelText('rte toggle');
-        expect(rteToggle).toBeTruthy();
-        await act(() => fireEvent.click(screen.getByLabelText('rte toggle')));
         const textArea = screen.getAllByRole('textbox')[1];
         fireEvent.change(textArea, { target: { value: 'Updated comment' } });
         fireEvent.click(screen.getByText('Save'));
@@ -206,7 +199,6 @@ describe('IssueCommentComponent', () => {
                 isEditingComment={false}
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
-                isAtlaskitEditorFFReceived={true}
             />,
         );
 
@@ -231,13 +223,11 @@ describe('IssueCommentComponent', () => {
                     fetchUsers={mockFetchUsers}
                     fetchImage={mockFetchImage}
                     onDelete={mockOnDelete}
-                    isRteEnabled={true}
                     commentText={commentText}
                     onCommentTextChange={setCommentText}
                     isEditingComment={isEditingComment}
                     onEditingCommentChange={setIsEditingComment}
                     isAtlaskitEditorEnabled={false}
-                    isAtlaskitEditorFFReceived={true}
                 />
             );
         };
@@ -245,7 +235,6 @@ describe('IssueCommentComponent', () => {
         render(<IssueCommentComponentWrapper />);
 
         fireEvent.click(screen.getByPlaceholderText('Add a comment...'));
-        fireEvent.click(await screen.findByLabelText('rte toggle'));
         fireEvent.focus(screen.getByRole('textbox'));
         fireEvent.input(screen.getByRole('textbox'), { target: { value: 'New comment' } });
         fireEvent.click(screen.getByText('Save'));
