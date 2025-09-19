@@ -5,6 +5,7 @@
 ### Features
 
 - Update pipeline schema to the current latest version
+- Add the ability to search issue through all connected sites
 
 ## What's new in 3.8.15
 
