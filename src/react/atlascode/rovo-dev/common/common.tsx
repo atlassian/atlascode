@@ -17,6 +17,37 @@ export const mdParser = new MarkdownIt({
 
 mdParser.linkify.set({ fuzzyLink: false });
 
+const defaultInlineRenderer = mdParser.renderer.rules.text || ((tokens, idx) => tokens[idx].content);
+mdParser.renderer.rules.text = (tokens, idx, options, env, renderer) => {
+    const token = tokens[idx];
+    const content = token.content;
+
+    const colonPattern = /^([^:]*:)(.*)$/;
+    const match = content.match(colonPattern);
+
+    if (match) {
+        const [, boldPart, remainingPart] = match;
+
+        const exceptions = [
+            /^https?:/i, // URLs (http:, https:)
+            /^ftp:/i, // FTP URLs
+            /^file:/i, // File URLs
+            /^[a-z]:\\/i, // Windows drive paths (C:\, D:\)
+            /\d+:/, // Port numbers (8080:, 3000:)
+            /\/\/.*:/, // Any URL-like pattern with ://
+            /^[^a-zA-Z]*$/, // Only symbols/numbers (no letters)
+        ];
+
+        const isException = exceptions.some((pattern) => pattern.test(boldPart));
+
+        if (boldPart.length <= 100 && boldPart.trim().length > 0 && !isException && /[a-zA-Z]/.test(boldPart)) {
+            return `<strong>${boldPart}</strong>${remainingPart}`;
+        }
+    }
+
+    return defaultInlineRenderer(tokens, idx, options, env, renderer);
+};
+
 export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
 }

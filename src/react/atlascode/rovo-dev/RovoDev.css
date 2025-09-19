@@ -339,6 +339,11 @@ body {
     align-self: flex-start;
 }
 
+.agent-message strong {
+    font-weight: bold;
+    color: var(--vscode-editor-foreground);
+}
+
 .user-message {
     background-color: var(--vscode-editor-selectionBackground);
     align-self: flex-end;
@@ -353,6 +358,11 @@ body {
     word-break: break-word;
     color: var(--vscode-editor-foreground);
     max-width: 100%;
+}
+
+.message-content strong {
+    font-weight: bold;
+    color: var(--vscode-editor-foreground);
 }
 
 /* Pull Request button styles */
