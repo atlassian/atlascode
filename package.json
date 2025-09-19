@@ -134,28 +134,28 @@
                 "title": "Trail Logs",
                 "icon": "$(terminal)",
                 "category": "Rovo Dev",
-                "enablement": "atlascode:rovoDevEnabled"
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
                 "command": "atlascode.openRovoDevConfig",
                 "title": "Open Settings File",
                 "category": "Rovo Dev",
                 "description": "Opens the ~/.rovodev/config.yaml file in the editor.",
-                "enablement": "atlascode:rovoDevEnabled"
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
                 "command": "atlascode.openRovoDevMcpJson",
                 "title": "Open MCP configuration",
                 "category": "Rovo Dev",
                 "description": "Opens the ~/.rovodev/mcp.json file in the editor.",
-                "enablement": "atlascode:rovoDevEnabled"
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
                 "command": "atlascode.openRovoDevGlobalMemory",
                 "title": "Open Global Memory file",
                 "category": "Rovo Dev",
                 "description": "Opens the ~/.rovodev/.agent.md file in the editor.",
-                "enablement": "atlascode:rovoDevEnabled"
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
                 "command": "atlascode.rovodev.shareFeedback",
@@ -631,22 +631,22 @@
                 },
                 {
                     "command": "atlascode.rovodev.showTerminal",
-                    "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView",
+                    "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "navigation@2"
                 },
                 {
                     "command": "atlascode.openRovoDevConfig",
-                    "when": "view == atlascode.views.rovoDev.webView",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu1@1"
                 },
                 {
                     "command": "atlascode.openRovoDevGlobalMemory",
-                    "when": "view == atlascode.views.rovoDev.webView",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu1@2"
                 },
                 {
                     "command": "atlascode.openRovoDevMcpJson",
-                    "when": "view == atlascode.views.rovoDev.webView",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu1@3"
                 },
                 {
