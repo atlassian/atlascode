@@ -645,9 +645,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         }))
                     }
                     fetchImage={(img) => this.fetchImage(img)}
-                    isRteEnabled={this.state.isRteEnabled}
                     isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}
-                    isAtlaskitEditorFFReceived={this.state.isAtlaskitEditorFFReceived}
                     onIssueUpdate={this.handleChildIssueUpdate}
                 />
                 {this.advancedMain()}
@@ -675,9 +673,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 this.state.fieldValues['project'] &&
                                 this.state.fieldValues['project'].projectTypeKey === 'service_desk'
                             }
-                            isRteEnabled={this.state.isRteEnabled}
                             isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}
-                            isAtlaskitEditorFFReceived={this.state.isAtlaskitEditorFFReceived}
                             commentText={this.state.commentText}
                             onCommentTextChange={this.handleCommentTextChange}
                             isEditingComment={this.state.isEditingComment}

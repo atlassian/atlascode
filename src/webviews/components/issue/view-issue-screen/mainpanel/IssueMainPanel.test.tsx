@@ -73,9 +73,7 @@ describe('IssueMainPanel', () => {
                     onFetchIssues={mockOnFetchIssues}
                     fetchUsers={mockFetchUsers}
                     fetchImage={mockFetchImage}
-                    isRteEnabled={true}
                     isAtlaskitEditorEnabled={false}
-                    isAtlaskitEditorFFReceived={true}
                 />,
             ),
         );
@@ -101,9 +99,7 @@ describe('IssueMainPanel', () => {
                     onFetchIssues={mockOnFetchIssues}
                     fetchUsers={mockFetchUsers}
                     fetchImage={mockFetchImage}
-                    isRteEnabled={true}
                     isAtlaskitEditorEnabled={false}
-                    isAtlaskitEditorFFReceived={true}
                 />,
             ),
         );
@@ -111,9 +107,6 @@ describe('IssueMainPanel', () => {
         await act(async () => {
             fireEvent.click(renderedDescription);
         });
-        const rteToggle = await screen.findByLabelText('rte toggle');
-        expect(rteToggle).toBeTruthy();
-        fireEvent.click(screen.getByLabelText('rte toggle'));
         const textArea = screen.getAllByRole('textbox')[0];
         fireEvent.change(textArea, { target: { value: 'Updated description' } });
         fireEvent.click(screen.getByText('Save'));

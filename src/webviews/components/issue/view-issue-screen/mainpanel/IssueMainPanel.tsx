@@ -4,22 +4,15 @@ import InlineDialog from '@atlaskit/inline-dialog';
 import Tooltip from '@atlaskit/tooltip';
 import { IssueType, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atlassianlabs/jira-pi-meta-models';
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
+import { AdfAwareContent } from '../../../AdfAwareContent';
+import { RenderedContent } from '../../../RenderedContent';
 import { AttachmentList } from '../../AttachmentList';
 import { AttachmentsModal } from '../../AttachmentsModal';
-// these four components can't be imported at the same time, so use lazy loading
-const AtlaskitEditor = lazy(() => import('../../common/AtlaskitEditor/AtlaskitEditor'));
-const JiraIssueTextAreaEditor = lazy(() => import('../../common/JiraIssueTextArea'));
-
-const RenderedContent = lazy(() => {
-    return import('../../../RenderedContent').then((module) => ({ default: module.RenderedContent }));
-});
-const AdfAwareContent = lazy(() => {
-    return import('../../../AdfAwareContent').then((module) => ({ default: module.AdfAwareContent }));
-});
-
+import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
+import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 import WorklogForm from '../../WorklogForm';
 import Worklogs from '../../Worklogs';
 import { AddContentDropdown } from './AddContentDropDown';
@@ -44,10 +37,8 @@ type Props = {
     onFetchIssues: (input: string) => Promise<any>;
     fetchUsers: (input: string) => Promise<any[]>;
     fetchImage: (url: string) => Promise<string>;
-    isRteEnabled?: boolean;
     onIssueUpdate?: (issueKey: string, fieldKey: string, newValue: any) => void;
     isAtlaskitEditorEnabled?: boolean;
-    isAtlaskitEditorFFReceived?: boolean;
 };
 
 const IssueMainPanel: React.FC<Props> = ({
@@ -68,10 +59,8 @@ const IssueMainPanel: React.FC<Props> = ({
     onFetchIssues,
     fetchUsers,
     fetchImage,
-    isRteEnabled = false,
     onIssueUpdate,
     isAtlaskitEditorEnabled,
-    isAtlaskitEditorFFReceived = false,
 }) => {
     const attachments = fields['attachment'] && fieldValues['attachment'] ? fieldValues['attachment'] : undefined;
     const subtasks =
@@ -191,46 +180,39 @@ const IssueMainPanel: React.FC<Props> = ({
                         {loadingField === 'description' ? <p>Saving...</p> : null}
                     </div>
                     {isEditingDescription || loadingField === 'description' ? (
-                        isAtlaskitEditorFFReceived ? (
-                            <Suspense fallback={<div>Loading...</div>}>
-                                {isAtlaskitEditorEnabled ? (
-                                    <AtlaskitEditor
-                                        defaultValue={descriptionText}
-                                        onSave={(content) => {
-                                            handleInlineEdit(fields['description'], content);
-                                            setIsEditingDescription(false);
-                                        }}
-                                        onCancel={() => {
-                                            setDescriptionText(getDescriptionTextForEditor());
-                                            setIsEditingDescription(false);
-                                        }}
-                                        onContentChange={(content) => {
-                                            setDescriptionText(content);
-                                        }}
-                                    />
-                                ) : (
-                                    <JiraIssueTextAreaEditor
-                                        value={descriptionText}
-                                        onChange={(e: string) => {
-                                            setDescriptionText(e);
-                                        }}
-                                        onSave={(i: string) => {
-                                            handleInlineEdit(fields['description'], i);
-                                            setIsEditingDescription(false);
-                                        }}
-                                        onCancel={() => {
-                                            setDescriptionText(getDescriptionTextForEditor());
-                                            setIsEditingDescription(false);
-                                        }}
-                                        fetchUsers={fetchUsers}
-                                        isDescription
-                                        saving={loadingField === 'description'}
-                                        featureGateEnabled={isRteEnabled}
-                                    />
-                                )}
-                            </Suspense>
+                        isAtlaskitEditorEnabled ? (
+                            <AtlaskitEditor
+                                defaultValue={descriptionText}
+                                onSave={(content) => {
+                                    handleInlineEdit(fields['description'], content);
+                                    setIsEditingDescription(false);
+                                }}
+                                onCancel={() => {
+                                    setDescriptionText(getDescriptionTextForEditor());
+                                    setIsEditingDescription(false);
+                                }}
+                                onContentChange={(content) => {
+                                    setDescriptionText(content);
+                                }}
+                            />
                         ) : (
-                            <div>Waiting...</div>
+                            <JiraIssueTextAreaEditor
+                                value={descriptionText}
+                                onChange={(e: string) => {
+                                    setDescriptionText(e);
+                                }}
+                                onSave={(i: string) => {
+                                    handleInlineEdit(fields['description'], i);
+                                    setIsEditingDescription(false);
+                                }}
+                                onCancel={() => {
+                                    setDescriptionText(getDescriptionTextForEditor());
+                                    setIsEditingDescription(false);
+                                }}
+                                fetchUsers={fetchUsers}
+                                isDescription
+                                saving={loadingField === 'description'}
+                            />
                         )
                     ) : (
                         <div
@@ -250,18 +232,12 @@ const IssueMainPanel: React.FC<Props> = ({
                             }}
                             className="ac-inline-input-view-p"
                         >
-                            {isAtlaskitEditorFFReceived ? (
-                                <Suspense fallback={<div>Loading description content...</div>}>
-                                    {isAtlaskitEditorEnabled ? (
-                                        <AdfAwareContent content={descriptionText} fetchImage={fetchImage} />
-                                    ) : renderedDescription ? (
-                                        <RenderedContent html={renderedDescription} fetchImage={fetchImage} />
-                                    ) : (
-                                        <p style={{ margin: 0 }}>{descriptionText}</p>
-                                    )}
-                                </Suspense>
+                            {isAtlaskitEditorEnabled ? (
+                                <AdfAwareContent content={descriptionText} fetchImage={fetchImage} />
+                            ) : renderedDescription ? (
+                                <RenderedContent html={renderedDescription} fetchImage={fetchImage} />
                             ) : (
-                                <div>Waiting description content...</div>
+                                <p style={{ margin: 0 }}>{descriptionText}</p>
                             )}
                         </div>
                     )}

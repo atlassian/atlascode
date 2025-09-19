@@ -29,7 +29,7 @@ import {
 import { Tooltip } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import EdiText, { EdiTextType } from 'react-editext';
 import { v4 } from 'uuid';
 
@@ -54,11 +54,9 @@ import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
+import AtlaskitEditor from './common/AtlaskitEditor/AtlaskitEditor';
+import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
-
-// Use lazy loading for editor components to avoid conflicts
-const AtlaskitEditor = lazy(() => import('./common/AtlaskitEditor/AtlaskitEditor'));
-const JiraIssueTextAreaEditor = lazy(() => import('./common/JiraIssueTextArea'));
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
 import { ParticipantList } from './ParticipantList';
@@ -82,13 +80,11 @@ export interface CommonEditorViewState extends Message {
     showPMF: boolean;
     errorDetails: any;
     commentInputValue: string;
-    isRteEnabled: boolean;
     isRovoDevEnabled: boolean;
     isGeneratingSuggestions?: boolean;
     summaryKey: string;
     isRendered?: boolean;
     isAtlaskitEditorEnabled: boolean;
-    isAtlaskitEditorFFReceived: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -104,12 +100,10 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     isErrorBannerOpen: false,
     errorDetails: undefined,
     commentInputValue: '',
-    isRteEnabled: false,
     isRovoDevEnabled: false,
     summaryKey: v4(),
     isRendered: false,
     isAtlaskitEditorEnabled: false,
-    isAtlaskitEditorFFReceived: false,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -226,9 +220,7 @@ export abstract class AbstractIssueEditorPage<
             }
             case 'updateFeatureFlags': {
                 this.setState({
-                    isRteEnabled: e.featureFlags.rteEnabled,
                     isAtlaskitEditorEnabled: e.featureFlags[Features.AtlaskitEditor] || false,
-                    isAtlaskitEditorFFReceived: true,
                 });
                 break;
             }
@@ -557,43 +549,33 @@ export abstract class AbstractIssueEditorPage<
                                     />
                                 );
                                 if ((field as InputFieldUI).isMultiline) {
-                                    markup = this.state.isAtlaskitEditorFFReceived ? (
-                                        this.state.isAtlaskitEditorEnabled ? (
-                                            <Suspense fallback={<div>Loading editor...</div>}>
-                                                <AtlaskitEditor
-                                                    defaultValue={this.state.fieldValues[field.key] || ''}
-                                                    onBlur={(content: string) => {
-                                                        this.handleInlineEdit(field, content);
-                                                    }}
-                                                />
-                                            </Suspense>
-                                        ) : (
-                                            <Suspense fallback={<div>Loading...</div>}>
-                                                <JiraIssueTextAreaEditor
-                                                    {...fieldArgs.fieldProps}
-                                                    value={this.coerceToString(this.state.fieldValues[field.key])}
-                                                    isDisabled={
-                                                        this.state.isSomethingLoading ||
-                                                        this.state.isGeneratingSuggestions
-                                                    }
-                                                    onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
-                                                        this.handleInlineEdit(field, val),
-                                                    )}
-                                                    fetchUsers={async (input: string) =>
-                                                        (await this.fetchUsers(input)).map((user) => ({
-                                                            displayName: user.displayName,
-                                                            avatarUrl: user.avatarUrls?.['48x48'],
-                                                            mention: this.state.siteDetails.isCloud
-                                                                ? `[~accountid:${user.accountId}]`
-                                                                : `[~${user.name}]`,
-                                                        }))
-                                                    }
-                                                    featureGateEnabled={this.state.isRteEnabled}
-                                                />
-                                            </Suspense>
-                                        )
+                                    markup = this.state.isAtlaskitEditorEnabled ? (
+                                        <AtlaskitEditor
+                                            defaultValue={this.state.fieldValues[field.key] || ''}
+                                            onBlur={(content: string) => {
+                                                this.handleInlineEdit(field, content);
+                                            }}
+                                        />
                                     ) : (
-                                        <div>Waiting...</div>
+                                        <JiraIssueTextAreaEditor
+                                            {...fieldArgs.fieldProps}
+                                            value={this.coerceToString(this.state.fieldValues[field.key])}
+                                            isDisabled={
+                                                this.state.isSomethingLoading || this.state.isGeneratingSuggestions
+                                            }
+                                            onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
+                                                this.handleInlineEdit(field, val),
+                                            )}
+                                            fetchUsers={async (input: string) =>
+                                                (await this.fetchUsers(input)).map((user) => ({
+                                                    displayName: user.displayName,
+                                                    avatarUrl: user.avatarUrls?.['48x48'],
+                                                    mention: this.state.siteDetails.isCloud
+                                                        ? `[~accountid:${user.accountId}]`
+                                                        : `[~${user.name}]`,
+                                                }))
+                                            }
+                                        />
                                     );
                                 }
                                 return (

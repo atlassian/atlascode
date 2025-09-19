@@ -123,7 +123,6 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
                 isEditingComment={false}
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={true}
-                isAtlaskitEditorFFReceived={true}
             />,
         );
 
@@ -148,7 +147,6 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
                     isEditingComment={false}
                     onEditingCommentChange={mockOnEditingCommentChange}
                     isAtlaskitEditorEnabled={true}
-                    isAtlaskitEditorFFReceived={true}
                 />,
             ),
         );
@@ -173,7 +171,6 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
     //             isEditingComment={false}
     //             onEditingCommentChange={mockOnEditingCommentChange}
     //             isAtlaskitEditorEnabled={true}
-    //             isAtlaskitEditorFFReceived={true}
     //         />,
     //     );
     //     const editButton = await screen.findByText('Edit');
@@ -199,7 +196,6 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
                 isEditingComment={false}
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={true}
-                isAtlaskitEditorFFReceived={true}
             />,
         );
 
@@ -224,13 +220,11 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
                     fetchUsers={mockFetchUsers}
                     fetchImage={mockFetchImage}
                     onDelete={mockOnDelete}
-                    isRteEnabled={true}
                     commentText={commentText}
                     onCommentTextChange={setCommentText}
                     isEditingComment={isEditingComment}
                     onEditingCommentChange={setIsEditingComment}
                     isAtlaskitEditorEnabled={true}
-                    isAtlaskitEditorFFReceived={true}
                 />
             );
         };
