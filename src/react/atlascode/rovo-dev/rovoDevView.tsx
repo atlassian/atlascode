@@ -553,13 +553,6 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
-    // Reset promptText after it has been set to avoid re-setting the same text
-    React.useEffect(() => {
-        if (promptText !== undefined) {
-            setPromptText(undefined);
-        }
-    }, [promptText]);
-
     const executeCodePlan = useCallback(() => {
         if (currentState.state !== 'WaitingForPrompt') {
             return;
@@ -661,6 +654,10 @@ const RovoDevView: React.FC = () => {
 
     const handleShowFeedbackForm = useCallback(() => {
         setIsFeedbackFormVisible(true);
+    }, []);
+
+    const handlePromptTextSet = useCallback(() => {
+        setPromptText(undefined);
     }, []);
 
     const executeSendFeedback = useCallback(
@@ -784,6 +781,7 @@ const RovoDevView: React.FC = () => {
                             handleMemoryCommand={executeGetAgentMemory}
                             handleTriggerFeedbackCommand={handleShowFeedbackForm}
                             promptText={promptText}
+                            onPromptTextSet={handlePromptTextSet}
                         />
                     </div>
                     <div className="ai-disclaimer">Uses AI. Verify results.</div>

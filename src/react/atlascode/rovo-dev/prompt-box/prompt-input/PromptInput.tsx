@@ -34,6 +34,7 @@ interface PromptInputBoxProps {
     handleMemoryCommand: () => void;
     handleTriggerFeedbackCommand: () => void;
     promptText?: string;
+    onPromptTextSet?: () => void;
 }
 
 const TextAreaMessages: Record<NonDisabledState['state'], string> = {
@@ -85,6 +86,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     handleMemoryCommand,
     handleTriggerFeedbackCommand,
     promptText,
+    onPromptTextSet,
 }) => {
     const [editor, setEditor] = React.useState<ReturnType<typeof createEditor>>(undefined);
     const [isEmpty, setIsEmpty] = React.useState(true);
@@ -120,10 +122,10 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     React.useEffect(() => {
         if (editor && promptText !== undefined) {
             editor.setValue(promptText);
-            // Reset promptText after setting to avoid re-setting the same text
             setIsEmpty(false); // Update isEmpty state since we set text
+            onPromptTextSet?.(); // Notify parent that text has been set
         }
-    }, [editor, promptText]);
+    }, [editor, promptText, onPromptTextSet]);
 
     React.useEffect(() => {
         if (!editor) {

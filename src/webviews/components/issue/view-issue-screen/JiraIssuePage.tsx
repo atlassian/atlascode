@@ -16,6 +16,7 @@ import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../../i
 import { LegacyPMFData } from '../../../../ipc/messaging';
 import { AtlascodeErrorBoundary } from '../../../../react/atlascode/common/ErrorBoundary';
 import { readFilesContentAsync } from '../../../../util/files';
+import { createRovoDevTemplate } from '../../../../util/rovoDevTemplate';
 import { ConnectionTimeout } from '../../../../util/time';
 import { AtlLoader } from '../../AtlLoader';
 import ErrorBanner from '../../ErrorBanner';
@@ -169,9 +170,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     handleSetRovoDevPrompt = () => {
-        const issueKey = this.state.key;
-        const issueUrl = `${this.state.siteDetails.baseLinkUrl}/browse/${issueKey}`;
-        const promptText = `Please work on [${issueKey}](${issueUrl})`;
+        const promptText = createRovoDevTemplate(this.state.key, this.state.siteDetails);
 
         this.postMessage({
             action: 'setRovoDevPromptText',
