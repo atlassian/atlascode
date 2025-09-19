@@ -26,7 +26,6 @@ export class SearchAllJiraHelper {
 
         const quickPick = window.createQuickPick<QuickPickIssue>();
         quickPick.placeholder = 'Search all Jira work items';
-        quickPick.matchOnDescription = true;
         quickPick.matchOnDetail = true;
 
         if (searchTerm) {

@@ -95,12 +95,12 @@ export class SearchJiraHelper {
         });
 
         const quickPick = window.createQuickPick<QuickPickIssue>();
-        quickPick.matchOnDescription = true;
         quickPick.matchOnDetail = true;
         quickPick.placeholder = 'Search Jira work items locally';
 
         const searchAllOption: QuickPickIssue = {
-            label: 'Search all Jira work items',
+            label: '',
+            description: 'Search all Jira work items',
             iconPath: new ThemeIcon('search'),
             issue: null,
             searchTerm: '',

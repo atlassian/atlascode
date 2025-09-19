@@ -26,12 +26,14 @@ const issue1 = forceCastTo<MinimalORIssueLink<DetailedSiteInfo>>({
     key: 'ISSUE-1',
     summary: 'Test Issue',
     siteDetails: { id: 'site1' },
+    status: { name: 'To Do' },
 });
 
 const issue2 = forceCastTo<MinimalORIssueLink<DetailedSiteInfo>>({
     key: 'ISSUE-2',
     summary: 'Another Issue',
     siteDetails: { id: 'site2' },
+    status: { name: 'In Progress' },
 });
 
 const createMockQuickPick = () => ({
@@ -177,13 +179,17 @@ describe('SearchJiraHelper', () => {
                 expect.arrayContaining([
                     expect.objectContaining({
                         label: issue1.key,
-                        description: issue1.summary,
+                        description: issue1.status.name,
                         issue: issue1,
                     }),
                     expect.objectContaining({
                         label: issue2.key,
-                        description: issue2.summary,
+                        description: issue2.status.name,
                         issue: issue2,
+                    }),
+                    expect.objectContaining({
+                        description: 'Search all Jira work items',
+                        issue: null,
                     }),
                 ]),
             );
@@ -199,6 +205,7 @@ describe('SearchJiraHelper', () => {
             const issue1Items = mockQuickPick.items.filter((item: any) => item.label === issue1.key);
 
             expect(issue1Items).toHaveLength(1);
+            expect(mockQuickPick.items).toHaveLength(2);
         });
 
         it('should execute ShowIssue command when issue is selected', async () => {
@@ -253,7 +260,14 @@ describe('SearchJiraHelper', () => {
             await registeredCallback();
 
             expect(vscode.window.createQuickPick).toHaveBeenCalled();
-            expect(mockQuickPick.items).toEqual([]);
+            expect(mockQuickPick.items).toHaveLength(1);
+            expect(mockQuickPick.items[0]).toEqual(
+                expect.objectContaining({
+                    description: 'Search all Jira work items',
+                    issue: null,
+                    searchTerm: '',
+                }),
+            );
         });
     });
 });
