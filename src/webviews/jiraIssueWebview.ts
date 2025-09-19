@@ -1128,8 +1128,8 @@ export class JiraIssueWebview
                     }
                     break;
                 }
-                case 'invokeRovodev': {
-                    Container.rovodevWebviewProvider.invokeRovoDevAskCommand((msg as any).prompt);
+                case 'setRovoDevPromptText': {
+                    Container.rovodevWebviewProvider.setPromptTextWithFocus((msg as any).text);
                     break;
                 }
                 case 'openPullRequest': {

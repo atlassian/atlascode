@@ -26,6 +26,7 @@ export const enum RovoDevViewResponseType {
     SendFeedback = 'sendFeedback',
     LaunchJiraAuth = 'launchJiraAuth',
     McpConsentChoiceSubmit = 'mcpConsentChoiceSubmit',
+    SetPromptText = 'setPromptText',
 }
 
 export interface ModifiedFile {
@@ -60,4 +61,5 @@ export type RovoDevViewResponse =
           { feedbackType: FeedbackType; feedbackMessage: string; lastTenMessages?: string[]; canContact: boolean }
       >
     | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>
-    | ReducerAction<RovoDevViewResponseType.McpConsentChoiceSubmit, { choice: McpConsentChoice; serverName?: string }>;
+    | ReducerAction<RovoDevViewResponseType.McpConsentChoiceSubmit, { choice: McpConsentChoice; serverName?: string }>
+    | ReducerAction<RovoDevViewResponseType.SetPromptText, { text: string }>;

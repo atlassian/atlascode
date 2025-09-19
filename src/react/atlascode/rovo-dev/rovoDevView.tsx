@@ -68,6 +68,7 @@ const RovoDevView: React.FC = () => {
     const [promptContextCollection, setPromptContextCollection] = useState<RovoDevContextItem[]>([]);
     const [debugPanelEnabled, setDebugPanelEnabled] = useState(false);
     const [debugPanelContext, setDebugPanelContext] = useState<Record<string, string>>({});
+    const [promptText, setPromptText] = useState<string | undefined>(undefined);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -455,6 +456,11 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.ShowFeedbackForm:
                     setIsFeedbackFormVisible(true);
                     break;
+
+                case RovoDevProviderMessageType.SetPromptText:
+                    setPromptText(event.text);
+                    break;
+
                 default:
                     // this is never supposed to happen since there aren't other type of messages
                     appendResponse({
@@ -546,6 +552,13 @@ const RovoDevView: React.FC = () => {
             type: RovoDevViewResponseType.WebviewReady,
         });
     }, [postMessage]);
+
+    // Reset promptText after it has been set to avoid re-setting the same text
+    React.useEffect(() => {
+        if (promptText !== undefined) {
+            setPromptText(undefined);
+        }
+    }, [promptText]);
 
     const executeCodePlan = useCallback(() => {
         if (currentState.state !== 'WaitingForPrompt') {
@@ -770,6 +783,7 @@ const RovoDevView: React.FC = () => {
                             onCopy={handleCopyResponse}
                             handleMemoryCommand={executeGetAgentMemory}
                             handleTriggerFeedbackCommand={handleShowFeedbackForm}
+                            promptText={promptText}
                         />
                     </div>
                     <div className="ai-disclaimer">Uses AI. Verify results.</div>

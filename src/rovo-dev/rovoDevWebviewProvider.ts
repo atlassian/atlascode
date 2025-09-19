@@ -826,6 +826,49 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
+    /**
+     * Sets the text in the prompt input field of the RovoDev webview
+     * @param text The text to set in the prompt input field
+     */
+    public setPromptText(text: string): void {
+        const webView = this._webView;
+        if (!webView) {
+            return;
+        }
+
+        webView.postMessage({
+            type: RovoDevProviderMessageType.SetPromptText,
+            text: text,
+        });
+    }
+
+    /**
+     * Sets the text in the prompt input field with focus, using the same reliable approach as invokeRovoDevAskCommand
+     * @param text The text to set in the prompt input field
+     */
+    public async setPromptTextWithFocus(text: string): Promise<void> {
+        // Always focus on the specific vscode view, even if disabled (so user can see the login prompt)
+        commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+
+        // Wait for the webview to initialize, up to 5 seconds
+        const initialized = await this.waitFor(
+            (value) => !!value,
+            () => !!this._webView,
+            5000,
+            50,
+        );
+
+        if (!initialized) {
+            return;
+        }
+
+        const webView = this._webView!;
+        webView.postMessage({
+            type: RovoDevProviderMessageType.SetPromptText,
+            text: text,
+        });
+    }
+
     private async waitFor<T>(
         condition: (value: T) => Promise<boolean> | boolean,
         check: () => Promise<T> | T,
