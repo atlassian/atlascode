@@ -1,19 +1,17 @@
 import { setTimeout } from 'timers/promises';
 
-type ExecuteCheckReturnType<T> = { checkPassed: true; result: T } | { checkPassed: false };
-
-const executeCheck = async <T>(
-    check: () => Promise<T> | T,
-    condition: (value: T | undefined) => Promise<boolean> | boolean,
-): Promise<ExecuteCheckReturnType<T>> => {
-    try {
-        const result = await check();
-        const passed = await condition(result);
-        return passed ? { checkPassed: true, result } : { checkPassed: false };
-    } catch {
-        return { checkPassed: false };
+class WaitForError<T> extends Error {
+    constructor(
+        msg: string,
+        public readonly value: T | undefined,
+    ) {
+        super(msg);
     }
-};
+}
+
+function isWaitForError<T>(error: Error): error is WaitForError<T> {
+    return error instanceof WaitForError;
+}
 
 /**
  * Polls the provided `check` function every `interval` milliseconds until the callback `condition` returns true, or the timeout time `timeout` occurrs.
@@ -40,27 +38,29 @@ export async function waitFor<T>({
     abortIf?: () => boolean;
 }): Promise<T> {
     if (abortIf?.()) {
-        throw new Error('aborted');
+        throw new WaitForError('aborted', undefined);
     }
 
-    let checkOutcome = await executeCheck(check, condition);
+    let result = await check();
+    let checkPassed = await condition(result);
 
-    while (!checkOutcome.checkPassed && timeout) {
+    while (!checkPassed && timeout) {
         await setTimeout(interval);
         timeout -= interval;
 
         if (abortIf?.()) {
-            throw new Error('aborted');
+            throw new WaitForError('aborted', result);
         }
 
-        checkOutcome = await executeCheck(check, condition);
+        result = await check();
+        checkPassed = await condition(result);
     }
 
-    if (!checkOutcome.checkPassed) {
-        throw new Error('failed');
+    if (!checkPassed) {
+        throw new WaitForError('failed', result);
     }
 
-    return checkOutcome.result;
+    return result;
 }
 
 /**
@@ -72,12 +72,16 @@ export async function waitFor<T>({
  * - `timeout` The timeout, in milliseconds, after which we give up.
  * - `interval` The interval in milliseconds.
  * - `abortIf` An optional callback, executed between intervals, that causes this wait to abort prematurely if its condition verifies.
- * @returns The last value returned by `check` when the `condition` satisfies, or undefined if either `abortIf` returns true, or the `timeout` occurs.
+ * @returns The last value returned by `check` when any termination condition triggered, or undefined if `check` was never invoked.
  */
 export async function safeWaitFor<T>(...args: Parameters<typeof waitFor<T>>) {
     try {
         return await waitFor(...args);
-    } catch {
-        return undefined;
+    } catch (error) {
+        if (isWaitForError<T>(error)) {
+            return error.value;
+        } else {
+            return undefined;
+        }
     }
 }

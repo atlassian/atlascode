@@ -537,7 +537,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         // special handling for when the Rovo Dev process has been terminated
         if (this._processState === RovoDevProcessState.Terminated) {
-            await RovoDevProcessManager.initializeRovoDev(this._context);
+            await RovoDevProcessManager.initializeRovoDev(this._context, true);
 
             this._processState = RovoDevProcessState.Starting;
             this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
@@ -847,7 +847,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             await this.rovoDevApiClient!.acceptMcpTerms(serverName!, decision!);
         }
 
-        await this.initializeWithHealthcheck(this.rovoDevApiClient!, 1000);
+        await this.initializeWithHealthcheck(this.rovoDevApiClient!, 5000);
     }
 
     /**
@@ -932,8 +932,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // if result is undefined, it means we didn't manage to contact Rovo Dev within the allotted time
         // TODO - this scenario needs a better handling
         if (!result) {
-            await rovoDevClient.shutdown();
-
             this.signalProcessTerminated(
                 `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within ${timeout} ms`,
                 true,
@@ -947,8 +945,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // if result is unhealthy, it means Rovo Dev has failed during initialization (e.g., some MCP servers failed to start)
         // we can't continue - shutdown and set the process as terminated so the user can try again.
         if (result.status === 'unhealthy') {
-            await rovoDevClient.shutdown();
-
             this.signalProcessTerminated(
                 'Failed to initialize Rovo Dev.\nPlease start a new chat session to try again.',
                 true,
@@ -959,8 +955,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // this scenario is when the user is not allowed to run Rovo Dev because it's disabled by the Jira administrator
         // TODO - handle this better: AXON-1024
         if (result.status === 'entitlement check failed') {
-            await rovoDevClient.shutdown();
-
             this.signalProcessTerminated(
                 'Rovo Dev is currently disabled in your Jira site.\nPlease contact your administrator to enable it.',
                 true,

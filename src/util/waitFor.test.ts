@@ -38,19 +38,28 @@ describe('safeWaitFor', () => {
         expect(result).toBe(2);
     });
 
-    it('returns undefined if timeout occurs', async () => {
+    it('returns last check() value if timeout occurs', async () => {
         let value = 0;
         const check = () => ++value;
         const condition = (v: number) => v >= 100;
         const result = await safeWaitFor({ condition, check, timeout: 50, interval: 10 });
-        expect(result).toBeUndefined();
+        expect(result).toBe(6);
     });
 
-    it('returns undefined if aborted', async () => {
+    it('returns last check() if aborted', async () => {
         let value = 0;
         const check = () => ++value;
-        const condition = (v: number) => v >= 3;
-        const abortIf = () => value === 2;
+        const condition = (v: number) => v >= 10;
+        const abortIf = () => value === 5;
+        const result = await safeWaitFor({ condition, check, timeout: 1000, interval: 10, abortIf });
+        expect(result).toBe(5);
+    });
+
+    it('returns undefined if aborted immediately', async () => {
+        let value = 0;
+        const check = () => ++value;
+        const condition = (v: number) => v >= 10;
+        const abortIf = () => true;
         const result = await safeWaitFor({ condition, check, timeout: 1000, interval: 10, abortIf });
         expect(result).toBeUndefined();
     });

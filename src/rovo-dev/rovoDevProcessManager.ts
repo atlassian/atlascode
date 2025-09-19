@@ -11,6 +11,7 @@ import { Disposable, ExtensionContext, Terminal, Uri, window, workspace } from '
 import { isBasicAuthInfo, ProductJira } from '../atlclients/authInfo';
 import { rovodevInfo } from '../constants';
 import { Container } from '../container';
+import { RovoDevApiClient } from './rovoDevApiClient';
 import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
 
 export const MIN_SUPPORTED_ROVODEV_VERSION = packageJson.rovoDev.version;
@@ -222,8 +223,13 @@ export class RovoDevProcessManager {
     private static async internalInitializeRovoDev(
         context: ExtensionContext,
         credentials: CloudCredentials | undefined,
+        forceNewInstance?: boolean,
     ) {
-        this.failIfRovoDevInstanceIsRunning();
+        if (forceNewInstance) {
+            this.stopRovoDevInstance();
+        } else {
+            this.failIfRovoDevInstanceIsRunning();
+        }
 
         this.currentCredentials = credentials;
 
@@ -246,7 +252,7 @@ export class RovoDevProcessManager {
         }
     }
 
-    public static async initializeRovoDev(context: ExtensionContext) {
+    public static async initializeRovoDev(context: ExtensionContext, forceNewInstance?: boolean) {
         if (this.asyncLocked) {
             throw new Error('Multiple initialization of Rovo Dev attempted');
         }
@@ -254,9 +260,12 @@ export class RovoDevProcessManager {
         this.asyncLocked = true;
 
         try {
-            this.failIfRovoDevInstanceIsRunning();
+            if (!forceNewInstance) {
+                this.failIfRovoDevInstanceIsRunning();
+            }
+
             const credentials = await getCloudCredentials();
-            await this.internalInitializeRovoDev(context, credentials);
+            await this.internalInitializeRovoDev(context, credentials, forceNewInstance);
         } finally {
             this.asyncLocked = false;
         }
@@ -276,8 +285,7 @@ export class RovoDevProcessManager {
                     return;
                 }
 
-                this.stopRovoDevInstance();
-                await this.internalInitializeRovoDev(context, credentials);
+                await this.internalInitializeRovoDev(context, credentials, true);
             } finally {
                 this.asyncLocked = false;
             }
@@ -337,6 +345,7 @@ abstract class RovoDevInstance extends Disposable {
 class RovoDevTerminalInstance extends RovoDevInstance {
     private rovoDevTerminal: Terminal | undefined;
     private started = false;
+    private httpPort: number = 0;
     private disposables: Disposable[] = [];
 
     public override get stopped() {
@@ -394,6 +403,8 @@ class RovoDevTerminalInstance extends RovoDevInstance {
                         },
                     });
 
+                    this.httpPort = port;
+
                     const onDidCloseTerminal = window.onDidCloseTerminal((event) => {
                         if (event === this.rovoDevTerminal) {
                             this.finalizeStop();
@@ -420,11 +431,25 @@ class RovoDevTerminalInstance extends RovoDevInstance {
     }
 
     public override async stop(): Promise<void> {
-        await this.rovoDevWebviewProvider.shutdownRovoDev();
-        this.finalizeStop();
+        if (!this.stopped) {
+            await this.shutdownRovoDev();
+            this.rovoDevWebviewProvider.signalProcessTerminated();
+            this.finalizeStop();
+        }
+    }
+
+    // don't rely on the RovoDevWebviewProvider for shutting Rovo Dev down, as it may
+    // already have set itself as Terminated and lost the reference to the API client
+    private async shutdownRovoDev() {
+        if (this.httpPort) {
+            try {
+                await new RovoDevApiClient('localhost', this.httpPort).shutdown();
+            } catch {}
+        }
     }
 
     private finalizeStop() {
+        this.httpPort = 0;
         this.rovoDevTerminal?.dispose();
         this.rovoDevTerminal = undefined;
         this.disposables.forEach((x) => x.dispose());
