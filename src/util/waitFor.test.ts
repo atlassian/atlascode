@@ -1,5 +1,9 @@
 import { safeWaitFor, waitFor } from './waitFor';
 
+jest.mock('timers/promises', () => ({
+    setTimeout: jest.fn().mockResolvedValue(undefined),
+}));
+
 describe('waitFor', () => {
     it('resolves when condition is met', async () => {
         let value = 0;
