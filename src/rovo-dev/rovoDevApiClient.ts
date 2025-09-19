@@ -6,7 +6,7 @@ class RovoDevApiError extends Error {
     constructor(
         message: string,
         public httpStatus: number,
-        public apiResponse: Response,
+        public apiResponse: Response | undefined,
     ) {
         super(message);
     }
@@ -75,23 +75,28 @@ export class RovoDevApiClient {
     private async fetchApi(restApi: string, method: 'GET' | 'POST'): Promise<Response>;
     private async fetchApi(restApi: string, method: 'POST', body: BodyInit | null): Promise<Response>;
     private async fetchApi(restApi: string, method: 'GET' | 'POST', body?: BodyInit | null): Promise<Response> {
-        const response = await fetch(this._baseApiUrl + restApi, {
-            method,
-            headers: {
-                accept: 'text/event-stream',
-                'Content-Type': 'application/json',
-            },
-            body,
-        });
+        try {
+            const response = await fetch(this._baseApiUrl + restApi, {
+                method,
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body,
+            });
 
-        if (statusIsSuccessful(response.status)) {
-            return response;
-        } else {
-            throw new RovoDevApiError(
-                `Failed to fetch '${restApi} API: HTTP ${response.status}`,
-                response.status,
-                response,
-            );
+            if (statusIsSuccessful(response.status)) {
+                return response;
+            } else {
+                throw new RovoDevApiError(
+                    `Failed to fetch '${restApi} API: HTTP ${response.status}`,
+                    response.status,
+                    response,
+                );
+            }
+        } catch (error) {
+            const reason = error.cause?.code || error.message || error;
+            throw new RovoDevApiError(`Failed to fetch '${restApi} API: ${reason}`, 0, undefined);
         }
     }
 

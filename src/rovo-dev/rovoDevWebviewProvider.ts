@@ -3,7 +3,7 @@ import path from 'path';
 import { CommandContext, setCommandContext } from 'src/commandContext';
 import { configuration } from 'src/config/configuration';
 import { getFsPromise } from 'src/util/fsPromises';
-import { setTimeout } from 'timers/promises';
+import { safeWaitFor } from 'src/util/waitFor';
 import { v4 } from 'uuid';
 import {
     CancellationToken,
@@ -783,7 +783,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         commands.executeCommand('atlascode.views.rovoDev.webView.focus');
 
         // Wait for the webview to initialize, up to 5 seconds
-        const initialized = await this.waitFor(
+        const initialized = await safeWaitFor(
             (value) => !!value,
             () => !!this._webView,
             5000,
@@ -824,32 +824,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             type: RovoDevProviderMessageType.ContextAdded,
             context: contextItem,
         });
-    }
-
-    private async waitFor<T>(
-        condition: (value: T) => Promise<boolean> | boolean,
-        check: () => Promise<T> | T,
-        timeoutMs: number,
-        interval: number,
-        abortIf?: () => boolean,
-    ): Promise<T> {
-        if (abortIf?.()) {
-            throw new Error('aborted');
-        }
-
-        let result = await check();
-        const checkPassed = await condition(result);
-        while (!checkPassed && timeoutMs) {
-            await setTimeout(interval);
-            if (abortIf?.()) {
-                throw new Error('aborted');
-            }
-
-            timeoutMs -= interval;
-            result = await check();
-        }
-
-        return result;
     }
 
     private _dispose() {
@@ -938,18 +912,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const webView = this._webView!;
 
         // wait for Rovo Dev to be ready, for up to 10 seconds
-        let result: Awaited<ReturnType<typeof this.executeHealthcheckInfo>>;
-        try {
-            result = await this.waitFor(
-                (info) => !!info,
-                () => this.executeHealthcheckInfo(),
-                timeout,
-                500,
-                () => !this.rovoDevApiClient,
-            );
-        } catch {
-            result = undefined;
-        }
+        const result = await safeWaitFor(
+            (info) => !!info && info.status !== 'unhealthy', // TODO: remove check for unhealthy after Rovo Dev fixes this status
+            () => this.executeHealthcheckInfo(),
+            timeout,
+            500,
+            () => !this.rovoDevApiClient,
+        );
 
         const rovoDevClient = this._rovoDevApiClient;
 
@@ -965,7 +934,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // if result is undefined, it means we didn't manage to contact Rovo Dev within the allotted time
         // TODO - this scenario needs a better handling
         if (!result) {
-            await rovoDevClient.shutdown();
+            //await rovoDevClient.shutdown();
 
             this.signalProcessTerminated(
                 `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within ${timeout} ms`,
@@ -980,7 +949,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // if result is unhealthy, it means Rovo Dev has failed during initialization (e.g., some MCP servers failed to start)
         // we can't continue - shutdown and set the process as terminated so the user can try again.
         if (result.status === 'unhealthy') {
-            await rovoDevClient.shutdown();
+            //await rovoDevClient.shutdown();
 
             this.signalProcessTerminated(
                 'Failed to initialize Rovo Dev.\nPlease start a new chat session to try again.',
@@ -992,7 +961,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // this scenario is when the user is not allowed to run Rovo Dev because it's disabled by the Jira administrator
         // TODO - handle this better: AXON-1024
         if (result.status === 'entitlement check failed') {
-            await rovoDevClient.shutdown();
+            //await rovoDevClient.shutdown();
 
             this.signalProcessTerminated(
                 'Rovo Dev is currently disabled in your Jira site.\nPlease contact your administrator to enable it.',

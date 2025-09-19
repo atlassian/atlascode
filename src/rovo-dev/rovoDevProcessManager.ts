@@ -413,7 +413,7 @@ class RovoDevTerminalInstance extends RovoDevInstance {
                     rovoDevWebviewProvider.signalProcessStarted(port);
                     resolve();
                 } catch (error) {
-                    reject(new Error(`failed to execute Rovo Dev: ${error.message || error.toString()}`));
+                    reject(new Error(`failed to execute Rovo Dev: ${error.message || error}`));
                 }
             });
         });
