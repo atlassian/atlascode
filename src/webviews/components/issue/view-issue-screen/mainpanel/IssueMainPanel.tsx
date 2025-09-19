@@ -7,9 +7,11 @@ import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atla
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
+import { AdfAwareContent } from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
 import { AttachmentList } from '../../AttachmentList';
 import { AttachmentsModal } from '../../AttachmentsModal';
+import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 import WorklogForm from '../../WorklogForm';
 import Worklogs from '../../Worklogs';
@@ -35,8 +37,8 @@ type Props = {
     onFetchIssues: (input: string) => Promise<any>;
     fetchUsers: (input: string) => Promise<any[]>;
     fetchImage: (url: string) => Promise<string>;
-    isRteEnabled?: boolean;
     onIssueUpdate?: (issueKey: string, fieldKey: string, newValue: any) => void;
+    isAtlaskitEditorEnabled?: boolean;
 };
 
 const IssueMainPanel: React.FC<Props> = ({
@@ -57,10 +59,9 @@ const IssueMainPanel: React.FC<Props> = ({
     onFetchIssues,
     fetchUsers,
     fetchImage,
-    isRteEnabled = false,
     onIssueUpdate,
+    isAtlaskitEditorEnabled,
 }) => {
-    //field values
     const attachments = fields['attachment'] && fieldValues['attachment'] ? fieldValues['attachment'] : undefined;
     const subtasks =
         fields['subtasks'] && fieldValues['subtasks'] && !isEpic && !fieldValues['issuetype'].subtask
@@ -77,8 +78,27 @@ const IssueMainPanel: React.FC<Props> = ({
     const [enableLinkedIssues, setEnableLinkedIssues] = React.useState(false);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [isInlineDialogOpen, setIsInlineDialogOpen] = React.useState(false);
-    const [descriptionText, setDescriptionText] = React.useState(defaultDescription);
+    // Handle descriptionText - convert ADF object to JSON string for editor input
+    const getDescriptionTextForEditor = React.useCallback(() => {
+        if (
+            typeof defaultDescription === 'object' &&
+            defaultDescription.version === 1 &&
+            defaultDescription.type === 'doc'
+        ) {
+            return JSON.stringify(defaultDescription);
+        }
+        return defaultDescription || '';
+    }, [defaultDescription]);
+
+    const [descriptionText, setDescriptionText] = React.useState(() => getDescriptionTextForEditor());
     const [isEditingDescription, setIsEditingDescription] = React.useState(false);
+
+    // Update descriptionText when defaultDescription changes (after save)
+    React.useEffect(() => {
+        if (!isEditingDescription) {
+            setDescriptionText(getDescriptionTextForEditor());
+        }
+    }, [defaultDescription, isEditingDescription, getDescriptionTextForEditor]);
 
     const handleStatusChange = (issueKey: string, statusName: string) => {
         if (onIssueUpdate) {
@@ -160,24 +180,40 @@ const IssueMainPanel: React.FC<Props> = ({
                         {loadingField === 'description' ? <p>Saving...</p> : null}
                     </div>
                     {isEditingDescription || loadingField === 'description' ? (
-                        <JiraIssueTextAreaEditor
-                            value={descriptionText}
-                            onChange={(e: string) => {
-                                setDescriptionText(e);
-                            }}
-                            onSave={(i: string) => {
-                                handleInlineEdit(fields['description'], i);
-                                setIsEditingDescription(false);
-                            }}
-                            onCancel={() => {
-                                setDescriptionText(defaultDescription);
-                                setIsEditingDescription(false);
-                            }}
-                            fetchUsers={fetchUsers}
-                            isDescription
-                            saving={loadingField === 'description'}
-                            featureGateEnabled={isRteEnabled}
-                        />
+                        isAtlaskitEditorEnabled ? (
+                            <AtlaskitEditor
+                                defaultValue={descriptionText}
+                                onSave={(content) => {
+                                    handleInlineEdit(fields['description'], content);
+                                    setIsEditingDescription(false);
+                                }}
+                                onCancel={() => {
+                                    setDescriptionText(getDescriptionTextForEditor());
+                                    setIsEditingDescription(false);
+                                }}
+                                onContentChange={(content) => {
+                                    setDescriptionText(content);
+                                }}
+                            />
+                        ) : (
+                            <JiraIssueTextAreaEditor
+                                value={descriptionText}
+                                onChange={(e: string) => {
+                                    setDescriptionText(e);
+                                }}
+                                onSave={(i: string) => {
+                                    handleInlineEdit(fields['description'], i);
+                                    setIsEditingDescription(false);
+                                }}
+                                onCancel={() => {
+                                    setDescriptionText(getDescriptionTextForEditor());
+                                    setIsEditingDescription(false);
+                                }}
+                                fetchUsers={fetchUsers}
+                                isDescription
+                                saving={loadingField === 'description'}
+                            />
+                        )
                     ) : (
                         <div
                             data-testid="issue.description"
@@ -191,10 +227,14 @@ const IssueMainPanel: React.FC<Props> = ({
                                 display: 'flex',
                                 alignItems: 'flex-start',
                             }}
-                            onClick={() => setIsEditingDescription(true)}
+                            onClick={() => {
+                                setIsEditingDescription(true);
+                            }}
                             className="ac-inline-input-view-p"
                         >
-                            {renderedDescription ? (
+                            {isAtlaskitEditorEnabled ? (
+                                <AdfAwareContent content={descriptionText} fetchImage={fetchImage} />
+                            ) : renderedDescription ? (
                                 <RenderedContent html={renderedDescription} fetchImage={fetchImage} />
                             ) : (
                                 <p style={{ margin: 0 }}>{descriptionText}</p>
