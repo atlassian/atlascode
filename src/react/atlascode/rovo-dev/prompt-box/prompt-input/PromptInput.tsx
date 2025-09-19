@@ -33,6 +33,8 @@ interface PromptInputBoxProps {
     onCopy: () => void;
     handleMemoryCommand: () => void;
     handleTriggerFeedbackCommand: () => void;
+    promptText?: string;
+    onPromptTextSet?: () => void;
 }
 
 const TextAreaMessages: Record<NonDisabledState['state'], string> = {
@@ -83,6 +85,8 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     onCopy,
     handleMemoryCommand,
     handleTriggerFeedbackCommand,
+    promptText,
+    onPromptTextSet,
 }) => {
     const [editor, setEditor] = React.useState<ReturnType<typeof createEditor>>(undefined);
     const [isEmpty, setIsEmpty] = React.useState(true);
@@ -113,6 +117,15 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             setupMonacoCommands(editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand);
         }
     }, [editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand]);
+
+    // Handle setting prompt text from external source
+    React.useEffect(() => {
+        if (editor && promptText !== undefined) {
+            editor.setValue(promptText);
+            setIsEmpty(false); // Update isEmpty state since we set text
+            onPromptTextSet?.(); // Notify parent that text has been set
+        }
+    }, [editor, promptText, onPromptTextSet]);
 
     React.useEffect(() => {
         if (!editor) {
