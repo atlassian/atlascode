@@ -21,10 +21,13 @@ import { Commands } from '../constants';
 import { Container } from '../container';
 import {
     CreateIssueAction,
+    isAiSuggestionFeedback,
     isCreateIssue,
+    isGenerateIssueSuggestions,
     isScreensForProjects,
     isScreensForSite,
     isSetIssueType,
+    isUpdateAiSettings,
 } from '../ipc/issueActions';
 import { CreateIssueData } from '../ipc/issueMessaging';
 import { Action } from '../ipc/messaging';
@@ -722,31 +725,35 @@ export class CreateIssueWebview
                 // AI-assisted issue creation
                 case 'updateAiSettings': {
                     handled = true;
-                    const newState = (msg as any).newState as any;
-                    // update vscode settings accordingly
-                    await configuration.update(
-                        'issueSuggestion.enabled',
-                        newState.isEnabled,
-                        ConfigurationTarget.Global,
-                    );
-                    await configuration.update(
-                        'issueSuggestion.contextLevel',
-                        newState.level,
-                        ConfigurationTarget.Global,
-                    );
+                    if (isUpdateAiSettings(msg)) {
+                        const newState = msg.newState;
+                        // update vscode settings accordingly
+                        await configuration.update(
+                            'issueSuggestion.enabled',
+                            newState.isEnabled,
+                            ConfigurationTarget.Global,
+                        );
+                        await configuration.update(
+                            'issueSuggestion.contextLevel',
+                            newState.level,
+                            ConfigurationTarget.Global,
+                        );
+                    }
                     break;
                 }
 
                 case 'generateIssueSuggestions': {
                     handled = true;
-                    const { todoData, suggestionSettings } = msg as any;
-                    const suggestionManager = new IssueSuggestionManager(suggestionSettings);
-                    suggestionManager.generate(todoData).then(async (suggestion) => {
-                        await this.fastUpdateFields({
-                            summary: suggestion.summary,
-                            description: suggestion.description,
+                    if (isGenerateIssueSuggestions(msg)) {
+                        const { todoData, suggestionSettings } = msg;
+                        const suggestionManager = new IssueSuggestionManager(suggestionSettings);
+                        suggestionManager.generate(todoData).then(async (suggestion) => {
+                            await this.fastUpdateFields({
+                                summary: suggestion.summary,
+                                description: suggestion.description,
+                            });
                         });
-                    });
+                    }
                     break;
                 }
 
@@ -766,10 +773,12 @@ export class CreateIssueWebview
 
                 case 'aiSuggestionFeedback': {
                     handled = true;
-                    const { isPositive, todoData } = msg as any;
+                    if (isAiSuggestionFeedback(msg)) {
+                        const { isPositive, todoData } = msg;
 
-                    const suggestionManager = new IssueSuggestionManager(this._issueSuggestionSettings!);
-                    suggestionManager.sendFeedback(isPositive, todoData);
+                        const suggestionManager = new IssueSuggestionManager(this._issueSuggestionSettings!);
+                        suggestionManager.sendFeedback(isPositive, todoData);
+                    }
                     break;
                 }
 
