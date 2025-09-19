@@ -17,10 +17,41 @@ export const mdParser = new MarkdownIt({
 
 mdParser.linkify.set({ fuzzyLink: false });
 
-const defaultInlineRenderer = mdParser.renderer.rules.text || ((tokens, idx) => tokens[idx].content);
+// Add a core plugin to mark tokens that are inside lists
+mdParser.core.ruler.before('linkify', 'mark_list_tokens', function (state) {
+    let listDepth = 0;
+
+    for (let i = 0; i < state.tokens.length; i++) {
+        const token = state.tokens[i];
+
+        if (token.type === 'bullet_list_open' || token.type === 'ordered_list_open') {
+            listDepth++;
+        } else if (token.type === 'bullet_list_close' || token.type === 'ordered_list_close') {
+            listDepth--;
+        } else if (listDepth > 0) {
+            // Mark any token that's inside a list
+            token.attrSet('data-in-list', 'true');
+            if (token.children) {
+                // Also mark child tokens
+                for (let j = 0; j < token.children.length; j++) {
+                    token.children[j].attrSet('data-in-list', 'true');
+                }
+            }
+        }
+    }
+});
+
+const defaultTextRenderer = mdParser.renderer.rules.text || ((tokens, idx) => tokens[idx].content);
 mdParser.renderer.rules.text = (tokens, idx, options, env, renderer) => {
     const token = tokens[idx];
     const content = token.content;
+
+    // Check if this token is marked as being inside a list
+    const isInList = token.attrGet && token.attrGet('data-in-list') === 'true';
+
+    if (isInList) {
+        return defaultTextRenderer(tokens, idx, options, env, renderer);
+    }
 
     const colonPattern = /^([^:]*:)(.*)$/;
     const match = content.match(colonPattern);
@@ -45,7 +76,7 @@ mdParser.renderer.rules.text = (tokens, idx, options, env, renderer) => {
         }
     }
 
-    return defaultInlineRenderer(tokens, idx, options, env, renderer);
+    return defaultTextRenderer(tokens, idx, options, env, renderer);
 };
 
 export interface OpenFileFunc {
