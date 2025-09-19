@@ -9,7 +9,7 @@ describe('waitFor', () => {
         let value = 0;
         const check = () => ++value;
         const condition = (v: number) => v >= 3;
-        const result = await waitFor(condition, check, 1000, 10);
+        const result = await waitFor({ condition, check, timeout: 1000, interval: 10 });
         expect(result).toBe(3);
     });
 
@@ -17,7 +17,7 @@ describe('waitFor', () => {
         let value = 0;
         const check = () => ++value;
         const condition = (v: number) => v >= 100;
-        await expect(waitFor(condition, check, 50, 10)).rejects.toThrow('failed');
+        await expect(waitFor({ condition, check, timeout: 50, interval: 10 })).rejects.toThrow('failed');
     });
 
     it('throws if aborted', async () => {
@@ -25,7 +25,7 @@ describe('waitFor', () => {
         const check = () => ++value;
         const condition = (v: number) => v >= 3;
         const abortIf = () => value === 2;
-        await expect(waitFor(condition, check, 1000, 10, abortIf)).rejects.toThrow('aborted');
+        await expect(waitFor({ condition, check, timeout: 1000, interval: 10, abortIf })).rejects.toThrow('aborted');
     });
 });
 
@@ -34,7 +34,7 @@ describe('safeWaitFor', () => {
         let value = 0;
         const check = () => ++value;
         const condition = (v: number) => v >= 2;
-        const result = await safeWaitFor(condition, check, 1000, 10);
+        const result = await safeWaitFor({ condition, check, timeout: 1000, interval: 10 });
         expect(result).toBe(2);
     });
 
@@ -42,7 +42,7 @@ describe('safeWaitFor', () => {
         let value = 0;
         const check = () => ++value;
         const condition = (v: number) => v >= 100;
-        const result = await safeWaitFor(condition, check, 50, 10);
+        const result = await safeWaitFor({ condition, check, timeout: 50, interval: 10 });
         expect(result).toBeUndefined();
     });
 
@@ -51,7 +51,7 @@ describe('safeWaitFor', () => {
         const check = () => ++value;
         const condition = (v: number) => v >= 3;
         const abortIf = () => value === 2;
-        const result = await safeWaitFor(condition, check, 1000, 10, abortIf);
+        const result = await safeWaitFor({ condition, check, timeout: 1000, interval: 10, abortIf });
         expect(result).toBeUndefined();
     });
 });

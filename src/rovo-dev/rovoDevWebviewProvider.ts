@@ -783,12 +783,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         commands.executeCommand('atlascode.views.rovoDev.webView.focus');
 
         // Wait for the webview to initialize, up to 5 seconds
-        const initialized = await safeWaitFor(
-            (value) => !!value,
-            () => !!this._webView,
-            5000,
-            50,
-        );
+        const initialized = await safeWaitFor({
+            condition: (value) => !!value,
+            check: () => !!this._webView,
+            timeout: 5000,
+            interval: 50,
+        });
 
         if (!initialized) {
             return;
@@ -909,17 +909,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private async initializeWithHealthcheck(rovoDevApiClient: RovoDevApiClient, timeout = 10000) {
         this._rovoDevApiClient = rovoDevApiClient;
 
-        const webView = this._webView!;
-
-        // wait for Rovo Dev to be ready, for up to 10 seconds
-        const result = await safeWaitFor(
-            (info) => !!info && info.status !== 'unhealthy', // TODO: remove check for unhealthy after Rovo Dev fixes this status
-            () => this.executeHealthcheckInfo(),
+        const result = await safeWaitFor({
+            condition: (info) => !!info && info.status !== 'unhealthy', // TODO: remove check for unhealthy after Rovo Dev fixes this status
+            check: () => this.executeHealthcheckInfo(),
             timeout,
-            500,
-            () => !this.rovoDevApiClient,
-        );
+            interval: 500,
+            abortIf: () => !this.rovoDevApiClient,
+        });
 
+        const webView = this._webView!;
         const rovoDevClient = this._rovoDevApiClient;
 
         // if the client becomes undefined, it means the process terminated while we were polling the healtcheck
