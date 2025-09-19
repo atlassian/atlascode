@@ -289,3 +289,84 @@ export function extractLastNMessages(n: number, history: Response[]) {
     }
     return lastTenMessages;
 }
+/**
+ *
+ * @param response new incoming response
+ * @param prev current state of response history
+ * @param handleAppendModifiedFileToolReturns function to handle appending modified file tool returns
+ * @param setIsDeepPlanCreated function to set if a deep plan has been created
+ * @returns updated response history
+ */
+export const appendResponse = (
+    response: Response,
+    prev: Response[],
+    handleAppendModifiedFileToolReturns: (tr: ToolReturnGenericMessage) => void,
+    setIsDeepPlanCreated: (val: boolean) => void,
+): Response[] => {
+    if (!response) {
+        return prev;
+    }
+
+    const latest = prev.pop();
+
+    if (!Array.isArray(response)) {
+        if (!Array.isArray(latest)) {
+            // Streaming text response, append to current message
+            if (latest && latest.source === 'RovoDev' && response.source === 'RovoDev') {
+                latest.text += response.text;
+                return [...prev, latest];
+            }
+            // Group tool return with previous message if applicable
+            if (response.source === 'ToolReturn') {
+                handleAppendModifiedFileToolReturns(response);
+                if (response.tool_name !== 'create_technical_plan') {
+                    // Do not group if User, Error message, or Pull Request message is the latest
+                    const canGroup =
+                        latest &&
+                        latest.source !== 'User' &&
+                        latest.source !== 'RovoDevError' &&
+                        latest.source !== 'PullRequest';
+
+                    let thinkingGroup: ChatMessage[] = canGroup ? [latest, response] : [response];
+
+                    if (canGroup) {
+                        const prevGroup = prev.pop();
+                        // if previous message is also a thinking group, merge them
+                        if (prevGroup !== undefined) {
+                            if (Array.isArray(prevGroup)) {
+                                thinkingGroup = [...prevGroup, ...thinkingGroup];
+                            } else {
+                                return [...prev, prevGroup, thinkingGroup];
+                            }
+                        }
+                        return [...prev, thinkingGroup];
+                    } else {
+                        return latest ? [...prev, latest, thinkingGroup] : [...prev, thinkingGroup];
+                    }
+                } else {
+                    // create_technical_plan is always its own message
+                    setIsDeepPlanCreated(true);
+                    return latest ? [...prev, latest, response] : [...prev, response];
+                }
+            }
+        } else {
+            if (response.source === 'ToolReturn') {
+                handleAppendModifiedFileToolReturns(response);
+                if (response.tool_name !== 'create_technical_plan') {
+                    latest.push(response);
+                    return [...prev, latest];
+                } else {
+                    setIsDeepPlanCreated(true);
+                    return [...prev, latest, response];
+                }
+            }
+            return [...prev, latest, response];
+        }
+    }
+
+    if (latest) {
+        return [...prev, latest, response];
+    } else {
+        return [...prev, response];
+    }
+};

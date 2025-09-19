@@ -25,6 +25,7 @@ import { McpConsentChoice, ModifiedFile, RovoDevViewResponse, RovoDevViewRespons
 import { DebugPanel } from './tools/DebugPanel';
 import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
+    appendResponse,
     ChatMessage,
     CODE_PLAN_EXECUTE_PROMPT,
     DefaultMessage,
@@ -194,67 +195,11 @@ const RovoDevView: React.FC = () => {
         [totalModifiedFiles],
     );
 
-    const appendResponse = useCallback(
+    const handleAppendResponse = useCallback(
         (response: Response) => {
-            setHistory((prev) => {
-                if (!response) {
-                    return prev;
-                }
-
-                const latest = prev.pop();
-
-                if (!Array.isArray(response)) {
-                    if (!Array.isArray(latest)) {
-                        // Streaming text response, append to current message
-                        if (latest && latest.source === 'RovoDev' && response.source === 'RovoDev') {
-                            latest.text += response.text;
-                            return [...prev, latest];
-                        }
-                        // Group tool return with previous message if applicable
-                        if (response.source === 'ToolReturn') {
-                            handleAppendModifiedFileToolReturns(response);
-                            if (response.tool_name !== 'create_technical_plan') {
-                                // Do not group if User or Error message is the latest
-                                const canGroup =
-                                    latest &&
-                                    latest.source !== 'User' &&
-                                    latest.source !== 'RovoDevError' &&
-                                    latest.source !== 'PullRequest';
-
-                                let thinkingGroup: ChatMessage[] = canGroup ? [latest, response] : [response];
-
-                                if (canGroup) {
-                                    const prevGroup = prev.pop();
-                                    // if previous message is also a thinking group, merge them
-                                    if (Array.isArray(prevGroup)) {
-                                        thinkingGroup = [...prevGroup, ...thinkingGroup];
-                                    } else {
-                                        if (prevGroup) {
-                                            prev.push(prevGroup);
-                                        }
-                                    }
-                                }
-                                return [...prev, thinkingGroup];
-                            }
-                        }
-                    } else {
-                        if (response.source === 'ToolReturn') {
-                            handleAppendModifiedFileToolReturns(response);
-                            if (response.tool_name !== 'create_technical_plan') {
-                                latest.push(response);
-                                return [...prev, latest];
-                            }
-                        }
-                        return [...prev, latest, response];
-                    }
-                }
-
-                if (latest) {
-                    return [...prev, latest, response];
-                } else {
-                    return [...prev, response];
-                }
-            });
+            setHistory((prev) =>
+                appendResponse(response, prev, handleAppendModifiedFileToolReturns, setIsDeepPlanCreated),
+            );
         },
         [handleAppendModifiedFileToolReturns],
     );
@@ -267,7 +212,7 @@ const RovoDevView: React.FC = () => {
                     setIsDeepPlanToggled(event.enable_deep_plan || false);
                     setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE);
                     if (event.echoMessage) {
-                        appendResponse({ source: 'User', text: event.text, context: event.context });
+                        handleAppendResponse({ source: 'User', text: event.text, context: event.context });
                     }
                     break;
 
@@ -281,7 +226,7 @@ const RovoDevView: React.FC = () => {
                             text: object.content || '',
                             source: 'RovoDev',
                         };
-                        appendResponse(msg);
+                        handleAppendResponse(msg);
                     }
                     break;
 
@@ -331,7 +276,7 @@ const RovoDevView: React.FC = () => {
                     };
 
                     setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE); // Clear pending tool call
-                    appendResponse(returnMessage);
+                    handleAppendResponse(returnMessage);
                     break;
 
                 case RovoDevProviderMessageType.ErrorMessage:
@@ -341,7 +286,7 @@ const RovoDevView: React.FC = () => {
                     } else {
                         setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
                     }
-                    appendResponse(msg);
+                    handleAppendResponse(msg);
                     break;
 
                 case RovoDevProviderMessageType.ClearChat:
@@ -457,7 +402,7 @@ const RovoDevView: React.FC = () => {
                     break;
                 default:
                     // this is never supposed to happen since there aren't other type of messages
-                    appendResponse({
+                    handleAppendResponse({
                         source: 'RovoDevError',
                         type: 'error',
                         // @ts-expect-error ts(2339) - event here should be 'never'
@@ -468,7 +413,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [currentState, appendResponse, clearChatHistory, finalizeResponse],
+        [currentState.state, handleAppendResponse, clearChatHistory, finalizeResponse],
     );
 
     const { postMessage, postMessagePromise } = useMessagingApi<
@@ -604,14 +549,14 @@ const RovoDevView: React.FC = () => {
                 keepFiles(totalModifiedFiles);
             }
 
-            appendResponse(msg);
+            handleAppendResponse(msg);
 
             postMessage({
                 type: RovoDevViewResponseType.ReportChangesGitPushed,
                 pullRequestCreated,
             });
         },
-        [totalModifiedFiles, appendResponse, postMessage, keepFiles],
+        [totalModifiedFiles, handleAppendResponse, postMessage, keepFiles],
     );
 
     const onCollapsiblePanelExpanded = useCallback(() => {
