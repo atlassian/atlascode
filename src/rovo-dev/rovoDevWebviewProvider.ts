@@ -155,6 +155,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private async refreshDebugPanel(force?: boolean) {
         if (this._debugPanelEnabled || force) {
+            this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
             await this._webView?.postMessage({
                 type: RovoDevProviderMessageType.SetDebugPanel,
                 enabled: this._debugPanelEnabled,
@@ -303,7 +304,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             throw new Error('Rovo Dev port not set');
                         } else {
                             this._processState = RovoDevProcessState.Starting;
-                            this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
                             this.refreshDebugPanel();
 
                             await RovoDevProcessManager.initializeRovoDev(this._context);
@@ -537,11 +537,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         // special handling for when the Rovo Dev process has been terminated
         if (this._processState === RovoDevProcessState.Terminated) {
-            await RovoDevProcessManager.initializeRovoDev(this._context, true);
-
             this._processState = RovoDevProcessState.Starting;
-            this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
             this.refreshDebugPanel();
+
+            await RovoDevProcessManager.initializeRovoDev(this._context, true);
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.ClearChat,
@@ -891,6 +890,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     public signalProcessStarted(rovoDevPort: number) {
+        this._processState = RovoDevProcessState.Starting;
+
         // initialize the API client
         const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
         const rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
@@ -986,7 +987,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._processState = RovoDevProcessState.Started;
         this.beginNewSession(result.sessionId || null, false);
 
-        this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
         this.refreshDebugPanel();
 
         await webView.postMessage({
@@ -1015,10 +1015,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     public signalRovoDevDisabled(reason: RovoDevDisabledReason) {
-        this._processState = RovoDevProcessState.Disabled;
+        if (
+            this._processState === RovoDevProcessState.Terminated ||
+            this._processState === RovoDevProcessState.Disabled
+        ) {
+            return;
+        }
 
-        this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
-        this.refreshDebugPanel();
+        this.setRovoDevTerminated(RovoDevProcessState.Disabled);
 
         const webView = this._webView!;
         return webView.postMessage({
@@ -1028,24 +1032,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     public signalProcessTerminated(errorMessage?: string, overrideFullMessage?: boolean) {
-        if (this._processState === RovoDevProcessState.Terminated) {
+        if (
+            this._processState === RovoDevProcessState.Terminated ||
+            this._processState === RovoDevProcessState.Disabled
+        ) {
             return;
         }
 
-        this.signalRovoDevDisabled('other');
-
-        this._processState = RovoDevProcessState.Terminated;
-        this._initialized = false;
-        this._rovoDevApiClient = undefined;
-        this._chatProvider.shutdown();
-        this._telemetryProvider.shutdown();
-        this._dwellTracker?.dispose();
-        this._dwellTracker = undefined;
-
-        delete this._debugPanelContext['RovoDevHost'];
-        delete this._debugPanelContext['RovoDevPort'];
-        this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
-        this.refreshDebugPanel();
+        this.setRovoDevTerminated(RovoDevProcessState.Terminated);
 
         if (!overrideFullMessage) {
             errorMessage = errorMessage
@@ -1057,8 +1051,22 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return this.processError(error, false, true);
     }
 
-    public async shutdownRovoDev() {
-        await this.rovoDevApiClient?.shutdown();
-        await this.signalProcessTerminated();
+    // Disabled and Terminated states are almost identical, except that
+    // with Terminated you can restart Rovo Dev with the [+] button,
+    // and with Disabled you can't.
+    private setRovoDevTerminated(processState: RovoDevProcessState.Disabled | RovoDevProcessState.Terminated) {
+        this._processState = processState;
+
+        this._initialized = false;
+        this._rovoDevApiClient = undefined;
+        this._chatProvider.shutdown();
+        this._telemetryProvider.shutdown();
+        this._dwellTracker?.dispose();
+        this._dwellTracker = undefined;
+
+        delete this._debugPanelContext['RovoDevHost'];
+        delete this._debugPanelContext['RovoDevPort'];
+        delete this._debugPanelContext['RovoDevHealthcheck'];
+        this.refreshDebugPanel();
     }
 }
