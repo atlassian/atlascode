@@ -157,6 +157,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
                                 <CircularProgress />
                             </Box>
                             <Box hidden={isLoading}>
+                                {/* eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- TODO check if needed */}
                                 <Typography dangerouslySetInnerHTML={{ __html: comment.htmlContent }} />
                             </Box>
                             <Grid item>

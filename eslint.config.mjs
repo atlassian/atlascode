@@ -11,7 +11,7 @@ const compat = new FlatCompat({
 });
 
 export default tseslint.config(
-    ...compat.plugins('@typescript-eslint', 'react', 'react-hooks', 'import', 'prettier', 'simple-import-sort'),
+    ...compat.plugins('@typescript-eslint', 'react', 'react-dom', 'react-hooks', 'import', 'prettier', 'simple-import-sort'),
     {
         languageOptions: {
             ecmaVersion: 2020,
@@ -35,6 +35,7 @@ export default tseslint.config(
         rules: {
             'prettier/prettier': 'error',
             'react/jsx-filename-extension': [2, { extensions: ['.js', '.jsx', '.ts', '.tsx'] }],
+            'react-dom/no-dangerously-set-innerhtml': 'error',
             'react-hooks/exhaustive-deps': 'error',
             '@typescript-eslint/await-thenable': 'error',
             '@typescript-eslint/naming-convention': [

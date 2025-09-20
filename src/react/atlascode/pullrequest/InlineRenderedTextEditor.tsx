@@ -74,6 +74,7 @@ const InlineRenderedTextEditor: React.FC<InlineTextEditorProps> = (props: Inline
             onMouseLeave={handleFocusOut}
         >
             <Grid item xs>
+                {/* eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- TODO check if needed */}
                 <Typography variant="body1" dangerouslySetInnerHTML={{ __html: props.htmlContent }} />
             </Grid>
             <Grid item>

@@ -194,6 +194,7 @@ const LabelOption = (props: any) => {
 
     return (
         <components.Option {...props}>
+            {/* eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- TODO check if needed */}
             <div ref={props.innerRef} {...props.innerProps} dangerouslySetInnerHTML={{ __html: label }} />
         </components.Option>
     );
