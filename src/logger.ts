@@ -44,6 +44,7 @@ export class Logger {
     private static _instance: Logger;
     private level: OutputLevel = OutputLevel.Info;
     private output: OutputChannel | undefined;
+    protected productArea?: ErrorProductArea;
 
     private static _onError = new EventEmitter<ErrorEvent>();
     public static get onError(): Event<ErrorEvent> {
@@ -51,7 +52,7 @@ export class Logger {
     }
 
     // constructor is private to ensure only a single instance is created
-    private constructor() {}
+    protected constructor() {}
 
     public static get Instance(): Logger {
         return this._instance || (this._instance = new this());
@@ -122,7 +123,7 @@ export class Logger {
         // the following code is ugly, but it's the only way to handle a JS/TS method overload where a new parameter
         // has been added at the beginning of the arg list.
         // next improvement will be refactoring every Logger.error in the codebase
-        const productArea: ErrorProductArea = params[0] instanceof Error ? undefined : params.shift();
+        const productArea: ErrorProductArea = this.Instance.productArea;
         const ex: Error = params.shift();
         const errorMessage: string | undefined = params.shift();
 
@@ -194,5 +195,18 @@ export class Logger {
         const now = new Date();
         const time = now.toISOString().replace(/T/, ' ').replace(/\..+/, '');
         return `[${time}:${('00' + now.getUTCMilliseconds()).slice(-3)}]`;
+    }
+}
+
+export class RovodevLogger extends Logger {
+    private static _fancyInstance: RovodevLogger;
+
+    public static override get Instance(): Logger {
+        return this._fancyInstance || (this._fancyInstance = new this());
+    }
+
+    protected constructor() {
+        super();
+        this.productArea = 'RovoDev';
     }
 }

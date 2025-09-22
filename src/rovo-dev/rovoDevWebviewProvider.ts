@@ -25,7 +25,7 @@ import {
 } from 'vscode';
 
 import { Container } from '../../src/container';
-import { Logger } from '../../src/logger';
+import { RovodevLogger as Logger } from '../../src/logger';
 import { Commands, rovodevInfo } from '../constants';
 import {
     ModifiedFile,
