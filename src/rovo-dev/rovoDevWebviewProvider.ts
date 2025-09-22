@@ -25,7 +25,7 @@ import {
 } from 'vscode';
 
 import { Container } from '../../src/container';
-import { Logger } from '../../src/logger';
+import { RovoDevLogger } from '../../src/logger';
 import { Commands, rovodevInfo } from '../constants';
 import {
     ModifiedFile,
@@ -136,7 +136,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         const onTelemetryError = Container.isDebugging
             ? (error: Error) => this.processError(error, false)
-            : (error: Error) => Logger.error(error);
+            : (error: Error) => RovoDevLogger.error(error);
 
         this._telemetryProvider = new RovoDevTelemetryProvider(
             this.isBoysenberry ? 'Boysenberry' : 'IDE',
@@ -426,7 +426,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         isRetriable: boolean,
         isProcessTerminated?: boolean,
     ) {
-        Logger.error('RovoDev', error);
+        RovoDevLogger.error(error);
 
         const webview = this._webView!;
         return webview.postMessage({

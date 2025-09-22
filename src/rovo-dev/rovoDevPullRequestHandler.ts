@@ -1,5 +1,5 @@
 import { exec } from 'child_process';
-import { Logger } from 'src/logger';
+import { Logger, RovoDevLogger } from 'src/logger';
 import { GitExtension, Repository } from 'src/typings/git';
 import { promisify } from 'util';
 import { env, extensions, Uri } from 'vscode';
@@ -106,7 +106,7 @@ export class RovoDevPullRequestHandler {
                 repo.state.mergeChanges.length === 0
             );
         } catch (error) {
-            Logger.error(error, 'Error checking git state');
+            RovoDevLogger.error(error, 'Error checking git state');
             return true; // If we can't determine the state, assume it's clean
         }
     }

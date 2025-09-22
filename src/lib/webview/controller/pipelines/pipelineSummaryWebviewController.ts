@@ -1,3 +1,5 @@
+import { Logger } from 'src/logger';
+
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import {
     Pipeline,
@@ -11,7 +13,6 @@ import { CommonActionType } from '../../../ipc/fromUI/common';
 import { PipelineSummaryAction, PipelineSummaryActionType } from '../../../ipc/fromUI/pipelineSummary';
 import { CommonMessage } from '../../../ipc/toUI/common';
 import { PipelineSummaryMessage, PipelineSummaryMessageType } from '../../../ipc/toUI/pipelineSummary';
-import { Logger } from '../../../logger';
 import { MessagePoster, WebviewController } from '../webviewController';
 import { PipelinesSummaryActionApi } from './pipelinesSummaryActionApi';
 

@@ -29,7 +29,7 @@ import { ConfigTarget } from './lib/ipc/models/config';
 import { SectionChangeMessage, SectionV3ChangeMessage } from './lib/ipc/toUI/config';
 import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
-import { Logger } from './logger';
+import { Logger, RovoDevLogger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
 import { registerQuickAuthCommand } from './onboarding/quickFlow';
 import { Pipeline } from './pipelines/model';
@@ -274,7 +274,7 @@ export class Container {
             this.pushFeatureUpdatesToUI();
             return true;
         } catch (err) {
-            Logger.error('RovoDev', err, "FeatureFlagClient: Failed to update user's tenantId");
+            RovoDevLogger.error(err, "FeatureFlagClient: Failed to update user's tenantId");
             return false;
         }
     }
@@ -295,7 +295,7 @@ export class Container {
                 // Already enabled
                 await RovoDevProcessManager.refreshRovoDevCredentials(context);
             } catch (error) {
-                Logger.error('RovoDev', error, 'Refreshing Rovo Dev credentials');
+                RovoDevLogger.error(error, 'Refreshing Rovo Dev credentials');
                 return;
             }
         } else {
@@ -313,7 +313,7 @@ export class Container {
 
                 context.subscriptions.push(this._rovodevDisposable);
             } catch (error) {
-                Logger.error('RovoDev', error, 'Enabling Rovo Dev');
+                RovoDevLogger.error(error, 'Enabling Rovo Dev');
             }
         }
 
@@ -321,7 +321,7 @@ export class Container {
             // Refresh all issue views to show the secret button
             this.jiraIssueViewManager.refreshAll();
         } catch (error) {
-            Logger.error('RovoDev', error, 'Refreshing Jira issue views');
+            RovoDevLogger.error(error, 'Refreshing Jira issue views');
             return;
         }
     }
@@ -338,14 +338,14 @@ export class Container {
             this._rovodevDisposable = undefined;
             RovoDevProcessManager.deactivateRovoDevProcessManager();
         } catch (error) {
-            Logger.error('RovoDev', error, 'Disabling Rovo Dev');
+            RovoDevLogger.error(error, 'Disabling Rovo Dev');
         }
 
         try {
             // Refresh all issue views to show the secret button
             this.jiraIssueViewManager.refreshAll();
         } catch (error) {
-            Logger.error('RovoDev', error, 'Refreshing Jira issue views');
+            RovoDevLogger.error(error, 'Refreshing Jira issue views');
             return;
         }
     }
