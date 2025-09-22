@@ -16,7 +16,7 @@ import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../../i
 import { LegacyPMFData } from '../../../../ipc/messaging';
 import { AtlascodeErrorBoundary } from '../../../../react/atlascode/common/ErrorBoundary';
 import { readFilesContentAsync } from '../../../../util/files';
-import { buildRovoDevPrompt } from '../../../../util/rovoDevPrompt';
+import { createRovoDevTemplate } from '../../../../util/rovoDevTemplate';
 import { ConnectionTimeout } from '../../../../util/time';
 import { AtlLoader } from '../../AtlLoader';
 import ErrorBanner from '../../ErrorBanner';
@@ -169,16 +169,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     };
 
-    handleInvokeRovodev = () => {
-        const summary = this.state.fieldValues['summary'] || '';
-        const description = this.state.fieldValues['description'] || '';
-        const prompt = buildRovoDevPrompt(summary, description);
+    handleSetRovoDevPrompt = () => {
+        const promptText = createRovoDevTemplate(this.state.key, this.state.siteDetails);
 
         this.postMessage({
-            action: 'invokeRovodev',
-            prompt: prompt,
-            issueKey: this.state.key,
-            siteDetails: this.state.siteDetails,
+            action: 'setRovoDevPromptText',
+            text: promptText,
         });
     };
 
@@ -772,7 +768,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.state.isRovoDevEnabled && (
                     <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
                         <Tooltip content="Rovo Dev is an AI assistant that will take the issue details and generate code on it">
-                            <LoadingButton className="ac-button" onClick={this.handleInvokeRovodev} isLoading={false}>
+                            <LoadingButton
+                                className="ac-button"
+                                onClick={this.handleSetRovoDevPrompt}
+                                isLoading={false}
+                            >
                                 Start with Rovo Dev!
                             </LoadingButton>
                         </Tooltip>
