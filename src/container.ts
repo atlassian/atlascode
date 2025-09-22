@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 
 import { featureFlagClientInitializedEvent } from './analytics';
 import { AnalyticsClient, analyticsClient } from './analytics-node-client/src/client.min.js';
+import { Product, ProductJira } from './atlclients/authInfo';
 import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
@@ -274,13 +275,26 @@ export class Container {
             this.pushFeatureUpdatesToUI();
             return true;
         } catch (err) {
-            RovoDevLogger.error(err, "FeatureFlagClient: Failed to update user's tenantId");
+            Logger.error(err, "FeatureFlagClient: Failed to update user's tenantId");
             return false;
         }
     }
 
-    static async refreshRovoDev(context: ExtensionContext) {
-        if (this.config.jira.enabled && this._featureFlagClient.checkGate(Features.RovoDevEnabled)) {
+    public static async isAtlassianUser(...products: Product[]) {
+        for (const product of products) {
+            try {
+                const authInfo = await this._credentialManager.getAllValidAuthInfo(product);
+                if (authInfo.findIndex((x) => x.user.email.endsWith('@atlassian.com')) >= 0) {
+                    return true;
+                }
+            } catch {}
+        }
+
+        return false;
+    }
+
+    private static async refreshRovoDev(context: ExtensionContext) {
+        if (this.config.jira.enabled && (await this.isAtlassianUser(ProductJira))) {
             this._isRovoDevEnabled = true;
             await this.enableRovoDev(context);
         } else {
@@ -289,7 +303,7 @@ export class Container {
         }
     }
 
-    static async enableRovoDev(context: ExtensionContext) {
+    private static async enableRovoDev(context: ExtensionContext) {
         if (this._rovodevDisposable) {
             try {
                 // Already enabled
@@ -326,7 +340,7 @@ export class Container {
         }
     }
 
-    static async disableRovoDev() {
+    private static async disableRovoDev() {
         if (!this._rovodevDisposable) {
             // Already disabled
             return;
@@ -350,7 +364,7 @@ export class Container {
         }
     }
 
-    static pushFeatureUpdatesToUI() {
+    private static pushFeatureUpdatesToUI() {
         const factories = [
             this.settingsWebviewFactory,
             this.startWorkWebviewFactory,
