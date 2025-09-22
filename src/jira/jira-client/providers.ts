@@ -139,7 +139,7 @@ export const getAgent: AgentProvider = (site?: SiteInfo) => {
             }
         }
     } catch (err) {
-        Logger.error(err, 'Error while creating agent');
+        Logger.error(undefined, err, 'Error while creating agent');
         agent = {};
     }
 

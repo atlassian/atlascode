@@ -77,7 +77,7 @@ export async function activate(context: ExtensionContext) {
             NotificationManagerImpl.getInstance().listen();
         }
     } catch (e) {
-        Logger.error(e, 'Error initializing atlascode!');
+        Logger.error(undefined, e, 'Error initializing atlascode!');
     }
 
     startListening((site: DetailedSiteInfo) => {
@@ -130,7 +130,7 @@ async function activateBitbucketFeatures() {
         }
         gitExt = await gitExtension.activate();
     } catch (e) {
-        Logger.error(e, 'Error activating vscode.git extension');
+        Logger.error(undefined, e, 'Error activating vscode.git extension');
         window.showWarningMessage(
             'Activating Bitbucket features failed. There was an issue activating vscode.git extension.',
         );
@@ -142,7 +142,7 @@ async function activateBitbucketFeatures() {
         const bbContext = new BitbucketContext(gitApi);
         Container.initializeBitbucket(bbContext);
     } catch (e) {
-        Logger.error(e, 'Activating Bitbucket features failed');
+        Logger.error(undefined, e, 'Activating Bitbucket features failed');
         window.showWarningMessage('Activating Bitbucket features failed');
     }
 }

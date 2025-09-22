@@ -213,7 +213,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         try {
             prTypeData = await this.client.get(prTypeUrl);
         } catch (ex) {
-            Logger.error(ex, `Fetching prTypeData failed for the PR: ${pr.data.id}}`);
+            Logger.error(undefined, ex, `Fetching prTypeData failed for the PR: ${pr.data.id}}`);
         }
         const conflictedFiles: string[] = [];
         if (prTypeData.data.diff_type === 'TOPIC') {
@@ -222,7 +222,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             try {
                 resp = await this.client.get(conflictUrl);
             } catch (ex) {
-                Logger.error(ex, `Fetching conflict data failed for the PR: ${pr.data.id}}`);
+                Logger.error(undefined, ex, `Fetching conflict data failed for the PR: ${pr.data.id}}`);
             }
             resp.data.forEach((data: { path: '' }) => conflictedFiles.push(data.path));
         }
@@ -240,7 +240,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             const response = await this.client.get(diffUrl);
             data = response.data;
         } catch (ex) {
-            Logger.error(ex, `Fetching diffStat failed for the PR: ${pr.data.id}`);
+            Logger.error(undefined, ex, `Fetching diffStat failed for the PR: ${pr.data.id}`);
         }
 
         if (!data.values) {
@@ -393,7 +393,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
             return this.convertDataToTask(data, site);
         } catch (e) {
-            Logger.error(e, 'Error creating new task using API');
+            Logger.error(undefined, e, 'Error creating new task using API');
             throw new Error(`Error creating new task using API: ${e}`);
         }
     }
@@ -419,7 +419,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
             return this.convertDataToTask(data, site);
         } catch (e) {
-            Logger.error(e, 'Error editing task using API');
+            Logger.error(undefined, e, 'Error editing task using API');
             throw new Error(`Error editing task using API: ${e}`);
         }
     }
@@ -433,7 +433,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 {},
             );
         } catch (e) {
-            Logger.error(e, 'Error deleting task using API');
+            Logger.error(undefined, e, 'Error deleting task using API');
             throw new Error(`Error deleting task using API: ${e}`);
         }
     }

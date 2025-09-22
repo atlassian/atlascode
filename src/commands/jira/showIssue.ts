@@ -64,7 +64,7 @@ export async function showIssueForURL(issueURL: string) {
         await showIssueForSiteIdAndKey(site.id, issueKey);
     } catch (e) {
         vscode.window.showErrorMessage('Invalid URL.');
-        Logger.error(e, 'Could not show issue for URL');
+        Logger.error(undefined, e, 'Could not show issue for URL');
     }
 }
 export async function showIssueForSiteIdAndKey(siteId: string, issueKey: string) {

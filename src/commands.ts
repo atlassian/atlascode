@@ -160,7 +160,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                         const target = issue.transitions.find((x) => x.name === transition.label);
                         if (!target) {
                             window.showErrorMessage(`Transition ${transition.label} not found`);
-                            Logger.error(new Error('Transition not found'));
+                            Logger.error(undefined, new Error('Transition not found'));
                             return;
                         }
 
@@ -375,7 +375,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                         const target = issue.transitions.find((x) => x.name === transition.label);
                         if (!target) {
                             window.showErrorMessage(`Transition ${transition.label} not found`);
-                            Logger.error(new Error('Transition not found'));
+                            Logger.error(undefined, new Error('Transition not found'));
                             return;
                         }
 

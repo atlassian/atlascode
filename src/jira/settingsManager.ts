@@ -63,7 +63,7 @@ export class JiraSettingsManager extends Disposable {
                 cMeta = await client.getCreateIssueMetadata(projectKey);
                 this._projectKeyCMetaStore.set(projectKey, cMeta);
             } catch (error) {
-                Logger.error(error, 'Create issue metadata not available.');
+                Logger.error(undefined, error, 'Create issue metadata not available.');
             }
         }
         return this._projectKeyCMetaStore.get(projectKey);
@@ -82,7 +82,7 @@ export class JiraSettingsManager extends Disposable {
             } catch (err) {
                 // TODO: [VSCODE-549] use /configuration to get settings
                 // for now we need to catch 404 and set an empty array.
-                Logger.error(err, 'issue links not enabled');
+                Logger.error(undefined, err, 'issue links not enabled');
             } finally {
                 this._issueLinkTypesStore.set(site.id, ilts);
             }

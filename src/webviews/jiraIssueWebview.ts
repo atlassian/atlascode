@@ -198,7 +198,7 @@ export class JiraIssueWebview
                 }
             }
         } catch (error) {
-            Logger.error(error, 'Error enhancing child and linked issues with transitions');
+            Logger.error(undefined, error, 'Error enhancing child and linked issues with transitions');
         }
     }
 
@@ -266,7 +266,7 @@ export class JiraIssueWebview
                 rovoDevEnabled: Container.isRovoDevEnabled,
             });
         } catch (e) {
-            Logger.error(e, 'Error updating issue');
+            Logger.error(undefined, e, 'Error updating issue');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
@@ -477,7 +477,7 @@ export class JiraIssueWebview
                         );
                         await commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
                     } catch (e) {
-                        Logger.error(e, 'Error updating issue');
+                        Logger.error(undefined, e, 'Error updating issue');
                         this.postMessage({
                             type: 'error',
                             reason: this.formatErrorReason(e, 'Error updating issue'),
@@ -516,7 +516,7 @@ export class JiraIssueWebview
                         );
                         await commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
                     } catch (e) {
-                        Logger.error(e, 'Error updating child issue');
+                        Logger.error(undefined, e, 'Error updating child issue');
                         this.postMessage({
                             type: 'error',
                             reason: this.formatErrorReason(e, 'Error updating child issue'),
@@ -549,7 +549,7 @@ export class JiraIssueWebview
                             throw new Error(`No transition found for status: ${statusName}`);
                         }
                     } catch (e) {
-                        Logger.error(e, 'Error transitioning child issue');
+                        Logger.error(undefined, e, 'Error transitioning child issue');
                         this.postMessage({
                             type: 'error',
                             reason: this.formatErrorReason(e, 'Error transitioning child issue'),
@@ -585,7 +585,7 @@ export class JiraIssueWebview
                                 fieldValues: { comment: this._editUIData.fieldValues['comment'], nonce: msg.nonce },
                             });
                         } catch (e) {
-                            Logger.error(e, 'Error posting comment');
+                            Logger.error(undefined, e, 'Error posting comment');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error posting comment'),
@@ -612,7 +612,7 @@ export class JiraIssueWebview
                                 fieldValues: { comment: this._editUIData.fieldValues['comment'], nonce: msg.nonce },
                             });
                         } catch (e) {
-                            Logger.error(e, 'Error deleting comment');
+                            Logger.error(undefined, e, 'Error deleting comment');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error deleting comment'),
@@ -659,7 +659,7 @@ export class JiraIssueWebview
                             commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
                             commands.executeCommand(Commands.RefreshCustomJqlExplorer);
                         } catch (e) {
-                            Logger.error(e, 'Error creating issue');
+                            Logger.error(undefined, e, 'Error creating issue');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error creating issue'),
@@ -698,7 +698,7 @@ export class JiraIssueWebview
                             commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
                             commands.executeCommand(Commands.RefreshCustomJqlExplorer);
                         } catch (e) {
-                            Logger.error(e, 'Error creating issue issue link');
+                            Logger.error(undefined, e, 'Error creating issue issue link');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error creating issue issue link'),
@@ -752,7 +752,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(e, 'Error deleting issuelink');
+                            Logger.error(undefined, e, 'Error deleting issuelink');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error deleting issuelink'),
@@ -794,7 +794,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(e, 'Error creating worklog');
+                            Logger.error(undefined, e, 'Error creating worklog');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error creating worklog'),
@@ -839,7 +839,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(e, 'Error adding watcher');
+                            Logger.error(undefined, e, 'Error adding watcher');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error adding watcher'),
@@ -889,7 +889,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(e, 'Error removing watcher');
+                            Logger.error(undefined, e, 'Error removing watcher');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error removing watcher'),
@@ -933,7 +933,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(e, 'Error adding vote');
+                            Logger.error(undefined, e, 'Error adding vote');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error adding vote'),
@@ -981,7 +981,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(e, 'Error removing vote');
+                            Logger.error(undefined, e, 'Error removing vote');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error removing vote'),
@@ -1036,7 +1036,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(e, 'Error adding attachments');
+                            Logger.error(undefined, e, 'Error adding attachments');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error adding attachments'),
@@ -1080,7 +1080,7 @@ export class JiraIssueWebview
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
-                            Logger.error(e, 'Error deleting attachments');
+                            Logger.error(undefined, e, 'Error deleting attachments');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error deleting attachments'),
@@ -1101,7 +1101,7 @@ export class JiraIssueWebview
                             // we need to force an update in case any new tranisitions are available
                             await this.forceUpdateIssue(true);
                         } catch (e) {
-                            Logger.error(e, 'Error transitioning issue');
+                            Logger.error(undefined, e, 'Error transitioning issue');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error transitioning issue'),
@@ -1116,7 +1116,7 @@ export class JiraIssueWebview
                     try {
                         await this.forceUpdateIssue(true);
                     } catch (e) {
-                        Logger.error(e, 'Error refeshing issue');
+                        Logger.error(undefined, e, 'Error refeshing issue');
                         this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error refeshing issue') });
                     }
                     break;
@@ -1147,6 +1147,7 @@ export class JiraIssueWebview
                             );
                         } else {
                             Logger.error(
+                                undefined,
                                 new Error(`error opening pullrequest: ${msg.prHref}`),
                                 'Error opening pullrequest',
                             );
@@ -1199,7 +1200,7 @@ export class JiraIssueWebview
                                 nonce: msg.nonce,
                             });
                         } catch (e) {
-                            Logger.error(e, `Error fetching image: ${msg.url}`);
+                            Logger.error(undefined, e, `Error fetching image: ${msg.url}`);
                             this.postMessage({
                                 type: 'getImageDone',
                                 imgData: '',
@@ -1232,7 +1233,7 @@ export class JiraIssueWebview
                 currentParentKey = parent.parentKey;
             }
         } catch (e) {
-            Logger.error(e, 'Error fetching issue hierarchy');
+            Logger.error(undefined, e, 'Error fetching issue hierarchy');
         } finally {
             this.postMessage({ type: 'hierarchyUpdate', hierarchy });
         }

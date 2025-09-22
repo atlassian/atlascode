@@ -116,7 +116,7 @@ export class LoginManager {
 
             this.fireExplicitSiteChangeEvent(siteDetails);
         } catch (e) {
-            Logger.error(e, `Error authenticating with provider '${provider}'`);
+            Logger.error(undefined, e, `Error authenticating with provider '${provider}'`);
             vscode.window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
         }
     }
@@ -153,7 +153,7 @@ export class LoginManager {
 
                 this.fireExplicitSiteChangeEvent([siteDetails]);
             } catch (err) {
-                Logger.error(err, `Error authenticating with ${site.product.name}`);
+                Logger.error(undefined, err, `Error authenticating with ${site.product.name}`);
                 return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
             }
         }
@@ -169,7 +169,7 @@ export class LoginManager {
 
                 this.fireExplicitSiteChangeEvent([siteDetails]);
             } catch (err) {
-                Logger.error(err, `Error authenticating with ${site.product.name}`);
+                Logger.error(undefined, err, `Error authenticating with ${site.product.name}`);
                 return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
             }
         }

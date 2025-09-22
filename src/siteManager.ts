@@ -187,7 +187,7 @@ export class SiteManager extends Disposable {
                 primarySite: this._primarySite,
             });
         } catch (error) {
-            Logger.error(error, 'Error during async site removal');
+            Logger.error(undefined, error, 'Error during async site removal');
         }
     }
 

@@ -209,6 +209,7 @@ export class CredentialManager implements Disposable {
                         } else if (Container.siteManager.getSiteForId(site.product, site.id)) {
                             // if keychain does not have any auth info for the current site but the site has been saved, we need to remove it
                             Logger.error(
+                                undefined,
                                 new Error(
                                     `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`,
                                 ),
@@ -286,7 +287,7 @@ export class CredentialManager implements Disposable {
             try {
                 await inFlight;
             } catch (e) {
-                Logger.error(e, 'error refreshing token');
+                Logger.error(undefined, e, 'error refreshing token');
                 return Promise.reject(
                     `Your ${site.product.name} session has expired. Please sign in again to continue.`,
                 );
@@ -306,7 +307,7 @@ export class CredentialManager implements Disposable {
                 try {
                     await Container.context.secrets.store(`${productKey}-${credentialId}`, JSON.stringify(info));
                 } catch (e) {
-                    Logger.error(e, `Error writing to secretstorage`);
+                    Logger.error(undefined, e, `Error writing to secretstorage`);
                 }
             },
             { priority: Priority.Write },

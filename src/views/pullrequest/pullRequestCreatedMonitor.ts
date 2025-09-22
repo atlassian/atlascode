@@ -37,7 +37,7 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                     return newPRs;
                 })
                 .catch((e) => {
-                    Logger.error(e, 'Error while fetching latest pull requests');
+                    Logger.error(undefined, e, 'Error while fetching latest pull requests');
                     return [];
                 });
         });

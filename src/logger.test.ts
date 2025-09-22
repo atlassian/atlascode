@@ -244,7 +244,7 @@ describe('Logger', () => {
                 eventRegistration = Logger.onError(errorHandlerSpy);
 
                 const testError = new Error('test error message');
-                Logger_error(testError, 'Something went wrong');
+                Logger_error(undefined, testError, 'Something went wrong');
 
                 expect(errorHandlerSpy).toHaveBeenCalled();
                 const errorEvent: ErrorEvent = errorHandlerSpy.mock.calls[0][0];
@@ -258,7 +258,7 @@ describe('Logger', () => {
 
         it('should append error to output channel', () => {
             const testError = new Error('test error message');
-            Logger_error(testError, 'Something went wrong');
+            Logger_error(undefined, testError, 'Something went wrong');
 
             expect(mockOutputChannel.appendLine).toHaveBeenCalled();
             const call = (mockOutputChannel.appendLine as jest.Mock).mock.calls[0][0];
@@ -270,7 +270,7 @@ describe('Logger', () => {
             mockContainerIsDebugging();
 
             const testError = new Error('test error message');
-            Logger_error(testError, 'Something went wrong');
+            Logger_error(undefined, testError, 'Something went wrong');
 
             expect(console.error).toHaveBeenCalled();
         });
@@ -281,7 +281,7 @@ describe('Logger', () => {
             Logger.configure(expansionCastTo<ExtensionContext>({ subscriptions: [] }));
 
             const testError = new Error('test error message');
-            Logger_error(testError, 'Something went wrong');
+            Logger_error(undefined, testError, 'Something went wrong');
 
             expect(mockOutputChannel.appendLine).not.toHaveBeenCalled();
             expect(console.error).not.toHaveBeenCalled();
@@ -305,7 +305,7 @@ describe('Logger', () => {
 
     describe('retrieveCallerName', () => {
         function thisFunctionName() {
-            Logger.error(new Error('test error'));
+            Logger.error(undefined, new Error('test error'));
         }
 
         it('should return caller function name', () => {

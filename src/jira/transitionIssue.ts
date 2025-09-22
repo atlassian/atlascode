@@ -37,7 +37,7 @@ export async function transitionIssue(
         await performTransition(issueKey, transition, site, analyticsData);
         return;
     } catch (e) {
-        Logger.error(e, 'Error executing transitionIssue');
+        Logger.error(undefined, e, 'Error executing transitionIssue');
         throw e;
     }
 }
@@ -61,7 +61,7 @@ async function performTransition(
             Container.analyticsClient.sendTrackEvent(e);
         });
     } catch (err) {
-        Logger.error(err, 'Error executing performTransition');
+        Logger.error(undefined, err, 'Error executing performTransition');
         throw err;
     }
 }

@@ -136,7 +136,7 @@ export class PipelinesYamlCompletionProvider implements CompletionItemProvider {
                 }
             })
             .catch((err) => {
-                Logger.error(err, 'Error getting pipes');
+                Logger.error(undefined, err, 'Error getting pipes');
                 Logger.debug('knownpipes', this.knownPipes);
             });
     }

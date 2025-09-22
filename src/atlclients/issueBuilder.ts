@@ -93,7 +93,7 @@ export const fetchIssueSuggestions = async (prompt: string, context?: string): P
 
         return responseData;
     } catch (error) {
-        Logger.error(error, 'Error fetching issue suggestions');
+        Logger.error(undefined, error, 'Error fetching issue suggestions');
         throw error;
     }
 };

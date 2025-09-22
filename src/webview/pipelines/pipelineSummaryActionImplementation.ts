@@ -25,7 +25,7 @@ export class PipelineSummaryActionImplementation implements PipelinesSummaryActi
         try {
             logRanges = await bbApi.pipelines!.getLogRanges(site as any, buildNumber);
         } catch (e) {
-            Logger.error(e, `Failed to fetch log ranges.`);
+            Logger.error(undefined, e, `Failed to fetch log ranges.`);
         }
         const steps = await bbApi.pipelines!.getSteps(site as any, uuid);
         steps.forEach((step: PipelineStep, index) => {
@@ -62,7 +62,7 @@ export class PipelineSummaryActionImplementation implements PipelinesSummaryActi
             const newPipeline = await bbApi.pipelines!.triggerPipeline(pipeline.site, pipeline.target);
             commands.executeCommand(Commands.ShowPipeline, newPipeline);
         } catch (e) {
-            Logger.error(e, 'Error executing PipelineSummaryActionImplementation.rerunPipeline');
+            Logger.error(undefined, e, 'Error executing PipelineSummaryActionImplementation.rerunPipeline');
         }
     }
 }

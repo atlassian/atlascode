@@ -28,7 +28,7 @@ export class BitbucketResponseHandler extends ResponseHandler {
             const data = tokenResponse.data;
             return { accessToken: data.access_token, refreshToken: data.refresh_token, receivedAt: Date.now() };
         } catch (err) {
-            Logger.error(err, 'Error fetching Bitbucket tokens');
+            Logger.error(undefined, err, 'Error fetching Bitbucket tokens');
             throw new Error(`Error fetching Bitbucket tokens: ${err}`);
         }
     }
@@ -76,7 +76,7 @@ export class BitbucketResponseHandler extends ResponseHandler {
                 avatarUrl: userData.links.avatar.href,
             };
         } catch (err) {
-            Logger.error(err, 'Error fetching Bitbucket user');
+            Logger.error(undefined, err, 'Error fetching Bitbucket user');
             throw new Error(`Error fetching Bitbucket user: ${err}`);
         }
     }

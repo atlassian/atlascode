@@ -106,7 +106,7 @@ export class RovoDevPullRequestHandler {
                 repo.state.mergeChanges.length === 0
             );
         } catch (error) {
-            Logger.error(error, 'Error checking git state');
+            Logger.error('RovoDev', error, 'Error checking git state');
             return true; // If we can't determine the state, assume it's clean
         }
     }

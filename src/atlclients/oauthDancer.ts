@@ -238,7 +238,7 @@ export class OAuthDancer implements Disposable {
                 await listenPromise(31415, () => {});
                 Logger.debug('auth server started on port 31415');
             } catch (err) {
-                Logger.error(err, 'Unable to start auth listener on localhost:31415');
+                Logger.error(undefined, err, 'Unable to start auth listener on localhost:31415');
                 return Promise.reject(`Unable to start auth listener on localhost:31415: ${err}`);
             }
 

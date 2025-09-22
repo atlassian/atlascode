@@ -102,7 +102,7 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
                     });
             })
             .catch((error) => {
-                Logger.error(error, 'Error fetching notifications');
+                Logger.error(undefined, error, 'Error fetching notifications');
             });
     }
 
@@ -157,7 +157,7 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
         try {
             adfData = JSON.parse(bodyItem.document.data);
         } catch (error) {
-            Logger.error(error, 'Error parsing ADF data');
+            Logger.error(undefined, error, 'Error parsing ADF data');
             return '';
         }
 
@@ -198,7 +198,7 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
 
             return allowedBitbucketHosts.includes(parsedUrl.host);
         } catch (error) {
-            Logger.error(error, 'Error parsing URL');
+            Logger.error(undefined, error, 'Error parsing URL');
             return false;
         }
     }
@@ -243,7 +243,7 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
                 return response.notifications.unseenNotificationCount;
             })
             .catch((error) => {
-                Logger.error(error, 'Error fetching unseen notification count');
+                Logger.error(undefined, error, 'Error fetching unseen notification count');
                 return 0;
             });
     }

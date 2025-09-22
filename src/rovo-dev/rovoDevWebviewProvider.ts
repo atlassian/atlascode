@@ -136,7 +136,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         const onTelemetryError = Container.isDebugging
             ? (error: Error) => this.processError(error, false)
-            : (error: Error) => Logger.error(error);
+            : (error: Error) => Logger.error('RovoDev', error);
 
         this._telemetryProvider = new RovoDevTelemetryProvider(
             this.isBoysenberry ? 'Boysenberry' : 'IDE',

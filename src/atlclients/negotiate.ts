@@ -36,7 +36,7 @@ export function startListening(requestSite: (site: DetailedSiteInfo) => void) {
             try {
                 requestSite(site);
             } catch (e) {
-                Logger.error(e, 'Error in Negotiate.startListening requestSite');
+                Logger.error(undefined, e, 'Error in Negotiate.startListening requestSite');
             }
             Logger.debug(`${tag}: done requesting site`);
             ipc.server.emit(socket, ACK_MESSAGE);
@@ -80,7 +80,7 @@ export class Negotiator {
                 return result;
             }
         }
-        Logger.error(new Error(`Failed to negotiate a responsible PID after ${MAX_ROUNDS} rounds`));
+        Logger.error(undefined, new Error(`Failed to negotiate a responsible PID after ${MAX_ROUNDS} rounds`));
         return false;
     }
 

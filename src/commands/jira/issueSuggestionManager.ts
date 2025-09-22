@@ -57,7 +57,7 @@ export class IssueSuggestionManager {
                 error: '',
             };
         } catch (error) {
-            Logger.error(error, 'Error fetching issue suggestions');
+            Logger.error(undefined, error, 'Error fetching issue suggestions');
             window.showErrorMessage('Error fetching issue suggestions: ' + error.message);
             return {
                 summary: '',
@@ -89,7 +89,7 @@ export class IssueSuggestionManager {
             // TODO: actually send an analytics event
             window.showInformationMessage(`Thank you for your feedback!`);
         } catch (error) {
-            Logger.error(error, 'Error sending feedback');
+            Logger.error(undefined, error, 'Error sending feedback');
             window.showErrorMessage('Error sending feedback: ' + error.message);
         }
     }

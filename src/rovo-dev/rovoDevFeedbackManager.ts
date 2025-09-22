@@ -94,7 +94,7 @@ export class RovoDevFeedbackManager {
                 data: payload,
             });
         } catch (error) {
-            Logger.error(error as Error, 'Error submitting Rovo Dev feedback');
+            Logger.error('RovoDev', error as Error, 'Error submitting Rovo Dev feedback');
             vscode.window.showErrorMessage('There was an error submitting your feedback. Please try again later.');
             return;
         }

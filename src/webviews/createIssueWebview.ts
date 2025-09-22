@@ -429,7 +429,7 @@ export class CreateIssueWebview
                 Container.analyticsClient.sendTrackEvent(event);
             });
         } catch (e) {
-            Logger.error(e, 'error updating issue fields');
+            Logger.error(undefined, e, 'error updating issue fields');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
@@ -696,7 +696,7 @@ export class CreateIssueWebview
                                     }
                                 });
                         } catch (e) {
-                            Logger.error(e, 'Error creating issue');
+                            Logger.error(undefined, e, 'Error creating issue');
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error creating issue'),

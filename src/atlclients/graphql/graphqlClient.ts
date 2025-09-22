@@ -27,7 +27,7 @@ export async function graphqlRequest<T = any>(
         Logger.debug('GraphQL response', { response });
         return response;
     } catch (error) {
-        Logger.error(error, 'GraphQL request failed');
+        Logger.error(undefined, error, 'GraphQL request failed');
         throw error;
     }
 }

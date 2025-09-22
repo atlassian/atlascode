@@ -55,7 +55,7 @@ export async function createIssue(data: Uri | TodoIssueData | undefined, source?
             });
         } catch (error) {
             // The view is already created with legacy logic, do nothing
-            Logger.error(error, 'Error generating issue suggestion settings');
+            Logger.error(undefined, error, 'Error generating issue suggestion settings');
         }
 
         startIssueCreationEvent('todoComment', ProductJira).then((e) => {

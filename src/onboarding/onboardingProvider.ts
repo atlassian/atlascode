@@ -140,7 +140,7 @@ class OnboardingProvider {
 
     private _handleError(message: string, error: Error) {
         window.showErrorMessage(message);
-        Logger.error(error, message);
+        Logger.error(undefined, error, message);
     }
 
     private _handleSkip(product: Product) {

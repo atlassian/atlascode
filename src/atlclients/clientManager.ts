@@ -187,7 +187,7 @@ export class ClientManager implements Disposable {
                 });
             });
         } catch (e) {
-            Logger.error(e, `Failed to refresh tokens`);
+            Logger.error(undefined, e, `Failed to refresh tokens`);
             throw e;
         }
         return newClient!;
@@ -257,7 +257,7 @@ export class ClientManager implements Disposable {
         const credentials = await Container.credentialManager.getAuthInfo(site, false);
 
         if (credentials?.state === AuthInfoState.Invalid) {
-            Logger.error(new Error('Error creating client: credentials state is Invalid'));
+            Logger.error(undefined, new Error('Error creating client: credentials state is Invalid'));
             if (!this.hasWarnedOfFailure) {
                 window
                     .showErrorMessage(
