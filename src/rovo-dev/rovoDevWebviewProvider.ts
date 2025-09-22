@@ -75,6 +75,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _rovoDevApiClient?: RovoDevApiClient;
     private _processState = RovoDevProcessState.NotStarted;
     private _initialized = false;
+    private _webviewReady = false;
     private _debugPanelEnabled = false;
     private _debugPanelContext: Record<string, string> = {};
 
@@ -280,6 +281,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.WebviewReady:
+                        this._webviewReady = true;
                         this.refreshDebugPanel(true);
                         if (!this.isBoysenberry && !this.isDisabled) {
                             if (!workspace.workspaceFolders?.length) {
@@ -846,26 +848,19 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
      * @param text The text to set in the prompt input field
      */
     public async setPromptTextWithFocus(text: string): Promise<void> {
-        // Always focus on the specific vscode view, even if disabled (so user can see the login prompt)
+        // Focus and wait for webview to be ready to receive messages
         commands.executeCommand('atlascode.views.rovoDev.webView.focus');
 
-        // Wait for the webview to initialize, up to 5 seconds
-        const initialized = await safeWaitFor({
+        const ready = await safeWaitFor({
             condition: (value) => !!value,
-            check: () => !!this._webView,
+            check: () => !!this._webView && this._webviewReady,
             timeout: 5000,
             interval: 50,
         });
 
-        if (!initialized) {
-            return;
+        if (ready) {
+            this.setPromptText(text);
         }
-
-        const webView = this._webView!;
-        webView.postMessage({
-            type: RovoDevProviderMessageType.SetPromptText,
-            text: text,
-        });
     }
 
     private _dispose() {
@@ -1101,6 +1096,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._processState = processState;
 
         this._initialized = false;
+        this._webviewReady = false;
         this._rovoDevApiClient = undefined;
         this._chatProvider.shutdown();
         this._telemetryProvider.shutdown();
