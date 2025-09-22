@@ -80,7 +80,7 @@ export const renderChatHistory = (
             );
         case 'RovoDev':
         case 'User':
-            return <ChatMessageItem msg={msg} />;
+            return <ChatMessageItem msg={msg} openFile={openFile} />;
         case 'RovoDevRetry':
             const retryMsg: DefaultMessage = {
                 text: msg.content,
@@ -90,6 +90,7 @@ export const renderChatHistory = (
                 <ChatMessageItem
                     msg={retryMsg}
                     icon={<StatusErrorIcon color="var(--ds-icon-danger)" label="error-icon" spacing="none" />}
+                    openFile={openFile}
                 />
             );
         default:

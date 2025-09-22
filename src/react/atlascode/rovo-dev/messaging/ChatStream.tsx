@@ -262,6 +262,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                     }
                                     onCopy={handleCopyResponse}
                                     onFeedback={handleFeedbackTrigger}
+                                    openFile={renderProps.openFile}
                                 />
                             );
                         } else if (block.source === 'ToolReturn') {
