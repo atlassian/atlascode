@@ -119,18 +119,8 @@ export class Logger {
         this.Instance.errorInternal(productArea, ex, callerName, errorMessage, ...params);
     }
 
-    public error(productArea: ErrorProductArea, ex: Error, errorMessage?: string, ...params: string[]): void;
-    public error(ex: Error, errorMessage?: string, ...params: string[]): void;
-    public error(...params: any[]): void {
+    public error(productArea: ErrorProductArea, ex: Error, errorMessage?: string, ...params: string[]): void {
         const callerName = retrieveCallerName();
-
-        // the following code is ugly, but it's the only way to handle a JS/TS method overload where a new parameter
-        // has been added at the beginning of the arg list.
-        // next improvement will be refactoring every Logger.error in the codebase
-        const productArea: ErrorProductArea = params[0] instanceof Error ? undefined : params.shift();
-        const ex: Error = params.shift();
-        const errorMessage: string | undefined = params.shift();
-
         this.errorInternal(productArea, ex, callerName, errorMessage, ...params);
     }
 
