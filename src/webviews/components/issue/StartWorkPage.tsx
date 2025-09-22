@@ -371,6 +371,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                     >
                         <p>{issue.summary}</p>
                     </PageHeader>
+                    {/* eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- TODO check if needed */}
                     <p dangerouslySetInnerHTML={{ __html: issue.descriptionHtml }} />
                 </GridColumn>
             );
@@ -391,6 +392,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                             {this.state.result.successMessage && (
                                 <SectionMessage appearance="confirmation" title="Work Started">
                                     <div className="start-work-success">
+                                        {/* eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- TODO check if needed */}
                                         <p dangerouslySetInnerHTML={{ __html: this.state.result.successMessage }} />
                                     </div>
                                 </SectionMessage>
