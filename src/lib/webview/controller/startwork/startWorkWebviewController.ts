@@ -1,5 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from 'src/lib/ipc/models/config';
+import { Logger } from 'src/logger';
 import * as vscode from 'vscode';
 
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
@@ -24,7 +25,6 @@ import {
     StartWorkMessageType,
     StartWorkResponse,
 } from '../../../ipc/toUI/startWork';
-import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
@@ -122,7 +122,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 isRovoDevEnabled: Container.isRovoDevEnabled,
             });
         } catch (e) {
-            this.logger.error(e, 'Error updating start work page');
+            this.logger.error(undefined, e, 'Error updating start work page');
             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
         } finally {
             this.isRefreshing = false;
@@ -159,7 +159,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                     });
                     this.analytics.fireIssueWorkStartedEvent(this.initData.issue.siteDetails, msg.pushBranchToRemote);
                 } catch (e) {
-                    this.logger.error(e, 'Error executing start work action');
+                    this.logger.error(undefined, e, 'Error executing start work action');
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error executing start work action'),
@@ -214,7 +214,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                         nonce: msg.nonce,
                     } as any);
                 } catch (e) {
-                    this.logger.error(e, 'Error fetching image');
+                    this.logger.error(undefined, e, 'Error fetching image');
                     this.postMessage({
                         type: 'getImageDone',
                         imgData: '',
@@ -231,7 +231,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                         enabled,
                     });
                 } catch (e) {
-                    this.logger.error(e, 'Error getting RovoDev preference');
+                    this.logger.error(undefined, e, 'Error getting RovoDev preference');
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error getting RovoDev preference'),
@@ -243,7 +243,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 try {
                     await this.api.updateRovoDevPreference(msg.enabled);
                 } catch (e) {
-                    this.logger.error(e, 'Error updating RovoDev preference');
+                    this.logger.error(undefined, e, 'Error updating RovoDev preference');
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error updating RovoDev preference'),
@@ -255,7 +255,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 try {
                     await this.api.openRovoDev();
                 } catch (e) {
-                    this.logger.error(e, 'Error opening RovoDev');
+                    this.logger.error(undefined, e, 'Error opening RovoDev');
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error opening RovoDev'),
@@ -276,7 +276,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 try {
                     await this.invalidate();
                 } catch (e) {
-                    this.logger.error(e, 'Error refeshing start work page');
+                    this.logger.error(undefined, e, 'Error refeshing start work page');
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error refeshing start work page'),

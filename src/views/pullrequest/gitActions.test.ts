@@ -344,6 +344,7 @@ describe('gitActions', () => {
                 'Dismiss',
             );
             expect(mockLogger.error).toHaveBeenCalledWith(
+                undefined,
                 new Error('Error checking out the pull request branch: no workspace repo'),
             );
             expect(result).toBe(false);

@@ -165,7 +165,7 @@ describe('HTTPClient', () => {
             mockTransport.mockRejectedValue(error);
 
             await expect(httpClient.getUrl(url)).rejects.toThrow('Network error');
-            expect(Logger.error).toHaveBeenCalledWith(error, 'Error getting URL', url);
+            expect(Logger.error).toHaveBeenCalledWith(undefined, error, 'Error getting URL', url);
         });
     });
 

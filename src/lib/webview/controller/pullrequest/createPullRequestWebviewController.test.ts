@@ -1,5 +1,6 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import Axios from 'axios';
+import { Logger } from 'src/logger';
 
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { Commit, FileDiff, FileStatus, PullRequest, User, WorkspaceRepo } from '../../../../bitbucket/model';
@@ -17,16 +18,15 @@ import {
 import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessageType } from '../../../ipc/toUI/common';
 import { CreatePullRequestMessageType, RepoData } from '../../../ipc/toUI/createPullRequest';
-import { Logger } from '../../../logger';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster } from '../webviewController';
 import { CreatePullRequestActionApi } from './createPullRequestActionApi';
 import { CreatePullRequestWebviewController } from './createPullRequestWebviewController';
 
 // Mock dependencies
-jest.mock('../../../logger');
 jest.mock('../../../analyticsApi');
 jest.mock('../common/commonActionMessageHandler');
+jest.mock('src/logger');
 jest.mock('axios');
 
 // Helper functions to create mock objects
@@ -283,7 +283,7 @@ describe('CreatePullRequestWebviewController', () => {
 
             await controller.update();
 
-            expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error updating start work page');
+            expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'Error updating start work page');
             expect(mockMessagePoster).toHaveBeenCalledWith({
                 type: CommonMessageType.Error,
                 reason: expect.any(String),
@@ -327,7 +327,7 @@ describe('CreatePullRequestWebviewController', () => {
 
                 await controller.onMessageReceived({ type: CommonActionType.Refresh });
 
-                expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error updating start work page');
+                expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'Error updating start work page');
                 expect(mockMessagePoster).toHaveBeenCalledWith({
                     type: CommonMessageType.Error,
                     reason: expect.any(String),
@@ -376,7 +376,7 @@ describe('CreatePullRequestWebviewController', () => {
                     ...action,
                 });
 
-                expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error fetching issue for branch name');
+                expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'Error fetching issue for branch name');
                 expect(mockMessagePoster).not.toHaveBeenCalled();
             });
         });
@@ -417,7 +417,7 @@ describe('CreatePullRequestWebviewController', () => {
                     ...action,
                 });
 
-                expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error fetching commits');
+                expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'Error fetching commits');
                 expect(mockMessagePoster).not.toHaveBeenCalled();
             });
         });
@@ -454,7 +454,7 @@ describe('CreatePullRequestWebviewController', () => {
                     ...action,
                 });
 
-                expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error opening diff');
+                expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'Error opening diff');
                 expect(mockMessagePoster).not.toHaveBeenCalled();
             });
         });
@@ -511,7 +511,7 @@ describe('CreatePullRequestWebviewController', () => {
                     ...action,
                 });
 
-                expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error fetching users');
+                expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'Error fetching users');
                 expect(mockMessagePoster).toHaveBeenCalledWith({
                     type: CommonMessageType.Error,
                     reason: expect.objectContaining({
@@ -580,7 +580,7 @@ describe('CreatePullRequestWebviewController', () => {
                     ...action,
                 });
 
-                expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error creating pull request');
+                expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'Error creating pull request');
                 expect(mockMessagePoster).toHaveBeenNthCalledWith(1, {
                     type: CreatePullRequestMessageType.SubmitResponse,
                     pr: undefined!,

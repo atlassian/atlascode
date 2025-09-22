@@ -308,7 +308,7 @@ describe('StartWorkOnIssueWebview', () => {
 
             await startWorkOnIssueWebview.invalidate();
 
-            expect(Logger.error).toHaveBeenCalledWith(error, 'StartWorkOnIssueWebview.forceUpdateIssue');
+            expect(Logger.error).toHaveBeenCalledWith(undefined, error, 'StartWorkOnIssueWebview.forceUpdateIssue');
             expect(formatErrorSpy).toHaveBeenCalledWith(error);
             expect(postMessageSpy).toHaveBeenCalledWith({ type: 'error', reason: 'Formatted error' });
         });

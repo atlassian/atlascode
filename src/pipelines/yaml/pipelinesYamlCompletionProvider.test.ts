@@ -91,7 +91,7 @@ describe('PipelinesYamlCompletionProvider', () => {
             // Wait for the promise to resolve/reject
             await new Promise((resolve) => setTimeout(resolve, 0));
 
-            expect(Logger.error).toHaveBeenCalledWith(mockError, 'Error getting pipes');
+            expect(Logger.error).toHaveBeenCalledWith(undefined, mockError, 'Error getting pipes');
             expect(Logger.debug).toHaveBeenCalledWith('knownpipes', []);
         });
     });

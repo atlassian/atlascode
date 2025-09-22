@@ -151,7 +151,7 @@ describe('transitionIssue', () => {
 
         // Execute and verify
         await expect(transitionIssue(mockedIssue, mockedTransition)).rejects.toThrow('API error');
-        expect(Logger.error).toHaveBeenCalledWith(error, 'Error executing transitionIssue');
+        expect(Logger.error).toHaveBeenCalledWith(undefined, error, 'Error executing transitionIssue');
     });
 
     it('should handle errors from transitionIssue API call', async () => {
@@ -162,6 +162,6 @@ describe('transitionIssue', () => {
 
         // Execute and verify
         await expect(transitionIssue(mockedIssue, mockedTransition)).rejects.toEqual(error);
-        expect(Logger.error).toHaveBeenCalledWith(error, 'Error executing transitionIssue');
+        expect(Logger.error).toHaveBeenCalledWith(undefined, error, 'Error executing transitionIssue');
     });
 });

@@ -373,7 +373,7 @@ describe('JiraIssueWebview', () => {
 
             await jiraIssueWebview['forceUpdateIssue']();
 
-            expect(Logger.error).toHaveBeenCalledWith(error, 'Error updating issue');
+            expect(Logger.error).toHaveBeenCalledWith(undefined, error, 'Error updating issue');
             expect(formatErrorSpy).toHaveBeenCalledWith(error);
             expect(postMessageSpy).toHaveBeenCalledWith({
                 type: 'error',
@@ -1219,7 +1219,7 @@ describe('JiraIssueWebview', () => {
 
             await jiraIssueWebview['onMessageReceived'](msg);
 
-            expect(Logger.error).toHaveBeenCalledWith(error, 'Error updating issue');
+            expect(Logger.error).toHaveBeenCalledWith(undefined, error, 'Error updating issue');
             expect(formatErrorSpy).toHaveBeenCalledWith(error, 'Error updating issue');
             expect(postMessageSpy).toHaveBeenCalledWith({
                 type: 'error',
@@ -1613,6 +1613,7 @@ describe('JiraIssueWebview - Additional Method Tests', () => {
             expect(mockFetchMultipleIssuesWithTransitions).toHaveBeenCalledWith(['SUBTASK-1'], mockIssue.siteDetails);
 
             expect(Logger.error).toHaveBeenCalledWith(
+                undefined,
                 error,
                 'Error enhancing child and linked issues with transitions',
             );

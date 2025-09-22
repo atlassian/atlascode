@@ -1,3 +1,5 @@
+import { Logger } from 'src/logger';
+
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import {
     Pipeline,
@@ -11,7 +13,6 @@ import { CommonActionType } from '../../../ipc/fromUI/common';
 import { PipelineSummaryAction, PipelineSummaryActionType } from '../../../ipc/fromUI/pipelineSummary';
 import { CommonMessage } from '../../../ipc/toUI/common';
 import { PipelineSummaryMessage, PipelineSummaryMessageType } from '../../../ipc/toUI/pipelineSummary';
-import { Logger } from '../../../logger';
 import { MessagePoster, WebviewController } from '../webviewController';
 import { PipelinesSummaryActionApi } from './pipelinesSummaryActionApi';
 
@@ -66,7 +67,7 @@ export class PipelineSummaryWebviewController implements WebviewController<Pipel
             }
             case PipelineSummaryActionType.FetchLogRange: {
                 if (!this.pipeline) {
-                    this.logger.error(new Error(`Missing a pipeline. no idea`));
+                    this.logger.error(undefined, new Error(`Missing a pipeline. no idea`));
                     return;
                 }
                 const logRef = msg.reference;
@@ -84,7 +85,7 @@ export class PipelineSummaryWebviewController implements WebviewController<Pipel
             }
             case PipelineSummaryActionType.ReRunPipeline: {
                 if (!this.pipeline) {
-                    this.logger.error(new Error(`Missing a pipeline. no idea`));
+                    this.logger.error(undefined, new Error(`Missing a pipeline. no idea`));
                     return;
                 }
 

@@ -1,6 +1,7 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
 import { ConfigV3Section } from 'src/lib/ipc/models/config';
+import { Logger } from 'src/logger';
 import { Features } from 'src/util/features';
 import { v4 } from 'uuid';
 import { env } from 'vscode';
@@ -15,7 +16,6 @@ import { ConfigAction, ConfigActionType } from '../../../ipc/fromUI/config';
 import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
 import { ConfigMessageType, ConfigResponse, ConfigV3Message, SectionV3ChangeMessage } from '../../../ipc/toUI/config';
-import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
@@ -112,7 +112,7 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
                 }
             }
         } catch (e) {
-            this._logger.error(e, 'Error updating configuration');
+            this._logger.error(undefined, e, 'Error updating configuration');
             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
         } finally {
             this._isRefreshing = false;
@@ -139,7 +139,7 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
                 try {
                     await this.invalidate();
                 } catch (e) {
-                    this._logger.error(e, 'Error refeshing config');
+                    this._logger.error(undefined, e, 'Error refeshing config');
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error refeshing config'),
@@ -154,7 +154,7 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
                     try {
                         await this._api.authenticateServer(msg.siteInfo, msg.authInfo);
                     } catch (e) {
-                        this._logger.error(e, 'Authentication error');
+                        this._logger.error(undefined, e, 'Authentication error');
                         this.postMessage({
                             type: CommonMessageType.Error,
                             reason: formatError(e, 'Authentication error'),
@@ -210,7 +210,7 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
                         if (Axios.isCancel(e)) {
                             this._logger.warn(formatError(e));
                         } else {
-                            this._logger.error(e, 'JQL fetch error');
+                            this._logger.error(undefined, e, 'JQL fetch error');
                             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                         }
                     }
@@ -226,7 +226,7 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
                             data: data,
                         });
                     } catch (e) {
-                        this._logger.error(e, 'JQL fetch error');
+                        this._logger.error(undefined, e, 'JQL fetch error');
                         this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                     }
                 }
@@ -250,7 +250,7 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
                         if (Axios.isCancel(e)) {
                             this._logger.warn(formatError(e));
                         } else {
-                            this._logger.error(e, 'Filter fetch error');
+                            this._logger.error(undefined, e, 'Filter fetch error');
                             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                         }
                     }
@@ -269,7 +269,7 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
                         if (Axios.isCancel(e)) {
                             this._logger.warn(formatError(e));
                         } else {
-                            this._logger.error(e, 'JQL Validate network error');
+                            this._logger.error(undefined, e, 'JQL Validate network error');
                             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                         }
                     }
@@ -280,7 +280,7 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
                 try {
                     this._api.updateSettings(msg.target, msg.changes, msg.removes);
                 } catch (e) {
-                    this._logger.error(e, 'Error updating configuration');
+                    this._logger.error(undefined, e, 'Error updating configuration');
                     this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
                 }
                 break;

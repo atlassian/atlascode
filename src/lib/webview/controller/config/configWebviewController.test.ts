@@ -1,4 +1,5 @@
 import Axios from 'axios';
+import { Logger } from 'src/logger';
 import { Features } from 'src/util/features';
 import { v4 } from 'uuid';
 import * as vscode from 'vscode';
@@ -13,7 +14,6 @@ import { WebViewID } from '../../../ipc/models/common';
 import { ConfigSection, ConfigTarget } from '../../../ipc/models/config';
 import { CommonMessageType } from '../../../ipc/toUI/common';
 import { ConfigMessageType, SectionChangeMessage } from '../../../ipc/toUI/config';
-import { Logger } from '../../../logger';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { ConfigActionApi } from './configActionApi';
 import { ConfigWebviewController, id } from './configWebviewController';
@@ -203,7 +203,7 @@ describe('ConfigWebviewController', () => {
 
             await controller['invalidate']();
 
-            expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error updating configuration');
+            expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'Error updating configuration');
             expect(mockMessagePoster).toHaveBeenCalledWith({
                 type: CommonMessageType.Error,
                 reason: expect.anything(),
@@ -237,7 +237,7 @@ describe('ConfigWebviewController', () => {
 
             await controller.onMessageReceived({ type: CommonActionType.Refresh });
 
-            expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error refeshing config');
+            expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'Error refeshing config');
             expect(mockMessagePoster).toHaveBeenCalledWith({
                 type: CommonMessageType.Error,
                 reason: expect.anything(),
@@ -301,7 +301,7 @@ describe('ConfigWebviewController', () => {
                 authInfo: mockAuthInfo,
             });
 
-            expect(mockLogger.error).toHaveBeenCalledWith(error, 'Authentication error');
+            expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'Authentication error');
             expect(mockMessagePoster).toHaveBeenCalledWith({
                 type: CommonMessageType.Error,
                 reason: expect.anything(),
@@ -416,7 +416,7 @@ describe('ConfigWebviewController', () => {
                 userInput: 'test',
             });
 
-            expect(mockLogger.error).toHaveBeenCalledWith(error, 'JQL fetch error');
+            expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'JQL fetch error');
             expect(mockMessagePoster).toHaveBeenCalledWith({
                 type: CommonMessageType.Error,
                 reason: expect.anything(),
@@ -508,7 +508,7 @@ describe('ConfigWebviewController', () => {
                 removes: [],
             });
 
-            expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error updating configuration');
+            expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'Error updating configuration');
             expect(mockMessagePoster).toHaveBeenCalledWith({
                 type: CommonMessageType.Error,
                 reason: expect.anything(),

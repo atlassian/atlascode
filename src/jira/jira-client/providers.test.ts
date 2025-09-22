@@ -304,7 +304,7 @@ describe('providers', () => {
             const agent = getAgent(siteWithSSLCerts);
 
             expect(agent).toEqual({});
-            expect(Logger.error).toHaveBeenCalledWith(expect.any(Error), 'Error while creating agent');
+            expect(Logger.error).toHaveBeenCalledWith(undefined, expect.any(Error), 'Error while creating agent');
         });
 
         it('skips Charles proxy setup when charlesDebugOnly is true but not debugging', () => {

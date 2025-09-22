@@ -129,7 +129,11 @@ describe('negotiate', () => {
             const mockSocket = {};
             pingHandler!(JSON.stringify(mockSite), mockSocket);
 
-            expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error in Negotiate.startListening requestSite');
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                undefined,
+                error,
+                'Error in Negotiate.startListening requestSite',
+            );
             expect(mockIPCInstance.server.emit).toHaveBeenCalledWith(mockSocket, 'atlascode-ack');
         });
     });
@@ -225,7 +229,7 @@ describe('negotiate', () => {
                 const result = await negotiator.requestTokenRefreshForSite('test-site');
 
                 expect(negotiator.negotiationRound).toHaveBeenCalledTimes(3);
-                expect(mockLogger.error).toHaveBeenCalledWith(expect.any(Error));
+                expect(mockLogger.error).toHaveBeenCalledWith(undefined, expect.any(Error));
                 expect(result).toBe(false);
             });
         });

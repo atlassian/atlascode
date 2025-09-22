@@ -162,7 +162,7 @@ describe('RovoDevFeedbackManager', () => {
 
             await RovoDevFeedbackManager.submitFeedback(feedback);
 
-            expect(Logger.error).toHaveBeenCalledWith(error, 'Error submitting Rovo Dev feedback');
+            expect(Logger.error).toHaveBeenCalledWith('RovoDev', error, 'Error submitting Rovo Dev feedback');
             expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
                 'There was an error submitting your feedback. Please try again later.',
             );

@@ -128,6 +128,7 @@ describe('utils', () => {
             const issues = await executeJqlQuery(jqlEntry);
             expect(issues).toHaveLength(0);
             expect(Logger.error).toHaveBeenCalledWith(
+                undefined,
                 error,
                 'Failed to execute default JQL query for site',
                 'site-id-guid',

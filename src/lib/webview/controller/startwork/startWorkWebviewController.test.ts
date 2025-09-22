@@ -1,5 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { createEmptyMinimalIssue, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { Logger } from 'src/logger';
 
 import { DetailedSiteInfo, emptySiteInfo, ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel, WorkspaceRepo } from '../../../../bitbucket/model';
@@ -16,7 +17,6 @@ import {
     StartWorkInitMessage,
     StartWorkMessageType,
 } from '../../../ipc/toUI/startWork';
-import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster } from '../webviewController';
@@ -346,7 +346,7 @@ describe('StartWorkWebviewController', () => {
 
                 await controller.onMessageReceived(startRequestAction);
 
-                expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error executing start work action');
+                expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'Error executing start work action');
                 expect(mockMessagePoster).toHaveBeenCalledWith({
                     type: CommonMessageType.Error,
                     reason: 'Formatted error message',
@@ -463,7 +463,7 @@ describe('StartWorkWebviewController', () => {
 
                 await controller.onMessageReceived(getImageAction);
 
-                expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error fetching image');
+                expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'Error fetching image');
                 expect(mockMessagePoster).toHaveBeenCalledWith({
                     type: 'getImageDone',
                     imgData: '',
@@ -593,7 +593,7 @@ describe('StartWorkWebviewController', () => {
 
                 await controller.onMessageReceived({ type: CommonActionType.Refresh });
 
-                expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error updating start work page');
+                expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'Error updating start work page');
                 expect(mockMessagePoster).toHaveBeenCalledWith({
                     type: CommonMessageType.Error,
                     reason: 'Formatted error message',

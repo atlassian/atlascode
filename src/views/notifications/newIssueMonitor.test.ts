@@ -312,7 +312,7 @@ describe('NewIssueMonitor', () => {
 
             await monitor.checkForNewIssues();
 
-            expect(Logger.error).toHaveBeenCalledWith(error, 'Error checking for new issues');
+            expect(Logger.error).toHaveBeenCalledWith(undefined, error, 'Error checking for new issues');
         });
     });
 

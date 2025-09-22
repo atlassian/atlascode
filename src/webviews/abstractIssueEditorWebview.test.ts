@@ -567,7 +567,7 @@ describe('AbstractIssueEditorWebview', () => {
             const handled = await webview.testOnMessageReceived(mockMessage);
 
             expect(handled).toBe(true);
-            expect(Logger.error).toHaveBeenCalledWith(expect.any(Error), 'Error fetching issues');
+            expect(Logger.error).toHaveBeenCalledWith(undefined, expect.any(Error), 'Error fetching issues');
             expect(webview.postMessage).toHaveBeenCalledWith({
                 type: 'error',
                 reason: 'Error fetching issues',
@@ -618,7 +618,7 @@ describe('AbstractIssueEditorWebview', () => {
             const handled = await webview.testOnMessageReceived(mockMessage);
 
             expect(handled).toBe(true);
-            expect(Logger.error).toHaveBeenCalledWith(mockError, 'Error fetching options');
+            expect(Logger.error).toHaveBeenCalledWith(undefined, mockError, 'Error fetching options');
             expect(webview.postMessage).toHaveBeenCalledWith({
                 type: 'error',
                 reason: 'Error fetching options',
@@ -683,7 +683,7 @@ describe('AbstractIssueEditorWebview', () => {
             const handled = await webview.testOnMessageReceived(mockMessage);
 
             expect(handled).toBe(true);
-            expect(Logger.error).toHaveBeenCalledWith(mockError, 'Error creating select option');
+            expect(Logger.error).toHaveBeenCalledWith(undefined, mockError, 'Error creating select option');
             expect(webview.postMessage).toHaveBeenCalledWith({
                 type: 'error',
                 reason: 'Error creating select option',

@@ -329,7 +329,7 @@ describe('BitbucketCheckoutHelper', () => {
 
             await checkoutHelper.pullRequest(repoUrl, pullRequestId);
 
-            expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error opening pull request');
+            expect(mockLogger.error).toHaveBeenCalledWith(undefined, error, 'Error opening pull request');
             expect(mockWindow.showInformationMessage).toHaveBeenCalledWith(
                 'Cannot open pull request. Authenticate with Bitbucket in the extension settings and try again.',
                 'Open auth settings',

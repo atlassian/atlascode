@@ -1,5 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
+import { Logger } from 'src/logger';
 
 import { Registry } from '../../../../analytics';
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
@@ -14,7 +15,6 @@ import {
     CreatePullRequestMessageType,
     CreatePullRequestResponse,
 } from '../../../ipc/toUI/createPullRequest';
-import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
@@ -68,7 +68,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                 repoData: repoData,
             });
         } catch (e) {
-            this.logger.error(e, 'Error updating start work page');
+            this.logger.error(undefined, e, 'Error updating start work page');
             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
         } finally {
             this.isRefreshing = false;
@@ -86,7 +86,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                 try {
                     await this.invalidate();
                 } catch (e) {
-                    this.logger.error(e, 'Error refeshing start work page');
+                    this.logger.error(undefined, e, 'Error refeshing start work page');
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error refeshing start work page'),
@@ -104,7 +104,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                         });
                     }
                 } catch (e) {
-                    this.logger.error(e, 'Error fetching issue for branch name');
+                    this.logger.error(undefined, e, 'Error fetching issue for branch name');
                     // ignore posting error to UI
                 }
                 break;
@@ -121,7 +121,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                         fileDiffs,
                     });
                 } catch (e) {
-                    this.logger.error(e, 'Error fetching commits');
+                    this.logger.error(undefined, e, 'Error fetching commits');
                     // ignore posting error to UI
                 }
                 break;
@@ -134,7 +134,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                         ProductBitbucket,
                     );
                 } catch (e) {
-                    this.logger.error(e, 'Error opening diff');
+                    this.logger.error(undefined, e, 'Error opening diff');
                     // ignore posting error to UI
                 }
                 break;
@@ -149,7 +149,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                     if (Axios.isCancel(e)) {
                         this.logger.warn(formatError(e));
                     } else {
-                        this.logger.error(e, 'Error fetching users');
+                        this.logger.error(undefined, e, 'Error fetching users');
                         this.postMessage({
                             type: CommonMessageType.Error,
                             reason: formatError(e, 'Error fetching users'),
@@ -166,7 +166,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                     });
                     this.analytics.firePrCreatedEvent(msg.sourceSiteRemote.site!.details);
                 } catch (e) {
-                    this.logger.error(e, 'Error creating pull request');
+                    this.logger.error(undefined, e, 'Error creating pull request');
                     this.postMessage({
                         type: CreatePullRequestMessageType.SubmitResponse,
                         pr: undefined!,
