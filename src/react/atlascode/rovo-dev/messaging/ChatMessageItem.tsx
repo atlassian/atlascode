@@ -3,7 +3,7 @@ import ThumbsDownIcon from '@atlaskit/icon/core/thumbs-down';
 import ThumbsUpIcon from '@atlaskit/icon/core/thumbs-up';
 import React from 'react';
 
-import { MarkedDown } from '../common/common';
+import { MarkedDown, OpenFileFunc } from '../common/common';
 import { PromptContextCollection } from '../prompt-box/promptContext/promptContextCollection';
 import { DefaultMessage } from '../utils';
 
@@ -13,7 +13,8 @@ export const ChatMessageItem: React.FC<{
     enableActions?: boolean;
     onCopy?: (text: string) => void;
     onFeedback?: (isPositive: boolean) => void;
-}> = ({ msg, icon, enableActions, onCopy, onFeedback }) => {
+    openFile?: OpenFileFunc;
+}> = ({ msg, icon, enableActions, onCopy, onFeedback, openFile }) => {
     const messageTypeStyles = msg.source === 'User' ? 'user-message' : 'agent-message';
 
     return (
@@ -31,7 +32,13 @@ export const ChatMessageItem: React.FC<{
             </div>
             {msg.source === 'User' && msg.context && (
                 <div className="message-context">
-                    <PromptContextCollection content={msg.context} direction="column" align="right" inChat={true} />
+                    <PromptContextCollection
+                        content={msg.context}
+                        direction="column"
+                        align="right"
+                        inChat={true}
+                        openFile={openFile}
+                    />
                 </div>
             )}
             {msg.source === 'RovoDev' && enableActions && (

@@ -699,6 +699,7 @@ const RovoDevView: React.FC = () => {
                                     }
                                 });
                             }}
+                            openFile={openFile}
                         />
                         <PromptInputBox
                             disabled={currentState.state === 'ProcessTerminated'}
