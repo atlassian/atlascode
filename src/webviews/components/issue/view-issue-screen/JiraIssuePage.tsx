@@ -58,7 +58,6 @@ const emptyState: ViewState = {
     isEditingComment: false,
     hierarchyLoading: false,
     hierarchy: [],
-    isRendered: false,
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -819,11 +818,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         );
     }
 
+    override componentDidMount() {
+        this.postMessage({ action: 'getFeatureFlags' });
+    }
+
     public override render() {
-        if (!this.state.isRendered) {
-            this.postMessage({ action: 'getFeatureFlags' });
-            this.setState({ isRendered: true });
-        }
         if (
             (Object.keys(this.state.fields).length < 1 || Object.keys(this.state.fieldValues).length < 1) &&
             !this.state.isErrorBannerOpen &&

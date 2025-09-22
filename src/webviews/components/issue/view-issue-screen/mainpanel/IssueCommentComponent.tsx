@@ -17,7 +17,7 @@ import { RenderedContent } from '../../../RenderedContent';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 
-type IssueCommentComponentProps = {
+export type IssueCommentComponentProps = {
     siteDetails: DetailedSiteInfo;
     currentUser: User;
     comments: JiraComment[];

@@ -1,5 +1,6 @@
 import './AtlaskitEditor.css';
 
+import type { EditorProps } from '@atlaskit/editor-core';
 import { ComposableEditor, EditorNextProps } from '@atlaskit/editor-core/composable-editor';
 import { useUniversalPreset } from '@atlaskit/editor-core/preset-universal';
 import { usePreset } from '@atlaskit/editor-core/use-preset';
@@ -16,15 +17,19 @@ interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' 
     onBlur?: (content: string) => void;
 }
 
+const defaultEditorConfiguration: Omit<EditorProps, 'onChange' | 'onSave'> = {
+    useStickyToolbar: true,
+    allowUndoRedoButtons: true,
+    allowTextColor: true,
+};
+
 const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProps) => {
     const { appearance = 'comment', onCancel, onSave, defaultValue = '', onChange, onBlur, onContentChange } = props;
 
     const universalPreset = useUniversalPreset({
         props: {
+            ...defaultEditorConfiguration,
             appearance,
-            useStickyToolbar: true,
-            allowUndoRedoButtons: true,
-            allowTextColor: true,
         },
         initialPluginConfiguration: {
             tasksAndDecisionsPlugin: {
@@ -134,7 +139,6 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 (document) => {
                     if (!document) {
                         throw new Error('document is not available');
-                        return;
                     }
                     // document is in  wiki markup format because of transformer passed below
                     onSave?.(document);
@@ -154,9 +158,9 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
         <div ref={editorContainerRef}>
             <ComposableEditor
                 appearance={appearance}
-                useStickyToolbar={true}
+                useStickyToolbar={defaultEditorConfiguration.useStickyToolbar}
                 assistiveLabel="Rich text editor for comments"
-                allowUndoRedoButtons={true}
+                allowUndoRedoButtons={defaultEditorConfiguration.allowUndoRedoButtons}
                 preset={preset}
                 defaultValue={defaultValue}
                 contentTransformerProvider={(schema) => {

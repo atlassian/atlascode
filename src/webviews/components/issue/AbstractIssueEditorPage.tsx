@@ -83,7 +83,6 @@ export interface CommonEditorViewState extends Message {
     isRovoDevEnabled: boolean;
     isGeneratingSuggestions?: boolean;
     summaryKey: string;
-    isRendered?: boolean;
     isAtlaskitEditorEnabled: boolean;
 }
 
@@ -102,7 +101,6 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     commentInputValue: '',
     isRovoDevEnabled: false,
     summaryKey: v4(),
-    isRendered: false,
     isAtlaskitEditorEnabled: false,
 };
 

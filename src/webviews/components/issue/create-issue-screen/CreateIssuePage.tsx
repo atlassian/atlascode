@@ -423,11 +423,11 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         );
     };
 
+    override componentDidMount() {
+        this.postMessage({ action: 'getFeatureFlags' });
+    }
+
     public override render() {
-        if (!this.state.isRendered) {
-            this.postMessage({ action: 'getFeatureFlags' });
-            this.setState({ isRendered: true });
-        }
         if (!this.state.fieldValues['issuetype']?.id && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refresh' });
             return <AtlLoader />;
