@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { FileLozenge, mdParser, OpenFileFunc } from '../common/common';
+import { FileLozenge, MarkedDown, OpenFileFunc } from '../common/common';
 
 interface FileToChangeComponentProps {
     filePath: string;
@@ -13,12 +13,9 @@ export const FileToChangeComponent: React.FC<FileToChangeComponentProps> = ({
     openFile,
     descriptionOfChange,
 }) => {
-    const renderDescription = (description: string) => {
-        return <span dangerouslySetInnerHTML={{ __html: mdParser.render(description) }} />;
-    };
     return (
         <div className="file-to-change">
-            {descriptionOfChange && renderDescription(descriptionOfChange)}
+            {descriptionOfChange && <MarkedDown value={descriptionOfChange} />}
             <div className="file-to-change-info">
                 <div className="lozenge-container">
                     <p>File to modify: </p>

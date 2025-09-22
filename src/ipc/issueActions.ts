@@ -10,6 +10,7 @@ import {
     User,
 } from '@atlassianlabs/jira-pi-common-models';
 import { FieldValues, IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { IssueSuggestionSettings, SimplifiedTodoIssueData } from 'src/config/model';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Branch } from '../typings/git';
@@ -168,6 +169,23 @@ export interface GetImageAction extends Action {
     url: string;
 }
 
+export interface UpdateAiSettingsAction extends Action {
+    action: 'updateAiSettings';
+    newState: IssueSuggestionSettings;
+}
+
+export interface GenerateIssueSuggestionsAction extends Action {
+    action: 'generateIssueSuggestions';
+    todoData: SimplifiedTodoIssueData;
+    suggestionSettings: IssueSuggestionSettings;
+}
+
+export interface AiSuggeestionFeedbackAction extends Action {
+    action: 'aiSuggestionFeedback';
+    isPositive: boolean;
+    todoData: SimplifiedTodoIssueData;
+}
+
 export function isGetImage(a: Action): a is GetImageAction {
     return (<GetImageAction>a).action === 'getImage';
 }
@@ -272,4 +290,26 @@ export function isStartWork(a: Action): a is StartWorkAction {
 
 export function isOpenStartWorkPageAction(a: Action): a is OpenStartWorkPageAction {
     return (<OpenStartWorkPageAction>a).issue !== undefined;
+}
+
+export function isUpdateAiSettings(a: Action): a is UpdateAiSettingsAction {
+    return a && a.action === 'updateAiSettings' && (<UpdateAiSettingsAction>a).newState !== undefined;
+}
+
+export function isGenerateIssueSuggestions(a: Action): a is GenerateIssueSuggestionsAction {
+    return (
+        a &&
+        a.action === 'generateIssueSuggestions' &&
+        (<GenerateIssueSuggestionsAction>a).suggestionSettings !== undefined &&
+        (<GenerateIssueSuggestionsAction>a).todoData !== undefined
+    );
+}
+
+export function isAiSuggestionFeedback(a: Action): a is AiSuggeestionFeedbackAction {
+    return (
+        a &&
+        a.action === 'aiSuggestionFeedback' &&
+        (<AiSuggeestionFeedbackAction>a).isPositive !== undefined &&
+        (<AiSuggeestionFeedbackAction>a).todoData !== undefined
+    );
 }

@@ -45,7 +45,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.11.18"
+        "version": "0.11.21"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -134,28 +134,28 @@
                 "title": "Trail Logs",
                 "icon": "$(terminal)",
                 "category": "Rovo Dev",
-                "enablement": "atlascode:rovoDevEnabled"
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
                 "command": "atlascode.openRovoDevConfig",
                 "title": "Open Settings File",
                 "category": "Rovo Dev",
                 "description": "Opens the ~/.rovodev/config.yaml file in the editor.",
-                "enablement": "atlascode:rovoDevEnabled"
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
                 "command": "atlascode.openRovoDevMcpJson",
                 "title": "Open MCP configuration",
                 "category": "Rovo Dev",
                 "description": "Opens the ~/.rovodev/mcp.json file in the editor.",
-                "enablement": "atlascode:rovoDevEnabled"
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
                 "command": "atlascode.openRovoDevGlobalMemory",
                 "title": "Open Global Memory file",
                 "category": "Rovo Dev",
                 "description": "Opens the ~/.rovodev/.agent.md file in the editor.",
-                "enablement": "atlascode:rovoDevEnabled"
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
                 "command": "atlascode.rovodev.shareFeedback",
@@ -631,22 +631,22 @@
                 },
                 {
                     "command": "atlascode.rovodev.showTerminal",
-                    "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView",
+                    "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "navigation@2"
                 },
                 {
                     "command": "atlascode.openRovoDevConfig",
-                    "when": "view == atlascode.views.rovoDev.webView",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu1@1"
                 },
                 {
                     "command": "atlascode.openRovoDevGlobalMemory",
-                    "when": "view == atlascode.views.rovoDev.webView",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu1@2"
                 },
                 {
                     "command": "atlascode.openRovoDevMcpJson",
-                    "when": "view == atlascode.views.rovoDev.webView",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu1@3"
                 },
                 {
@@ -1023,6 +1023,21 @@
                     "type": "boolean",
                     "description": "Enable Rovo Dev debug panel",
                     "scope": "window"
+                },
+                "atlascode.issueSuggestion.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables AI-assisted issue suggestion for TODO comments",
+                    "scope": "window"
+                },
+                "atlascode.issueSuggestion.contextLevel": {
+                    "type": "string",
+                    "description": "What context to use for issue suggestions - only the TODO text, surrouding code, or the entire file",
+                    "default": "codeContext",
+                    "enum": [
+                        "todoOnly",
+                        "codeContext"
+                    ]
                 },
                 "atlascode.outputLevel": {
                     "type": "string",
@@ -1486,7 +1501,7 @@
         "@mui/utils": "^5.17.1",
         "@segment/analytics-node": "^2.1.3",
         "@speed-highlight/core": "^1.2.7",
-        "@vscode/codicons": "^0.0.36",
+        "@vscode/codicons": "^0.0.40",
         "@vscode/webview-ui-toolkit": "^1.4.0",
         "adm-zip": "^0.5.16",
         "awesome-debounce-promise": "^2.1.0",

@@ -5,7 +5,30 @@ export enum OutputLevel {
     Debug = 'debug',
 }
 
+export enum IssueSuggestionContextLevel {
+    TodoOnly = 'todoOnly',
+    CodeContext = 'codeContext',
+}
+
+export type IssueSuggestionSettings = {
+    isAvailable: boolean;
+    isEnabled: boolean;
+    level: IssueSuggestionContextLevel;
+};
+
+// Simplified representation of a TODO, used in IPC
+export type SimplifiedTodoIssueData = {
+    summary: string;
+    context: string;
+    position: {
+        line: number;
+        character: number;
+    };
+    uri: string;
+};
+
 export interface IConfig {
+    issueSuggestionContextLevel: IssueSuggestionContextLevel;
     outputLevel: OutputLevel;
     enableCharles: boolean;
     charlesCertPath: string;
@@ -254,6 +277,7 @@ const emptyBitbucketConfig: BitbucketConfig = {
 };
 
 export const emptyConfig: IConfig = {
+    issueSuggestionContextLevel: IssueSuggestionContextLevel.CodeContext,
     outputLevel: OutputLevel.Silent,
     enableCharles: false,
     charlesCertPath: '',

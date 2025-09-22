@@ -3,7 +3,7 @@ import ThumbsDownIcon from '@atlaskit/icon/core/thumbs-down';
 import ThumbsUpIcon from '@atlaskit/icon/core/thumbs-up';
 import React from 'react';
 
-import { mdParser } from '../common/common';
+import { MarkedDown } from '../common/common';
 import { PromptContextCollection } from '../prompt-box/promptContext/promptContextCollection';
 import { DefaultMessage } from '../utils';
 
@@ -15,12 +15,6 @@ export const ChatMessageItem: React.FC<{
     onFeedback?: (isPositive: boolean) => void;
 }> = ({ msg, icon, enableActions, onCopy, onFeedback }) => {
     const messageTypeStyles = msg.source === 'User' ? 'user-message' : 'agent-message';
-    const content = (
-        <div
-            style={{ display: 'flex', flexDirection: 'column' }}
-            dangerouslySetInnerHTML={{ __html: mdParser.render(msg.text || '') }}
-        />
-    );
 
     return (
         <>
@@ -29,7 +23,11 @@ export const ChatMessageItem: React.FC<{
                 style={{ display: 'flex', flexDirection: 'row', alignItems: 'start', gap: '8px' }}
             >
                 {icon && <div className="message-icon">{icon}</div>}
-                <div className="message-content">{content}</div>
+                <div className="message-content">
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <MarkedDown value={msg.text || ''} />
+                    </div>
+                </div>
             </div>
             {msg.source === 'User' && msg.context && (
                 <div className="message-context">

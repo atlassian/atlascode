@@ -191,6 +191,7 @@ export function useEditor<T extends UserType>(props: {
             return;
         }
         if (props.enabled) {
+            view.current.state.doc = mdParser.parse(content);
             const slice = view.current.state.doc.slice(0);
             const tr = view.current.state.tr.replaceWith(0, slice?.size || 0, mdParser.parse(content));
             view.current.dispatch(tr);

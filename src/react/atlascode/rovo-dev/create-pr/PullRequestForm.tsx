@@ -4,7 +4,7 @@ import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev
 import { ConnectionTimeout } from 'src/util/time';
 
 import { useMessagingApi } from '../../messagingApi';
-import { mdParser } from '../common/common';
+import { MarkedDown } from '../common/common';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { DefaultMessage } from '../utils';
 
@@ -147,10 +147,9 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
 
 export const PullRequestChatItem: React.FC<{ msg: DefaultMessage }> = ({ msg }) => {
     const content = (
-        <div
-            style={{ display: 'flex', flexDirection: 'column' }}
-            dangerouslySetInnerHTML={{ __html: mdParser.render(msg.text || '') }}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <MarkedDown value={msg.text || ''} />
+        </div>
     );
     return (
         <div className="chat-message pull-request-chat-item agent-message">

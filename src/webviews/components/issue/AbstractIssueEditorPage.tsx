@@ -45,6 +45,8 @@ import {
 } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
 import { ConnectionTimeout } from '../../../util/time';
+import AISuggestionFooter from '../aiCreateIssue/AISuggestionFooter';
+import AISuggestionHeader from '../aiCreateIssue/AISuggestionHeader';
 import { colorToLozengeAppearanceMap } from '../colors';
 import * as FieldValidators from '../fieldValidators';
 import { chain } from '../fieldValidators';
@@ -78,6 +80,8 @@ export interface CommonEditorViewState extends Message {
     commentInputValue: string;
     isRteEnabled: boolean;
     isRovoDevEnabled: boolean;
+    isGeneratingSuggestions?: boolean;
+    summaryKey: string;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -95,6 +99,7 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     commentInputValue: '',
     isRteEnabled: false,
     isRovoDevEnabled: false,
+    summaryKey: v4(),
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -509,62 +514,69 @@ export abstract class AbstractIssueEditorPage<
                 }
 
                 return (
-                    <Field
-                        defaultValue={defaultVal}
-                        label={<span>{field.name}</span>}
-                        isRequired={field.required}
-                        id={field.key}
-                        name={field.key}
-                        validate={validateFunc}
-                    >
-                        {(fieldArgs: any) => {
-                            let errDiv = <span />;
-                            if (fieldArgs.error && fieldArgs.error !== '') {
-                                errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
-                            }
+                    <>
+                        {field.key === 'summary' && <AISuggestionHeader vscodeApi={this._api} />}
+                        <Field
+                            key={this.state.summaryKey}
+                            defaultValue={defaultVal}
+                            label={<span>{field.name}</span>}
+                            isRequired={field.required}
+                            id={field.key}
+                            name={field.key}
+                            validate={validateFunc}
+                        >
+                            {(fieldArgs: any) => {
+                                let errDiv = <span />;
+                                if (fieldArgs.error && fieldArgs.error !== '') {
+                                    errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
+                                }
 
-                            let markup = (
-                                <Textfield
-                                    {...fieldArgs.fieldProps}
-                                    value={this.coerceToString(fieldArgs.fieldProps.value)}
-                                    className="ac-inputField"
-                                    isDisabled={this.state.isSomethingLoading}
-                                    onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
-                                        this.handleInlineEdit(field, e.currentTarget.value),
-                                    )}
-                                    placeholder={field.key === 'summary' && 'What needs to be done?'}
-                                />
-                            );
-                            if ((field as InputFieldUI).isMultiline) {
-                                markup = (
-                                    <JiraIssueTextAreaEditor
+                                let markup = (
+                                    <Textfield
                                         {...fieldArgs.fieldProps}
-                                        value={this.coerceToString(this.state.fieldValues[field.key])}
-                                        isDisabled={this.state.isSomethingLoading}
-                                        onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
-                                            this.handleInlineEdit(field, val),
+                                        value={defaultVal}
+                                        className="ac-inputField"
+                                        isDisabled={this.state.isSomethingLoading || this.state.isGeneratingSuggestions}
+                                        onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
+                                            this.handleInlineEdit(field, e.currentTarget.value),
                                         )}
-                                        fetchUsers={async (input: string) =>
-                                            (await this.fetchUsers(input)).map((user) => ({
-                                                displayName: user.displayName,
-                                                avatarUrl: user.avatarUrls?.['48x48'],
-                                                mention: this.state.siteDetails.isCloud
-                                                    ? `[~accountid:${user.accountId}]`
-                                                    : `[~${user.name}]`,
-                                            }))
-                                        }
-                                        featureGateEnabled={this.state.isRteEnabled}
+                                        placeholder={field.key === 'summary' && 'What needs to be done?'}
                                     />
                                 );
-                            }
-                            return (
-                                <div>
-                                    {markup}
-                                    {errDiv}
-                                </div>
-                            );
-                        }}
-                    </Field>
+                                if ((field as InputFieldUI).isMultiline) {
+                                    markup = (
+                                        <JiraIssueTextAreaEditor
+                                            {...fieldArgs.fieldProps}
+                                            value={this.coerceToString(this.state.fieldValues[field.key])}
+                                            isDisabled={
+                                                this.state.isSomethingLoading || this.state.isGeneratingSuggestions
+                                            }
+                                            onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
+                                                this.handleInlineEdit(field, val),
+                                            )}
+                                            fetchUsers={async (input: string) =>
+                                                (await this.fetchUsers(input)).map((user) => ({
+                                                    displayName: user.displayName,
+                                                    avatarUrl: user.avatarUrls?.['48x48'],
+                                                    mention: this.state.siteDetails.isCloud
+                                                        ? `[~accountid:${user.accountId}]`
+                                                        : `[~${user.name}]`,
+                                                }))
+                                            }
+                                            featureGateEnabled={this.state.isRteEnabled}
+                                        />
+                                    );
+                                }
+                                return (
+                                    <div>
+                                        {markup}
+                                        {errDiv}
+                                    </div>
+                                );
+                            }}
+                        </Field>
+                        {field.key === 'description' && <AISuggestionFooter vscodeApi={this._api} />}
+                    </>
                 );
             }
             case UIType.Date: {

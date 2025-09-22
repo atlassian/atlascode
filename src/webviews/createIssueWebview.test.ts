@@ -52,6 +52,7 @@ jest.mock('../container', () => ({
 }));
 
 jest.mock('../config/configuration', () => ({
+    ...jest.requireActual('../config/configuration'),
     configuration: {
         setLastCreateSiteAndProject: jest.fn().mockResolvedValue(undefined),
     },

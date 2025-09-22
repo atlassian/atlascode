@@ -29,14 +29,15 @@ export const UpdatedFilesComponent: React.FC<{
                 <div>
                     <button
                         disabled={!actionsEnabled}
-                        className="updated-files-action secondary"
+                        className="updated-files-action"
                         onClick={() => onUndo(modifiedFiles)}
                     >
                         Undo
                     </button>
                     <button
                         disabled={!actionsEnabled}
-                        className="updated-files-action primary"
+                        className="updated-files-action"
+                        id="bordered-button"
                         onClick={() => onKeep(modifiedFiles)}
                     >
                         Keep

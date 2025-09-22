@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 3.8.17
+
+### Features
+
+- Update pipeline schema to the current latest version
+
 ## What's new in 3.8.15
 
 ### Bug Fixes

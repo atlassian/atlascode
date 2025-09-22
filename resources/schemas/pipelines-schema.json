@@ -97,7 +97,7 @@
             "description": "The type of the artifact.",
             "enum": [
               "shared",
-              "unshared",
+              "scoped",
               "test-reports"
             ],
             "title": "Artifact Type",
@@ -829,6 +829,11 @@
             "title": "Stage Deployment Environment",
             "type": "string"
           },
+          "environment": {
+            "description": "The environment for the stage.",
+            "title": "Stage Environment",
+            "type": "string"
+          },
           "name": {
             "description": "The name of the stage.",
             "title": "Stage Name",
@@ -921,9 +926,25 @@
           "clone": {
             "$ref": "#/components/schemas/clone"
           },
+          "concurrency-group": {
+            "description": "The concurrency group for the step.",
+            "maxLength": 50,
+            "title": "Concurrency group",
+            "type": "string"
+          },
+          "custom": {
+            "description": "The name of the custom pipeline to run, if the step type is pipeline.",
+            "title": "Custom",
+            "type": "string"
+          },
           "deployment": {
             "description": "The deployment environment for the step.",
             "title": "Step Deployment Environment",
+            "type": "string"
+          },
+          "environment": {
+            "description": "The environment for the step.",
+            "title": "Step Environment",
             "type": "string"
           },
           "fail-fast": {
@@ -932,6 +953,25 @@
           },
           "image": {
             "$ref": "#/components/schemas/image"
+          },
+          "input-variables": {
+            "additionalProperties": {
+              "description": "input variable value",
+              "oneOf": [
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Variables from the parent step that are provided to the child pipeline.",
+            "example": {
+              "VAR_1": "VALUE_1",
+              "VAR_2": "${BITBUCKET_BRANCH}"
+            },
+            "maxProperties": 20,
+            "minProperties": 1,
+            "title": "Input Variables",
+            "type": "object"
           },
           "max-time": {
             "$ref": "#/components/schemas/max_time",
@@ -977,11 +1017,18 @@
             "$ref": "#/components/schemas/trigger",
             "description": "The trigger used for the pipeline step.",
             "title": "Step Trigger"
+          },
+          "type": {
+            "default": "shared",
+            "description": "The type of the step.",
+            "enum": [
+              "inline",
+              "pipeline"
+            ],
+            "title": "Step Type",
+            "type": "string"
           }
         },
-        "required": [
-          "script"
-        ],
         "title": "Pipeline Step",
         "type": "object"
       },
@@ -1001,6 +1048,38 @@
           "manual"
         ],
         "type": "string"
+      },
+      "trigger_context": {
+        "description": "Context of the trigger that started the pipeline. Only returned for pipelines triggered by a parent step.",
+        "properties": {
+          "parent_pipeline_run_uuid": {
+            "description": "The UUID of the pipeline run that contains the parent step that triggered this pipeline.",
+            "example": "{00000000-0000-0000-0000-000000000000}",
+            "title": "Parent Pipeline Run UUID",
+            "type": "string"
+          },
+          "parent_pipeline_uuid": {
+            "description": "The UUID of the pipeline that contains the parent step that triggered this pipeline.",
+            "example": "{00000000-0000-0000-0000-000000000000}",
+            "title": "Parent Pipeline UUID",
+            "type": "string"
+          },
+          "parent_step_uuid": {
+            "description": "The UUID of the parent step that triggered this pipeline.",
+            "example": "{00000000-0000-0000-0000-000000000000}",
+            "title": "Parent Step UUID",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of trigger that started the pipeline.",
+            "enum": [
+              "parent_step"
+            ],
+            "title": "Pipeline Trigger",
+            "type": "string"
+          }
+        },
+        "type": "object"
       },
       "variables_item": {
         "additionalProperties": false,

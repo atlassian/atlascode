@@ -2,7 +2,7 @@ import QuestionCircleIcon from '@atlaskit/icon/glyph/question-circle';
 import React from 'react';
 import { TechnicalPlan } from 'src/rovo-dev/rovoDevTypes';
 
-import { mdParser, OpenFileFunc } from '../common/common';
+import { MarkedDown, OpenFileFunc } from '../common/common';
 import { LogicalChange } from './LogicalChange';
 
 interface TechnicalPlanProps {
@@ -61,7 +61,7 @@ export const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, 
                             />
                             <div style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}>
                                 <div>{idx + 1}. </div>
-                                <span dangerouslySetInnerHTML={{ __html: mdParser.render(question) }} />
+                                <MarkedDown value={question} />
                             </div>
                         </div>
                     );

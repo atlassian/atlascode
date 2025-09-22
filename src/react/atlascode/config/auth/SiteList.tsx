@@ -121,6 +121,9 @@ export const SiteList: React.FunctionComponent<SiteListProps> = ({ sites, produc
     // Deduplicate OAuth sites by username and update display names
     const deduplicatedSites = deduplicateOAuthSites(sites);
 
+    // Sort sites alphabetically by site name
+    const sortedSites = deduplicatedSites.sort((a, b) => a.site.name.localeCompare(b.site.name));
+
     const editOrLogout = (siteWithAuth: SiteWithAuthInfo) => {
         if (isOAuthInfo(siteWithAuth.auth)) {
             controller.logout(siteWithAuth.site);
@@ -133,9 +136,7 @@ export const SiteList: React.FunctionComponent<SiteListProps> = ({ sites, produc
 
     return (
         <div className={clsx(classes.root, borderBox.box)}>
-            <List>
-                {generateListItems(product, deduplicatedSites, controller.logout, editOrLogout, classes.iconStyle)}
-            </List>
+            <List>{generateListItems(product, sortedSites, controller.logout, editOrLogout, classes.iconStyle)}</List>
         </div>
     );
 };

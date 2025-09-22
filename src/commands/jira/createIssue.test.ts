@@ -38,6 +38,7 @@ jest.mock('../../container', () => ({
     Container: {
         createIssueWebview: {
             createOrShow: jest.fn(),
+            fastUpdateFields: jest.fn().mockResolvedValue(undefined),
         },
         analyticsClient: {
             sendTrackEvent: jest.fn(),
@@ -45,6 +46,9 @@ jest.mock('../../container', () => ({
         bitbucketContext: {
             getAllRepositories: jest.fn().mockReturnValue([]),
             getRepositoryScm: jest.fn(),
+        },
+        featureFlagClient: {
+            checkGate: jest.fn().mockReturnValue(true),
         },
     },
 }));
@@ -60,17 +64,12 @@ describe('createIssue', () => {
                 summary: 'Test summary',
                 uri: Uri.file('/test/path'),
                 insertionPoint: new Position(10, 20),
+                context: 'This is a test context',
             };
 
-            createIssue(todoData);
+            await createIssue(todoData);
 
-            expect(Container.createIssueWebview.createOrShow).toHaveBeenCalledWith(ViewColumn.Beside, {
-                summary: todoData.summary,
-                description: expect.any(String),
-                uri: todoData.uri,
-                position: todoData.insertionPoint,
-                onCreated: expect.any(Function),
-            });
+            expect(Container.createIssueWebview.createOrShow).toHaveBeenCalled();
 
             expect(startIssueCreationEvent).toHaveBeenCalledWith('todoComment', ProductJira);
 
@@ -84,7 +83,7 @@ describe('createIssue', () => {
         it('should create issue from file Uri', async () => {
             const uri = Uri.file('/test/path');
 
-            createIssue(uri);
+            await createIssue(uri);
 
             expect(Container.createIssueWebview.createOrShow).toHaveBeenCalledWith(ViewColumn.Active, {
                 description: expect.any(String),
@@ -100,7 +99,7 @@ describe('createIssue', () => {
         it('should not use file Uri handling for non-file scheme', async () => {
             const uri = { scheme: 'http', fsPath: 'http://example.com' };
 
-            createIssue(uri as any);
+            await createIssue(uri as any);
 
             expect(Container.createIssueWebview.createOrShow).toHaveBeenCalledWith();
             expect(startIssueCreationEvent).toHaveBeenCalledWith('explorer', ProductJira);
@@ -109,7 +108,7 @@ describe('createIssue', () => {
 
     describe('No input', () => {
         it('should create issue with no data', async () => {
-            createIssue(undefined);
+            await createIssue(undefined);
 
             expect(Container.createIssueWebview.createOrShow).toHaveBeenCalledWith();
             expect(startIssueCreationEvent).toHaveBeenCalledWith('explorer', ProductJira);
@@ -120,7 +119,7 @@ describe('createIssue', () => {
         });
 
         it('should create issue with custom source', async () => {
-            createIssue(undefined, 'customSource');
+            await createIssue(undefined, 'customSource');
 
             expect(Container.createIssueWebview.createOrShow).toHaveBeenCalledWith();
             expect(startIssueCreationEvent).toHaveBeenCalledWith('customSource', ProductJira);
@@ -134,9 +133,10 @@ describe('createIssue', () => {
                 summary: 'Test summary',
                 uri: Uri.file('/test/path'),
                 insertionPoint: new Position(10, 20),
+                context: 'This is a test context',
             };
 
-            createIssue(todoData);
+            await createIssue(todoData);
 
             // Get the onCreated callback
             const createOrShowMock = Container.createIssueWebview.createOrShow as jest.Mock;
@@ -178,9 +178,10 @@ describe('createIssue', () => {
                 summary: 'Test summary',
                 uri: Uri.file('/test/path'),
                 insertionPoint: new Position(10, 20),
+                context: 'This is a test context',
             };
 
-            createIssue(todoData);
+            await createIssue(todoData);
 
             const createOrShowMock = Container.createIssueWebview.createOrShow as jest.Mock;
             const { onCreated } = createOrShowMock.mock.calls[0][1];

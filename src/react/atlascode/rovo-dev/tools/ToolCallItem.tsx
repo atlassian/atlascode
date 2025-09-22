@@ -66,6 +66,8 @@ function getInitStatusMessage(state: InitializingState | InitializingDownladingS
             return 'Rovo Dev is initializing';
         case 'UpdatingBinaries':
             return 'Rovo Dev is updating';
+        case 'MCPAcceptance':
+            return 'MCPAcceptance'; // this substate is not displayed in the loading spinner
         default:
             // @ts-expect-error ts(2339) - state here should be 'never'
             return state.toString();

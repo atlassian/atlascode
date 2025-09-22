@@ -6,7 +6,7 @@ class RovoDevApiError extends Error {
     constructor(
         message: string,
         public httpStatus: number,
-        public apiResponse: Response,
+        public apiResponse: Response | undefined,
     ) {
         super(message);
     }
@@ -33,11 +33,23 @@ export interface RovoDevChatRequest {
     enable_deep_plan?: boolean;
 }
 
-export interface RovoDevHealthcheckResponse {
-    status: 'healthy' | 'unhealthy' | 'entitlement check failed' | 'pending user review';
+export interface AbstractRovoDevHealthcheckResponse {
     version: string;
     sessionId: string | null; // from response header
 }
+
+export interface RovoDevHealthcheckBasicResponse extends AbstractRovoDevHealthcheckResponse {
+    status: 'healthy' | 'unhealthy' | 'entitlement check failed';
+}
+
+export interface RovoDevHealthcheckEntitlementCheckFailedResponse extends AbstractRovoDevHealthcheckResponse {
+    status: 'pending user review';
+    mcp_servers: Record<string, string>;
+}
+
+export type RovoDevHealthcheckResponse =
+    | RovoDevHealthcheckBasicResponse
+    | RovoDevHealthcheckEntitlementCheckFailedResponse;
 
 export interface RovoDevCancelResponse {
     message: string;
@@ -63,23 +75,28 @@ export class RovoDevApiClient {
     private async fetchApi(restApi: string, method: 'GET' | 'POST'): Promise<Response>;
     private async fetchApi(restApi: string, method: 'POST', body: BodyInit | null): Promise<Response>;
     private async fetchApi(restApi: string, method: 'GET' | 'POST', body?: BodyInit | null): Promise<Response> {
-        const response = await fetch(this._baseApiUrl + restApi, {
-            method,
-            headers: {
-                accept: 'text/event-stream',
-                'Content-Type': 'application/json',
-            },
-            body,
-        });
+        try {
+            const response = await fetch(this._baseApiUrl + restApi, {
+                method,
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body,
+            });
 
-        if (statusIsSuccessful(response.status)) {
-            return response;
-        } else {
-            throw new RovoDevApiError(
-                `Failed to fetch '${restApi} API: HTTP ${response.status}`,
-                response.status,
-                response,
-            );
+            if (statusIsSuccessful(response.status)) {
+                return response;
+            } else {
+                throw new RovoDevApiError(
+                    `Failed to fetch '${restApi} API: HTTP ${response.status}`,
+                    response.status,
+                    response,
+                );
+            }
+        } catch (error) {
+            const reason = error.cause?.code || error.message || error;
+            throw new RovoDevApiError(`Failed to fetch '${restApi} API: ${reason}`, 0, undefined);
         }
     }
 
@@ -194,8 +211,37 @@ export class RovoDevApiClient {
         return jsonResponse;
     }
 
-    /** Invokes the GET `/shutdown` API. */
+    /** Invokes the POST `/shutdown` API. */
     public async shutdown(): Promise<void> {
         await this.fetchApi('/shutdown', 'POST');
+    }
+
+    /** Invokes the POST `/accept-mcp-terms` API.
+     * @param {true} acceptAll Indicates all server terms should be accepted.
+     */
+    public async acceptMcpTerms(acceptAll: true): Promise<void>;
+    /** Invokes the POST `/accept-mcp-terms` API.
+     * @param {string} serverName Specify the server name for which the acceptance decision is being provided.
+     * @param {'accept' | 'deny'} decision Specify the acceptance decision.
+     */
+    public async acceptMcpTerms(serverName: string, decision: 'accept' | 'deny'): Promise<void>;
+    public async acceptMcpTerms(serverName: string | true, decision?: 'accept' | 'deny'): Promise<void> {
+        const message =
+            typeof serverName === 'string'
+                ? {
+                      servers: [
+                          {
+                              server_name: serverName,
+                              decision: decision === 'accept' ? 'accept' : 'deny',
+                          },
+                      ],
+                      accept_all: 'false',
+                  }
+                : {
+                      servers: [],
+                      accept_all: 'true',
+                  };
+
+        await this.fetchApi('/accept-mcp-terms', 'POST', JSON.stringify(message));
     }
 }

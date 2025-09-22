@@ -1,7 +1,6 @@
 import './RovoDev.css';
 import './RovoDevCodeHighlighting.css';
 
-import CloseIcon from '@atlaskit/icon/core/close';
 import { setGlobalTheme } from '@atlaskit/tokens';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
@@ -22,10 +21,11 @@ import { ChatStream } from './messaging/ChatStream';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
-import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
+import { McpConsentChoice, ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import { DebugPanel } from './tools/DebugPanel';
 import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
+    appendResponse,
     ChatMessage,
     CODE_PLAN_EXECUTE_PROMPT,
     DefaultMessage,
@@ -39,30 +39,6 @@ import {
 } from './utils';
 
 const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
-
-// TODO - replace with @atlaskit/icon implementation
-export const AiGenerativeTextSummaryIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 16 16"
-        fill="none"
-        role="presentation"
-        style={{ width: '16px', height: '16px', overflow: 'hidden', verticalAlign: 'bottom' }}
-    >
-        <path
-            d="M0 0H14V1.5H0V0ZM0 4.1663H14V5.6663H0V4.1663ZM10.7958 8.49428C10.9038 8.19825 11.1853 8.00129 11.5004 8.00129C11.8155 8.00129 12.0975 8.19825 12.2055 8.49428L12.8206 10.1807L14.507 10.7958C14.803 10.9038 15 11.1853 15 11.5004C15 11.8155 14.803 12.0975 14.507 12.2055L12.8206 12.8206L12.2055 14.507C12.0975 14.803 11.816 15 11.5009 15C11.1858 15 10.9038 14.803 10.7958 14.507L10.1807 12.8206L8.49428 12.2055C8.19825 12.0975 8.00129 11.816 8.00129 11.5009C8.00129 11.1858 8.19825 10.9038 8.49428 10.7958L10.1807 10.1807L10.7958 8.49428ZM0 8.3326H7V9.8326H0V8.3326ZM0 12.4989H5V13.9989H0V12.4989Z"
-            fill="currentColor"
-        />
-    </svg>
-);
-
-export const CloseIconDeepPlan: React.FC<{}> = () => {
-    return (
-        <span style={{ zoom: '0.5' }}>
-            <CloseIcon label="" />
-        </span>
-    );
-};
 
 function mapRovoDevDisabledReasonToSubState(reason: RovoDevDisabledReason): DisabledState['subState'] {
     switch (reason) {
@@ -219,67 +195,11 @@ const RovoDevView: React.FC = () => {
         [totalModifiedFiles],
     );
 
-    const appendResponse = useCallback(
+    const handleAppendResponse = useCallback(
         (response: Response) => {
-            setHistory((prev) => {
-                if (!response) {
-                    return prev;
-                }
-
-                const latest = prev.pop();
-
-                if (!Array.isArray(response)) {
-                    if (!Array.isArray(latest)) {
-                        // Streaming text response, append to current message
-                        if (latest && latest.source === 'RovoDev' && response.source === 'RovoDev') {
-                            latest.text += response.text;
-                            return [...prev, latest];
-                        }
-                        // Group tool return with previous message if applicable
-                        if (response.source === 'ToolReturn') {
-                            handleAppendModifiedFileToolReturns(response);
-                            if (response.tool_name !== 'create_technical_plan') {
-                                // Do not group if User or Error message is the latest
-                                const canGroup =
-                                    latest &&
-                                    latest.source !== 'User' &&
-                                    latest.source !== 'RovoDevError' &&
-                                    latest.source !== 'PullRequest';
-
-                                let thinkingGroup: ChatMessage[] = canGroup ? [latest, response] : [response];
-
-                                if (canGroup) {
-                                    const prevGroup = prev.pop();
-                                    // if previous message is also a thinking group, merge them
-                                    if (Array.isArray(prevGroup)) {
-                                        thinkingGroup = [...prevGroup, ...thinkingGroup];
-                                    } else {
-                                        if (prevGroup) {
-                                            prev.push(prevGroup);
-                                        }
-                                    }
-                                }
-                                return [...prev, thinkingGroup];
-                            }
-                        }
-                    } else {
-                        if (response.source === 'ToolReturn') {
-                            handleAppendModifiedFileToolReturns(response);
-                            if (response.tool_name !== 'create_technical_plan') {
-                                latest.push(response);
-                                return [...prev, latest];
-                            }
-                        }
-                        return [...prev, latest, response];
-                    }
-                }
-
-                if (latest) {
-                    return [...prev, latest, response];
-                } else {
-                    return [...prev, response];
-                }
-            });
+            setHistory((prev) =>
+                appendResponse(response, prev, handleAppendModifiedFileToolReturns, setIsDeepPlanCreated),
+            );
         },
         [handleAppendModifiedFileToolReturns],
     );
@@ -292,7 +212,7 @@ const RovoDevView: React.FC = () => {
                     setIsDeepPlanToggled(event.enable_deep_plan || false);
                     setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE);
                     if (event.echoMessage) {
-                        appendResponse({ source: 'User', text: event.text, context: event.context });
+                        handleAppendResponse({ source: 'User', text: event.text, context: event.context });
                     }
                     break;
 
@@ -306,7 +226,7 @@ const RovoDevView: React.FC = () => {
                             text: object.content || '',
                             source: 'RovoDev',
                         };
-                        appendResponse(msg);
+                        handleAppendResponse(msg);
                     }
                     break;
 
@@ -356,16 +276,17 @@ const RovoDevView: React.FC = () => {
                     };
 
                     setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE); // Clear pending tool call
-                    appendResponse(returnMessage);
+                    handleAppendResponse(returnMessage);
                     break;
 
                 case RovoDevProviderMessageType.ErrorMessage:
-                    if (event.message.isProcessTerminated) {
-                        setCurrentState({ state: 'ProcessTerminated' });
-                    }
                     const msg = event.message;
-                    setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
-                    appendResponse(msg);
+                    if (msg.isProcessTerminated) {
+                        setCurrentState({ state: 'ProcessTerminated' });
+                    } else {
+                        setRetryAfterErrorEnabled(msg.isRetriable ? msg.uid : '');
+                    }
+                    handleAppendResponse(msg);
                     break;
 
                 case RovoDevProviderMessageType.ClearChat:
@@ -399,6 +320,15 @@ const RovoDevView: React.FC = () => {
                         isPromptPending: event.isPromptPending,
                         totalBytes: event.totalBytes,
                         downloadedBytes: event.downloadedBytes,
+                    });
+                    break;
+
+                case RovoDevProviderMessageType.SetMcpAcceptanceRequired:
+                    setCurrentState({
+                        state: 'Initializing',
+                        subState: 'MCPAcceptance',
+                        mcpIds: event.mcpIds,
+                        isPromptPending: event.isPromptPending,
                     });
                     break;
 
@@ -472,7 +402,7 @@ const RovoDevView: React.FC = () => {
                     break;
                 default:
                     // this is never supposed to happen since there aren't other type of messages
-                    appendResponse({
+                    handleAppendResponse({
                         source: 'RovoDevError',
                         type: 'error',
                         // @ts-expect-error ts(2339) - event here should be 'never'
@@ -483,7 +413,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [currentState, appendResponse, clearChatHistory, finalizeResponse],
+        [currentState.state, handleAppendResponse, clearChatHistory, finalizeResponse],
     );
 
     const { postMessage, postMessagePromise } = useMessagingApi<
@@ -619,14 +549,14 @@ const RovoDevView: React.FC = () => {
                 keepFiles(totalModifiedFiles);
             }
 
-            appendResponse(msg);
+            handleAppendResponse(msg);
 
             postMessage({
                 type: RovoDevViewResponseType.ReportChangesGitPushed,
                 pullRequestCreated,
             });
         },
-        [totalModifiedFiles, appendResponse, postMessage, keepFiles],
+        [totalModifiedFiles, handleAppendResponse, postMessage, keepFiles],
     );
 
     const onCollapsiblePanelExpanded = useCallback(() => {
@@ -696,6 +626,21 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
+    const onMcpChoice = useCallback(
+        (choice: McpConsentChoice, serverName?: string) => {
+            postMessage({
+                type: RovoDevViewResponseType.McpConsentChoiceSubmit,
+                choice,
+                serverName,
+            });
+        },
+        [postMessage],
+    );
+
+    const hidePromptBox =
+        currentState.state === 'Disabled' ||
+        (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance');
+
     return (
         <div className="rovoDevChat">
             {debugPanelEnabled && <DebugPanel currentState={currentState} debugContext={debugPanelContext} />}
@@ -721,8 +666,9 @@ const RovoDevView: React.FC = () => {
                 sendFeedback={executeSendFeedback}
                 onLoginClick={onLoginClick}
                 onOpenFolder={onOpenFolder}
+                onMcpChoice={onMcpChoice}
             />
-            {currentState.state !== 'Disabled' && (
+            {!hidePromptBox && (
                 <div className="input-section-container">
                     <UpdatedFilesComponent
                         modifiedFiles={totalModifiedFiles}
