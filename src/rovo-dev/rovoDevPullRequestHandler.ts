@@ -1,5 +1,5 @@
 import { exec } from 'child_process';
-import { Logger, RovoDevLogger } from 'src/logger';
+import { RovoDevLogger } from 'src/logger';
 import { GitExtension, Repository } from 'src/typings/git';
 import { promisify } from 'util';
 import { env, extensions, Uri } from 'vscode';
@@ -48,13 +48,13 @@ export class RovoDevPullRequestHandler {
         for (const matcher of linkMatchers) {
             const match = output.match(matcher);
             if (match && match[0]) {
-                Logger.info(`Create PR: ${match[0]}`);
+                RovoDevLogger.info(`Create PR: ${match[0]}`);
                 return match[0];
             }
         }
 
-        Logger.info(`Could not find PR link in push output.`);
-        Logger.info(`Push warnings: ${output}`);
+        RovoDevLogger.info(`Could not find PR link in push output.`);
+        RovoDevLogger.info(`Push warnings: ${output}`);
         return undefined;
     }
 
