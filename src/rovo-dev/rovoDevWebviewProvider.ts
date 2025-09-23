@@ -78,6 +78,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _webviewReady = false;
     private _debugPanelEnabled = false;
     private _debugPanelContext: Record<string, string> = {};
+    private _debugPanelMcpContext: Record<string, string> = {};
 
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
@@ -161,6 +162,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 type: RovoDevProviderMessageType.SetDebugPanel,
                 enabled: this._debugPanelEnabled,
                 context: this._debugPanelContext,
+                mcpContext: this._debugPanelMcpContext,
             });
         }
     }
@@ -587,11 +589,21 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async executeHealthcheckInfo(): Promise<RovoDevHealthcheckResponse | undefined> {
+        let info: RovoDevHealthcheckResponse | undefined = undefined;
         try {
-            return await this.rovoDevApiClient?.healthcheck();
-        } catch {
-            return undefined;
+            info = await this.rovoDevApiClient?.healthcheck();
+        } catch {}
+
+        if (info) {
+            for (const mcpServer in info.mcp_servers) {
+                this._debugPanelMcpContext[mcpServer] = info.mcp_servers[mcpServer];
+            }
         }
+
+        this._debugPanelContext['RovoDevHealthcheck'] = info?.status || '???';
+        this.refreshDebugPanel();
+
+        return info;
     }
 
     private makeRelativePathAbsolute(filePath: string): string {
@@ -934,9 +946,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
         const rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
 
-        this._debugPanelContext['RovoDevHost'] = rovoDevHost;
-        this._debugPanelContext['RovoDevPort'] = `${rovoDevPort}`;
-        this._debugPanelContext['RovoDevHealthcheck'] = '???';
+        this._debugPanelContext['RovoDevAddress'] = `http://${rovoDevHost}:${rovoDevPort}`;
         this.refreshDebugPanel();
 
         // enable the 'show terminal' button only when in debugging
@@ -961,8 +971,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         // if the client becomes undefined, it means the process terminated while we were polling the healtcheck
         if (!rovoDevClient) {
-            delete this._debugPanelContext['RovoDevHost'];
-            delete this._debugPanelContext['RovoDevPort'];
+            delete this._debugPanelContext['RovoDevAddress'];
             delete this._debugPanelContext['RovoDevHealthcheck'];
             this.refreshDebugPanel();
             return;
@@ -977,9 +986,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             );
             return;
         }
-
-        this._debugPanelContext['RovoDevHealthcheck'] = result.status;
-        this.refreshDebugPanel();
 
         // if result is unhealthy, it means Rovo Dev has failed during initialization (e.g., some MCP servers failed to start)
         // we can't continue - shutdown and set the process as terminated so the user can try again.
@@ -1103,9 +1109,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._dwellTracker?.dispose();
         this._dwellTracker = undefined;
 
-        delete this._debugPanelContext['RovoDevHost'];
-        delete this._debugPanelContext['RovoDevPort'];
-        delete this._debugPanelContext['RovoDevHealthcheck'];
         this.refreshDebugPanel();
     }
 }
