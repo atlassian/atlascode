@@ -39,7 +39,7 @@ export interface AbstractRovoDevHealthcheckResponse {
 }
 
 export interface RovoDevHealthcheckBasicResponse extends AbstractRovoDevHealthcheckResponse {
-    status: 'healthy' | 'unhealthy' | 'entitlement check failed';
+    status: 'unknown' | 'healthy' | 'unhealthy' | 'entitlement check failed';
 }
 
 export interface RovoDevHealthcheckEntitlementCheckFailedResponse extends AbstractRovoDevHealthcheckResponse {

@@ -949,7 +949,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._rovoDevApiClient = rovoDevApiClient;
 
         const result = await safeWaitFor({
-            condition: (info) => !!info && info.status !== 'unhealthy', // TODO: remove check for unhealthy after Rovo Dev fixes this status
+            condition: (info) => !!info && info.status !== 'unknown',
             check: () => this.executeHealthcheckInfo(),
             timeout,
             interval: 500,
@@ -968,18 +968,18 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             return;
         }
 
+        this._debugPanelContext['RovoDevHealthcheck'] = result?.status ?? '???';
+        this.refreshDebugPanel();
+
         // if result is undefined, it means we didn't manage to contact Rovo Dev within the allotted time
         // TODO - this scenario needs a better handling
-        if (!result) {
+        if (!result || result.status === 'unknown') {
             this.signalProcessTerminated(
                 `Unable to initialize RovoDev at "${this._rovoDevApiClient.baseApiUrl}". Service wasn't ready within ${timeout} ms`,
                 true,
             );
             return;
         }
-
-        this._debugPanelContext['RovoDevHealthcheck'] = result.status;
-        this.refreshDebugPanel();
 
         // if result is unhealthy, it means Rovo Dev has failed during initialization (e.g., some MCP servers failed to start)
         // we can't continue - shutdown and set the process as terminated so the user can try again.
