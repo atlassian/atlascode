@@ -29,7 +29,7 @@ import {
 import { Tooltip } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
-import * as React from 'react';
+import React from 'react';
 import EdiText, { EdiTextType } from 'react-editext';
 import { v4 } from 'uuid';
 
@@ -44,6 +44,7 @@ import {
     UserList,
 } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
+import { Features } from '../../../util/features';
 import { ConnectionTimeout } from '../../../util/time';
 import AISuggestionFooter from '../aiCreateIssue/AISuggestionFooter';
 import AISuggestionHeader from '../aiCreateIssue/AISuggestionHeader';
@@ -53,6 +54,7 @@ import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
+import AtlaskitEditor from './common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
@@ -78,10 +80,10 @@ export interface CommonEditorViewState extends Message {
     showPMF: boolean;
     errorDetails: any;
     commentInputValue: string;
-    isRteEnabled: boolean;
     isRovoDevEnabled: boolean;
     isGeneratingSuggestions?: boolean;
     summaryKey: string;
+    isAtlaskitEditorEnabled: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -97,9 +99,9 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     isErrorBannerOpen: false,
     errorDetails: undefined,
     commentInputValue: '',
-    isRteEnabled: false,
     isRovoDevEnabled: false,
     summaryKey: v4(),
+    isAtlaskitEditorEnabled: false,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -215,7 +217,9 @@ export abstract class AbstractIssueEditorPage<
                 break;
             }
             case 'updateFeatureFlags': {
-                this.setState({ isRteEnabled: e.featureFlags.rteEnabled });
+                this.setState({
+                    isAtlaskitEditorEnabled: e.featureFlags[Features.AtlaskitEditor] || false,
+                });
                 break;
             }
             case 'loadingStart': {
@@ -474,8 +478,8 @@ export abstract class AbstractIssueEditorPage<
                     if ((field as InputFieldUI).isMultiline) {
                         markup = (
                             <EditRenderedTextArea
-                                text={this.coerceToString(this.state.fieldValues[`${field.key}`])}
-                                renderedText={this.coerceToString(this.state.fieldValues[`${field.key}.rendered`])}
+                                text={this.state.fieldValues[`${field.key}`]}
+                                renderedText={this.state.fieldValues[`${field.key}.rendered`]}
                                 fetchUsers={async (input: string) =>
                                     (await this.fetchUsers(input)).map((user) => ({
                                         displayName: user.displayName,
@@ -512,7 +516,6 @@ export abstract class AbstractIssueEditorPage<
                     }
                     return markup;
                 }
-
                 return (
                     <>
                         {field.key === 'summary' && <AISuggestionHeader vscodeApi={this._api} />}
@@ -544,7 +547,14 @@ export abstract class AbstractIssueEditorPage<
                                     />
                                 );
                                 if ((field as InputFieldUI).isMultiline) {
-                                    markup = (
+                                    markup = this.state.isAtlaskitEditorEnabled ? (
+                                        <AtlaskitEditor
+                                            defaultValue={this.state.fieldValues[field.key] || ''}
+                                            onBlur={(content: string) => {
+                                                this.handleInlineEdit(field, content);
+                                            }}
+                                        />
+                                    ) : (
                                         <JiraIssueTextAreaEditor
                                             {...fieldArgs.fieldProps}
                                             value={this.coerceToString(this.state.fieldValues[field.key])}
@@ -563,7 +573,6 @@ export abstract class AbstractIssueEditorPage<
                                                         : `[~${user.name}]`,
                                                 }))
                                             }
-                                            featureGateEnabled={this.state.isRteEnabled}
                                         />
                                     );
                                 }
