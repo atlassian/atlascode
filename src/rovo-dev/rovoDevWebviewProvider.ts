@@ -995,9 +995,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             return;
         }
 
-        this._debugPanelContext['RovoDevHealthcheck'] = result?.status ?? '???';
-        this.refreshDebugPanel();
-
         // if result is undefined, it means we didn't manage to contact Rovo Dev within the allotted time
         // TODO - this scenario needs a better handling
         if (!result || result.status === 'unknown') {
