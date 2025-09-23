@@ -49,6 +49,19 @@ module.exports = {
         ],
         splitChunks: {
             cacheGroups: {
+                prosemirror: {
+                    name: 'prosemirror',
+                    test: /[\\/]node_modules[\\/]prosemirror-/,
+                    chunks: 'all',
+                    priority: 30,
+                    enforce: true,
+                },
+                atlaskit: {
+                    name: 'atlaskit',
+                    test: /[\\/]node_modules[\\/]@atlaskit[\\/]/,
+                    chunks: 'all',
+                    priority: 20,
+                },
                 styles: {
                     name: 'main',
                     test: /^\.\/src\/webviews\.css$/,
@@ -70,6 +83,24 @@ module.exports = {
         plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.notest.json') })],
         fallback: {
             path: require.resolve('path-browserify'),
+        },
+        alias: {
+            // Resolve ProseMirror conflicts by using unified versions
+            'prosemirror-model': path.resolve(__dirname, 'node_modules/prosemirror-model'),
+            'prosemirror-state': path.resolve(__dirname, 'node_modules/prosemirror-state'),
+            'prosemirror-view': path.resolve(__dirname, 'node_modules/prosemirror-view'),
+            'prosemirror-commands': path.resolve(__dirname, 'node_modules/prosemirror-commands'),
+            'prosemirror-gapcursor': path.resolve(__dirname, 'node_modules/prosemirror-gapcursor'),
+            'prosemirror-history': path.resolve(__dirname, 'node_modules/prosemirror-history'),
+            'prosemirror-keymap': path.resolve(__dirname, 'node_modules/prosemirror-keymap'),
+            'prosemirror-dropcursor': path.resolve(__dirname, 'node_modules/prosemirror-dropcursor'),
+            'prosemirror-example-setup': path.resolve(__dirname, 'node_modules/prosemirror-example-setup'),
+            'prosemirror-inputrules': path.resolve(__dirname, 'node_modules/prosemirror-inputrules'),
+            'prosemirror-markdown': path.resolve(__dirname, 'node_modules/prosemirror-markdown'),
+            'prosemirror-mentions': path.resolve(__dirname, 'node_modules/prosemirror-mentions'),
+            'prosemirror-menu': path.resolve(__dirname, 'node_modules/prosemirror-menu'),
+            // Fix Atlaskit editor compatibility with newer ProseMirror versions
+            '@atlaskit/editor-prosemirror/view': path.resolve(__dirname, 'node_modules/prosemirror-view'),
         },
     },
     plugins: [
@@ -109,11 +140,16 @@ module.exports = {
             'process.env.ATLASCODE_EXP_OVERRIDES_BOOL': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_BOOL),
             'process.env.ATLASCODE_EXP_OVERRIDES_STRING': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_STRING),
             'process.env.ROVODEV_BBY': JSON.stringify(process.env.ROVODEV_BBY),
+            'process.env.NODE_ENV': JSON.stringify('production'),
+            'process.browser': JSON.stringify(true),
+        }),
+        new webpack.ProvidePlugin({
+            process: 'process/browser',
         }),
     ],
     performance: {
         maxEntrypointSize: 350000,
-        maxAssetSize: 4000000,
+        maxAssetSize: 14680064, // 14 MiB for atlaskit chunk
     },
     watchOptions: {
         ignored: /node_modules/,
@@ -192,6 +228,13 @@ module.exports = {
                         },
                     },
                 ],
+            },
+            {
+                test: /\.svg$/,
+                type: 'asset/resource',
+                generator: {
+                    filename: 'static/media/[name].[hash:8][ext]',
+                },
             },
         ],
     },

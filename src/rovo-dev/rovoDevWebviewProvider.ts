@@ -75,6 +75,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _rovoDevApiClient?: RovoDevApiClient;
     private _processState = RovoDevProcessState.NotStarted;
     private _initialized = false;
+    private _webviewReady = false;
     private _debugPanelEnabled = false;
     private _debugPanelContext: Record<string, string> = {};
 
@@ -280,6 +281,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.WebviewReady:
+                        this._webviewReady = true;
                         this.refreshDebugPanel(true);
                         if (!this.isBoysenberry && !this.isDisabled) {
                             if (!workspace.workspaceFolders?.length) {
@@ -825,6 +827,42 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
+    /**
+     * Sets the text in the prompt input field of the RovoDev webview
+     * @param text The text to set in the prompt input field
+     */
+    public setPromptText(text: string): void {
+        const webView = this._webView;
+        if (!webView) {
+            return;
+        }
+
+        webView.postMessage({
+            type: RovoDevProviderMessageType.SetPromptText,
+            text: text,
+        });
+    }
+
+    /**
+     * Sets the text in the prompt input field with focus, using the same reliable approach as invokeRovoDevAskCommand
+     * @param text The text to set in the prompt input field
+     */
+    public async setPromptTextWithFocus(text: string): Promise<void> {
+        // Focus and wait for webview to be ready to receive messages
+        commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+
+        const ready = await safeWaitFor({
+            condition: (value) => !!value,
+            check: () => !!this._webView && this._webviewReady,
+            timeout: 5000,
+            interval: 50,
+        });
+
+        if (ready) {
+            this.setPromptText(text);
+        }
+    }
+
     private _dispose() {
         this._disposables.forEach((d) => d.dispose());
         this._disposables = [];
@@ -1058,6 +1096,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._processState = processState;
 
         this._initialized = false;
+        this._webviewReady = false;
         this._rovoDevApiClient = undefined;
         this._chatProvider.shutdown();
         this._telemetryProvider.shutdown();

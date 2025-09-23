@@ -7,6 +7,7 @@ How does it work? In summary:
 - We mock the various API calls made from the extension using wiremock
 - We spin up a browser-based extension and use playwright to perform various actions
 - All of that is run during the build in a docker container, with a supporting `wiremock` instance using docker-compose
+- Analytics events are disabled during testing via the `DISABLE_ANALYTICS=1` env variable
 
 ### How do I use it?
 

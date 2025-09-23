@@ -423,6 +423,10 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         );
     };
 
+    override componentDidMount() {
+        this.postMessage({ action: 'getFeatureFlags' });
+    }
+
     public override render() {
         if (!this.state.fieldValues['issuetype']?.id && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refresh' });

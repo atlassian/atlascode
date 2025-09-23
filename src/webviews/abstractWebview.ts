@@ -139,7 +139,8 @@ export abstract class AbstractReactWebview implements ReactWebview {
             this._panel.reveal(column ? column : ViewColumn.Active); // , false);
         }
 
-        this.fireFeatureGates([Features.JiraRichText]);
+        // The webview might not be ready at this point; see getFeatureFlags usage in `onMessageReceived`
+        this.fireFeatureGates([Features.AtlaskitEditor]);
         this.fireExperimentGates([]);
         this.fireAdditionalSettings({
             rovoDevEnabled: Container.isRovoDevEnabled,
@@ -233,6 +234,11 @@ export abstract class AbstractReactWebview implements ReactWebview {
                     }
                     Container.pmfStats.touchSurveyed();
                     return true;
+                }
+                case 'getFeatureFlags': {
+                    // Ensures the page is rendered and AbstractIssueEditorPage added listener for FF
+                    this.fireFeatureGates([Features.AtlaskitEditor]);
+                    this.fireExperimentGates([]);
                 }
             }
         }

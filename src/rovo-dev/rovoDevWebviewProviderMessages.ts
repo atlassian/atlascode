@@ -27,6 +27,7 @@ export const enum RovoDevProviderMessageType {
     ForceStop = 'forceStop',
     ShowFeedbackForm = 'showFeedbackForm',
     SetDebugPanel = 'setDebugPanel',
+    SetPromptText = 'setPromptText',
 }
 
 export interface RovoDevObjectResponse {
@@ -72,4 +73,5 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
     | ReducerAction<RovoDevProviderMessageType.ForceStop>
     | ReducerAction<RovoDevProviderMessageType.ShowFeedbackForm>
-    | ReducerAction<RovoDevProviderMessageType.SetDebugPanel, { enabled: boolean; context: Record<string, string> }>;
+    | ReducerAction<RovoDevProviderMessageType.SetDebugPanel, { enabled: boolean; context: Record<string, string> }>
+    | ReducerAction<RovoDevProviderMessageType.SetPromptText, { text: string }>;
