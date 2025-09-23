@@ -388,6 +388,10 @@ export class Container {
     };
 
     private static getAnalyticsEnable(): boolean {
+        if (process.env.DISABLE_ANALYTICS === '1') {
+            return false;
+        }
+
         const telemetryConfig = workspace.getConfiguration('telemetry');
         return telemetryConfig.get<boolean>('enableTelemetry', true);
     }

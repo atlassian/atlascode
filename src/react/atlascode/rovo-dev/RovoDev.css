@@ -33,6 +33,10 @@ body {
     font-size: var(--vscode-font-size) !important;
 }
 
+#prompt-editor-container > .monaco-editor {
+    outline: none;
+}
+
 .rovoDevChat button {
     cursor: pointer;
 }
