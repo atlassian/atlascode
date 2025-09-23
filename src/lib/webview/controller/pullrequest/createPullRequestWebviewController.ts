@@ -1,5 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
+import { Logger } from 'src/logger';
 
 import { Registry } from '../../../../analytics';
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
@@ -14,7 +15,6 @@ import {
     CreatePullRequestMessageType,
     CreatePullRequestResponse,
 } from '../../../ipc/toUI/createPullRequest';
-import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';

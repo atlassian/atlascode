@@ -1,6 +1,6 @@
 import { Container } from 'src/container';
 import { getAxiosInstance } from 'src/jira/jira-client/providers';
-import { Logger } from 'src/logger';
+import { RovoDevLogger } from 'src/logger';
 import * as vscode from 'vscode';
 
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
@@ -162,7 +162,7 @@ describe('RovoDevFeedbackManager', () => {
 
             await RovoDevFeedbackManager.submitFeedback(feedback);
 
-            expect(Logger.error).toHaveBeenCalledWith(error, 'Error submitting Rovo Dev feedback');
+            expect(RovoDevLogger.error).toHaveBeenCalledWith(error, 'Error submitting Rovo Dev feedback');
             expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
                 'There was an error submitting your feedback. Please try again later.',
             );

@@ -1,5 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from 'src/lib/ipc/models/config';
+import { Logger } from 'src/logger';
 import * as vscode from 'vscode';
 
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
@@ -24,7 +25,6 @@ import {
     StartWorkMessageType,
     StartWorkResponse,
 } from '../../../ipc/toUI/startWork';
-import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';

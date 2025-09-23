@@ -51,7 +51,7 @@ export class Logger {
     }
 
     // constructor is private to ensure only a single instance is created
-    private constructor() {}
+    protected constructor() {}
 
     public static get Instance(): Logger {
         return this._instance || (this._instance = new this());
@@ -114,37 +114,31 @@ export class Logger {
         }
     }
 
-    public static error(productArea: ErrorProductArea, ex: Error, errorMessage?: string, ...params: string[]): void;
-    public static error(ex: Error, errorMessage?: string, ...params: string[]): void;
-    public static error(...params: any[]): void {
+    public static error(ex: Error, errorMessage?: string, ...params: string[]): void {
+        // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
+        // If not, the function will return the name of a method inside Logger.
         const callerName = retrieveCallerName();
-
-        // the following code is ugly, but it's the only way to handle a JS/TS method overload where a new parameter
-        // has been added at the beginning of the arg list.
-        // next improvement will be refactoring every Logger.error in the codebase
-        const productArea: ErrorProductArea = params[0] instanceof Error ? undefined : params.shift();
-        const ex: Error = params.shift();
-        const errorMessage: string | undefined = params.shift();
-
-        this.Instance.errorInternal(productArea, ex, callerName, errorMessage, ...params);
+        this.Instance.errorInternal(undefined, ex, callerName, errorMessage, ...params);
     }
 
-    public error(productArea: ErrorProductArea, ex: Error, errorMessage?: string, ...params: string[]): void;
-    public error(ex: Error, errorMessage?: string, ...params: string[]): void;
-    public error(...params: any[]): void {
+    public error(ex: Error, errorMessage?: string, ...params: string[]): void {
+        // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
+        // If not, the function will return the name of a method inside Logger.
         const callerName = retrieveCallerName();
-
-        // the following code is ugly, but it's the only way to handle a JS/TS method overload where a new parameter
-        // has been added at the beginning of the arg list.
-        // next improvement will be refactoring every Logger.error in the codebase
-        const productArea: ErrorProductArea = params[0] instanceof Error ? undefined : params.shift();
-        const ex: Error = params.shift();
-        const errorMessage: string | undefined = params.shift();
-
-        this.errorInternal(productArea, ex, callerName, errorMessage, ...params);
+        this.errorInternal(undefined, ex, callerName, errorMessage, ...params);
     }
 
-    private errorInternal(
+    protected static errorInternal(
+        productArea: ErrorProductArea,
+        ex: Error,
+        capturedBy?: string,
+        errorMessage?: string,
+        ...params: string[]
+    ): void {
+        this.Instance.errorInternal(productArea, ex, capturedBy, errorMessage, ...params);
+    }
+
+    protected errorInternal(
         productArea: ErrorProductArea,
         ex: Error,
         capturedBy?: string,
@@ -194,5 +188,21 @@ export class Logger {
         const now = new Date();
         const time = now.toISOString().replace(/T/, ' ').replace(/\..+/, '');
         return `[${time}:${('00' + now.getUTCMilliseconds()).slice(-3)}]`;
+    }
+}
+
+export class RovoDevLogger extends Logger {
+    public static override error(ex: Error, errorMessage?: string, ...params: string[]): void {
+        // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
+        // If not, the function will return the name of a method inside Logger.
+        const callerName = retrieveCallerName();
+        this.errorInternal('RovoDev', ex, callerName, errorMessage, ...params);
+    }
+
+    public override error(ex: Error, errorMessage?: string, ...params: string[]): void {
+        // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
+        // If not, the function will return the name of a method inside Logger.
+        const callerName = retrieveCallerName();
+        this.errorInternal('RovoDev', ex, callerName, errorMessage, ...params);
     }
 }
