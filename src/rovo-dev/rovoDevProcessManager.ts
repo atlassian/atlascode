@@ -409,7 +409,7 @@ class RovoDevTerminalInstance extends Disposable {
 
                     // prints a line in the terminal indicating when the process started, and the full command line
                     this.rovoDevTerminal.sendText(
-                        `${format(timeStarted, 'yyyy-MM-dd hh:mm:ss.sss')} | START    | ${this.rovoDevBinPath} serve ${port} --xid rovodev-ide-vscode\r\n`,
+                        `${format(timeStarted, 'yyyy-MM-dd hh:mm:ss.sss')} | START    | ${this.rovoDevBinPath} serve ${port} --xid rovodev-ide-vscode --site-url ${siteUrl}\r\n`,
                         false,
                     );
 

@@ -34,7 +34,7 @@ export interface RovoDevChatRequest {
 }
 
 export interface RovoDevHealthcheckResponse {
-    status: 'healthy' | 'unhealthy' | 'entitlement check failed' | 'pending user review';
+    status: 'unknown' | 'healthy' | 'unhealthy' | 'entitlement check failed' | 'pending user review';
     version: string;
     mcp_servers: Record<string, string>;
     sessionId: string | null; // from response header
