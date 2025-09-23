@@ -3,7 +3,7 @@ import fs from 'fs';
 import net from 'net';
 import packageJson from 'package.json';
 import path from 'path';
-import { Logger } from 'src/logger';
+import { RovoDevLogger } from 'src/logger';
 import { downloadAndUnzip } from 'src/util/downloadFile';
 import { getFsPromise } from 'src/util/fsPromises';
 import { Disposable, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
@@ -116,7 +116,7 @@ async function getCloudCredentials(): Promise<{ username: string; key: string; h
         const results = (await Promise.all(promises)).filter((result) => result !== undefined);
         return results.length > 0 ? results[0] : undefined;
     } catch (error) {
-        Logger.error('RovoDev', error, 'Error fetching cloud credentials for Rovo Dev');
+        RovoDevLogger.error(error, 'Error fetching cloud credentials for Rovo Dev');
         return undefined;
     }
 }

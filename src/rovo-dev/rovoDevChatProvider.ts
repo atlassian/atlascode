@@ -1,4 +1,4 @@
-import { Logger } from 'src/logger';
+import { RovoDevLogger } from 'src/logger';
 import { RovoDevViewResponse } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
 import { v4 } from 'uuid';
 import { Event, Webview } from 'vscode';
@@ -389,7 +389,7 @@ export class RovoDevChatProvider {
     }
 
     private processError(error: Error, isRetriable: boolean, isProcessTerminated?: boolean) {
-        Logger.error('RovoDev', error);
+        RovoDevLogger.error(error);
 
         const webview = this._webView!;
         return webview.postMessage({
