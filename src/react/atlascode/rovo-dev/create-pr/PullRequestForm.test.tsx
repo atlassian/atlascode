@@ -107,7 +107,7 @@ describe('PullRequestForm', () => {
             target: { value: 'test-branch' },
         });
 
-        fireEvent.click(screen.getByRole('button', { name: /create pr/i }));
+        fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
 
         await waitFor(() => {
             expect(mockPostMessagePromise).toHaveBeenCalledWith(
@@ -132,7 +132,7 @@ describe('PullRequestForm', () => {
             />,
         );
 
-        fireEvent.click(screen.getByRole('button', { name: /create pr/i }));
+        fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
 
         expect(mockPostMessagePromise).not.toHaveBeenCalled();
         expect(mockOnPullRequestCreated).not.toHaveBeenCalled();
