@@ -202,7 +202,7 @@ const RovoDevView: React.FC = () => {
                 appendResponse(response, prev, handleAppendModifiedFileToolReturns, setIsDeepPlanCreated),
             );
         },
-        [handleAppendModifiedFileToolReturns],
+        [setHistory, handleAppendModifiedFileToolReturns, setIsDeepPlanCreated],
     );
 
     const onMessageHandler = useCallback(
@@ -353,7 +353,6 @@ const RovoDevView: React.FC = () => {
                     ) {
                         finalizeResponse();
                     }
-                    clearChatHistory();
                     setCurrentState({
                         state: 'Disabled',
                         subState: mapRovoDevDisabledReasonToSubState(event.reason),

@@ -209,7 +209,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     const isChatHistoryDisabled =
         (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance') ||
-        currentState.state === 'Disabled';
+        (currentState.state === 'Disabled' && currentState.subState !== 'Other');
 
     const shouldShowToolCall =
         currentState.state !== 'Disabled' &&

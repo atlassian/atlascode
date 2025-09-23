@@ -17,12 +17,16 @@ export async function fetchCreateIssueUI(
     projectKey: string,
 ): Promise<CreateMetaTransformerResult<DetailedSiteInfo>> {
     const client = await Container.clientManager.jiraClient(siteDetails);
-    const [fields, issuelinkTypes, cMeta] = await Promise.all([
+    const [fields, issueLinkTypes, issueCreateMetadata] = await Promise.all([
         Container.jiraSettingsManager.getAllFieldsForSite(siteDetails),
         Container.jiraSettingsManager.getIssueLinkTypes(siteDetails),
         Container.jiraSettingsManager.getIssueCreateMetadata(projectKey, siteDetails),
     ]);
-    return await createIssueUI(projectKey, client, DEFAULT_API_VERSION, fields, issuelinkTypes, cMeta, true);
+    return await createIssueUI(projectKey, client, DEFAULT_API_VERSION, {
+        fields,
+        issueLinkTypes,
+        issueCreateMetadata,
+    });
 }
 
 export async function getCachedOrFetchMinimalIssue(
@@ -58,7 +62,7 @@ export async function fetchMinimalIssue(
 
 export async function fetchEditIssueUI(issue: MinimalIssue<DetailedSiteInfo>): Promise<EditIssueUI<DetailedSiteInfo>> {
     const client = await Container.clientManager.jiraClient(issue.siteDetails);
-    const [fields, issuelinkTypes, cMeta] = await Promise.all([
+    const [fields, issueLinkTypes, issueCreateMetadata] = await Promise.all([
         Container.jiraSettingsManager.getAllFieldsForSite(issue.siteDetails),
         Container.jiraSettingsManager.getIssueLinkTypes(issue.siteDetails),
         Container.jiraSettingsManager.getIssueCreateMetadata(
@@ -66,5 +70,5 @@ export async function fetchEditIssueUI(issue: MinimalIssue<DetailedSiteInfo>): P
             issue.siteDetails,
         ),
     ]);
-    return await editIssueUI(issue, client, DEFAULT_API_VERSION, fields, issuelinkTypes, cMeta, true);
+    return await editIssueUI(issue, client, DEFAULT_API_VERSION, { fields, issueLinkTypes, issueCreateMetadata });
 }
