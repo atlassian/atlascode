@@ -28,6 +28,8 @@ jobs:
           npm ci --no-audit
 
       - name: Run vulnerability audit
+        # "There is no Vulnerability in Media Viewer after 48.5.4. since it was fixed by patching, but npm audit still reports it.",
+        # So that switched to audit-ci with allowlist
         run: npx audit-ci --config=".audit-ci.json"
 
       - name: Run linter

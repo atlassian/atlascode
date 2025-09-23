@@ -2,7 +2,6 @@
   "package-manager": "npm",
   "low": true,
   "allowlist": [
-    // "There is no Vulnerability in Media Viewer after 48.5.4. since it was fixed by patching, but npm audit still reports it.",
     "pdfjs-dist"
   ],
   "show-not-found": true
