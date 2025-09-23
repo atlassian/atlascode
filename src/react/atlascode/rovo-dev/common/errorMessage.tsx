@@ -5,6 +5,7 @@ import React, { useCallback } from 'react';
 
 import { chatMessageStyles, errorMessageStyles, inChatButtonStyles, messageContentStyles } from '../rovoDevViewStyles';
 import { ErrorMessage } from '../utils';
+import { MarkedDown } from './common';
 
 export const ErrorMessageItem: React.FC<{
     msg: ErrorMessage;
@@ -53,7 +54,9 @@ export const ErrorMessageItem: React.FC<{
                 >
                     <div style={messageContentStyles}>{getTitle()}</div>
                     <div style={messageContentStyles}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>{msg.text}</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <MarkedDown value={msg.text} />
+                        </div>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '8px' }}>
                         {msg.isRetriable && isRetryAfterErrorButtonEnabled(msg.uid) && (
