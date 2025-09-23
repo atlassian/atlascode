@@ -1,6 +1,7 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
 import { ConfigV3Section } from 'src/lib/ipc/models/config';
+import { Logger } from 'src/logger';
 import { Features } from 'src/util/features';
 import { v4 } from 'uuid';
 import { env } from 'vscode';
@@ -15,7 +16,6 @@ import { ConfigAction, ConfigActionType } from '../../../ipc/fromUI/config';
 import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
 import { ConfigMessageType, ConfigResponse, ConfigV3Message, SectionV3ChangeMessage } from '../../../ipc/toUI/config';
-import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';

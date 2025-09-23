@@ -998,19 +998,7 @@ async function checkUserDomain(): Promise<string> {
         return 'unknown';
     }
 
-    for (const site of allSites) {
-        try {
-            const authInfo = await Container.credentialManager?.getAuthInfo(site);
-            if (authInfo?.user?.email?.toLowerCase().endsWith('@atlassian.com')) {
-                return 'atlassian';
-            }
-        } catch {
-            // Continue to next site if this one fails
-            continue;
-        }
-    }
-
-    return 'not-atlassian';
+    return (await Container.isAtlassianUser(ProductJira, ProductBitbucket)) ? 'atlassian' : 'not-atlassian';
 }
 
 async function appendUserInfo<T>(e: Object): Promise<T> {

@@ -80,6 +80,7 @@ mdParser.renderer.rules.text = (tokens, idx, options, env, renderer) => {
 };
 
 export const MarkedDown: React.FC<{ value: string }> = ({ value }) => {
+    // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- necessary to apply MarkDown formatting
     return <span dangerouslySetInnerHTML={{ __html: mdParser.render(value) }} />;
 };
 

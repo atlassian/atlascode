@@ -1,5 +1,6 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import Axios from 'axios';
+import { Logger } from 'src/logger';
 
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { Commit, FileDiff, FileStatus, PullRequest, User, WorkspaceRepo } from '../../../../bitbucket/model';
@@ -17,16 +18,15 @@ import {
 import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessageType } from '../../../ipc/toUI/common';
 import { CreatePullRequestMessageType, RepoData } from '../../../ipc/toUI/createPullRequest';
-import { Logger } from '../../../logger';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster } from '../webviewController';
 import { CreatePullRequestActionApi } from './createPullRequestActionApi';
 import { CreatePullRequestWebviewController } from './createPullRequestWebviewController';
 
 // Mock dependencies
-jest.mock('../../../logger');
 jest.mock('../../../analyticsApi');
 jest.mock('../common/commonActionMessageHandler');
+jest.mock('src/logger');
 jest.mock('axios');
 
 // Helper functions to create mock objects
