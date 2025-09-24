@@ -33,8 +33,7 @@ jobs:
           restore-keys: yarn-cache-
 
       - name: Install dependencies
-        run: |
-          yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Run vulnerability audit
         # pdfjs-dist is excluded in .yarnrc.yml npmAuditExcludePackages
@@ -83,7 +82,7 @@ jobs:
           restore-keys: yarn-cache-
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Run unit tests
         if: matrix.kind == 'unit'
