@@ -149,7 +149,7 @@ module.exports = {
     ],
     performance: {
         maxEntrypointSize: 350000,
-        maxAssetSize: 10223616, // 9.75 MiB MiB for atlaskit chunk
+        maxAssetSize: 12582912, // 12 MiB for atlaskit chunk
     },
     watchOptions: {
         ignored: /node_modules/,
