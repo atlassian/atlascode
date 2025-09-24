@@ -88,7 +88,13 @@ export async function activate(context: ExtensionContext) {
         if (previousVersion === undefined) {
             commands.executeCommand(Commands.ShowOnboardingFlow);
         } else {
-            showWelcomePage(atlascodeVersion, previousVersion);
+            // Check if user should get first-time experience due to long inactivity
+            const shouldShowFirstTimeExperience = await checkForFirstTimeExperienceOnReinstall();
+            if (shouldShowFirstTimeExperience) {
+                commands.executeCommand(Commands.ShowOnboardingFlow);
+            } else {
+                showWelcomePage(atlascodeVersion, previousVersion);
+            }
         }
     }
 
@@ -202,6 +208,30 @@ async function sendAnalytics(version: string, globalState: Memento) {
     ).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
+}
+
+// Check if user should get first-time experience on reinstall/upgrade
+async function checkForFirstTimeExperienceOnReinstall(): Promise<boolean> {
+    // Check if we should even consider triggering (weekly throttle)
+    if (!Container.pmfStats.shouldTriggerFirstTimeExperience()) {
+        return false;
+    }
+
+    // Check if user has been inactive for 90 days
+    const hasBeenInactive = Container.pmfStats.hasBeenInactiveFor90Days();
+    if (!hasBeenInactive) {
+        return false;
+    }
+
+    // Check if user is not logged in to Jira
+    const isJiraAuthenticated = Container.siteManager.productHasAtLeastOneSite(ProductJira);
+    if (isJiraAuthenticated) {
+        return false;
+    }
+
+    // All conditions met - record that we've performed this check and return true
+    await Container.pmfStats.touchFirstTimeExperienceCheck();
+    return true;
 }
 
 // this method is called when your extension is deactivated
