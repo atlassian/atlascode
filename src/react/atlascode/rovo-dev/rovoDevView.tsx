@@ -69,6 +69,7 @@ const RovoDevView: React.FC = () => {
     const [promptContextCollection, setPromptContextCollection] = useState<RovoDevContextItem[]>([]);
     const [debugPanelEnabled, setDebugPanelEnabled] = useState(false);
     const [debugPanelContext, setDebugPanelContext] = useState<Record<string, string>>({});
+    const [debugPanelMcpContext, setDebugPanelMcpContext] = useState<Record<string, string>>({});
     const [promptText, setPromptText] = useState<string | undefined>(undefined);
 
     // Initialize atlaskit theme for proper token support
@@ -202,7 +203,7 @@ const RovoDevView: React.FC = () => {
                 appendResponse(response, prev, handleAppendModifiedFileToolReturns, setIsDeepPlanCreated),
             );
         },
-        [handleAppendModifiedFileToolReturns],
+        [setHistory, handleAppendModifiedFileToolReturns, setIsDeepPlanCreated],
     );
 
     const onMessageHandler = useCallback(
@@ -303,7 +304,10 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.SetDebugPanel:
                     setDebugPanelEnabled(event.enabled);
-                    setDebugPanelContext(event.context);
+                    if (event.enabled) {
+                        setDebugPanelContext(event.context);
+                        setDebugPanelMcpContext(event.mcpContext);
+                    }
                     break;
 
                 case RovoDevProviderMessageType.SetInitializing:
@@ -353,7 +357,6 @@ const RovoDevView: React.FC = () => {
                     ) {
                         finalizeResponse();
                     }
-                    clearChatHistory();
                     setCurrentState({
                         state: 'Disabled',
                         subState: mapRovoDevDisabledReasonToSubState(event.reason),
@@ -653,7 +656,13 @@ const RovoDevView: React.FC = () => {
 
     return (
         <div className="rovoDevChat">
-            {debugPanelEnabled && <DebugPanel currentState={currentState} debugContext={debugPanelContext} />}
+            {debugPanelEnabled && (
+                <DebugPanel
+                    currentState={currentState}
+                    debugContext={debugPanelContext}
+                    debugMcpContext={debugPanelMcpContext}
+                />
+            )}
             <ChatStream
                 chatHistory={history}
                 renderProps={{

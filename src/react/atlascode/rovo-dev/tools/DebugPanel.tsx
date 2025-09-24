@@ -1,15 +1,28 @@
 import React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 
+import { MarkedDown } from '../common/common';
+
 export const DebugPanel: React.FC<{
     currentState: State;
     debugContext: Record<string, string>;
-}> = ({ currentState, debugContext }) => {
+    debugMcpContext: Record<string, string>;
+}> = ({ currentState, debugContext, debugMcpContext }) => {
     return (
         <div style={{ width: '100%', border: '1px solid var(--vscode-inputValidation-errorBorder)', padding: '4px' }}>
             <DebugStatePanel currentState={currentState} />
-            <hr />
-            <DebugContextPanel debugContext={debugContext} />
+            {Object.keys(debugContext).length > 0 && (
+                <>
+                    <hr />
+                    <DebugContextPanel title="Provider's state" debugContext={debugContext} />
+                </>
+            )}
+            {Object.keys(debugMcpContext).length > 0 && (
+                <>
+                    <hr />
+                    <DebugContextPanel title="MCP servers" debugContext={debugMcpContext} />
+                </>
+            )}
         </div>
     );
 };
@@ -20,13 +33,21 @@ const DebugStatePanel: React.FC<{
     return (
         <table>
             <tr>
-                <td>State:</td>
+                <td>View's state:</td>
                 <td>{currentState.state}</td>
             </tr>
             {(currentState.state === 'Disabled' || currentState.state === 'Initializing') && (
                 <tr>
                     <td>Substate:</td>
                     <td>{currentState.subState}</td>
+                </tr>
+            )}
+            {currentState.state === 'Initializing' && currentState.subState === 'UpdatingBinaries' && (
+                <tr>
+                    <td>Downloaded:</td>
+                    <td>
+                        {currentState.downloadedBytes} / {currentState.totalBytes}
+                    </td>
                 </tr>
             )}
             {currentState.state === 'Initializing' && (
@@ -40,8 +61,9 @@ const DebugStatePanel: React.FC<{
 };
 
 const DebugContextPanel: React.FC<{
+    title: string;
     debugContext: Record<string, string>;
-}> = ({ debugContext }) => {
+}> = ({ title, debugContext }) => {
     const props = React.useMemo(() => {
         const p: [string, string][] = [];
         for (const key in debugContext) {
@@ -51,13 +73,21 @@ const DebugContextPanel: React.FC<{
     }, [debugContext]);
 
     return (
-        <table>
-            {props.map(([key, value]) => (
-                <tr>
-                    <td>{key}</td>
-                    <td>{value}</td>
-                </tr>
-            ))}
-        </table>
+        <details open>
+            <summary>{title}</summary>
+            <table>
+                {props.map(([key, value]) => (
+                    <tr>
+                        <td>{key}</td>
+                        {key === 'RovoDevAddress' && (
+                            <td>
+                                <MarkedDown value={value + '/docs'} />
+                            </td>
+                        )}
+                        {key !== 'RovoDevAddress' && <td>{value}</td>}
+                    </tr>
+                ))}
+            </table>
+        </details>
     );
 };

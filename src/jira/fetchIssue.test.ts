@@ -105,15 +105,11 @@ describe('fetchIssue', () => {
                 mockProjectKey,
                 mockSiteDetails,
             );
-            expect(createIssueUI).toHaveBeenCalledWith(
-                mockProjectKey,
-                mockClient,
-                DEFAULT_API_VERSION,
-                mockFields,
-                mockIssueLinkTypes,
-                mockCreateMetadata,
-                true,
-            );
+            expect(createIssueUI).toHaveBeenCalledWith(mockProjectKey, mockClient, DEFAULT_API_VERSION, {
+                fields: mockFields,
+                issueLinkTypes: mockIssueLinkTypes,
+                issueCreateMetadata: mockCreateMetadata,
+            });
             expect(result).toEqual({
                 fields: [],
                 issuetypes: [],
@@ -209,15 +205,11 @@ describe('fetchIssue', () => {
                 mockProjectKey,
                 mockMinimalIssue.siteDetails,
             );
-            expect(editIssueUI).toHaveBeenCalledWith(
-                mockMinimalIssue,
-                mockClient,
-                DEFAULT_API_VERSION,
-                mockFields,
-                mockIssueLinkTypes,
-                mockCreateMetadata,
-                true,
-            );
+            expect(editIssueUI).toHaveBeenCalledWith(mockMinimalIssue, mockClient, DEFAULT_API_VERSION, {
+                fields: mockFields,
+                issueLinkTypes: mockIssueLinkTypes,
+                issueCreateMetadata: mockCreateMetadata,
+            });
             expect(result).toEqual({ fields: [] });
         });
 
