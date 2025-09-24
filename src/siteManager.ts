@@ -98,6 +98,10 @@ export class SiteManager extends Disposable {
         }
     }
 
+    public isSiteAddedViaOauth(site: DetailedSiteInfo): boolean {
+        return site.isCloud && site.name !== site.host && !site.contextPath;
+    }
+
     public addSites(newSites: DetailedSiteInfo[]) {
         if (newSites.length === 0) {
             return;
@@ -109,7 +113,7 @@ export class SiteManager extends Disposable {
         if (allSites) {
             // Ensure all cloud sites use the per account credential ID
             allSites.forEach((site) => {
-                if (site.isCloud) {
+                if (this.isSiteAddedViaOauth(site)) {
                     site.credentialId = CredentialManager.generateCredentialId(site.product.key, site.userId);
                 }
             });

@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 3.8.18
+
+### Bug Fixes
+
+- Fix error while connecting several jira sites with an API token
+
 ## What's new in 3.8.17
 
 ### Features
