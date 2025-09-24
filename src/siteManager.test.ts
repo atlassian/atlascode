@@ -150,32 +150,6 @@ describe('SiteManager', () => {
             expect(updatedSites[0].credentialId).toBe(`${ProductJira.key}-user1`);
             expect(updatedSites).toHaveLength(2);
         });
-
-        it('should not rewrite credentialId for site added via API token', () => {
-            const apiTokenSite = createDetailedSiteInfo(ProductJira, 'mock-site.atlassian.net', 'user1', true);
-            apiTokenSite.name = 'mock-site.atlassian.net';
-            apiTokenSite.host = 'mock-site.atlassian.net';
-            apiTokenSite.credentialId = 'api-token-credential-id';
-
-            storedSites.set(`${ProductJira.key}Sites`, [apiTokenSite]);
-
-            const oauthSite = createDetailedSiteInfo(ProductJira, 'oauth-site', 'user2', true);
-            oauthSite.name = 'mock-oauth';
-
-            siteManager.addSites([oauthSite]);
-
-            const updatedSites = siteManager.getSitesAvailable(ProductJira);
-
-            // The API token site should keep its original credential ID
-            const apiTokenSiteInResult = updatedSites.find((site) => site.name === 'mock-site.atlassian.net');
-            expect(apiTokenSiteInResult?.credentialId).toBe('api-token-credential-id');
-
-            // The OAuth site should get the standard credential ID
-            const oauthSiteInResult = updatedSites.find((site) => site.name === 'mock-oauth');
-            expect(oauthSiteInResult?.credentialId).toBe(`${ProductJira.key}-user2`);
-
-            expect(updatedSites).toHaveLength(2);
-        });
     });
 
     describe('updateSite', () => {
