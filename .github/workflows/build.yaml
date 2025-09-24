@@ -36,8 +36,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Run vulnerability audit
-        # pdfjs-dist is excluded in .yarnrc.yml npmAuditExcludePackages
-        run: yarn npm audit --no-deprecations
+        run: yarn npm audit --recursive --no-deprecations
 
       - name: Run linter
         run: yarn lint
