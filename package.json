@@ -59,7 +59,7 @@
         "compile:extension": "NODE_OPTIONS=--openssl-legacy-provider webpack --mode production --config webpack.extension.prod.js --fail-on-warnings",
         "compile:react": "NODE_OPTIONS=--openssl-legacy-provider webpack --mode production --config webpack.react.prod.js --fail-on-warnings",
         "postinstall": "cp ./scripts/githooks/* ./.git/hooks",
-        "extension:clean": "rm -rf ./atlascode-*.vsix",
+        "extension:clean": "rm -f './atlascode-'*.vsix 2>/dev/null || true",
         "extension:package:prerelease": "yarn extension:clean && vsce package --pre-release --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",
         "extension:package": "yarn extension:clean && vsce package --baseContentUrl https://raw.githubusercontent.com/atlassian/atlascode/main/",
         "extension:install": "yarn extension:package && code --install-extension ./atlascode-*.vsix --force",
@@ -1678,6 +1678,17 @@
     },
     "packageManager": "yarn@4.10.3",
     "resolutions": {
-        "@atlassiansox/analytics-web-client": "npm:@segment/analytics-node@^2.1.3"
+        "@atlassiansox/analytics-web-client": "npm:@segment/analytics-node@^2.1.3",
+        "@atlaskit/analytics-next-stable-react-context/react": "^18.3.1",
+        "react-scrolllock/react": "^18.3.1",
+        "@atlaskit/icon-priority/react": "^18.3.1",
+        "react-intl-next/typescript": "^5.8.3",
+        "@atlaskit/code/refractor": "^4.6.1",
+        "@atlaskit/teams-client/@sentry/browser": "^7.119.2",
+        "@atlaskit/editor-common/@sentry/browser": "^7.119.2",
+        "@atlaskit/editor-common/@atlaskit/media-viewer": "^52.4.20",
+        "fetch-mock/path-to-regexp": "^3.2.0",
+        "react-loosely-lazy/react": "^18.3.1",
+        "react-lazily-render/react": "^18.3.1"
     }
 }
