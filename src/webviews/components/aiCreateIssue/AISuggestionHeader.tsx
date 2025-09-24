@@ -114,8 +114,24 @@ const AISuggestionHeader: React.FC<{
         </div>
     ) : (
         <HelperMessage>
-            Did you know you can use AI to generate issues? Please add an API key in the settings to enable this
-            feature.
+            <div style={{ marginTop: '24px' }}>
+                <div>
+                    <a
+                        href="https://id.atlassian.com/manage-profile/security/api-tokens"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Create an API token
+                    </a>{' '}
+                    and then add it here to use AI-powered issue suggestions
+                </div>
+                <button
+                    style={{ marginTop: '8px' }}
+                    onClick={() => vscodeApi.postMessage({ action: 'addRovoDevToken' })}
+                >
+                    Add API Token
+                </button>
+            </div>
         </HelperMessage>
     );
 };
