@@ -1,7 +1,7 @@
 import { Uri } from 'vscode';
 
 import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/types';
-import { CreatePrTerminalSelection, ErrorProductArea, UIErrorInfo } from './analyticsTypes';
+import { CreatePrTerminalSelection, ErrorProductArea, FeedbackSentEvent, UIErrorInfo } from './analyticsTypes';
 import {
     DetailedSiteInfo,
     isEmptySiteInfo,
@@ -537,6 +537,10 @@ export async function viewScreenEvent(
 }
 
 // UI Events
+
+export async function feedbackSentEvent(event: FeedbackSentEvent): Promise<TrackEvent> {
+    return trackEvent('feedbackSent', 'atlascode', { attributes: { ...event } });
+}
 
 export async function quickFlowEvent(event: QuickFlowAnalyticsEvent): Promise<TrackEvent> {
     return trackEvent('statusUpdated', 'quickFlow', { attributes: { ...event } });

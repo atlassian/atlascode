@@ -86,7 +86,10 @@ export class IssueSuggestionManager {
             : `Negative feedback for issue suggestion: ${data.summary}`;
         console.log('Sending feedback:', feedback);
         try {
-            // TODO: actually send an analytics event
+            await Container.analyticsApi.fireFeedbackSentEvent({
+                feature: 'issueSuggestions',
+                feedbackType: isPositive ? 'positive' : 'negative',
+            });
             window.showInformationMessage(`Thank you for your feedback!`);
         } catch (error) {
             Logger.error(error, 'Error sending feedback');
