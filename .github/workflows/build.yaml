@@ -21,10 +21,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'yarn'
           
       - name: Enable Corepack
         run: corepack enable
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-cache-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-cache-
 
       - name: Install dependencies
         run: |
@@ -65,10 +71,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'yarn'
           
       - name: Enable Corepack
         run: corepack enable
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-cache-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-cache-
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
