@@ -2,16 +2,17 @@ import QuestionCircleIcon from '@atlaskit/icon/glyph/question-circle';
 import React from 'react';
 import { TechnicalPlan } from 'src/rovo-dev/rovoDevTypes';
 
-import { MarkedDown, OpenFileFunc } from '../common/common';
+import { CheckFileExistsFunc, MarkedDown, OpenFileFunc } from '../common/common';
 import { LogicalChange } from './LogicalChange';
 
 interface TechnicalPlanProps {
     content: TechnicalPlan;
     openFile: OpenFileFunc;
+    checkFileExists: CheckFileExistsFunc;
     onMount?: () => void;
 }
 
-export const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile }) => {
+export const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile, checkFileExists }) => {
     const clarifyingQuestions = content.logicalChanges.flatMap((change) => {
         return change.filesToChange
             .map((file) => {
@@ -34,7 +35,12 @@ export const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, 
                                 <div className="logical-change-counter">
                                     <p>{index + 1}</p>
                                 </div>
-                                <LogicalChange key={index} change={change} openFile={openFile} />
+                                <LogicalChange
+                                    key={index}
+                                    change={change}
+                                    openFile={openFile}
+                                    checkFileExists={checkFileExists}
+                                />
                             </div>
                         );
                     })}

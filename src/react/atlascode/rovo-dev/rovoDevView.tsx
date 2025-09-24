@@ -71,6 +71,7 @@ const RovoDevView: React.FC = () => {
     const [debugPanelContext, setDebugPanelContext] = useState<Record<string, string>>({});
     const [debugPanelMcpContext, setDebugPanelMcpContext] = useState<Record<string, string>>({});
     const [promptText, setPromptText] = useState<string | undefined>(undefined);
+    const [fileExistenceMap, setFileExistenceMap] = useState<Map<string, boolean>>(new Map());
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -394,6 +395,10 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.CheckGitChangesComplete:
                     break; // This is handled elsewhere
 
+                case RovoDevProviderMessageType.CheckFileExistsComplete:
+                    setFileExistenceMap((prev) => new Map(prev.set(event.filePath, event.exists)));
+                    break;
+
                 case RovoDevProviderMessageType.ForceStop:
                     // Signal user that Rovo Dev is stopping
                     if (currentState.state === 'GeneratingResponse' || currentState.state === 'ExecutingPlan') {
@@ -547,6 +552,24 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
+    const checkFileExists = useCallback(
+        (filePath: string): boolean | null => {
+            if (fileExistenceMap.has(filePath)) {
+                return fileExistenceMap.get(filePath)!;
+            }
+
+            const requestId = v4();
+            postMessage({
+                type: RovoDevViewResponseType.CheckFileExists,
+                filePath,
+                requestId,
+            });
+
+            return null;
+        },
+        [postMessage, fileExistenceMap],
+    );
+
     const isRetryAfterErrorButtonEnabled = useCallback(
         (uid: string) => retryAfterErrorEnabled === uid,
         [retryAfterErrorEnabled],
@@ -667,6 +690,7 @@ const RovoDevView: React.FC = () => {
                 chatHistory={history}
                 renderProps={{
                     openFile,
+                    checkFileExists,
                     isRetryAfterErrorButtonEnabled,
                     retryPromptAfterError,
                 }}
