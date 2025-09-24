@@ -298,6 +298,10 @@ body {
     background: var(--vscode-button-secondaryHoverBackground);
 }
 
+.chat-message-action.copied svg {
+    color: #6a9a23;
+}
+
 .message-drawer {
     width: 100%;
     display: flex;
