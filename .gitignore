@@ -7,6 +7,16 @@ node_modules
 launch.json
 *.vsix
 .yo-*
+
+# Yarn Berry (keep these tracked)
+# .yarnrc.yml
+# yarn.lock
+
+# Yarn Berry cache and install state (ignore these)
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
 yarn-error.log
 *.pem
 *.crt
