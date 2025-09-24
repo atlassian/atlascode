@@ -17,9 +17,33 @@ const mdParser = new MarkdownIt({
 
 mdParser.linkify.set({ fuzzyLink: false });
 
+// Make complex URLs safe for Markdown parsing by wrapping them in angle brackets
+// This helps preserve URLs that include balanced parentheses or percent-encoded characters
+// without relying solely on markdown-it's linkify heuristics.
+function autolinkComplexUrls(input: string): string {
+    // Regex adapted from common robust URL matchers. It supports nested parentheses by allowing
+    // sequences of either non-bracket/space chars or balanced (...)
+    const urlRegex = /https?:\/\/(?:[^\s<>()[\]]+|\([^\s<>()[\]]+\))+/g;
+
+    return input.replace(urlRegex, (match, _g1, offset, str) => {
+        const prev = offset > 0 ? str[offset - 1] : '';
+        const next = offset + match.length < str.length ? str[offset + match.length] : '';
+        const before2 = str.slice(Math.max(0, offset - 2), offset);
+
+        // Avoid double-wrapping:
+        // - already an autolink like <http://...>
+        // - already in a markdown link destination immediately after ](
+        if ((prev === '<' && next === '>') || before2 === '](') {
+            return match;
+        }
+        return `<${match}>`;
+    });
+}
+
 export const MarkedDown: React.FC<{ value: string }> = ({ value }) => {
+    const preprocessed = autolinkComplexUrls(value || '');
     // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- necessary to apply MarkDown formatting
-    return <span dangerouslySetInnerHTML={{ __html: mdParser.render(value) }} />;
+    return <span dangerouslySetInnerHTML={{ __html: mdParser.render(preprocessed) }} />;
 };
 
 export interface OpenFileFunc {
