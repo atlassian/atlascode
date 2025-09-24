@@ -158,11 +158,11 @@ export class RovoDevApiClient {
         await this.fetchApi('/v3/resume_tool_calls', 'POST', JSON.stringify(message));
     }
 
-    /** Invokes the POST `/v2/replay` API
+    /** Invokes the POST `/v3/replay` API
      * @returns {Promise<Response>} An object representing the API response.
      */
     public replay(): Promise<Response> {
-        return this.fetchApi('/v2/replay', 'POST');
+        return this.fetchApi('/v3/replay', 'POST');
     }
 
     /** Invokes the GET `/v3/cache-file-path` API.

@@ -357,7 +357,7 @@ describe('RovoDevApiClient', () => {
 
             const response = await client.replay();
 
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/replay', {
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/replay', {
                 method: 'POST',
                 headers: {
                     accept: 'text/event-stream',
@@ -377,7 +377,7 @@ describe('RovoDevApiClient', () => {
 
             mockFetch.mockResolvedValue(mockResponse);
 
-            await expect(client.replay()).rejects.toThrow("Failed to fetch '/v2/replay API: HTTP 503");
+            await expect(client.replay()).rejects.toThrow("Failed to fetch '/v3/replay API: HTTP 503");
         });
     });
 
