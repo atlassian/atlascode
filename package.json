@@ -1676,45 +1676,6 @@
         "webpack-manifest-plugin": "^5.0.0",
         "webpack-node-externals": "^3.0.0"
     },
-    "overrides": {
-        "@atlaskit/analytics-next-stable-react-context": {
-            "react": "^18.3.1"
-        },
-        "react-scrolllock": {
-            "react": "^18.3.1"
-        },
-        "@atlaskit/icon-priority": {
-            "react": "^18.3.1"
-        },
-        "react-intl-next": {
-            "typescript": "^5.8.3"
-        },
-        "@atlaskit/code": {
-            "refractor": "^4.6.1"
-        },
-        "@atlaskit/teams-client": {
-            "@sentry/browser": "^7.119.2"
-        },
-        "@atlaskit/editor-common": {
-            "@sentry/browser": "^7.119.2"
-        },
-        "fetch-mock": {
-            "path-to-regexp": "^3.2.0"
-        },
-        "react-loosely-lazy": {
-            "react": "^18.3.1"
-        },
-        "react-lazily-render": {
-            "react": "^18.3.1"
-        },
-        "@loomhq/record-sdk": {
-            "@atlaskit/icon": "^28.3.0"
-        },
-        "transition-hook@1.5.2": {
-            "react-dom": "^18.3.1",
-            "react": "^18.3.1"
-        }
-    },
     "packageManager": "yarn@4.10.3",
     "resolutions": {
         "@atlassiansox/analytics-web-client": "npm:@segment/analytics-node@^2.1.3"
