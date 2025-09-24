@@ -39,6 +39,10 @@ type Props = {
     fetchImage: (url: string) => Promise<string>;
     onIssueUpdate?: (issueKey: string, fieldKey: string, newValue: any) => void;
     isAtlaskitEditorEnabled?: boolean;
+    // New props for media integration
+    issueKey?: string;
+    onAttachmentUpload?: (files: File[]) => Promise<any[]>;
+    getMediaAuth?: () => Promise<{ token: string; clientId?: string; baseUrl?: string; collection?: string }>;
 };
 
 const IssueMainPanel: React.FC<Props> = ({
@@ -61,6 +65,9 @@ const IssueMainPanel: React.FC<Props> = ({
     fetchImage,
     onIssueUpdate,
     isAtlaskitEditorEnabled,
+    issueKey,
+    onAttachmentUpload,
+    getMediaAuth,
 }) => {
     const attachments = fields['attachment'] && fieldValues['attachment'] ? fieldValues['attachment'] : undefined;
     const subtasks =
@@ -182,6 +189,11 @@ const IssueMainPanel: React.FC<Props> = ({
                     {isEditingDescription || loadingField === 'description' ? (
                         isAtlaskitEditorEnabled ? (
                             <AtlaskitEditor
+                                outputFormat="wiki"
+                                siteDetails={siteDetails}
+                                issueKey={issueKey}
+                                onAttachmentUpload={onAttachmentUpload}
+                                getMediaAuth={getMediaAuth}
                                 defaultValue={descriptionText}
                                 onSave={(content) => {
                                     handleInlineEdit(fields['description'], content);

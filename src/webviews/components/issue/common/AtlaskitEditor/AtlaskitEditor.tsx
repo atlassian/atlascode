@@ -4,17 +4,28 @@ import type { EditorProps } from '@atlaskit/editor-core';
 import { ComposableEditor, EditorNextProps } from '@atlaskit/editor-core/composable-editor';
 import { useUniversalPreset } from '@atlaskit/editor-core/preset-universal';
 import { usePreset } from '@atlaskit/editor-core/use-preset';
+import { mediaPlugin } from '@atlaskit/editor-plugin-media';
 import { WikiMarkupTransformer } from '@atlaskit/editor-wikimarkup-transformer';
+import { ADFEncoder } from '@atlaskit/renderer';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
+import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
 interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' | 'onSave'> {
-    onSave?: (content: string) => void;
+    onSave?: (content: any) => void;
     onCancel?: () => void;
-    defaultValue?: string;
-    onContentChange?: (content: string) => void;
-    onChange?: (content: string) => void;
-    onBlur?: (content: string) => void;
+    defaultValue?: any;
+    onContentChange?: (content: any) => void;
+    onChange?: (content: any) => void;
+    onBlur?: (content: any) => void;
+    // Controls what format onSave returns
+    outputFormat?: 'adf' | 'wiki';
+    // Media plugin props
+    siteDetails?: DetailedSiteInfo;
+    issueKey?: string;
+    onAttachmentUpload?: (files: File[]) => Promise<any[]>;
+    // Function to obtain Media Services auth (token/baseUrl/clientId)
+    getMediaAuth?: () => Promise<{ token: string; clientId?: string; baseUrl?: string; collection?: string }>;
 }
 
 const defaultEditorConfiguration: Omit<EditorProps, 'onChange' | 'onSave'> = {
@@ -24,7 +35,81 @@ const defaultEditorConfiguration: Omit<EditorProps, 'onChange' | 'onSave'> = {
 };
 
 const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProps) => {
-    const { appearance = 'comment', onCancel, onSave, defaultValue = '', onChange, onBlur, onContentChange } = props;
+    const {
+        appearance = 'comment',
+        onCancel,
+        onSave,
+        defaultValue = '',
+        onChange,
+        onBlur,
+        onContentChange,
+        outputFormat = 'adf',
+        getMediaAuth,
+    } = props;
+
+    // Prepare initial ADF document from incoming value (ADF object, ADF JSON, or Wiki Markup string)
+    const initialAdfDoc = React.useMemo(() => {
+        try {
+            if (defaultValue && typeof defaultValue === 'object' && defaultValue.type === 'doc') {
+                return defaultValue;
+            }
+            if (typeof defaultValue === 'string') {
+                const parsed = JSON.parse(defaultValue);
+                if (parsed && parsed.type === 'doc') {
+                    return parsed;
+                }
+            }
+            const wiki = typeof defaultValue === 'string' ? defaultValue : '';
+            const encoder = new ADFEncoder((schema) => new WikiMarkupTransformer(schema));
+            return encoder.encode(wiki);
+        } catch (e) {
+            console.error('Failed to prepare initial ADF doc; using empty doc', e);
+            return { version: 1, type: 'doc', content: [] } as any;
+        }
+    }, [defaultValue]);
+
+    // Media plugin options with provider that calls getMediaAuth (when supplied)
+    const mediaOptions = React.useMemo(() => {
+        const base: any = {
+            allowMediaSingle: true,
+            allowMediaGroup: true,
+            allowResizing: true,
+            allowAnnotation: true,
+            allowLinking: true,
+            allowResizingInTables: true,
+            allowMediaInline: true,
+            allowCaptions: true,
+            allowAltTextOnImages: true,
+            featureFlags: { mediaInline: true },
+        };
+        if (!getMediaAuth) {
+            return base;
+        }
+        const provider = Promise.resolve({
+            uploadMediaClientConfig: {
+                authProvider: async () => {
+                    const auth = await getMediaAuth();
+                    return {
+                        token: auth.token,
+                        clientId: auth.clientId,
+                        baseUrl: auth.baseUrl ?? 'https://media-cdn.atlassian.com',
+                    } as any;
+                },
+            },
+            viewMediaClientConfig: {
+                authProvider: async () => {
+                    const auth = await getMediaAuth();
+                    return {
+                        token: auth.token,
+                        clientId: auth.clientId,
+                        baseUrl: auth.baseUrl ?? 'https://media-cdn.atlassian.com',
+                    } as any;
+                },
+            },
+            uploadParams: { collection: (props.issueKey as any) ?? 'atlascode' },
+        });
+        return { ...base, provider };
+    }, [getMediaAuth, props.issueKey]);
 
     const universalPreset = useUniversalPreset({
         props: {
@@ -44,34 +129,27 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
             },
         },
     });
-    const { preset, editorApi } = usePreset(() => universalPreset);
 
-    // Helper function to get current document content
-    const getCurrentContent = React.useCallback(async (): Promise<string | null> => {
+    const { preset, editorApi } = usePreset(() => universalPreset.add([mediaPlugin, mediaOptions]));
+
+    // Helper to get current ADF document content
+    const getCurrentContent = React.useCallback(async (): Promise<any | null> => {
         try {
             if (!editorApi) {
                 return null;
             }
 
             return new Promise((resolve) => {
-                editorApi.core.actions.requestDocument(
-                    (document) => {
-                        if (!document) {
-                            resolve(null);
-                            return;
-                        }
-                        // document is in wiki markup format because of transformer passed below
-                        resolve(document);
-                    },
-                    {
-                        transformer: editorApi.core.actions.createTransformer(
-                            (scheme) => new WikiMarkupTransformer(scheme),
-                        ),
-                    },
-                );
+                editorApi.core.actions.requestDocument((document) => {
+                    if (!document) {
+                        resolve(null);
+                        return;
+                    }
+                    resolve(document);
+                });
             });
         } catch (error) {
-            console.error(error);
+            console.error('Error getting document content:', error);
             return null;
         }
     }, [editorApi]);
@@ -87,8 +165,9 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
 
         const checkForChanges = async () => {
             const content = await getCurrentContent();
-            if (content !== null && content !== previousContentRef.current) {
-                previousContentRef.current = content;
+            const serialized = content === null ? '' : JSON.stringify(content);
+            if (content !== null && serialized !== previousContentRef.current) {
+                previousContentRef.current = serialized;
                 onChange?.(content);
                 onContentChange?.(content);
             }
@@ -128,29 +207,37 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
         };
     }, [onBlur, getCurrentContent]);
 
-    // Handle save button click using EditorActions
+    // Handle save button click using EditorActions (return ADF by default, or wiki when requested)
     const handleSave = async () => {
         try {
             if (!editorApi) {
                 throw new Error('editorApi is not available');
             }
 
-            editorApi.core.actions.requestDocument(
-                (document) => {
+            if (outputFormat === 'wiki') {
+                editorApi.core.actions.requestDocument(
+                    (document) => {
+                        if (!document) {
+                            throw new Error('document is not available');
+                        }
+                        onSave?.(document);
+                    },
+                    {
+                        transformer: editorApi.core.actions.createTransformer(
+                            (scheme) => new WikiMarkupTransformer(scheme),
+                        ),
+                    },
+                );
+            } else {
+                editorApi.core.actions.requestDocument((document) => {
                     if (!document) {
                         throw new Error('document is not available');
                     }
-                    // document is in  wiki markup format because of transformer passed below
                     onSave?.(document);
-                },
-                {
-                    transformer: editorApi.core.actions.createTransformer(
-                        (scheme) => new WikiMarkupTransformer(scheme),
-                    ),
-                },
-            );
+                });
+            }
         } catch (error) {
-            console.error(error);
+            console.error('Error saving document:', error);
         }
     };
 
@@ -162,11 +249,7 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 assistiveLabel="Rich text editor for comments"
                 allowUndoRedoButtons={defaultEditorConfiguration.allowUndoRedoButtons}
                 preset={preset}
-                defaultValue={defaultValue}
-                contentTransformerProvider={(schema) => {
-                    // here we transforms ADF <-> wiki markup
-                    return new WikiMarkupTransformer(schema);
-                }}
+                defaultValue={initialAdfDoc}
             />
             {(onSave || onCancel) && (
                 <div

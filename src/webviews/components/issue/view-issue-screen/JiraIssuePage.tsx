@@ -646,6 +646,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     fetchImage={(img) => this.fetchImage(img)}
                     isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}
                     onIssueUpdate={this.handleChildIssueUpdate}
+                    getMediaAuth={async () => {
+                        const nonce = v4();
+                        return (await this.postMessageWithEventPromise(
+                            { action: 'getMediaAuth', site: this.state.siteDetails, nonce },
+                            'mediaAuth',
+                            15000,
+                            nonce,
+                        )) as any;
+                    }}
                 />
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (

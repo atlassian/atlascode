@@ -117,7 +117,7 @@ export class OAuthStrategyData {
         accessibleResourcesURL: 'https://api.atlassian.com/oauth/token/accessible-resources',
         callbackURL: remoteAuthConfig.callbackURL,
         apiURL: 'api.atlassian.com',
-        scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
+        scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project read:media-api write:media-api',
         authParams: {
             audience: 'api.atlassian.com',
             prompt: 'consent',
@@ -135,7 +135,7 @@ export class OAuthStrategyData {
         accessibleResourcesURL: 'https://api.atlassian.com/oauth/token/accessible-resources',
         callbackURL: 'http://127.0.0.1:31415/' + OAuthProvider.JiraCloud,
         apiURL: 'api.atlassian.com',
-        scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
+        scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project read:media-api write:media-api',
         authParams: {
             audience: 'api.atlassian.com',
             prompt: 'consent',

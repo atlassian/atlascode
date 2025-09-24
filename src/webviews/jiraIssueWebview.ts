@@ -422,6 +422,31 @@ export class JiraIssueWebview
 
         if (!handled) {
             switch (msg.action) {
+                case 'getMediaAuth': {
+                    handled = true;
+                    try {
+                        const site = (msg as any).site;
+                        const creds = await Container.credentialManager.getAuthInfo(site);
+                        const token = (creds as any)?.access;
+                        if (!token) {
+                            throw new Error('No OAuth access token available for media');
+                        }
+                        await this.postMessage({
+                            type: 'mediaAuth',
+                            token,
+                            baseUrl: 'https://api.media.atlassian.com',
+                            nonce: (msg as any).nonce,
+                        });
+                    } catch (e) {
+                        Logger.error(e, 'Error getting media auth');
+                        await this.postMessage({
+                            type: 'error',
+                            reason: this.formatErrorReason(e, 'Error getting media auth'),
+                            nonce: (msg as any).nonce,
+                        });
+                    }
+                    break;
+                }
                 case 'copyJiraIssueLink': {
                     handled = true;
                     const linkUrl = `${this._issue.siteDetails.baseLinkUrl}/browse/${this._issue.key}`;
