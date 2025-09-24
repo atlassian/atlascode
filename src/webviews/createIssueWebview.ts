@@ -270,6 +270,19 @@ export class CreateIssueWebview
         return projectsWithPermission;
     }
 
+    private async selectedProjectHasCreatePermission(project: Project): Promise<boolean> {
+        try {
+            return !!(await Container.jiraProjectManager.checkProjectPermission(
+                this._siteDetails,
+                project.key,
+                'CREATE_ISSUES',
+            ));
+        } catch (error) {
+            Logger.error(error, `CREATE_ISSUES permission check failed for project ${project.name}`);
+            return false;
+        }
+    }
+
     public async invalidate() {
         await this.updateFields();
         await Container.pmfStats.touchActivity();
@@ -363,12 +376,16 @@ export class CreateIssueWebview
                 this.getProjectsWithPermission(this._siteDetails),
                 fetchCreateIssueUI(this._siteDetails, this._currentProject.key),
             ]);
-            const isHasPermissionForCurrentProject = projectsWithCreateIssuesPermission.find(
+            const currentProjectHasCreatePermission = projectsWithCreateIssuesPermission.find(
                 (project) => project.id === this._currentProject?.id,
             );
 
-            // if the current project does not have create issues permission, we will select the first project with permission
-            if (!isHasPermissionForCurrentProject) {
+            // if the selected or current project does not have create issues permission, we will select the first project with permission
+            const shouldOverrideProject = fieldValues?.['project']
+                ? !(await this.selectedProjectHasCreatePermission(fieldValues['project']))
+                : !currentProjectHasCreatePermission;
+
+            if (shouldOverrideProject) {
                 this._currentProject =
                     projectsWithCreateIssuesPermission.length > 0
                         ? projectsWithCreateIssuesPermission[0]
