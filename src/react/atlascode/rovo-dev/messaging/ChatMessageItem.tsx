@@ -69,10 +69,7 @@ export const ChatMessageItem: React.FC<{
                             <ThumbsDownIcon label="thumbs-down" spacing="none" />
                         </button>
                     </Tooltip>
-                    <Tooltip 
-                        key={isCopied ? 'copied' : 'copy'} 
-                        content={isCopied ? 'Copied!' : 'Copy response'} 
-                    >
+                    <Tooltip key={isCopied ? 'copied' : 'copy'} content={isCopied ? 'Copied!' : 'Copy response'}>
                         <button
                             aria-label="copy-button"
                             className={`chat-message-action copy-button ${isCopied ? 'copied' : ''}`}
