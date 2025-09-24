@@ -58,7 +58,7 @@ jobs:
         run: yarn version --new-version $PACKAGE_VERSION --no-git-tag-version
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Build and package the extension
         run: yarn extension:package
