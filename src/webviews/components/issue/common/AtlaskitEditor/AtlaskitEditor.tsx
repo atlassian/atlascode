@@ -1,9 +1,12 @@
 import './AtlaskitEditor.css';
 
-import type { EditorProps } from '@atlaskit/editor-core';
 import { ComposableEditor, EditorNextProps } from '@atlaskit/editor-core/composable-editor';
-import { useUniversalPreset } from '@atlaskit/editor-core/preset-universal';
+import { createDefaultPreset } from '@atlaskit/editor-core/preset-default';
 import { usePreset } from '@atlaskit/editor-core/use-preset';
+import { insertBlockPlugin } from '@atlaskit/editor-plugin-insert-block';
+import { listPlugin } from '@atlaskit/editor-plugin-list';
+import { textColorPlugin } from '@atlaskit/editor-plugin-text-color';
+import { toolbarListsIndentationPlugin } from '@atlaskit/editor-plugin-toolbar-lists-indentation';
 import { WikiMarkupTransformer } from '@atlaskit/editor-wikimarkup-transformer';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
@@ -17,35 +20,34 @@ interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' 
     onBlur?: (content: string) => void;
 }
 
-const defaultEditorConfiguration: Omit<EditorProps, 'onChange' | 'onSave'> = {
-    useStickyToolbar: true,
-    allowUndoRedoButtons: true,
-    allowTextColor: true,
-};
-
 const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProps) => {
     const { appearance = 'comment', onCancel, onSave, defaultValue = '', onChange, onBlur, onContentChange } = props;
-
-    const universalPreset = useUniversalPreset({
-        props: {
-            ...defaultEditorConfiguration,
-            appearance,
-        },
-        initialPluginConfiguration: {
-            tasksAndDecisionsPlugin: {
-                quickInsertActionDescription: 'quickInsertActionDescription',
-                taskPlaceholder: 'taskPlaceholder',
-            },
-            toolbarPlugin: {
-                disableSelectionToolbar: false,
-            },
-            insertBlockPlugin: {
-                toolbarShowPlusInsertOnly: true,
-            },
-        },
-    });
-    const { preset, editorApi } = usePreset(() => universalPreset);
-
+    const { preset, editorApi } = usePreset(() => {
+        return (
+            createDefaultPreset({
+                allowUndoRedoButtons: true,
+                appearance: appearance,
+                codeBlock: {},
+                hyperlinkOptions: {
+                    lpLinkPicker: true,
+                    editorAppearance: appearance,
+                    linkPicker: {},
+                    platform: 'web',
+                },
+            })
+                // You can extend this with other plugins if you need them
+                .add(listPlugin)
+                .add([
+                    toolbarListsIndentationPlugin,
+                    { showIndentationButtons: false, allowHeadingAndParagraphIndentation: false },
+                ])
+                .add(textColorPlugin)
+                .add([
+                    insertBlockPlugin,
+                    { toolbarShowPlusInsertOnly: true, appearance: appearance, allowExpand: true },
+                ])
+        );
+    }, []);
     // Helper function to get current document content
     const getCurrentContent = React.useCallback(async (): Promise<string | null> => {
         try {
@@ -157,10 +159,8 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
     return (
         <div ref={editorContainerRef}>
             <ComposableEditor
-                appearance={appearance}
-                useStickyToolbar={defaultEditorConfiguration.useStickyToolbar}
+                useStickyToolbar={true}
                 assistiveLabel="Rich text editor for comments"
-                allowUndoRedoButtons={defaultEditorConfiguration.allowUndoRedoButtons}
                 preset={preset}
                 defaultValue={defaultValue}
                 contentTransformerProvider={(schema) => {

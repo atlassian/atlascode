@@ -55,7 +55,7 @@ export const RovoDevLanding: React.FC<{
                 <div style={{ marginTop: '24px' }}>
                     <div>
                         <a
-                            href="https://id.atlassian.com/manage-profile/security/api-token"
+                            href="https://id.atlassian.com/manage-profile/security/api-tokens"
                             target="_blank"
                             rel="noopener noreferrer"
                         >

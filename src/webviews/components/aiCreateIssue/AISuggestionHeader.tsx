@@ -1,6 +1,6 @@
 import Checkbox from '@atlaskit/checkbox';
 import { HelperMessage } from '@atlaskit/form';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { IssueSuggestionContextLevel, IssueSuggestionSettings } from 'src/config/model';
 
 interface VsCodeApi {
@@ -28,6 +28,10 @@ const AISuggestionHeader: React.FC<{
         vscodeApi.postMessage({
             action: 'webviewReady',
         });
+    }, [vscodeApi]);
+
+    const onLoginClick = useCallback(() => {
+        vscodeApi.postMessage({ action: 'addApiToken' });
     }, [vscodeApi]);
 
     const updateIdeSettings = (newState: IssueSuggestionSettings) =>
@@ -114,8 +118,21 @@ const AISuggestionHeader: React.FC<{
         </div>
     ) : (
         <HelperMessage>
-            Did you know you can use AI to generate issues? Please add an API key in the settings to enable this
-            feature.
+            <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <span>
+                    <a
+                        href="https://id.atlassian.com/manage-profile/security/api-tokens"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Create an API token
+                    </a>{' '}
+                    and add it here to use AI issue suggestions
+                </span>
+                <button type={'button'} style={{ marginTop: '0', fontSize: '12px' }} onClick={onLoginClick}>
+                    Add API Token
+                </button>
+            </div>
         </HelperMessage>
     );
 };
