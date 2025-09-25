@@ -119,7 +119,7 @@ export class RovoDevChatProvider {
         this.beginNewPrompt();
 
         const fetchOp = async (client: RovoDevApiClient) => {
-            const response = await client.chat(requestPayload);
+            const response = await client.chat(requestPayload, true);
 
             this._telemetryProvider.fireTelemetryEvent(
                 'rovoDevPromptSentEvent',
@@ -258,7 +258,7 @@ export class RovoDevChatProvider {
         }
     }
 
-    private processRovoDevResponse(sourceApi: StreamingApi, response: RovoDevResponse): Thenable<boolean> {
+    private processRovoDevResponse(sourceApi: StreamingApi, response: RovoDevResponse): Thenable<unknown> {
         // if (this._processState === RovoDevProcessState.Disabled) {
         //     return Promise.resolve(false);
         // }
@@ -358,8 +358,17 @@ export class RovoDevChatProvider {
                     },
                 });
 
+            case 'on_call_tools_start':
+                // simulate YOLO mode
+                return this._rovoDevApiClient!.resumeToolCall(response.tools.map((x) => x.tool_call_id));
+
+            case 'close':
+                // response terminated
+                return Promise.resolve(true);
+
             default:
-                return Promise.resolve(false);
+                // @ts-expect-error ts(2339) - response here should be 'never'
+                throw new Error(`Rovo Dev response error: unknown event kind: ${response.event_kind}`);
         }
     }
 

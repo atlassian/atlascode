@@ -89,7 +89,7 @@ interface RovoDevWarningChunk {
     data: RovoDevWarningResponseRaw;
 }
 
-// ??
+// https://bitbucket.org/atlassian/acra-python/src/9ce5910e61d00e91f70c7978e067bde2690a1c97/packages/cli-rovodev/docs/serve/streaming-events.md?at=RDA-307-emit-warning-events-related-to-rate-limits-and-other-api-request-problems#:~:text=Server%20Error%20Warnings
 interface RovoDevClearResponseRaw {
     message: string;
 }
@@ -99,7 +99,7 @@ interface RovoDevClearChunk {
     data: RovoDevClearResponseRaw;
 }
 
-// ??
+// https://bitbucket.org/atlassian/acra-python/src/9ce5910e61d00e91f70c7978e067bde2690a1c97/packages/cli-rovodev/docs/serve/streaming-events.md?at=RDA-307-emit-warning-events-related-to-rate-limits-and-other-api-request-problems#:~:text=Server%20Error%20Warnings
 interface RovoDevPruneResponseRaw {
     message: string;
 }
@@ -107,6 +107,21 @@ interface RovoDevPruneResponseRaw {
 interface RovoDevPruneChunk {
     event_kind: 'prune';
     data: RovoDevPruneResponseRaw;
+}
+
+// https://bitbucket.org/atlassian/acra-python/src/9ce5910e61d00e91f70c7978e067bde2690a1c97/packages/cli-rovodev/docs/serve/streaming-events.md?at=RDA-307-emit-warning-events-related-to-rate-limits-and-other-api-request-problems#:~:text=Server%20Error%20Warnings
+interface RovoDevOnCallToolStartResponseRaw {
+    parts: RovoDevToolCallResponseRaw[];
+}
+
+interface RovoDevOnCallToolStartChunk {
+    event_kind: 'on_call_tools_start';
+    data: RovoDevOnCallToolStartResponseRaw;
+}
+
+// https://bitbucket.org/atlassian/acra-python/src/9ce5910e61d00e91f70c7978e067bde2690a1c97/packages/cli-rovodev/docs/serve/streaming-events.md?at=RDA-307-emit-warning-events-related-to-rate-limits-and-other-api-request-problems#:~:text=Server%20Error%20Warnings
+interface RovoDevCloseChunk {
+    event_kind: 'close';
 }
 
 type RovoDevSingleResponseRaw =
@@ -118,7 +133,8 @@ type RovoDevSingleResponseRaw =
     | RovoDevWarningResponseRaw
     | RovoDevExceptionResponseRaw
     | RovoDevClearResponseRaw
-    | RovoDevPruneResponseRaw;
+    | RovoDevPruneResponseRaw
+    | RovoDevOnCallToolStartResponseRaw;
 
 type RovoDevSingleChunk =
     | RovoDevUserPromptChunk
@@ -129,7 +145,9 @@ type RovoDevSingleChunk =
     | RovoDevExceptionChunk
     | RovoDevWarningChunk
     | RovoDevClearChunk
-    | RovoDevPruneChunk;
+    | RovoDevPruneChunk
+    | RovoDevOnCallToolStartChunk
+    | RovoDevCloseChunk;
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.PartStartEvent
 interface RovoDevPartStartResponseRaw {
@@ -213,6 +231,15 @@ export interface RovoDevPruneResponse {
     message: string;
 }
 
+export interface RovoDevOnCallToolStartResponse {
+    event_kind: 'on_call_tools_start';
+    tools: RovoDevToolCallResponse[];
+}
+
+export interface RovoDevCloseResponse {
+    event_kind: 'close';
+}
+
 export type RovoDevResponse =
     | RovoDevUserPromptResponse
     | RovoDevTextResponse
@@ -222,7 +249,9 @@ export type RovoDevResponse =
     | RovoDevExceptionResponse
     | RovoDevWarningResponse
     | RovoDevClearResponse
-    | RovoDevPruneResponse;
+    | RovoDevPruneResponse
+    | RovoDevOnCallToolStartResponse
+    | RovoDevCloseResponse;
 
 // parsing functions for specific response types
 
@@ -338,6 +367,13 @@ function parseResponsePrune(data: RovoDevWarningResponseRaw): RovoDevPruneRespon
     };
 }
 
+function parseOnCallToolStart(data: RovoDevOnCallToolStartResponseRaw): RovoDevOnCallToolStartResponse {
+    return {
+        event_kind: 'on_call_tools_start',
+        tools: data.parts.map((part) => parseResponseToolCall(part)),
+    };
+}
+
 // the parser
 
 export interface RovoDevResponseParserOptions {
@@ -380,7 +416,7 @@ export class RovoDevResponseParser {
 
             const chunk: RovoDevSingleChunk | RovoDevPartStartChunk | RovoDevPartDeltaChunk = {
                 event_kind: match[1].trim() as any,
-                data: JSON.parse(match[2]),
+                data: match[2] ? JSON.parse(match[2]) : '',
             };
 
             let tmpChunkToFlush: RovoDevResponse | undefined;
@@ -519,8 +555,21 @@ export class RovoDevResponseParser {
                 }
                 return parseResponsePrune(chunk.data);
 
+            case 'on_call_tools_start':
+                if (buffer) {
+                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
+                }
+                return parseOnCallToolStart(chunk.data);
+
+            case 'close':
+                if (buffer) {
+                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
+                }
+                return { event_kind: 'close' };
+
             default:
-                throw new Error(`Rovo Dev parser error: unknown event kind: ${(chunk as any).event_kind}`);
+                // @ts-expect-error ts(2339) - chunk here should be 'never'
+                throw new Error(`Rovo Dev parser error: unknown event kind: ${chunk.event_kind}`);
         }
     }
 }

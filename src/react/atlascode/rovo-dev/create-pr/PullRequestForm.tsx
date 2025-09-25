@@ -13,11 +13,11 @@ const PullRequestButton: React.FC<{
     isLoading?: boolean;
 }> = ({ onClick, isLoading }) => {
     return (
-        <button className="pull-request-button" onClick={onClick} title="Create Pull Request">
+        <button className="pull-request-button" onClick={onClick} title="Create pull request">
             {isLoading ? (
                 <i className="codicon codicon-loading codicon-modifier-spin" />
             ) : (
-                <PullRequestIcon label="Create Pull Request" spacing="none" />
+                <PullRequestIcon label="Create pull request" spacing="none" />
             )}
             Create Pull Request
         </button>
@@ -133,7 +133,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                                 ) : (
                                     <PullRequestIcon label="pull-request-icon" spacing="none" />
                                 )}
-                                Create PR
+                                Create pull request
                             </button>
                         </div>
                     </form>

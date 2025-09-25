@@ -759,6 +759,12 @@ export class CreateIssueWebview
                     break;
                 }
 
+                case 'addApiToken': {
+                    handled = true;
+                    commands.executeCommand(Commands.JiraAPITokenLogin);
+                    break;
+                }
+
                 case 'generateIssueSuggestions': {
                     handled = true;
                     if (isGenerateIssueSuggestions(msg)) {
