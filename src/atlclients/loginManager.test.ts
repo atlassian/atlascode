@@ -49,6 +49,12 @@ jest.mock('../container', () => ({
     Container: {
         clientManager: {
             jiraClient: () => Promise.resolve(),
+            removeClient: jest.fn(),
+        },
+        siteManager: {
+            getSitesAvailable: jest.fn(),
+            removeSite: jest.fn(),
+            addOrUpdateSite: jest.fn(),
         },
     },
 }));
@@ -251,6 +257,33 @@ describe('LoginManager', () => {
 
             expect(credentialManager.saveAuthInfo).toHaveBeenCalled();
             expect(siteManager.addOrUpdateSite).toHaveBeenCalled();
+        });
+
+        it('removes token site when connecting a new one', async () => {
+            const existingTokenSite = forceCastTo<DetailedSiteInfo>({
+                host: 'mock-token-site.atlassian.net',
+                name: 'mock-token-site.atlassian.net',
+                product: ProductJira,
+                isCloud: true,
+                contextPath: '/',
+            });
+
+            jest.spyOn(siteManager, 'getSitesAvailable').mockReturnValue([existingTokenSite]);
+
+            const showInfoMessageSpy = jest
+                .spyOn(require('vscode').window, 'showInformationMessage')
+                .mockResolvedValue('OK');
+
+            expect(loginManager['isSiteAddedViaToken'](existingTokenSite)).toBe(true);
+
+            await loginManager['removeTokenConnectedSites']();
+
+            expect(Container.clientManager.removeClient).toHaveBeenCalledWith(existingTokenSite);
+            expect(Container.siteManager.removeSite).toHaveBeenCalledWith(existingTokenSite, true, true);
+
+            expect(showInfoMessageSpy).toHaveBeenCalledWith(
+                'Currently only one Jira site can be connected via API token at a time. The previous Jira site has been disconnected to connect the new one.',
+            );
         });
     });
 
