@@ -46,7 +46,7 @@ describe('PullRequestForm', () => {
         expect(screen.getByLabelText(/commit message/i)).toBeTruthy();
         expect(screen.getByLabelText(/branch name/i)).toBeTruthy();
         expect(screen.getByRole('button', { name: /cancel/i })).toBeTruthy();
-        expect(screen.getByRole('button', { name: /create pr/i })).toBeTruthy();
+        expect(screen.getByRole('button', { name: /create pull request/i })).toBeTruthy();
     });
 
     it('fetches branch name when toggle button is clicked', async () => {
@@ -107,7 +107,7 @@ describe('PullRequestForm', () => {
             target: { value: 'test-branch' },
         });
 
-        fireEvent.click(screen.getByRole('button', { name: /create pr/i }));
+        fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
 
         await waitFor(() => {
             expect(mockPostMessagePromise).toHaveBeenCalledWith(
@@ -132,7 +132,7 @@ describe('PullRequestForm', () => {
             />,
         );
 
-        fireEvent.click(screen.getByRole('button', { name: /create pr/i }));
+        fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
 
         expect(mockPostMessagePromise).not.toHaveBeenCalled();
         expect(mockOnPullRequestCreated).not.toHaveBeenCalled();
