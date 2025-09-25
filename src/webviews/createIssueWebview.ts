@@ -9,7 +9,7 @@ import { commands, ConfigurationTarget, Position, Uri, ViewColumn, window } from
 import { issueCreatedEvent } from '../analytics';
 import { performanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
-import { IssueSuggestionManager } from '../commands/jira/issueSuggestionManager';
+import { buildSuggestionSettings, IssueSuggestionManager } from '../commands/jira/issueSuggestionManager';
 import { showIssue } from '../commands/jira/showIssue';
 import {
     configuration,
@@ -81,6 +81,7 @@ export class CreateIssueWebview
 
     private _issueSuggestionSettings: IssueSuggestionSettings | undefined;
     private _todoData: SimplifiedTodoIssueData | undefined;
+    private _generatingSuggestions: boolean = false;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -124,6 +125,39 @@ export class CreateIssueWebview
         this._todoData = todoData;
         await super.createOrShow(column);
         await this.initialize(data);
+    }
+
+    override async onAuthChange() {
+        const originallyAvailable = this._issueSuggestionSettings?.isAvailable;
+        const originallyEnabled = this._issueSuggestionSettings?.isEnabled;
+
+        this._issueSuggestionSettings = await buildSuggestionSettings();
+
+        await this.postMessage({
+            type: 'updateAiSettings',
+            newState: this._issueSuggestionSettings,
+            todoData: this._todoData,
+        });
+
+        if (!this._issueSuggestionSettings.isAvailable || !this._issueSuggestionSettings.isEnabled || !this._todoData) {
+            return;
+        }
+
+        if (!originallyAvailable && originallyEnabled && !this._generatingSuggestions) {
+            // Generate suggestions if the auth change made suggestions available
+            this._generatingSuggestions = true;
+            try {
+                const mgr = new IssueSuggestionManager(this._issueSuggestionSettings);
+                await mgr.generate(this._todoData).then(async (suggestion) => {
+                    await this.fastUpdateFields({
+                        summary: suggestion.summary,
+                        description: suggestion.description,
+                    });
+                });
+            } finally {
+                this._generatingSuggestions = false;
+            }
+        }
     }
 
     async updateSuggestionData(data: { suggestions?: IssueSuggestionSettings; todoData?: SimplifiedTodoIssueData }) {
@@ -251,6 +285,10 @@ export class CreateIssueWebview
             siteId: this._siteDetails.id,
             projectKey: this._currentProject!.key,
         });
+
+        if (this._todoData) {
+            this.onAuthChange();
+        }
     }
 
     private async getProjectsWithPermission(siteDetails: DetailedSiteInfo) {

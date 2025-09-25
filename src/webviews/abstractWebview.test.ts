@@ -32,6 +32,14 @@ jest.mock('../container', () => ({
         analyticsApi: {
             fireUIErrorEvent: jest.fn(),
         },
+        credentialManager: {
+            onDidAuthChange: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+        },
+        siteManager: {
+            onDidSitesAvailableChange: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+            getSiteForId: jest.fn(),
+            getSitesAvailable: jest.fn().mockReturnValue([]),
+        },
     },
 }));
 
