@@ -833,6 +833,14 @@ body {
     border: 2px solid var(--vscode-contrastBorder);
 }
 
+.vscode-light .form-cancel-button {
+    color: var(--vscode-foreground);
+}
+
+.vscode-light .form-cancel-button:hover {
+    color: var(--vscode-button-secondaryForeground);
+}
+
 .vscode-high-contrast .form-cancel-button:hover,
 .vscode-high-contrast .form-submit-button:hover {
     border: 2px solid var(--vscode-focusBorder);
