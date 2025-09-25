@@ -281,6 +281,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             this._chatProvider.currentPromptId,
                         );
                         break;
+                    case RovoDevViewResponseType.ReportCreatePrButtonClicked:
+                        this._telemetryProvider.fireTelemetryEvent(
+                            'rovoDevCreatePrButtonClickedEvent',
+                            this._chatProvider.currentPromptId,
+                        );
+                        break;
 
                     case RovoDevViewResponseType.WebviewReady:
                         this._webviewReady = true;

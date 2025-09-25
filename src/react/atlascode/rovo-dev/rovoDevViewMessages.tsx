@@ -19,6 +19,7 @@ export const enum RovoDevViewResponseType {
     ReportChangedFilesPanelShown = 'reportChangedFilesPanelShown',
     ReportChangesGitPushed = 'reportChangesGitPushed',
     ReportThinkingDrawerExpanded = 'reportThinkingDrawerExpanded',
+    ReportCreatePrButtonClicked = 'reportCreatePrButtonClicked',
     CheckGitChanges = 'checkGitChanges',
     WebviewReady = 'webviewReady',
     GetAgentMemory = 'getAgentMemory',
@@ -51,6 +52,7 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.ReportChangedFilesPanelShown, { filesCount: number }>
     | ReducerAction<RovoDevViewResponseType.ReportChangesGitPushed, { pullRequestCreated: boolean }>
     | ReducerAction<RovoDevViewResponseType.ReportThinkingDrawerExpanded>
+    | ReducerAction<RovoDevViewResponseType.ReportCreatePrButtonClicked>
     | ReducerAction<RovoDevViewResponseType.CheckGitChanges>
     | ReducerAction<RovoDevViewResponseType.WebviewReady>
     | ReducerAction<RovoDevViewResponseType.GetAgentMemory>

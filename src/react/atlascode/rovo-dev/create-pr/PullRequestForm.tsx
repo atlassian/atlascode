@@ -36,7 +36,7 @@ interface PullRequestFormProps {
 
 export const PullRequestForm: React.FC<PullRequestFormProps> = ({
     onCancel,
-    messagingApi: { postMessagePromise },
+    messagingApi: { postMessage, postMessagePromise },
     onPullRequestCreated,
     isFormVisible = false,
     setFormVisible,
@@ -58,6 +58,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
 
     const handleToggleForm = async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
+        postMessage({ type: RovoDevViewResponseType.ReportCreatePrButtonClicked });
         await getCurrentBranchName();
         setFormVisible?.(true);
     };
