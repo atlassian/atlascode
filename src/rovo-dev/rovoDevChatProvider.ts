@@ -383,22 +383,19 @@ export class RovoDevChatProvider {
                     response.tools.forEach((x) => (this._pendingToolConfirmation[x.tool_call_id] = 'undecided'));
                     this._pendingToolConfirmationLeft = response.tools.length;
 
-                    const promises = [];
-                    for (const tool of response.tools) {
-                        promises.push(
-                            webview.postMessage({
-                                type: RovoDevProviderMessageType.ShowDialog,
-                                message: {
-                                    type: 'toolPermissionRequest',
-                                    source: 'RovoDevDialog',
-                                    toolName: tool.tool_name,
-                                    toolArgs: tool.args,
-                                    text: 'To do this I will need to',
-                                    toolCallId: tool.tool_call_id,
-                                },
-                            }),
-                        );
-                    }
+                    const promises = response.tools.map((tool) => {
+                        return webview.postMessage({
+                            type: RovoDevProviderMessageType.ShowDialog,
+                            message: {
+                                type: 'toolPermissionRequest',
+                                source: 'RovoDevDialog',
+                                toolName: tool.tool_name,
+                                toolArgs: tool.args,
+                                text: 'To do this I will need to',
+                                toolCallId: tool.tool_call_id,
+                            },
+                        });
+                    });
                     return Promise.all(promises);
                 }
 

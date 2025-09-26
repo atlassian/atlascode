@@ -145,6 +145,19 @@ const fileListStyles: React.CSSProperties = {
     overflow: 'hidden',
 };
 
+const friendlyToolName: Record<string, string> = {
+    create_file: 'Create file',
+    delete_file: 'Delete file',
+    move_file: 'Move file',
+    find_and_replace_code: 'Find and replace code',
+    open_files: 'Read files',
+    expand_code_chunks: 'Expand chunks of code',
+    expand_folder: 'Expand folder',
+    grep: 'Search for',
+    bash: 'Run command',
+    create_technical_plan: 'Create a technical plan',
+};
+
 const ToolCall: React.FC<{
     toolName: string;
     toolArgs: string;
@@ -157,7 +170,7 @@ const ToolCall: React.FC<{
         }
     }, [toolArgs]);
 
-    const toolFriendlyName = React.useMemo(() => parseToolName(toolName), [toolName]);
+    const toolFriendlyName = React.useMemo(() => friendlyToolName[toolName] ?? toolName, [toolName]);
 
     return (
         <div>
@@ -215,30 +228,3 @@ const ToolCallBody: React.FC<{
         return <div>{toolArgs}</div>;
     }
 };
-
-function parseToolName(toolName: string): string {
-    switch (toolName) {
-        case 'create_file':
-            return 'Create file';
-        case 'delete_file':
-            return 'Delete file';
-        case 'move_file':
-            return 'Move file';
-        case 'find_and_replace_code':
-            return 'Find and replace code';
-        case 'open_files':
-            return 'Read files';
-        case 'expand_code_chunks':
-            return 'Expand chunks of code';
-        case 'expand_folder':
-            return 'Expand folder';
-        case 'grep':
-            return 'Search for';
-        case 'bash':
-            return 'Run command';
-        case 'create_technical_plan':
-            return 'Create a technical plan';
-        default:
-            return toolName;
-    }
-}
