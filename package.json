@@ -164,12 +164,6 @@
                 "enablement": "atlascode:rovoDevEnabled"
             },
             {
-                "command": "atlascode.rovodev.startWorkWithRovoDev",
-                "title": "Start work with Rovo Dev",
-                "category": "Rovo Dev",
-                "enablement": "atlascode:rovoDevEnabled"
-            },
-            {
                 "command": "atlascode.jira.todoIssue",
                 "title": "TO DO"
             },
@@ -753,11 +747,6 @@
                     "group": "jiraContextMenuGroup1"
                 },
                 {
-                    "command": "atlascode.rovodev.startWorkWithRovoDev",
-                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated && atlascode:rovoDevEnabled",
-                    "group": "jiraContextMenuGroup1"
-                },
-                {
                     "command": "atlascode.viewInWebBrowser",
                     "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
@@ -1001,10 +990,6 @@
                 },
                 {
                     "command": "atlascode.showExploreSettings",
-                    "when": "false"
-                },
-                {
-                    "command": "atlascode.rovodev.startWorkWithRovoDev",
                     "when": "false"
                 }
             ]
