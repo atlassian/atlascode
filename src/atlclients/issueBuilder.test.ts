@@ -1,87 +1,109 @@
-import { AuthInfoState, BasicAuthInfo } from './authInfo';
-import { findApiTokenForSite } from './issueBuilder';
+import { Logger } from 'src/logger';
 
-jest.mock('../container', () => {
-    const actual = jest.requireActual('../container');
+import { Container } from '../container';
+import { BasicAuthInfo } from './authInfo';
+import { fetchIssueSuggestions } from './issueBuilder';
+
+jest.mock('../container', () => ({
+    Container: {
+        credentialManager: {
+            findApiTokenForSite: jest.fn(),
+        },
+    },
+}));
+jest.mock('src/logger', () => ({
+    Logger: {
+        error: jest.fn(),
+    },
+}));
+jest.mock('./issueBuilder', () => {
+    const actual = jest.requireActual('./issueBuilder');
     return {
         ...actual,
-        Container: {
-            siteManager: {
-                getSiteForId: jest.fn(),
-                getSitesAvailable: jest.fn(),
-            },
-            credentialManager: {
-                getAuthInfo: jest.fn(),
-            },
-        },
+        getAxiosInstance: jest.fn(),
     };
 });
 
-import { Container } from '../container';
-
-describe('findApiTokenForSite', () => {
-    const basicAuthInfo: BasicAuthInfo = {
-        username: 'user',
-        password: 'pass',
-        user: { email: 'test@domain.com', id: 'id', displayName: 'Test User', avatarUrl: '' },
-        state: AuthInfoState.Valid,
-    };
-
-    const makeSite = (host: string, email: string): any => ({
-        host,
+describe('fetchIssueSuggestions', () => {
+    const site = {
+        host: 'test.atlassian.net',
         id: 'site-id',
         name: 'Test Site',
         avatarUrl: '',
         baseLinkUrl: '',
-        product: 'jira',
-        user: { email, id: 'id', displayName: 'Test User', avatarUrl: '' },
-    });
+        baseApiUrl: '',
+        isCloud: true,
+        userId: 'user-id',
+        credentialId: 'cred-id',
+        product: { name: 'Jira', key: 'jira' },
+    };
+    const basicAuthInfo: BasicAuthInfo = {
+        username: 'user',
+        password: 'pass',
+        user: { email: 'test@domain.com', id: 'id', displayName: 'Test User', avatarUrl: '' },
+        state: 0,
+    };
+    const mockAxiosInstance = {
+        post: jest.fn(),
+    };
 
     beforeEach(() => {
         jest.clearAllMocks();
+        (Container.credentialManager.findApiTokenForSite as jest.Mock).mockResolvedValue(basicAuthInfo);
+        jest.spyOn(require('../jira/jira-client/providers'), 'getAxiosInstance').mockReturnValue(mockAxiosInstance);
     });
 
-    it('returns undefined if site is not found', async () => {
-        (Container.siteManager.getSiteForId as jest.Mock).mockReturnValue(undefined);
-        const result = await findApiTokenForSite('site-id');
-        expect(result).toBeUndefined();
+    it('returns suggested issues on success', async () => {
+        const mockResponse = {
+            data: {
+                ai_feature_output: {
+                    suggested_issues: [
+                        {
+                            issue_type: 'Task',
+                            field_values: {
+                                Summary: 'Test summary',
+                                Description: 'Test description',
+                            },
+                        },
+                    ],
+                },
+            },
+        };
+        mockAxiosInstance.post.mockResolvedValue(mockResponse);
+        const result = await fetchIssueSuggestions(site as any, 'prompt', 'context');
+        expect(result.suggestedIssues).toHaveLength(1);
+        expect(result.suggestedIssues[0].issueType).toBe('Task');
+        expect(result.suggestedIssues[0].fieldValues.summary).toBe('Test summary');
+        expect(result.suggestedIssues[0].fieldValues.description).toBe('Test description');
+        expect(mockAxiosInstance.post).toHaveBeenCalled();
     });
 
-    it('returns undefined if site host is not .atlassian.net', async () => {
-        (Container.siteManager.getSiteForId as jest.Mock).mockReturnValue(makeSite('example.com', 'test@domain.com'));
-        const result = await findApiTokenForSite('site-id');
-        expect(result).toBeUndefined();
+    it('throws error if no valid auth info', async () => {
+        (Container.credentialManager.findApiTokenForSite as jest.Mock).mockResolvedValue(undefined);
+        await expect(fetchIssueSuggestions(site as any, 'prompt', 'context')).rejects.toThrow(
+            'No valid auth info found for site',
+        );
+        expect(Logger.error).toHaveBeenCalled();
     });
 
-    it('returns undefined if no matching authInfo found', async () => {
-        const site = makeSite('test.atlassian.net', 'a@b.com');
-        (Container.siteManager.getSiteForId as jest.Mock).mockReturnValue(site);
-        (Container.siteManager.getSitesAvailable as jest.Mock).mockReturnValue([site]);
-        (Container.credentialManager.getAuthInfo as jest.Mock).mockResolvedValueOnce({
-            user: { email: 'a@b.com', id: 'id', displayName: '', avatarUrl: '' },
-        });
-        (Container.credentialManager.getAuthInfo as jest.Mock).mockResolvedValueOnce(undefined);
-        const result = await findApiTokenForSite('site-id');
-        expect(result).toBeUndefined();
+    it('throws error if no suggested issues found', async () => {
+        const mockResponse = {
+            data: {
+                ai_feature_output: {
+                    suggested_issues: [],
+                },
+            },
+        };
+        mockAxiosInstance.post.mockResolvedValue(mockResponse);
+        await expect(fetchIssueSuggestions(site as any, 'prompt', 'context')).rejects.toThrow(
+            'No suggested issues found',
+        );
+        expect(Logger.error).toHaveBeenCalled();
     });
 
-    it('returns BasicAuthInfo if matching site and authInfo found', async () => {
-        const site = makeSite('test.atlassian.net', 'test@domain.com');
-        (Container.siteManager.getSiteForId as jest.Mock).mockReturnValue(site);
-        (Container.siteManager.getSitesAvailable as jest.Mock).mockReturnValue([site]);
-        // First call returns an object with a user property, second returns BasicAuthInfo
-        (Container.credentialManager.getAuthInfo as jest.Mock).mockResolvedValueOnce({ user: site.user });
-        (Container.credentialManager.getAuthInfo as jest.Mock).mockResolvedValueOnce(basicAuthInfo);
-        const result = await findApiTokenForSite('site-id');
-        expect(result).toEqual(basicAuthInfo);
-    });
-
-    it('works when site is passed as DetailedSiteInfo', async () => {
-        const site = makeSite('test.atlassian.net', 'test@domain.com');
-        (Container.siteManager.getSitesAvailable as jest.Mock).mockReturnValue([site]);
-        (Container.credentialManager.getAuthInfo as jest.Mock).mockResolvedValueOnce({ user: site.user });
-        (Container.credentialManager.getAuthInfo as jest.Mock).mockResolvedValueOnce(basicAuthInfo);
-        const result = await findApiTokenForSite(site);
-        expect(result).toEqual(basicAuthInfo);
+    it('logs and throws error on request failure', async () => {
+        mockAxiosInstance.post.mockRejectedValue(new Error('Network error'));
+        await expect(fetchIssueSuggestions(site as any, 'prompt', 'context')).rejects.toThrow('Network error');
+        expect(Logger.error).toHaveBeenCalled();
     });
 });

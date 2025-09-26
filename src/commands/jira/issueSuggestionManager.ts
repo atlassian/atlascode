@@ -3,7 +3,7 @@ import { Container } from 'src/container';
 import { Logger } from 'src/logger';
 import { window, workspace } from 'vscode';
 
-import { fetchIssueSuggestions, findApiTokenForSite } from '../../atlclients/issueBuilder';
+import { fetchIssueSuggestions } from '../../atlclients/issueBuilder';
 import { IssueSuggestionContextLevel, IssueSuggestionSettings, SimplifiedTodoIssueData } from '../../config/model';
 import { Features } from '../../util/featureFlags';
 
@@ -147,5 +147,5 @@ async function getSuggestionAvailable(): Promise<boolean> {
         return false;
     }
 
-    return (await findApiTokenForSite(selectedSite)) !== undefined;
+    return (await Container.credentialManager.findApiTokenForSite(selectedSite)) !== undefined;
 }

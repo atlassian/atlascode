@@ -17,35 +17,7 @@ export type SuggestedIssuesResponse = {
     suggestedIssues: SuggestedIssue[];
 };
 
-type SiteId = string;
-
 const ASSIST_API = '/gateway/api/assist/api/ai/v2/ai-feature/jira/issue/source-type/code/suggestions';
-
-export const findApiTokenForSite = async (site?: DetailedSiteInfo | SiteId): Promise<BasicAuthInfo | undefined> => {
-    const siteToCheck = typeof site === 'string' ? Container.siteManager.getSiteForId(ProductJira, site) : site;
-
-    if (!siteToCheck || !siteToCheck.host.endsWith('.atlassian.net')) {
-        return undefined;
-    }
-
-    const sites = Container.siteManager.getSitesAvailable(ProductJira);
-    const selectedSiteEmail = (await Container.credentialManager.getAuthInfo(siteToCheck))?.user.email;
-
-    // For a cloud site - check if we have another cloud site with the same user and API key
-    const promises = sites
-        .filter((site) => site.host.endsWith('.atlassian.net'))
-        .map(async (site) => {
-            const authInfo = await Container.credentialManager.getAuthInfo(site);
-            if (authInfo?.user.email === selectedSiteEmail && isBasicAuthInfo(authInfo)) {
-                // There's another site with the same user and cloud, so we can use that API key for suggestions
-                return authInfo as BasicAuthInfo;
-            }
-            return undefined;
-        });
-
-    const results = await Promise.all(promises);
-    return results.find((authInfo) => authInfo !== undefined);
-};
 
 export const fetchIssueSuggestions = async (
     site: DetailedSiteInfo,
@@ -55,7 +27,7 @@ export const fetchIssueSuggestions = async (
     const axiosInstance: AxiosInstance = getAxiosInstance();
 
     try {
-        const authInfo = await findApiTokenForSite(site);
+        const authInfo = await Container.credentialManager.findApiTokenForSite(site);
         if (!authInfo || !isBasicAuthInfo(authInfo)) {
             throw new Error('No valid auth info found for site');
         }
