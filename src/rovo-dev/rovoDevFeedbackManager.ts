@@ -1,7 +1,7 @@
 import { truncate } from 'lodash';
 import { Container } from 'src/container';
 import { getAxiosInstance } from 'src/jira/jira-client/providers';
-import { Logger } from 'src/logger';
+import { RovoDevLogger } from 'src/logger';
 import * as vscode from 'vscode';
 
 import { MIN_SUPPORTED_ROVODEV_VERSION } from './rovoDevProcessManager';
@@ -94,7 +94,7 @@ export class RovoDevFeedbackManager {
                 data: payload,
             });
         } catch (error) {
-            Logger.error(error as Error, 'Error submitting Rovo Dev feedback');
+            RovoDevLogger.error(error, 'Error submitting Rovo Dev feedback');
             vscode.window.showErrorMessage('There was an error submitting your feedback. Please try again later.');
             return;
         }

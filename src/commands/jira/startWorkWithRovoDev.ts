@@ -2,7 +2,7 @@ import { MinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-
 
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Container } from '../../container';
-import { buildRovoDevPrompt } from '../../util/rovoDevPrompt';
+import { createRovoDevTemplate } from '../../util/rovoDevTemplate';
 
 export async function startWorkWithRovoDev(issue: MinimalORIssueLink<DetailedSiteInfo>) {
     const fullIssue = issue as MinimalIssue<DetailedSiteInfo>;
@@ -11,12 +11,7 @@ export async function startWorkWithRovoDev(issue: MinimalORIssueLink<DetailedSit
         throw new Error(`Jira issue not found`);
     }
 
-    const client = await Container.clientManager.jiraClient(fullIssue.siteDetails);
-    const fullIssueData = await client.getIssue(fullIssue.key, ['description'], '');
+    const promptText = createRovoDevTemplate(fullIssue.key, fullIssue.siteDetails);
 
-    const summary = fullIssue.summary || '';
-    const description = fullIssueData.fields.description || '';
-
-    const prompt = buildRovoDevPrompt(summary, description);
-    Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt);
+    Container.rovodevWebviewProvider.setPromptTextWithFocus(promptText);
 }

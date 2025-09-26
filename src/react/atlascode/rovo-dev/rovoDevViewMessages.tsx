@@ -19,6 +19,7 @@ export const enum RovoDevViewResponseType {
     ReportChangedFilesPanelShown = 'reportChangedFilesPanelShown',
     ReportChangesGitPushed = 'reportChangesGitPushed',
     ReportThinkingDrawerExpanded = 'reportThinkingDrawerExpanded',
+    ReportCreatePrButtonClicked = 'reportCreatePrButtonClicked',
     CheckGitChanges = 'checkGitChanges',
     WebviewReady = 'webviewReady',
     GetAgentMemory = 'getAgentMemory',
@@ -26,6 +27,7 @@ export const enum RovoDevViewResponseType {
     SendFeedback = 'sendFeedback',
     LaunchJiraAuth = 'launchJiraAuth',
     McpConsentChoiceSubmit = 'mcpConsentChoiceSubmit',
+    CheckFileExists = 'checkFileExists',
 }
 
 export interface ModifiedFile {
@@ -51,6 +53,7 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.ReportChangedFilesPanelShown, { filesCount: number }>
     | ReducerAction<RovoDevViewResponseType.ReportChangesGitPushed, { pullRequestCreated: boolean }>
     | ReducerAction<RovoDevViewResponseType.ReportThinkingDrawerExpanded>
+    | ReducerAction<RovoDevViewResponseType.ReportCreatePrButtonClicked>
     | ReducerAction<RovoDevViewResponseType.CheckGitChanges>
     | ReducerAction<RovoDevViewResponseType.WebviewReady>
     | ReducerAction<RovoDevViewResponseType.GetAgentMemory>
@@ -60,4 +63,5 @@ export type RovoDevViewResponse =
           { feedbackType: FeedbackType; feedbackMessage: string; lastTenMessages?: string[]; canContact: boolean }
       >
     | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>
-    | ReducerAction<RovoDevViewResponseType.McpConsentChoiceSubmit, { choice: McpConsentChoice; serverName?: string }>;
+    | ReducerAction<RovoDevViewResponseType.McpConsentChoiceSubmit, { choice: McpConsentChoice; serverName?: string }>
+    | ReducerAction<RovoDevViewResponseType.CheckFileExists, { filePath: string; requestId: string }>;

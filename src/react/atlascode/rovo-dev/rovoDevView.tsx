@@ -69,6 +69,9 @@ const RovoDevView: React.FC = () => {
     const [promptContextCollection, setPromptContextCollection] = useState<RovoDevContextItem[]>([]);
     const [debugPanelEnabled, setDebugPanelEnabled] = useState(false);
     const [debugPanelContext, setDebugPanelContext] = useState<Record<string, string>>({});
+    const [debugPanelMcpContext, setDebugPanelMcpContext] = useState<Record<string, string>>({});
+    const [promptText, setPromptText] = useState<string | undefined>(undefined);
+    const [fileExistenceMap, setFileExistenceMap] = useState<Map<string, boolean>>(new Map());
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -201,7 +204,7 @@ const RovoDevView: React.FC = () => {
                 appendResponse(response, prev, handleAppendModifiedFileToolReturns, setIsDeepPlanCreated),
             );
         },
-        [handleAppendModifiedFileToolReturns],
+        [setHistory, handleAppendModifiedFileToolReturns, setIsDeepPlanCreated],
     );
 
     const onMessageHandler = useCallback(
@@ -302,7 +305,10 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.SetDebugPanel:
                     setDebugPanelEnabled(event.enabled);
-                    setDebugPanelContext(event.context);
+                    if (event.enabled) {
+                        setDebugPanelContext(event.context);
+                        setDebugPanelMcpContext(event.mcpContext);
+                    }
                     break;
 
                 case RovoDevProviderMessageType.SetInitializing:
@@ -352,7 +358,6 @@ const RovoDevView: React.FC = () => {
                     ) {
                         finalizeResponse();
                     }
-                    clearChatHistory();
                     setCurrentState({
                         state: 'Disabled',
                         subState: mapRovoDevDisabledReasonToSubState(event.reason),
@@ -390,6 +395,10 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.CheckGitChangesComplete:
                     break; // This is handled elsewhere
 
+                case RovoDevProviderMessageType.CheckFileExistsComplete:
+                    setFileExistenceMap((prev) => new Map(prev.set(event.filePath, event.exists)));
+                    break;
+
                 case RovoDevProviderMessageType.ForceStop:
                     // Signal user that Rovo Dev is stopping
                     if (currentState.state === 'GeneratingResponse' || currentState.state === 'ExecutingPlan') {
@@ -400,6 +409,11 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.ShowFeedbackForm:
                     setIsFeedbackFormVisible(true);
                     break;
+
+                case RovoDevProviderMessageType.SetPromptText:
+                    setPromptText(event.text);
+                    break;
+
                 default:
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendResponse({
@@ -538,6 +552,24 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
+    const checkFileExists = useCallback(
+        (filePath: string): boolean | null => {
+            if (fileExistenceMap.has(filePath)) {
+                return fileExistenceMap.get(filePath)!;
+            }
+
+            const requestId = v4();
+            postMessage({
+                type: RovoDevViewResponseType.CheckFileExists,
+                filePath,
+                requestId,
+            });
+
+            return null;
+        },
+        [postMessage, fileExistenceMap],
+    );
+
     const isRetryAfterErrorButtonEnabled = useCallback(
         (uid: string) => retryAfterErrorEnabled === uid,
         [retryAfterErrorEnabled],
@@ -595,6 +627,10 @@ const RovoDevView: React.FC = () => {
         setIsFeedbackFormVisible(true);
     }, []);
 
+    const handlePromptTextSet = useCallback(() => {
+        setPromptText(undefined);
+    }, []);
+
     const executeSendFeedback = useCallback(
         (feedbackType: FeedbackType, feedack: string, canContact: boolean, includeTenMessages: boolean) => {
             let lastTenMessages: string[] | undefined = undefined;
@@ -643,11 +679,18 @@ const RovoDevView: React.FC = () => {
 
     return (
         <div className="rovoDevChat">
-            {debugPanelEnabled && <DebugPanel currentState={currentState} debugContext={debugPanelContext} />}
+            {debugPanelEnabled && (
+                <DebugPanel
+                    currentState={currentState}
+                    debugContext={debugPanelContext}
+                    debugMcpContext={debugPanelMcpContext}
+                />
+            )}
             <ChatStream
                 chatHistory={history}
                 renderProps={{
                     openFile,
+                    checkFileExists,
                     isRetryAfterErrorButtonEnabled,
                     retryPromptAfterError,
                 }}
@@ -716,6 +759,8 @@ const RovoDevView: React.FC = () => {
                             onCopy={handleCopyResponse}
                             handleMemoryCommand={executeGetAgentMemory}
                             handleTriggerFeedbackCommand={handleShowFeedbackForm}
+                            promptText={promptText}
+                            onPromptTextSet={handlePromptTextSet}
                         />
                     </div>
                     <div className="ai-disclaimer">Uses AI. Verify results.</div>

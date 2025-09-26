@@ -3,6 +3,7 @@ import { Logger } from 'src/logger';
 
 import {
     rovoDevAiResultViewedEvent,
+    rovoDevCreatePrButtonClickedEvent,
     rovoDevDetailsExpandedEvent,
     RovoDevEnv,
     rovoDevFileChangedActionEvent,
@@ -25,6 +26,7 @@ const rovoDevTelemetryEvents = {
     rovoDevTechnicalPlanningShownEvent,
     rovoDevDetailsExpandedEvent,
     rovoDevAiResultViewedEvent,
+    rovoDevCreatePrButtonClickedEvent,
 };
 
 type ParametersSkip3<T extends (...args: any) => any> =
@@ -77,7 +79,7 @@ export class RovoDevTelemetryProvider {
         this._firedTelemetryForCurrentPrompt = {};
     }
 
-    // This function esures that the same telemetry event is not sent twice for the same prompt
+    // This function ensures that the same telemetry event is not sent twice for the same prompt
     public fireTelemetryEvent<T extends TelemetryFunction>(
         funcName: T,
         ...params: ParametersSkip3<(typeof rovoDevTelemetryEvents)[T]>
@@ -94,6 +96,7 @@ export class RovoDevTelemetryProvider {
 
         // the following events can be fired multiple times during the same prompt
         delete this._firedTelemetryForCurrentPrompt['rovoDevFileChangedActionEvent'];
+        delete this._firedTelemetryForCurrentPrompt['rovoDevCreatePrButtonClickedEvent'];
 
         if (!this._firedTelemetryForCurrentPrompt[funcName]) {
             this._firedTelemetryForCurrentPrompt[funcName] = true;

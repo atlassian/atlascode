@@ -1,5 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { createEmptyMinimalIssue, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { Logger } from 'src/logger';
 
 import { DetailedSiteInfo, emptySiteInfo, ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel, WorkspaceRepo } from '../../../../bitbucket/model';
@@ -16,7 +17,6 @@ import {
     StartWorkInitMessage,
     StartWorkMessageType,
 } from '../../../ipc/toUI/startWork';
-import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster } from '../webviewController';

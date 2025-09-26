@@ -1,7 +1,7 @@
 import { Uri } from 'vscode';
 
 import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/types';
-import { CreatePrTerminalSelection, ErrorProductArea, UIErrorInfo } from './analyticsTypes';
+import { CreatePrTerminalSelection, ErrorProductArea, FeedbackSentEvent, UIErrorInfo } from './analyticsTypes';
 import {
     DetailedSiteInfo,
     isEmptySiteInfo,
@@ -329,6 +329,17 @@ export function rovoDevDetailsExpandedEvent(
     });
 }
 
+export function rovoDevCreatePrButtonClickedEvent(
+    rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
+    sessionId: string,
+    promptId: string,
+) {
+    return trackEvent('clicked', 'rovoDevCreatePrButton', {
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId },
+    });
+}
+
 export function rovoDevAiResultViewedEvent(
     rovoDevEnv: RovoDevEnv,
     appInstanceId: string,
@@ -537,6 +548,10 @@ export async function viewScreenEvent(
 }
 
 // UI Events
+
+export async function feedbackSentEvent(event: FeedbackSentEvent): Promise<TrackEvent> {
+    return trackEvent('feedbackSent', 'atlascode', { attributes: { ...event } });
+}
 
 export async function quickFlowEvent(event: QuickFlowAnalyticsEvent): Promise<TrackEvent> {
     return trackEvent('statusUpdated', 'quickFlow', { attributes: { ...event } });
@@ -998,19 +1013,7 @@ async function checkUserDomain(): Promise<string> {
         return 'unknown';
     }
 
-    for (const site of allSites) {
-        try {
-            const authInfo = await Container.credentialManager?.getAuthInfo(site);
-            if (authInfo?.user?.email?.toLowerCase().endsWith('@atlassian.com')) {
-                return 'atlassian';
-            }
-        } catch {
-            // Continue to next site if this one fails
-            continue;
-        }
-    }
-
-    return 'not-atlassian';
+    return (await Container.isAtlassianUser(ProductJira, ProductBitbucket)) ? 'atlassian' : 'not-atlassian';
 }
 
 async function appendUserInfo<T>(e: Object): Promise<T> {

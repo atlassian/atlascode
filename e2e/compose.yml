@@ -46,6 +46,7 @@ services:
             - NODE_TLS_REJECT_UNAUTHORIZED=0
             - ONLYSERVER
             - TARGET
+            - DISABLE_ANALYTICS=1
         depends_on:
             - wiremock-mockedteams
             - wiremock-bitbucket

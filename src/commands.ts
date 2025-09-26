@@ -24,6 +24,7 @@ import { transitionIssue } from './jira/transitionIssue';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from './lib/ipc/models/config';
 import { Logger } from './logger';
+import { runQuickAuth } from './onboarding/quickFlow';
 import { AuthenticationType } from './onboarding/quickFlow/authentication/types';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevContextItem } from './rovo-dev/rovoDevTypes';
@@ -220,7 +221,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             commands.registerCommand(Commands.JiraLogin, () => {
                 const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
                 if (useNewAuthFlow) {
-                    commands.executeCommand(Commands.QuickAuth, { product: ProductJira }, 'assigned to me');
+                    runQuickAuth({ initialState: { product: ProductJira }, origin: 'settings' });
                 } else {
                     commands.executeCommand(Commands.ShowConfigPage);
                 }
@@ -228,9 +229,9 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             commands.registerCommand(Commands.JiraAPITokenLogin, () => {
                 const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
                 if (useNewAuthFlow) {
-                    commands.executeCommand(Commands.QuickAuth, {
-                        product: ProductJira,
-                        authenticationType: AuthenticationType.ApiToken,
+                    runQuickAuth({
+                        initialState: { product: ProductJira, authenticationType: AuthenticationType.ApiToken },
+                        origin: 'nudge',
                     });
                 } else {
                     Container.settingsWebviewFactory.createOrShow({
@@ -435,7 +436,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             commands.registerCommand(Commands.JiraLogin, () => {
                 const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
                 if (useNewAuthFlow) {
-                    commands.executeCommand(Commands.QuickAuth, { product: ProductJira }, 'assigned to me');
+                    runQuickAuth({ initialState: { product: ProductJira }, origin: 'settings' });
                 } else {
                     commands.executeCommand(Commands.ShowConfigPage);
                 }
@@ -443,9 +444,9 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             commands.registerCommand(Commands.JiraAPITokenLogin, () => {
                 const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
                 if (useNewAuthFlow) {
-                    commands.executeCommand(Commands.QuickAuth, {
-                        product: ProductJira,
-                        authenticationType: AuthenticationType.ApiToken,
+                    runQuickAuth({
+                        initialState: { product: ProductJira, authenticationType: AuthenticationType.ApiToken },
+                        origin: 'nudge',
                     });
                 } else {
                     Container.settingsWebviewFactory.createOrShow({

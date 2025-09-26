@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 
 import { featureFlagClientInitializedEvent } from './analytics';
 import { AnalyticsClient, analyticsClient } from './analytics-node-client/src/client.min.js';
+import { Product, ProductJira } from './atlclients/authInfo';
 import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
@@ -29,7 +30,7 @@ import { ConfigTarget } from './lib/ipc/models/config';
 import { SectionChangeMessage, SectionV3ChangeMessage } from './lib/ipc/toUI/config';
 import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
-import { Logger } from './logger';
+import { Logger, RovoDevLogger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
 import { registerQuickAuthCommand } from './onboarding/quickFlow';
 import { Pipeline } from './pipelines/model';
@@ -44,6 +45,7 @@ import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
 import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
+import { SearchAllJiraHelper } from './views/jira/searchAllJiraHelper';
 import { SearchJiraHelper } from './views/jira/searchJiraHelper';
 import { CustomJQLViewProvider } from './views/jira/treeViews/customJqlViewProvider';
 import { AssignedWorkItemsViewProvider } from './views/jira/treeViews/jiraAssignedWorkItemsViewProvider';
@@ -250,6 +252,7 @@ export class Container {
         context.subscriptions.push(AtlascodeUriHandler.create(this._analyticsApi, this._bitbucketHelper));
 
         SearchJiraHelper.initialize();
+        SearchAllJiraHelper.initialize();
         context.subscriptions.push(new CustomJQLViewProvider());
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
 
@@ -272,13 +275,26 @@ export class Container {
             this.pushFeatureUpdatesToUI();
             return true;
         } catch (err) {
-            Logger.error('RovoDev', err, "FeatureFlagClient: Failed to update user's tenantId");
+            Logger.error(err, "FeatureFlagClient: Failed to update user's tenantId");
             return false;
         }
     }
 
-    static async refreshRovoDev(context: ExtensionContext) {
-        if (this.config.jira.enabled && this._featureFlagClient.checkGate(Features.RovoDevEnabled)) {
+    public static async isAtlassianUser(...products: Product[]) {
+        for (const product of products) {
+            try {
+                const authInfo = await this._credentialManager.getAllValidAuthInfo(product);
+                if (authInfo.findIndex((x) => x.user.email.endsWith('@atlassian.com')) >= 0) {
+                    return true;
+                }
+            } catch {}
+        }
+
+        return false;
+    }
+
+    private static async refreshRovoDev(context: ExtensionContext) {
+        if (this.config.jira.enabled && (await this.isAtlassianUser(ProductJira))) {
             this._isRovoDevEnabled = true;
             await this.enableRovoDev(context);
         } else {
@@ -287,13 +303,13 @@ export class Container {
         }
     }
 
-    static async enableRovoDev(context: ExtensionContext) {
+    private static async enableRovoDev(context: ExtensionContext) {
         if (this._rovodevDisposable) {
             try {
                 // Already enabled
                 await RovoDevProcessManager.refreshRovoDevCredentials(context);
             } catch (error) {
-                Logger.error('RovoDev', error, 'Refreshing Rovo Dev credentials');
+                RovoDevLogger.error(error, 'Refreshing Rovo Dev credentials');
                 return;
             }
         } else {
@@ -311,7 +327,7 @@ export class Container {
 
                 context.subscriptions.push(this._rovodevDisposable);
             } catch (error) {
-                Logger.error('RovoDev', error, 'Enabling Rovo Dev');
+                RovoDevLogger.error(error, 'Enabling Rovo Dev');
             }
         }
 
@@ -319,12 +335,12 @@ export class Container {
             // Refresh all issue views to show the secret button
             this.jiraIssueViewManager.refreshAll();
         } catch (error) {
-            Logger.error('RovoDev', error, 'Refreshing Jira issue views');
+            RovoDevLogger.error(error, 'Refreshing Jira issue views');
             return;
         }
     }
 
-    static async disableRovoDev() {
+    private static async disableRovoDev() {
         if (!this._rovodevDisposable) {
             // Already disabled
             return;
@@ -336,19 +352,19 @@ export class Container {
             this._rovodevDisposable = undefined;
             RovoDevProcessManager.deactivateRovoDevProcessManager();
         } catch (error) {
-            Logger.error('RovoDev', error, 'Disabling Rovo Dev');
+            RovoDevLogger.error(error, 'Disabling Rovo Dev');
         }
 
         try {
             // Refresh all issue views to show the secret button
             this.jiraIssueViewManager.refreshAll();
         } catch (error) {
-            Logger.error('RovoDev', error, 'Refreshing Jira issue views');
+            RovoDevLogger.error(error, 'Refreshing Jira issue views');
             return;
         }
     }
 
-    static pushFeatureUpdatesToUI() {
+    private static pushFeatureUpdatesToUI() {
         const factories = [
             this.settingsWebviewFactory,
             this.startWorkWebviewFactory,
@@ -372,6 +388,10 @@ export class Container {
     };
 
     private static getAnalyticsEnable(): boolean {
+        if (process.env.DISABLE_ANALYTICS === '1') {
+            return false;
+        }
+
         const telemetryConfig = workspace.getConfiguration('telemetry');
         return telemetryConfig.get<boolean>('enableTelemetry', true);
     }

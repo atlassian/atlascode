@@ -33,6 +33,10 @@ body {
     font-size: var(--vscode-font-size) !important;
 }
 
+#prompt-editor-container > .monaco-editor {
+    outline: none;
+}
+
 .rovoDevChat button {
     cursor: pointer;
 }
@@ -155,6 +159,15 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.file-lozenge.file-lozenge-disabled {
+    opacity: 0.7;
+}
+
+.file-lozenge.file-lozenge-disabled:hover {
+    background-color: transparent;
+    cursor: not-allowed;
 }
 
 .code-changes-container {
@@ -292,6 +305,10 @@ body {
 
 .chat-message-action:hover {
     background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.chat-message-action.copied svg {
+    color: #6a9a23;
 }
 
 .message-drawer {
@@ -827,6 +844,14 @@ body {
 .vscode-high-contrast .form-cancel-button,
 .vscode-high-contrast .form-submit-button {
     border: 2px solid var(--vscode-contrastBorder);
+}
+
+.vscode-light .form-cancel-button {
+    color: var(--vscode-foreground);
+}
+
+.vscode-light .form-cancel-button:hover {
+    color: var(--vscode-button-secondaryForeground);
 }
 
 .vscode-high-contrast .form-cancel-button:hover,

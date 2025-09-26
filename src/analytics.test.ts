@@ -1330,6 +1330,22 @@ describe('analytics', () => {
             expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
             expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
         });
+
+        it.each(RovoDevEnvironments)('should create rovoDevCreatePrButtonClickedEvent', async (rovoDevEnv) => {
+            const event = await analytics.rovoDevCreatePrButtonClickedEvent(
+                rovoDevEnv,
+                appInstanceId,
+                mockSessionId,
+                mockPromptId,
+            );
+
+            expect(event.trackEvent.action).toEqual('clicked');
+            expect(event.trackEvent.actionSubject).toEqual('rovoDevCreatePrButton');
+            expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+            expect(event.trackEvent.attributes.appInstanceId).toEqual(appInstanceId);
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
+        });
     });
 
     // Platform detection tests

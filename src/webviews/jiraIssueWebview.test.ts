@@ -36,6 +36,9 @@ jest.mock('../container', () => ({
         bitbucketContext: {
             recentPullrequestsForAllRepos: jest.fn(() => Promise.resolve([])),
         },
+        rovodevWebviewProvider: {
+            setPromptTextWithFocus: jest.fn(),
+        },
         createIssueProblemsWebview: {
             createOrShow: jest.fn(),
         },
@@ -1197,6 +1200,19 @@ describe('JiraIssueWebview', () => {
             await jiraIssueWebview['onMessageReceived'](msg);
 
             expect(startWorkOnIssue).toHaveBeenCalledWith(mockIssue);
+        });
+
+        test('should handle setRovoDevPromptText action', async () => {
+            const msg = {
+                action: 'setRovoDevPromptText',
+                text: 'Please work on [TEST-123](https://test.com/browse/TEST-123)',
+            };
+
+            await jiraIssueWebview['onMessageReceived'](msg);
+
+            expect(Container.rovodevWebviewProvider.setPromptTextWithFocus).toHaveBeenCalledWith(
+                'Please work on [TEST-123](https://test.com/browse/TEST-123)',
+            );
         });
     });
 
