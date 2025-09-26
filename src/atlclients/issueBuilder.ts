@@ -21,49 +21,41 @@ type SiteId = string;
 
 const ASSIST_API = '/gateway/api/assist/api/ai/v2/ai-feature/jira/issue/source-type/code/suggestions';
 
-export const isSiteCloudWithApiKey = async (site?: DetailedSiteInfo | SiteId): Promise<boolean> => {
+export const findApiTokenForSite = async (site?: DetailedSiteInfo | SiteId): Promise<BasicAuthInfo | undefined> => {
     const siteToCheck = typeof site === 'string' ? Container.siteManager.getSiteForId(ProductJira, site) : site;
 
-    if (!siteToCheck || !siteToCheck.host) {
-        return false;
+    if (!siteToCheck || !siteToCheck.host.endsWith('.atlassian.net')) {
+        return undefined;
     }
 
-    if (!siteToCheck.host.endsWith('.atlassian.net')) {
-        return false;
-    }
+    const sites = Container.siteManager.getSitesAvailable(ProductJira);
+    const selectedSiteEmail = (await Container.credentialManager.getAuthInfo(siteToCheck))?.user.email;
 
-    const authInfo = await Container.credentialManager.getAuthInfo(siteToCheck);
-    if (!authInfo || !isBasicAuthInfo(authInfo)) {
-        return false;
-    }
+    // For a cloud site - check if we have another cloud site with the same user and API key
+    const promises = sites
+        .filter((site) => site.host.endsWith('.atlassian.net'))
+        .map(async (site) => {
+            const authInfo = await Container.credentialManager.getAuthInfo(site);
+            if (authInfo?.user.email === selectedSiteEmail && isBasicAuthInfo(authInfo)) {
+                // There's another site with the same user and cloud, so we can use that API key for suggestions
+                return authInfo as BasicAuthInfo;
+            }
+            return undefined;
+        });
 
-    return true;
+    const results = await Promise.all(promises);
+    return results.find((authInfo) => authInfo !== undefined);
 };
 
-export const findCloudSiteWithApiKey = async (): Promise<DetailedSiteInfo | undefined> => {
-    const sites = (
-        await Promise.all(
-            Container.siteManager
-                .getSitesAvailable(ProductJira)
-                .map(async (x) => ((await isSiteCloudWithApiKey(x)) ? x : undefined)),
-        )
-    ).filter((x) => x !== undefined) as DetailedSiteInfo[];
-
-    // Any site is fine, just need an API key
-    return sites.length > 0 ? sites[0] : undefined;
-};
-
-export const fetchIssueSuggestions = async (prompt: string, context?: string): Promise<SuggestedIssuesResponse> => {
+export const fetchIssueSuggestions = async (
+    site: DetailedSiteInfo,
+    prompt: string,
+    context?: string,
+): Promise<SuggestedIssuesResponse> => {
     const axiosInstance: AxiosInstance = getAxiosInstance();
 
     try {
-        const site = await findCloudSiteWithApiKey();
-
-        if (!site) {
-            throw new Error('No site found with API key');
-        }
-
-        const authInfo = (await Container.credentialManager.getAuthInfo(site)) as BasicAuthInfo;
+        const authInfo = await findApiTokenForSite(site);
         if (!authInfo || !isBasicAuthInfo(authInfo)) {
             throw new Error('No valid auth info found for site');
         }

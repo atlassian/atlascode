@@ -1,8 +1,9 @@
+import { DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
 import { Container } from 'src/container';
 import { Logger } from 'src/logger';
 import { window, workspace } from 'vscode';
 
-import { fetchIssueSuggestions, isSiteCloudWithApiKey } from '../../atlclients/issueBuilder';
+import { fetchIssueSuggestions, findApiTokenForSite } from '../../atlclients/issueBuilder';
 import { IssueSuggestionContextLevel, IssueSuggestionSettings, SimplifiedTodoIssueData } from '../../config/model';
 import { Features } from '../../util/featureFlags';
 
@@ -41,7 +42,11 @@ export class IssueSuggestionManager {
     async generateIssueSuggestion(data: SimplifiedTodoIssueData) {
         const { prompt, context } = this.createSuggestionPrompt(data, this.settings.level);
         try {
-            const response = await fetchIssueSuggestions(prompt, context);
+            const suggestionSite = getSelectedSite();
+            if (!suggestionSite) {
+                throw new Error('No site selected for issue suggestions');
+            }
+            const response = await fetchIssueSuggestions(suggestionSite, prompt, context);
             const issue = response.suggestedIssues[0];
             if (!issue) {
                 return {
@@ -126,13 +131,21 @@ function getSuggestionContextLevel(): IssueSuggestionContextLevel {
     return config || IssueSuggestionContextLevel.CodeContext;
 }
 
+function getSelectedSite(): DetailedSiteInfo | undefined {
+    const siteId = workspace.getConfiguration('atlascode').get<string>('jira.lastCreateSiteAndProject.siteId');
+    return siteId ? Container.siteManager.getSiteForId(ProductJira, siteId) : undefined;
+}
+
 async function getSuggestionAvailable(): Promise<boolean> {
     const isFeatureEnabled = Container.featureFlagClient.checkGate(Features.EnableAiSuggestions);
     if (!isFeatureEnabled) {
         return false;
     }
 
-    const selectedSite = workspace.getConfiguration('atlascode').get<string>('jira.lastCreateSiteAndProject.siteId');
+    const selectedSite = getSelectedSite();
+    if (!selectedSite) {
+        return false;
+    }
 
-    return await isSiteCloudWithApiKey(selectedSite);
+    return (await findApiTokenForSite(selectedSite)) !== undefined;
 }
