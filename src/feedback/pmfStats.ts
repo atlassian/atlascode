@@ -12,6 +12,7 @@ type PmfStatsData = {
         [k: string]: number;
     };
     lastFirstTimeExperienceCheck?: string; // Track when we last checked for first-time experience
+    lastActivationTime?: string; // Track when extension was last activated
 };
 
 const fallbackData: PmfStatsData = {
@@ -134,5 +135,63 @@ export class PmfStats {
 
         currentState.lastFirstTimeExperienceCheck = format(now, FormatYYYYMMDD);
         await this.extensionContext.globalState.update(PmfStatsKey, currentState);
+    }
+
+    /**
+     * Check if extension activation appears to be user-initiated based on timing patterns
+     * Uses heuristics to distinguish between likely manual vs automatic updates
+     */
+    isLikelyManualActivation(): boolean {
+        const currentState = this.extensionContext.globalState.get<PmfStatsData>(PmfStatsKey, fallbackData);
+        const now = new Date();
+
+        // If no previous activation time, assume manual (first install)
+        if (!currentState.lastActivationTime) {
+            return true;
+        }
+
+        const lastActivation = parseISO(currentState.lastActivationTime);
+        const timeSinceLastActivation = now.getTime() - lastActivation.getTime();
+        const hoursSinceLastActivation = timeSinceLastActivation / (1000 * 60 * 60);
+
+        const isWorkingHours = this.isWorkingHours(now);
+        const isReasonableInterval = hoursSinceLastActivation >= 1;
+        const hasRecentActivity = this.hasRecentUserActivity();
+
+        return isWorkingHours && isReasonableInterval && hasRecentActivity;
+    }
+
+    /**
+     * Update last activation time
+     */
+    async touchActivationTime() {
+        const currentState = this.extensionContext.globalState.get<PmfStatsData>(PmfStatsKey, fallbackData);
+        const now = new Date();
+
+        currentState.lastActivationTime = format(now, FormatISO);
+        await this.extensionContext.globalState.update(PmfStatsKey, currentState);
+    }
+
+    /**
+     * Check if current time is during typical working hours (9 AM - 6 PM)
+     */
+    private isWorkingHours(date: Date): boolean {
+        const hours = date.getHours();
+        return hours >= 9 && hours <= 18;
+    }
+
+    /**
+     * Check if user has had recent activity (within last 7 days)
+     * This helps indicate if user is actively using VS Code vs automatic background updates
+     */
+    private hasRecentUserActivity(): boolean {
+        const currentState = this.extensionContext.globalState.get<PmfStatsData>(PmfStatsKey, fallbackData);
+        const now = new Date();
+        const sevenDaysAgo = addDays(now, -7);
+
+        return Object.keys(currentState.activityByDay).some((dateKey) => {
+            const activityDate = parseISO(dateKey);
+            return isAfter(activityDate, sevenDaysAgo);
+        });
     }
 }

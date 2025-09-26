@@ -85,9 +85,14 @@ export async function activate(context: ExtensionContext) {
     });
 
     if (!process.env.ROVODEV_BBY) {
-        // Show onboarding for first-time installs OR when user meets inactive user conditions
+        // Track activation time for manual vs automatic detection
+        await Container.pmfStats.touchActivationTime();
+
+        // Show onboarding for first-time installs OR when user meets inactive user conditions (and appears to be manual)
         const isFirstTimeInstall = previousVersion === undefined;
-        const shouldShowFirstTimeExperience = isFirstTimeInstall || (await checkForFirstTimeExperienceOnReinstall());
+        const isLikelyManualActivation = Container.pmfStats.isLikelyManualActivation();
+        const shouldShowFirstTimeExperience =
+            isFirstTimeInstall || (isLikelyManualActivation && (await checkForFirstTimeExperienceOnReinstall()));
 
         if (shouldShowFirstTimeExperience) {
             commands.executeCommand(Commands.ShowOnboardingFlow);

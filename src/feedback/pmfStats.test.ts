@@ -533,4 +533,94 @@ describe('PmfStats', () => {
             });
         });
     });
+
+    describe('isLikelyManualActivation', () => {
+        beforeEach(() => {
+            jest.spyOn(PmfStats.prototype, 'cleanupOldEntries').mockImplementation();
+            pmfStats = new PmfStats(mockExtensionContext);
+        });
+
+        it('should return true when no previous activation time exists (first install)', () => {
+            const mockState = {
+                lastSurveyed: '2025-01-01',
+                snoozeUntil: '2025-07-01T10:00:00+00:00',
+                activityByDay: {},
+            };
+
+            mockGlobalStateGet.mockReturnValue(mockState);
+
+            const result = pmfStats.isLikelyManualActivation();
+
+            expect(result).toBe(true);
+        });
+
+        it('should return false when not in working hours', () => {
+            const mockState = {
+                lastSurveyed: '2025-01-01',
+                snoozeUntil: '2025-07-01T10:00:00+00:00',
+                activityByDay: {
+                    '2025-07-14': 1,
+                },
+                lastActivationTime: '2025-07-14T10:00:00+00:00',
+            };
+
+            mockGlobalStateGet.mockReturnValue(mockState);
+            mockParseISO.mockImplementation((dateStr) => new Date(dateStr));
+            mockAddDays.mockReturnValue(new Date('2025-07-08T00:00:00Z'));
+            mockIsAfter.mockReturnValue(true);
+
+            jest.spyOn(Date.prototype, 'getHours').mockReturnValue(23);
+
+            const result = pmfStats.isLikelyManualActivation();
+
+            expect(result).toBe(false);
+        });
+
+        it('should return true when all conditions are met (working hours, reasonable interval, recent activity)', () => {
+            const mockState = {
+                lastSurveyed: '2025-01-01',
+                snoozeUntil: '2025-07-01T10:00:00+00:00',
+                activityByDay: {
+                    '2025-07-14': 1,
+                },
+                lastActivationTime: '2025-07-14T10:00:00+00:00',
+            };
+
+            mockGlobalStateGet.mockReturnValue(mockState);
+            mockParseISO.mockImplementation((dateStr) => new Date(dateStr));
+            mockAddDays.mockReturnValue(new Date('2025-07-08T00:00:00Z'));
+            mockIsAfter.mockReturnValue(true);
+
+            jest.spyOn(Date.prototype, 'getHours').mockReturnValue(14);
+
+            const result = pmfStats.isLikelyManualActivation();
+
+            expect(result).toBe(true);
+        });
+    });
+
+    describe('touchActivationTime', () => {
+        beforeEach(() => {
+            jest.spyOn(PmfStats.prototype, 'cleanupOldEntries').mockImplementation();
+            pmfStats = new PmfStats(mockExtensionContext);
+        });
+
+        it('should update lastActivationTime with current timestamp', async () => {
+            const mockState = {
+                lastSurveyed: '2025-01-01',
+                snoozeUntil: '2025-07-01T10:00:00+00:00',
+                activityByDay: {},
+            };
+
+            mockGlobalStateGet.mockReturnValue(mockState);
+            mockFormat.mockReturnValueOnce('2025-07-15T14:30:00+00:00');
+
+            await pmfStats.touchActivationTime();
+
+            expect(mockGlobalStateUpdate).toHaveBeenCalledWith('pmfStats', {
+                ...mockState,
+                lastActivationTime: '2025-07-15T14:30:00+00:00',
+            });
+        });
+    });
 });
