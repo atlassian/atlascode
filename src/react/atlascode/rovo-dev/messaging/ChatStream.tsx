@@ -1,8 +1,10 @@
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
+import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import { useMessagingApi } from '../../messagingApi';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc } from '../common/common';
 import { ErrorMessageItem } from '../common/errorMessage';
@@ -41,6 +43,10 @@ interface ChatStreamProps {
     onLoginClick: () => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
+    onSendMessage: (message: string) => void;
+    jiraWorkItems?: MinimalIssue<DetailedSiteInfo>[];
+    onJiraItemClick?: (issue: MinimalIssue<DetailedSiteInfo>) => void;
+    onRequestJiraItems?: () => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -59,6 +65,10 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onLoginClick,
     onOpenFolder,
     onMcpChoice,
+    onSendMessage,
+    jiraWorkItems,
+    onJiraItemClick,
+    onRequestJiraItems,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -225,6 +235,10 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 onLoginClick={onLoginClick}
                 onOpenFolder={onOpenFolder}
                 onMcpChoice={onMcpChoice}
+                onSendMessage={onSendMessage}
+                jiraWorkItems={jiraWorkItems}
+                onJiraItemClick={onJiraItemClick}
+                onRequestJiraItems={onRequestJiraItems}
             />
             {!isChatHistoryDisabled &&
                 chatHistory &&

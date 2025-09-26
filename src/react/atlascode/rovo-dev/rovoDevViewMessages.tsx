@@ -28,6 +28,7 @@ export const enum RovoDevViewResponseType {
     LaunchJiraAuth = 'launchJiraAuth',
     McpConsentChoiceSubmit = 'mcpConsentChoiceSubmit',
     CheckFileExists = 'checkFileExists',
+    GetJiraWorkItems = 'getJiraWorkItems',
 }
 
 export interface ModifiedFile {
@@ -64,4 +65,5 @@ export type RovoDevViewResponse =
       >
     | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>
     | ReducerAction<RovoDevViewResponseType.McpConsentChoiceSubmit, { choice: McpConsentChoice; serverName?: string }>
-    | ReducerAction<RovoDevViewResponseType.CheckFileExists, { filePath: string; requestId: string }>;
+    | ReducerAction<RovoDevViewResponseType.CheckFileExists, { filePath: string; requestId: string }>
+    | ReducerAction<RovoDevViewResponseType.GetJiraWorkItems>;
