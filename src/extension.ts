@@ -85,16 +85,14 @@ export async function activate(context: ExtensionContext) {
     });
 
     if (!process.env.ROVODEV_BBY) {
-        if (previousVersion === undefined) {
+        // Show onboarding for first-time installs OR when user meets inactive user conditions
+        const isFirstTimeInstall = previousVersion === undefined;
+        const shouldShowFirstTimeExperience = isFirstTimeInstall || (await checkForFirstTimeExperienceOnReinstall());
+
+        if (shouldShowFirstTimeExperience) {
             commands.executeCommand(Commands.ShowOnboardingFlow);
         } else {
-            // Check if user should get first-time experience due to long inactivity
-            const shouldShowFirstTimeExperience = await checkForFirstTimeExperienceOnReinstall();
-            if (shouldShowFirstTimeExperience) {
-                commands.executeCommand(Commands.ShowOnboardingFlow);
-            } else {
-                showWelcomePage(atlascodeVersion, previousVersion);
-            }
+            showWelcomePage(atlascodeVersion, previousVersion);
         }
     }
 
