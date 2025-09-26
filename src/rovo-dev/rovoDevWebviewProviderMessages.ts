@@ -1,6 +1,8 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 
 import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
+import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { RovoDevResponse } from './responseParser';
 import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
@@ -28,6 +30,8 @@ export const enum RovoDevProviderMessageType {
     ShowFeedbackForm = 'showFeedbackForm',
     SetDebugPanel = 'setDebugPanel',
     SetPromptText = 'setPromptText',
+    GetJiraWorkItems = 'getJiraWorkItems',
+    SetJiraWorkItems = 'setJiraWorkItems',
     CheckFileExistsComplete = 'checkFileExistsComplete',
 }
 
@@ -79,6 +83,7 @@ export type RovoDevProviderMessage =
           { enabled: boolean; context: Record<string, string>; mcpContext: Record<string, string> }
       >
     | ReducerAction<RovoDevProviderMessageType.SetPromptText, { text: string }>
+    | ReducerAction<RovoDevProviderMessageType.SetJiraWorkItems, { issues: MinimalIssue<DetailedSiteInfo>[] }>
     | ReducerAction<
           RovoDevProviderMessageType.CheckFileExistsComplete,
           { requestId: string; filePath: string; exists: boolean }

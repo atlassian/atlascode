@@ -1,3 +1,4 @@
+import { isMinimalIssue, MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
 import * as fs from 'fs';
 import path from 'path';
 import { CommandContext, setCommandContext } from 'src/commandContext';
@@ -26,6 +27,7 @@ import {
 
 import { Container } from '../../src/container';
 import { RovoDevLogger } from '../../src/logger';
+import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
 import { Commands, rovodevInfo } from '../constants';
 import {
     ModifiedFile,
@@ -33,6 +35,7 @@ import {
     RovoDevViewResponseType,
 } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { GitErrorCodes } from '../typings/git';
+import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
@@ -79,6 +82,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _debugPanelEnabled = false;
     private _debugPanelContext: Record<string, string> = {};
     private _debugPanelMcpContext: Record<string, string> = {};
+    private _jiraWorkItemsLoaded = false;
 
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
@@ -362,6 +366,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await this.checkFileExists(e.filePath, e.requestId);
                         break;
 
+                    case RovoDevViewResponseType.GetJiraWorkItems:
+                        await this.fetchAndSendJiraWorkItems();
+                        break;
+
                     case RovoDevViewResponseType.ToolPermissionChoiceSubmit:
                         await this._chatProvider.signalToolRequestChoiceSubmit(e.toolCallId, e.choice);
                         break;
@@ -383,6 +391,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private beginNewSession(sessionId: string | null, manuallyCreated: boolean): void {
         this._telemetryProvider.startNewSession(sessionId ?? v4(), manuallyCreated);
+        // Only reset Jira work items loaded flag if manually created (user initiated)
+        // Don't reset for automatic session creation during initialization
+        if (manuallyCreated) {
+            this._jiraWorkItemsLoaded = false;
+        }
     }
 
     // Helper to get openFile info from a document
@@ -605,6 +618,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             const sessionId = await client.createSession();
             this._revertedChanges = [];
+
+            this._jiraWorkItemsLoaded = false;
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.ClearChat,
@@ -1185,5 +1200,101 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._dwellTracker = undefined;
 
         return this.refreshDebugPanel();
+    }
+
+    private getCachedJiraIssues(sites: DetailedSiteInfo[]): MinimalIssue<DetailedSiteInfo>[] {
+        const cachedIssues: MinimalIssue<DetailedSiteInfo>[] = [];
+        for (const site of sites) {
+            const assignedIssuesForSite = SearchJiraHelper.getAssignedIssuesPerSite(site.id);
+            // Filter to only include MinimalIssue items (not IssueLinkIssue)
+            const minimalIssues = assignedIssuesForSite.filter(isMinimalIssue) as MinimalIssue<DetailedSiteInfo>[];
+            cachedIssues.push(...minimalIssues);
+        }
+
+        const filteredIssues = cachedIssues.filter(
+            (issue) => issue.status && issue.status.statusCategory && issue.status.statusCategory.name !== 'Done',
+        );
+
+        return filteredIssues.slice(0, 3);
+    }
+
+    private async sendJiraWorkItems(issues: MinimalIssue<DetailedSiteInfo>[]): Promise<void> {
+        if (!this._webView) {
+            return;
+        }
+
+        await this._webView.postMessage({
+            type: RovoDevProviderMessageType.SetJiraWorkItems,
+            issues: issues,
+        });
+
+        this._jiraWorkItemsLoaded = true;
+    }
+
+    private async fetchJiraIssuesFromAPI(sites: DetailedSiteInfo[]): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+        for (const site of sites) {
+            try {
+                const issues = await this.fetchLimitedJiraIssues(site, 3);
+                if (issues.length > 0) {
+                    return issues.slice(0, 3);
+                }
+            } catch (error) {
+                RovoDevLogger.error(error, `Failed to fetch Jira issues for site ${site.host}`);
+            }
+        }
+
+        return [];
+    }
+
+    private async fetchLimitedJiraIssues(
+        site: DetailedSiteInfo,
+        maxResults: number,
+    ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+        const jql = 'assignee = currentUser() AND StatusCategory != Done ORDER BY updated DESC';
+
+        const client = await Container.clientManager.jiraClient(site);
+        const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
+        const fields = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicFieldInfo);
+
+        try {
+            const res = await client.searchForIssuesUsingJqlGet(jql, fields, maxResults, 0);
+            const searchResults = await readSearchResults(res, site, epicFieldInfo);
+
+            return searchResults.issues;
+        } catch (error) {
+            RovoDevLogger.error(error, `Failed to fetch limited Jira issues for site ${site.host}`);
+            return [];
+        }
+    }
+
+    private async fetchAndSendJiraWorkItems() {
+        if (!this._webView || this._jiraWorkItemsLoaded) {
+            return;
+        }
+
+        try {
+            const sites = Container.siteManager.getSitesAvailable(ProductJira);
+
+            if (sites.length === 0) {
+                await this.sendJiraWorkItems([]);
+                return;
+            }
+
+            // Try cached issues first
+            const cachedIssues = this.getCachedJiraIssues(sites);
+
+            if (cachedIssues.length > 0) {
+                await this.sendJiraWorkItems(cachedIssues);
+
+                return;
+            }
+
+            // Fallback to API fetch
+            const apiIssues = await this.fetchJiraIssuesFromAPI(sites);
+            await this.sendJiraWorkItems(apiIssues);
+        } catch (error) {
+            RovoDevLogger.error(error, 'Failed to fetch Jira work items');
+            await this.sendJiraWorkItems([]);
+        }
     }
 }

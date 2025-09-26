@@ -2,6 +2,7 @@ import './RovoDev.css';
 import './RovoDevCodeHighlighting.css';
 
 import { setGlobalTheme } from '@atlaskit/tokens';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
@@ -9,12 +10,14 @@ import * as React from 'react';
 import { DisabledState, RovoDevContextItem, State } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
 import {
     RovoDevDisabledReason,
     RovoDevProviderMessage,
     RovoDevProviderMessageType,
 } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
+import { createRovoDevTemplate } from '../../../util/rovoDevTemplate';
 import { useMessagingApi } from '../messagingApi';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 import { ChatStream } from './messaging/ChatStream';
@@ -82,6 +85,7 @@ const RovoDevView: React.FC = () => {
     const [debugPanelMcpContext, setDebugPanelMcpContext] = useState<Record<string, string>>({});
     const [promptText, setPromptText] = useState<string | undefined>(undefined);
     const [fileExistenceMap, setFileExistenceMap] = useState<Map<string, boolean>>(new Map());
+    const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[]>([]);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -423,6 +427,10 @@ const RovoDevView: React.FC = () => {
                     setPromptText(event.text);
                     break;
 
+                case RovoDevProviderMessageType.SetJiraWorkItems:
+                    setJiraWorkItems(event.issues);
+                    break;
+
                 default:
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendResponse({
@@ -682,6 +690,20 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
+    const onRequestJiraItems = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.GetJiraWorkItems,
+        });
+    }, [postMessage]);
+
+    const onJiraItemClick = useCallback(
+        (issue: MinimalIssue<DetailedSiteInfo>) => {
+            const template = createRovoDevTemplate(issue.key, issue.siteDetails);
+            setPromptText(template);
+        },
+        [setPromptText],
+    );
+
     const onToolPermissionChoice = useCallback(
         (toolCallId: string, choice: ToolPermissionChoice) => {
             // remove the dialog after the choice is submitted
@@ -750,6 +772,10 @@ const RovoDevView: React.FC = () => {
                 onLoginClick={onLoginClick}
                 onOpenFolder={onOpenFolder}
                 onMcpChoice={onMcpChoice}
+                onSendMessage={sendPrompt}
+                jiraWorkItems={jiraWorkItems}
+                onJiraItemClick={onJiraItemClick}
+                onRequestJiraItems={onRequestJiraItems}
                 onToolPermissionChoice={onToolPermissionChoice}
             />
             {!hidePromptBox && (
