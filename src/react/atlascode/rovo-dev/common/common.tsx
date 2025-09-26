@@ -26,6 +26,8 @@ export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
 }
 
+export type CheckFileExistsFunc = (filePath: string) => boolean | null;
+
 export const FollowUpActionFooter: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
     return (
         <div
@@ -46,6 +48,7 @@ export const renderChatHistory = (
     msg: ChatMessage,
     index: number,
     openFile: OpenFileFunc,
+    checkFileExists: CheckFileExistsFunc,
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean,
     retryAfterError: () => void,
 ) => {
@@ -54,7 +57,13 @@ export const renderChatHistory = (
             const parsedMessages = parseToolReturnMessage(msg);
             return parsedMessages.map((message) => {
                 if (message.technicalPlan) {
-                    return <TechnicalPlanComponent content={message.technicalPlan} openFile={openFile} />;
+                    return (
+                        <TechnicalPlanComponent
+                            content={message.technicalPlan}
+                            openFile={openFile}
+                            checkFileExists={checkFileExists}
+                        />
+                    );
                 }
                 return <ToolReturnParsedItem msg={message} openFile={openFile} />;
             });
@@ -85,11 +94,21 @@ export const renderChatHistory = (
     }
 };
 
-export const FileLozenge: React.FC<{ filePath: string; openFile?: OpenFileFunc }> = ({ filePath, openFile }) => {
+export const FileLozenge: React.FC<{
+    filePath: string;
+    openFile?: OpenFileFunc;
+    isDisabled?: boolean;
+}> = ({ filePath, openFile, isDisabled }) => {
     const fileTitle = filePath ? filePath.match(/([^/\\]+)$/)?.[0] : undefined;
 
+    const handleClick = () => {
+        if (!isDisabled && openFile) {
+            openFile(filePath);
+        }
+    };
+
     return (
-        <div onClick={() => openFile && openFile(filePath)} className="file-lozenge">
+        <div onClick={handleClick} className={isDisabled ? 'file-lozenge file-lozenge-disabled' : 'file-lozenge'}>
             <span className="file-path">{fileTitle || filePath}</span>
         </div>
     );

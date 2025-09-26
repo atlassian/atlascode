@@ -329,6 +329,17 @@ export function rovoDevDetailsExpandedEvent(
     });
 }
 
+export function rovoDevCreatePrButtonClickedEvent(
+    rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
+    sessionId: string,
+    promptId: string,
+) {
+    return trackEvent('clicked', 'rovoDevCreatePrButton', {
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId },
+    });
+}
+
 export function rovoDevAiResultViewedEvent(
     rovoDevEnv: RovoDevEnv,
     appInstanceId: string,

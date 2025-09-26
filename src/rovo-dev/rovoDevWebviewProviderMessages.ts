@@ -28,6 +28,7 @@ export const enum RovoDevProviderMessageType {
     ShowFeedbackForm = 'showFeedbackForm',
     SetDebugPanel = 'setDebugPanel',
     SetPromptText = 'setPromptText',
+    CheckFileExistsComplete = 'checkFileExistsComplete',
 }
 
 export interface RovoDevObjectResponse {
@@ -77,4 +78,8 @@ export type RovoDevProviderMessage =
           RovoDevProviderMessageType.SetDebugPanel,
           { enabled: boolean; context: Record<string, string>; mcpContext: Record<string, string> }
       >
-    | ReducerAction<RovoDevProviderMessageType.SetPromptText, { text: string }>;
+    | ReducerAction<RovoDevProviderMessageType.SetPromptText, { text: string }>
+    | ReducerAction<
+          RovoDevProviderMessageType.CheckFileExistsComplete,
+          { requestId: string; filePath: string; exists: boolean }
+      >;

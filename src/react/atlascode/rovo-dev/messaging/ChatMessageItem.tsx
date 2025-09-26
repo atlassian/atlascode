@@ -1,7 +1,9 @@
+import CheckCircleIcon from '@atlaskit/icon/core/check-circle';
 import CopyIcon from '@atlaskit/icon/core/copy';
 import ThumbsDownIcon from '@atlaskit/icon/core/thumbs-down';
 import ThumbsUpIcon from '@atlaskit/icon/core/thumbs-up';
-import React from 'react';
+import Tooltip from '@atlaskit/tooltip';
+import React, { useCallback, useState } from 'react';
 
 import { MarkedDown } from '../common/common';
 import { PromptContextCollection } from '../prompt-box/promptContext/promptContextCollection';
@@ -14,7 +16,20 @@ export const ChatMessageItem: React.FC<{
     onCopy?: (text: string) => void;
     onFeedback?: (isPositive: boolean) => void;
 }> = ({ msg, icon, enableActions, onCopy, onFeedback }) => {
+    const [isCopied, setIsCopied] = useState(false);
+
     const messageTypeStyles = msg.source === 'User' ? 'user-message' : 'agent-message';
+
+    const handleCopyClick = useCallback(() => {
+        if (onCopy && msg.text) {
+            onCopy(msg.text);
+            setIsCopied(true);
+            // Reset the copied state and remove the check icon after 2 seconds
+            setTimeout(() => {
+                setIsCopied(false);
+            }, 2000);
+        }
+    }, [onCopy, msg.text]);
 
     return (
         <>
@@ -36,32 +51,37 @@ export const ChatMessageItem: React.FC<{
             )}
             {msg.source === 'RovoDev' && enableActions && (
                 <div className="chat-message-actions">
-                    <button
-                        onClick={() => onFeedback && onFeedback(true)}
-                        aria-label="like-response-button"
-                        title="Helpful"
-                        className="chat-message-action"
-                    >
-                        <ThumbsUpIcon label="thumbs-up" spacing="none" />
-                    </button>
-                    <button
-                        onClick={() => onFeedback && onFeedback(false)}
-                        aria-label="dislike-response-button"
-                        title="Unhelpful"
-                        className="chat-message-action"
-                    >
-                        <ThumbsDownIcon label="thumbs-down" spacing="none" />
-                    </button>
-                    <button
-                        aria-label="copy-button"
-                        title="Copy response"
-                        className="chat-message-action"
-                        onClick={() => {
-                            onCopy && onCopy(msg.text || '');
-                        }}
-                    >
-                        <CopyIcon label="Copy button" spacing="none" />
-                    </button>
+                    <Tooltip content="Helpful">
+                        <button
+                            onClick={() => onFeedback?.(true)}
+                            aria-label="like-response-button"
+                            className="chat-message-action"
+                        >
+                            <ThumbsUpIcon label="thumbs-up" spacing="none" />
+                        </button>
+                    </Tooltip>
+                    <Tooltip content="Unhelpful">
+                        <button
+                            onClick={() => onFeedback?.(false)}
+                            aria-label="dislike-response-button"
+                            className="chat-message-action"
+                        >
+                            <ThumbsDownIcon label="thumbs-down" spacing="none" />
+                        </button>
+                    </Tooltip>
+                    <Tooltip key={isCopied ? 'copied' : 'copy'} content={isCopied ? 'Copied!' : 'Copy response'}>
+                        <button
+                            aria-label="copy-button"
+                            className={`chat-message-action copy-button ${isCopied ? 'copied' : ''}`}
+                            onClick={handleCopyClick}
+                        >
+                            {isCopied ? (
+                                <CheckCircleIcon label="Copied!" spacing="none" />
+                            ) : (
+                                <CopyIcon label="Copy button" spacing="none" />
+                            )}
+                        </button>
+                    </Tooltip>
                 </div>
             )}
         </>

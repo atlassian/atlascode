@@ -58,6 +58,8 @@ export abstract class AbstractReactWebview implements ReactWebview {
     private _onDidPanelDispose = new vscode.EventEmitter<void>();
     protected isRefeshing: boolean = false;
     private _viewEventSent: boolean = false;
+    private _authChangeListener: Disposable | undefined;
+    private _siteChangeListener: Disposable | undefined;
     private ws: UIWebsocket;
 
     constructor(extensionPath: string) {
@@ -145,6 +147,18 @@ export abstract class AbstractReactWebview implements ReactWebview {
         this.fireAdditionalSettings({
             rovoDevEnabled: Container.isRovoDevEnabled,
         });
+
+        // When anything changes around site availability or auth - we need to handle it
+        this._authChangeListener = Container.credentialManager.onDidAuthChange(() => {
+            this.onAuthChange();
+        }, this);
+        this._siteChangeListener = Container.siteManager.onDidSitesAvailableChange(() => {
+            this.onAuthChange();
+        }, this);
+    }
+
+    protected onAuthChange(): Promise<void> | void {
+        // Override in subclass if needed
     }
 
     private fireFeatureGates(features: Features[]) {
@@ -289,6 +303,10 @@ export abstract class AbstractReactWebview implements ReactWebview {
         }
         this._panel = undefined;
         this._onDidPanelDispose.fire();
+        this._authChangeListener?.dispose();
+        this._authChangeListener = undefined;
+        this._siteChangeListener?.dispose();
+        this._siteChangeListener = undefined;
     }
 
     public dispose() {

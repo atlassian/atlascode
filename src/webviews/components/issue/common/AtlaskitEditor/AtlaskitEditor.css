@@ -23,3 +23,8 @@
 [class*="Select__menu"] {
     z-index: 1000;
 }
+
+/* Fix for code blocks in ProseMirror editor */
+.ProseMirror code {
+    background-color: rgba(255, 255, 255, 0.1);
+}

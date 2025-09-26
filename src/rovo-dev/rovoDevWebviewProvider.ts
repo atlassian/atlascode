@@ -281,6 +281,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             this._chatProvider.currentPromptId,
                         );
                         break;
+                    case RovoDevViewResponseType.ReportCreatePrButtonClicked:
+                        this._telemetryProvider.fireTelemetryEvent(
+                            'rovoDevCreatePrButtonClickedEvent',
+                            this._chatProvider.currentPromptId,
+                        );
+                        break;
 
                     case RovoDevViewResponseType.WebviewReady:
                         this._webviewReady = true;
@@ -349,6 +355,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         } else {
                             await this.acceptMcpServer(false, e.serverName!, e.choice);
                         }
+                        break;
+
+                    case RovoDevViewResponseType.CheckFileExists:
+                        await this.checkFileExists(e.filePath, e.requestId);
                         break;
 
                     default:
@@ -624,6 +634,29 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 throw new Error('No workspace folder found');
             }
             return path.join(workspaceRoot, filePath);
+        }
+    }
+
+    private async checkFileExists(filePath: string, requestId: string): Promise<void> {
+        const webview = this._webView!;
+
+        try {
+            const resolvedPath = this.makeRelativePathAbsolute(filePath);
+            const exists = fs.existsSync(resolvedPath);
+
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.CheckFileExistsComplete,
+                requestId,
+                filePath,
+                exists,
+            });
+        } catch {
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.CheckFileExistsComplete,
+                requestId,
+                filePath,
+                exists: false,
+            });
         }
     }
 

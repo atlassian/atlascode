@@ -4,7 +4,7 @@ import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev
 import { ConnectionTimeout } from 'src/util/time';
 
 import { useMessagingApi } from '../../messagingApi';
-import { FollowUpActionFooter, OpenFileFunc } from '../common/common';
+import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc } from '../common/common';
 import { ErrorMessageItem } from '../common/errorMessage';
 import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
 import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
@@ -22,6 +22,7 @@ interface ChatStreamProps {
     chatHistory: Response[];
     renderProps: {
         openFile: OpenFileFunc;
+        checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
     };
@@ -262,6 +263,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                         <TechnicalPlanComponent
                                             content={message.technicalPlan}
                                             openFile={renderProps.openFile}
+                                            checkFileExists={renderProps.checkFileExists}
                                         />
                                     );
                                 }
