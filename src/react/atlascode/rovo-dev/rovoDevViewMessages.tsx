@@ -27,6 +27,7 @@ export const enum RovoDevViewResponseType {
     SendFeedback = 'sendFeedback',
     LaunchJiraAuth = 'launchJiraAuth',
     McpConsentChoiceSubmit = 'mcpConsentChoiceSubmit',
+    ToolPermissionChoiceSubmit = 'toolPermissionChoiceSubmit',
 }
 
 export interface ModifiedFile {
@@ -35,6 +36,7 @@ export interface ModifiedFile {
 }
 
 export type McpConsentChoice = 'accept' | 'acceptAll' | 'deny';
+export type ToolPermissionChoice = 'allow' | 'deny';
 
 export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.Refresh>
@@ -62,4 +64,8 @@ export type RovoDevViewResponse =
           { feedbackType: FeedbackType; feedbackMessage: string; lastTenMessages?: string[]; canContact: boolean }
       >
     | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>
-    | ReducerAction<RovoDevViewResponseType.McpConsentChoiceSubmit, { choice: McpConsentChoice; serverName?: string }>;
+    | ReducerAction<RovoDevViewResponseType.McpConsentChoiceSubmit, { choice: McpConsentChoice; serverName?: string }>
+    | ReducerAction<
+          RovoDevViewResponseType.ToolPermissionChoiceSubmit,
+          { choice: ToolPermissionChoice; toolCallId: string }
+      >;

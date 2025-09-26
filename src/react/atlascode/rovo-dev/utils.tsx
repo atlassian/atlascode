@@ -7,7 +7,7 @@ export type ToolReturnMessage =
     | ToolReturnGrepFileContentMessage
     | ToolReturnGenericMessage;
 
-export type ChatMessage = DefaultMessage | ErrorMessage | ToolCallMessage | ToolReturnGenericMessage;
+export type ChatMessage = DefaultMessage | DialogMessage | ToolCallMessage | ToolReturnGenericMessage;
 
 export interface DefaultMessage {
     text: string;
@@ -15,15 +15,31 @@ export interface DefaultMessage {
     context?: RovoDevContextItem[];
 }
 
-export interface ErrorMessage {
-    type: 'error' | 'warning' | 'info';
+export interface AbstractDialogMessage {
     text: string;
     title?: string;
-    source: 'RovoDevError';
+    source: 'RovoDevDialog';
+}
+
+export interface ErrorDialogMessage extends AbstractDialogMessage {
+    type: 'error';
     isRetriable?: boolean;
     isProcessTerminated?: boolean;
     uid: string;
 }
+
+export interface WarningInfoDialogMessage extends AbstractDialogMessage {
+    type: 'warning' | 'info';
+}
+
+export interface ToolPermissionDialogMessage extends AbstractDialogMessage {
+    type: 'toolPermissionRequest';
+    toolName: string;
+    toolArgs: string;
+    toolCallId: string;
+}
+
+export type DialogMessage = ErrorDialogMessage | WarningInfoDialogMessage | ToolPermissionDialogMessage;
 
 export interface ToolCallMessage {
     tool_name: string;
@@ -324,7 +340,7 @@ export const appendResponse = (
                     const canGroup =
                         latest &&
                         latest.source !== 'User' &&
-                        latest.source !== 'RovoDevError' &&
+                        latest.source !== 'RovoDevDialog' &&
                         latest.source !== 'PullRequest';
 
                     let thinkingGroup: ChatMessage[] = canGroup ? [latest, response] : [response];

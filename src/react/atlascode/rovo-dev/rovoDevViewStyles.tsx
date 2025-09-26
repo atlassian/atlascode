@@ -105,3 +105,9 @@ export const inChatButtonStyles: React.CSSProperties = {
         : '1px solid var(--vscode-editorWidget-border)',
     borderRadius: '4px',
 };
+
+export const inChatSecondaryButtonStyles: React.CSSProperties = {
+    ...inChatButtonStyles,
+    background: 'var(--vscode-button-secondaryBackground)',
+    color: 'var(--vscode-button-secondaryForeground)',
+};

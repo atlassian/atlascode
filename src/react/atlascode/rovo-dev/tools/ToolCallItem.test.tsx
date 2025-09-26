@@ -1,7 +1,6 @@
 import { Matcher, render, SelectorMatcherOptions } from '@testing-library/react';
 import React from 'react';
 
-import { ToolCallMessage } from '../utils';
 import { parseToolCallMessage, ToolCallItem } from './ToolCallItem';
 
 function validateMessage(
@@ -15,21 +14,12 @@ function validateMessage(
 
 describe('ToolCallItem', () => {
     it('invalid tool call message is empty', () => {
-        const invalidMsg = {} as ToolCallMessage;
-        const toolMessage = parseToolCallMessage(invalidMsg);
-
+        const toolMessage = parseToolCallMessage('');
         expect(toolMessage).toBe('');
     });
 
     it('renders the correct message for expand_code_chunks tool', () => {
-        const msg: ToolCallMessage = {
-            tool_name: 'expand_code_chunks',
-            args: '',
-            source: 'ToolCall',
-            tool_call_id: '12345',
-        };
-        const toolMessage = parseToolCallMessage(msg);
-
+        const toolMessage = parseToolCallMessage('expand_code_chunks');
         const { getByText } = render(
             <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
         );
@@ -38,14 +28,7 @@ describe('ToolCallItem', () => {
     });
 
     it('renders the correct message for find_and_replace_code tool', () => {
-        const msg: ToolCallMessage = {
-            tool_name: 'find_and_replace_code',
-            args: '',
-            source: 'ToolCall',
-            tool_call_id: '12345',
-        };
-        const toolMessage = parseToolCallMessage(msg);
-
+        const toolMessage = parseToolCallMessage('find_and_replace_code');
         const { getByText } = render(
             <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
         );
@@ -54,14 +37,7 @@ describe('ToolCallItem', () => {
     });
 
     it('renders the correct message for open_files tool', () => {
-        const msg: ToolCallMessage = {
-            tool_name: 'open_files',
-            args: '',
-            source: 'ToolCall',
-            tool_call_id: '12345',
-        };
-        const toolMessage = parseToolCallMessage(msg);
-
+        const toolMessage = parseToolCallMessage('open_files');
         const { getByText } = render(
             <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
         );
@@ -70,14 +46,7 @@ describe('ToolCallItem', () => {
     });
 
     it('renders the correct message for create_file tool', () => {
-        const msg: ToolCallMessage = {
-            tool_name: 'create_file',
-            args: '',
-            source: 'ToolCall',
-            tool_call_id: '12345',
-        };
-        const toolMessage = parseToolCallMessage(msg);
-
+        const toolMessage = parseToolCallMessage('create_file');
         const { getByText } = render(
             <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
         );
@@ -86,14 +55,7 @@ describe('ToolCallItem', () => {
     });
 
     it('renders the correct message for delete_file tool', () => {
-        const msg: ToolCallMessage = {
-            tool_name: 'delete_file',
-            args: '',
-            source: 'ToolCall',
-            tool_call_id: '12345',
-        };
-        const toolMessage = parseToolCallMessage(msg);
-
+        const toolMessage = parseToolCallMessage('delete_file');
         const { getByText } = render(
             <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
         );
@@ -102,14 +64,7 @@ describe('ToolCallItem', () => {
     });
 
     it('renders the correct message for bash tool', () => {
-        const msg: ToolCallMessage = {
-            tool_name: 'bash',
-            args: '',
-            source: 'ToolCall',
-            tool_call_id: '12345',
-        };
-        const toolMessage = parseToolCallMessage(msg);
-
+        const toolMessage = parseToolCallMessage('bash');
         const { getByText } = render(
             <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
         );
@@ -118,14 +73,7 @@ describe('ToolCallItem', () => {
     });
 
     it('renders the correct message for create_technical_plan tool', () => {
-        const msg: ToolCallMessage = {
-            tool_name: 'create_technical_plan',
-            args: '',
-            source: 'ToolCall',
-            tool_call_id: '12345',
-        };
-        const toolMessage = parseToolCallMessage(msg);
-
+        const toolMessage = parseToolCallMessage('create_technical_plan');
         const { getByText } = render(
             <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
         );
@@ -133,47 +81,17 @@ describe('ToolCallItem', () => {
         validateMessage('Creating technical plan', toolMessage, getByText);
     });
 
-    it('renders the correct message for grep_file_content tool', () => {
-        const msg: ToolCallMessage = {
-            tool_name: 'grep_file_content',
-            args: '',
-            source: 'ToolCall',
-            tool_call_id: '12345',
-        };
-        const toolMessage = parseToolCallMessage(msg);
-
+    it('renders the correct message for grep', () => {
+        const toolMessage = parseToolCallMessage('grep');
         const { getByText } = render(
             <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
         );
 
-        validateMessage('Grep file content with pattern', toolMessage, getByText);
-    });
-
-    it('renders the correct message for grep_file_path tool', () => {
-        const msg: ToolCallMessage = {
-            tool_name: 'grep_file_path',
-            args: '',
-            source: 'ToolCall',
-            tool_call_id: '12345',
-        };
-        const toolMessage = parseToolCallMessage(msg);
-
-        const { getByText } = render(
-            <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
-        );
-
-        validateMessage('Grep file path', toolMessage, getByText);
+        validateMessage('Searching for patterns', toolMessage, getByText);
     });
 
     it('renders the tool name for unknown tools', () => {
-        const msg: ToolCallMessage = {
-            tool_name: 'unknown_tool',
-            args: '',
-            source: 'ToolCall',
-            tool_call_id: '12345',
-        };
-        const toolMessage = parseToolCallMessage(msg);
-
+        const toolMessage = parseToolCallMessage('unknown_tool');
         const { getByText } = render(
             <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
         );
@@ -182,14 +100,7 @@ describe('ToolCallItem', () => {
     });
 
     it('renders with the loading icon', () => {
-        const msg: ToolCallMessage = {
-            tool_name: 'bash',
-            args: '',
-            source: 'ToolCall',
-            tool_call_id: '12345',
-        };
-        const toolMessage = parseToolCallMessage(msg);
-
+        const toolMessage = parseToolCallMessage('bash');
         render(<ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />);
 
         const loadingIcon = document.querySelector('.codicon.codicon-loading.codicon-modifier-spin');

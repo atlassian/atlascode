@@ -92,12 +92,12 @@ describe('appendResponse', () => {
         expect(result[1]).toHaveLength(1);
     });
 
-    it('should not group ToolReturn when latest is RovoDevError message', () => {
+    it('should not group ToolReturn when latest is RovoDevDialog message', () => {
         const prev: Response[] = [
             {
                 type: 'error',
                 text: 'error',
-                source: 'RovoDevError',
+                source: 'RovoDevDialog',
                 isRetriable: false,
                 uid: 'uid',
             },

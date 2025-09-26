@@ -1,5 +1,5 @@
 import { RovoDevLogger } from 'src/logger';
-import { RovoDevViewResponse } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
+import { RovoDevViewResponse, ToolPermissionChoice } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
 import { v4 } from 'uuid';
 import { Event, Webview } from 'vscode';
 
@@ -17,6 +17,8 @@ interface TypedWebview<MessageOut, MessageIn> extends Webview {
 type StreamingApi = 'chat' | 'replay';
 
 export class RovoDevChatProvider {
+    public yoloMode = false;
+
     private _pendingPrompt: RovoDevPrompt | undefined;
     private _currentPrompt: RovoDevPrompt | undefined;
     private _rovoDevApiClient: RovoDevApiClient | undefined;
@@ -38,7 +40,10 @@ export class RovoDevChatProvider {
         return !!this._pendingPrompt;
     }
 
-    constructor(private _telemetryProvider: RovoDevTelemetryProvider) {}
+    constructor(
+        private readonly _isBoysenberry: boolean,
+        private _telemetryProvider: RovoDevTelemetryProvider,
+    ) {}
 
     public setWebview(webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined) {
         this._webView = webView;
@@ -119,7 +124,8 @@ export class RovoDevChatProvider {
         this.beginNewPrompt();
 
         const fetchOp = async (client: RovoDevApiClient) => {
-            const response = await client.chat(requestPayload, true);
+            // Boysenberry is always in YOLO mode
+            const response = await client.chat(requestPayload, !this._isBoysenberry);
 
             this._telemetryProvider.fireTelemetryEvent(
                 'rovoDevPromptSentEvent',
@@ -330,14 +336,12 @@ export class RovoDevChatProvider {
 
             case 'warning':
                 return webview.postMessage({
-                    type: RovoDevProviderMessageType.ErrorMessage,
+                    type: RovoDevProviderMessageType.ShowDialog,
                     message: {
                         type: 'warning',
                         text: response.message,
                         title: response.title,
-                        source: 'RovoDevError',
-                        isRetriable: false,
-                        uid: v4(),
+                        source: 'RovoDevDialog',
                     },
                 });
 
@@ -348,19 +352,36 @@ export class RovoDevChatProvider {
 
             case 'prune':
                 return webview.postMessage({
-                    type: RovoDevProviderMessageType.ErrorMessage,
+                    type: RovoDevProviderMessageType.ShowDialog,
                     message: {
                         type: 'info',
                         text: response.message,
-                        source: 'RovoDevError',
-                        isRetriable: false,
-                        uid: v4(),
+                        source: 'RovoDevDialog',
                     },
                 });
 
             case 'on_call_tools_start':
-                // simulate YOLO mode
-                return this._rovoDevApiClient!.resumeToolCall(response.tools.map((x) => x.tool_call_id));
+                if (this.yoloMode) {
+                    return this._rovoDevApiClient!.resumeToolCall(response.tools.map((x) => x.tool_call_id));
+                } else {
+                    const promises = [];
+                    for (const tool of response.tools) {
+                        promises.push(
+                            webview.postMessage({
+                                type: RovoDevProviderMessageType.ShowDialog,
+                                message: {
+                                    type: 'toolPermissionRequest',
+                                    source: 'RovoDevDialog',
+                                    toolName: tool.tool_name,
+                                    toolArgs: tool.args,
+                                    text: 'To do this I will need to',
+                                    toolCallId: tool.tool_call_id,
+                                },
+                            }),
+                        );
+                    }
+                    return Promise.all(promises);
+                }
 
             case 'close':
                 // response terminated
@@ -370,6 +391,11 @@ export class RovoDevChatProvider {
                 // @ts-expect-error ts(2339) - response here should be 'never'
                 throw new Error(`Rovo Dev response error: unknown event kind: ${response.event_kind}`);
         }
+    }
+
+    public signalToolRequestChoiceSubmit(toolCallId: string, choice: ToolPermissionChoice) {
+        const denyReason = choice === 'deny' ? 'I denied the execution of this tool call' : undefined;
+        return this._rovoDevApiClient!.resumeToolCall(toolCallId, denyReason);
     }
 
     private async executeStreamingApiWithErrorHandling(
@@ -402,11 +428,11 @@ export class RovoDevChatProvider {
 
         const webview = this._webView!;
         return webview.postMessage({
-            type: RovoDevProviderMessageType.ErrorMessage,
+            type: RovoDevProviderMessageType.ShowDialog,
             message: {
                 type: 'error',
                 text: error.message,
-                source: 'RovoDevError',
+                source: 'RovoDevDialog',
                 isRetriable,
                 isProcessTerminated,
                 uid: v4(),

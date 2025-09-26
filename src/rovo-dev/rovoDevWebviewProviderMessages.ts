@@ -1,6 +1,6 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 
-import { ErrorMessage } from '../react/atlascode/rovo-dev/utils';
+import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
 import { RovoDevResponse } from './responseParser';
 import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
@@ -11,7 +11,7 @@ export const enum RovoDevProviderMessageType {
     CompleteMessage = 'completeMessage',
     ToolCall = 'toolCall',
     ToolReturn = 'toolReturn',
-    ErrorMessage = 'errorMessage',
+    ShowDialog = 'showDialog',
     ClearChat = 'clearChat',
     ProviderReady = 'providerReady',
     SetInitializing = 'setInitializing',
@@ -52,7 +52,7 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.CompleteMessage, { isReplay?: boolean }>
     | ReducerAction<RovoDevProviderMessageType.ToolCall, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ToolReturn, RovoDevObjectResponse>
-    | ReducerAction<RovoDevProviderMessageType.ErrorMessage, { message: ErrorMessage }>
+    | ReducerAction<RovoDevProviderMessageType.ShowDialog, { message: DialogMessage }>
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
     | ReducerAction<RovoDevProviderMessageType.ProviderReady, { workspacePath?: string; homeDir?: string }>
     | ReducerAction<RovoDevProviderMessageType.SetInitializing, { isPromptPending: boolean }>
