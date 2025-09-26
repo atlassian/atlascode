@@ -3,16 +3,17 @@ import ChevronRightIcon from '@atlaskit/icon/glyph/chevron-right';
 import React from 'react';
 import { TechnicalPlanFileToChange, TechnicalPlanLogicalChange } from 'src/rovo-dev/rovoDevTypes';
 
-import { OpenFileFunc } from '../common/common';
+import { CheckFileExistsFunc, OpenFileFunc } from '../common/common';
 import { FileToChangeComponent } from './FileToChangeComponent';
 
 interface LogicalChangeProps {
     change: TechnicalPlanLogicalChange;
     openFile: OpenFileFunc;
+    checkFileExists: CheckFileExistsFunc;
 }
 
 export const LogicalChange: React.FC<LogicalChangeProps> = (props) => {
-    const { change, openFile } = props;
+    const { change, openFile, checkFileExists } = props;
 
     const [isOpen, setIsOpen] = React.useState(false);
 
@@ -27,6 +28,7 @@ export const LogicalChange: React.FC<LogicalChangeProps> = (props) => {
                 <FileToChangeComponent
                     filePath={files[0].filePath}
                     openFile={openFile}
+                    checkFileExists={checkFileExists}
                     descriptionOfChange={files[0].descriptionOfChange}
                 />
             );
@@ -41,6 +43,7 @@ export const LogicalChange: React.FC<LogicalChangeProps> = (props) => {
                                 key={index}
                                 filePath={file.filePath}
                                 openFile={openFile}
+                                checkFileExists={checkFileExists}
                                 descriptionOfChange={file.descriptionOfChange}
                             />
                         </li>

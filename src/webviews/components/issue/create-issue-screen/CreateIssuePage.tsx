@@ -43,6 +43,8 @@ const emptyState: ViewState = {
     formKey: v4(),
 };
 
+const fallbackTimerDuration = 5000; // 5 seconds
+
 const getFaviconUrl = (siteData: any): string | null => {
     if (siteData?.baseLinkUrl) {
         return `${siteData.baseLinkUrl}/favicon.ico`;
@@ -105,6 +107,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     private commonFields: FieldUI[] = [];
     private attachingInProgress = false;
     private initialFieldValues: FieldValues = {};
+    private suggestionFallbackTimer: NodeJS.Timeout | null = null;
 
     getProjectKey(): string {
         return this.state.fieldValues['project'].key;
@@ -124,10 +127,26 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
         if (!handled) {
             switch (e.type) {
-                case 'generateIssueSuggestions': {
+                case 'setGeneratingIssueSuggestions': {
                     handled = true;
+
+                    if (this.suggestionFallbackTimer) {
+                        clearTimeout(this.suggestionFallbackTimer);
+                        this.suggestionFallbackTimer = null;
+                    }
+
+                    if (e.isGeneratingIssueSuggestions) {
+                        // Set a fallback timer to reset isGeneratingSuggestions after 5 seconds in case something goes wrong
+                        this.suggestionFallbackTimer = setTimeout(() => {
+                            if (this.state.isGeneratingSuggestions) {
+                                this.setState({ isGeneratingSuggestions: false });
+                            }
+                            this.suggestionFallbackTimer = null;
+                        }, fallbackTimerDuration);
+                    }
+
                     this.setState({
-                        isGeneratingSuggestions: true,
+                        isGeneratingSuggestions: e.isGeneratingIssueSuggestions,
                     });
                     break;
                 }
@@ -167,7 +186,6 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                         this.setState({
                             isSomethingLoading: false,
                             loadingField: '',
-                            isGeneratingSuggestions: false,
                             summaryKey: v4(), // reset summary to clear validation errors
                         });
                     });

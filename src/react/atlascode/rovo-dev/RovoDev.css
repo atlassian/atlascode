@@ -161,6 +161,15 @@ body {
     white-space: nowrap;
 }
 
+.file-lozenge.file-lozenge-disabled {
+    opacity: 0.7;
+}
+
+.file-lozenge.file-lozenge-disabled:hover {
+    background-color: transparent;
+    cursor: not-allowed;
+}
+
 .code-changes-container {
     display: flex;
     flex-direction: column;

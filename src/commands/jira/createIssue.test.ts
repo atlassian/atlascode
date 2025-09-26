@@ -39,6 +39,7 @@ jest.mock('../../container', () => ({
         createIssueWebview: {
             createOrShow: jest.fn(),
             fastUpdateFields: jest.fn().mockResolvedValue(undefined),
+            setGeneratingIssueSuggestions: jest.fn(),
         },
         analyticsClient: {
             sendTrackEvent: jest.fn(),

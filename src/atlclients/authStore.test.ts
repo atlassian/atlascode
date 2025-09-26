@@ -10,6 +10,7 @@ import {
     AuthChangeType,
     AuthInfo,
     AuthInfoState,
+    BasicAuthInfo,
     DetailedSiteInfo,
     OAuthInfo,
     ProductBitbucket,
@@ -47,6 +48,7 @@ jest.mock('../container', () => ({
             },
         },
         siteManager: {
+            getSitesAvailable: jest.fn(),
             getSiteForId: jest.fn(),
             removeSite: jest.fn(),
         },
@@ -578,6 +580,81 @@ describe('CredentialManager', () => {
 
             expect(id1).toEqual(id2);
             expect(id1).not.toEqual(id3);
+        });
+    });
+
+    describe('findApiTokenForSite', () => {
+        const basicAuthInfo: BasicAuthInfo = {
+            username: 'user',
+            password: 'pass',
+            user: { email: 'test@domain.com', id: 'id', displayName: 'Test User', avatarUrl: '' },
+            state: AuthInfoState.Valid,
+        };
+
+        const makeSite = (host: string, email: string): any => ({
+            host,
+            id: 'site-id',
+            name: 'Test Site',
+            avatarUrl: '',
+            baseLinkUrl: '',
+            product: 'jira',
+            user: { email, id: 'id', displayName: 'Test User', avatarUrl: '' },
+        });
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+        });
+
+        it('returns undefined if site is not found', async () => {
+            (Container.siteManager.getSiteForId as jest.Mock).mockReturnValue(undefined);
+            const result = await credentialManager.findApiTokenForSite('site-id');
+            expect(result).toBeUndefined();
+        });
+
+        it('returns undefined if site host is not .atlassian.net', async () => {
+            (Container.siteManager.getSiteForId as jest.Mock).mockReturnValue(
+                makeSite('example.com', 'test@domain.com'),
+            );
+            const result = await credentialManager.findApiTokenForSite('site-id');
+            expect(result).toBeUndefined();
+        });
+
+        it('returns undefined if no matching authInfo found', async () => {
+            const site = makeSite('test.atlassian.net', 'a@b.com');
+            (Container.siteManager.getSiteForId as jest.Mock).mockReturnValue(site);
+            (Container.siteManager.getSitesAvailable as jest.Mock).mockReturnValue([site]);
+            credentialManager.getAuthInfo = jest
+                .fn()
+                .mockResolvedValueOnce({
+                    user: { email: 'a@b.com', id: 'id', displayName: '', avatarUrl: '' },
+                })
+                .mockResolvedValueOnce(undefined);
+            const result = await credentialManager.findApiTokenForSite('site-id');
+            expect(result).toBeUndefined();
+        });
+
+        it('returns BasicAuthInfo if matching site and authInfo found', async () => {
+            const site = makeSite('test.atlassian.net', 'test@domain.com');
+            (Container.siteManager.getSiteForId as jest.Mock).mockReturnValue(site);
+            (Container.siteManager.getSitesAvailable as jest.Mock).mockReturnValue([site]);
+            // First call returns an object with a user property, second returns BasicAuthInfo
+            credentialManager.getAuthInfo = jest
+                .fn()
+                .mockResolvedValueOnce({ user: site.user })
+                .mockResolvedValueOnce(basicAuthInfo);
+            const result = await credentialManager.findApiTokenForSite('site-id');
+            expect(result).toEqual(basicAuthInfo);
+        });
+
+        it('works when site is passed as DetailedSiteInfo', async () => {
+            const site = makeSite('test.atlassian.net', 'test@domain.com');
+            (Container.siteManager.getSitesAvailable as jest.Mock).mockReturnValue([site]);
+            credentialManager.getAuthInfo = jest
+                .fn()
+                .mockResolvedValueOnce({ user: site.user })
+                .mockResolvedValueOnce(basicAuthInfo);
+            const result = await credentialManager.findApiTokenForSite(site);
+            expect(result).toEqual(basicAuthInfo);
         });
     });
 });

@@ -45,9 +45,6 @@ const AISuggestionHeader: React.FC<{
         if (!todoData) {
             return;
         }
-        window.postMessage({
-            type: 'generateIssueSuggestions',
-        });
         vscodeApi.postMessage({
             action: 'generateIssueSuggestions',
             todoData,
