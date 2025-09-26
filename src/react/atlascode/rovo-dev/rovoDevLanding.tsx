@@ -1,8 +1,21 @@
+import AiChatIcon from '@atlaskit/icon/core/ai-chat';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import { ActionItem } from './action-item/ActionItem';
+import { JiraWorkItem } from './jira-work-item/JiraWorkItem';
 import { McpConsentChoice } from './rovoDevViewMessages';
 import { inChatButtonStyles } from './rovoDevViewStyles';
+
+const titleStyles: React.CSSProperties = {
+    fontSize: '13px',
+    fontWeight: '600',
+    marginBottom: '10px',
+    color: 'var(--vscode-descriptionForeground)',
+    textAlign: 'left',
+};
 
 const RovoDevImg = () => {
     return (
@@ -26,7 +39,39 @@ export const RovoDevLanding: React.FC<{
     onLoginClick: () => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
-}> = ({ currentState, onLoginClick, onOpenFolder, onMcpChoice }) => {
+    onSendMessage: (message: string) => void;
+    jiraWorkItems?: MinimalIssue<DetailedSiteInfo>[];
+    onJiraItemClick?: (issue: MinimalIssue<DetailedSiteInfo>) => void;
+    onRequestJiraItems?: () => void;
+}> = ({
+    currentState,
+    onLoginClick,
+    onOpenFolder,
+    onMcpChoice,
+    onSendMessage,
+    jiraWorkItems = [],
+    onJiraItemClick,
+    onRequestJiraItems,
+}) => {
+    const requestedRef = React.useRef(false);
+    const currentStateRef = React.useRef(currentState.state);
+
+    // Track state changes to reset the flag when leaving WaitingForPrompt
+    React.useEffect(() => {
+        if (currentStateRef.current === 'WaitingForPrompt' && currentState.state !== 'WaitingForPrompt') {
+            requestedRef.current = false;
+        }
+        currentStateRef.current = currentState.state;
+    }, [currentState.state]);
+
+    // Request Jira work items when component mounts and user is authenticated
+    React.useEffect(() => {
+        if (currentState.state === 'WaitingForPrompt' && onRequestJiraItems && !requestedRef.current) {
+            onRequestJiraItems();
+            requestedRef.current = true;
+        }
+    }, [currentState.state, onRequestJiraItems]);
+
     if (process.env.ROVODEV_BBY) {
         return null;
     }
@@ -50,6 +95,46 @@ export const RovoDevLanding: React.FC<{
             <div style={{ fontSize: '12px', maxWidth: '270px' }}>
                 Rovo Dev can help you understand context of your repository, suggest and make updates.
             </div>
+
+            <div style={{ marginTop: '32px', width: '100%', maxWidth: '270px' }}>
+                <div style={titleStyles}>Actions</div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
+                    <ActionItem
+                        icon={<AiChatIcon size="small" spacing="none" label="Explain this repository" />}
+                        text="Explain this repository"
+                        onClick={() => onSendMessage('Explain this repository')}
+                    />
+                    <ActionItem
+                        icon={<AiChatIcon size="small" spacing="none" label="Find bugs in this repository" />}
+                        text="Find bugs in this repository"
+                        onClick={() => onSendMessage('Find bugs in this repository')}
+                    />
+                    <ActionItem
+                        icon={<AiChatIcon size="small" spacing="none" label="List my assign Jira work items" />}
+                        text="List my assign Jira work items"
+                        onClick={() => onSendMessage('List my assign Jira work items')}
+                    />
+                </div>
+            </div>
+
+            {jiraWorkItems.length > 0 && (
+                <div style={{ marginTop: '24px', width: '100%', maxWidth: '270px' }}>
+                    <div style={titleStyles}>Jira Work Items</div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {jiraWorkItems.map((issue) => (
+                            <JiraWorkItem
+                                key={issue.key}
+                                summary={issue.summary}
+                                issueTypeIconUrl={issue.issuetype?.iconUrl}
+                                issueTypeName={issue.issuetype?.name}
+                                onClick={() => onJiraItemClick?.(issue)}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {currentState.state === 'Disabled' && currentState.subState === 'NeedAuth' && (
                 <div style={{ marginTop: '24px' }}>
