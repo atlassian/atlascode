@@ -47,6 +47,7 @@ export async function createIssue(data: Uri | TodoIssueData | undefined, source?
         );
 
         try {
+            await Container.createIssueWebview.setGeneratingIssueSuggestions(true);
             await suggestionManager.generate(todoData).then(async (suggestion) => {
                 await Container.createIssueWebview.fastUpdateFields({
                     summary: suggestion.summary,
@@ -56,6 +57,8 @@ export async function createIssue(data: Uri | TodoIssueData | undefined, source?
         } catch (error) {
             // The view is already created with legacy logic, do nothing
             Logger.error(error, 'Error generating issue suggestion settings');
+        } finally {
+            await Container.createIssueWebview.setGeneratingIssueSuggestions(false);
         }
 
         startIssueCreationEvent('todoComment', ProductJira).then((e) => {

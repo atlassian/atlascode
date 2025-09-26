@@ -145,9 +145,9 @@ export class CreateIssueWebview
 
         if (!originallyAvailable && originallyEnabled && !this._generatingSuggestions) {
             // Generate suggestions if the auth change made suggestions available
-            this._generatingSuggestions = true;
             try {
                 const mgr = new IssueSuggestionManager(this._issueSuggestionSettings);
+                await this.setGeneratingIssueSuggestions(true);
                 await mgr.generate(this._todoData).then(async (suggestion) => {
                     await this.fastUpdateFields({
                         summary: suggestion.summary,
@@ -155,7 +155,7 @@ export class CreateIssueWebview
                     });
                 });
             } finally {
-                this._generatingSuggestions = false;
+                await this.setGeneratingIssueSuggestions(false);
             }
         }
     }
@@ -574,6 +574,18 @@ export class CreateIssueWebview
         return issuelinks;
     }
 
+    async setGeneratingIssueSuggestions(status: boolean) {
+        if (this._generatingSuggestions === status) {
+            return;
+        }
+        this._generatingSuggestions = status;
+
+        await this.postMessage({
+            type: 'setGeneratingIssueSuggestions',
+            isGeneratingIssueSuggestions: status,
+        });
+    }
+
     formatCreatePayload(a: CreateIssueAction): [any, any, any, any] {
         const raw: Record<string, unknown> = { ...a.issueData };
         const rawAny = raw as Record<string, any>;
@@ -814,12 +826,16 @@ export class CreateIssueWebview
                     if (isGenerateIssueSuggestions(msg)) {
                         const { todoData, suggestionSettings } = msg;
                         const suggestionManager = new IssueSuggestionManager(suggestionSettings);
-                        suggestionManager.generate(todoData).then(async (suggestion) => {
+                        try {
+                            await this.setGeneratingIssueSuggestions(true);
+                            const suggestion = await suggestionManager.generate(todoData);
                             await this.fastUpdateFields({
                                 summary: suggestion.summary,
                                 description: suggestion.description,
                             });
-                        });
+                        } finally {
+                            await this.setGeneratingIssueSuggestions(false);
+                        }
                     }
                     break;
                 }
