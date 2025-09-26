@@ -10,7 +10,9 @@ import Spinner from '@atlaskit/spinner';
 import Textfield from '@atlaskit/textfield';
 import {
     CommentVisibility,
+    emptyIssueType,
     IssuePickerIssue,
+    IssueType,
     JsdInternalCommentVisibility,
     MinimalIssueOrKeyAndSite,
 } from '@atlassianlabs/jira-pi-common-models';
@@ -24,9 +26,10 @@ import {
     UIType,
     ValueType,
 } from '@atlassianlabs/jira-pi-meta-models';
+import { Tooltip } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
-import * as React from 'react';
+import React from 'react';
 import EdiText, { EdiTextType } from 'react-editext';
 import { v4 } from 'uuid';
 
@@ -41,13 +44,17 @@ import {
     UserList,
 } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
+import { Features } from '../../../util/features';
 import { ConnectionTimeout } from '../../../util/time';
+import AISuggestionFooter from '../aiCreateIssue/AISuggestionFooter';
+import AISuggestionHeader from '../aiCreateIssue/AISuggestionHeader';
 import { colorToLozengeAppearanceMap } from '../colors';
 import * as FieldValidators from '../fieldValidators';
 import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
+import AtlaskitEditor from './common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
@@ -73,8 +80,10 @@ export interface CommonEditorViewState extends Message {
     showPMF: boolean;
     errorDetails: any;
     commentInputValue: string;
-    isRteEnabled: boolean;
     isRovoDevEnabled: boolean;
+    isGeneratingSuggestions?: boolean;
+    summaryKey: string;
+    isAtlaskitEditorEnabled: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -90,8 +99,9 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     isErrorBannerOpen: false,
     errorDetails: undefined,
     commentInputValue: '',
-    isRteEnabled: false,
     isRovoDevEnabled: false,
+    summaryKey: v4(),
+    isAtlaskitEditorEnabled: false,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -155,6 +165,21 @@ export abstract class AbstractIssueEditorPage<
         return val;
     }
 
+    private coerceToString(value: any): string {
+        if (value === undefined || value === null) {
+            return '';
+        }
+        const t = typeof value;
+        if (t === 'string') {
+            return value as string;
+        }
+        if (t === 'number' || t === 'boolean') {
+            return String(value);
+        }
+        // For any other type (objects, symbols, functions), render empty string
+        return '';
+    }
+
     onMessageReceived(e: any): boolean {
         let handled: boolean = false;
         switch (e.type) {
@@ -192,7 +217,9 @@ export abstract class AbstractIssueEditorPage<
                 break;
             }
             case 'updateFeatureFlags': {
-                this.setState({ isRteEnabled: e.featureFlags.rteEnabled });
+                this.setState({
+                    isAtlaskitEditorEnabled: e.featureFlags[Features.AtlaskitEditor] || false,
+                });
                 break;
             }
             case 'loadingStart': {
@@ -289,7 +316,11 @@ export abstract class AbstractIssueEditorPage<
         }
     };
 
-    protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
+    protected loadIssueOptions = (
+        field: SelectFieldUI,
+        input: string,
+        currentJQL?: string,
+    ): Promise<IssuePickerIssue[]> => {
         return new Promise((resolve) => {
             const nonce: string = v4();
             // this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl, nonce: nonce });
@@ -302,6 +333,7 @@ export abstract class AbstractIssueEditorPage<
                             site: this.state.siteDetails,
                             autocompleteUrl: field.autoCompleteUrl,
                             nonce: nonce,
+                            currentJQL: currentJQL,
                         },
                         'issueSuggestionsList',
                         ConnectionTimeout,
@@ -411,15 +443,18 @@ export abstract class AbstractIssueEditorPage<
         }
     }, 100);
 
-    protected getInputMarkup(field: FieldUI, editmode: boolean = false): any {
+    protected getInputMarkup(
+        field: FieldUI,
+        editmode: boolean = false,
+        currentIssueType: IssueType = emptyIssueType,
+    ): any {
         switch (field.uiType) {
             case UIType.Input: {
                 const validateFunc = this.getValidateFunction(field, editmode);
                 let validationFailMessage = '';
                 const valType = field.valueType;
 
-                const defaultVal =
-                    this.state.fieldValues[field.key] === undefined ? '' : this.state.fieldValues[field.key];
+                const defaultVal = this.coerceToString(this.state.fieldValues[field.key]);
                 switch (valType) {
                     case ValueType.Number: {
                         validationFailMessage = `${field.name} must be a number`;
@@ -481,63 +516,76 @@ export abstract class AbstractIssueEditorPage<
                     }
                     return markup;
                 }
-
                 return (
-                    <Field
-                        defaultValue={defaultVal}
-                        label={<span>{field.name}</span>}
-                        isRequired={field.required}
-                        id={field.key}
-                        name={field.key}
-                        validate={validateFunc}
-                    >
-                        {(fieldArgs: any) => {
-                            let errDiv = <span />;
-                            if (fieldArgs.error && fieldArgs.error !== '') {
-                                errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
-                            }
+                    <>
+                        {field.key === 'summary' && <AISuggestionHeader vscodeApi={this._api} />}
+                        <Field
+                            key={this.state.summaryKey}
+                            defaultValue={defaultVal}
+                            label={<span>{field.name}</span>}
+                            isRequired={field.required}
+                            id={field.key}
+                            name={field.key}
+                            validate={validateFunc}
+                        >
+                            {(fieldArgs: any) => {
+                                let errDiv = <span />;
+                                if (fieldArgs.error && fieldArgs.error !== '') {
+                                    errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
+                                }
 
-                            let markup = (
-                                <Textfield
-                                    {...fieldArgs.fieldProps}
-                                    className="ac-inputField"
-                                    isDisabled={this.state.isSomethingLoading}
-                                    onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
-                                        this.handleInlineEdit(field, e.currentTarget.value),
-                                    )}
-                                    placeholder={field.key === 'summary' && 'What needs to be done?'}
-                                />
-                            );
-                            if ((field as InputFieldUI).isMultiline) {
-                                markup = (
-                                    <JiraIssueTextAreaEditor
+                                let markup = (
+                                    <Textfield
                                         {...fieldArgs.fieldProps}
-                                        value={this.state.fieldValues[field.key]}
-                                        isDisabled={this.state.isSomethingLoading}
-                                        onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
-                                            this.handleInlineEdit(field, val),
+                                        value={defaultVal}
+                                        className="ac-inputField"
+                                        isDisabled={this.state.isSomethingLoading || this.state.isGeneratingSuggestions}
+                                        onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
+                                            this.handleInlineEdit(field, e.currentTarget.value),
                                         )}
-                                        fetchUsers={async (input: string) =>
-                                            (await this.fetchUsers(input)).map((user) => ({
-                                                displayName: user.displayName,
-                                                avatarUrl: user.avatarUrls?.['48x48'],
-                                                mention: this.state.siteDetails.isCloud
-                                                    ? `[~accountid:${user.accountId}]`
-                                                    : `[~${user.name}]`,
-                                            }))
-                                        }
-                                        featureGateEnabled={this.state.isRteEnabled}
+                                        placeholder={field.key === 'summary' && 'What needs to be done?'}
                                     />
                                 );
-                            }
-                            return (
-                                <div>
-                                    {markup}
-                                    {errDiv}
-                                </div>
-                            );
-                        }}
-                    </Field>
+                                if ((field as InputFieldUI).isMultiline) {
+                                    markup = this.state.isAtlaskitEditorEnabled ? (
+                                        <AtlaskitEditor
+                                            defaultValue={this.state.fieldValues[field.key] || ''}
+                                            onBlur={(content: string) => {
+                                                this.handleInlineEdit(field, content);
+                                            }}
+                                        />
+                                    ) : (
+                                        <JiraIssueTextAreaEditor
+                                            {...fieldArgs.fieldProps}
+                                            value={this.coerceToString(this.state.fieldValues[field.key])}
+                                            isDisabled={
+                                                this.state.isSomethingLoading || this.state.isGeneratingSuggestions
+                                            }
+                                            onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
+                                                this.handleInlineEdit(field, val),
+                                            )}
+                                            fetchUsers={async (input: string) =>
+                                                (await this.fetchUsers(input)).map((user) => ({
+                                                    displayName: user.displayName,
+                                                    avatarUrl: user.avatarUrls?.['48x48'],
+                                                    mention: this.state.siteDetails.isCloud
+                                                        ? `[~accountid:${user.accountId}]`
+                                                        : `[~${user.name}]`,
+                                                }))
+                                            }
+                                        />
+                                    );
+                                }
+                                return (
+                                    <div>
+                                        {markup}
+                                        {errDiv}
+                                    </div>
+                                );
+                            }}
+                        </Field>
+                        {field.key === 'description' && <AISuggestionFooter vscodeApi={this._api} />}
+                    </>
                 );
             }
             case UIType.Date: {
@@ -549,7 +597,7 @@ export abstract class AbstractIssueEditorPage<
                             id={field.key}
                             name={field.key}
                             isLoading={this.state.loadingField === field.key}
-                            defaultValue={this.state.fieldValues[field.key]}
+                            defaultValue={this.coerceToString(this.state.fieldValues[field.key])}
                             isDisabled={this.state.isSomethingLoading}
                             className="ac-select-container"
                             selectProps={{ className: 'ac-select-container', classNamePrefix: 'ac-select' }}
@@ -607,7 +655,7 @@ export abstract class AbstractIssueEditorPage<
                         <DateTimePicker
                             id={field.key}
                             name={field.key}
-                            defaultValue={this.state.fieldValues[field.key]}
+                            defaultValue={this.coerceToString(this.state.fieldValues[field.key])}
                             isDisabled={this.state.isSomethingLoading}
                             className="ac-select-container"
                             datePickerSelectProps={{
@@ -685,7 +733,122 @@ export abstract class AbstractIssueEditorPage<
                 }
                 return markup;
             }
+            case UIType.IssueLink: {
+                if (editmode && currentIssueType.name !== 'Epic') {
+                    let defaultParent: IssuePickerIssue | undefined;
+                    if (this.state.fieldValues['parent']) {
+                        defaultParent = {
+                            img: this.state.fieldValues['parent'].issuetype?.iconUrl || '',
+                            key: this.state.fieldValues['parent'].key,
+                            keyHtml: `<b>${this.state.fieldValues['parent'].key}</b>`,
+                            summary: this.state.fieldValues['parent'].summary,
+                            summaryText: this.state.fieldValues['parent'].summary,
+                        };
+                    } else {
+                        defaultParent = undefined;
+                    }
+                    const sameProjectQuery = `project = "${this.state.fieldValues['project'].key}"`;
+                    let jqlQuery: string = '';
+                    if (currentIssueType.subtask) {
+                        jqlQuery = `${sameProjectQuery} AND issuetype in standardIssueTypes())`;
+                    } else {
+                        jqlQuery = `${sameProjectQuery} AND issuetype = Epic`;
+                    }
 
+                    if (this.state.siteDetails.isCloud) {
+                        return (
+                            <AsyncSelect
+                                isClearable={!field.required && !currentIssueType.subtask}
+                                isMulti={false}
+                                defaultValue={defaultParent}
+                                className="ac-select-container"
+                                classNamePrefix="ac-select"
+                                loadOptions={async (input: string) =>
+                                    await this.loadIssueOptions(field as SelectFieldUI, input, jqlQuery)
+                                }
+                                getOptionLabel={(option: any) => option.key}
+                                getOptionValue={(option: any) => option.key}
+                                placeholder="Search for parent issue"
+                                isLoading={this.state.loadingField === field.key}
+                                isDisabled={this.state.isSomethingLoading}
+                                onChange={(val: any) => {
+                                    this.handleSelectChange(field as SelectFieldUI, val);
+                                }}
+                                components={{
+                                    Option: SelectFieldHelper.IssueSuggestionOption,
+                                    SingleValue: SelectFieldHelper.IssueSuggestionValue,
+                                }}
+                            />
+                        );
+                    } else {
+                        return (
+                            <Tooltip title="Can only configure in Jira Web">
+                                <div style={{ display: 'inline-block', width: '100%' }}>
+                                    <AsyncSelect
+                                        isClearable={!field.required && !currentIssueType.subtask}
+                                        isMulti={false}
+                                        defaultValue={defaultParent}
+                                        className="ac-select-container"
+                                        classNamePrefix="ac-select"
+                                        getOptionLabel={(option: any) => option.key}
+                                        getOptionValue={(option: any) => option.key}
+                                        placeholder="Can only configure in Jira Web"
+                                        isLoading={this.state.loadingField === field.key}
+                                        isDisabled={true}
+                                        components={{
+                                            Option: SelectFieldHelper.IssueSuggestionOption,
+                                            SingleValue: SelectFieldHelper.IssueSuggestionValue,
+                                        }}
+                                    />
+                                </div>
+                            </Tooltip>
+                        );
+                    }
+                } else if (currentIssueType.name !== 'Epic') {
+                    // This will never run for DC because it does not have 'parent' field
+                    return (
+                        <Field
+                            label={<span>{field.name}</span>}
+                            isRequired={field.required}
+                            id={field.key}
+                            name={field.key}
+                        >
+                            {(fieldArgs: any) => {
+                                return (
+                                    <AsyncSelect
+                                        {...fieldArgs.fieldProps}
+                                        isClearable={!field.required}
+                                        isMulti={false}
+                                        className="ac-form-select-container"
+                                        classNamePrefix="ac-form-select"
+                                        loadOptions={async (input: string) =>
+                                            await this.loadIssueOptions(
+                                                field as SelectFieldUI,
+                                                input,
+                                                'issuetype = Epic',
+                                            )
+                                        }
+                                        getOptionLabel={(option: any) => option.key}
+                                        getOptionValue={(option: any) => option.key}
+                                        placeholder="Search for parent issue"
+                                        isLoading={this.state.loadingField === field.key}
+                                        isDisabled={this.state.isSomethingLoading}
+                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                            this.handleInlineEdit(field, val);
+                                        })}
+                                        components={{
+                                            Option: SelectFieldHelper.IssueSuggestionOption,
+                                            SingleValue: SelectFieldHelper.IssueSuggestionValue,
+                                        }}
+                                    />
+                                );
+                            }}
+                        </Field>
+                    );
+                } else {
+                    return <React.Fragment />;
+                }
+            }
             case UIType.IssueLinks: {
                 let markup = <div></div>;
                 if (editmode) {
@@ -697,7 +860,6 @@ export abstract class AbstractIssueEditorPage<
                                 this.handleInlineEdit(field, val);
                             }}
                             isLoading={this.state.loadingField === field.key}
-                            //onFetchIssues={async (input: string) => ReactPromiseUtil.debouncePromise<IssuePickerIssue[]>(() => this.loadIssueOptions(field as SelectFieldUI, input), 100)()}
                             onFetchIssues={async (input: string) =>
                                 await this.loadIssueOptions(field as SelectFieldUI, input)
                             }

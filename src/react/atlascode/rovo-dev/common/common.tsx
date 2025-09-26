@@ -8,15 +8,25 @@ import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import { ChatMessage, DefaultMessage, parseToolReturnMessage } from '../utils';
 import { ErrorMessageItem } from './errorMessage';
 
-export const mdParser = new MarkdownIt({
-    html: true,
+const mdParser = new MarkdownIt({
+    html: false,
     breaks: true,
     typographer: true,
+    linkify: true,
 });
+
+mdParser.linkify.set({ fuzzyLink: false });
+
+export const MarkedDown: React.FC<{ value: string }> = ({ value }) => {
+    // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- necessary to apply MarkDown formatting
+    return <span dangerouslySetInnerHTML={{ __html: mdParser.render(value) }} />;
+};
 
 export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
 }
+
+export type CheckFileExistsFunc = (filePath: string) => boolean | null;
 
 export const FollowUpActionFooter: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
     return (
@@ -38,6 +48,7 @@ export const renderChatHistory = (
     msg: ChatMessage,
     index: number,
     openFile: OpenFileFunc,
+    checkFileExists: CheckFileExistsFunc,
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean,
     retryAfterError: () => void,
 ) => {
@@ -46,7 +57,13 @@ export const renderChatHistory = (
             const parsedMessages = parseToolReturnMessage(msg);
             return parsedMessages.map((message) => {
                 if (message.technicalPlan) {
-                    return <TechnicalPlanComponent content={message.technicalPlan} openFile={openFile} />;
+                    return (
+                        <TechnicalPlanComponent
+                            content={message.technicalPlan}
+                            openFile={openFile}
+                            checkFileExists={checkFileExists}
+                        />
+                    );
                 }
                 return <ToolReturnParsedItem msg={message} openFile={openFile} />;
             });
@@ -63,7 +80,7 @@ export const renderChatHistory = (
             return <ChatMessageItem msg={msg} />;
         case 'RovoDevRetry':
             const retryMsg: DefaultMessage = {
-                text: 'Unable to process the request ' + '`' + msg.tool_name + '`',
+                text: msg.content,
                 source: 'RovoDev',
             };
             return (
@@ -77,11 +94,21 @@ export const renderChatHistory = (
     }
 };
 
-export const FileLozenge: React.FC<{ filePath: string; openFile?: OpenFileFunc }> = ({ filePath, openFile }) => {
+export const FileLozenge: React.FC<{
+    filePath: string;
+    openFile?: OpenFileFunc;
+    isDisabled?: boolean;
+}> = ({ filePath, openFile, isDisabled }) => {
     const fileTitle = filePath ? filePath.match(/([^/\\]+)$/)?.[0] : undefined;
 
+    const handleClick = () => {
+        if (!isDisabled && openFile) {
+            openFile(filePath);
+        }
+    };
+
     return (
-        <div onClick={() => openFile && openFile(filePath)} className="file-lozenge">
+        <div onClick={handleClick} className={isDisabled ? 'file-lozenge file-lozenge-disabled' : 'file-lozenge'}>
             <span className="file-path">{fileTitle || filePath}</span>
         </div>
     );

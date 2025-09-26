@@ -8,8 +8,9 @@
 # AXON TEAM: @bwieger-atlassian-com @sdzh-atlassian @cabella-dot @marcomura
 # DEV INNER LOOP: @akalia-atlassian @pastelsky
 # SOFTSERVE TEAM: @bhorai-atl
+# BBY FOLKS: @Blastoplex @mattcolman
 
-*       @bwieger-atlassian-com @sdzh-atlassian @cabella-dot @marcomura @akalia-atlassian @pastelsky @bhorai-atl @om-ukr
+*       @bwieger-atlassian-com @sdzh-atlassian @cabella-dot @marcomura @akalia-atlassian @pastelsky @bhorai-atl @om-ukr @mattcolman @Blastoplex
 
 # Order is important; the last matching pattern takes the most
 # precedence. When someone opens a pull request that only

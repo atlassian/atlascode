@@ -63,6 +63,7 @@ export interface ConfigControllerApi {
     createJiraIssue: () => void;
     viewJiraIssue: () => void;
     openNativeSettings: () => void;
+    startAuthFlow: () => void;
 }
 
 export const emptyApi: ConfigControllerApi = {
@@ -135,6 +136,9 @@ export const emptyApi: ConfigControllerApi = {
         return;
     },
     openNativeSettings: (): void => {
+        return;
+    },
+    startAuthFlow: (): void => {
         return;
     },
 };
@@ -218,6 +222,7 @@ function configReducerV3(state: ConfigV3State, action: ConfigV3UIAction): Config
                 ...action.data,
                 openSection: action.data.section ? action.data.section : ConfigV3Section.Auth,
                 openSubSections: action.data.subSection ? [action.data.subSection] : [],
+                initiateApiTokenAuth: action.data.initiateApiTokenAuth,
                 isSomethingLoading: false,
                 isErrorBannerOpen: false,
                 machineId: action.data.machineId,
@@ -230,6 +235,7 @@ function configReducerV3(state: ConfigV3State, action: ConfigV3UIAction): Config
                 ...state,
                 openSection: action.data.section ? action.data.section : state.openSection,
                 openSubSections: action.data.subSection ? [action.data.subSection] : state.openSubSections,
+                initiateApiTokenAuth: action.data.initiateApiTokenAuth,
                 isSomethingLoading: false,
                 isErrorBannerOpen: false,
                 errorDetails: undefined,
@@ -283,6 +289,7 @@ function configReducer(state: ConfigState, action: ConfigUIAction): ConfigState 
                 ...action.data,
                 openSection: action.data.section ? action.data.section : ConfigSection.Jira,
                 openSubSections: action.data.subSection ? [action.data.subSection] : [],
+                initiateApiTokenAuth: action.data.initiateApiTokenAuth,
                 isSomethingLoading: false,
                 isErrorBannerOpen: false,
                 machineId: action.data.machineId,
@@ -295,6 +302,7 @@ function configReducer(state: ConfigState, action: ConfigUIAction): ConfigState 
                 ...state,
                 openSection: action.data.section ? action.data.section : state.openSection,
                 openSubSections: action.data.subSection ? [action.data.subSection] : state.openSubSections,
+                initiateApiTokenAuth: action.data.initiateApiTokenAuth,
                 isSomethingLoading: false,
                 isErrorBannerOpen: false,
                 errorDetails: undefined,
@@ -610,6 +618,10 @@ export function useConfigControllerV3(): [ConfigV3State, ConfigControllerApi] {
         postMessage({ type: ConfigActionType.OpenNativeSettings });
     }, [postMessage]);
 
+    const startAuthFlow = useCallback((): void => {
+        postMessage({ type: ConfigActionType.StartAuthFlow });
+    }, [postMessage]);
+
     const controllerApi = useMemo<ConfigControllerApi>((): ConfigControllerApi => {
         return {
             postMessage: postMessage,
@@ -629,6 +641,7 @@ export function useConfigControllerV3(): [ConfigV3State, ConfigControllerApi] {
             viewPullRequest: viewPullRequest,
             viewJiraIssue: viewJiraIssue,
             openNativeSettings: openNativeSettings,
+            startAuthFlow: startAuthFlow,
         };
     }, [
         handleConfigChange,
@@ -648,6 +661,7 @@ export function useConfigControllerV3(): [ConfigV3State, ConfigControllerApi] {
         viewPullRequest,
         viewJiraIssue,
         openNativeSettings,
+        startAuthFlow,
     ]);
 
     return [state, controllerApi];
@@ -923,6 +937,10 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         postMessage({ type: ConfigActionType.OpenNativeSettings });
     }, [postMessage]);
 
+    const startAuthFlow = useCallback((): void => {
+        postMessage({ type: ConfigActionType.StartAuthFlow });
+    }, [postMessage]);
+
     const controllerApi = useMemo<ConfigControllerApi>((): ConfigControllerApi => {
         return {
             postMessage: postMessage,
@@ -942,6 +960,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             viewPullRequest: viewPullRequest,
             viewJiraIssue: viewJiraIssue,
             openNativeSettings: openNativeSettings,
+            startAuthFlow: startAuthFlow,
         };
     }, [
         handleConfigChange,
@@ -961,6 +980,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         viewPullRequest,
         viewJiraIssue,
         openNativeSettings,
+        startAuthFlow,
     ]);
 
     return [state, controllerApi];

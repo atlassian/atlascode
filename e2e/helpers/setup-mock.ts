@@ -3,7 +3,7 @@ import { APIRequestContext } from '@playwright/test';
 import fs from 'fs';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
-import type { PullRequestComment } from './types';
+import { JiraTypes, PullRequestComment } from './types';
 import { updateIssueField } from './update-jira-issue';
 
 /**
@@ -64,8 +64,9 @@ export const cleanupWireMockMapping = async (request: APIRequestContext, mapping
     await request.delete(`http://wiremock-mockedteams:8080/__admin/mappings/${mappingId}`);
 };
 
-export async function setupSearchMock(request: APIRequestContext, status: string) {
-    const searchJSON = JSON.parse(fs.readFileSync('e2e/wiremock-mappings/mockedteams/search.json', 'utf-8'));
+export async function setupSearchMock(request: APIRequestContext, status: string, type: JiraTypes) {
+    const file = type === JiraTypes.DC ? 'search-dc.json' : 'search.json';
+    const searchJSON = JSON.parse(fs.readFileSync(`e2e/wiremock-mappings/mockedteams/${file}`, 'utf-8'));
 
     const parsedBody = JSON.parse(searchJSON.response.body);
     const updatedIssue = structuredClone(parsedBody);
@@ -73,8 +74,8 @@ export async function setupSearchMock(request: APIRequestContext, status: string
     const issueIndex = updatedIssue.issues.findIndex(({ key }: MinimalIssue<DetailedSiteInfo>) => key === 'BTS-1');
     updatedIssue.issues[issueIndex].fields.status.name = status;
     updatedIssue.issues[issueIndex].fields.status.statusCategory.name = status;
-
-    const { id } = await setupWireMockMapping(request, 'GET', updatedIssue, '/rest/api/3/search/jql');
+    const urlPath = type === JiraTypes.DC ? '/rest/api/2/search' : '/rest/api/3/search/jql';
+    const { id } = await setupWireMockMapping(request, 'GET', updatedIssue, urlPath);
     return () => cleanupWireMockMapping(request, id);
 }
 
@@ -105,6 +106,17 @@ export async function setupPullrequests(request: APIRequestContext, values: Arra
                 equalTo: '25',
             },
         },
+    );
+
+    return () => cleanupWireMockMapping(request, id);
+}
+
+export async function setupPullrequestsDC(request: APIRequestContext, values: Array<any>) {
+    const { id } = await setupWireMockMappingBitbucket(
+        request,
+        'GET',
+        { values, limit: 25, size: 0, start: 0, isLastPage: true, nextPageStart: null },
+        '/rest/api/1.0/projects/mocked-project/repos/dc-mocked-repo/pull-requests',
     );
 
     return () => cleanupWireMockMapping(request, id);

@@ -1,11 +1,11 @@
 import React from 'react';
-import { RovoDevContext, RovoDevContextItem } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevContextItem } from 'src/rovo-dev/rovoDevTypes';
 
 import { PromptContextItem } from './promptContextItem';
 
 // PromptContextCollection: displays a row or column of PromptContextItem
 export const PromptContextCollection: React.FC<{
-    content: RovoDevContext;
+    content: RovoDevContextItem[];
     direction?: 'row' | 'column';
     align?: 'left' | 'right';
     onToggleActiveItem?: (enabled: boolean) => void;
@@ -13,13 +13,15 @@ export const PromptContextCollection: React.FC<{
     onRemoveContext?: (item: RovoDevContextItem) => void;
     inChat?: boolean;
 }> = ({ content, direction = 'row', align = 'left', onToggleActiveItem, readonly = true, onRemoveContext, inChat }) => {
-    if (content.focusInfo?.invalid && !content.contextItems?.length) {
+    if (content.length === 0) {
         return null;
     }
 
+    const focusedItem = content.find((x) => x.isFocus);
+    const addedItems = content.filter((x) => !x.isFocus);
+
     const flexDirection = direction === 'column' ? 'column' : 'row';
     const justifyContent = align === 'right' ? 'flex-end' : 'flex-start';
-    const showFocusInfo = onToggleActiveItem !== undefined || content.focusInfo?.enabled;
 
     return (
         <div
@@ -37,24 +39,25 @@ export const PromptContextCollection: React.FC<{
         >
             {/* Disabled for now in favor of the larger button outside the collection */}
             {/* {!readonly && <AddContextButton onClick={onAddContext} />} */}
-            {content.focusInfo && !content.focusInfo.invalid && showFocusInfo && (
+            {!!focusedItem && (
                 <PromptContextItem
-                    file={content.focusInfo.file}
-                    selection={content.focusInfo.selection}
-                    enabled={content.focusInfo.enabled}
+                    isFocus={focusedItem.isFocus}
+                    file={focusedItem.file}
+                    selection={focusedItem.selection}
+                    enabled={focusedItem.enabled}
                     onToggle={onToggleActiveItem}
                 />
             )}
-            {content.contextItems &&
-                content.contextItems.length > 0 &&
-                content.contextItems.map((item, index) => (
-                    <PromptContextItem
-                        key={index}
-                        file={item.file}
-                        selection={item.selection}
-                        onRemove={!readonly && onRemoveContext ? () => onRemoveContext(item) : undefined}
-                    />
-                ))}
+            {addedItems.map((item, index) => (
+                <PromptContextItem
+                    key={index}
+                    isFocus={item.isFocus}
+                    file={item.file}
+                    selection={item.selection}
+                    enabled={item.enabled}
+                    onRemove={!readonly && onRemoveContext ? () => onRemoveContext(item) : undefined}
+                />
+            ))}
         </div>
     );
 };

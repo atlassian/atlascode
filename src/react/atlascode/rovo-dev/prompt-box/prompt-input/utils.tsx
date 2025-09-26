@@ -84,6 +84,12 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         description: 'Show agent memory',
         command: { title: 'Agent Memory', id: 'rovo-dev.agentMemory', tooltip: 'Show agent memory' },
     },
+    {
+        label: '/feedback',
+        insertText: '/feedback',
+        description: 'Provide feedback on Rovo Dev',
+        command: { title: 'Feedback', id: 'rovo-dev.triggerFeedback', tooltip: 'Provide feedback on Rovo Dev' },
+    },
 ];
 
 export const createSlashCommandProvider = (): monaco.languages.CompletionItemProvider => {
@@ -142,4 +148,60 @@ export function removeMonacoStyles() {
             console.warn('Could not access stylesheet:', e);
         }
     });
+}
+
+export function setupMonacoCommands(
+    editor: monaco.editor.IStandaloneCodeEditor,
+    onSend: (text: string) => boolean,
+    onCopy: () => void,
+    handleMemoryCommand: () => void,
+    handleTriggerFeedbackCommand: () => void,
+) {
+    monaco.editor.registerCommand('rovo-dev.clearChat', () => {
+        if (onSend('/clear')) {
+            editor.setValue('');
+        }
+    });
+
+    monaco.editor.registerCommand('rovo-dev.pruneChat', () => {
+        if (onSend('/prune')) {
+            editor.setValue('');
+        }
+    });
+
+    monaco.editor.registerCommand('rovo-dev.copyResponse', () => {
+        editor.setValue('');
+        onCopy();
+    });
+
+    monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
+        handleMemoryCommand();
+        editor.setValue('');
+    });
+
+    monaco.editor.registerCommand('rovo-dev.triggerFeedback', () => {
+        handleTriggerFeedbackCommand();
+        editor.setValue('');
+    });
+}
+
+export function setupPromptKeyBindings(editor: monaco.editor.IStandaloneCodeEditor, handleSend: () => void) {
+    editor.addCommand(monaco.KeyCode.Enter, () => handleSend(), '!suggestWidgetVisible'); // Only trigger if suggestions are not visible
+
+    editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
+        editor.trigger('keyboard', 'type', { text: '\n' });
+    });
+}
+
+// Auto-resize functionality
+export function setupAutoResize(editor: monaco.editor.IStandaloneCodeEditor, maxHeight = 200) {
+    const updateHeight = () => {
+        const contentHeight = Math.min(maxHeight, editor.getContentHeight());
+        const container = editor.getContainerDomNode();
+        container.style.height = `${contentHeight}px`;
+        editor.layout();
+    };
+
+    editor.onDidContentSizeChange(updateHeight);
+    updateHeight();
 }

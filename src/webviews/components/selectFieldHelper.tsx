@@ -194,6 +194,7 @@ const LabelOption = (props: any) => {
 
     return (
         <components.Option {...props}>
+            {/* eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- TODO check if needed */}
             <div ref={props.innerRef} {...props.innerProps} dangerouslySetInnerHTML={{ __html: label }} />
         </components.Option>
     );
@@ -299,7 +300,10 @@ const IssueLinkTypeValue = (props: any) => (
 export const IssueSuggestionOption = (props: any) => (
     <components.Option {...props}>
         <div ref={props.innerRef} {...props.innerProps} className="ac-flex">
-            <span style={{ marginLeft: '10px' }}>{props.data.key}</span>
+            {props.data.img && (
+                <img src={props.data.img} width="16" height="16" alt="" style={{ marginRight: '8px' }} />
+            )}
+            <span style={{ marginLeft: '10px', fontWeight: 'bold' }}>{props.data.key}</span>
             <span style={{ marginLeft: '1em' }}>{props.data.summaryText}</span>
         </div>
     </components.Option>
@@ -308,7 +312,10 @@ export const IssueSuggestionOption = (props: any) => (
 export const IssueSuggestionValue = (props: any) => (
     <components.SingleValue {...props}>
         <div ref={props.innerRef} {...props.innerProps} className="ac-flex">
-            <span style={{ marginLeft: '4px' }}>{props.data.key}</span>
+            {props.data.img && (
+                <img src={props.data.img} width="16" height="16" alt="" style={{ marginRight: '8px' }} />
+            )}
+            <span style={{ marginLeft: '4px', fontWeight: 'bold' }}>{props.data.key}</span>
             <span style={{ marginLeft: '4px', marginRight: '4px' }}>{props.data.summaryText}</span>
         </div>
     </components.SingleValue>

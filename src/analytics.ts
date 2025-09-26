@@ -1,10 +1,18 @@
 import { Uri } from 'vscode';
 
 import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/types';
-import { CreatePrTerminalSelection, ErrorProductArea, UIErrorInfo } from './analyticsTypes';
-import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira, SiteInfo } from './atlclients/authInfo';
+import { CreatePrTerminalSelection, ErrorProductArea, FeedbackSentEvent, UIErrorInfo } from './analyticsTypes';
+import {
+    DetailedSiteInfo,
+    isEmptySiteInfo,
+    Product,
+    ProductBitbucket,
+    ProductJira,
+    SiteInfo,
+} from './atlclients/authInfo';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
+import { QuickFlowAnalyticsEvent } from './onboarding/quickFlow/types';
 import { NotificationSurface, NotificationType } from './views/notifications/notificationManager';
 import { NotificationSource } from './views/notifications/notificationSources';
 
@@ -195,6 +203,8 @@ type JiraPerfEvents =
     | 'ui.jira.editJiraIssue.update.lcp';
 
 interface RovoDevCommonParams {
+    rovoDevEnv: RovoDevEnv;
+    appInstanceId: string;
     rovoDevSessionId: string;
     rovoDevPromptId: string;
 }
@@ -222,25 +232,32 @@ export function performanceEvent(tag: string, measure: number, params?: Record<s
 
 export type RovoDevEnv = 'IDE' | 'Boysenberry';
 
-export function rovoDevNewSessionActionEvent(rovoDevEnv: RovoDevEnv, sessionId: string, isManuallyCreated: boolean) {
+export function rovoDevNewSessionActionEvent(
+    rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
+    sessionId: string,
+    isManuallyCreated: boolean,
+) {
     return trackEvent('rovoDevNewSessionAction', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, isManuallyCreated },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, isManuallyCreated },
     });
 }
 
 export function rovoDevPromptSentEvent(
     rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
     sessionId: string,
     promptId: string,
     deepPlanEnabled: boolean,
 ) {
     return trackEvent('rovoDevPromptSent', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, promptId, deepPlanEnabled },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, deepPlanEnabled },
     });
 }
 
 export function rovoDevTechnicalPlanningShownEvent(
     rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
     sessionId: string,
     promptId: string,
     stepsCount: number,
@@ -248,53 +265,102 @@ export function rovoDevTechnicalPlanningShownEvent(
     questionsCount: number,
 ) {
     return trackEvent('rovoDevTechnicalPlanningShown', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, promptId, stepsCount, filesCount, questionsCount },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, stepsCount, filesCount, questionsCount },
     });
 }
 
 export function rovoDevFilesSummaryShownEvent(
     rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
     sessionId: string,
     promptId: string,
     filesCount: number,
 ) {
     return trackEvent('rovoDevFilesSummaryShown', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, promptId, filesCount },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, filesCount },
     });
 }
 
 export function rovoDevFileChangedActionEvent(
     rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
     sessionId: string,
     promptId: string,
     action: 'undo' | 'keep',
     filesCount: number,
 ) {
     return trackEvent('rovoDevFileChangedAction', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, promptId, action, filesCount },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, action, filesCount },
     });
 }
 
-export function rovoDevStopActionEvent(rovoDevEnv: RovoDevEnv, sessionId: string, promptId: string, failed?: boolean) {
+export function rovoDevStopActionEvent(
+    rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
+    sessionId: string,
+    promptId: string,
+    failed?: boolean,
+) {
     return trackEvent('rovoDevStopAction', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, promptId, failed },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, failed },
     });
 }
 
 export function rovoDevGitPushActionEvent(
     rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
     sessionId: string,
     promptId: string,
     prCreated: boolean,
 ) {
     return trackEvent('rovoDevGitPushAction', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, promptId, prCreated },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, prCreated },
     });
 }
 
-export function rovoDevDetailsExpandedEvent(rovoDevEnv: RovoDevEnv, sessionId: string, promptId: string) {
+export function rovoDevDetailsExpandedEvent(
+    rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
+    sessionId: string,
+    promptId: string,
+) {
     return trackEvent('rovoDevDetailsExpanded', 'atlascode', {
-        attributes: { rovoDevEnv, sessionId, promptId },
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId },
+    });
+}
+
+export function rovoDevCreatePrButtonClickedEvent(
+    rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
+    sessionId: string,
+    promptId: string,
+) {
+    return trackEvent('clicked', 'rovoDevCreatePrButton', {
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId },
+    });
+}
+
+export function rovoDevAiResultViewedEvent(
+    rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
+    sessionId: string,
+    promptId: string,
+    dwellMs: number,
+) {
+    return trackEvent('viewed', 'aiResult', {
+        attributes: {
+            rovoDevEnv,
+            appInstanceId,
+            sessionId,
+            promptId,
+            dwellMs,
+            xid: 'rovodev-sessions',
+            singleInstrumentationID: promptId,
+            aiFeatureName: 'rovodevSessions',
+            proactiveGeneratedAI: 0,
+            userGeneratedAI: 1,
+            isAIFeature: 1,
+        },
     });
 }
 
@@ -478,10 +544,18 @@ export async function viewScreenEvent(
 
     const tenantId: string | undefined = site ? site.id : undefined;
 
-    return anyUserOrAnonymous<ScreenEvent>(tenantOrNull<ScreenEvent>(e, tenantId));
+    return appendUserInfo<ScreenEvent>(tenantOrNull<ScreenEvent>(e, tenantId));
 }
 
 // UI Events
+
+export async function feedbackSentEvent(event: FeedbackSentEvent): Promise<TrackEvent> {
+    return trackEvent('feedbackSent', 'atlascode', { attributes: { ...event } });
+}
+
+export async function quickFlowEvent(event: QuickFlowAnalyticsEvent): Promise<TrackEvent> {
+    return trackEvent('statusUpdated', 'quickFlow', { attributes: { ...event } });
+}
 
 export async function uiErrorEvent(errorInfo: UIErrorInfo): Promise<TrackEvent> {
     const e = trackEvent('failedTest', 'ui', {
@@ -506,7 +580,7 @@ export async function bbIssuesPaginationEvent(): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function prPaginationEvent(): Promise<UIEvent> {
@@ -525,7 +599,7 @@ export async function prPaginationEvent(): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function moreSettingsButtonEvent(source: string): Promise<UIEvent> {
@@ -541,7 +615,7 @@ export async function moreSettingsButtonEvent(source: string): Promise<UIEvent> 
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function focusCreateIssueEvent(source: string): Promise<UIEvent> {
@@ -557,7 +631,7 @@ export async function focusCreateIssueEvent(source: string): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function focusIssueEvent(source: string): Promise<UIEvent> {
@@ -573,7 +647,7 @@ export async function focusIssueEvent(source: string): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 export async function focusCreatePullRequestEvent(source: string): Promise<UIEvent> {
     const e = {
@@ -588,7 +662,7 @@ export async function focusCreatePullRequestEvent(source: string): Promise<UIEve
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 export async function focusPullRequestEvent(source: string): Promise<UIEvent> {
     const e = {
@@ -603,7 +677,7 @@ export async function focusPullRequestEvent(source: string): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 export async function doneButtonEvent(source: string): Promise<UIEvent> {
     const e = {
@@ -618,7 +692,7 @@ export async function doneButtonEvent(source: string): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function authenticateButtonEvent(
@@ -648,7 +722,7 @@ export async function authenticateButtonEvent(
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function editButtonEvent(source: string): Promise<UIEvent> {
@@ -664,7 +738,7 @@ export async function editButtonEvent(source: string): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function logoutButtonEvent(source: string): Promise<UIEvent> {
@@ -680,7 +754,7 @@ export async function logoutButtonEvent(source: string): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function saveManualCodeEvent(source: string): Promise<UIEvent> {
@@ -696,7 +770,7 @@ export async function saveManualCodeEvent(source: string): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function configureJQLButtonEvent(source: string): Promise<UIEvent> {
@@ -712,7 +786,7 @@ export async function configureJQLButtonEvent(source: string): Promise<UIEvent> 
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function openSettingsButtonEvent(source: string): Promise<UIEvent> {
@@ -728,7 +802,7 @@ export async function openSettingsButtonEvent(source: string): Promise<UIEvent> 
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function exploreFeaturesButtonEvent(source: string): Promise<UIEvent> {
@@ -744,7 +818,7 @@ export async function exploreFeaturesButtonEvent(source: string): Promise<UIEven
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function openWorkbenchRepositoryButtonEvent(source: string): Promise<UIEvent> {
@@ -760,7 +834,7 @@ export async function openWorkbenchRepositoryButtonEvent(source: string): Promis
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function openWorkbenchWorkspaceButtonEvent(source: string): Promise<UIEvent> {
@@ -776,7 +850,7 @@ export async function openWorkbenchWorkspaceButtonEvent(source: string): Promise
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function cloneRepositoryButtonEvent(source: string): Promise<UIEvent> {
@@ -792,7 +866,7 @@ export async function cloneRepositoryButtonEvent(source: string): Promise<UIEven
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function openActiveIssueEvent(): Promise<UIEvent> {
@@ -808,7 +882,7 @@ export async function openActiveIssueEvent(): Promise<UIEvent> {
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function notificationBannerClickedEvent(source: string, buttonType: string): Promise<UIEvent> {
@@ -827,7 +901,7 @@ export async function notificationBannerClickedEvent(source: string, buttonType:
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function createPrTerminalLinkPanelButtonClickedEvent(
@@ -849,7 +923,7 @@ export async function createPrTerminalLinkPanelButtonClickedEvent(
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 
 export async function notificationActionButtonClickedEvent(
@@ -874,7 +948,7 @@ export async function notificationActionButtonClickedEvent(
         },
     };
 
-    return anyUserOrAnonymous<UIEvent>(e);
+    return appendUserInfo<UIEvent>(e);
 }
 // Helper methods
 
@@ -898,7 +972,7 @@ async function trackEvent(action: string, actionSubject: string, eventProps: any
         trackEvent: event(action, actionSubject, eventProps),
     };
 
-    return anyUserOrAnonymous<TrackEvent>(e);
+    return appendUserInfo<TrackEvent>(e);
 }
 
 async function tenantTrackEvent(
@@ -913,7 +987,7 @@ async function tenantTrackEvent(
         trackEvent: event(action, actionSubject, eventProps),
     };
 
-    return anyUserOrAnonymous<TrackEvent>(e);
+    return appendUserInfo<TrackEvent>(e);
 }
 
 function event(action: string, actionSubject: string, attributes: any): any {
@@ -927,14 +1001,52 @@ function event(action: string, actionSubject: string, attributes: any): any {
     return Object.assign(event, attributes);
 }
 
-function anyUserOrAnonymous<T>(e: Object): T {
+async function checkUserDomain(): Promise<string> {
+    // Try to get user email from Jira first, then Bitbucket
+    const jiraSites = Container.siteManager?.getSitesAvailable(ProductJira) || [];
+    const bitbucketSites = Container.siteManager?.getSitesAvailable(ProductBitbucket) || [];
+
+    const allSites = [...jiraSites, ...bitbucketSites];
+
+    // If all sites is zero, return unknown
+    if (allSites.length === 0) {
+        return 'unknown';
+    }
+
+    return (await Container.isAtlassianUser(ProductJira, ProductBitbucket)) ? 'atlassian' : 'not-atlassian';
+}
+
+async function appendUserInfo<T>(e: Object): Promise<T> {
     let newObj: Object;
     const aaid = Container.siteManager?.getFirstAAID();
 
     if (aaid) {
-        newObj = { ...e, ...{ userId: aaid, userIdType: 'atlassianAccount', anonymousId: Container.machineId } };
+        const userDomain = await checkUserDomain();
+        newObj = {
+            ...e,
+            ...{
+                userId: aaid,
+                userIdType: 'atlassianAccount',
+                anonymousId: Container.machineId,
+            },
+        };
+
+        // Add isInternalUser to the attributes of the nested event data
+        const eventObj = newObj as any;
+        if (eventObj.trackEvent) {
+            eventObj.trackEvent.attributes = { ...eventObj.trackEvent.attributes, userDomain: userDomain };
+        } else if (eventObj.uiEvent) {
+            eventObj.uiEvent.attributes = { ...eventObj.uiEvent.attributes, userDomain: userDomain };
+        } else if (eventObj.screenEvent) {
+            eventObj.screenEvent.attributes = { ...eventObj.screenEvent.attributes, userDomain: userDomain };
+        }
     } else {
-        newObj = { ...e, ...{ anonymousId: Container.machineId } };
+        newObj = {
+            ...e,
+            ...{
+                anonymousId: Container.machineId,
+            },
+        };
     }
 
     return newObj as T;

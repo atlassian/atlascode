@@ -10,7 +10,7 @@ const mockedData: MockedData = {};
 
 jest.mock('./container', () => ({
     Container: {
-        siteManager: { getFirstAAID: () => mockedData.getFirstAAID_value },
+        siteManager: { getFirstAAID: () => mockedData.getFirstAAID_value, getSitesAvailable: () => [] },
         machineId: 'test-machine-id',
     },
 }));
@@ -41,7 +41,7 @@ describe('analytics', () => {
             const screenName = 'testScreen';
             const event = await analytics.viewScreenEvent(screenName);
             expect(event.name).toEqual(screenName);
-            expect(event.screenEvent.attributes).toBeUndefined();
+            expect(event.screenEvent.attributes).toEqual({ userDomain: 'unknown' });
         });
 
         it('should exclude from activity if screen name is atlascodeWelcomeScreen', async () => {
@@ -274,6 +274,7 @@ describe('analytics', () => {
                 errorName: 'TestError',
                 errorMessage: 'Test UI error',
                 errorCause: 'Test cause',
+                userDomain: 'unknown',
             };
 
             const event = await analytics.uiErrorEvent(errorInfo);
@@ -804,7 +805,12 @@ describe('analytics', () => {
         describe('api.rovodev.chat.response.timeToFirstByte', () => {
             it('should create a performance event with correct tag and measure', async () => {
                 const measure = 150;
-                const params = { rovoDevSessionId: 'test-session-123', rovoDevPromptId: 'test-prompt-123' };
+                const params = {
+                    rovoDevEnv: 'IDE' as const,
+                    appInstanceId: 'app-123',
+                    rovoDevSessionId: 'test-session-123',
+                    rovoDevPromptId: 'test-prompt-123',
+                };
 
                 const event = await analytics.performanceEvent(
                     'api.rovodev.chat.response.timeToFirstByte',
@@ -824,7 +830,12 @@ describe('analytics', () => {
         describe('api.rovodev.chat.response.timeToFirstMessage', () => {
             it('should create a performance event with correct tag and measure', async () => {
                 const measure = 250;
-                const params = { rovoDevSessionId: 'session-456', rovoDevPromptId: 'prompt-456' };
+                const params = {
+                    rovoDevEnv: 'IDE' as const,
+                    appInstanceId: 'app-456',
+                    rovoDevSessionId: 'session-456',
+                    rovoDevPromptId: 'prompt-456',
+                };
 
                 const event = await analytics.performanceEvent(
                     'api.rovodev.chat.response.timeToFirstMessage',
@@ -836,6 +847,7 @@ describe('analytics', () => {
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.tag).toEqual('api.rovodev.chat.response.timeToFirstMessage');
                 expect(event.trackEvent.attributes.measure).toEqual(measure);
+                expect(event.trackEvent.attributes.appInstanceId).toEqual(params.appInstanceId);
                 expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(params.rovoDevSessionId);
                 expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(params.rovoDevPromptId);
             });
@@ -844,7 +856,12 @@ describe('analytics', () => {
         describe('api.rovodev.chat.response.timeToTechPlan', () => {
             it('should create a performance event with correct tag and measure', async () => {
                 const measure = 500;
-                const params = { rovoDevSessionId: 'session-789', rovoDevPromptId: 'prompt-789' };
+                const params = {
+                    rovoDevEnv: 'IDE' as const,
+                    appInstanceId: 'app-789',
+                    rovoDevSessionId: 'session-789',
+                    rovoDevPromptId: 'prompt-789',
+                };
 
                 const event = await analytics.performanceEvent(
                     'api.rovodev.chat.response.timeToTechPlan',
@@ -856,6 +873,7 @@ describe('analytics', () => {
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.tag).toEqual('api.rovodev.chat.response.timeToTechPlan');
                 expect(event.trackEvent.attributes.measure).toEqual(measure);
+                expect(event.trackEvent.attributes.appInstanceId).toEqual(params.appInstanceId);
                 expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(params.rovoDevSessionId);
                 expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(params.rovoDevPromptId);
             });
@@ -864,7 +882,12 @@ describe('analytics', () => {
         describe('api.rovodev.chat.response.timeToLastMessage', () => {
             it('should create a performance event with correct tag and measure', async () => {
                 const measure = 1000;
-                const params = { rovoDevSessionId: 'session-999', rovoDevPromptId: 'prompt-999' };
+                const params = {
+                    rovoDevEnv: 'IDE' as const,
+                    appInstanceId: 'app-999',
+                    rovoDevSessionId: 'session-999',
+                    rovoDevPromptId: 'prompt-999',
+                };
 
                 const event = await analytics.performanceEvent(
                     'api.rovodev.chat.response.timeToLastMessage',
@@ -876,6 +899,7 @@ describe('analytics', () => {
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.tag).toEqual('api.rovodev.chat.response.timeToLastMessage');
                 expect(event.trackEvent.attributes.measure).toEqual(measure);
+                expect(event.trackEvent.attributes.appInstanceId).toEqual(params.appInstanceId);
                 expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(params.rovoDevSessionId);
                 expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(params.rovoDevPromptId);
             });
@@ -885,6 +909,8 @@ describe('analytics', () => {
             it('should include platform information based on process.platform', async () => {
                 setProcessPlatform('darwin');
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToFirstByte', 100, {
+                    rovoDevEnv: 'IDE',
+                    appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
                 });
@@ -894,6 +920,8 @@ describe('analytics', () => {
 
             it('should include origin information', async () => {
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToFirstByte', 100, {
+                    rovoDevEnv: 'IDE',
+                    appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
                 });
@@ -903,6 +931,8 @@ describe('analytics', () => {
 
             it('should handle empty string parameters', async () => {
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToFirstByte', 100, {
+                    rovoDevEnv: 'IDE',
+                    appInstanceId: 'test-app-id',
                     rovoDevSessionId: '',
                     rovoDevPromptId: '',
                 });
@@ -913,6 +943,8 @@ describe('analytics', () => {
 
             it('should handle additional parameters in params object', async () => {
                 const params = {
+                    rovoDevEnv: 'IDE' as const,
+                    appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
                     additionalData: 'extra-info',
@@ -925,6 +957,7 @@ describe('analytics', () => {
                     params,
                 );
 
+                expect(event.trackEvent.attributes.appInstanceId).toEqual('test-app-id');
                 expect(event.trackEvent.attributes.rovoDevSessionId).toEqual('test-session');
                 expect(event.trackEvent.attributes.rovoDevPromptId).toEqual('test-prompt');
                 expect(event.trackEvent.attributes.additionalData).toEqual('extra-info');
@@ -980,6 +1013,8 @@ describe('analytics', () => {
         describe('event structure validation', () => {
             it('should return a valid TrackEvent structure', async () => {
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToFirstByte', 100, {
+                    rovoDevEnv: 'IDE',
+                    appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
                 });
@@ -1000,6 +1035,8 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToFirstByte', async () => {
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToFirstByte', 100, {
+                    rovoDevEnv: 'IDE',
+                    appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
                 });
@@ -1010,6 +1047,8 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToFirstMessage', async () => {
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToFirstMessage', 100, {
+                    rovoDevEnv: 'IDE',
+                    appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
                 });
@@ -1020,6 +1059,8 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToTechPlan', async () => {
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToTechPlan', 100, {
+                    rovoDevEnv: 'IDE',
+                    appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
                 });
@@ -1030,6 +1071,8 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToLastMessage', async () => {
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToLastMessage', 100, {
+                    rovoDevEnv: 'IDE',
+                    appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
                     rovoDevPromptId: 'test-prompt',
                 });
@@ -1042,6 +1085,7 @@ describe('analytics', () => {
 
     // Rovo Dev event tests
     describe('Rovo Dev events', () => {
+        const appInstanceId = 'test-app-session-id';
         const mockSessionId = 'test-session-id';
         const mockPromptId = 'test-prompt-id';
 
@@ -1056,6 +1100,7 @@ describe('analytics', () => {
                 const isManuallyCreated = true;
                 const event = await analytics.rovoDevNewSessionActionEvent(
                     rovoDevEnv,
+                    appInstanceId,
                     mockSessionId,
                     isManuallyCreated,
                 );
@@ -1063,6 +1108,7 @@ describe('analytics', () => {
                 expect(event.trackEvent.action).toEqual('rovoDevNewSessionAction');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.appInstanceId).toEqual(appInstanceId);
                 expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
                 expect(event.trackEvent.attributes.isManuallyCreated).toEqual(isManuallyCreated);
             },
@@ -1071,11 +1117,18 @@ describe('analytics', () => {
         it.each(RovoDevEnvironments)(
             'should create rovoDevPromptSentEvent with session and prompt IDs',
             async (rovoDevEnv) => {
-                const event = await analytics.rovoDevPromptSentEvent(rovoDevEnv, mockSessionId, mockPromptId, true);
+                const event = await analytics.rovoDevPromptSentEvent(
+                    rovoDevEnv,
+                    appInstanceId,
+                    mockSessionId,
+                    mockPromptId,
+                    true,
+                );
 
                 expect(event.trackEvent.action).toEqual('rovoDevPromptSent');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.appInstanceId).toEqual(appInstanceId);
                 expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
                 expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
                 expect(event.trackEvent.attributes.deepPlanEnabled).toEqual(true);
@@ -1090,6 +1143,7 @@ describe('analytics', () => {
                 const questionsCount = 2;
                 const event = await analytics.rovoDevTechnicalPlanningShownEvent(
                     rovoDevEnv,
+                    appInstanceId,
                     mockSessionId,
                     mockPromptId,
                     stepsCount,
@@ -1100,6 +1154,7 @@ describe('analytics', () => {
                 expect(event.trackEvent.action).toEqual('rovoDevTechnicalPlanningShown');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.appInstanceId).toEqual(appInstanceId);
                 expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
                 expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
                 expect(event.trackEvent.attributes.stepsCount).toEqual(stepsCount);
@@ -1114,6 +1169,7 @@ describe('analytics', () => {
                 const filesCount = 4;
                 const event = await analytics.rovoDevFilesSummaryShownEvent(
                     rovoDevEnv,
+                    appInstanceId,
                     mockSessionId,
                     mockPromptId,
                     filesCount,
@@ -1122,6 +1178,7 @@ describe('analytics', () => {
                 expect(event.trackEvent.action).toEqual('rovoDevFilesSummaryShown');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.appInstanceId).toEqual(appInstanceId);
                 expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
                 expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
                 expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
@@ -1135,6 +1192,7 @@ describe('analytics', () => {
                 const filesCount = 3;
                 const event = await analytics.rovoDevFileChangedActionEvent(
                     rovoDevEnv,
+                    appInstanceId,
                     mockSessionId,
                     mockPromptId,
                     action,
@@ -1144,6 +1202,7 @@ describe('analytics', () => {
                 expect(event.trackEvent.action).toEqual('rovoDevFileChangedAction');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.appInstanceId).toEqual(appInstanceId);
                 expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
                 expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
                 expect(event.trackEvent.attributes.action).toEqual(action);
@@ -1158,6 +1217,7 @@ describe('analytics', () => {
                 const filesCount = 2;
                 const event = await analytics.rovoDevFileChangedActionEvent(
                     rovoDevEnv,
+                    appInstanceId,
                     mockSessionId,
                     mockPromptId,
                     action,
@@ -1167,6 +1227,7 @@ describe('analytics', () => {
                 expect(event.trackEvent.action).toEqual('rovoDevFileChangedAction');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.appInstanceId).toEqual(appInstanceId);
                 expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
                 expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
                 expect(event.trackEvent.attributes.action).toEqual(action);
@@ -1175,11 +1236,17 @@ describe('analytics', () => {
         );
 
         it.each(RovoDevEnvironments)('should create rovoDevStopActionEvent when successful', async (rovoDevEnv) => {
-            const event = await analytics.rovoDevStopActionEvent(rovoDevEnv, mockSessionId, mockPromptId);
+            const event = await analytics.rovoDevStopActionEvent(
+                rovoDevEnv,
+                appInstanceId,
+                mockSessionId,
+                mockPromptId,
+            );
 
             expect(event.trackEvent.action).toEqual('rovoDevStopAction');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
             expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+            expect(event.trackEvent.attributes.appInstanceId).toEqual(appInstanceId);
             expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
             expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
             expect(event.trackEvent.attributes.failed).toBeUndefined();
@@ -1187,11 +1254,18 @@ describe('analytics', () => {
 
         it.each(RovoDevEnvironments)('should create rovoDevStopActionEvent when failed', async (rovoDevEnv) => {
             const failed = true;
-            const event = await analytics.rovoDevStopActionEvent(rovoDevEnv, mockSessionId, mockPromptId, failed);
+            const event = await analytics.rovoDevStopActionEvent(
+                rovoDevEnv,
+                appInstanceId,
+                mockSessionId,
+                mockPromptId,
+                failed,
+            );
 
             expect(event.trackEvent.action).toEqual('rovoDevStopAction');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
             expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+            expect(event.trackEvent.attributes.appInstanceId).toEqual(appInstanceId);
             expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
             expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
             expect(event.trackEvent.attributes.failed).toEqual(failed);
@@ -1203,6 +1277,7 @@ describe('analytics', () => {
                 const prCreated = true;
                 const event = await analytics.rovoDevGitPushActionEvent(
                     rovoDevEnv,
+                    appInstanceId,
                     mockSessionId,
                     mockPromptId,
                     prCreated,
@@ -1211,6 +1286,7 @@ describe('analytics', () => {
                 expect(event.trackEvent.action).toEqual('rovoDevGitPushAction');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.appInstanceId).toEqual(appInstanceId);
                 expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
                 expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
                 expect(event.trackEvent.attributes.prCreated).toEqual(prCreated);
@@ -1223,6 +1299,7 @@ describe('analytics', () => {
                 const prCreated = false;
                 const event = await analytics.rovoDevGitPushActionEvent(
                     rovoDevEnv,
+                    appInstanceId,
                     mockSessionId,
                     mockPromptId,
                     prCreated,
@@ -1231,6 +1308,7 @@ describe('analytics', () => {
                 expect(event.trackEvent.action).toEqual('rovoDevGitPushAction');
                 expect(event.trackEvent.actionSubject).toEqual('atlascode');
                 expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+                expect(event.trackEvent.attributes.appInstanceId).toEqual(appInstanceId);
                 expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
                 expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
                 expect(event.trackEvent.attributes.prCreated).toEqual(prCreated);
@@ -1238,11 +1316,33 @@ describe('analytics', () => {
         );
 
         it.each(RovoDevEnvironments)('should create rovoDevDetailsExpandedEvent', async (rovoDevEnv) => {
-            const event = await analytics.rovoDevDetailsExpandedEvent(rovoDevEnv, mockSessionId, mockPromptId);
+            const event = await analytics.rovoDevDetailsExpandedEvent(
+                rovoDevEnv,
+                appInstanceId,
+                mockSessionId,
+                mockPromptId,
+            );
 
             expect(event.trackEvent.action).toEqual('rovoDevDetailsExpanded');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
             expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+            expect(event.trackEvent.attributes.appInstanceId).toEqual(appInstanceId);
+            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
+            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
+        });
+
+        it.each(RovoDevEnvironments)('should create rovoDevCreatePrButtonClickedEvent', async (rovoDevEnv) => {
+            const event = await analytics.rovoDevCreatePrButtonClickedEvent(
+                rovoDevEnv,
+                appInstanceId,
+                mockSessionId,
+                mockPromptId,
+            );
+
+            expect(event.trackEvent.action).toEqual('clicked');
+            expect(event.trackEvent.actionSubject).toEqual('rovoDevCreatePrButton');
+            expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
+            expect(event.trackEvent.attributes.appInstanceId).toEqual(appInstanceId);
             expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
             expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
         });
@@ -1556,6 +1656,8 @@ describe('analytics', () => {
                     'api.rovodev.chat.response.timeToFirstByte',
                     100,
                     {
+                        rovoDevEnv: 'IDE',
+                        appInstanceId: 'test-app-id',
                         rovoDevSessionId: 'test-session',
                         rovoDevPromptId: 'test-prompt',
                     },
@@ -1567,6 +1669,7 @@ describe('analytics', () => {
                 expect(jiraEvent.trackEvent.attributes.tag).toEqual('ui.jira.jqlFetch.render.lcp');
 
                 // RovoDev event should have sessionId/promptId
+                expect(rovoDevEvent.trackEvent.attributes.appInstanceId).toEqual('test-app-id');
                 expect(rovoDevEvent.trackEvent.attributes.rovoDevSessionId).toEqual('test-session');
                 expect(rovoDevEvent.trackEvent.attributes.rovoDevPromptId).toEqual('test-prompt');
                 expect(rovoDevEvent.trackEvent.attributes.tag).toEqual('api.rovodev.chat.response.timeToFirstByte');

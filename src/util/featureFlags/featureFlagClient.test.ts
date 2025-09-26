@@ -14,7 +14,7 @@ const MockExperimentGates: Record<string, any> = {
     },
 };
 
-jest.mock('./features', () => {
+jest.mock('../features', () => {
     return {
         ExperimentGates: MockExperimentGates,
     };
@@ -39,8 +39,8 @@ import { it } from '@jest/globals';
 import { forceCastTo } from 'testsutil';
 
 import { ClientInitializedErrorType } from '../../analytics';
+import { Experiments, Features } from '../features';
 import { FeatureFlagClient, FeatureFlagClientInitError } from './featureFlagClient';
-import { Experiments, Features } from './features';
 
 describe('FeatureFlagClient', () => {
     let options: Identifiers;

@@ -1,5 +1,7 @@
+import { QuickFlowAnalyticsEvent } from 'src/onboarding/quickFlow/types';
+
 import { DeepLinkEventErrorType } from '../analytics';
-import { UIErrorInfo } from '../analyticsTypes';
+import { FeedbackSentEvent, UIErrorInfo } from '../analyticsTypes';
 import { DetailedSiteInfo, Product, SiteInfo } from '../atlclients/authInfo';
 
 export interface AnalyticsApi {
@@ -53,4 +55,6 @@ export interface AnalyticsApi {
     fireExploreFeaturesButtonEvent(source: string): Promise<void>;
     firePipelineRerunEvent(site: DetailedSiteInfo, source: string): Promise<void>;
     fireUIErrorEvent(errorInfo: UIErrorInfo): Promise<void>;
+    fireQuickFlowEvent(event: QuickFlowAnalyticsEvent): Promise<void>;
+    fireFeedbackSentEvent(event: FeedbackSentEvent): Promise<void>;
 }

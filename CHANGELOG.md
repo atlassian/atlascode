@@ -1,5 +1,48 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 3.8.19
+
+### Bug Fixes
+
+- Fix error while connecting several jira sites with an API token
+
+## What's new in 3.8.17
+
+### Features
+
+- Update pipeline schema to the current latest version
+- Add the ability to search issue through all connected sites
+
+## What's new in 3.8.15
+
+### Bug Fixes
+
+- Fix issue with create task functionality
+
+## What's new in 3.8.14
+
+### Features
+
+- Add the ability to update the Status column from the child issues table tree
+
+### Bug Fixes
+
+- Allow editing Cloud sites authenticated with an API token
+
+## What's new in 3.8.13
+
+### Features
+
+- Autocomplete the site URL for API token authentication using already OAuth authenticated sites
+- Don't require typing https:// when typing the authentication site's URL
+
+## What's new in 3.8.12
+
+### Bug Fixes
+
+- Fixed issue in create issue page when site select is empty after changing issue type
+- Fixed style issues on feedback modal
+
 ## What's new in 3.8.11
 
 ### Features
@@ -21,8 +64,6 @@
 ### Bug Fixes
 
 - Added loading indicator to Refresh button for Jira issue auto-refreshes
-
----
 
 ## What's new in 3.8.9
 

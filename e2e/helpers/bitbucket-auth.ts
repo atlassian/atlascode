@@ -9,7 +9,7 @@ import { closeAllNotifications, openAtlassianSettings } from './common';
 export const authenticateWithBitbucketDC = async (
     page: Page,
     baseUrl: string = 'https://bitbucket.mockeddomain.com',
-    username: string = 'mockedUser',
+    username: string = 'mockuser',
     password: string = '12345',
 ) => {
     const settingsFrame = await openAtlassianSettings(page, 'Connect Bitbucket to view pull requests');
@@ -91,5 +91,5 @@ export const authenticateWithBitbucketCloud = async (
         await page.waitForTimeout(1000);
     }
 
-    await expect(settingsFrame.getByText('Bitbucket Cloud')).toBeVisible();
+    await expect(settingsFrame.getByText('mock@atlassian.code')).toBeVisible();
 };

@@ -379,7 +379,7 @@ describe('AbstractIssueEditorWebview', () => {
                                 key: 'TEST-1',
                                 keyHtml: 'TEST-1',
                                 summaryText: 'Test Issue 1',
-                                img: '',
+                                img: '/images/icons/issuetypes/task.png',
                                 summary: 'Test Issue 1',
                             },
                         ],
@@ -388,6 +388,7 @@ describe('AbstractIssueEditorWebview', () => {
             };
 
             mockJiraClient.getAutocompleteDataFromUrl.mockResolvedValue(mockResult);
+            mockJiraClient.baseUrl = 'https://test.atlassian.net/rest';
 
             const handled = await webview.testOnMessageReceived(mockMessage);
 
@@ -398,7 +399,13 @@ describe('AbstractIssueEditorWebview', () => {
             expect(webview.postMessage).toHaveBeenCalledWith({
                 type: 'issueSuggestionsList',
                 issues: [
-                    { key: 'TEST-1', keyHtml: 'TEST-1', summaryText: 'Test Issue 1', img: '', summary: 'Test Issue 1' },
+                    {
+                        key: 'TEST-1',
+                        keyHtml: 'TEST-1',
+                        summaryText: 'Test Issue 1',
+                        img: 'https://test.atlassian.net/images/icons/issuetypes/task.png',
+                        summary: 'Test Issue 1',
+                    },
                 ],
                 nonce: 'test-nonce',
             });
@@ -413,10 +420,17 @@ describe('AbstractIssueEditorWebview', () => {
             };
 
             const mockSuggestions = [
-                { key: 'TEST-1', keyHtml: 'TEST-1', summaryText: 'Test Issue 1', img: '', summary: 'Test Issue 1' },
+                {
+                    key: 'TEST-1',
+                    keyHtml: 'TEST-1',
+                    summaryText: 'Test Issue 1',
+                    img: '/images/icons/issuetypes/task.png',
+                    summary: 'Test Issue 1',
+                },
             ];
 
             mockJiraClient.getIssuePickerSuggestions.mockResolvedValue(mockSuggestions);
+            mockJiraClient.baseUrl = 'https://test.atlassian.net/rest';
 
             const handled = await webview.testOnMessageReceived(mockMessage);
 
@@ -424,7 +438,116 @@ describe('AbstractIssueEditorWebview', () => {
             expect(mockJiraClient.getIssuePickerSuggestions).toHaveBeenCalledWith('test');
             expect(webview.postMessage).toHaveBeenCalledWith({
                 type: 'issueSuggestionsList',
-                issues: mockSuggestions,
+                issues: [
+                    {
+                        key: 'TEST-1',
+                        keyHtml: 'TEST-1',
+                        summaryText: 'Test Issue 1',
+                        img: 'https://test.atlassian.net/images/icons/issuetypes/task.png',
+                        summary: 'Test Issue 1',
+                    },
+                ],
+                nonce: 'test-nonce',
+            });
+        });
+
+        it('should handle fetchIssues action with currentJQL', async () => {
+            const mockMessage = {
+                action: 'fetchIssues',
+                query: 'test',
+                currentJQL: 'project = TEST',
+                site: mockSiteInfo,
+                nonce: 'test-nonce',
+            };
+
+            const mockResult: IssuePickerResult = {
+                sections: [
+                    {
+                        issues: [
+                            {
+                                key: 'TEST-1',
+                                keyHtml: 'TEST-1',
+                                summaryText: 'Test Issue with JQL',
+                                img: '/images/icons/issuetypes/bug.png',
+                                summary: 'Test Issue with JQL',
+                            },
+                        ],
+                    },
+                ],
+            };
+
+            mockJiraClient.getAutocompleteDataFromUrl.mockResolvedValue(mockResult);
+            mockJiraClient.baseUrl = 'https://test.atlassian.net/rest';
+            mockJiraClient.apiVersion = '2';
+
+            const handled = await webview.testOnMessageReceived(mockMessage);
+
+            expect(handled).toBe(true);
+            expect(mockJiraClient.getAutocompleteDataFromUrl).toHaveBeenCalledWith(
+                'https://test.atlassian.net/rest/api/2/issue/picker?query=test&currentJQL=project%20%3D%20TEST',
+            );
+            expect(webview.postMessage).toHaveBeenCalledWith({
+                type: 'issueSuggestionsList',
+                issues: [
+                    {
+                        key: 'TEST-1',
+                        keyHtml: 'TEST-1',
+                        summaryText: 'Test Issue with JQL',
+                        img: 'https://test.atlassian.net/images/icons/issuetypes/bug.png',
+                        summary: 'Test Issue with JQL',
+                    },
+                ],
+                nonce: 'test-nonce',
+            });
+        });
+
+        it('should handle fetchIssues action with empty currentJQL', async () => {
+            const mockMessage = {
+                action: 'fetchIssues',
+                query: 'test',
+                currentJQL: '   ', // whitespace only
+                site: mockSiteInfo,
+                autocompleteUrl: 'https://test.atlassian.net/rest/api/2/autocomplete?query=',
+                nonce: 'test-nonce',
+            };
+
+            const mockResult: IssuePickerResult = {
+                sections: [
+                    {
+                        issues: [
+                            {
+                                key: 'TEST-1',
+                                keyHtml: 'TEST-1',
+                                summaryText: 'Test Issue',
+                                img: '/images/icons/issuetypes/task.png',
+                                summary: 'Test Issue',
+                            },
+                        ],
+                    },
+                ],
+            };
+
+            mockJiraClient.getAutocompleteDataFromUrl.mockResolvedValue(mockResult);
+            mockJiraClient.baseUrl = 'https://test.atlassian.net/rest';
+
+            const handled = await webview.testOnMessageReceived(mockMessage);
+
+            expect(handled).toBe(true);
+            // Should use autocompleteUrl instead of JQL endpoint since currentJQL is empty/whitespace
+            expect(mockJiraClient.getAutocompleteDataFromUrl).toHaveBeenCalledWith(
+                'https://test.atlassian.net/rest/api/2/autocomplete?query=test',
+            );
+            expect(webview.postMessage).toHaveBeenCalledWith({
+                type: 'issueSuggestionsList',
+                issues: [
+                    {
+                        key: 'TEST-1',
+                        keyHtml: 'TEST-1',
+                        summaryText: 'Test Issue',
+                        img: 'https://test.atlassian.net/images/icons/issuetypes/task.png',
+                        summary: 'Test Issue',
+                    },
+                ],
                 nonce: 'test-nonce',
             });
         });
@@ -439,11 +562,12 @@ describe('AbstractIssueEditorWebview', () => {
 
             const mockError = new Error('Network error');
             mockJiraClient.getIssuePickerSuggestions.mockRejectedValue(mockError);
+            mockJiraClient.baseUrl = 'https://test.atlassian.net/rest';
 
             const handled = await webview.testOnMessageReceived(mockMessage);
 
             expect(handled).toBe(true);
-            expect(Logger.error).toHaveBeenCalledWith(mockError, 'Error fetching issues');
+            expect(Logger.error).toHaveBeenCalledWith(expect.any(Error), 'Error fetching issues');
             expect(webview.postMessage).toHaveBeenCalledWith({
                 type: 'error',
                 reason: 'Error fetching issues',
@@ -454,7 +578,7 @@ describe('AbstractIssueEditorWebview', () => {
         it('should handle fetchSelectOptions action', async () => {
             const mockMessage = {
                 action: 'fetchSelectOptions',
-                query: 'test',
+                query: 'test query',
                 site: mockSiteInfo,
                 autocompleteUrl: 'https://test.atlassian.net/rest/api/2/autocomplete?query=',
                 nonce: 'test-nonce',
@@ -470,7 +594,7 @@ describe('AbstractIssueEditorWebview', () => {
 
             expect(handled).toBe(true);
             expect(mockJiraClient.getAutocompleteDataFromUrl).toHaveBeenCalledWith(
-                'https://test.atlassian.net/rest/api/2/autocomplete?query=test',
+                'https://test.atlassian.net/rest/api/2/autocomplete?query=test%20query',
             );
             expect(webview.postMessage).toHaveBeenCalledWith({
                 type: 'selectOptionsList',

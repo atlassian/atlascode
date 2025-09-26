@@ -22,7 +22,7 @@ import { CommonActionType } from '../lib/ipc/fromUI/common';
 import { AdditionalSettings, CommonMessageType } from '../lib/ipc/toUI/common';
 import { iconSet, Resources } from '../resources';
 import { Experiments, Features } from '../util/featureFlags';
-import { ExperimentGateValues, FeatureGateValues } from '../util/featureFlags/features';
+import { ExperimentGateValues, FeatureGateValues } from '../util/features';
 import { UIWebsocket } from '../ws';
 
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
@@ -58,6 +58,8 @@ export abstract class AbstractReactWebview implements ReactWebview {
     private _onDidPanelDispose = new vscode.EventEmitter<void>();
     protected isRefeshing: boolean = false;
     private _viewEventSent: boolean = false;
+    private _authChangeListener: Disposable | undefined;
+    private _siteChangeListener: Disposable | undefined;
     private ws: UIWebsocket;
 
     constructor(extensionPath: string) {
@@ -139,11 +141,24 @@ export abstract class AbstractReactWebview implements ReactWebview {
             this._panel.reveal(column ? column : ViewColumn.Active); // , false);
         }
 
-        this.fireFeatureGates([Features.JiraRichText]);
+        // The webview might not be ready at this point; see getFeatureFlags usage in `onMessageReceived`
+        this.fireFeatureGates([Features.AtlaskitEditor]);
         this.fireExperimentGates([]);
         this.fireAdditionalSettings({
             rovoDevEnabled: Container.isRovoDevEnabled,
         });
+
+        // When anything changes around site availability or auth - we need to handle it
+        this._authChangeListener = Container.credentialManager.onDidAuthChange(() => {
+            this.onAuthChange();
+        }, this);
+        this._siteChangeListener = Container.siteManager.onDidSitesAvailableChange(() => {
+            this.onAuthChange();
+        }, this);
+    }
+
+    protected onAuthChange(): Promise<void> | void {
+        // Override in subclass if needed
     }
 
     private fireFeatureGates(features: Features[]) {
@@ -234,6 +249,11 @@ export abstract class AbstractReactWebview implements ReactWebview {
                     Container.pmfStats.touchSurveyed();
                     return true;
                 }
+                case 'getFeatureFlags': {
+                    // Ensures the page is rendered and AbstractIssueEditorPage added listener for FF
+                    this.fireFeatureGates([Features.AtlaskitEditor]);
+                    this.fireExperimentGates([]);
+                }
             }
         }
 
@@ -283,6 +303,10 @@ export abstract class AbstractReactWebview implements ReactWebview {
         }
         this._panel = undefined;
         this._onDidPanelDispose.fire();
+        this._authChangeListener?.dispose();
+        this._authChangeListener = undefined;
+        this._siteChangeListener?.dispose();
+        this._siteChangeListener = undefined;
     }
 
     public dispose() {

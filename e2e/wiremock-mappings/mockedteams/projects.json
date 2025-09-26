@@ -1,0 +1,13 @@
+ {
+  "request": {
+    "method": "GET",
+    "urlPath": "/rest/api/2/project"
+  },
+  "response": {
+    "status": 200,
+    "body": "[{\"expand\":\"description,lead,issueTypes,url,projectKeys,permissions,insight\",\"self\":\"https://jira.mockeddomain.com/rest/api/2/project/10000\",\"id\":\"10000\",\"key\":\"BTS\",\"name\":\"MMOCK\",\"avatarUrls\":{\"48x48\":\"https://jira.mockeddomain.com/rest/api/2/universal_avatar/view/type/project/avatar/10417\",\"24x24\":\"https://jira.mockeddomain.com/rest/api/2/universal_avatar/view/type/project/avatar/10417?size=small\",\"16x16\":\"https://jira.mockeddomain.com/rest/api/2/universal_avatar/view/type/project/avatar/10417?size=xsmall\",\"32x32\":\"https://jira.mockeddomain.com/rest/api/2/universal_avatar/view/type/project/avatar/10417?size=medium\"},\"projectTypeKey\":\"software\",\"simplified\":false,\"style\":\"classic\",\"isPrivate\":false,\"properties\":{}}]",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

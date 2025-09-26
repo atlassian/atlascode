@@ -4,7 +4,7 @@ import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev
 import { ConnectionTimeout } from 'src/util/time';
 
 import { useMessagingApi } from '../../messagingApi';
-import { mdParser } from '../common/common';
+import { MarkedDown } from '../common/common';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { DefaultMessage } from '../utils';
 
@@ -13,11 +13,11 @@ const PullRequestButton: React.FC<{
     isLoading?: boolean;
 }> = ({ onClick, isLoading }) => {
     return (
-        <button className="pull-request-button" onClick={onClick} title="Create Pull Request">
+        <button className="pull-request-button" onClick={onClick} title="Create pull request">
             {isLoading ? (
                 <i className="codicon codicon-loading codicon-modifier-spin" />
             ) : (
-                <PullRequestIcon label="Create Pull Request" spacing="none" />
+                <PullRequestIcon label="Create pull request" spacing="none" />
             )}
             Create Pull Request
         </button>
@@ -36,7 +36,7 @@ interface PullRequestFormProps {
 
 export const PullRequestForm: React.FC<PullRequestFormProps> = ({
     onCancel,
-    messagingApi: { postMessagePromise },
+    messagingApi: { postMessage, postMessagePromise },
     onPullRequestCreated,
     isFormVisible = false,
     setFormVisible,
@@ -58,6 +58,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
 
     const handleToggleForm = async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
+        postMessage({ type: RovoDevViewResponseType.ReportCreatePrButtonClicked });
         await getCurrentBranchName();
         setFormVisible?.(true);
     };
@@ -94,14 +95,14 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
     return (
         <>
             {isFormVisible ? (
-                <div className="pull-request-form-container">
-                    <form onSubmit={handleSubmit} className="pull-request-form-body">
-                        <div className="pull-request-form-header">
+                <div className="form-container">
+                    <form onSubmit={handleSubmit} className="form-body">
+                        <div className="form-header">
                             <PullRequestIcon label="pull-request-icon" spacing="none" />
                             Create pull request
                         </div>
-                        <div className="pull-request-form-fields">
-                            <div className="pull-request-form-field">
+                        <div className="form-fields">
+                            <div className="form-field">
                                 <label htmlFor="pr-commit-message">Commit message</label>
                                 <input
                                     type="text"
@@ -111,7 +112,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                                     required
                                 />
                             </div>
-                            <div className="pull-request-form-field">
+                            <div className="form-field">
                                 <label htmlFor="pr-branch-name">Branch name</label>
                                 <input
                                     type="text"
@@ -123,17 +124,17 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                                 />
                             </div>
                         </div>
-                        <div className="pull-request-form-actions">
-                            <button type="button" onClick={() => onCancel()} className="pull-request-cancel-button">
+                        <div className="form-actions">
+                            <button type="button" onClick={() => onCancel()} className="form-cancel-button">
                                 Cancel
                             </button>
-                            <button type="submit" className="pull-request-submit-button">
+                            <button type="submit" className="form-submit-button">
                                 {isPullRequestLoading ? (
                                     <i className="codicon codicon-loading codicon-modifier-spin" />
                                 ) : (
                                     <PullRequestIcon label="pull-request-icon" spacing="none" />
                                 )}
-                                Create PR
+                                Create pull request
                             </button>
                         </div>
                     </form>
@@ -147,10 +148,9 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
 
 export const PullRequestChatItem: React.FC<{ msg: DefaultMessage }> = ({ msg }) => {
     const content = (
-        <div
-            style={{ display: 'flex', flexDirection: 'column' }}
-            dangerouslySetInnerHTML={{ __html: mdParser.render(msg.text || '') }}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <MarkedDown value={msg.text || ''} />
+        </div>
     );
     return (
         <div className="chat-message pull-request-chat-item agent-message">

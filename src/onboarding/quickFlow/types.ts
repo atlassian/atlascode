@@ -13,6 +13,9 @@ export type State<UIType, DataType> = {
 
     /** Is this state terminal? */
     isTerminal?: boolean;
+
+    /** Is this terminal state a failure? */
+    isFailure?: boolean;
 };
 
 type TransitionInfo<UIType, DataType> = [DataType | undefined, State<UIType, DataType> | undefined];
@@ -33,3 +36,23 @@ export class Transition {
         return [undefined, undefined];
     }
 }
+
+export enum QuickFlowStatus {
+    Started = 'started',
+    InProgress = 'in_progress',
+    Completed = 'completed',
+    Cancelled = 'cancelled',
+    Failed = 'failed',
+}
+
+export type QuickFlowAnalyticsEvent = {
+    flowType: string;
+    flowId: string;
+    status: QuickFlowStatus;
+
+    origin?: string;
+    direction?: 'forward' | 'back';
+    stepNumber?: number;
+    step?: string;
+    nextStep?: string;
+};

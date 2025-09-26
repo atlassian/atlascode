@@ -1,8 +1,10 @@
+import { v4 } from 'uuid';
 import { env, ExtensionContext, languages, UIKind, workspace } from 'vscode';
 import * as vscode from 'vscode';
 
 import { featureFlagClientInitializedEvent } from './analytics';
 import { AnalyticsClient, analyticsClient } from './analytics-node-client/src/client.min.js';
+import { Product, ProductJira } from './atlclients/authInfo';
 import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
@@ -15,7 +17,6 @@ import { CommandContext, setCommandContext } from './commandContext';
 import { registerDebugCommands } from './commands';
 import { openPullRequest } from './commands/bitbucket/pullRequest';
 import { configuration, IConfig } from './config/configuration';
-import { Commands } from './constants';
 import { PmfStats } from './feedback/pmfStats';
 import { JQLManager } from './jira/jqlManager';
 import { JiraProjectManager } from './jira/projectManager';
@@ -29,7 +30,7 @@ import { ConfigTarget } from './lib/ipc/models/config';
 import { SectionChangeMessage, SectionV3ChangeMessage } from './lib/ipc/toUI/config';
 import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
-import { Logger } from './logger';
+import { Logger, RovoDevLogger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
 import { registerQuickAuthCommand } from './onboarding/quickFlow';
 import { Pipeline } from './pipelines/model';
@@ -44,6 +45,7 @@ import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
 import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
+import { SearchAllJiraHelper } from './views/jira/searchAllJiraHelper';
 import { SearchJiraHelper } from './views/jira/searchJiraHelper';
 import { CustomJQLViewProvider } from './views/jira/treeViews/customJqlViewProvider';
 import { AssignedWorkItemsViewProvider } from './views/jira/treeViews/jiraAssignedWorkItemsViewProvider';
@@ -201,6 +203,7 @@ export class Container {
                 analyticsAnonymousId: this.machineId,
             });
 
+            this.pushFeatureUpdatesToUI();
             Logger.debug(`FeatureFlagClient: Succesfully initialized the client.`);
             featureFlagClientInitializedEvent(true).then((e) => {
                 this.analyticsClient.sendTrackEvent(e);
@@ -225,54 +228,88 @@ export class Container {
             setCommandContext(CommandContext.UseNewAuthFlow, false);
         }
 
+        // in Boysenberry we don't need to listen to Jira auth updates
         if (!process.env.ROVODEV_BBY) {
+            // refresh Rovo Dev when auth sites change
             this._siteManager.onDidSitesAvailableChange(async () => {
-                if (await this.updateFeatureFlagTenantId(this._siteManager.primarySite?.id)) {
-                    if (this._featureFlagClient.checkGate(Features.RovoDevEnabled)) {
-                        await this.enableRovoDev(context);
-                    } else {
-                        await this.disableRovoDev();
-                    }
-                }
+                await this.updateFeatureFlagTenantId();
+                await this.refreshRovoDev(context);
             });
+
+            // refresh Rovo Dev when Jira gets enabled or disabled
+            context.subscriptions.push(
+                configuration.onDidChange(async (e) => {
+                    if (configuration.changed(e, 'jira.enabled')) {
+                        await this.updateFeatureFlagTenantId();
+                        await this.refreshRovoDev(context);
+                    }
+                }, this),
+            );
         }
 
-        const tenantId = this._siteManager.primarySite?.id;
-        if (tenantId) {
-            await this.updateFeatureFlagTenantId(tenantId);
-        }
+        await this.updateFeatureFlagTenantId();
 
         context.subscriptions.push(AtlascodeUriHandler.create(this._analyticsApi, this._bitbucketHelper));
 
         SearchJiraHelper.initialize();
+        SearchAllJiraHelper.initialize();
         context.subscriptions.push(new CustomJQLViewProvider());
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
 
         this._onboardingProvider = new OnboardingProvider();
 
-        if (process.env.ROVODEV_BBY || this.featureFlagClient.checkGate(Features.RovoDevEnabled)) {
+        if (
+            process.env.ROVODEV_BBY ||
+            (this.config.jira.enabled && this.featureFlagClient.checkGate(Features.RovoDevEnabled))
+        ) {
             this._isRovoDevEnabled = true;
             await this.enableRovoDev(context);
         }
     }
 
-    static async updateFeatureFlagTenantId(tenantId: string | undefined): Promise<boolean> {
+    static async updateFeatureFlagTenantId(): Promise<boolean> {
+        const tenantId = Container.config.jira.enabled ? this._siteManager.primarySite?.id : undefined;
+
         try {
             await this._featureFlagClient.updateUser({ tenantId });
+            this.pushFeatureUpdatesToUI();
             return true;
         } catch (err) {
-            Logger.error('RovoDev', err, "FeatureFlagClient: Failed to update user's tenantId");
+            Logger.error(err, "FeatureFlagClient: Failed to update user's tenantId");
             return false;
         }
     }
 
-    static async enableRovoDev(context: ExtensionContext) {
+    public static async isAtlassianUser(...products: Product[]) {
+        for (const product of products) {
+            try {
+                const authInfo = await this._credentialManager.getAllValidAuthInfo(product);
+                if (authInfo.findIndex((x) => x.user.email.endsWith('@atlassian.com')) >= 0) {
+                    return true;
+                }
+            } catch {}
+        }
+
+        return false;
+    }
+
+    private static async refreshRovoDev(context: ExtensionContext) {
+        if (this.config.jira.enabled && (await this.isAtlassianUser(ProductJira))) {
+            this._isRovoDevEnabled = true;
+            await this.enableRovoDev(context);
+        } else {
+            this._isRovoDevEnabled = false;
+            await this.disableRovoDev();
+        }
+    }
+
+    private static async enableRovoDev(context: ExtensionContext) {
         if (this._rovodevDisposable) {
             try {
                 // Already enabled
                 await RovoDevProcessManager.refreshRovoDevCredentials(context);
             } catch (error) {
-                Logger.error('RovoDev', error, 'Refreshing Rovo Dev credentials');
+                RovoDevLogger.error(error, 'Refreshing Rovo Dev credentials');
                 return;
             }
         } else {
@@ -286,12 +323,11 @@ export class Container {
                         providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
                     }),
                     (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context, context.extensionPath)),
-                    this.configureRovodevSettingsCommands(context),
                 );
 
                 context.subscriptions.push(this._rovodevDisposable);
             } catch (error) {
-                Logger.error('RovoDev', error, 'Enabling Rovo Dev');
+                RovoDevLogger.error(error, 'Enabling Rovo Dev');
             }
         }
 
@@ -299,65 +335,48 @@ export class Container {
             // Refresh all issue views to show the secret button
             this.jiraIssueViewManager.refreshAll();
         } catch (error) {
-            Logger.error('RovoDev', error, 'Refreshing Jira issue views');
+            RovoDevLogger.error(error, 'Refreshing Jira issue views');
             return;
         }
     }
 
-    static async disableRovoDev() {
-        try {
-            if (!this._rovodevDisposable) {
-                // Already disabled
-                return;
-            }
+    private static async disableRovoDev() {
+        if (!this._rovodevDisposable) {
+            // Already disabled
+            return;
+        }
 
+        try {
             await setCommandContext(CommandContext.RovoDevEnabled, false);
             this._rovodevDisposable.dispose();
             this._rovodevDisposable = undefined;
             RovoDevProcessManager.deactivateRovoDevProcessManager();
         } catch (error) {
-            Logger.error('RovoDev', error, 'Disabling Rovo Dev');
+            RovoDevLogger.error(error, 'Disabling Rovo Dev');
         }
 
         try {
             // Refresh all issue views to show the secret button
             this.jiraIssueViewManager.refreshAll();
         } catch (error) {
-            Logger.error('RovoDev', error, 'Refreshing Jira issue views');
+            RovoDevLogger.error(error, 'Refreshing Jira issue views');
             return;
         }
     }
 
-    static configureRovodevSettingsCommands(context: ExtensionContext) {
-        async function openConfigFile(subPath: string, friendlyName: string) {
-            const home = process.env.HOME || process.env.USERPROFILE;
-            if (!home) {
-                vscode.window.showErrorMessage('Could not determine home directory.');
-                return;
-            }
-            const filePath = `${home}/${subPath}`;
-            try {
-                const doc = await workspace.openTextDocument(filePath);
-                await vscode.window.showTextDocument(doc);
-            } catch (err) {
-                vscode.window.showErrorMessage(`Could not open ${friendlyName} (${filePath}): ${err}`);
+    private static pushFeatureUpdatesToUI() {
+        const factories = [
+            this.settingsWebviewFactory,
+            this.startWorkWebviewFactory,
+            this.startWorkV3WebviewFactory,
+            this.createPullRequestWebviewFactory,
+        ];
+
+        for (const factory of factories) {
+            if (typeof factory?.updateFeatureMetadata === 'function') {
+                factory.updateFeatureMetadata();
             }
         }
-
-        const disposable = vscode.Disposable.from(
-            vscode.commands.registerCommand(Commands.OpenRovoDevConfig, async () => {
-                await openConfigFile('.rovodev/config.yml', 'Rovo Dev settings file');
-            }),
-            vscode.commands.registerCommand(Commands.OpenRovoDevMcpJson, async () => {
-                await openConfigFile('.rovodev/mcp.json', 'Rovo Dev MCP configuration');
-            }),
-            vscode.commands.registerCommand(Commands.OpenRovoDevGlobalMemory, async () => {
-                await openConfigFile('.rovodev/.agent.md', 'Rovo Dev Global Memory file');
-            }),
-        );
-        context.subscriptions.push(disposable);
-
-        return disposable;
     }
 
     static focus() {
@@ -369,6 +388,10 @@ export class Container {
     };
 
     private static getAnalyticsEnable(): boolean {
+        if (process.env.DISABLE_ANALYTICS === '1') {
+            return false;
+        }
+
         const telemetryConfig = workspace.getConfiguration('telemetry');
         return telemetryConfig.get<boolean>('enableTelemetry', true);
     }
@@ -401,8 +424,8 @@ export class Container {
         return env.machineId;
     }
 
-    private static get isRemote() {
-        return env.remoteName !== undefined;
+    public static get isRemote() {
+        return !!env.remoteName;
     }
 
     private static get isWebUI() {
@@ -431,6 +454,18 @@ export class Container {
 
     public static set configTarget(target: ConfigTarget) {
         this._context.globalState.update(ConfigTargetKey, target);
+    }
+
+    private static _appInstanceId: string;
+    /**
+     * An instance ID randomly generated to identify this specific instance.
+     * Note: closing/opening a workspace causes this ID to change.
+     */
+    public static get appInstanceId() {
+        if (!this._appInstanceId) {
+            this._appInstanceId = v4();
+        }
+        return this._appInstanceId;
     }
 
     private static _featureFlagClient: FeatureFlagClient;

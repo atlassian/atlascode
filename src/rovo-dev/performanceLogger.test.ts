@@ -21,7 +21,7 @@ describe('PerformanceLogger', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        performanceLogger = new PerformanceLogger();
+        performanceLogger = new PerformanceLogger('IDE', 'test-instance-id');
 
         // Setup mock analytics client
         mockAnalyticsClient = {
@@ -96,6 +96,8 @@ describe('PerformanceLogger', () => {
                 'api.rovodev.chat.response.timeToFirstByte',
                 measureValue,
                 {
+                    rovoDevEnv: 'IDE',
+                    appInstanceId: 'test-instance-id',
                     rovoDevSessionId: 'test-session-123',
                     rovoDevPromptId,
                 },
@@ -134,6 +136,8 @@ describe('PerformanceLogger', () => {
                 'api.rovodev.chat.response.timeToFirstMessage',
                 measureValue,
                 {
+                    rovoDevEnv: 'IDE',
+                    appInstanceId: 'test-instance-id',
                     rovoDevSessionId: 'test-session-123',
                     rovoDevPromptId,
                 },
@@ -165,6 +169,8 @@ describe('PerformanceLogger', () => {
                 'api.rovodev.chat.response.timeToTechPlan',
                 measureValue,
                 {
+                    rovoDevEnv: 'IDE',
+                    appInstanceId: 'test-instance-id',
                     rovoDevSessionId: 'test-session-123',
                     rovoDevPromptId,
                 },
@@ -197,6 +203,8 @@ describe('PerformanceLogger', () => {
                 'api.rovodev.chat.response.timeToLastMessage',
                 measureValue,
                 {
+                    rovoDevEnv: 'IDE',
+                    appInstanceId: 'test-instance-id',
                     rovoDevSessionId: 'test-session-123',
                     rovoDevPromptId,
                 },

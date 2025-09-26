@@ -1,4 +1,6 @@
 import Axios from 'axios';
+import { Logger } from 'src/logger';
+import { Features } from 'src/util/features';
 import { v4 } from 'uuid';
 import * as vscode from 'vscode';
 
@@ -12,7 +14,6 @@ import { WebViewID } from '../../../ipc/models/common';
 import { ConfigSection, ConfigTarget } from '../../../ipc/models/config';
 import { CommonMessageType } from '../../../ipc/toUI/common';
 import { ConfigMessageType, SectionChangeMessage } from '../../../ipc/toUI/config';
-import { Logger } from '../../../logger';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { ConfigActionApi } from './configActionApi';
 import { ConfigWebviewController, id } from './configWebviewController';
@@ -119,7 +120,7 @@ describe('ConfigWebviewController', () => {
         });
 
         test('should have required feature flags and experiments as empty arrays', () => {
-            expect(controller.requiredFeatureFlags).toEqual([]);
+            expect(controller.requiredFeatureFlags).toEqual([Features.UseNewAuthFlow]);
             expect(controller.requiredExperiments).toEqual([]);
         });
 

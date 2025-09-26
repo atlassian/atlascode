@@ -10,23 +10,16 @@ export type RovoDevContextSelectionInfo = {
 };
 
 export type RovoDevContextItem = {
+    isFocus: boolean;
     file: RovoDevContextFileInfo;
     selection?: RovoDevContextSelectionInfo;
-    enabled?: boolean;
-    // Optional indication of the editor pointing to an invalid file
-    // e.g. welcome page, webview tab, etc
-    invalid?: boolean;
-};
-
-export type RovoDevContext = {
-    focusInfo?: RovoDevContextItem;
-    contextItems?: RovoDevContextItem[];
+    enabled: boolean;
 };
 
 export interface RovoDevPrompt {
     text: string;
-    enable_deep_plan?: boolean;
-    context?: RovoDevContext;
+    enable_deep_plan: boolean;
+    context: RovoDevContextItem[];
 }
 
 export interface CodeSnippetToChange {
@@ -51,18 +44,37 @@ export interface TechnicalPlan {
     logicalChanges: TechnicalPlanLogicalChange[];
 }
 
-export const enum State {
-    Disabled,
-    NoWorkspaceOpen,
-    WaitingForPrompt,
-    GeneratingResponse,
-    CancellingResponse,
-    ExecutingPlan,
-    ProcessTerminated,
+// ---- Rovo Dev Chat States ----
+
+export interface AbstractInitializingState {
+    state: 'Initializing';
+    isPromptPending: boolean;
 }
 
-export const enum RovoDevInitState {
-    NotInitialized,
-    UpdatingBinaries,
-    Initialized,
+export interface InitializingOtherState extends AbstractInitializingState {
+    subState: 'Other';
 }
+
+export interface InitializingDownladingState extends AbstractInitializingState {
+    subState: 'UpdatingBinaries';
+    downloadedBytes: number;
+    totalBytes: number;
+}
+
+export interface InitializingMcpAcceptanceState extends AbstractInitializingState {
+    subState: 'MCPAcceptance';
+    mcpIds: string[];
+}
+
+export type InitializingState = InitializingOtherState | InitializingDownladingState | InitializingMcpAcceptanceState;
+
+export interface BasicState {
+    state: 'WaitingForPrompt' | 'GeneratingResponse' | 'CancellingResponse' | 'ExecutingPlan' | 'ProcessTerminated';
+}
+
+export interface DisabledState {
+    state: 'Disabled';
+    subState: 'NeedAuth' | 'NoWorkspaceOpen' | 'Other';
+}
+
+export type State = BasicState | InitializingState | DisabledState;

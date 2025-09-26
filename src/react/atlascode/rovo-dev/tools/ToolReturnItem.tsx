@@ -4,7 +4,7 @@ import SearchIcon from '@atlaskit/icon/glyph/search';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
 import React from 'react';
 
-import { OpenFileFunc } from '../common/common';
+import { MarkedDown, OpenFileFunc } from '../common/common';
 import { ToolReturnParseResult } from '../utils';
 
 export const ToolReturnParsedItem: React.FC<{
@@ -18,9 +18,11 @@ export const ToolReturnParsedItem: React.FC<{
             className={`tool-return-item-base tool-return-item ${msg.filePath ? 'tool-return-file-path' : ''}`}
             onClick={() => msg.filePath && openFile(msg.filePath)}
         >
-            {toolIcon && <>{toolIcon}</>}
+            {toolIcon}
             <div className="tool-return-item-base" style={{ flexWrap: 'wrap' }}>
-                {msg.content}
+                <div className="tool-return-content">
+                    <MarkedDown value={msg.content} />
+                </div>
                 {renderTitle(msg)}
             </div>
         </a>

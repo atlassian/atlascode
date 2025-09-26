@@ -58,6 +58,7 @@ export interface ConfigInitMessage {
     target: ConfigTarget;
     section?: ConfigSection;
     subSection?: ConfigSubSection;
+    initiateApiTokenAuth?: boolean;
     machineId?: string;
 }
 export interface ConfigV3InitMessage {
@@ -70,6 +71,7 @@ export interface ConfigV3InitMessage {
     target: ConfigTarget;
     section?: ConfigV3Section;
     subSection?: ConfigV3SubSection;
+    initiateApiTokenAuth?: boolean;
     machineId?: string;
 }
 
@@ -134,9 +136,11 @@ export interface ValidateJqlResponseMessage {
 export interface SectionChangeMessage {
     section: ConfigSection;
     subSection: ConfigSubSection | undefined;
+    initiateApiTokenAuth?: boolean;
 }
 
 export interface SectionV3ChangeMessage {
     section: ConfigV3Section;
     subSection: ConfigV3SubSection | undefined;
+    initiateApiTokenAuth?: boolean;
 }

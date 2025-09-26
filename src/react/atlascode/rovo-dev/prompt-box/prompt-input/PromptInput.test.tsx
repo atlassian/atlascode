@@ -1,3 +1,19 @@
+const editor = {
+    addCommand: jest.fn(),
+    dispose: jest.fn(),
+    setValue: jest.fn(),
+    getValue: jest.fn(),
+    onDidChangeModelContent: jest.fn(),
+    onDidContentSizeChange: jest.fn(),
+    getContentHeight: jest.fn(() => 100),
+    getContainerDomNode: jest.fn(() => ({ style: { height: '' } })),
+    getModel: jest.fn(),
+    focus: jest.fn(),
+    layout: jest.fn(),
+    updateOptions: jest.fn(),
+    trigger: jest.fn(),
+};
+
 jest.mock('monaco-editor', () => ({
     languages: {
         registerCompletionItemProvider: jest.fn(() => ({
@@ -5,21 +21,7 @@ jest.mock('monaco-editor', () => ({
         })),
     },
     editor: {
-        create: jest.fn(() => ({
-            addCommand: jest.fn(),
-            dispose: jest.fn(),
-            setValue: jest.fn(),
-            getValue: jest.fn(),
-            onDidChangeModelContent: jest.fn(),
-            onDidContentSizeChange: jest.fn(),
-            getContentHeight: jest.fn(() => 100),
-            getContainerDomNode: jest.fn(() => ({ style: { height: '' } })),
-            getModel: jest.fn(),
-            focus: jest.fn(),
-            layout: jest.fn(),
-            updateOptions: jest.fn(),
-            trigger: jest.fn(),
-        })),
+        create: jest.fn(() => editor),
         registerCommand: jest.fn(),
         defineTheme: jest.fn(),
     },
@@ -33,13 +35,13 @@ jest.mock('monaco-editor', () => ({
 
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
-import { State } from 'src/rovo-dev/rovoDevTypes';
+import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 
 import { PromptInputBox } from './PromptInput';
 
 describe('PromptInputBox', () => {
     const defaultProps = {
-        state: State.WaitingForPrompt,
+        currentState: { state: 'WaitingForPrompt' } as Exclude<State, DisabledState>,
         promptText: '',
         onPromptTextChange: jest.fn(),
         isDeepPlanEnabled: false,
@@ -50,6 +52,7 @@ describe('PromptInputBox', () => {
         onAddContext: jest.fn(),
         onCopy: jest.fn(),
         handleMemoryCommand: jest.fn(),
+        handleTriggerFeedbackCommand: jest.fn(),
     };
 
     beforeEach(() => {
@@ -62,54 +65,38 @@ describe('PromptInputBox', () => {
     });
 
     it('renders Stop button when state is not WaitingForPrompt', () => {
-        render(<PromptInputBox {...defaultProps} state={State.GeneratingResponse} />);
+        render(<PromptInputBox {...defaultProps} currentState={{ state: 'GeneratingResponse' }} />);
         expect(screen.getByLabelText('Stop')).toBeTruthy();
     });
 
     it('calls onSend when Send button is clicked', () => {
-        render(<PromptInputBox {...defaultProps} promptText="test prompt" />);
+        jest.spyOn(editor, 'getValue').mockReturnValue('text prompt');
+        jest.spyOn(editor, 'onDidChangeModelContent').mockImplementation((cb) => cb());
+        render(<PromptInputBox {...defaultProps} />);
         fireEvent.click(screen.getByLabelText('Send prompt'));
-        expect(defaultProps.onSend).toHaveBeenCalled();
+        expect(defaultProps.onSend).toHaveBeenCalledWith('text prompt');
     });
 
     it('calls onCancel when Stop button is clicked', () => {
-        render(<PromptInputBox {...defaultProps} state={State.GeneratingResponse} />);
+        render(<PromptInputBox {...defaultProps} currentState={{ state: 'GeneratingResponse' }} />);
         fireEvent.click(screen.getByLabelText('Stop'));
         expect(defaultProps.onCancel).toHaveBeenCalled();
     });
 
-    it('disables Send button when sendButtonDisabled is true', () => {
-        render(<PromptInputBox {...defaultProps} sendButtonDisabled={true} />);
-        fireEvent.click(screen.getByLabelText('Send prompt'));
-        expect(defaultProps.onSend).toHaveBeenCalledTimes(0);
-    });
-
     it('disables Stop button when state is CancellingResponse', () => {
-        render(<PromptInputBox {...defaultProps} state={State.CancellingResponse} />);
+        render(<PromptInputBox {...defaultProps} currentState={{ state: 'CancellingResponse' }} />);
         fireEvent.click(screen.getByLabelText('Stop'));
         expect(defaultProps.onCancel).toHaveBeenCalledTimes(0);
     });
 
-    it('calls onDeepPlanToggled when deep plan button is clicked', () => {
-        render(<PromptInputBox {...defaultProps} />);
-        fireEvent.click(screen.getAllByRole('button', { name: '' })[1]);
-        expect(defaultProps.onDeepPlanToggled).toHaveBeenCalled();
-    });
-
-    it('disables deep plan button when state is not WaitingForPrompt', () => {
-        render(<PromptInputBox {...defaultProps} state={State.GeneratingResponse} />);
-        fireEvent.click(screen.getAllByRole('button', { name: '' })[1]);
-        expect(defaultProps.onDeepPlanToggled).toHaveBeenCalledTimes(0);
-    });
-
     it('shows "Deep plan enabled" text when deep plan is enabled', () => {
         render(<PromptInputBox {...defaultProps} isDeepPlanEnabled={true} />);
-        expect(screen.getByText('Deep plan enabled')).toBeTruthy();
+        expect(screen.getByTitle('Deep plan is enabled')).toBeTruthy();
     });
 
     it('calls onAddContext when Add Context button is clicked', () => {
         render(<PromptInputBox {...defaultProps} />);
-        fireEvent.click(screen.getAllByRole('button', { name: '' })[0]);
+        fireEvent.click(screen.getAllByRole('button', { name: 'Add context' })[0]);
         expect(defaultProps.onAddContext).toHaveBeenCalled();
     });
 });

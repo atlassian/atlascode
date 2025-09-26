@@ -26,19 +26,44 @@ const issue1 = forceCastTo<MinimalORIssueLink<DetailedSiteInfo>>({
     key: 'ISSUE-1',
     summary: 'Test Issue',
     siteDetails: { id: 'site1' },
+    status: { name: 'To Do' },
 });
 
 const issue2 = forceCastTo<MinimalORIssueLink<DetailedSiteInfo>>({
     key: 'ISSUE-2',
     summary: 'Another Issue',
     siteDetails: { id: 'site2' },
+    status: { name: 'In Progress' },
+});
+
+const createMockQuickPick = () => ({
+    items: [] as any[],
+    value: '',
+    placeholder: '',
+    matchOnDescription: true,
+    matchOnDetail: false,
+    show: jest.fn(),
+    hide: jest.fn(),
+    dispose: jest.fn(),
+    onDidChangeValue: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+    onDidAccept: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+    onDidHide: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+    selectedItems: [] as any[],
+    activeItems: [] as any[],
+    busy: false,
+    title: '',
 });
 
 describe('SearchJiraHelper', () => {
+    let mockQuickPick: ReturnType<typeof createMockQuickPick>;
+
     beforeEach(() => {
         jest.spyOn(vscode.commands, 'registerCommand').mockImplementation();
         jest.spyOn(vscode.commands, 'executeCommand').mockImplementation();
         jest.spyOn(vscode.window, 'showQuickPick').mockImplementation();
+
+        mockQuickPick = createMockQuickPick();
+        jest.spyOn(vscode.window, 'createQuickPick').mockReturnValue(mockQuickPick as any);
     });
 
     afterEach(() => {
@@ -136,9 +161,6 @@ describe('SearchJiraHelper', () => {
         it('should send analytics event when called', async () => {
             SearchJiraHelper.setIssues([issue1], 'provider1');
 
-            // Mock showQuickPick to resolve immediately
-            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue(undefined);
-
             // Call the registered callback
             await registeredCallback();
 
@@ -150,27 +172,26 @@ describe('SearchJiraHelper', () => {
             SearchJiraHelper.setIssues([issue1], 'provider1');
             SearchJiraHelper.setIssues([issue2], 'provider2');
 
-            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue(undefined);
-
             await registeredCallback();
 
-            expect(vscode.window.showQuickPick).toHaveBeenCalledWith(
+            expect(vscode.window.createQuickPick).toHaveBeenCalled();
+            expect(mockQuickPick.items).toEqual(
                 expect.arrayContaining([
                     expect.objectContaining({
                         label: issue1.key,
-                        description: issue1.summary,
+                        description: issue1.status.name,
                         issue: issue1,
                     }),
                     expect.objectContaining({
                         label: issue2.key,
-                        description: issue2.summary,
+                        description: issue2.status.name,
                         issue: issue2,
                     }),
+                    expect.objectContaining({
+                        description: 'Search all Jira work items',
+                        issue: null,
+                    }),
                 ]),
-                expect.objectContaining({
-                    matchOnDescription: true,
-                    placeHolder: 'Search for issue key or summary',
-                }),
             );
         });
 
@@ -179,28 +200,35 @@ describe('SearchJiraHelper', () => {
             SearchJiraHelper.setIssues([issue1], 'provider1');
             SearchJiraHelper.setIssues([issue1], 'provider2');
 
-            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue(undefined);
-
             await registeredCallback();
 
-            const callArgs = (vscode.window.showQuickPick as jest.Mock).mock.calls[0][0];
-            const issue1Items = callArgs.filter((item: any) => item.label === issue1.key);
+            const issue1Items = mockQuickPick.items.filter((item: any) => item.label === issue1.key);
 
             expect(issue1Items).toHaveLength(1);
+            expect(mockQuickPick.items).toHaveLength(2);
         });
 
         it('should execute ShowIssue command when issue is selected', async () => {
             SearchJiraHelper.setIssues([issue1], 'provider1');
 
-            const selectedQuickPickItem = {
-                label: issue1.key,
-                description: issue1.summary,
-                issue: issue1,
-            };
-
-            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue(selectedQuickPickItem);
+            let onDidAcceptCallback: Function | undefined;
+            mockQuickPick.onDidAccept.mockImplementation((callback: Function) => {
+                onDidAcceptCallback = callback;
+            });
 
             await registeredCallback();
+
+            mockQuickPick.selectedItems = [
+                {
+                    label: issue1.key,
+                    description: issue1.summary,
+                    issue: issue1,
+                },
+            ];
+
+            if (onDidAcceptCallback) {
+                onDidAcceptCallback();
+            }
 
             expect(vscode.commands.executeCommand).toHaveBeenCalledWith(Commands.ShowIssue, issue1);
         });
@@ -210,9 +238,18 @@ describe('SearchJiraHelper', () => {
 
             // Clear previous calls
             (vscode.commands.executeCommand as jest.Mock).mockClear();
-            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue(undefined);
+
+            let onDidAcceptCallback: Function | undefined;
+            mockQuickPick.onDidAccept.mockImplementation((callback: Function) => {
+                onDidAcceptCallback = callback;
+            });
 
             await registeredCallback();
+
+            mockQuickPick.selectedItems = [];
+            if (onDidAcceptCallback) {
+                onDidAcceptCallback();
+            }
 
             expect(vscode.commands.executeCommand).not.toHaveBeenCalledWith(Commands.ShowIssue, expect.anything());
         });
@@ -220,15 +257,15 @@ describe('SearchJiraHelper', () => {
         it('should handle empty issue list', async () => {
             SearchJiraHelper.clearIssues();
 
-            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue(undefined);
-
             await registeredCallback();
 
-            expect(vscode.window.showQuickPick).toHaveBeenCalledWith(
-                [],
+            expect(vscode.window.createQuickPick).toHaveBeenCalled();
+            expect(mockQuickPick.items).toHaveLength(1);
+            expect(mockQuickPick.items[0]).toEqual(
                 expect.objectContaining({
-                    matchOnDescription: true,
-                    placeHolder: 'Search for issue key or summary',
+                    description: 'Search all Jira work items',
+                    issue: null,
+                    searchTerm: '',
                 }),
             );
         });

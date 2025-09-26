@@ -26,6 +26,7 @@ import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
 import { Commands } from '../constants';
 import { Container } from '../container';
 import {
+    EditChildIssueAction,
     EditIssueAction,
     isAddAttachmentsAction,
     isCreateIssue,
@@ -39,11 +40,13 @@ import {
     isTransitionIssue,
     isUpdateVoteAction,
     isUpdateWatcherAction,
+    TransitionChildIssueAction,
 } from '../ipc/issueActions';
 import { EditIssueData, emptyEditIssueData } from '../ipc/issueMessaging';
 import { Action } from '../ipc/messaging';
 import { isOpenPullRequest } from '../ipc/prActions';
 import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
+import { fetchMultipleIssuesWithTransitions } from '../jira/fetchIssueWithTransitions';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
@@ -93,6 +96,11 @@ export class JiraIssueWebview
 
     async initialize(issue: MinimalIssue<DetailedSiteInfo>) {
         this._issue = issue;
+
+        this.fireAdditionalSettings({
+            rovoDevEnabled: Container.isRovoDevEnabled,
+        });
+
         this.invalidate();
 
         NotificationManagerImpl.getInstance().clearNotificationsByUri(getJiraIssueUri(issue));
@@ -121,6 +129,79 @@ export class JiraIssueWebview
         return values;
     }
 
+    /**
+     * Enhances child issues (subtasks) and linked issues with their transitions data
+     */
+    private async enhanceChildAndLinkedIssuesWithTransitions(): Promise<void> {
+        if (!this._editUIData?.fieldValues) {
+            return;
+        }
+
+        try {
+            const issueKeysToFetch: string[] = [];
+
+            const subtasks = this._editUIData.fieldValues['subtasks'];
+            if (Array.isArray(subtasks)) {
+                subtasks.forEach((subtask: any) => {
+                    if (subtask.key) {
+                        issueKeysToFetch.push(subtask.key);
+                    }
+                });
+            }
+
+            const issuelinks = this._editUIData.fieldValues['issuelinks'];
+            if (Array.isArray(issuelinks)) {
+                issuelinks.forEach((issuelink: any) => {
+                    if (issuelink.inwardIssue?.key) {
+                        issueKeysToFetch.push(issuelink.inwardIssue.key);
+                    }
+                    if (issuelink.outwardIssue?.key) {
+                        issueKeysToFetch.push(issuelink.outwardIssue.key);
+                    }
+                });
+            }
+
+            if (issueKeysToFetch.length > 0) {
+                const enhancedIssues = await fetchMultipleIssuesWithTransitions(
+                    issueKeysToFetch,
+                    this._issue.siteDetails,
+                );
+
+                const enhancedIssuesMap = new Map();
+                enhancedIssues.forEach((issue) => {
+                    enhancedIssuesMap.set(issue.key, issue);
+                });
+
+                if (Array.isArray(subtasks)) {
+                    subtasks.forEach((subtask: any, index: number) => {
+                        const enhanced = enhancedIssuesMap.get(subtask.key);
+                        if (enhanced) {
+                            this._editUIData.fieldValues['subtasks'][index] = this.enhanceIssueWithTransitions(
+                                subtask,
+                                enhanced,
+                            );
+                        }
+                    });
+                }
+
+                if (Array.isArray(issuelinks)) {
+                    issuelinks.forEach((issuelink: any, index: number) => {
+                        if (issuelink.inwardIssue?.key) {
+                            this._editUIData.fieldValues['issuelinks'][index].inwardIssue =
+                                this.enhanceIssueIfAvailable(issuelink.inwardIssue, enhancedIssuesMap);
+                        }
+                        if (issuelink.outwardIssue?.key) {
+                            this._editUIData.fieldValues['issuelinks'][index].outwardIssue =
+                                this.enhanceIssueIfAvailable(issuelink.outwardIssue, enhancedIssuesMap);
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            Logger.error(error, 'Error enhancing child and linked issues with transitions');
+        }
+    }
+
     private async forceUpdateIssue(refetchMinimalIssue: boolean = false) {
         if (this.isRefeshing) {
             return;
@@ -141,6 +222,8 @@ export class JiraIssueWebview
             }
 
             this._editUIData = editUI as EditIssueData;
+
+            await this.enhanceChildAndLinkedIssuesWithTransitions();
             if (this._issue.issuetype.name === 'Epic') {
                 this._issue.isEpic = true;
                 this._editUIData.isEpic = true;
@@ -177,6 +260,10 @@ export class JiraIssueWebview
             const updatesDuration = timer.measureAndClear(updatePerfMarker);
             performanceEvent(EditJiraIssueUpdatesEventName, updatesDuration, epicFlag).then((event) => {
                 Container.analyticsClient.sendTrackEvent(event);
+            });
+
+            this.fireAdditionalSettings({
+                rovoDevEnabled: Container.isRovoDevEnabled,
             });
         } catch (e) {
             Logger.error(e, 'Error updating issue');
@@ -292,6 +379,44 @@ export class JiraIssueWebview
         return '';
     }
 
+    private findMatchingTransition(transitions: any[] | undefined, statusName: string): any | undefined {
+        if (!transitions) {
+            return undefined;
+        }
+
+        return transitions.find((transition: any) => {
+            const targetStatus = transition.to.name.toLowerCase();
+            const desiredStatus = statusName.toLowerCase();
+
+            return (
+                targetStatus.includes(desiredStatus) ||
+                (desiredStatus.includes('todo') && targetStatus.includes('todo')) ||
+                (desiredStatus.includes('to do') && targetStatus.includes('todo')) ||
+                (desiredStatus.includes('progress') && targetStatus.includes('progress')) ||
+                (desiredStatus.includes('done') && (targetStatus.includes('done') || targetStatus.includes('closed')))
+            );
+        });
+    }
+
+    private enhanceIssueWithTransitions(originalIssue: any, enhancedIssue: any): any {
+        return {
+            ...originalIssue,
+            transitions: enhancedIssue.transitions,
+            status: enhancedIssue.status,
+            assignee: enhancedIssue.assignee,
+            priority: enhancedIssue.priority,
+        };
+    }
+
+    private enhanceIssueIfAvailable(originalIssue: any, enhancedIssuesMap: Map<string, any>): any {
+        if (!originalIssue?.key) {
+            return originalIssue;
+        }
+
+        const enhanced = enhancedIssuesMap.get(originalIssue.key);
+        return enhanced ? this.enhanceIssueWithTransitions(originalIssue, enhanced) : originalIssue;
+    }
+
     protected override async onMessageReceived(msg: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(msg);
 
@@ -357,6 +482,77 @@ export class JiraIssueWebview
                             type: 'error',
                             reason: this.formatErrorReason(e, 'Error updating issue'),
                             fieldValues: this.getFieldValuesForKeys(Object.keys(newFieldValues)),
+                            nonce: msg.nonce,
+                        });
+                    }
+                    break;
+                }
+                case 'editChildIssue': {
+                    handled = true;
+                    const childIssueMsg = msg as EditChildIssueAction;
+                    const issueKey = childIssueMsg.issueKey;
+                    const newFieldValues: FieldValues = childIssueMsg.fields;
+                    try {
+                        const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+                        await client.editIssue(issueKey, newFieldValues);
+
+                        await this.forceUpdateIssue();
+                        await this.postMessage({
+                            type: 'editIssueDone',
+                            nonce: msg.nonce,
+                        });
+
+                        Object.keys(newFieldValues).forEach((key) => {
+                            issueUpdatedEvent(this._issue.siteDetails, issueKey, key, this.fieldNameForKey(key)).then(
+                                (e) => {
+                                    Container.analyticsClient.sendTrackEvent(e);
+                                },
+                            );
+                        });
+
+                        await commands.executeCommand(
+                            Commands.RefreshAssignedWorkItemsExplorer,
+                            OnJiraEditedRefreshDelay,
+                        );
+                        await commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
+                    } catch (e) {
+                        Logger.error(e, 'Error updating child issue');
+                        this.postMessage({
+                            type: 'error',
+                            reason: this.formatErrorReason(e, 'Error updating child issue'),
+                            nonce: msg.nonce,
+                        });
+                    }
+                    break;
+                }
+                case 'transitionChildIssue': {
+                    handled = true;
+                    const transitionMsg = msg as TransitionChildIssueAction;
+                    const issueKey = transitionMsg.issueKey;
+                    const statusName = transitionMsg.statusName;
+                    try {
+                        const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+
+                        const childIssue = await fetchMinimalIssue(issueKey, this._issue.siteDetails);
+
+                        const targetTransition = this.findMatchingTransition(childIssue.transitions, statusName);
+
+                        if (targetTransition) {
+                            await client.transitionIssue(issueKey, targetTransition.id);
+
+                            await this.forceUpdateIssue();
+                            await this.postMessage({
+                                type: 'editIssueDone',
+                                nonce: msg.nonce,
+                            });
+                        } else {
+                            throw new Error(`No transition found for status: ${statusName}`);
+                        }
+                    } catch (e) {
+                        Logger.error(e, 'Error transitioning child issue');
+                        this.postMessage({
+                            type: 'error',
+                            reason: this.formatErrorReason(e, 'Error transitioning child issue'),
                             nonce: msg.nonce,
                         });
                     }
@@ -932,8 +1128,8 @@ export class JiraIssueWebview
                     }
                     break;
                 }
-                case 'invokeRovodev': {
-                    Container.rovodevWebviewProvider.invokeRovoDevAskCommand((msg as any).prompt);
+                case 'setRovoDevPromptText': {
+                    Container.rovodevWebviewProvider.setPromptTextWithFocus((msg as any).text);
                     break;
                 }
                 case 'openPullRequest': {

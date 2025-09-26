@@ -36,7 +36,7 @@ export enum iconSet {
     PIPELINEFAILED = 'failed',
     PIPELINESTOPPED = 'stopped',
     PIPELINEPAUSED = 'paused',
-    TWITTERLOGOBLUE = 'twitterLogoBlue',
+    ROVODEV = 'rovodev',
 }
 
 export function registerResources(vscodeContext: ExtensionContext) {
@@ -88,6 +88,11 @@ export function registerResources(vscodeContext: ExtensionContext) {
         light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'add.svg'))),
         dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'add.svg'))),
     });
+    Resources.icons.set(iconSet.ROVODEV, {
+        light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'rovodev-icon.svg'))),
+        dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'rovodev-icon.svg'))),
+    });
+
     Resources.icons.set(iconSet.ISSUES, Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'issues.svg'))));
 
     Resources.icons.set(

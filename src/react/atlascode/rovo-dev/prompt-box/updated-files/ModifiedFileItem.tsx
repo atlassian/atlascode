@@ -1,5 +1,7 @@
-import CheckIcon from '@atlaskit/icon/glyph/check';
-import CrossIcon from '@atlaskit/icon/glyph/cross';
+import CheckMarkIcon from '@atlaskit/icon/core/check-mark';
+import UndoIcon from '@atlaskit/icon/core/undo';
+import Tooltip from '@atlaskit/tooltip';
+import { isAbsolute, join } from 'path';
 import React from 'react';
 
 import { ToolReturnParseResult } from '../../utils';
@@ -10,7 +12,9 @@ export const ModifiedFileItem: React.FC<{
     onKeep: (file: ToolReturnParseResult) => void;
     onFileClick: (filePath: string) => void;
     actionsEnabled?: boolean;
-}> = ({ msg, onUndo, onKeep, onFileClick, actionsEnabled = true }) => {
+    workspacePath?: string;
+    homeDir?: string;
+}> = ({ msg, onUndo, onKeep, onFileClick, actionsEnabled = true, workspacePath = '', homeDir = '' }) => {
     const getClassName = (msg: ToolReturnParseResult) => {
         switch (msg.type) {
             case 'delete':
@@ -37,9 +41,35 @@ export const ModifiedFileItem: React.FC<{
         onKeep(msg);
     };
 
+    const getDisplayPath = (): string => {
+        if (!filePath) {
+            return '';
+        }
+
+        let fullPath = filePath;
+
+        if (!isAbsolute(filePath) && workspacePath) {
+            fullPath = join(workspacePath, filePath);
+        }
+
+        if (homeDir && fullPath.startsWith(homeDir)) {
+            return '~' + fullPath.substring(homeDir.length);
+        }
+
+        return fullPath;
+    };
+
     return (
-        <div aria-label="modified-file-item" className="modified-file-item" onClick={() => onFileClick(filePath)}>
-            <div className={getClassName(msg)}>{filePath}</div>
+        <div
+            aria-label="modified-file-item"
+            className="modified-file-item"
+            onClick={() => onFileClick(filePath)}
+            title={getDisplayPath()}
+        >
+            <div className={getClassName(msg)}>
+                <span className="file-name">{filePath.split('/').pop()}</span>
+                <span className="file-path">{filePath.split('/').slice(0, -1).join('/')}</span>
+            </div>
             <div className="modified-file-actions">
                 <button
                     disabled={!actionsEnabled}
@@ -47,7 +77,9 @@ export const ModifiedFileItem: React.FC<{
                     onClick={handleUndo}
                     aria-label="Undo changes to this file"
                 >
-                    <CrossIcon size="small" label="Undo" />
+                    <Tooltip content="Undo" position="top">
+                        <UndoIcon size="small" label="Undo" />
+                    </Tooltip>
                 </button>
                 <button
                     disabled={!actionsEnabled}
@@ -55,7 +87,9 @@ export const ModifiedFileItem: React.FC<{
                     onClick={handleKeep}
                     aria-label="Keep changes to this file"
                 >
-                    <CheckIcon size="small" label="Keep" />
+                    <Tooltip content="Keep" position="top">
+                        <CheckMarkIcon size="small" label="Keep" />
+                    </Tooltip>
                 </button>
             </div>
         </div>

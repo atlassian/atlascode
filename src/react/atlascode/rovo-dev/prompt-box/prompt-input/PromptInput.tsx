@@ -1,170 +1,161 @@
-import { LoadingButton } from '@atlaskit/button';
+import AddIcon from '@atlaskit/icon/core/add';
+import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-summary';
 import SendIcon from '@atlaskit/icon/core/arrow-up';
-import StopIcon from '@atlaskit/icon/core/video-stop';
+import CrossIcon from '@atlaskit/icon/core/cross';
+import VideoStopOverlayIcon from '@atlaskit/icon/core/video-stop-overlay';
+import { token } from '@atlaskit/tokens';
+import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
-import { State } from 'src/rovo-dev/rovoDevTypes';
+import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
+type NonDisabledState = Exclude<State, DisabledState>;
 
-import { AiGenerativeTextSummaryIcon, CloseIconDeepPlan } from '../../rovoDevView';
+import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
+import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
 import {
-    rovoDevDeepPlanStylesSelector,
-    rovoDevPromptButtonStyles,
-    rovoDevTextareaStyles,
-} from '../../rovoDevViewStyles';
-import { createMonacoPromptEditor, createSlashCommandProvider, removeMonacoStyles } from './utils';
+    createMonacoPromptEditor,
+    createSlashCommandProvider,
+    removeMonacoStyles,
+    setupAutoResize,
+    setupMonacoCommands,
+    setupPromptKeyBindings,
+} from './utils';
 
 interface PromptInputBoxProps {
     disabled?: boolean;
     hideButtons?: boolean;
-    state: State;
-    promptText: string;
-    onPromptTextChange: (text: string) => void;
+    currentState: NonDisabledState;
     isDeepPlanEnabled: boolean;
     onDeepPlanToggled: () => void;
-    onSend: (text: string) => void;
+    onSend: (text: string) => boolean;
     onCancel: () => void;
-    sendButtonDisabled?: boolean;
     onAddContext: () => void;
     onCopy: () => void;
     handleMemoryCommand: () => void;
+    handleTriggerFeedbackCommand: () => void;
+    promptText?: string;
+    onPromptTextSet?: () => void;
 }
 
-const TextAreaMessages: Record<State, string> = {
-    [State.Disabled]: 'Rovo Dev is currently disabled. Please, refer to the error message in chat',
-    [State.WaitingForPrompt]: 'Type in a question',
-    [State.NoWorkspaceOpen]: 'Please, open a folder to start a chat session with Rovo Dev',
-    [State.GeneratingResponse]: 'Generating response...',
-    [State.CancellingResponse]: 'Cancelling the response...',
-    [State.ExecutingPlan]: 'Executing the code plan...',
-    [State.ProcessTerminated]: 'Start a new session to chat',
+const TextAreaMessages: Record<NonDisabledState['state'], string> = {
+    ['Initializing']: 'Write a prompt or use / for actions',
+    ['WaitingForPrompt']: 'Write a prompt or use / for actions',
+    ['GeneratingResponse']: 'Generating response...',
+    ['CancellingResponse']: 'Cancelling the response...',
+    ['ExecutingPlan']: 'Executing the code plan...',
+    ['ProcessTerminated']: 'Start a new session to chat',
 };
 
-const getTextAreaPlaceholder = (state: State) => {
-    return TextAreaMessages[state];
+const getTextAreaPlaceholder = (isGeneratingResponse: boolean, currentState: NonDisabledState) => {
+    if (isGeneratingResponse) {
+        return TextAreaMessages['GeneratingResponse'];
+    } else {
+        return TextAreaMessages[currentState.state];
+    }
 };
+
+function createEditor(setIsEmpty?: (isEmpty: boolean) => void) {
+    const container = document.getElementById('prompt-editor-container');
+    if (!container) {
+        return undefined;
+    }
+
+    monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider());
+
+    const editor = createMonacoPromptEditor(container);
+    editor.onDidChangeModelContent(() => {
+        if (editor.getValue().trim().length === 0) {
+            setIsEmpty?.(true);
+        } else {
+            setIsEmpty?.(false);
+        }
+    });
+    setupAutoResize(editor);
+    return editor;
+}
 
 export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     disabled,
-    hideButtons,
-    state,
-    promptText,
+    currentState,
     isDeepPlanEnabled,
     onDeepPlanToggled,
     onSend,
     onCancel,
-    sendButtonDisabled = false,
     onAddContext,
     onCopy,
     handleMemoryCommand,
+    handleTriggerFeedbackCommand,
+    promptText,
+    onPromptTextSet,
 }) => {
-    const [editor, setEditor] = React.useState<monaco.editor.IStandaloneCodeEditor | null>(null);
+    const [editor, setEditor] = React.useState<ReturnType<typeof createEditor>>(undefined);
+    const [isEmpty, setIsEmpty] = React.useState(true);
 
-    const setupCommands = (
-        editor: monaco.editor.IStandaloneCodeEditor,
-        onSend: (text: string) => void,
-        onCopy: () => void,
-        handleMemoryCommand: () => void,
-    ) => {
-        monaco.editor.registerCommand('rovo-dev.clearChat', () => {
-            editor.setValue('');
-
-            onSend('/clear');
-        });
-
-        monaco.editor.registerCommand('rovo-dev.pruneChat', () => {
-            editor.setValue('');
-
-            onSend(`/prune`);
-        });
-
-        monaco.editor.registerCommand('rovo-dev.copyResponse', () => {
-            editor.setValue('');
-            onCopy();
-        });
-
-        monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
-            handleMemoryCommand();
-
-            editor.setValue('');
-        });
-    };
-
-    const setupPromptKeyBindings = (editor: monaco.editor.IStandaloneCodeEditor, onSend: (text: string) => void) => {
-        editor.addCommand(
-            monaco.KeyCode.Enter,
-            () => {
-                const value = editor.getValue();
-                if (value.trim()) {
-                    onSend(value);
-                }
-            },
-            '!suggestWidgetVisible',
-        ); // Only trigger if suggestions are not visible
-
-        editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
-            editor.trigger('keyboard', 'type', { text: '\n' });
-        });
-    };
-
-    // Auto-resize functionality
-    const setupAutoResize = (editor: monaco.editor.IStandaloneCodeEditor, maxHeight = 200) => {
-        const updateHeight = () => {
-            const contentHeight = Math.min(maxHeight, editor.getContentHeight());
-            const container = editor.getContainerDomNode();
-            container.style.height = `${contentHeight}px`;
-            editor.layout();
-        };
-
-        editor.onDidContentSizeChange(updateHeight);
-        updateHeight();
-    };
+    // create the editor only once - use onSend hook to retry
+    React.useEffect(() => setEditor((prev) => prev ?? createEditor(setIsEmpty)), [onSend]);
 
     React.useEffect(() => {
-        const container = document.getElementById('prompt-editor-container');
-
         // Remove Monaco's color stylesheet
         removeMonacoStyles();
+    }, [editor]);
 
-        if (container) {
-            const completionProvider = monaco.languages.registerCompletionItemProvider(
-                'plaintext',
-                createSlashCommandProvider(),
-            );
-            const editor = createMonacoPromptEditor(container);
-            setupPromptKeyBindings(editor, onSend);
-            setupAutoResize(editor);
-            setupCommands(editor, onSend, onCopy, handleMemoryCommand);
-
-            editor.setValue(promptText);
-
-            setEditor(editor);
-
-            return () => {
-                completionProvider.dispose();
-                editor.dispose();
-            };
+    const handleSend = React.useCallback(() => {
+        const value = editor && editor.getValue();
+        if (value && onSend(value)) {
+            editor.setValue('');
         }
-        return () => {};
-    }, [handleMemoryCommand, onCopy, onSend, promptText]);
+    }, [editor, onSend]);
+
+    React.useEffect(() => {
+        if (editor) {
+            setupPromptKeyBindings(editor, handleSend);
+        }
+    }, [editor, handleSend]);
+
+    React.useEffect(() => {
+        if (editor) {
+            setupMonacoCommands(editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand);
+        }
+    }, [editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand]);
+
+    // Handle setting prompt text from external source
+    React.useEffect(() => {
+        if (editor && promptText !== undefined) {
+            editor.setValue(promptText);
+            setIsEmpty(false); // Update isEmpty state since we set text
+            onPromptTextSet?.(); // Notify parent that text has been set
+        }
+    }, [editor, promptText, onPromptTextSet]);
 
     React.useEffect(() => {
         if (!editor) {
             return;
         }
 
+        const isGeneratingResponse =
+            currentState.state === 'GeneratingResponse' ||
+            (currentState.state === 'Initializing' && currentState.isPromptPending);
+
         editor.updateOptions({
             readOnly: disabled,
-            placeholder: getTextAreaPlaceholder(state),
+            placeholder: getTextAreaPlaceholder(isGeneratingResponse, currentState),
         });
-    }, [state, editor, disabled]);
+    }, [currentState, editor, disabled]);
 
-    const handleSend = () => {
-        if (editor) {
-            const text = editor.getValue();
-            onSend(text);
-            editor.setValue(''); // Clear the editor after sending
-        }
-    };
+    const isWaitingForPrompt = React.useMemo(
+        () =>
+            currentState.state === 'WaitingForPrompt' ||
+            (currentState.state === 'Initializing' && !currentState.isPromptPending),
+        [currentState],
+    );
+
+    const showCancelButton = React.useMemo(
+        () =>
+            currentState.state === 'GeneratingResponse' ||
+            currentState.state === 'CancellingResponse' ||
+            (currentState.state === 'Initializing' && currentState.isPromptPending),
+        [currentState],
+    );
 
     return (
         <>
@@ -178,63 +169,62 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     flexWrap: 'wrap',
                 }}
             >
-                {/* Left-side Add Context Button */}
-                {!hideButtons && (
-                    <>
-                        <LoadingButton
-                            style={{
-                                ...rovoDevPromptButtonStyles,
-                            }}
-                            spacing="compact"
-                            label="Add context"
-                            iconBefore={<i className="codicon codicon-add" />}
-                            isDisabled={disabled}
+                <div style={{ display: 'flex', flexDirection: 'row', alignContent: 'center', gap: 4 }}>
+                    <Tooltip content="Add context">
+                        <button
+                            className="prompt-button-secondary"
                             onClick={() => onAddContext()}
+                            aria-label="Add context"
+                            disabled={disabled}
+                        >
+                            <AddIcon label="Add context" />
+                        </button>
+                    </Tooltip>
+                    <Tooltip content="Preferences">
+                        <PromptSettingsPopup
+                            onToggleDeepPlan={onDeepPlanToggled}
+                            isDeepPlanEnabled={isDeepPlanEnabled}
+                            onClose={() => {}}
                         />
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            <LoadingButton
-                                style={{
-                                    ...rovoDevDeepPlanStylesSelector(
-                                        isDeepPlanEnabled,
-                                        state !== State.WaitingForPrompt,
-                                    ),
-                                }}
-                                spacing="compact"
-                                label="Enable deep plan"
-                                iconBefore={<AiGenerativeTextSummaryIcon />}
-                                iconAfter={isDeepPlanEnabled ? <CloseIconDeepPlan /> : undefined}
-                                isDisabled={disabled || state !== State.WaitingForPrompt}
+                    </Tooltip>
+                    {isDeepPlanEnabled && (
+                        <Tooltip content="Disable deep plan">
+                            <div
+                                className="deep-plan-indicator"
+                                title="Deep plan is enabled"
                                 onClick={() => onDeepPlanToggled()}
                             >
-                                {isDeepPlanEnabled ? 'Deep plan enabled' : ''}
-                            </LoadingButton>
-                            {state === State.WaitingForPrompt && (
-                                <LoadingButton
-                                    style={{
-                                        ...rovoDevPromptButtonStyles,
-                                        color: 'var(--vscode-button-foreground) !important',
-                                        backgroundColor: 'var(--vscode-button-background)',
-                                    }}
-                                    spacing="compact"
-                                    label="Send prompt"
-                                    iconBefore={<SendIcon label="Send prompt" />}
-                                    isDisabled={disabled || sendButtonDisabled}
-                                    onClick={() => handleSend()}
-                                />
-                            )}
-                            {state !== State.WaitingForPrompt && (
-                                <LoadingButton
-                                    style={rovoDevPromptButtonStyles}
-                                    spacing="compact"
-                                    label="Stop"
-                                    iconBefore={<StopIcon label="Stop" />}
-                                    isDisabled={disabled || state === State.CancellingResponse}
-                                    onClick={() => onCancel()}
-                                />
-                            )}
-                        </div>
-                    </>
-                )}
+                                <AiGenerativeTextSummaryIcon label="deep plan icon" />
+                                <CrossIcon size="small" label="disable deep plan" />
+                            </div>
+                        </Tooltip>
+                    )}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                    {!showCancelButton && (
+                        <button
+                            className="prompt-button-primary"
+                            aria-label="send"
+                            onClick={() => handleSend()}
+                            disabled={disabled || !isWaitingForPrompt || isEmpty}
+                        >
+                            <SendIcon label="Send prompt" />
+                        </button>
+                    )}
+                    {showCancelButton && (
+                        <Tooltip content="Stop generating" position="top">
+                            <button
+                                className="prompt-button-secondary"
+                                id="bordered-button"
+                                aria-label="stop"
+                                onClick={() => onCancel()}
+                                disabled={disabled || currentState.state === 'CancellingResponse'}
+                            >
+                                <VideoStopOverlayIcon color={token('color.icon.danger')} label="Stop" />
+                            </button>
+                        </Tooltip>
+                    )}
+                </div>
             </div>
         </>
     );

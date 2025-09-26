@@ -24,3 +24,13 @@ export interface PullRequestComment {
         links?: Record<string, any>;
     };
 }
+
+export enum JiraTypes {
+    Cloud = 'Cloud',
+    DC = 'Dc',
+}
+
+export interface DescriptionObject {
+    fields: { description: string };
+    renderedFields: { description: string };
+}

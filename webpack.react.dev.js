@@ -8,6 +8,7 @@ const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const autoprefixer = require('autoprefixer');
+const { CompiledExtractPlugin } = require('@compiled/webpack-loader');
 
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
@@ -30,6 +31,25 @@ module.exports = {
         filename: 'static/js/[name].js',
         devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]',
     },
+    optimization: {
+        splitChunks: {
+            cacheGroups: {
+                prosemirror: {
+                    name: 'prosemirror',
+                    test: /[\\/]node_modules[\\/]prosemirror-/,
+                    chunks: 'all',
+                    priority: 30,
+                    enforce: true,
+                },
+                atlaskit: {
+                    name: 'atlaskit',
+                    test: /[\\/]node_modules[\\/]@atlaskit[\\/]/,
+                    chunks: 'all',
+                    priority: 20,
+                },
+            },
+        },
+    },
     externals: ['utf-8-validate', 'bufferutil', 'vscode'],
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
@@ -37,12 +57,34 @@ module.exports = {
         plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.json') })],
         fallback: {
             path: require.resolve('path-browserify'),
+            process: false,
+        },
+        alias: {
+            // Resolve ProseMirror conflicts by using unified versions
+            'prosemirror-model': path.resolve(__dirname, 'node_modules/prosemirror-model'),
+            'prosemirror-state': path.resolve(__dirname, 'node_modules/prosemirror-state'),
+            'prosemirror-view': path.resolve(__dirname, 'node_modules/prosemirror-view'),
+            'prosemirror-commands': path.resolve(__dirname, 'node_modules/prosemirror-commands'),
+            'prosemirror-gapcursor': path.resolve(__dirname, 'node_modules/prosemirror-gapcursor'),
+            'prosemirror-history': path.resolve(__dirname, 'node_modules/prosemirror-history'),
+            'prosemirror-keymap': path.resolve(__dirname, 'node_modules/prosemirror-keymap'),
+            'prosemirror-dropcursor': path.resolve(__dirname, 'node_modules/prosemirror-dropcursor'),
+            'prosemirror-example-setup': path.resolve(__dirname, 'node_modules/prosemirror-example-setup'),
+            'prosemirror-inputrules': path.resolve(__dirname, 'node_modules/prosemirror-inputrules'),
+            'prosemirror-markdown': path.resolve(__dirname, 'node_modules/prosemirror-markdown'),
+            'prosemirror-mentions': path.resolve(__dirname, 'node_modules/prosemirror-mentions'),
+            'prosemirror-menu': path.resolve(__dirname, 'node_modules/prosemirror-menu'),
+            // Fix Atlaskit editor compatibility with newer ProseMirror versions
+            '@atlaskit/editor-prosemirror/view': path.resolve(__dirname, 'node_modules/prosemirror-view'),
         },
     },
     plugins: [
         new MiniCssExtractPlugin({
             filename: '[name].css',
             ignoreOrder: true,
+        }),
+        new CompiledExtractPlugin({
+            sortShorthand: true,
         }),
         new WebpackManifestPlugin({
             fileName: 'asset-manifest.json',
@@ -67,7 +109,10 @@ module.exports = {
             'process.env.ATLASCODE_FF_OVERRIDES': JSON.stringify(process.env.ATLASCODE_FF_OVERRIDES),
             'process.env.ATLASCODE_EXP_OVERRIDES_BOOL': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_BOOL),
             'process.env.ATLASCODE_EXP_OVERRIDES_STRING': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_STRING),
-            'process.env.ROVODEV_BBY': JSON.stringify(process.env.ROVODEV_BBY),
+            'process.env.ROVODEV_BBY': JSON.stringify(process.env.ROVODEV_BBY)
+        }),
+        new webpack.ProvidePlugin({
+            process: 'process/browser',
         }),
     ],
     module: {
@@ -82,10 +127,25 @@ module.exports = {
                 // Include ts, tsx, js, and jsx files.
                 test: /\.(ts|js)x?$/,
                 exclude: [/node_modules/, /\.test\.ts$/, /\.spec\.ts$/],
-                use: [{ loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } }],
+                use: [
+                    { loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } },
+                    {
+                        loader: '@compiled/webpack-loader',
+                        options: {
+                            transformerBabelPlugins: ['@atlaskit/tokens/babel-plugin'],
+                            extract: true,
+                            inlineCss: true,
+                        },
+                    },
+                ],
+            },
+
+            {
+                test: /compiled(-css)?\.css$/i,
+                use: [MiniCssExtractPlugin.loader, 'css-loader'],
             },
             {
-                test: /\.css$/,
+                test: /(?<!compiled-css)(?<!\.compiled)\.css$/i,
                 use: [
                     {
                         loader: MiniCssExtractPlugin.loader,
@@ -135,6 +195,13 @@ module.exports = {
                 enforce: 'pre',
                 include: /node_modules/,
                 exclude: [/node_modules\/@atlaskit\/analytics-next-stable-react-context/],
+            },
+            {
+                test: /\.svg$/,
+                type: 'asset/resource',
+                generator: {
+                    filename: 'static/media/[name].[hash:8][ext]',
+                },
             },
         ],
     },

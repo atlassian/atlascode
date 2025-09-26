@@ -1,5 +1,6 @@
 import { ProductJira } from 'src/atlclients/authInfo';
 import { Container } from 'src/container';
+import { EXTENSION_URL } from 'src/uriHandler/atlascodeUriHandler';
 import {
     env,
     InputBoxOptions,
@@ -13,6 +14,7 @@ import {
 
 import { BaseUI, UiResponse } from '../baseUI';
 import {
+    AUTHENTICATION_SUCCESSFUL,
     AuthenticationType,
     AuthFlowData,
     ServerCredentialType,
@@ -65,12 +67,11 @@ export class AuthFlowUI {
             }))
             .sort((a, b) => a.label.localeCompare(b.label));
 
-        if (sites.length === 0 && state.authenticationType === AuthenticationType.ApiToken) {
+        if (sites.length === 0 && state.authenticationType === AuthenticationType.ApiToken && !state.hasOAuthFailed) {
             sites.push({
                 label: SpecialSiteOptions.OAuth,
-                // TODO: actually trigger OAuth here once we can await on flows
-                detail: 'You can run OAuth from the previous step',
-                iconPath: new ThemeIcon('info'),
+                detail: 'Select this option to complete Basic authentication and view all available cloud sites',
+                iconPath: new ThemeIcon('cloud'),
             });
         }
         const choices = [
@@ -86,38 +87,39 @@ export class AuthFlowUI {
         ];
         return this.baseUI.showQuickPick(choices, {
             placeHolder: 'Select a site to authenticate with',
-            validateSelection: (items) =>
-                items.length > 0 && !items.some((item) => item.label.includes('Login with OAuth')),
         });
     }
 
     public pickAuthenticationType(state: PartialData): Promise<UiResponse<AuthenticationType>> {
-        return this.baseUI.showQuickPick(
-            [
-                {
-                    iconPath: new ThemeIcon('cloud'),
-                    label: AuthenticationType.OAuth,
-                    description: 'Authenticate using OAuth',
-                    detail: 'Get basic access to your Atlassian work items',
-                },
-                {
-                    iconPath: new ThemeIcon('key'),
-                    label: AuthenticationType.ApiToken,
-                    description: 'Authenticate via an API token',
-                    detail: 'Get the full power of Atlassian integration, including experimental and AI features',
-                },
-                {
-                    iconPath: new ThemeIcon('server'),
-                    label: AuthenticationType.Server,
-                    description: 'Authenticate with Jira Server or Datacenter',
-                    detail: 'Use this if you have a self-hosted Jira instance or Jira DC',
-                },
-            ],
-            {
-                placeHolder: 'How would you like to authenticate?',
-                value: state.authenticationType || '',
-            },
-        );
+        const choices: QuickPickItem[] = [];
+
+        if (!Container.isRemote) {
+            choices.push({
+                iconPath: new ThemeIcon('cloud'),
+                label: AuthenticationType.OAuth,
+                description: 'Uses OAuth',
+                detail: 'Get basic access to your Atlassian work items',
+            });
+        }
+
+        choices.push({
+            iconPath: new ThemeIcon('cloud'),
+            label: AuthenticationType.ApiToken,
+            description: 'Uses API token',
+            detail: 'Get the full power of Atlassian integration, including experimental and AI features',
+        });
+
+        choices.push({
+            iconPath: new ThemeIcon('server'),
+            label: AuthenticationType.Server,
+            description: 'Authenticate with Jira Server or Datacenter',
+            detail: 'Use this if you have a self-hosted Jira instance or Jira DC',
+        });
+
+        return this.baseUI.showQuickPick(choices, {
+            placeHolder: 'How would you like to authenticate?',
+            value: state.authenticationType || '',
+        });
     }
 
     public pickContextPathNeeded(state: PartialData): Promise<UiResponse<'Yes' | 'No'>> {
@@ -125,14 +127,14 @@ export class AuthFlowUI {
         return this.baseUI.showQuickPick(
             [
                 {
-                    label: 'Yes',
-                    description: 'Your Jira server has a path',
-                    detail: `For example: https://${site}/path/to/jira`,
-                },
-                {
                     label: 'No',
                     description: 'Your Jira server is running at the root',
                     detail: `For example: https://${site}/`,
+                },
+                {
+                    label: 'Yes',
+                    description: 'Your Jira server has a path',
+                    detail: `For example: https://${site}/path/to/jira`,
                 },
             ],
             {
@@ -296,12 +298,54 @@ export class AuthFlowUI {
     }
 
     public inputPassword(state: PartialData, passwordName: string): Promise<UiResponse> {
+        const prompt =
+            state.authenticationType === AuthenticationType.ApiToken
+                ? 'You can always visit [id.atlassian.com](https://id.atlassian.com/manage-profile/security/api-tokens) to generate a new token'
+                : '';
         return this.baseUI.showInputBox({
             placeHolder: `Enter your ${passwordName}`,
             password: true,
+            prompt,
             value: state.password || '',
             valueSelection: state.password ? [0, state.password.length] : undefined,
         });
+    }
+
+    // Other
+
+    public async showOAuthLoading(state: PartialData): Promise<UiResponse> {
+        const value = await this.baseUI.showLoadingIndicator({
+            props: {
+                placeHolder: 'Please continue the authentication process in your browser',
+                prompt: '⏳ Loading...',
+            },
+            awaitedFunc: async (resolve, reject, input) => {
+                try {
+                    const product = state.product ?? ProductJira;
+                    const siteInfo = {
+                        product,
+                        host: product === ProductJira ? 'atlassian.net' : 'bitbucket.org',
+                    };
+                    await Container.loginManager.userInitiatedOAuthLogin(siteInfo, EXTENSION_URL, false, 'auth flow');
+
+                    // Visual confirmation
+                    input.prompt = '✅ Success! Press Enter to continue.';
+                    input.busy = false;
+
+                    resolve(AUTHENTICATION_SUCCESSFUL);
+                } catch (error) {
+                    // Visual confirmation
+                    input.prompt = '❌ Something went wrong...';
+                    await new Promise((resolveDelay) => setTimeout(resolveDelay, 300));
+
+                    // Resolve here to move forward to the error handling step
+                    resolve(error?.message || 'Basic authentication failed');
+                }
+            },
+        });
+
+        console.log(value);
+        return value;
     }
 
     // Helpers

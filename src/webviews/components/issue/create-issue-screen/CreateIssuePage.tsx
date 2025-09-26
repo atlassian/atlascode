@@ -124,6 +124,13 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
         if (!handled) {
             switch (e.type) {
+                case 'generateIssueSuggestions': {
+                    handled = true;
+                    this.setState({
+                        isGeneratingSuggestions: true,
+                    });
+                    break;
+                }
                 case 'update': {
                     handled = true;
                     const issueData = e as CreateIssueData;
@@ -146,11 +153,22 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                         }
                     }
 
-                    this.updateInternals(issueData);
-                    this.setState(issueData, () => {
+                    // Merge new field values over existing to avoid losing values
+                    const mergedFieldValues = fieldValues
+                        ? { ...this.state.fieldValues, ...fieldValues }
+                        : this.state.fieldValues;
+                    const mergedIssueData: CreateIssueData = {
+                        ...issueData,
+                        fieldValues: mergedFieldValues,
+                    };
+
+                    this.updateInternals(mergedIssueData);
+                    this.setState(mergedIssueData, () => {
                         this.setState({
                             isSomethingLoading: false,
                             loadingField: '',
+                            isGeneratingSuggestions: false,
+                            summaryKey: v4(), // reset summary to clear validation errors
                         });
                     });
 
@@ -370,23 +388,44 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     }
 
     getAdvancedFieldMarkup(): any {
-        return this.advancedFields
-            .filter((field) => field.key !== 'parent') //TODO: add parent functionality
-            .map((field) => this.getInputMarkup(field));
+        // Cloud supports parent-child relation only for all issues. DC supports parent-child for standard-issues and subtasks
+        if (this.state.siteDetails.isCloud) {
+            return this.advancedFields.map((field) =>
+                this.getInputMarkup(field, false, this.state.fieldValues['issuetype']),
+            );
+        } else {
+            return this.advancedFields
+                .filter((field) => field.key !== 'parent') //
+                .map((field) => this.getInputMarkup(field));
+        }
     }
 
     formHeader = () => {
         return (
             <div>
                 Create work item
-                {this.state.isSomethingLoading && (
-                    <div className="spinner" style={{ marginLeft: '15px' }}>
-                        <Spinner size="medium" />
-                    </div>
-                )}
+                {this.state.isSomethingLoading ||
+                    (this.state.isGeneratingSuggestions && (
+                        <div
+                            className="spinner"
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                margin: '10px 15px 0 0',
+                                zIndex: 1,
+                            }}
+                        >
+                            <Spinner size="medium" />
+                        </div>
+                    ))}
             </div>
         );
     };
+
+    override componentDidMount() {
+        this.postMessage({ action: 'getFeatureFlags' });
+    }
 
     public override render() {
         if (!this.state.fieldValues['issuetype']?.id && !this.state.isErrorBannerOpen && this.state.isOnline) {

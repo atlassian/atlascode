@@ -6,7 +6,7 @@ import { WorkspaceRepo } from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { StartWorkAction, StartWorkActionType } from '../../../lib/ipc/fromUI/startWork';
 import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
-import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
+import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from '../../../lib/ipc/models/config';
 import {
     emptyStartWorkInitMessage,
     StartWorkInitMessage,
@@ -35,7 +35,10 @@ export interface StartWorkControllerApi {
     ) => Promise<{ transistionStatus?: string; branch?: string; upstream?: string }>;
     closePage: () => void;
     openJiraIssue: () => void;
-    openSettings: (section?: ConfigSection, subsection?: ConfigSubSection) => void;
+    openSettings: (
+        section?: ConfigSection | ConfigV3Section,
+        subsection?: ConfigSubSection | ConfigV3SubSection,
+    ) => void;
 }
 
 const emptyApi: StartWorkControllerApi = {
@@ -54,6 +57,7 @@ export const StartWorkControllerContext = React.createContext(emptyApi);
 
 export interface StartWorkState extends StartWorkInitMessage {
     isSomethingLoading: boolean;
+    rovoDevPreference?: boolean;
 }
 
 const emptyState: StartWorkState = {
@@ -61,16 +65,19 @@ const emptyState: StartWorkState = {
     isSomethingLoading: false,
     customTemplate: '{{prefix}}/{{issueKey}}-{{summary}}',
     customPrefixes: [],
+    rovoDevPreference: false,
 };
 
 enum StartWorkUIActionType {
     Init = 'init',
     Loading = 'loading',
+    SetRovoDevPreference = 'setRovoDevPreference',
 }
 
 type StartWorkUIAction =
     | ReducerAction<StartWorkUIActionType.Init, { data: StartWorkInitMessage }>
-    | ReducerAction<StartWorkUIActionType.Loading, {}>;
+    | ReducerAction<StartWorkUIActionType.Loading, {}>
+    | ReducerAction<StartWorkUIActionType.SetRovoDevPreference, { enabled: boolean }>;
 
 function reducer(state: StartWorkState, action: StartWorkUIAction): StartWorkState {
     switch (action.type) {
@@ -88,6 +95,9 @@ function reducer(state: StartWorkState, action: StartWorkUIAction): StartWorkSta
         case StartWorkUIActionType.Loading: {
             return { ...state, ...{ isSomethingLoading: true } };
         }
+        case StartWorkUIActionType.SetRovoDevPreference: {
+            return { ...state, rovoDevPreference: action.enabled };
+        }
         default:
             return defaultStateGuard(state, action);
     }
@@ -100,6 +110,10 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
         switch (message.type) {
             case StartWorkMessageType.Init: {
                 dispatch({ type: StartWorkUIActionType.Init, data: message });
+                break;
+            }
+            case StartWorkMessageType.RovoDevPreferenceResponse: {
+                dispatch({ type: StartWorkUIActionType.SetRovoDevPreference, enabled: message.enabled });
                 break;
             }
             default: {

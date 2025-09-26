@@ -1,0 +1,24 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/rest/mirroring/1.0/mirrorServers",
+        "queryParameters": {
+            "limit": {
+                "matches": ".*"
+            }
+        }
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "size": 0,
+            "limit": 100,
+            "isLastPage": true,
+            "values": [],
+            "start": 0
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

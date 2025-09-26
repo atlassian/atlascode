@@ -1,4 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from 'src/lib/ipc/models/config';
+import { Logger } from 'src/logger';
 import * as vscode from 'vscode';
 
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
@@ -6,6 +8,7 @@ import { BitbucketBranchingModel } from '../../../../bitbucket/model';
 import { Commands } from '../../../../constants';
 import { Container } from '../../../../container';
 import { Features } from '../../../../util/featureFlags';
+import { Experiments } from '../../../../util/featureFlags';
 import { OnJiraEditedRefreshDelay } from '../../../../util/time';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
@@ -22,7 +25,6 @@ import {
     StartWorkMessageType,
     StartWorkResponse,
 } from '../../../ipc/toUI/startWork';
-import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
@@ -117,6 +119,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 ...this.initData!,
                 repoData,
                 ...this.api.getStartWorkConfig(),
+                isRovoDevEnabled: Container.isRovoDevEnabled,
             });
         } catch (e) {
             this.logger.error(e, 'Error updating start work page');
@@ -169,7 +172,12 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 break;
             }
             case StartWorkActionType.OpenSettings: {
-                this.api.openSettings(msg.section, msg.subsection);
+                if (Container.featureFlagClient.checkExperimentValue(Experiments.AtlascodeNewSettingsExperiment)) {
+                    this.api.openSettings(ConfigV3Section.AdvancedConfig, ConfigV3SubSection.StartWork);
+                } else {
+                    this.api.openSettings(ConfigSection.Jira, ConfigSubSection.StartWork);
+                }
+
                 break;
             }
             case StartWorkActionType.GetImage: {
@@ -212,6 +220,46 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                         imgData: '',
                         nonce: msg.nonce,
                     } as any);
+                }
+                break;
+            }
+            case StartWorkActionType.GetRovoDevPreference: {
+                try {
+                    const enabled = await this.api.getRovoDevPreference();
+                    this.postMessage({
+                        type: StartWorkMessageType.RovoDevPreferenceResponse,
+                        enabled,
+                    });
+                } catch (e) {
+                    this.logger.error(e, 'Error getting RovoDev preference');
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error getting RovoDev preference'),
+                    });
+                }
+                break;
+            }
+            case StartWorkActionType.UpdateRovoDevPreference: {
+                try {
+                    await this.api.updateRovoDevPreference(msg.enabled);
+                } catch (e) {
+                    this.logger.error(e, 'Error updating RovoDev preference');
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error updating RovoDev preference'),
+                    });
+                }
+                break;
+            }
+            case StartWorkActionType.OpenRovoDev: {
+                try {
+                    await this.api.openRovoDev();
+                } catch (e) {
+                    this.logger.error(e, 'Error opening RovoDev');
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error opening RovoDev'),
+                    });
                 }
                 break;
             }

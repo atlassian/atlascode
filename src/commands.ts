@@ -16,6 +16,7 @@ import { assignIssue } from './commands/jira/assignIssue';
 import { createIssue } from './commands/jira/createIssue';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey, showIssueForURL } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
+import { startWorkWithRovoDev } from './commands/jira/startWorkWithRovoDev';
 import { configuration } from './config/configuration';
 import { Commands, HelpTreeViewId } from './constants';
 import { Container } from './container';
@@ -23,8 +24,11 @@ import { transitionIssue } from './jira/transitionIssue';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from './lib/ipc/models/config';
 import { Logger } from './logger';
+import { runQuickAuth } from './onboarding/quickFlow';
+import { AuthenticationType } from './onboarding/quickFlow/authentication/types';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
-import { RovoDevContext } from './rovo-dev/rovoDevTypes';
+import { RovoDevContextItem } from './rovo-dev/rovoDevTypes';
+import { openRovoDevConfigFile } from './rovo-dev/rovoDevUtils';
 import { Experiments, Features } from './util/featureFlags';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
@@ -173,6 +177,9 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                             : issueNodeOrMinimalIssue.issue,
                     ),
             ),
+            commands.registerCommand(Commands.StartWorkWithRovoDev, (issueNode: IssueNode) =>
+                startWorkWithRovoDev(issueNode.issue),
+            ),
             commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, Uri, Uri, string]) => {
                 viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then((e) => {
                     Container.analyticsClient.sendScreenEvent(e);
@@ -211,6 +218,29 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 Container.openPullRequestHandler(data.pullRequestUrl);
             }),
             commands.registerCommand(Commands.ShowOnboardingFlow, () => Container.onboardingProvider.start()),
+            commands.registerCommand(Commands.JiraLogin, () => {
+                const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
+                if (useNewAuthFlow) {
+                    runQuickAuth({ initialState: { product: ProductJira }, origin: 'settings' });
+                } else {
+                    commands.executeCommand(Commands.ShowConfigPage);
+                }
+            }),
+            commands.registerCommand(Commands.JiraAPITokenLogin, () => {
+                const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
+                if (useNewAuthFlow) {
+                    runQuickAuth({
+                        initialState: { product: ProductJira, authenticationType: AuthenticationType.ApiToken },
+                        origin: 'nudge',
+                    });
+                } else {
+                    Container.settingsWebviewFactory.createOrShow({
+                        section: ConfigV3Section.Auth,
+                        subSection: ConfigV3SubSection.JiraAuth,
+                        initiateApiTokenAuth: true,
+                    });
+                }
+            }),
         );
     } else {
         vscodeContext.subscriptions.push(
@@ -230,12 +260,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 Container.settingsWebviewFactory.createOrShow({
                     section: ConfigSection.Jira,
                     subSection: ConfigSubSection.Auth,
-                }),
-            ),
-            commands.registerCommand(Commands.ShowConfigPageV3, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigV3Section.Auth,
-                    subSection: ConfigV3SubSection.JiraAuth,
                 }),
             ),
             commands.registerCommand(Commands.ShowConfigPageFromExtensionContext, () => {
@@ -368,6 +392,9 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                             : issueNodeOrMinimalIssue.issue,
                     ),
             ),
+            commands.registerCommand(Commands.StartWorkWithRovoDev, (issueNode: IssueNode) =>
+                startWorkWithRovoDev(issueNode.issue),
+            ),
             commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, Uri, Uri, string]) => {
                 viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then((e) => {
                     Container.analyticsClient.sendScreenEvent(e);
@@ -409,16 +436,31 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             commands.registerCommand(Commands.JiraLogin, () => {
                 const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
                 if (useNewAuthFlow) {
-                    commands.executeCommand(Commands.QuickAuth, { product: ProductJira });
+                    runQuickAuth({ initialState: { product: ProductJira }, origin: 'settings' });
                 } else {
                     commands.executeCommand(Commands.ShowConfigPage);
+                }
+            }),
+            commands.registerCommand(Commands.JiraAPITokenLogin, () => {
+                const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
+                if (useNewAuthFlow) {
+                    runQuickAuth({
+                        initialState: { product: ProductJira, authenticationType: AuthenticationType.ApiToken },
+                        origin: 'nudge',
+                    });
+                } else {
+                    Container.settingsWebviewFactory.createOrShow({
+                        section: ConfigSection.Jira,
+                        subSection: ConfigSubSection.Auth,
+                        initiateApiTokenAuth: true,
+                    });
                 }
             }),
         );
     }
 }
 
-const buildContext = (editor?: TextEditor, vscodeContext?: ExtensionContext): RovoDevContext | undefined => {
+const buildContext = (editor?: TextEditor, vscodeContext?: ExtensionContext): RovoDevContextItem[] | undefined => {
     if (!editor || !vscodeContext) {
         return undefined;
     }
@@ -435,13 +477,12 @@ const buildContext = (editor?: TextEditor, vscodeContext?: ExtensionContext): Ro
             : document.fileName,
     };
     const selections = editor.selections && editor.selections.length > 0 ? editor.selections : [editor.selection];
-    return {
-        contextItems: selections.map((selection) => ({
-            file: fileInfo,
-            selection: selection ? { start: selection.start.line, end: selection.end.line } : undefined,
-            enabled: true,
-        })),
-    };
+    return selections.map((selection) => ({
+        isFocus: false,
+        file: fileInfo,
+        selection: selection ? { start: selection.start.line, end: selection.end.line } : undefined,
+        enabled: true,
+    }));
 };
 
 export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
@@ -459,27 +500,35 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             }
             Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
-    );
-    vscodeContext.subscriptions.push(
-        commands.registerCommand(Commands.RovodevAsk, (prompt: string, context?: RovoDevContext) => {
+        commands.registerCommand(Commands.RovodevAsk, (prompt: string, context?: RovoDevContextItem[]) => {
             Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
         commands.registerCommand(Commands.RovodevNewSession, () => {
             Container.rovodevWebviewProvider.executeNewSession();
         }),
         commands.registerCommand(Commands.RovodevShowTerminal, () => RovoDevProcessManager.showTerminal()),
-    );
-    vscodeContext.subscriptions.push(
+        commands.registerCommand(Commands.RovodevShareFeedback, () =>
+            Container.rovodevWebviewProvider.executeTriggerFeedback(),
+        ),
         commands.registerCommand(Commands.RovodevAddToContext, async () => {
             const context = buildContext(window.activeTextEditor, vscodeContext);
-            if (!context || !context.contextItems || context.contextItems.length === 0) {
+            if (!context || context.length === 0) {
                 // Do nothing, this should only have effect in editor context
                 return;
             }
             commands.executeCommand('atlascode.views.rovoDev.webView.focus');
-            context.contextItems.forEach((item) => {
+            context.forEach((item) => {
                 Container.rovodevWebviewProvider.addToContext(item);
             });
+        }),
+        commands.registerCommand(Commands.OpenRovoDevConfig, async () => {
+            await openRovoDevConfigFile('.rovodev/config.yml', 'Rovo Dev settings file');
+        }),
+        commands.registerCommand(Commands.OpenRovoDevMcpJson, async () => {
+            await openRovoDevConfigFile('.rovodev/mcp.json', 'Rovo Dev MCP configuration');
+        }),
+        commands.registerCommand(Commands.OpenRovoDevGlobalMemory, async () => {
+            await openRovoDevConfigFile('.rovodev/.agent.md', 'Rovo Dev Global Memory file');
         }),
     );
 }

@@ -1,4 +1,4 @@
-import { RovoDevContext, TechnicalPlan } from '../../../../src/rovo-dev/rovoDevTypes';
+import { RovoDevContextItem, TechnicalPlan } from '../../../../src/rovo-dev/rovoDevTypes';
 
 export type ToolReturnMessage =
     | ToolReturnFileMessage
@@ -6,17 +6,13 @@ export type ToolReturnMessage =
     | ToolReturnTechnicalPlanMessage
     | ToolReturnGrepFileContentMessage
     | ToolReturnGenericMessage;
-export type ChatMessage =
-    | DefaultMessage
-    | ErrorMessage
-    | ToolCallMessage
-    | ToolReturnGenericMessage
-    | ToolReturnGroupedMessage;
+
+export type ChatMessage = DefaultMessage | ErrorMessage | ToolCallMessage | ToolReturnGenericMessage;
 
 export interface DefaultMessage {
     text: string;
     source: 'User' | 'RovoDev' | 'PullRequest';
-    context?: RovoDevContext;
+    context?: RovoDevContextItem[];
 }
 
 export interface ErrorMessage {
@@ -24,7 +20,7 @@ export interface ErrorMessage {
     text: string;
     title?: string;
     source: 'RovoDevError';
-    isRetriable: boolean;
+    isRetriable?: boolean;
     isProcessTerminated?: boolean;
     uid: string;
 }
@@ -92,7 +88,7 @@ export interface ToolReturnParseResult {
     type?: 'modify' | 'create' | 'delete' | 'open' | 'bash';
 }
 
-export type MessageBlockDetails = ChatMessage[] | DefaultMessage | ErrorMessage | ToolReturnGenericMessage | null;
+export type Response = ChatMessage | ChatMessage[] | null;
 
 interface ToolReturnInfo {
     title: string;
@@ -174,16 +170,29 @@ export function parseToolReturnMessage(rawMsg: ToolReturnGenericMessage): ToolRe
             }
             break;
 
-        case 'grep_file_content':
-            const grepArgs = msg.args && JSON.parse(msg.args);
-            if (grepArgs?.pattern) {
-                const pattern = grepArgs.pattern;
-                resp.push({
-                    content: `Searched file content${pattern ? ` for pattern:` : ''}`,
-                    title: `"${pattern}"`,
-                    type: 'open',
-                });
+        case 'grep':
+            const toolCallArgs = msg.args;
+            const searchPattern = toolCallArgs ? JSON.parse(toolCallArgs).content_pattern : undefined;
+            const pathGlob = toolCallArgs ? JSON.parse(toolCallArgs).path_glob : undefined;
+            const matches = msg.content.split('\n').filter((line) => line.trim() !== '');
+            let content = 'Searched files';
+            if (searchPattern && pathGlob) {
+                content = `Searched for \`${searchPattern}\` in files matching \`${pathGlob}\``;
+            } else if (pathGlob) {
+                content = `Searched files matching \`${pathGlob}\``;
+            } else if (searchPattern) {
+                content = `Searched for \`${searchPattern}\``;
             }
+
+            resp.push({
+                title:
+                    matches.length > 0
+                        ? `${matches.length} ${matches.length > 1 ? 'matches' : 'match'} found`
+                        : 'No matches found',
+                content: content,
+                type: 'open',
+            });
+
             break;
 
         case 'create_technical_plan':
@@ -239,3 +248,125 @@ export const scrollToEnd = (() => {
         }
     };
 })();
+
+export function extractLastNMessages(n: number, history: Response[]) {
+    let msgCount = 0;
+    let idx = history.length - 1;
+    const lastTenMessages = [];
+    let msgBlock: string[] = [];
+
+    while (idx >= 0 && msgCount < n) {
+        const block = history[idx];
+        if (!Array.isArray(block) && block && block.source === 'User') {
+            msgBlock.unshift(JSON.stringify(block, undefined, 4));
+            lastTenMessages.unshift(msgBlock.join('\n'));
+            msgBlock = [];
+            idx--;
+            msgCount++;
+            continue;
+        }
+
+        if (Array.isArray(block)) {
+            const thinkingMsgs: string[] = [];
+            block.forEach((item) => {
+                const tmpItem = { ...item };
+                if (item.source === 'ToolReturn') {
+                    // we don't want to send the full content of the tool_return back in the feedback as it can contain sensitive data
+                    delete (tmpItem as any).content;
+                    delete (tmpItem as any).parsedContent;
+                }
+                thinkingMsgs.push(JSON.stringify(tmpItem, undefined, 4));
+            });
+            msgBlock.unshift(thinkingMsgs.join('\n'));
+            idx--;
+            continue;
+        }
+
+        if (block) {
+            msgBlock.unshift(JSON.stringify(block, undefined, 4));
+        }
+        idx--;
+    }
+    return lastTenMessages;
+}
+/**
+ *
+ * @param response new incoming response
+ * @param prev current state of response history
+ * @param handleAppendModifiedFileToolReturns function to handle appending modified file tool returns
+ * @param setIsDeepPlanCreated function to set if a deep plan has been created
+ * @returns updated response history
+ */
+export const appendResponse = (
+    response: Response,
+    prev: Response[],
+    handleAppendModifiedFileToolReturns: (tr: ToolReturnGenericMessage) => void,
+    setIsDeepPlanCreated: (val: boolean) => void,
+): Response[] => {
+    if (!response) {
+        return prev;
+    }
+
+    const latest = prev.pop();
+
+    if (!Array.isArray(response)) {
+        if (!Array.isArray(latest)) {
+            // Streaming text response, append to current message
+            if (latest && latest.source === 'RovoDev' && response.source === 'RovoDev') {
+                latest.text += response.text;
+                return [...prev, latest];
+            }
+            // Group tool return with previous message if applicable
+            if (response.source === 'ToolReturn') {
+                handleAppendModifiedFileToolReturns(response);
+                if (response.tool_name !== 'create_technical_plan') {
+                    // Do not group if User, Error message, or Pull Request message is the latest
+                    const canGroup =
+                        latest &&
+                        latest.source !== 'User' &&
+                        latest.source !== 'RovoDevError' &&
+                        latest.source !== 'PullRequest';
+
+                    let thinkingGroup: ChatMessage[] = canGroup ? [latest, response] : [response];
+
+                    if (canGroup) {
+                        const prevGroup = prev.pop();
+                        // if previous message is also a thinking group, merge them
+                        if (prevGroup !== undefined) {
+                            if (Array.isArray(prevGroup)) {
+                                thinkingGroup = [...prevGroup, ...thinkingGroup];
+                            } else {
+                                return [...prev, prevGroup, thinkingGroup];
+                            }
+                        }
+                        return [...prev, thinkingGroup];
+                    } else {
+                        return latest ? [...prev, latest, thinkingGroup] : [...prev, thinkingGroup];
+                    }
+                } else {
+                    // create_technical_plan is always its own message
+                    setIsDeepPlanCreated(true);
+                    return latest ? [...prev, latest, response] : [...prev, response];
+                }
+            }
+        } else {
+            if (response.source === 'ToolReturn') {
+                handleAppendModifiedFileToolReturns(response);
+                if (response.tool_name !== 'create_technical_plan') {
+                    latest.push(response);
+                    return [...prev, latest];
+                } else {
+                    setIsDeepPlanCreated(true);
+                    return [...prev, latest, response];
+                }
+            }
+            return [...prev, latest, response];
+        }
+    }
+
+    if (latest) {
+        return [...prev, latest, response];
+    } else {
+        return [...prev, response];
+    }
+};

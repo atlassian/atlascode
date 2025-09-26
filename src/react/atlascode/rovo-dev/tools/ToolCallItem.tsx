@@ -1,18 +1,15 @@
 import React, { useCallback } from 'react';
-import { RovoDevInitState } from 'src/rovo-dev/rovoDevTypes';
+import { InitializingDownladingState, InitializingState, State } from 'src/rovo-dev/rovoDevTypes';
 
 import { ToolCallMessage } from '../utils';
 
-export const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
-
 export const ToolCallItem: React.FC<{
     toolMessage: string;
-    state: RovoDevInitState;
-    downloadProgress?: [number, number];
-}> = ({ toolMessage, state, downloadProgress }) => {
+    currentState: State;
+}> = ({ toolMessage, currentState }) => {
     const getMessage = useCallback(
-        () => (state === RovoDevInitState.Initialized ? toolMessage : getInitStatusMessage(state)),
-        [toolMessage, state],
+        () => (currentState.state === 'Initializing' ? getInitStatusMessage(currentState) : toolMessage),
+        [toolMessage, currentState],
     );
 
     return (
@@ -21,13 +18,15 @@ export const ToolCallItem: React.FC<{
                 <i className="codicon codicon-loading codicon-modifier-spin" />
                 <span>{getMessage()}</span>
             </div>
-            {state === RovoDevInitState.UpdatingBinaries && !!downloadProgress && downloadProgress[1] > 0 && (
-                <progress
-                    max={downloadProgress[1]}
-                    value={downloadProgress[0]}
-                    style={{ alignSelf: 'center', width: '100px', marginLeft: '4px' }}
-                />
-            )}
+            {currentState.state === 'Initializing' &&
+                currentState.subState === 'UpdatingBinaries' &&
+                currentState.totalBytes > 0 && (
+                    <progress
+                        max={currentState.totalBytes}
+                        value={currentState.downloadedBytes}
+                        style={{ alignSelf: 'center', width: '100px', marginLeft: '4px' }}
+                    />
+                )}
         </div>
     );
 };
@@ -61,14 +60,14 @@ export function parseToolCallMessage(msg: ToolCallMessage): string {
     }
 }
 
-function getInitStatusMessage(state: RovoDevInitState): string {
-    switch (state) {
-        case RovoDevInitState.NotInitialized:
+function getInitStatusMessage(state: InitializingState | InitializingDownladingState): string {
+    switch (state.subState) {
+        case 'Other':
             return 'Rovo Dev is initializing';
-        case RovoDevInitState.UpdatingBinaries:
+        case 'UpdatingBinaries':
             return 'Rovo Dev is updating';
-        case RovoDevInitState.Initialized:
-            return DEFAULT_LOADING_MESSAGE;
+        case 'MCPAcceptance':
+            return 'MCPAcceptance'; // this substate is not displayed in the loading spinner
         default:
             // @ts-expect-error ts(2339) - state here should be 'never'
             return state.toString();

@@ -1,10 +1,15 @@
-import { performanceEvent } from '../../src/analytics';
+import { performanceEvent, RovoDevEnv } from '../../src/analytics';
 import { Container } from '../../src/container';
 import { Logger } from '../../src/logger';
 import Perf from '../util/perf';
 
 export class PerformanceLogger {
     private currentSessionId: string = '';
+
+    constructor(
+        private readonly rovoDevEnv: RovoDevEnv,
+        private readonly appInstanceId: string,
+    ) {}
 
     public sessionStarted(sessionId: string) {
         this.currentSessionId = sessionId;
@@ -21,6 +26,8 @@ export class PerformanceLogger {
     public async promptFirstByteReceived(promptId: string) {
         const measure = Perf.measure(promptId);
         const evt = await performanceEvent('api.rovodev.chat.response.timeToFirstByte', measure, {
+            rovoDevEnv: this.rovoDevEnv,
+            appInstanceId: this.appInstanceId,
             rovoDevSessionId: this.currentSessionId,
             rovoDevPromptId: promptId,
         });
@@ -32,6 +39,8 @@ export class PerformanceLogger {
     public async promptFirstMessageReceived(promptId: string) {
         const measure = Perf.measure(promptId);
         const evt = await performanceEvent('api.rovodev.chat.response.timeToFirstMessage', measure, {
+            rovoDevEnv: this.rovoDevEnv,
+            appInstanceId: this.appInstanceId,
             rovoDevSessionId: this.currentSessionId,
             rovoDevPromptId: promptId,
         });
@@ -43,6 +52,8 @@ export class PerformanceLogger {
     public async promptTechnicalPlanReceived(promptId: string) {
         const measure = Perf.measure(promptId);
         const evt = await performanceEvent('api.rovodev.chat.response.timeToTechPlan', measure, {
+            rovoDevEnv: this.rovoDevEnv,
+            appInstanceId: this.appInstanceId,
             rovoDevSessionId: this.currentSessionId,
             rovoDevPromptId: promptId,
         });
@@ -54,6 +65,8 @@ export class PerformanceLogger {
     public async promptLastMessageReceived(promptId: string) {
         const measure = Perf.measure(promptId);
         const evt = await performanceEvent('api.rovodev.chat.response.timeToLastMessage', measure, {
+            rovoDevEnv: this.rovoDevEnv,
+            appInstanceId: this.appInstanceId,
             rovoDevSessionId: this.currentSessionId,
             rovoDevPromptId: promptId,
         });

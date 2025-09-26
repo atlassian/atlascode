@@ -2,13 +2,14 @@ import ChevronDown from '@atlaskit/icon/glyph/chevron-down';
 import ChevronRight from '@atlaskit/icon/glyph/chevron-right';
 import React, { useCallback } from 'react';
 
-import { OpenFileFunc, renderChatHistory } from '../common/common';
+import { CheckFileExistsFunc, OpenFileFunc, renderChatHistory } from '../common/common';
 import { ChatMessage } from '../utils';
 
 interface MessageDrawerProps {
     messages: ChatMessage[];
     renderProps: {
         openFile: OpenFileFunc;
+        checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
     };
@@ -18,11 +19,16 @@ interface MessageDrawerProps {
 
 export const MessageDrawer: React.FC<MessageDrawerProps> = ({
     messages,
-    renderProps: { openFile, isRetryAfterErrorButtonEnabled, retryPromptAfterError },
+    renderProps: { openFile, checkFileExists, isRetryAfterErrorButtonEnabled, retryPromptAfterError },
     onCollapsiblePanelExpanded,
     opened,
 }) => {
     const [isOpen, setIsOpen] = React.useState(opened);
+
+    // Sync internal state when `opened` prop changes
+    React.useEffect(() => {
+        setIsOpen(opened);
+    }, [opened]);
 
     const openDrawer = useCallback(
         (value: boolean) => {
@@ -51,7 +57,14 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
             </div>
             <div hidden={!isOpen} className="message-drawer-content">
                 {messages.map((msg, index) =>
-                    renderChatHistory(msg, index, openFile, isRetryAfterErrorButtonEnabled, retryPromptAfterError),
+                    renderChatHistory(
+                        msg,
+                        index,
+                        openFile,
+                        checkFileExists,
+                        isRetryAfterErrorButtonEnabled,
+                        retryPromptAfterError,
+                    ),
                 )}
             </div>
         </div>

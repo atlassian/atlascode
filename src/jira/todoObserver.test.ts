@@ -85,6 +85,7 @@ describe('todoObserver', () => {
                 command: Commands.CreateIssue,
                 arguments: [
                     {
+                        context: '// TODO: implement this feature',
                         fromCodeLens: true,
                         summary: ': implement this feature',
                         uri: document.uri,

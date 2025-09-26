@@ -1,5 +1,11 @@
 body {
     padding: 0 !important;
+    background-color: var(--vscode-sideBar-background) !important;
+}
+
+.rovoDevChat * {
+    scrollbar-width: auto;
+    scrollbar-color: var(--vscode-scrollbarSlider-background) transparent;
 }
 
 .rovoDevChat {
@@ -7,7 +13,7 @@ body {
     flex-direction: column;
     align-items: center;
     box-sizing: border-box;
-    background-color: var(--vscode-editor-background);
+    background-color: var(--vscode-sideBar-background);
     font-size: var(--vscode-font-size);
     font-family: var(--vscode-font-family);
     height: 100vh;
@@ -15,8 +21,20 @@ body {
     max-width: 800px;
 }
 
+#rovoDevLogo > path {
+    fill: #6A9A23;
+}
+
+.vscode-dark #rovoDevLogo > path {
+    fill: #94C748;
+}
+
 #prompt-editor-container * {
     font-size: var(--vscode-font-size) !important;
+}
+
+#prompt-editor-container > .monaco-editor {
+    outline: none;
 }
 
 .rovoDevChat button {
@@ -143,6 +161,15 @@ body {
     white-space: nowrap;
 }
 
+.file-lozenge.file-lozenge-disabled {
+    opacity: 0.7;
+}
+
+.file-lozenge.file-lozenge-disabled:hover {
+    background-color: transparent;
+    cursor: not-allowed;
+}
+
 .code-changes-container {
     display: flex;
     flex-direction: column;
@@ -224,14 +251,15 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--vscode-button-border);
+    border: 1px solid var(--vscode-editorWidget-border);
+    border-radius: 6px;
     max-width: 400px;
-    background-color: var(--vscode-button-secondaryBackground);
+    background-color: inherit;
     padding: 6px 12px;
 }
 
 .code-plan-button:hover {
-    background-color: var(--vscode-button-secondaryHoverBackground);
+    border: 1px solid var(--vscode-focusBorder);
     cursor: pointer;
 }
 
@@ -277,6 +305,10 @@ body {
 
 .chat-message-action:hover {
     background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.chat-message-action.copied svg {
+    color: #6a9a23;
 }
 
 .message-drawer {
@@ -351,14 +383,15 @@ body {
     background-color: var(--vscode-button-background);
     color: var(--vscode-button-foreground);
     border: 0;
+    border-radius: 6px;
 }
 .pull-request-button:hover {
     background-color: var(--vscode-button-hoverBackground);
     cursor: pointer;
 }
 
-/* Pull Request form styles */
-.pull-request-form-container {
+/* form styles */
+.form-container {
     display: flex;
     padding: 12px;
     flex-direction: column;
@@ -368,21 +401,21 @@ body {
     flex: 1 0 0;
 }
 
-.pull-request-form-body {
+.form-body {
     display: flex;
     flex-direction: column;
     gap: 18px;
     width: 100%;
 }
 
-.pull-request-form-header {
+.form-header {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 4px;
 }
 
-.pull-request-form-fields {
+.form-fields {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -390,7 +423,7 @@ body {
     align-self: stretch;
 }
 
-.pull-request-form-field {
+.form-field {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -398,24 +431,57 @@ body {
     align-self: stretch;
 }
 
-.pull-request-form-field label {
+.form-field label {
     font-size: 11px;
     color: var(--vscode-editor-foreground);
 }
 
-.pull-request-form-field input[type="text"] {
+.form-field input[type="text"], .form-field textarea {
     width: 100%;
     padding: 6px 8px;
     border: 1px solid var(--vscode-input-border);
+    border-radius: 4px;
     background-color: var(--vscode-input-background);
     color: var(--vscode-input-foreground);
 }
 
-.pull-request-form-field input[type="text"]:focus {
+.form-field input[type="text"]:focus, .form-field textarea:focus {
     outline: var(--vscode-focusBorder) solid 1px;
 }
 
-.pull-request-form-actions {
+.form-field-checkbox {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+.form-field-checkbox input[type="checkbox"] {
+    background-color: var(--vscode-checkbox-background);
+    color: var(--vscode-checkbox-foreground);
+    border: 1px solid var(--vscode-checkbox-border);
+    cursor: pointer;
+}
+
+.form-field-checkbox input[type="checkbox"]:focus {
+    outline: var(--vscode-checkbox-selectBorder) solid 1px;
+    background-color: var(--vscode-checkbox-selectBackground);
+}
+
+
+.form-select {
+    width: 100%;
+    border: 1px solid var(--vscode-dropdown-border);
+    border-radius: 4px;
+    background-color: var(--vscode-dropdown-background);
+    color: var(--vscode-dropdown-foreground);
+}
+
+.form-select:focus {
+    outline: var(--vscode-focusBorder) solid 1px;
+}
+
+.form-actions {
     display: flex;
     flex-direction: row;
     gap: 10px;
@@ -423,31 +489,32 @@ body {
     justify-content: flex-end;
 }
 
-.pull-request-cancel-button,
-.pull-request-submit-button {
+.form-cancel-button,
+.form-submit-button {
     padding: 6px 12px;
     display: flex;
     align-items: center;
     gap: 8px;
     border: 0;
+    border-radius: 4px;
     cursor: pointer;
 }
 
-.pull-request-cancel-button {
-    background-color: var(--vscode-button-secondaryBackground);
+.form-cancel-button {
+    background-color: inherit;
     color: var(--vscode-button-secondaryForeground);
 }
 
-.pull-request-cancel-button:hover {
+.form-cancel-button:hover {
     background-color: var(--vscode-button-secondaryHoverBackground);
 }
 
-.pull-request-submit-button {
+.form-submit-button {
     background-color: var(--vscode-button-background);
     color: var(--vscode-button-foreground);
 }
 
-.pull-request-submit-button:hover {
+.form-submit-button:hover {
     background-color: var(--vscode-button-hoverBackground);
 }
 
@@ -478,19 +545,43 @@ body {
     width: 100%;
 }
 
+.modified-file-item > div {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+    margin-right: 8px;
+}
+
+.modified-file-item .file-name {
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.modified-file-item .file-path {
+    color: var(--vscode-descriptionForeground);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-left: 8px;
+    display: inline;
+}
+
 .modified-file-item:hover {
     background-color: var(--vscode-list-hoverBackground);
 }
 
 .modified-file-actions {
-    display: none;
+    visibility: hidden;
+    display: flex;
     align-items: center;
     flex-direction: row;
     gap: 4px;
+    flex-shrink: 0;
 }
 
 .modified-file-item:hover .modified-file-actions {
-    display: flex;
+    visibility: visible;
 }
 
 .modified-file-action {
@@ -529,8 +620,12 @@ body {
     flex-direction: column;
     width: 100%;
     gap: 8px;
-    background: var(--vscode-sideBar-background);
-    padding-bottom: 4px;
+    padding-top: 8px;
+    border: solid 1px var(--vscode-dropdown-border);
+    border-bottom: none;
+    margin-bottom: -16px;
+    padding-bottom: 16px;
+    border-radius: 16px 16px 0 0;
 }
 
 .updated-files-header {
@@ -555,14 +650,25 @@ body {
 }
 
 .updated-files-action {
-    cursor: pointer;
+    color: var(--vscode-input-foreground);
+    background-color: inherit;
+    border: none;
+    border-radius: 4px;
     padding: 2px 6px;
+}
+
+#bordered-button {
+    border: 1px solid var(--vscode-editorWidget-border);
 }
 
 .updated-files-action:disabled {
     cursor: not-allowed;
 }
 
+.updated-files-action:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+    color: var(--vscode-button-secondaryForeground)
+}
 
 .secondary {
     color: var(--vscode-button-secondaryForeground);
@@ -576,7 +682,7 @@ body {
 .primary {
     color: var(--vscode-button-foreground);
     background-color: var(--vscode-button-background);
-    border: 1px solid var(--vscode-button-border);
+    border: 1px solid var(--vscode-editorWidget-border);
 }
 .primary:hover {
     background-color: var(--vscode-button-hoverBackground);
@@ -586,7 +692,7 @@ body {
 .input-section-container {
     width: 100%;
     background-color: var(--vscode-sideBar-background);
-    padding: 16px 16px 6px 16px;
+    padding: 8px 16px 6px 16px;
     border-radius: 12px 12px 0 0;
 }
 
@@ -596,9 +702,9 @@ body {
     flex-direction: column;
     gap: 8px;
     border : 1px solid var(--vscode-input-border);
-    border-radius: 4px;
+    border-radius: 16px;
     background-color: var(--vscode-input-background);
-    padding: 8px;
+    padding: 12px;
 }
 
 .monaco-editor {
@@ -629,6 +735,86 @@ body {
     outline: var(--vscode-focusBorder) solid 1px;
 }
 
+.prompt-button-primary,
+.prompt-button-secondary,
+.prompt-button-secondary-open {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: none;
+    padding: 2px 6px;
+    height: 32px;
+    width: 32px;
+}
+
+.prompt-button-primary {
+    color: var(--vscode-button-foreground);
+    background-color: var(--vscode-button-background);
+}
+
+.prompt-button-primary:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+.prompt-button-primary:disabled,
+.prompt-button-secondary:disabled {
+    cursor: not-allowed;
+}
+
+.prompt-button-primary:disabled {
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-disabledForeground);
+}
+
+.prompt-button-secondary {
+    color: var(--vscode-input-foreground);
+    background-color: var(--vscode-input-background);
+}
+
+.prompt-button-secondary:hover {
+    color: var(--vscode-button-secondaryForeground);
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.prompt-button-secondary-open {
+    color: var(--vscode-inputOption-activeForeground);
+    background-color: var(--vscode-inputOption-activeBackground);
+    border: 1px solid var(--vscode-focusBorder);
+}
+
+.prompt-settings-item {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+    background-color: var(--vscode-sideBar-background);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.prompt-settings-action {
+    --ds-icon-inverse: var(--vscode-sideBar-background);
+}
+
+.prompt-settings-logo {
+    display: flex;
+    padding-top: 4px;
+}
+
+.deep-plan-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--vscode-focusBorder);
+    height: 32px;
+    padding: 2px 6px;
+    border-radius: 16px;
+    background-color: var(--vscode-inputOption-activeBackground);
+    color: var(--vscode-inputOption-activeForeground);
+    cursor: pointer;
+}
+
 .ai-disclaimer {
     text-align: center;
     font-size: 11px;
@@ -637,3 +823,80 @@ body {
     opacity: 0.7;
 }
 
+/* High contrast theme overrides */
+
+.vscode-high-contrast .user-message {
+    border: 1px solid var(--vscode-contrastBorder);
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+}
+
+.vscode-high-contrast code {
+    border: 1px solid var(--vscode-contrastBorder);
+    background-color: var(--vscode-editor-background);
+}
+
+.vscode-high-contrast-light code {
+    border: 1px solid var(--vscode-contrastBorder);
+    background-color: var(--vscode-editor-background);
+}
+
+.vscode-high-contrast .form-cancel-button,
+.vscode-high-contrast .form-submit-button {
+    border: 2px solid var(--vscode-contrastBorder);
+}
+
+.vscode-light .form-cancel-button {
+    color: var(--vscode-foreground);
+}
+
+.vscode-light .form-cancel-button:hover {
+    color: var(--vscode-button-secondaryForeground);
+}
+
+.vscode-high-contrast .form-cancel-button:hover,
+.vscode-high-contrast .form-submit-button:hover {
+    border: 2px solid var(--vscode-focusBorder);
+}
+
+.vscode-high-contrast .updated-files-action,
+.vscode-high-contrast #bordered-button {
+    border: 2px solid var(--vscode-contrastBorder);
+}
+
+.vscode-high-contrast .updated-files-action:hover,
+.vscode-high-contrast #bordered-button:hover
+ {
+    border: 2px solid var(--vscode-focusBorder);
+}
+
+.vscode-high-contrast .updated-files-action:disabled,
+.vscode-high-contrast #bordered-button:disabled {
+    border: 2px solid var(--vscode-disabledForeground);
+    opacity: 0.5;
+}
+
+.vscode-high-contrast .prompt-button-primary,
+.vscode-high-contrast .prompt-button-secondary,
+.vscode-high-contrast .prompt-button-secondary-open {
+    border: 2px solid var(--vscode-contrastBorder);
+}
+.vscode-high-contrast .prompt-button-primary:hover,
+.vscode-high-contrast .prompt-button-secondary:hover,
+.vscode-high-contrast .prompt-button-secondary-open:hover {
+    border: 2px solid var(--vscode-focusBorder);
+}
+
+.vscode-high-contrast .code-plan-button {
+    border: 2px solid var(--vscode-contrastBorder);
+}
+.vscode-high-contrast .code-plan-button:hover {
+    border: 2px solid var(--vscode-focusBorder);
+}
+
+.vscode-high-contrast .deep-plan-indicator {
+    border: 2px solid var(--vscode-contrastBorder);
+}
+.vscode-high-contrast .deep-plan-indicator:hover {
+    border: 2px solid var(--vscode-focusBorder);
+}
