@@ -1,12 +1,16 @@
 import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-summary';
 import CrossIcon from '@atlaskit/icon/core/cross';
 import CustomizeIcon from '@atlaskit/icon/core/customize';
+import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
 import Popup, { PopupComponentProps } from '@atlaskit/popup';
 import Toggle from '@atlaskit/toggle';
 import React from 'react';
+
 interface PromptSettingsPopupProps {
-    onToggleDeepPlan: () => void;
+    onDeepPlanToggled?: () => void;
+    onYoloModeToggled?: () => void;
     isDeepPlanEnabled: boolean;
+    isYoloModeEnabled: boolean;
     onClose: () => void;
 }
 
@@ -30,8 +34,19 @@ const PopupContainer = React.forwardRef<HTMLDivElement, PopupComponentProps>(
     ),
 );
 
-const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({ onToggleDeepPlan, isDeepPlanEnabled, onClose }) => {
+const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
+    onDeepPlanToggled,
+    onYoloModeToggled,
+    isDeepPlanEnabled,
+    isYoloModeEnabled,
+    onClose,
+}) => {
     const [isOpen, setIsOpen] = React.useState(false);
+
+    if (!onDeepPlanToggled && !onYoloModeToggled) {
+        return false;
+    }
+
     return (
         <Popup
             shouldRenderToParent
@@ -60,13 +75,28 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({ onToggleDeepP
                 </>
             )}
             content={() => (
-                <PromptSettingsItem
-                    label="Plan"
-                    description="Tackle complex, multi-step code by first generating a plan before coding."
-                    action={onToggleDeepPlan}
-                    actionType="toggle"
-                    toggled={isDeepPlanEnabled}
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {onDeepPlanToggled && (
+                        <PromptSettingsItem
+                            icon={<AiGenerativeTextSummaryIcon label="Deep plan" />}
+                            label="Plan"
+                            description="Tackle complex, multi-step code by first generating a plan before coding."
+                            action={onDeepPlanToggled}
+                            actionType="toggle"
+                            toggled={isDeepPlanEnabled}
+                        />
+                    )}
+                    {onYoloModeToggled && (
+                        <PromptSettingsItem
+                            icon={<LockUnlockedIcon label="YOLO mode" />}
+                            label="YOLO"
+                            description="Toggle yolo mode which runs all file CRUD operations and bash commands without confirmation. Use with caution!"
+                            action={onYoloModeToggled}
+                            actionType="toggle"
+                            toggled={isYoloModeEnabled}
+                        />
+                    )}
+                </div>
             )}
             placement="top-start"
             popupComponent={PopupContainer}
@@ -79,24 +109,16 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({ onToggleDeepP
 };
 
 const PromptSettingsItem: React.FC<{
+    icon: JSX.Element;
     label: string;
     description: string;
     action?: () => void;
     actionType?: 'toggle' | 'button';
     toggled?: boolean;
-}> = ({ label, description, action, actionType, toggled }) => {
+}> = ({ icon, label, description, action, actionType, toggled }) => {
     return (
         <div className="prompt-settings-item">
-            <div className="prompt-settings-logo">
-                {(() => {
-                    switch (label) {
-                        case 'Plan':
-                            return <AiGenerativeTextSummaryIcon label="Deep plan" />;
-                        default:
-                            return <CustomizeIcon label="Customize prompt" />;
-                    }
-                })()}
-            </div>
+            <div className="prompt-settings-logo">{icon}</div>
             <div id="prompt-settings-context">
                 <p style={{ fontWeight: 'bold' }}>{label}</p>
                 <p style={{ fontSize: '11px' }}>{description}</p>

@@ -45,7 +45,9 @@ describe('PromptInputBox', () => {
         promptText: '',
         onPromptTextChange: jest.fn(),
         isDeepPlanEnabled: false,
+        isYoloModeEnabled: false,
         onDeepPlanToggled: jest.fn(),
+        onYoloModeToggled: jest.fn(),
         onSend: jest.fn(),
         onCancel: jest.fn(),
         sendButtonDisabled: false,
@@ -87,11 +89,6 @@ describe('PromptInputBox', () => {
         render(<PromptInputBox {...defaultProps} currentState={{ state: 'CancellingResponse' }} />);
         fireEvent.click(screen.getByLabelText('Stop'));
         expect(defaultProps.onCancel).toHaveBeenCalledTimes(0);
-    });
-
-    it('shows "Deep plan enabled" text when deep plan is enabled', () => {
-        render(<PromptInputBox {...defaultProps} isDeepPlanEnabled={true} />);
-        expect(screen.getByTitle('Deep plan is enabled')).toBeTruthy();
     });
 
     it('calls onAddContext when Add Context button is clicked', () => {

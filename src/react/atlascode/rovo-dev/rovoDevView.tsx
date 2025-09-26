@@ -60,6 +60,8 @@ function mapRovoDevDisabledReasonToSubState(reason: RovoDevDisabledReason): Disa
     }
 }
 
+const IsBoysenberry = process.env.ROVODEV_BBY === 'true';
+
 const RovoDevView: React.FC = () => {
     const [currentState, setCurrentState] = useState<State>({ state: 'WaitingForPrompt' });
     const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
@@ -67,6 +69,7 @@ const RovoDevView: React.FC = () => {
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
     const [isDeepPlanCreated, setIsDeepPlanCreated] = useState(false);
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
+    const [isYoloModeToggled, setIsYoloModeToggled] = useState(IsBoysenberry);
     const [workspacePath, setWorkspacePath] = useState<string>('');
     const [homeDir, setHomeDir] = useState<string>('');
     const [history, setHistory] = useState<Response[]>([]);
@@ -672,6 +675,20 @@ const RovoDevView: React.FC = () => {
         [setModalDialogs, postMessage],
     );
 
+    const onYoloModeToggled = useCallback(() => setIsYoloModeToggled((prev) => !prev), [setIsYoloModeToggled]);
+
+    React.useEffect(() => {
+        // the event below (YoloModeToggled) with value true automatically approves any pending confirmation
+        if (isYoloModeToggled) {
+            setModalDialogs([]);
+        }
+
+        postMessage({
+            type: RovoDevViewResponseType.YoloModeToggled,
+            value: isYoloModeToggled,
+        });
+    }, [postMessage, isYoloModeToggled]);
+
     const hidePromptBox =
         currentState.state === 'Disabled' ||
         (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance');
@@ -747,7 +764,9 @@ const RovoDevView: React.FC = () => {
                             disabled={currentState.state === 'ProcessTerminated'}
                             currentState={currentState}
                             isDeepPlanEnabled={isDeepPlanToggled}
-                            onDeepPlanToggled={() => setIsDeepPlanToggled(!isDeepPlanToggled)}
+                            isYoloModeEnabled={isYoloModeToggled}
+                            onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
+                            onYoloModeToggled={IsBoysenberry ? undefined : () => onYoloModeToggled()}
                             onSend={sendPrompt}
                             onCancel={cancelResponse}
                             onAddContext={() => {

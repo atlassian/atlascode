@@ -17,14 +17,25 @@ interface TypedWebview<MessageOut, MessageIn> extends Webview {
 type StreamingApi = 'chat' | 'replay';
 
 export class RovoDevChatProvider {
-    public yoloMode = false;
-
+    private _pendingToolConfirmation: Record<string, ToolPermissionChoice | 'undecided'> = {};
+    private _pendingToolConfirmationLeft = 0;
     private _pendingPrompt: RovoDevPrompt | undefined;
     private _currentPrompt: RovoDevPrompt | undefined;
     private _rovoDevApiClient: RovoDevApiClient | undefined;
     private _webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined;
 
     private _replayInProgress = false;
+
+    private _yoloMode = false;
+    public get yoloMode() {
+        return this._yoloMode;
+    }
+    public set yoloMode(value: boolean) {
+        this._yoloMode = value;
+        if (value) {
+            this.signalYoloModeEngaged();
+        }
+    }
 
     private _currentPromptId: string = '';
     public get currentPromptId() {
@@ -361,9 +372,17 @@ export class RovoDevChatProvider {
                 });
 
             case 'on_call_tools_start':
+                this._pendingToolConfirmation = {};
+                this._pendingToolConfirmationLeft = 0;
+
                 if (this.yoloMode) {
-                    return this._rovoDevApiClient!.resumeToolCall(response.tools.map((x) => x.tool_call_id));
+                    const yoloChoices: RovoDevChatProvider['_pendingToolConfirmation'] = {};
+                    response.tools.forEach((x) => (yoloChoices[x.tool_call_id] = 'allow'));
+                    return this._rovoDevApiClient!.resumeToolCall(yoloChoices);
                 } else {
+                    response.tools.forEach((x) => (this._pendingToolConfirmation[x.tool_call_id] = 'undecided'));
+                    this._pendingToolConfirmationLeft = response.tools.length;
+
                     const promises = [];
                     for (const tool of response.tools) {
                         promises.push(
@@ -393,9 +412,34 @@ export class RovoDevChatProvider {
         }
     }
 
-    public signalToolRequestChoiceSubmit(toolCallId: string, choice: ToolPermissionChoice) {
-        const denyReason = choice === 'deny' ? 'I denied the execution of this tool call' : undefined;
-        return this._rovoDevApiClient!.resumeToolCall(toolCallId, denyReason);
+    public async signalToolRequestChoiceSubmit(toolCallId: string, choice: ToolPermissionChoice) {
+        if (!this._pendingToolConfirmation[toolCallId]) {
+            throw new Error('Received an unexpected tool confirmation: not found.');
+        }
+        if (this._pendingToolConfirmation[toolCallId] !== 'undecided') {
+            throw new Error('Received an unexpected tool confirmation: already confirmed.');
+        }
+
+        this._pendingToolConfirmation[toolCallId] = choice;
+
+        if (--this._pendingToolConfirmationLeft <= 0) {
+            await this._rovoDevApiClient!.resumeToolCall(this._pendingToolConfirmation);
+            this._pendingToolConfirmation = {};
+        }
+    }
+
+    private async signalYoloModeEngaged() {
+        if (this._pendingToolConfirmationLeft > 0) {
+            for (const key in this._pendingToolConfirmation) {
+                if (this._pendingToolConfirmation[key] === 'undecided') {
+                    this._pendingToolConfirmation[key] = 'allow';
+                }
+            }
+            this._pendingToolConfirmationLeft = 0;
+
+            await this._rovoDevApiClient!.resumeToolCall(this._pendingToolConfirmation);
+            this._pendingToolConfirmation = {};
+        }
     }
 
     private async executeStreamingApiWithErrorHandling(

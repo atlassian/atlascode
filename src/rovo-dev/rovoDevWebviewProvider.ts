@@ -362,6 +362,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await this._chatProvider.signalToolRequestChoiceSubmit(e.toolCallId, e.choice);
                         break;
 
+                    case RovoDevViewResponseType.YoloModeToggled:
+                        this._chatProvider.yoloMode = e.value;
+                        break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));

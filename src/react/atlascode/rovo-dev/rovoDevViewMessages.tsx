@@ -28,6 +28,7 @@ export const enum RovoDevViewResponseType {
     LaunchJiraAuth = 'launchJiraAuth',
     McpConsentChoiceSubmit = 'mcpConsentChoiceSubmit',
     ToolPermissionChoiceSubmit = 'toolPermissionChoiceSubmit',
+    YoloModeToggled = 'yoloModeToggled',
 }
 
 export interface ModifiedFile {
@@ -68,4 +69,5 @@ export type RovoDevViewResponse =
     | ReducerAction<
           RovoDevViewResponseType.ToolPermissionChoiceSubmit,
           { choice: ToolPermissionChoice; toolCallId: string }
-      >;
+      >
+    | ReducerAction<RovoDevViewResponseType.YoloModeToggled, { value: boolean }>;

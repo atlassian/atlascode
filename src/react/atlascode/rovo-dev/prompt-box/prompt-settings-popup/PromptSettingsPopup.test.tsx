@@ -4,7 +4,8 @@ import React from 'react';
 import PromptSettingsPopup from './PromptSettingsPopup';
 
 describe('PromptSettingsPopup', () => {
-    const mockOnToggleDeepPlan = jest.fn();
+    const mockOnDeepPlanToggled = jest.fn();
+    const mockOnYoloModeToggled = jest.fn();
     const mockOnClose = jest.fn();
 
     beforeEach(() => {
@@ -14,8 +15,10 @@ describe('PromptSettingsPopup', () => {
     it('renders the settings trigger button', () => {
         render(
             <PromptSettingsPopup
-                onToggleDeepPlan={mockOnToggleDeepPlan}
+                onDeepPlanToggled={mockOnDeepPlanToggled}
+                onYoloModeToggled={mockOnYoloModeToggled}
                 isDeepPlanEnabled={false}
+                isYoloModeEnabled={false}
                 onClose={mockOnClose}
             />,
         );
@@ -27,8 +30,10 @@ describe('PromptSettingsPopup', () => {
     it('opens popup when trigger button is clicked', () => {
         render(
             <PromptSettingsPopup
-                onToggleDeepPlan={mockOnToggleDeepPlan}
+                onDeepPlanToggled={mockOnDeepPlanToggled}
+                onYoloModeToggled={mockOnYoloModeToggled}
                 isDeepPlanEnabled={false}
+                isYoloModeEnabled={false}
                 onClose={mockOnClose}
             />,
         );
@@ -45,8 +50,10 @@ describe('PromptSettingsPopup', () => {
     it('calls onToggleDeepPlan when toggle is clicked', () => {
         render(
             <PromptSettingsPopup
-                onToggleDeepPlan={mockOnToggleDeepPlan}
+                onDeepPlanToggled={mockOnDeepPlanToggled}
+                onYoloModeToggled={mockOnYoloModeToggled}
                 isDeepPlanEnabled={false}
+                isYoloModeEnabled={false}
                 onClose={mockOnClose}
             />,
         );
@@ -57,14 +64,16 @@ describe('PromptSettingsPopup', () => {
         const toggle = screen.getByLabelText('Plan toggle');
         fireEvent.click(toggle);
 
-        expect(mockOnToggleDeepPlan).toHaveBeenCalledTimes(1);
+        expect(mockOnDeepPlanToggled).toHaveBeenCalledTimes(1);
     });
 
     it('closes popup and calls onClose when clicking outside', () => {
         render(
             <PromptSettingsPopup
-                onToggleDeepPlan={mockOnToggleDeepPlan}
+                onDeepPlanToggled={mockOnDeepPlanToggled}
+                onYoloModeToggled={mockOnYoloModeToggled}
                 isDeepPlanEnabled={false}
+                isYoloModeEnabled={false}
                 onClose={mockOnClose}
             />,
         );

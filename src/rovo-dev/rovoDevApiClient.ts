@@ -1,3 +1,5 @@
+import { ToolPermissionChoice } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
+
 function statusIsSuccessful(status: number | undefined) {
     return !!status && Math.floor(status / 100) === 2;
 }
@@ -133,27 +135,20 @@ export class RovoDevApiClient {
     }
 
     /** Invokes the POST `/v3/resume_tool_calls` API.
-     * @param {string[]} toolCallIds A list of tool call IDs to allow.
+     * @param {Record<string, 'allow' | 'deny' | 'undecided'>} permissionChoices A map of `toolCallId : choice` representing the choice
+     *   taken for the tool permission request. If provided choice is `'undecided'`, it's defaulted to `'deny'`.
      */
-    public async resumeToolCall(toolCallIds: string[]): Promise<void>;
-    /** Invokes the POST `/v3/resume_tool_calls` API.
-     * @param {string} toolCallId The ID of the tool call to either allow or deny.
-     * @param {string?} denyMessage The deny message for this tool call, or `undefined` to allow the tool call. Defaults to `undefined`.
-     */
-    public async resumeToolCall(toolCallId: string, denyMessage?: string): Promise<void>;
-    public async resumeToolCall(toolCallId: string | string[], denyMessage?: string): Promise<void> {
-        const message = Array.isArray(toolCallId)
-            ? {
-                  decisions: toolCallId.map((tool_call_id) => ({ tool_call_id })),
-              }
-            : {
-                  decisions: [
-                      {
-                          tool_call_id: toolCallId,
-                          deny_message: denyMessage || undefined,
-                      },
-                  ],
-              };
+    public async resumeToolCall(permissionChoices: Record<string, ToolPermissionChoice | 'undecided'>): Promise<void> {
+        const defaultDenyMessage = 'I denied the execution of this tool call';
+
+        const decisions: { tool_call_id: string; deny_message?: string }[] = [];
+
+        for (const key in permissionChoices) {
+            const choice = permissionChoices[key];
+            decisions.push({ tool_call_id: key, deny_message: choice === 'allow' ? undefined : defaultDenyMessage });
+        }
+
+        const message = { decisions };
 
         await this.fetchApi('/v3/resume_tool_calls', 'POST', JSON.stringify(message));
     }

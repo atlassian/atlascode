@@ -673,92 +673,6 @@ describe('RovoDevApiClient', () => {
         });
     });
 
-    describe('resumeToolCall method', () => {
-        it('should send resume request with array of tool call IDs', async () => {
-            const mockResponse = {
-                status: 200,
-                headers: mockStandardResponseHeaders(),
-            } as Response;
-
-            mockFetch.mockResolvedValue(mockResponse);
-
-            const toolCallIds = ['tool1', 'tool2', 'tool3'];
-            await expect(client.resumeToolCall(toolCallIds)).resolves.toBeUndefined();
-
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/resume_tool_calls', {
-                method: 'POST',
-                headers: {
-                    accept: 'text/event-stream',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    decisions: [{ tool_call_id: 'tool1' }, { tool_call_id: 'tool2' }, { tool_call_id: 'tool3' }],
-                }),
-            });
-        });
-
-        it('should send resume request with single tool call ID', async () => {
-            const mockResponse = {
-                status: 200,
-                headers: mockStandardResponseHeaders(),
-            } as Response;
-
-            mockFetch.mockResolvedValue(mockResponse);
-
-            const toolCallId = 'tool1';
-            await expect(client.resumeToolCall(toolCallId)).resolves.toBeUndefined();
-
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/resume_tool_calls', {
-                method: 'POST',
-                headers: {
-                    accept: 'text/event-stream',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    decisions: [{ tool_call_id: 'tool1', deny_message: undefined }],
-                }),
-            });
-        });
-
-        it('should send resume request with single tool call ID and deny message', async () => {
-            const mockResponse = {
-                status: 200,
-                headers: mockStandardResponseHeaders(),
-            } as Response;
-
-            mockFetch.mockResolvedValue(mockResponse);
-
-            const toolCallId = 'tool1';
-            const denyMessage = 'Access denied';
-            await expect(client.resumeToolCall(toolCallId, denyMessage)).resolves.toBeUndefined();
-
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/resume_tool_calls', {
-                method: 'POST',
-                headers: {
-                    accept: 'text/event-stream',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    decisions: [{ tool_call_id: 'tool1', deny_message: 'Access denied' }],
-                }),
-            });
-        });
-
-        it('should throw error when API call fails', async () => {
-            const mockResponse = {
-                status: 500,
-                statusText: 'Internal Server Error',
-                headers: mockStandardResponseHeaders(),
-            } as Response;
-
-            mockFetch.mockResolvedValue(mockResponse);
-
-            await expect(client.resumeToolCall('tool1')).rejects.toThrow(
-                "Failed to fetch '/v3/resume_tool_calls API: HTTP 500",
-            );
-        });
-    });
-
     describe('shutdown method', () => {
         it('should send shutdown request successfully', async () => {
             const mockResponse = {
@@ -797,6 +711,251 @@ describe('RovoDevApiClient', () => {
             mockFetch.mockRejectedValue(networkError);
 
             await expect(client.shutdown()).rejects.toThrow("Failed to fetch '/shutdown API: Network error");
+        });
+    });
+
+    describe('resumeToolCall method', () => {
+        it('should send allow decision for single tool call', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {
+                'tool-call-1': 'allow' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/resume_tool_calls', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    decisions: [
+                        {
+                            tool_call_id: 'tool-call-1',
+                            deny_message: undefined,
+                        },
+                    ],
+                }),
+            });
+        });
+
+        it('should send deny decision for single tool call', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {
+                'tool-call-2': 'deny' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/resume_tool_calls', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    decisions: [
+                        {
+                            tool_call_id: 'tool-call-2',
+                            deny_message: 'I denied the execution of this tool call',
+                        },
+                    ],
+                }),
+            });
+        });
+
+        it('should handle undecided choice as deny', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {
+                'tool-call-3': 'undecided' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/resume_tool_calls', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    decisions: [
+                        {
+                            tool_call_id: 'tool-call-3',
+                            deny_message: 'I denied the execution of this tool call',
+                        },
+                    ],
+                }),
+            });
+        });
+
+        it('should handle multiple tool calls with mixed choices', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {
+                'tool-call-allow': 'allow' as const,
+                'tool-call-deny': 'deny' as const,
+                'tool-call-undecided': 'undecided' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/resume_tool_calls', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    decisions: [
+                        {
+                            tool_call_id: 'tool-call-allow',
+                            deny_message: undefined,
+                        },
+                        {
+                            tool_call_id: 'tool-call-deny',
+                            deny_message: 'I denied the execution of this tool call',
+                        },
+                        {
+                            tool_call_id: 'tool-call-undecided',
+                            deny_message: 'I denied the execution of this tool call',
+                        },
+                    ],
+                }),
+            });
+        });
+
+        it('should handle empty permission choices', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {};
+
+            await expect(client.resumeToolCall(permissionChoices)).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/resume_tool_calls', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    decisions: [],
+                }),
+            });
+        });
+
+        it('should handle tool call IDs with special characters', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {
+                'tool-call-with-special-chars_123@test.com': 'allow' as const,
+                'tool/call\\with:slashes': 'deny' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/resume_tool_calls', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    decisions: [
+                        {
+                            tool_call_id: 'tool-call-with-special-chars_123@test.com',
+                            deny_message: undefined,
+                        },
+                        {
+                            tool_call_id: 'tool/call\\with:slashes',
+                            deny_message: 'I denied the execution of this tool call',
+                        },
+                    ],
+                }),
+            });
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {
+                'tool-call-1': 'allow' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).rejects.toThrow(
+                "Failed to fetch '/v3/resume_tool_calls API: HTTP 500",
+            );
+        });
+
+        it('should throw error when API call fails with 404', async () => {
+            const mockResponse = {
+                status: 404,
+                statusText: 'Not Found',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {
+                'tool-call-1': 'deny' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).rejects.toThrow(
+                "Failed to fetch '/v3/resume_tool_calls API: HTTP 404",
+            );
+        });
+
+        it('should handle network errors', async () => {
+            const networkError = new Error('Network connection failed');
+            mockFetch.mockRejectedValue(networkError);
+
+            const permissionChoices = {
+                'tool-call-1': 'allow' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).rejects.toThrow(
+                "Failed to fetch '/v3/resume_tool_calls API: Network connection failed",
+            );
         });
     });
 });

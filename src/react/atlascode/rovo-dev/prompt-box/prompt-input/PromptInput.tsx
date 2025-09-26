@@ -2,6 +2,7 @@ import AddIcon from '@atlaskit/icon/core/add';
 import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-summary';
 import SendIcon from '@atlaskit/icon/core/arrow-up';
 import CrossIcon from '@atlaskit/icon/core/cross';
+import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
 import VideoStopOverlayIcon from '@atlaskit/icon/core/video-stop-overlay';
 import { token } from '@atlaskit/tokens';
 import Tooltip from '@atlaskit/tooltip';
@@ -26,7 +27,9 @@ interface PromptInputBoxProps {
     hideButtons?: boolean;
     currentState: NonDisabledState;
     isDeepPlanEnabled: boolean;
-    onDeepPlanToggled: () => void;
+    isYoloModeEnabled: boolean;
+    onDeepPlanToggled?: () => void;
+    onYoloModeToggled?: () => void;
     onSend: (text: string) => boolean;
     onCancel: () => void;
     onAddContext: () => void;
@@ -78,7 +81,9 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     disabled,
     currentState,
     isDeepPlanEnabled,
+    isYoloModeEnabled,
     onDeepPlanToggled,
+    onYoloModeToggled,
     onSend,
     onCancel,
     onAddContext,
@@ -182,23 +187,29 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     </Tooltip>
                     <Tooltip content="Preferences">
                         <PromptSettingsPopup
-                            onToggleDeepPlan={onDeepPlanToggled}
+                            onDeepPlanToggled={onDeepPlanToggled}
+                            onYoloModeToggled={onYoloModeToggled}
                             isDeepPlanEnabled={isDeepPlanEnabled}
+                            isYoloModeEnabled={isYoloModeEnabled}
                             onClose={() => {}}
                         />
                     </Tooltip>
-                    {isDeepPlanEnabled && (
+                    {isDeepPlanEnabled && onDeepPlanToggled && (
                         <Tooltip content="Disable deep plan">
-                            <div
-                                className="deep-plan-indicator"
-                                title="Deep plan is enabled"
-                                onClick={() => onDeepPlanToggled()}
-                            >
+                            <div className="deep-plan-indicator" onClick={() => onDeepPlanToggled()}>
                                 <AiGenerativeTextSummaryIcon label="deep plan icon" />
                                 <CrossIcon size="small" label="disable deep plan" />
                             </div>
                         </Tooltip>
                     )}
+                    {isYoloModeEnabled && onYoloModeToggled && (
+                        <Tooltip content="Disable YOLO mode">
+                            <div className="deep-plan-indicator" onClick={() => onYoloModeToggled()}>
+                                <LockUnlockedIcon label="yolo mode icon" />
+                                <CrossIcon size="small" label="disable yolo mode" />
+                            </div>
+                        </Tooltip>
+                    )}{' '}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                     {!showCancelButton && (

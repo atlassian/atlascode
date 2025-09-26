@@ -182,6 +182,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     // Auto-scroll when content changes or when re-enabled
     React.useEffect(performAutoScroll, [
         chatHistory,
+        modalDialogs,
         isFormVisible,
         pendingToolCall,
         autoScrollEnabled,

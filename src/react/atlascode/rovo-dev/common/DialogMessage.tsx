@@ -93,13 +93,13 @@ export const DialogMessageItem: React.FC<{
                                 style={inChatSecondaryButtonStyles}
                                 onClick={() => onToolPermissionChoice(msg.toolCallId, 'deny')}
                             >
-                                Cancel
+                                Deny
                             </button>
                             <button
                                 style={inChatButtonStyles}
                                 onClick={() => onToolPermissionChoice(msg.toolCallId, 'allow')}
                             >
-                                Continue
+                                Allow
                             </button>
                         </div>
                     )}
@@ -133,14 +133,16 @@ const InfoIcon: React.FC<{
     </div>
 );
 
-export const toolCallToolName: React.CSSProperties = {
-    fontWeight: '600',
-};
-
-export const toolCallCodeBlock: React.CSSProperties = {
+const toolCallCodeBlockStyles: React.CSSProperties = {
     maxWidth: '100%',
     textWrap: 'wrap',
     overflowWrap: 'break-word',
+};
+
+const fileListStyles: React.CSSProperties = {
+    margin: '0',
+    paddingLeft: '20px',
+    overflow: 'hidden',
 };
 
 const ToolCall: React.FC<{
@@ -159,7 +161,7 @@ const ToolCall: React.FC<{
 
     return (
         <div>
-            <div style={toolCallToolName}>{toolFriendlyName}</div>
+            <div style={{ fontWeight: '600' }}>{toolFriendlyName}</div>
             <ToolCallBody toolName={toolName} jsonArgs={jsonArgs} toolArgs={toolArgs} />
         </div>
     );
@@ -173,46 +175,44 @@ const ToolCallBody: React.FC<{
     if (toolName === 'bash') {
         return (
             <pre style={{ margin: '0' }}>
-                <code style={toolCallCodeBlock}>{jsonArgs.command}</code>
+                <code style={toolCallCodeBlockStyles}>{jsonArgs.command}</code>
             </pre>
         );
     } else if (toolName === 'grep') {
-        return <code style={toolCallCodeBlock}>{jsonArgs.content_pattern}</code>;
+        return <code style={toolCallCodeBlockStyles}>{jsonArgs.content_pattern}</code>;
     } else if (toolName === 'create_technical_plan') {
         return null;
+    } else if (Array.isArray(jsonArgs.file_paths)) {
+        return (
+            <ul style={fileListStyles}>
+                {jsonArgs.file_paths.map((file: string) => (
+                    <li>{file}</li>
+                ))}
+            </ul>
+        );
+    } else if (jsonArgs.file_path && Array.isArray(jsonArgs.line_ranges)) {
+        return (
+            <ul style={fileListStyles}>
+                {Array.isArray(jsonArgs.line_ranges) &&
+                    jsonArgs.line_ranges.map((range: [number, number]) =>
+                        range[0] >= 0 && range[1] > 0 ? (
+                            <li>
+                                {jsonArgs.file_path}:[{range[0]}-{range[1]}]
+                            </li>
+                        ) : (
+                            <li>{jsonArgs.file_path}</li>
+                        ),
+                    )}
+            </ul>
+        );
+    } else if (jsonArgs.file_path) {
+        return (
+            <ul style={fileListStyles}>
+                <li>{jsonArgs.file_path}</li>
+            </ul>
+        );
     } else {
-        if (Array.isArray(jsonArgs.file_paths)) {
-            return (
-                <ul style={{ margin: '0', paddingLeft: '20px' }}>
-                    {jsonArgs.file_paths.map((file: string) => (
-                        <li>{file}</li>
-                    ))}
-                </ul>
-            );
-        } else if (jsonArgs.file_path && Array.isArray(jsonArgs.line_ranges)) {
-            return (
-                <ul style={{ margin: '0', paddingLeft: '20px' }}>
-                    {Array.isArray(jsonArgs.line_ranges) &&
-                        jsonArgs.line_ranges.map((range: [number, number]) =>
-                            range[0] >= 0 && range[1] > 0 ? (
-                                <li>
-                                    {jsonArgs.file_path}:[{range[0]}-{range[1]}]
-                                </li>
-                            ) : (
-                                <li>{jsonArgs.file_path}</li>
-                            ),
-                        )}
-                </ul>
-            );
-        } else if (jsonArgs.file_path) {
-            return (
-                <ul style={{ margin: '0', paddingLeft: '20px' }}>
-                    <li>{jsonArgs.file_path}</li>
-                </ul>
-            );
-        } else {
-            return <div>{toolArgs}</div>;
-        }
+        return <div>{toolArgs}</div>;
     }
 };
 
