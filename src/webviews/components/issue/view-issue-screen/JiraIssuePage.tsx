@@ -1,4 +1,3 @@
-import { LoadingButton } from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
@@ -16,7 +15,6 @@ import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../../i
 import { LegacyPMFData } from '../../../../ipc/messaging';
 import { AtlascodeErrorBoundary } from '../../../../react/atlascode/common/ErrorBoundary';
 import { readFilesContentAsync } from '../../../../util/files';
-import { createRovoDevTemplate } from '../../../../util/rovoDevTemplate';
 import { ConnectionTimeout } from '../../../../util/time';
 import { AtlLoader } from '../../AtlLoader';
 import ErrorBanner from '../../ErrorBanner';
@@ -166,15 +164,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({
             action: 'openStartWorkPage',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
-        });
-    };
-
-    handleSetRovoDevPrompt = () => {
-        const promptText = createRovoDevTemplate(this.state.key, this.state.siteDetails);
-
-        this.postMessage({
-            action: 'setRovoDevPromptText',
-            text: promptText,
         });
     };
 
@@ -765,20 +754,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     handleStatusChange={this.handleStatusChange}
                     handleStartWork={this.handleStartWorkOnIssue}
                 />
-                {this.state.isRovoDevEnabled && (
-                    <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
-                        <Tooltip content="Rovo Dev is an AI assistant that will take the issue details and generate code on it">
-                            <LoadingButton
-                                className="ac-button"
-                                onClick={this.handleSetRovoDevPrompt}
-                                isLoading={false}
-                            >
-                                Start with Rovo Dev!
-                            </LoadingButton>
-                        </Tooltip>
-                    </Box>
-                )}
-
                 <IssueSidebarCollapsible label="Details" items={commonItems} defaultOpen />
                 <IssueSidebarCollapsible label="More fields" items={advancedItems} />
             </Box>
