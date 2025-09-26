@@ -1,4 +1,9 @@
+import 'src/react/atlascode/rovo-dev/RovoDev.css';
+
 import { HelperMessage } from '@atlaskit/form';
+import ThumbsDownIcon from '@atlaskit/icon/core/thumbs-down';
+import ThumbsUpIcon from '@atlaskit/icon/core/thumbs-up';
+import Tooltip from '@atlaskit/tooltip';
 import React, { useState } from 'react';
 import { SimplifiedTodoIssueData } from 'src/config/model';
 
@@ -28,19 +33,42 @@ const AISuggestionFooter: React.FC<{
 
     return (
         (isAvailable && isEnabled && (
-            <HelperMessage>
-                <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
-                    <span>AI-generated results may vary. Please provide feedback</span>
-                    <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
-                        <span style={{ cursor: 'pointer' }} onClick={() => handleFeedback(true)}>
-                            👍
-                        </span>
-                        <span style={{ cursor: 'pointer' }} onClick={() => handleFeedback(false)}>
-                            👎
-                        </span>
-                    </div>
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    minWidth: '100%',
+                }}
+            >
+                <HelperMessage style={{ flex: 1 }}>
+                    Please provide feedback to improve AI work item generation
+                </HelperMessage>
+                <div className="chat-message-actions" style={{ display: 'flex', gap: '2px', marginTop: '10px' }}>
+                    <div style={{ flex: 1 }}></div>
+                    <Tooltip content="Helpful">
+                        <button
+                            onClick={() => handleFeedback(true)}
+                            type="button"
+                            aria-label="like-response-button"
+                            className="chat-message-action"
+                        >
+                            <ThumbsUpIcon label="thumbs-up" spacing="none" />
+                        </button>
+                    </Tooltip>
+                    <Tooltip content="Unhelpful">
+                        <button
+                            onClick={() => handleFeedback(false)}
+                            type="button"
+                            aria-label="dislike-response-button"
+                            className="chat-message-action"
+                        >
+                            <ThumbsDownIcon label="thumbs-down" spacing="none" />
+                        </button>
+                    </Tooltip>
                 </div>
-            </HelperMessage>
+            </div>
         )) ||
         null
     );

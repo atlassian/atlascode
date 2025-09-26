@@ -1,5 +1,6 @@
 import Checkbox from '@atlaskit/checkbox';
 import { HelperMessage } from '@atlaskit/form';
+import StatusInformationIcon from '@atlaskit/icon/core/status-information';
 import React, { useCallback, useEffect, useState } from 'react';
 import { IssueSuggestionContextLevel, IssueSuggestionSettings } from 'src/config/model';
 
@@ -90,26 +91,19 @@ const AISuggestionHeader: React.FC<{
     }
 
     return isAvailable ? (
-        <div>
+        <div style={{ marginBottom: '15px' }}>
             <hr className="ac-form-separator" />
-            <Checkbox label="Use AI to create issue" isChecked={isEnabled} onChange={handleCheckboxChange} />
+            <Checkbox
+                label="Use AI to create summary and description"
+                isChecked={isEnabled}
+                onChange={handleCheckboxChange}
+            />
             <HelperMessage>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span>AI will analyze your TODO and code context to suggest issue titles and descriptions.</span>
-                    <span title="AI suggestions use your code and TODO comments to generate issue details.">
-                        <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            aria-label="Info"
-                            style={{ verticalAlign: 'middle', cursor: 'pointer' }}
-                        >
-                            <circle cx="8" cy="8" r="7" stroke="#6B778C" strokeWidth="1.5" fill="#DEEBFF" />
-                            <rect x="7.25" y="7" width="1.5" height="4" rx="0.75" fill="#6B778C" />
-                            <rect x="7.25" y="4" width="1.5" height="1.5" rx="0.75" fill="#6B778C" />
-                        </svg>
+                <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <span style={{ marginLeft: '6px', marginRight: '6px' }}>
+                        <StatusInformationIcon label="info" size="small" />
                     </span>
+                    <span>Uses AI. Verify results.</span>
                 </span>
             </HelperMessage>
         </div>
