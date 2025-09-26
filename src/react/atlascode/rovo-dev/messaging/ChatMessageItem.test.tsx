@@ -41,4 +41,44 @@ describe('ChatMessageItem', () => {
         render(<ChatMessageItem msg={assistantMessage} />);
         expect(screen.getByText('Bold text')).toBeTruthy();
     });
+
+    describe('User message with context', () => {
+        it('renders context when provided for user message', () => {
+            const userMessageWithContext = forceCastTo<DefaultMessage>({
+                text: 'Test message',
+                source: 'User',
+                context: [
+                    {
+                        name: 'test-file.tsx',
+                        content: 'file content',
+                        path: '/path/to/test-file.tsx',
+                    },
+                ],
+            });
+
+            render(<ChatMessageItem msg={userMessageWithContext} />);
+
+            expect(screen.getByText('Test message')).toBeTruthy();
+            expect(screen.getByText('test-file.tsx')).toBeTruthy();
+        });
+
+        it('passes openFile prop to PromptContextCollection', () => {
+            const mockOpenFile = jest.fn();
+            const userMessageWithContext = forceCastTo<DefaultMessage>({
+                text: 'Test message',
+                source: 'User',
+                context: [
+                    {
+                        name: 'test-file.tsx',
+                        content: 'file content',
+                        path: '/path/to/test-file.tsx',
+                    },
+                ],
+            });
+
+            render(<ChatMessageItem msg={userMessageWithContext} openFile={mockOpenFile} />);
+
+            expect(screen.getByText('Test message')).toBeTruthy();
+        });
+    });
 });
