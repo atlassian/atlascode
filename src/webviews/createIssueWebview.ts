@@ -389,6 +389,12 @@ export class CreateIssueWebview
             return;
         }
 
+        this._partialIssue = {
+            ...this._partialIssue,
+            summary: fieldValues?.summary || this._partialIssue?.summary,
+            description: fieldValues?.description || this._partialIssue?.description,
+        };
+
         const createData: CreateIssueData = this._screenData.issueTypeUIs[this._selectedIssueTypeId] as CreateIssueData;
         createData.fieldValues = {
             ...createData.fieldValues,
