@@ -18,16 +18,7 @@ export const DisabledMessage: React.FC<{
     if (currentState.state === 'Disabled' && currentState.subState === 'NeedAuth') {
         return (
             <div style={messageOuterStyles}>
-                <div>
-                    <a
-                        href="https://id.atlassian.com/manage-profile/security/api-tokens"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        Create an API token
-                    </a>{' '}
-                    and then add it here to use RovoDev beta
-                </div>
+                <div>Create an API token and add it here to use Rovo Dev beta</div>
                 <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={onLoginClick}>
                     Add API Token
                 </button>
