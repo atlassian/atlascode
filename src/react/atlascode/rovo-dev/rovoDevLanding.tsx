@@ -57,10 +57,17 @@ export const RovoDevLanding: React.FC<{
 }) => {
     const [hasRequestedItems, setHasRequestedItems] = React.useState(false);
 
+    const shouldHideSuggestions = React.useMemo(
+        () =>
+            currentState.state === 'Disabled' ||
+            (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance'),
+        [currentState],
+    );
+
     // Auto-request Jira work items when ready
     React.useEffect(() => {
         const shouldRequest =
-            currentState.state === 'WaitingForPrompt' &&
+            !shouldHideSuggestions &&
             onRequestJiraItems &&
             !hasRequestedItems &&
             jiraWorkItems.length === 0 &&
@@ -70,16 +77,14 @@ export const RovoDevLanding: React.FC<{
             onRequestJiraItems();
             setHasRequestedItems(true);
         }
-
-        // Reset flag when leaving WaitingForPrompt or when items are loaded
-        if (currentState.state !== 'WaitingForPrompt' || jiraWorkItems.length > 0) {
-            setHasRequestedItems(false);
-        }
-    }, [currentState.state, onRequestJiraItems, hasRequestedItems, jiraWorkItems.length, isJiraWorkItemsLoading]);
-
-    if (process.env.ROVODEV_BBY) {
-        return null;
-    }
+    }, [
+        currentState.state,
+        onRequestJiraItems,
+        hasRequestedItems,
+        jiraWorkItems.length,
+        isJiraWorkItemsLoading,
+        shouldHideSuggestions,
+    ]);
 
     return (
         <div
@@ -101,34 +106,36 @@ export const RovoDevLanding: React.FC<{
                 Rovo Dev can help you understand context of your repository, suggest and make updates.
             </div>
 
-            <div style={{ marginTop: '32px', width: '100%', maxWidth: '270px' }}>
-                <div style={titleStyles}>Actions</div>
+            {!shouldHideSuggestions && (
+                <div style={{ marginTop: '32px', width: '100%', maxWidth: '270px' }}>
+                    <div style={titleStyles}>Actions</div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
-                    <ActionItem
-                        icon={<AiChatIcon size="small" spacing="none" label="Explain this repository" />}
-                        text="Explain this repository"
-                        onClick={() => onSendMessage('Explain this repository')}
-                    />
-                    <ActionItem
-                        icon={<AiChatIcon size="small" spacing="none" label="Find bugs in this repository" />}
-                        text="Find bugs in this repository"
-                        onClick={() => onSendMessage('Find bugs in this repository')}
-                    />
-                    <ActionItem
-                        icon={<AiChatIcon size="small" spacing="none" label="List my assign Jira work items" />}
-                        text="List my assign Jira work items"
-                        onClick={() => onSendMessage('List my assign Jira work items')}
-                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
+                        <ActionItem
+                            icon={<AiChatIcon size="small" spacing="none" label="Explain this repository" />}
+                            text="Explain this repository"
+                            onClick={() => onSendMessage('Explain this repository')}
+                        />
+                        <ActionItem
+                            icon={<AiChatIcon size="small" spacing="none" label="Find bugs in this repository" />}
+                            text="Find bugs in this repository"
+                            onClick={() => onSendMessage('Find bugs in this repository')}
+                        />
+                        <ActionItem
+                            icon={<AiChatIcon size="small" spacing="none" label="List my assigned Jira work items" />}
+                            text="List my assigned Jira work items"
+                            onClick={() => onSendMessage('List my assigned Jira work items')}
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {(isJiraWorkItemsLoading || jiraWorkItems.length > 0) && (
+            {!shouldHideSuggestions && (isJiraWorkItemsLoading || jiraWorkItems.length > 0) && (
                 <div style={{ marginTop: '24px', width: '100%', maxWidth: '270px' }}>
                     <div style={titleStyles}>Jira Work Items</div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        {isJiraWorkItemsLoading ? (
+                        {isJiraWorkItemsLoading && (
                             <div
                                 style={{
                                     display: 'flex',
@@ -141,7 +148,8 @@ export const RovoDevLanding: React.FC<{
                                 <i className="codicon codicon-loading codicon-modifier-spin" />
                                 <span>Loading work items...</span>
                             </div>
-                        ) : (
+                        )}
+                        {!isJiraWorkItemsLoading &&
                             jiraWorkItems.map((issue) => (
                                 <JiraWorkItem
                                     key={issue.key}
@@ -151,8 +159,7 @@ export const RovoDevLanding: React.FC<{
                                     issueTypeName={issue.issuetype?.name}
                                     onClick={() => onJiraItemClick?.(issue)}
                                 />
-                            ))
-                        )}
+                            ))}
                     </div>
                 </div>
             )}

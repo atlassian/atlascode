@@ -242,17 +242,19 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            <RovoDevLanding
-                currentState={currentState}
-                onLoginClick={onLoginClick}
-                onOpenFolder={onOpenFolder}
-                onMcpChoice={onMcpChoice}
-                onSendMessage={onSendMessage}
-                jiraWorkItems={jiraWorkItems}
-                isJiraWorkItemsLoading={isJiraWorkItemsLoading}
-                onJiraItemClick={onJiraItemClick}
-                onRequestJiraItems={onRequestJiraItems}
-            />
+            {!process.env.ROVODEV_BBY && (
+                <RovoDevLanding
+                    currentState={currentState}
+                    onLoginClick={onLoginClick}
+                    onOpenFolder={onOpenFolder}
+                    onMcpChoice={onMcpChoice}
+                    onSendMessage={onSendMessage}
+                    jiraWorkItems={jiraWorkItems}
+                    isJiraWorkItemsLoading={isJiraWorkItemsLoading}
+                    onJiraItemClick={onJiraItemClick}
+                    onRequestJiraItems={onRequestJiraItems}
+                />
+            )}
             {!isChatHistoryDisabled &&
                 chatHistory &&
                 chatHistory.map((block, idx) => {
