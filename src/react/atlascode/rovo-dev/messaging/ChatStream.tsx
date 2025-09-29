@@ -1,5 +1,6 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
+import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
@@ -10,13 +11,8 @@ import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc } from '../comm
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
 import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
-import { RovoDevLanding } from '../rovoDevLanding';
-import {
-    McpConsentChoice,
-    RovoDevViewResponse,
-    RovoDevViewResponseType,
-    ToolPermissionChoice,
-} from '../rovoDevViewMessages';
+import { RovoDevLanding } from '../landing-page/RovoDevLanding';
+import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
@@ -50,10 +46,10 @@ interface ChatStreamProps {
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
     onSendMessage: (message: string) => void;
-    jiraWorkItems?: MinimalIssue<DetailedSiteInfo>[];
-    isJiraWorkItemsLoading?: boolean;
-    onJiraItemClick?: (issue: MinimalIssue<DetailedSiteInfo>) => void;
-    onRequestJiraItems?: () => void;
+    jiraWorkItems: MinimalIssue<DetailedSiteInfo>[];
+    isJiraWorkItemsLoading: boolean;
+    onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
+    onRequestJiraItems: () => void;
     onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice) => void;
 }
 

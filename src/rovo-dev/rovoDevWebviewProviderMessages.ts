@@ -4,6 +4,7 @@ import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
 import { RovoDevResponse } from './responseParser';
+import { EntitlementCheckRovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
 import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
 export const enum RovoDevProviderMessageType {
@@ -30,7 +31,6 @@ export const enum RovoDevProviderMessageType {
     ShowFeedbackForm = 'showFeedbackForm',
     SetDebugPanel = 'setDebugPanel',
     SetPromptText = 'setPromptText',
-    GetJiraWorkItems = 'getJiraWorkItems',
     SetJiraWorkItems = 'setJiraWorkItems',
     SetJiraWorkItemsLoading = 'setJiraWorkItemsLoading',
     CheckFileExistsComplete = 'checkFileExistsComplete',
@@ -49,10 +49,15 @@ interface NonFocusedContextRemovedResponse {
     context: RovoDevContextItem;
 }
 
-export type RovoDevDisabledReason = 'noOpenFolder' | 'needAuth' | 'other';
+export type RovoDevDisabledReason = 'noOpenFolder' | 'needAuth' | 'other' | 'entitlementCheckFailed';
+
+export type RovoDevEntitlementCheckFailedDetail = EntitlementCheckRovoDevHealthcheckResponse['detail'];
 
 export type RovoDevProviderMessage =
-    | ReducerAction<RovoDevProviderMessageType.RovoDevDisabled, { reason: RovoDevDisabledReason }>
+    | ReducerAction<
+          RovoDevProviderMessageType.RovoDevDisabled,
+          { reason: RovoDevDisabledReason; detail?: RovoDevEntitlementCheckFailedDetail }
+      >
     | ReducerAction<RovoDevProviderMessageType.SignalPromptSent, RovoDevPrompt & { echoMessage: boolean }>
     | ReducerAction<RovoDevProviderMessageType.Response, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.CompleteMessage, { isReplay?: boolean }>

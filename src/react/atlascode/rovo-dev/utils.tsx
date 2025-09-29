@@ -18,6 +18,7 @@ export interface DefaultMessage {
 export interface AbstractDialogMessage {
     text: string;
     title?: string;
+    statusCode?: string;
     source: 'RovoDevDialog';
 }
 

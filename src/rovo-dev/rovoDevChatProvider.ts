@@ -1,10 +1,15 @@
 import { RovoDevLogger } from 'src/logger';
-import { RovoDevViewResponse, ToolPermissionChoice } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
+import { RovoDevViewResponse } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
 import { v4 } from 'uuid';
 import { Event, Webview } from 'vscode';
 
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
-import { RovoDevApiClient, RovoDevChatRequest, RovoDevChatRequestContextFileEntry } from './rovoDevApiClient';
+import { RovoDevApiClient } from './rovoDevApiClient';
+import {
+    RovoDevChatRequest,
+    RovoDevChatRequestContextFileEntry,
+    ToolPermissionChoice,
+} from './rovoDevApiClientInterfaces';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';

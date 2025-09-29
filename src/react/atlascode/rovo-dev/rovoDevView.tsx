@@ -7,6 +7,7 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
+import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
 import { DisabledState, RovoDevContextItem, State } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
@@ -24,13 +25,7 @@ import { ChatStream } from './messaging/ChatStream';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
-import {
-    McpConsentChoice,
-    ModifiedFile,
-    RovoDevViewResponse,
-    RovoDevViewResponseType,
-    ToolPermissionChoice,
-} from './rovoDevViewMessages';
+import { McpConsentChoice, ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import { DebugPanel } from './tools/DebugPanel';
 import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
@@ -57,6 +52,8 @@ function mapRovoDevDisabledReasonToSubState(reason: RovoDevDisabledReason): Disa
             return 'NoWorkspaceOpen';
         case 'other':
             return 'Other';
+        case 'entitlementCheckFailed':
+            return 'EntitlementCheckFailed';
         default:
             // @ts-expect-error ts(2339) - reason here should be 'never'
             throw new Error(reason.toString());
@@ -372,10 +369,20 @@ const RovoDevView: React.FC = () => {
                     ) {
                         finalizeResponse();
                     }
-                    setCurrentState({
-                        state: 'Disabled',
-                        subState: mapRovoDevDisabledReasonToSubState(event.reason),
-                    });
+
+                    const subState = mapRovoDevDisabledReasonToSubState(event.reason);
+                    if (subState === 'EntitlementCheckFailed') {
+                        setCurrentState({
+                            state: 'Disabled',
+                            subState,
+                            detail: event.detail!,
+                        });
+                    } else {
+                        setCurrentState({
+                            state: 'Disabled',
+                            subState,
+                        });
+                    }
                     break;
 
                 case RovoDevProviderMessageType.ContextAdded:

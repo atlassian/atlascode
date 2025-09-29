@@ -2,8 +2,8 @@ import StatusErrorIcon from '@atlaskit/icon/core/status-error';
 import StatusInfoIcon from '@atlaskit/icon/core/status-information';
 import StatusWarningIcon from '@atlaskit/icon/core/status-warning';
 import React from 'react';
+import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
 
-import { ToolPermissionChoice } from '../rovoDevViewMessages';
 import {
     chatMessageStyles,
     errorMessageStyles,
@@ -16,9 +16,9 @@ import { MarkedDown } from './common';
 
 export const DialogMessageItem: React.FC<{
     msg: DialogMessage;
-    isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
-    retryAfterError: () => void;
-    onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice) => void;
+    isRetryAfterErrorButtonEnabled?: (uid: string) => boolean;
+    retryAfterError?: () => void;
+    onToolPermissionChoice?: (toolCallId: string, choice: ToolPermissionChoice) => void;
 }> = ({ msg, isRetryAfterErrorButtonEnabled, retryAfterError, onToolPermissionChoice }) => {
     const [title, icon] = React.useMemo(() => {
         let title: string;
@@ -72,14 +72,19 @@ export const DialogMessageItem: React.FC<{
                         <ToolCall toolName={msg.toolName} toolArgs={msg.toolArgs} />
                     )}
 
-                    {msg.type === 'error' && msg.isRetriable && isRetryAfterErrorButtonEnabled(msg.uid) && (
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '8px' }}>
-                            <button style={inChatButtonStyles} onClick={retryAfterError}>
-                                Try again
-                            </button>
-                        </div>
-                    )}
-                    {msg.type === 'toolPermissionRequest' && (
+                    {msg.type === 'error' &&
+                        msg.isRetriable &&
+                        retryAfterError &&
+                        isRetryAfterErrorButtonEnabled?.(msg.uid) && (
+                            <div
+                                style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '8px' }}
+                            >
+                                <button style={inChatButtonStyles} onClick={retryAfterError}>
+                                    Try again
+                                </button>
+                            </div>
+                        )}
+                    {msg.type === 'toolPermissionRequest' && onToolPermissionChoice && (
                         <div
                             style={{
                                 display: 'flex',
@@ -103,6 +108,7 @@ export const DialogMessageItem: React.FC<{
                             </button>
                         </div>
                     )}
+                    {msg.statusCode && <div style={{ fontSize: 'smaller', textAlign: 'right' }}>{msg.statusCode}</div>}
                 </div>
             </div>
         </div>

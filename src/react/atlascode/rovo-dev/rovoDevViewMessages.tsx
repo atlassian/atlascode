@@ -1,4 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
 import { RovoDevPrompt } from 'src/rovo-dev/rovoDevTypes';
 
 import { FeedbackType } from './feedback-form/FeedbackForm';
@@ -39,7 +40,6 @@ export interface ModifiedFile {
 }
 
 export type McpConsentChoice = 'accept' | 'acceptAll' | 'deny';
-export type ToolPermissionChoice = 'allow' | 'deny';
 
 export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.Refresh>

@@ -37,7 +37,8 @@ import {
 import { GitErrorCodes } from '../typings/git';
 import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
-import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
+import { RovoDevApiClient } from './rovoDevApiClient';
+import { RovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
 import { RovoDevDwellTracker } from './rovoDevDwellTracker';
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
@@ -47,6 +48,7 @@ import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem } from './rovoDevTypes';
 import {
     RovoDevDisabledReason,
+    RovoDevEntitlementCheckFailedDetail,
     RovoDevProviderMessage,
     RovoDevProviderMessageType,
 } from './rovoDevWebviewProviderMessages';
@@ -627,7 +629,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             info = await this.rovoDevApiClient?.healthcheck();
         } catch {}
 
-        if (info) {
+        if (info && info.mcp_servers) {
             for (const mcpServer in info.mcp_servers) {
                 this._debugPanelMcpContext[mcpServer] = info.mcp_servers[mcpServer];
             }
@@ -1047,7 +1049,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // if result is undefined, it means we didn't manage to contact Rovo Dev within the allotted time
         // TODO - this scenario needs a better handling
         if (!result || result.status === 'unknown') {
-            this.signalProcessFailedToInitialize(
+            await this.signalProcessFailedToInitialize(
                 `Service at at "${this._rovoDevApiClient.baseApiUrl}" wasn't ready within ${timeout} ms`,
             );
             return;
@@ -1056,29 +1058,32 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // if result is unhealthy, it means Rovo Dev has failed during initialization (e.g., some MCP servers failed to start)
         // we can't continue - shutdown and set the process as terminated so the user can try again.
         if (result.status === 'unhealthy') {
-            this.signalProcessFailedToInitialize();
+            await this.signalProcessFailedToInitialize();
             return;
         }
 
         // this scenario is when the user is not allowed to run Rovo Dev because it's disabled by the Jira administrator
-        // TODO - handle this better: AXON-1024
         if (result.status === 'entitlement check failed') {
-            this.signalProcessFailedToInitialize(
-                'Rovo Dev is currently disabled in your Jira site.\nPlease contact your administrator to enable it.',
-            );
+            await this.signalRovoDevDisabled('entitlementCheckFailed', result.detail);
             return;
         }
 
         // this scenario is when the user needs to accept/decline the usage of some MCP server before Rovo Dev can start
         if (result.status === 'pending user review') {
-            const serversToReview = Object.keys(result.mcp_servers).filter(
-                (x) => result.mcp_servers[x] === 'pending user review',
-            );
-            webView.postMessage({
-                type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
-                isPromptPending: this._chatProvider.isPromptPending,
-                mcpIds: serversToReview,
-            });
+            const mcp_servers = result.mcp_servers || {};
+            const serversToReview = Object.keys(mcp_servers).filter((x) => mcp_servers[x] === 'pending user review');
+
+            if (serversToReview.length === 0) {
+                await this.signalProcessFailedToInitialize(
+                    'Failed to initialize Rovo Dev, something went wrong with the MCP servers acceptance flow.',
+                );
+            } else {
+                await webView.postMessage({
+                    type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
+                    isPromptPending: this._chatProvider.isPromptPending,
+                    mcpIds: serversToReview,
+                });
+            }
 
             return;
         }
@@ -1120,7 +1125,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    public async signalRovoDevDisabled(reason: RovoDevDisabledReason) {
+    public async signalRovoDevDisabled(reason: Exclude<RovoDevDisabledReason, 'entitlementCheckFailed'>): Promise<void>;
+    public async signalRovoDevDisabled(
+        reason: 'entitlementCheckFailed',
+        detail: RovoDevEntitlementCheckFailedDetail,
+    ): Promise<void>;
+    public async signalRovoDevDisabled(
+        reason: RovoDevDisabledReason,
+        detail?: RovoDevEntitlementCheckFailedDetail,
+    ): Promise<void> {
         if (
             this._processState === RovoDevProcessState.Terminated ||
             this._processState === RovoDevProcessState.Disabled
@@ -1134,6 +1147,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await webView.postMessage({
             type: RovoDevProviderMessageType.RovoDevDisabled,
             reason,
+            detail,
         });
     }
 

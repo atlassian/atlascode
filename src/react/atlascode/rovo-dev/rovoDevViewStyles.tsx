@@ -88,6 +88,7 @@ export const errorMessageStyles: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
+    textAlign: 'left',
 };
 
 export const messageContentStyles: React.CSSProperties = {
