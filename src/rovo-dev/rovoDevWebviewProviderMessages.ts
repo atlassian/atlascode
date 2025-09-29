@@ -1,8 +1,8 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 
-import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
 import { RovoDevResponse } from './responseParser';
 import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
