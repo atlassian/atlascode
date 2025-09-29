@@ -15,6 +15,7 @@ import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 import WorklogForm from '../../WorklogForm';
 import Worklogs from '../../Worklogs';
+import { useEditorState } from '../EditorStateContext';
 import { AddContentDropdown } from './AddContentDropDown';
 import { ChildIssuesComponent } from './ChildIssuesComponent';
 import { LinkedIssuesComponent } from './LinkedIssuesComponent';
@@ -78,6 +79,9 @@ const IssueMainPanel: React.FC<Props> = ({
     const [enableLinkedIssues, setEnableLinkedIssues] = React.useState(false);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [isInlineDialogOpen, setIsInlineDialogOpen] = React.useState(false);
+
+    // Use centralized editor state
+    const { openEditor, closeEditor, isEditorActive } = useEditorState();
     // Handle descriptionText - convert ADF object to JSON string for editor input
     const getDescriptionTextForEditor = React.useCallback(() => {
         if (
@@ -91,7 +95,7 @@ const IssueMainPanel: React.FC<Props> = ({
     }, [defaultDescription]);
 
     const [descriptionText, setDescriptionText] = React.useState(() => getDescriptionTextForEditor());
-    const [isEditingDescription, setIsEditingDescription] = React.useState(false);
+    const isEditingDescription = isEditorActive('description');
 
     // Update descriptionText when defaultDescription changes (after save)
     React.useEffect(() => {
@@ -99,6 +103,23 @@ const IssueMainPanel: React.FC<Props> = ({
             setDescriptionText(getDescriptionTextForEditor());
         }
     }, [defaultDescription, isEditingDescription, getDescriptionTextForEditor]);
+
+    // Listen for forced editor close events
+    React.useEffect(() => {
+        const handleEditorForceClosed = (event: CustomEvent) => {
+            if (event.detail.editorType === 'description') {
+                // Reset description editor state when it's forcibly closed
+                setDescriptionText(getDescriptionTextForEditor());
+                closeEditor('description');
+            }
+        };
+
+        window.addEventListener('editorForceClosed', handleEditorForceClosed as EventListener);
+
+        return () => {
+            window.removeEventListener('editorForceClosed', handleEditorForceClosed as EventListener);
+        };
+    }, [closeEditor, getDescriptionTextForEditor]);
 
     const handleStatusChange = (issueKey: string, statusName: string) => {
         if (onIssueUpdate) {
@@ -185,11 +206,11 @@ const IssueMainPanel: React.FC<Props> = ({
                                 defaultValue={descriptionText}
                                 onSave={(content) => {
                                     handleInlineEdit(fields['description'], content);
-                                    setIsEditingDescription(false);
+                                    closeEditor('description');
                                 }}
                                 onCancel={() => {
                                     setDescriptionText(getDescriptionTextForEditor());
-                                    setIsEditingDescription(false);
+                                    closeEditor('description');
                                 }}
                                 onContentChange={(content) => {
                                     setDescriptionText(content);
@@ -203,11 +224,11 @@ const IssueMainPanel: React.FC<Props> = ({
                                 }}
                                 onSave={(i: string) => {
                                     handleInlineEdit(fields['description'], i);
-                                    setIsEditingDescription(false);
+                                    closeEditor('description');
                                 }}
                                 onCancel={() => {
                                     setDescriptionText(getDescriptionTextForEditor());
-                                    setIsEditingDescription(false);
+                                    closeEditor('description');
                                 }}
                                 fetchUsers={fetchUsers}
                                 isDescription
@@ -228,7 +249,7 @@ const IssueMainPanel: React.FC<Props> = ({
                                 alignItems: 'flex-start',
                             }}
                             onClick={() => {
-                                setIsEditingDescription(true);
+                                openEditor('description');
                             }}
                             className="ac-inline-input-view-p"
                         >

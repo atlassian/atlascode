@@ -16,6 +16,7 @@ import { AdfAwareContent } from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
+import { useEditorState } from '../EditorStateContext';
 
 export type IssueCommentComponentProps = {
     siteDetails: DetailedSiteInfo;
@@ -52,7 +53,9 @@ const CommentComponent: React.FC<{
     isServiceDeskProject,
     isAtlaskitEditorEnabled,
 }) => {
-    const [isEditing, setIsEditing] = React.useState(false);
+    const { openEditor, closeEditor, isEditorActive } = useEditorState();
+    const editorId = `edit-comment-${comment.id}` as const;
+    const isEditing = isEditorActive(editorId);
     const [isSaving, setIsSaving] = React.useState(false);
     const bodyText = comment.renderedBody ? comment.renderedBody : comment.body;
 
@@ -64,10 +67,28 @@ const CommentComponent: React.FC<{
         }
     }, [comment.body, isEditing]);
 
+    // Listen for forced editor close events
+    React.useEffect(() => {
+        const handleEditorForceClosed = (event: CustomEvent) => {
+            if (event.detail.editorType === editorId) {
+                // Reset comment editor state when it's forcibly closed
+                setCommentText(comment.body);
+                setIsSaving(false);
+                closeEditor(editorId);
+            }
+        };
+
+        window.addEventListener('editorForceClosed', handleEditorForceClosed as EventListener);
+
+        return () => {
+            window.removeEventListener('editorForceClosed', handleEditorForceClosed as EventListener);
+        };
+    }, [editorId, comment.body, closeEditor]);
+
     const baseActions: JSX.Element[] = [
         <CommentAction
             onClick={() => {
-                setIsEditing(true);
+                openEditor(editorId);
             }}
         >
             Edit
@@ -113,13 +134,13 @@ const CommentComponent: React.FC<{
                                 defaultValue={commentText}
                                 onSave={(content) => {
                                     setIsSaving(true);
-                                    setIsEditing(false);
+                                    closeEditor(editorId);
                                     onSave(content, comment.id, undefined);
                                 }}
                                 onCancel={() => {
                                     setCommentText(comment.body);
                                     setIsSaving(false);
-                                    setIsEditing(false);
+                                    closeEditor(editorId);
                                 }}
                                 onContentChange={(content) => {
                                     setCommentText(content);
@@ -133,17 +154,17 @@ const CommentComponent: React.FC<{
                                 }}
                                 onSave={() => {
                                     setIsSaving(true);
-                                    setIsEditing(false);
+                                    closeEditor(editorId);
                                     onSave(commentText, comment.id, undefined);
                                 }}
                                 onCancel={() => {
                                     setIsSaving(false);
-                                    setIsEditing(false);
+                                    closeEditor(editorId);
                                     setCommentText(comment.body);
                                 }}
                                 onInternalCommentSave={() => {
                                     setIsSaving(false);
-                                    setIsEditing(false);
+                                    closeEditor(editorId);
                                     onSave(commentText, comment.id, JsdInternalCommentVisibility);
                                 }}
                                 fetchUsers={fetchUsers}
@@ -186,6 +207,26 @@ const AddCommentComponent: React.FC<{
     isEditing,
     setIsEditing,
 }) => {
+    const { openEditor, closeEditor } = useEditorState();
+
+    // Listen for forced editor close events
+    React.useEffect(() => {
+        const handleEditorForceClosed = (event: CustomEvent) => {
+            if (event.detail.editorType === 'add-comment') {
+                // Reset add comment editor state when it's forcibly closed
+                setCommentText('');
+                closeEditor('add-comment');
+                setIsEditing(false);
+            }
+        };
+
+        window.addEventListener('editorForceClosed', handleEditorForceClosed as EventListener);
+
+        return () => {
+            window.removeEventListener('editorForceClosed', handleEditorForceClosed as EventListener);
+        };
+    }, [closeEditor, setCommentText, setIsEditing]);
+
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             <Box
@@ -209,6 +250,7 @@ const AddCommentComponent: React.FC<{
                             },
                         }}
                         onClick={() => {
+                            openEditor('add-comment');
                             setIsEditing(true);
                         }}
                         placeholder="Add a comment..."
@@ -221,11 +263,13 @@ const AddCommentComponent: React.FC<{
                                 if (content && content.trim() !== '') {
                                     onCreate(content, undefined);
                                     setCommentText('');
+                                    closeEditor('add-comment');
                                     setIsEditing(false);
                                 }
                             }}
                             onCancel={() => {
                                 setCommentText('');
+                                closeEditor('add-comment');
                                 setIsEditing(false);
                             }}
                             onContentChange={(content) => {
@@ -241,19 +285,23 @@ const AddCommentComponent: React.FC<{
                             if (i !== '') {
                                 onCreate(i, undefined);
                                 setCommentText('');
+                                closeEditor('add-comment');
                                 setIsEditing(false);
                             }
                         }}
                         onInternalCommentSave={() => {
                             onCreate(commentText, JsdInternalCommentVisibility);
                             setCommentText('');
+                            closeEditor('add-comment');
                             setIsEditing(false);
                         }}
                         onCancel={() => {
                             setCommentText('');
+                            closeEditor('add-comment');
                             setIsEditing(false);
                         }}
                         onEditorFocus={() => {
+                            openEditor('add-comment');
                             setIsEditing(true);
                         }}
                         fetchUsers={fetchUsers}
