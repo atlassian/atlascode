@@ -5,6 +5,7 @@ import { JiraWorkItem } from './JiraWorkItem';
 
 describe('JiraWorkItem', () => {
     const defaultProps = {
+        issueKey: 'TEST-123',
         summary: 'Test issue summary',
         onClick: jest.fn(),
     };
@@ -38,5 +39,11 @@ describe('JiraWorkItem', () => {
 
         expect(container.querySelector('img')).toBeFalsy();
         expect(container.querySelector('.jira-work-item-icon')).toBeTruthy();
+    });
+
+    it('displays issue key and summary in correct format', () => {
+        const { container } = render(<JiraWorkItem {...defaultProps} />);
+        const summaryElement = container.querySelector('.jira-work-item-summary');
+        expect(summaryElement?.textContent).toBe('TEST-123: Test issue summary');
     });
 });

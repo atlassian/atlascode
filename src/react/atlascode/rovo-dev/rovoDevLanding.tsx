@@ -126,6 +126,7 @@ export const RovoDevLanding: React.FC<{
                         {jiraWorkItems.map((issue) => (
                             <JiraWorkItem
                                 key={issue.key}
+                                issueKey={issue.key}
                                 summary={issue.summary}
                                 issueTypeIconUrl={issue.issuetype?.iconUrl}
                                 issueTypeName={issue.issuetype?.name}

@@ -3,6 +3,7 @@ import './JiraWorkItem.css';
 import * as React from 'react';
 
 export interface JiraWorkItemProps {
+    issueKey: string;
     summary: string;
     issueTypeIconUrl?: string;
     issueTypeName?: string;
@@ -16,7 +17,13 @@ export interface JiraWorkItemProps {
  * Solution: onError handler + transparent placeholder -> clean console + consistent spacing
  */
 
-export const JiraWorkItem: React.FC<JiraWorkItemProps> = ({ summary, issueTypeIconUrl, issueTypeName, onClick }) => {
+export const JiraWorkItem: React.FC<JiraWorkItemProps> = ({
+    issueKey,
+    summary,
+    issueTypeIconUrl,
+    issueTypeName,
+    onClick,
+}) => {
     const [hasImageError, setHasImageError] = React.useState(false);
 
     // Check if this is a broken image placeholder
@@ -33,8 +40,10 @@ export const JiraWorkItem: React.FC<JiraWorkItemProps> = ({ summary, issueTypeIc
         setHasImageError(false);
     }, [issueTypeIconUrl]);
 
+    const displayText = `${issueKey}: ${summary}`;
+
     return (
-        <div className="jira-work-item" onClick={onClick} title={summary}>
+        <div className="jira-work-item" onClick={onClick} title={displayText}>
             {isBrokenImage || hasImageError ? (
                 // Show transparent placeholder to maintain layout
                 <div className="jira-work-item-icon" />
@@ -48,7 +57,7 @@ export const JiraWorkItem: React.FC<JiraWorkItemProps> = ({ summary, issueTypeIc
                     />
                 )
             )}
-            <div className="jira-work-item-summary">{summary}</div>
+            <div className="jira-work-item-summary">{displayText}</div>
         </div>
     );
 };
