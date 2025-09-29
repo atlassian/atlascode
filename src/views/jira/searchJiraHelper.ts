@@ -1,5 +1,5 @@
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
-import { commands, QuickPickItem, window } from 'vscode';
+import { commands, QuickPickItem, ThemeIcon, window } from 'vscode';
 
 import { searchIssuesEvent } from '../../analytics';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
@@ -7,7 +7,8 @@ import { AssignedJiraItemsViewId, Commands } from '../../constants';
 import { Container } from '../../container';
 
 interface QuickPickIssue extends QuickPickItem {
-    issue: MinimalORIssueLink<DetailedSiteInfo>;
+    issue: MinimalORIssueLink<DetailedSiteInfo> | null;
+    searchTerm?: string;
 }
 
 export class SearchJiraHelper {
@@ -85,22 +86,53 @@ export class SearchJiraHelper {
                     issueSet.add(issue.key);
                     quickPickIssues.push({
                         label: issue.key,
-                        description: issue.summary,
+                        description: issue.status.name,
+                        detail: issue.summary,
                         issue: issue,
                     });
                 }
             });
         });
 
-        window
-            .showQuickPick<QuickPickIssue>(quickPickIssues, {
-                matchOnDescription: true,
-                placeHolder: 'Search for issue key or summary',
-            })
-            .then((quickPickIssue: QuickPickIssue | undefined) => {
-                if (quickPickIssue) {
-                    commands.executeCommand(Commands.ShowIssue, quickPickIssue.issue);
-                }
-            });
+        const quickPick = window.createQuickPick<QuickPickIssue>();
+        quickPick.matchOnDetail = true;
+        quickPick.placeholder = 'Search Jira work items locally';
+
+        const searchAllOption: QuickPickIssue = {
+            label: '',
+            description: 'Search all Jira work items',
+            iconPath: new ThemeIcon('search'),
+            issue: null,
+            searchTerm: '',
+            alwaysShow: true,
+        };
+
+        quickPick.items = [...quickPickIssues, searchAllOption];
+
+        quickPick.onDidChangeValue((value) => {
+            const searchAllOption = quickPick.items.find((item) => 'searchTerm' in item);
+            if (!searchAllOption) {
+                return;
+            }
+            searchAllOption.searchTerm = value;
+        });
+
+        quickPick.onDidAccept(() => {
+            const selectedItem = quickPick.selectedItems[0];
+            if (!selectedItem) {
+                return;
+            }
+
+            if ('searchTerm' in selectedItem) {
+                selectedItem.searchTerm
+                    ? commands.executeCommand(Commands.JiraSearchAllIssues, selectedItem.searchTerm)
+                    : commands.executeCommand(Commands.JiraSearchAllIssues);
+            } else {
+                commands.executeCommand(Commands.ShowIssue, selectedItem.issue);
+            }
+            quickPick.hide();
+        });
+
+        quickPick.show();
     }
 }

@@ -43,6 +43,8 @@ const emptyState: ViewState = {
     formKey: v4(),
 };
 
+const fallbackTimerDuration = 5000; // 5 seconds
+
 const getFaviconUrl = (siteData: any): string | null => {
     if (siteData?.baseLinkUrl) {
         return `${siteData.baseLinkUrl}/favicon.ico`;
@@ -105,6 +107,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     private commonFields: FieldUI[] = [];
     private attachingInProgress = false;
     private initialFieldValues: FieldValues = {};
+    private suggestionFallbackTimer: NodeJS.Timeout | null = null;
 
     getProjectKey(): string {
         return this.state.fieldValues['project'].key;
@@ -124,6 +127,29 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
         if (!handled) {
             switch (e.type) {
+                case 'setGeneratingIssueSuggestions': {
+                    handled = true;
+
+                    if (this.suggestionFallbackTimer) {
+                        clearTimeout(this.suggestionFallbackTimer);
+                        this.suggestionFallbackTimer = null;
+                    }
+
+                    if (e.isGeneratingIssueSuggestions) {
+                        // Set a fallback timer to reset isGeneratingSuggestions after 5 seconds in case something goes wrong
+                        this.suggestionFallbackTimer = setTimeout(() => {
+                            if (this.state.isGeneratingSuggestions) {
+                                this.setState({ isGeneratingSuggestions: false });
+                            }
+                            this.suggestionFallbackTimer = null;
+                        }, fallbackTimerDuration);
+                    }
+
+                    this.setState({
+                        isGeneratingSuggestions: e.isGeneratingIssueSuggestions,
+                    });
+                    break;
+                }
                 case 'update': {
                     handled = true;
                     const issueData = e as CreateIssueData;
@@ -146,11 +172,21 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                         }
                     }
 
-                    this.updateInternals(issueData);
-                    this.setState(issueData, () => {
+                    // Merge new field values over existing to avoid losing values
+                    const mergedFieldValues = fieldValues
+                        ? { ...this.state.fieldValues, ...fieldValues }
+                        : this.state.fieldValues;
+                    const mergedIssueData: CreateIssueData = {
+                        ...issueData,
+                        fieldValues: mergedFieldValues,
+                    };
+
+                    this.updateInternals(mergedIssueData);
+                    this.setState(mergedIssueData, () => {
                         this.setState({
                             isSomethingLoading: false,
                             loadingField: '',
+                            summaryKey: v4(), // reset summary to clear validation errors
                         });
                     });
 
@@ -386,14 +422,28 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         return (
             <div>
                 Create work item
-                {this.state.isSomethingLoading && (
-                    <div className="spinner" style={{ marginLeft: '15px' }}>
-                        <Spinner size="medium" />
-                    </div>
-                )}
+                {this.state.isSomethingLoading ||
+                    (this.state.isGeneratingSuggestions && (
+                        <div
+                            className="spinner"
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                margin: '10px 15px 0 0',
+                                zIndex: 1,
+                            }}
+                        >
+                            <Spinner size="medium" />
+                        </div>
+                    ))}
             </div>
         );
     };
+
+    override componentDidMount() {
+        this.postMessage({ action: 'getFeatureFlags' });
+    }
 
     public override render() {
         if (!this.state.fieldValues['issuetype']?.id && !this.state.isErrorBannerOpen && this.state.isOnline) {

@@ -1,3 +1,5 @@
+import { Logger } from 'src/logger';
+
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import {
     Pipeline,
@@ -11,14 +13,13 @@ import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { PipelineSummaryAction, PipelineSummaryActionType } from '../../../ipc/fromUI/pipelineSummary';
 import { PipelineSummaryMessageType } from '../../../ipc/toUI/pipelineSummary';
-import { Logger } from '../../../logger';
 import { MessagePoster } from '../webviewController';
 import { PipelinesSummaryActionApi } from './pipelinesSummaryActionApi';
 import { PipelineSummaryWebviewController } from './pipelineSummaryWebviewController';
 
 // Mock dependencies
-jest.mock('../../../logger');
 jest.mock('../../../analyticsApi');
+jest.mock('src/logger');
 
 describe('PipelineSummaryWebviewController', () => {
     let controller: PipelineSummaryWebviewController;

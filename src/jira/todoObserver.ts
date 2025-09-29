@@ -4,10 +4,12 @@ import { Commands } from '../constants';
 import { Container } from '../container';
 import { parseJiraIssueKeys } from './issueKeyParser';
 
+const CONTEXT_SIZE = 20;
 interface LensMatch {
     document: TextDocument;
     text: string;
     range: Range;
+    context: string;
 }
 
 export function provideCodeLenses(document: TextDocument, token: CancellationToken): CodeLens[] {
@@ -21,7 +23,15 @@ export function provideCodeLenses(document: TextDocument, token: CancellationTok
         return new CodeLens(match.range, {
             title: 'Create Jira Issue',
             command: Commands.CreateIssue,
-            arguments: [{ fromCodeLens: true, summary: match.text, uri: document.uri, insertionPoint: insertionPoint }],
+            arguments: [
+                {
+                    fromCodeLens: true,
+                    summary: match.text,
+                    uri: document.uri,
+                    insertionPoint: insertionPoint,
+                    context: match.context,
+                },
+            ],
         });
     });
 }
@@ -59,9 +69,24 @@ function findTodos(document: TextDocument) {
                 const word = reMatches[0];
                 const range = new Range(new Position(i, index), new Position(i, index + word.length - 1));
                 const ersatzSummary = line.substr(index + word.length).trim();
-                matches.push({ document: document, text: ersatzSummary, range: range });
+                matches.push({
+                    document: document,
+                    text: ersatzSummary,
+                    range: range,
+                    context: generateContext(document, i, CONTEXT_SIZE),
+                });
             }
         }
     }
     return matches;
+}
+
+function generateContext(document: TextDocument, lineNumber: number, contextSize: number): string {
+    const startLine = Math.max(0, lineNumber - contextSize);
+    const endLine = Math.min(document.lineCount - 1, lineNumber + contextSize);
+    const lines: string[] = [];
+    for (let i = startLine; i <= endLine; i++) {
+        lines.push(document.lineAt(i).text);
+    }
+    return lines.join('\n');
 }

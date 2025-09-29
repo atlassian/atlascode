@@ -14,9 +14,11 @@ import {
     AuthInfo,
     AuthInfoEvent,
     AuthInfoState,
+    BasicAuthInfo,
     DetailedSiteInfo,
     emptyAuthInfo,
     getSecretForAuthInfo,
+    isBasicAuthInfo,
     isOAuthInfo,
     OAuthInfo,
     OAuthProvider,
@@ -74,6 +76,32 @@ export class CredentialManager implements Disposable {
     public async getAuthInfo(site: DetailedSiteInfo, allowCache = true): Promise<AuthInfo | undefined> {
         const authInfo = await this.getAuthInfoForProductAndCredentialId(site, allowCache);
         return this.softRefreshOAuth(site, authInfo);
+    }
+
+    async findApiTokenForSite(site?: DetailedSiteInfo | string): Promise<BasicAuthInfo | undefined> {
+        const siteToCheck = typeof site === 'string' ? Container.siteManager.getSiteForId(ProductJira, site) : site;
+
+        if (!siteToCheck || !siteToCheck.host.endsWith('.atlassian.net')) {
+            return undefined;
+        }
+
+        const sites = Container.siteManager.getSitesAvailable(ProductJira);
+        const selectedSiteEmail = (await this.getAuthInfo(siteToCheck))?.user.email;
+
+        // For a cloud site - check if we have another cloud site with the same user and API key
+        const promises = sites
+            .filter((site) => site.host.endsWith('.atlassian.net'))
+            .map(async (site) => {
+                const authInfo = await this.getAuthInfo(site);
+                if (authInfo?.user.email === selectedSiteEmail && isBasicAuthInfo(authInfo)) {
+                    // There's another site with the same user and cloud, so we can use that API key for suggestions
+                    return authInfo as BasicAuthInfo;
+                }
+                return undefined;
+            });
+
+        const results = await Promise.all(promises);
+        return results.find((authInfo) => authInfo !== undefined);
     }
 
     public async getAllValidAuthInfo(product: Product): Promise<AuthInfo[]> {

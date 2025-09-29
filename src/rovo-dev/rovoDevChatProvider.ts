@@ -1,12 +1,12 @@
-import { Logger } from 'src/logger';
-import { RovoDevViewResponse } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
+import { RovoDevLogger } from 'src/logger';
+import { RovoDevViewResponse, ToolPermissionChoice } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
 import { v4 } from 'uuid';
 import { Event, Webview } from 'vscode';
 
 import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
 import { RovoDevApiClient, RovoDevChatRequest, RovoDevChatRequestContextFileEntry } from './rovoDevApiClient';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
+import { RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
@@ -14,13 +14,28 @@ interface TypedWebview<MessageOut, MessageIn> extends Webview {
     postMessage(message: MessageOut): Thenable<boolean>;
 }
 
+type StreamingApi = 'chat' | 'replay';
+
 export class RovoDevChatProvider {
+    private _pendingToolConfirmation: Record<string, ToolPermissionChoice | 'undecided'> = {};
+    private _pendingToolConfirmationLeft = 0;
     private _pendingPrompt: RovoDevPrompt | undefined;
     private _currentPrompt: RovoDevPrompt | undefined;
     private _rovoDevApiClient: RovoDevApiClient | undefined;
     private _webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined;
 
     private _replayInProgress = false;
+
+    private _yoloMode = false;
+    public get yoloMode() {
+        return this._yoloMode;
+    }
+    public set yoloMode(value: boolean) {
+        this._yoloMode = value;
+        if (value) {
+            this.signalYoloModeEngaged();
+        }
+    }
 
     private _currentPromptId: string = '';
     public get currentPromptId() {
@@ -36,7 +51,10 @@ export class RovoDevChatProvider {
         return !!this._pendingPrompt;
     }
 
-    constructor(private _telemetryProvider: RovoDevTelemetryProvider) {}
+    constructor(
+        private readonly _isBoysenberry: boolean,
+        private _telemetryProvider: RovoDevTelemetryProvider,
+    ) {}
 
     public setWebview(webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined) {
         this._webView = webView;
@@ -54,6 +72,7 @@ export class RovoDevChatProvider {
 
     public shutdown() {
         this._rovoDevApiClient = undefined;
+        this._pendingPrompt = undefined;
     }
 
     public executeChat(prompt: RovoDevPrompt, revertedFiles: string[]) {
@@ -75,18 +94,13 @@ export class RovoDevChatProvider {
             context = [];
         }
 
-        if (!flushingPendingPrompt) {
-            await this.sendUserPromptToView(text, context);
-        }
-
-        await this.sendPromptSentToView(text, enable_deep_plan, context);
+        // when flushing a pending prompt, we don't want to echo the prompt in chat again
+        await this.signalPromptSent({ text, enable_deep_plan, context }, !flushingPendingPrompt);
 
         if (!this._rovoDevApiClient) {
             this._pendingPrompt = { text, enable_deep_plan, context };
             return;
         }
-
-        this.beginNewPrompt();
 
         this._currentPrompt = {
             text,
@@ -100,37 +114,7 @@ export class RovoDevChatProvider {
             this.addUndoContextToPrompt(requestPayload, revertedFiles);
         }
 
-        const currentPrompt = this._currentPrompt;
-        const fetchOp = async (client: RovoDevApiClient) => {
-            const response = await client.chat(requestPayload);
-
-            this._telemetryProvider.fireTelemetryEvent(
-                'rovoDevPromptSentEvent',
-                this._currentPromptId,
-                !!currentPrompt.enable_deep_plan,
-            );
-
-            return this.processChatResponse('chat', response);
-        };
-
-        await this.executeApiWithErrorHandling(fetchOp, true);
-    }
-
-    public async executeReplay(): Promise<void> {
-        if (!this._rovoDevApiClient) {
-            throw new Error('Unable to replay the previous conversation. Rovo Dev failed to initialize');
-        }
-
-        this.beginNewPrompt('replay');
-        await this.sendPromptSentToView('', false, []);
-
-        this._replayInProgress = true;
-
-        await this.executeApiWithErrorHandling(async (client) => {
-            return this.processChatResponse('replay', client.replay());
-        }, false);
-
-        this._replayInProgress = false;
+        await this.sendPromptToRovoDev(requestPayload);
     }
 
     public async executeRetryPromptAfterError() {
@@ -138,17 +122,21 @@ export class RovoDevChatProvider {
             return;
         }
 
-        this.beginNewPrompt();
+        // we need to echo back the prompt to the View since it's not submitted via prompt box
+        await this.signalPromptSent(this._currentPrompt, true);
 
-        const currentPrompt = this._currentPrompt;
-        const requestPayload = this.preparePayloadForChatRequest(currentPrompt);
+        const requestPayload = this.preparePayloadForChatRequest(this._currentPrompt);
         this.addRetryAfterErrorContextToPrompt(requestPayload);
 
-        // we need to echo back the prompt to the View since it's not user submitted
-        await this.sendPromptSentToView(requestPayload.message, currentPrompt.enable_deep_plan, currentPrompt.context);
+        await this.sendPromptToRovoDev(requestPayload);
+    }
+
+    private async sendPromptToRovoDev(requestPayload: RovoDevChatRequest) {
+        this.beginNewPrompt();
 
         const fetchOp = async (client: RovoDevApiClient) => {
-            const response = await client.chat(requestPayload);
+            // Boysenberry is always in YOLO mode
+            const response = await client.chat(requestPayload, !this._isBoysenberry);
 
             this._telemetryProvider.fireTelemetryEvent(
                 'rovoDevPromptSentEvent',
@@ -159,7 +147,26 @@ export class RovoDevChatProvider {
             return this.processChatResponse('chat', response);
         };
 
-        await this.executeApiWithErrorHandling(fetchOp, true);
+        await this.executeStreamingApiWithErrorHandling('chat', fetchOp);
+    }
+
+    public async executeReplay(): Promise<void> {
+        if (!this._rovoDevApiClient) {
+            throw new Error('Unable to replay the previous conversation. Rovo Dev failed to initialize');
+        }
+
+        this.beginNewPrompt('replay');
+
+        this._replayInProgress = true;
+
+        const fetchOp = async (client: RovoDevApiClient) => {
+            const response = client.replay();
+            return this.processChatResponse('replay', response);
+        };
+
+        await this.executeStreamingApiWithErrorHandling('replay', fetchOp);
+
+        this._replayInProgress = false;
     }
 
     public async executeCancel(fromNewSession: boolean): Promise<boolean> {
@@ -172,12 +179,15 @@ export class RovoDevChatProvider {
             }
             this._pendingCancellation = true;
 
-            const cancelResponse = await this.executeApiWithErrorHandling((client) => client.cancel(), false);
+            try {
+                const cancelResponse = await this._rovoDevApiClient.cancel();
+                success = cancelResponse.cancelled || cancelResponse.message === 'No chat in progress';
+            } catch {
+                await this.processError(new Error('Failed to cancel the current response. Please try again.'), false);
+                success = false;
+            }
 
             this._pendingCancellation = false;
-
-            success =
-                !!cancelResponse && (cancelResponse.cancelled || cancelResponse.message === 'No chat in progress');
 
             if (!success) {
                 await webview.postMessage({
@@ -214,7 +224,7 @@ export class RovoDevChatProvider {
         this._telemetryProvider.startNewPrompt(this._currentPromptId);
     }
 
-    private async processChatResponse(sourceApi: 'chat' | 'replay', fetchOp: Promise<Response> | Response) {
+    private async processChatResponse(sourceApi: StreamingApi, fetchOp: Promise<Response> | Response) {
         const fireTelemetry = sourceApi === 'chat';
         const response = await fetchOp;
         if (!response.body) {
@@ -263,24 +273,9 @@ export class RovoDevChatProvider {
                 await this.processRovoDevResponse(sourceApi, msg);
             }
         }
-
-        // Send final complete message when stream ends
-        await this.completeChatResponse(sourceApi);
     }
 
-    private completeChatResponse(sourceApi: 'replay' | 'chat' | 'error') {
-        // if (this._processState === RovoDevProcessState.Disabled) {
-        //     return Promise.resolve(false);
-        // }
-
-        const webview = this._webView!;
-        return webview.postMessage({
-            type: RovoDevProviderMessageType.CompleteMessage,
-            isReplay: sourceApi === 'replay',
-        });
-    }
-
-    private processRovoDevResponse(sourceApi: 'chat' | 'replay', response: RovoDevResponse): Thenable<boolean> {
+    private processRovoDevResponse(sourceApi: StreamingApi, response: RovoDevResponse): Thenable<unknown> {
         // if (this._processState === RovoDevProcessState.Disabled) {
         //     return Promise.resolve(false);
         // }
@@ -339,7 +334,10 @@ export class RovoDevChatProvider {
                         enable_deep_plan: false,
                         context: [],
                     };
-                    return this.sendUserPromptToView(response.content);
+                    return this.signalPromptSent(
+                        { text: response.content, enable_deep_plan: false, context: [] },
+                        true,
+                    );
                 }
                 return Promise.resolve(false);
 
@@ -349,14 +347,12 @@ export class RovoDevChatProvider {
 
             case 'warning':
                 return webview.postMessage({
-                    type: RovoDevProviderMessageType.ErrorMessage,
+                    type: RovoDevProviderMessageType.ShowDialog,
                     message: {
                         type: 'warning',
                         text: response.message,
                         title: response.title,
-                        source: 'RovoDevError',
-                        isRetriable: false,
-                        uid: v4(),
+                        source: 'RovoDevDialog',
                     },
                 });
 
@@ -367,46 +363,117 @@ export class RovoDevChatProvider {
 
             case 'prune':
                 return webview.postMessage({
-                    type: RovoDevProviderMessageType.ErrorMessage,
+                    type: RovoDevProviderMessageType.ShowDialog,
                     message: {
                         type: 'info',
                         text: response.message,
-                        source: 'RovoDevError',
-                        isRetriable: false,
-                        uid: v4(),
+                        source: 'RovoDevDialog',
                     },
                 });
 
+            case 'on_call_tools_start':
+                this._pendingToolConfirmation = {};
+                this._pendingToolConfirmationLeft = 0;
+
+                if (this.yoloMode) {
+                    const yoloChoices: RovoDevChatProvider['_pendingToolConfirmation'] = {};
+                    response.tools.forEach((x) => (yoloChoices[x.tool_call_id] = 'allow'));
+                    return this._rovoDevApiClient!.resumeToolCall(yoloChoices);
+                } else {
+                    response.tools.forEach((x) => (this._pendingToolConfirmation[x.tool_call_id] = 'undecided'));
+                    this._pendingToolConfirmationLeft = response.tools.length;
+
+                    const promises = response.tools.map((tool) => {
+                        return webview.postMessage({
+                            type: RovoDevProviderMessageType.ShowDialog,
+                            message: {
+                                type: 'toolPermissionRequest',
+                                source: 'RovoDevDialog',
+                                toolName: tool.tool_name,
+                                toolArgs: tool.args,
+                                text: 'To do this I will need to',
+                                toolCallId: tool.tool_call_id,
+                            },
+                        });
+                    });
+                    return Promise.all(promises);
+                }
+
+            case 'close':
+                // response terminated
+                return Promise.resolve(true);
+
             default:
-                return Promise.resolve(false);
+                // @ts-expect-error ts(2339) - response here should be 'never'
+                throw new Error(`Rovo Dev response error: unknown event kind: ${response.event_kind}`);
         }
     }
 
-    private async executeApiWithErrorHandling<T>(
-        func: (client: RovoDevApiClient) => Promise<T>,
-        isErrorRetriable: boolean,
-    ): Promise<T | void> {
+    public async signalToolRequestChoiceSubmit(toolCallId: string, choice: ToolPermissionChoice) {
+        if (!this._pendingToolConfirmation[toolCallId]) {
+            throw new Error('Received an unexpected tool confirmation: not found.');
+        }
+        if (this._pendingToolConfirmation[toolCallId] !== 'undecided') {
+            throw new Error('Received an unexpected tool confirmation: already confirmed.');
+        }
+
+        this._pendingToolConfirmation[toolCallId] = choice;
+
+        if (--this._pendingToolConfirmationLeft <= 0) {
+            await this._rovoDevApiClient!.resumeToolCall(this._pendingToolConfirmation);
+            this._pendingToolConfirmation = {};
+        }
+    }
+
+    private async signalYoloModeEngaged() {
+        if (this._pendingToolConfirmationLeft > 0) {
+            for (const key in this._pendingToolConfirmation) {
+                if (this._pendingToolConfirmation[key] === 'undecided') {
+                    this._pendingToolConfirmation[key] = 'allow';
+                }
+            }
+            this._pendingToolConfirmationLeft = 0;
+
+            await this._rovoDevApiClient!.resumeToolCall(this._pendingToolConfirmation);
+            this._pendingToolConfirmation = {};
+        }
+    }
+
+    private async executeStreamingApiWithErrorHandling(
+        sourceApi: StreamingApi,
+        func: (client: RovoDevApiClient) => Promise<any>,
+    ): Promise<void> {
+        const webview = this._webView!;
+
         if (this._rovoDevApiClient) {
             try {
-                return await func(this._rovoDevApiClient);
+                await func(this._rovoDevApiClient);
             } catch (error) {
-                await this.processError(error, isErrorRetriable);
+                // the error is retriable only when it happens during the streaming of a 'chat' response
+                await this.processError(error, sourceApi === 'chat');
             }
         } else {
             await this.processError(new Error('RovoDev client not initialized'), false);
         }
+
+        // whatever happens, at the end of the streaming API we need to tell the webview
+        // that the generation of the response has finished
+        await webview.postMessage({
+            type: RovoDevProviderMessageType.CompleteMessage,
+            isReplay: sourceApi === 'replay',
+        });
     }
 
     private processError(error: Error, isRetriable: boolean, isProcessTerminated?: boolean) {
-        Logger.error('RovoDev', error);
+        RovoDevLogger.error(error);
 
         const webview = this._webView!;
         return webview.postMessage({
-            type: RovoDevProviderMessageType.ErrorMessage,
+            type: RovoDevProviderMessageType.ShowDialog,
             message: {
                 type: 'error',
                 text: error.message,
-                source: 'RovoDevError',
+                source: 'RovoDevDialog',
                 isRetriable,
                 isProcessTerminated,
                 uid: v4(),
@@ -414,24 +481,11 @@ export class RovoDevChatProvider {
         });
     }
 
-    private async sendUserPromptToView(text: string, context?: RovoDevContextItem[]) {
+    private async signalPromptSent({ text, enable_deep_plan, context }: RovoDevPrompt, echoMessage: boolean) {
         const webview = this._webView!;
-
         return await webview.postMessage({
-            type: RovoDevProviderMessageType.UserChatMessage,
-            message: {
-                text: text,
-                source: 'User',
-                context: context,
-            },
-        });
-    }
-
-    private async sendPromptSentToView(text: string, enable_deep_plan: boolean, context: RovoDevContextItem[]) {
-        const webview = this._webView!;
-
-        return await webview.postMessage({
-            type: RovoDevProviderMessageType.PromptSent,
+            type: RovoDevProviderMessageType.SignalPromptSent,
+            echoMessage,
             text,
             enable_deep_plan,
             context,

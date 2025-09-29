@@ -4,7 +4,7 @@ import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev
 import { ConnectionTimeout } from 'src/util/time';
 
 import { useMessagingApi } from '../../messagingApi';
-import { mdParser } from '../common/common';
+import { MarkedDown } from '../common/common';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { DefaultMessage } from '../utils';
 
@@ -13,11 +13,11 @@ const PullRequestButton: React.FC<{
     isLoading?: boolean;
 }> = ({ onClick, isLoading }) => {
     return (
-        <button className="pull-request-button" onClick={onClick} title="Create Pull Request">
+        <button className="pull-request-button" onClick={onClick} title="Create pull request">
             {isLoading ? (
                 <i className="codicon codicon-loading codicon-modifier-spin" />
             ) : (
-                <PullRequestIcon label="Create Pull Request" spacing="none" />
+                <PullRequestIcon label="Create pull request" spacing="none" />
             )}
             Create Pull Request
         </button>
@@ -36,7 +36,7 @@ interface PullRequestFormProps {
 
 export const PullRequestForm: React.FC<PullRequestFormProps> = ({
     onCancel,
-    messagingApi: { postMessagePromise },
+    messagingApi: { postMessage, postMessagePromise },
     onPullRequestCreated,
     isFormVisible = false,
     setFormVisible,
@@ -58,6 +58,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
 
     const handleToggleForm = async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
+        postMessage({ type: RovoDevViewResponseType.ReportCreatePrButtonClicked });
         await getCurrentBranchName();
         setFormVisible?.(true);
     };
@@ -133,7 +134,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                                 ) : (
                                     <PullRequestIcon label="pull-request-icon" spacing="none" />
                                 )}
-                                Create PR
+                                Create pull request
                             </button>
                         </div>
                     </form>
@@ -147,10 +148,9 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
 
 export const PullRequestChatItem: React.FC<{ msg: DefaultMessage }> = ({ msg }) => {
     const content = (
-        <div
-            style={{ display: 'flex', flexDirection: 'column' }}
-            dangerouslySetInnerHTML={{ __html: mdParser.render(msg.text || '') }}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <MarkedDown value={msg.text || ''} />
+        </div>
     );
     return (
         <div className="chat-message pull-request-chat-item agent-message">

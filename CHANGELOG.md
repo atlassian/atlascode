@@ -1,5 +1,18 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 3.8.19
+
+### Bug Fixes
+
+- Fix error while connecting several jira sites with an API token
+
+## What's new in 3.8.17
+
+### Features
+
+- Update pipeline schema to the current latest version
+- Add the ability to search issue through all connected sites
+
 ## What's new in 3.8.15
 
 ### Bug Fixes

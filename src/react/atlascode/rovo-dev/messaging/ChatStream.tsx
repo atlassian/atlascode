@@ -1,27 +1,36 @@
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
+import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import { useMessagingApi } from '../../messagingApi';
-import { FollowUpActionFooter, OpenFileFunc } from '../common/common';
-import { ErrorMessageItem } from '../common/errorMessage';
+import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc } from '../common/common';
+import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
 import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
 import { RovoDevLanding } from '../rovoDevLanding';
-import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
+import {
+    McpConsentChoice,
+    RovoDevViewResponse,
+    RovoDevViewResponseType,
+    ToolPermissionChoice,
+} from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { DefaultMessage, parseToolReturnMessage, Response, scrollToEnd } from '../utils';
+import { DefaultMessage, DialogMessage, parseToolReturnMessage, Response, scrollToEnd } from '../utils';
 import { ChatMessageItem } from './ChatMessageItem';
 import { MessageDrawer } from './MessageDrawer';
 
 interface ChatStreamProps {
     chatHistory: Response[];
+    modalDialogs: DialogMessage[];
     renderProps: {
         openFile: OpenFileFunc;
+        checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
     };
@@ -39,10 +48,18 @@ interface ChatStreamProps {
     sendFeedback: (feedbackType: FeedbackType, feedack: string, canContact: boolean, lastTenMessages: boolean) => void;
     onLoginClick: () => void;
     onOpenFolder: () => void;
+    onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
+    onSendMessage: (message: string) => void;
+    jiraWorkItems?: MinimalIssue<DetailedSiteInfo>[];
+    isJiraWorkItemsLoading?: boolean;
+    onJiraItemClick?: (issue: MinimalIssue<DetailedSiteInfo>) => void;
+    onRequestJiraItems?: () => void;
+    onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice) => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
     chatHistory,
+    modalDialogs,
     renderProps,
     pendingToolCall,
     deepPlanCreated,
@@ -56,6 +73,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     sendFeedback,
     onLoginClick,
     onOpenFolder,
+    onMcpChoice,
+    onSendMessage,
+    jiraWorkItems,
+    isJiraWorkItemsLoading,
+    onJiraItemClick,
+    onRequestJiraItems,
+    onToolPermissionChoice,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -171,6 +195,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     // Auto-scroll when content changes or when re-enabled
     React.useEffect(performAutoScroll, [
         chatHistory,
+        modalDialogs,
         isFormVisible,
         pendingToolCall,
         autoScrollEnabled,
@@ -205,23 +230,30 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         [setFeedbackVisible],
     );
 
-    const shouldShowToolCall = React.useMemo(() => {
-        switch (currentState.state) {
-            case 'Disabled':
-            case 'ProcessTerminated':
-            case 'WaitingForPrompt':
-                return false;
-            case 'Initializing':
-                return currentState.isPromptPending;
-            default:
-                return true;
-        }
-    }, [currentState]);
+    const isChatHistoryDisabled =
+        (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance') ||
+        (currentState.state === 'Disabled' && currentState.subState !== 'Other');
+
+    const shouldShowToolCall =
+        currentState.state !== 'Disabled' &&
+        currentState.state !== 'ProcessTerminated' &&
+        currentState.state !== 'WaitingForPrompt' &&
+        (currentState.state !== 'Initializing' || currentState.isPromptPending);
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            <RovoDevLanding currentState={currentState} onLoginClick={onLoginClick} onOpenFolder={onOpenFolder} />
-            {(currentState.state !== 'Disabled' || currentState.subState !== 'NeedAuth') &&
+            <RovoDevLanding
+                currentState={currentState}
+                onLoginClick={onLoginClick}
+                onOpenFolder={onOpenFolder}
+                onMcpChoice={onMcpChoice}
+                onSendMessage={onSendMessage}
+                jiraWorkItems={jiraWorkItems}
+                isJiraWorkItemsLoading={isJiraWorkItemsLoading}
+                onJiraItemClick={onJiraItemClick}
+                onRequestJiraItems={onRequestJiraItems}
+            />
+            {!isChatHistoryDisabled &&
                 chatHistory &&
                 chatHistory.map((block, idx) => {
                     const drawerOpen =
@@ -247,6 +279,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                     }
                                     onCopy={handleCopyResponse}
                                     onFeedback={handleFeedbackTrigger}
+                                    openFile={renderProps.openFile}
                                 />
                             );
                         } else if (block.source === 'ToolReturn') {
@@ -258,17 +291,19 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                         <TechnicalPlanComponent
                                             content={message.technicalPlan}
                                             openFile={renderProps.openFile}
+                                            checkFileExists={renderProps.checkFileExists}
                                         />
                                     );
                                 }
                                 return <ToolReturnParsedItem msg={message} openFile={renderProps.openFile} />;
                             });
-                        } else if (block.source === 'RovoDevError') {
+                        } else if (block.source === 'RovoDevDialog') {
                             return (
-                                <ErrorMessageItem
+                                <DialogMessageItem
                                     msg={block}
                                     isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
                                     retryAfterError={renderProps.retryPromptAfterError}
+                                    onToolPermissionChoice={onToolPermissionChoice}
                                 />
                             );
                         } else if (block.source === 'PullRequest') {
@@ -279,13 +314,23 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     return null;
                 })}
 
-            {shouldShowToolCall && pendingToolCall && (
+            {!isChatHistoryDisabled && shouldShowToolCall && pendingToolCall && (
                 <div style={{ marginBottom: '16px' }}>
                     <ToolCallItem toolMessage={pendingToolCall} currentState={currentState} />
                 </div>
             )}
 
-            {currentState.state === 'WaitingForPrompt' && (
+            {!isChatHistoryDisabled &&
+                modalDialogs.map((dialog) => (
+                    <DialogMessageItem
+                        msg={dialog}
+                        isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
+                        retryAfterError={renderProps.retryPromptAfterError}
+                        onToolPermissionChoice={onToolPermissionChoice}
+                    />
+                ))}
+
+            {!isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && (
                 <FollowUpActionFooter>
                     {deepPlanCreated && !feedbackVisible && <CodePlanButton execute={executeCodePlan} />}
                     {canCreatePR && !deepPlanCreated && !feedbackVisible && hasChangesInGit && (

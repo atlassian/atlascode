@@ -1,3 +1,4 @@
+import { Container } from 'src/container';
 import * as vscode from 'vscode';
 
 import { authenticatedEvent, editedEvent } from '../analytics';
@@ -175,6 +176,30 @@ export class LoginManager {
         }
     }
 
+    private isSiteAddedViaToken(site: DetailedSiteInfo): boolean {
+        return site.isCloud && site.name === site.host && site.contextPath !== undefined;
+    }
+
+    private shouldCleanupTokenSites(siteDetails: DetailedSiteInfo, credentials: AuthInfo): boolean {
+        return siteDetails.isCloud && siteDetails.product.key === ProductJira.key && isBasicAuthInfo(credentials);
+    }
+
+    public async removeTokenConnectedSites(): Promise<void> {
+        const existingSites = this._siteManager.getSitesAvailable(ProductJira);
+        const sitesToRemove = existingSites.filter((site) => this.isSiteAddedViaToken(site));
+
+        if (sitesToRemove.length > 0) {
+            vscode.window.showInformationMessage(
+                'Currently only one Jira site can be connected via API token at a time. The previous Jira site has been disconnected to connect the new one.',
+            );
+        }
+
+        for (const siteToRemove of sitesToRemove) {
+            await Container.clientManager.removeClient(siteToRemove);
+            await Container.siteManager.removeSite(siteToRemove, true, true);
+        }
+    }
+
     private authHeader(credentials: BasicAuthInfo | PATAuthInfo) {
         if (isBasicAuthInfo(credentials)) {
             return 'Basic ' + new Buffer(credentials.username + ':' + credentials.password).toString('base64');
@@ -280,6 +305,11 @@ export class LoginManager {
                 email: json.emailAddress,
                 avatarUrl: json.avatarUrl,
             };
+        }
+
+        // Clean up existing site before connecting new one, as currently we support just one connected with API token site at a time
+        if (this.shouldCleanupTokenSites(siteDetails, credentials)) {
+            await this.removeTokenConnectedSites();
         }
 
         await this._credentialManager.saveAuthInfo(siteDetails, credentials);

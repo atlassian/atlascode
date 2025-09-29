@@ -46,7 +46,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.11.18"
+        "version": "0.11.24"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -135,38 +135,32 @@
                 "title": "Trail Logs",
                 "icon": "$(terminal)",
                 "category": "Rovo Dev",
-                "enablement": "atlascode:rovoDevEnabled"
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
                 "command": "atlascode.openRovoDevConfig",
                 "title": "Open Settings File",
                 "category": "Rovo Dev",
                 "description": "Opens the ~/.rovodev/config.yaml file in the editor.",
-                "enablement": "atlascode:rovoDevEnabled"
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
                 "command": "atlascode.openRovoDevMcpJson",
                 "title": "Open MCP configuration",
                 "category": "Rovo Dev",
                 "description": "Opens the ~/.rovodev/mcp.json file in the editor.",
-                "enablement": "atlascode:rovoDevEnabled"
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
                 "command": "atlascode.openRovoDevGlobalMemory",
                 "title": "Open Global Memory file",
                 "category": "Rovo Dev",
                 "description": "Opens the ~/.rovodev/.agent.md file in the editor.",
-                "enablement": "atlascode:rovoDevEnabled"
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
                 "command": "atlascode.rovodev.shareFeedback",
                 "title": "Share feedback",
-                "category": "Rovo Dev",
-                "enablement": "atlascode:rovoDevEnabled"
-            },
-            {
-                "command": "atlascode.rovodev.startWorkWithRovoDev",
-                "title": "Start work with Rovo Dev",
                 "category": "Rovo Dev",
                 "enablement": "atlascode:rovoDevEnabled"
             },
@@ -521,7 +515,7 @@
                 {
                     "id": "atlascode-rovo-dev",
                     "title": "Rovo Dev",
-                    "icon": "resources/rovodev-icon.svg"
+                    "icon": "resources/light/rovodev-icon.svg"
                 }
             ]
         },
@@ -632,22 +626,22 @@
                 },
                 {
                     "command": "atlascode.rovodev.showTerminal",
-                    "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView",
+                    "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "navigation@2"
                 },
                 {
                     "command": "atlascode.openRovoDevConfig",
-                    "when": "view == atlascode.views.rovoDev.webView",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu1@1"
                 },
                 {
                     "command": "atlascode.openRovoDevGlobalMemory",
-                    "when": "view == atlascode.views.rovoDev.webView",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu1@2"
                 },
                 {
                     "command": "atlascode.openRovoDevMcpJson",
-                    "when": "view == atlascode.views.rovoDev.webView",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu1@3"
                 },
                 {
@@ -751,11 +745,6 @@
                 {
                     "command": "atlascode.jira.startWorkOnIssue",
                     "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
-                    "group": "jiraContextMenuGroup1"
-                },
-                {
-                    "command": "atlascode.rovodev.startWorkWithRovoDev",
-                    "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated && atlascode:rovoDevEnabled",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
@@ -1003,10 +992,6 @@
                 {
                     "command": "atlascode.showExploreSettings",
                     "when": "false"
-                },
-                {
-                    "command": "atlascode.rovodev.startWorkWithRovoDev",
-                    "when": "false"
                 }
             ]
         },
@@ -1020,9 +1005,25 @@
                     "description": "Show the Rovo Dev keybinding annotation in the editor when a selection is present.",
                     "scope": "window"
                 },
-                "atlascode.rovodev.executablePath": {
+                "atlascode.rovodev.debugPanelEnabled": {
+                    "type": "boolean",
+                    "description": "Enable Rovo Dev debug panel",
+                    "scope": "window"
+                },
+                "atlascode.issueSuggestion.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables AI-assisted issue suggestion for TODO comments",
+                    "scope": "window"
+                },
+                "atlascode.issueSuggestion.contextLevel": {
                     "type": "string",
-                    "description": "The absolute path to the Rovo Dev executable"
+                    "description": "What context to use for issue suggestions - only the TODO text, surrouding code, or the entire file",
+                    "default": "codeContext",
+                    "enum": [
+                        "todoOnly",
+                        "codeContext"
+                    ]
                 },
                 "atlascode.outputLevel": {
                     "type": "string",
@@ -1431,6 +1432,7 @@
         }
     },
     "dependencies": {
+        "@atlaskit/adf-utils": "^19.21.3",
         "@atlaskit/analytics-next": "^11.1.1",
         "@atlaskit/avatar": "^25.1.12",
         "@atlaskit/avatar-group": "^12.2.2",
@@ -1439,8 +1441,17 @@
         "@atlaskit/checkbox": "^17.1.11",
         "@atlaskit/comment": "^13.0.20",
         "@atlaskit/css": "^0.12.3",
+        "@atlaskit/css-reset": "^7.3.5",
         "@atlaskit/datetime-picker": "^17.0.13",
         "@atlaskit/dropdown-menu": "^16.3.8",
+        "@atlaskit/editor-common": "^109.5.0",
+        "@atlaskit/editor-core": "^213.0.0",
+        "@atlaskit/editor-json-transformer": "^8.27.2",
+        "@atlaskit/editor-plugin-insert-block": "^6.0.4",
+        "@atlaskit/editor-plugin-list": "^7.2.3",
+        "@atlaskit/editor-plugin-text-color": "^5.4.2",
+        "@atlaskit/editor-plugin-toolbar-lists-indentation": "^6.1.3",
+        "@atlaskit/editor-wikimarkup-transformer": "^11.16.4",
         "@atlaskit/feature-gate-js-client": "^5.5.5",
         "@atlaskit/form": "^12.2.1",
         "@atlaskit/icon": "^27.12.0",
@@ -1451,12 +1462,14 @@
         "@atlaskit/modal-dialog": "^14.3.4",
         "@atlaskit/page": "^14.0.1",
         "@atlaskit/page-header": "^12.1.1",
+        "@atlaskit/popup": "^4.4.0",
         "@atlaskit/pragmatic-drag-and-drop": "^1.0.0",
         "@atlaskit/pragmatic-drag-and-drop-flourish": "^2.0.4",
         "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
         "@atlaskit/pragmatic-drag-and-drop-live-region": "^1.3.1",
         "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator": "^3.2.5",
         "@atlaskit/radio": "^8.3.0",
+        "@atlaskit/renderer": "123.0.0",
         "@atlaskit/section-message": "^8.5.1",
         "@atlaskit/select": "^21.2.6",
         "@atlaskit/spinner": "^19.0.3",
@@ -1470,12 +1483,12 @@
         "@atlassianlabs/guipi-core-components": "^3.2.0",
         "@atlassianlabs/guipi-core-controller": "^3.2.0",
         "@atlassianlabs/guipi-jira-components": "^3.2.0",
-        "@atlassianlabs/jira-metaui-client": "^1.4.1",
-        "@atlassianlabs/jira-metaui-transformer": "^1.4.1",
-        "@atlassianlabs/jira-pi-client": "^1.4.1",
-        "@atlassianlabs/jira-pi-common-models": "^1.4.1",
-        "@atlassianlabs/jira-pi-meta-models": "^1.4.1",
-        "@atlassianlabs/pi-client-common": "^1.4.1",
+        "@atlassianlabs/jira-metaui-client": "^2.0.0",
+        "@atlassianlabs/jira-metaui-transformer": "^2.0.0",
+        "@atlassianlabs/jira-pi-client": "^2.0.0",
+        "@atlassianlabs/jira-pi-common-models": "^2.0.0",
+        "@atlassianlabs/jira-pi-meta-models": "^2.0.0",
+        "@atlassianlabs/pi-client-common": "^2.0.0",
         "@emotion/react": "^11.14.0",
         "@emotion/styled": "^11.14.1",
         "@mui/icons-material": "^5.18.0",
@@ -1485,7 +1498,7 @@
         "@mui/utils": "^5.17.1",
         "@segment/analytics-node": "^2.1.3",
         "@speed-highlight/core": "^1.2.7",
-        "@vscode/codicons": "^0.0.36",
+        "@vscode/codicons": "^0.0.40",
         "@vscode/webview-ui-toolkit": "^1.4.0",
         "adm-zip": "^0.5.16",
         "awesome-debounce-promise": "^2.1.0",
@@ -1580,6 +1593,7 @@
         "@vscode/vsce": "^3.6.0",
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
+        "audit-ci": "^7.1.0",
         "autoprefixer": "^10.4.20",
         "concurrently": "^9.1.2",
         "css-loader": "^7.1.2",
@@ -1590,6 +1604,7 @@
         "eslint-plugin-import": "^2.30.0",
         "eslint-plugin-prettier": "^5.2.1",
         "eslint-plugin-react": "^7.36.0",
+        "eslint-plugin-react-dom": "^1.53.1",
         "eslint-plugin-react-hooks": "^5.2.0",
         "eslint-plugin-simple-import-sort": "^12.1.1",
         "fork-ts-checker-notifier-webpack-plugin": "^9.0.0",
@@ -1608,6 +1623,7 @@
         "postcss-loader": "^8.1.1",
         "postcss-preset-env": "^10.2.0",
         "prettier": "^3.5.3",
+        "process": "^0.11.10",
         "source-map-loader": "^5.0.0",
         "terser-webpack-plugin": "^5.3.0",
         "ts-jest": "^29.4.0",
@@ -1626,6 +1642,31 @@
             "react": "^18.3.1"
         },
         "react-scrolllock": {
+            "react": "^18.3.1"
+        },
+        "@atlaskit/icon-priority": {
+            "react": "^18.3.1"
+        },
+        "react-intl-next": {
+            "typescript": "^5.8.3"
+        },
+        "@atlaskit/code": {
+            "refractor": "^4.6.1"
+        },
+        "@atlaskit/teams-client": {
+            "@sentry/browser": "^7.119.2"
+        },
+        "@atlaskit/editor-common": {
+            "@sentry/browser": "^7.119.2",
+            "@atlaskit/media-viewer": "^52.4.20"
+        },
+        "fetch-mock": {
+            "path-to-regexp": "^3.2.0"
+        },
+        "react-loosely-lazy": {
+            "react": "^18.3.1"
+        },
+        "react-lazily-render": {
             "react": "^18.3.1"
         }
     },

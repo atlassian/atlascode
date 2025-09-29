@@ -45,7 +45,9 @@ describe('PromptInputBox', () => {
         promptText: '',
         onPromptTextChange: jest.fn(),
         isDeepPlanEnabled: false,
+        isYoloModeEnabled: false,
         onDeepPlanToggled: jest.fn(),
+        onYoloModeToggled: jest.fn(),
         onSend: jest.fn(),
         onCancel: jest.fn(),
         sendButtonDisabled: false,
@@ -70,10 +72,11 @@ describe('PromptInputBox', () => {
     });
 
     it('calls onSend when Send button is clicked', () => {
-        render(<PromptInputBox {...defaultProps} promptText="test prompt" />);
         jest.spyOn(editor, 'getValue').mockReturnValue('text prompt');
+        jest.spyOn(editor, 'onDidChangeModelContent').mockImplementation((cb) => cb());
+        render(<PromptInputBox {...defaultProps} />);
         fireEvent.click(screen.getByLabelText('Send prompt'));
-        expect(defaultProps.onSend).toHaveBeenCalled();
+        expect(defaultProps.onSend).toHaveBeenCalledWith('text prompt');
     });
 
     it('calls onCancel when Stop button is clicked', () => {
@@ -82,38 +85,15 @@ describe('PromptInputBox', () => {
         expect(defaultProps.onCancel).toHaveBeenCalled();
     });
 
-    it('disables Send button when sendButtonDisabled is true', () => {
-        render(<PromptInputBox {...defaultProps} sendButtonDisabled={true} />);
-        fireEvent.click(screen.getByLabelText('Send prompt'));
-        expect(defaultProps.onSend).toHaveBeenCalledTimes(0);
-    });
-
     it('disables Stop button when state is CancellingResponse', () => {
         render(<PromptInputBox {...defaultProps} currentState={{ state: 'CancellingResponse' }} />);
         fireEvent.click(screen.getByLabelText('Stop'));
         expect(defaultProps.onCancel).toHaveBeenCalledTimes(0);
     });
 
-    it('calls onDeepPlanToggled when deep plan button is clicked', () => {
-        render(<PromptInputBox {...defaultProps} />);
-        fireEvent.click(screen.getAllByRole('button', { name: '' })[1]);
-        expect(defaultProps.onDeepPlanToggled).toHaveBeenCalled();
-    });
-
-    it('disables deep plan button when state is not WaitingForPrompt', () => {
-        render(<PromptInputBox {...defaultProps} currentState={{ state: 'GeneratingResponse' }} />);
-        fireEvent.click(screen.getAllByRole('button', { name: '' })[1]);
-        expect(defaultProps.onDeepPlanToggled).toHaveBeenCalledTimes(0);
-    });
-
-    it('shows "Deep plan enabled" text when deep plan is enabled', () => {
-        render(<PromptInputBox {...defaultProps} isDeepPlanEnabled={true} />);
-        expect(screen.getByText('Deep plan enabled')).toBeTruthy();
-    });
-
     it('calls onAddContext when Add Context button is clicked', () => {
         render(<PromptInputBox {...defaultProps} />);
-        fireEvent.click(screen.getAllByRole('button', { name: '' })[0]);
+        fireEvent.click(screen.getAllByRole('button', { name: 'Add context' })[0]);
         expect(defaultProps.onAddContext).toHaveBeenCalled();
     });
 });

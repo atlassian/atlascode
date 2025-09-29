@@ -131,7 +131,7 @@ describe('RovoDevApiClient', () => {
 
             const result = await client.cancel();
 
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/cancel', {
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/cancel', {
                 method: 'POST',
                 headers: {
                     accept: 'text/event-stream',
@@ -167,42 +167,7 @@ describe('RovoDevApiClient', () => {
 
             mockFetch.mockResolvedValue(mockResponse);
 
-            await expect(client.cancel()).rejects.toThrow("Failed to fetch '/v2/cancel API: HTTP 500");
-        });
-    });
-
-    describe('reset method', () => {
-        it('should make successful reset request', async () => {
-            const mockResponse = {
-                status: 200,
-                json: jest.fn().mockResolvedValue({}),
-                headers: mockStandardResponseHeaders(),
-            } as unknown as Response;
-
-            mockFetch.mockResolvedValue(mockResponse);
-
-            await client.reset();
-
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/reset', {
-                method: 'POST',
-                headers: {
-                    accept: 'text/event-stream',
-                    'Content-Type': 'application/json',
-                },
-                body: undefined,
-            });
-        });
-
-        it('should throw error when reset fails', async () => {
-            const mockResponse = {
-                status: 400,
-                statusText: 'Bad Request',
-                headers: mockStandardResponseHeaders(),
-            } as Response;
-
-            mockFetch.mockResolvedValue(mockResponse);
-
-            await expect(client.reset()).rejects.toThrow("Failed to fetch '/v2/reset API: HTTP 400");
+            await expect(client.cancel()).rejects.toThrow("Failed to fetch '/v3/cancel API: HTTP 500");
         });
     });
 
@@ -218,7 +183,7 @@ describe('RovoDevApiClient', () => {
             const message = 'Hello, how can I help?';
             const response = await client.chat(message);
 
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/chat', {
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/set_chat_message', {
                 method: 'POST',
                 headers: {
                     accept: 'text/event-stream',
@@ -227,6 +192,52 @@ describe('RovoDevApiClient', () => {
                 body: JSON.stringify({ message, context: [] }),
             });
             expect(response).toBe(mockResponse);
+
+            // after the POST /v3/set_chat_message, we expect a GET /v3/stream_chat to be called
+            expect(mockFetch).toHaveBeenCalledWith(
+                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false',
+                {
+                    method: 'GET',
+                    headers: {
+                        accept: 'text/event-stream',
+                        'Content-Type': 'application/json',
+                    },
+                },
+            );
+        });
+
+        it('should send chat message successfully, pasing on call tools', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const message = 'Hello, how can I help?';
+            const response = await client.chat(message, true);
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/set_chat_message', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message, context: [] }),
+            });
+            expect(response).toBe(mockResponse);
+
+            // after the POST /v3/set_chat_message, we expect a GET /v3/stream_chat to be called
+            expect(mockFetch).toHaveBeenCalledWith(
+                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=true',
+                {
+                    method: 'GET',
+                    headers: {
+                        accept: 'text/event-stream',
+                        'Content-Type': 'application/json',
+                    },
+                },
+            );
         });
 
         it('should request a deep plan successfully', async () => {
@@ -244,7 +255,7 @@ describe('RovoDevApiClient', () => {
                 context: [],
             });
 
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/chat', {
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/set_chat_message', {
                 method: 'POST',
                 headers: {
                     accept: 'text/event-stream',
@@ -253,6 +264,18 @@ describe('RovoDevApiClient', () => {
                 body: JSON.stringify({ message, enable_deep_plan: true, context: [] }),
             });
             expect(response).toBe(mockResponse);
+
+            // after the POST /v3/set_chat_message, we expect a GET /v3/stream_chat to be called
+            expect(mockFetch).toHaveBeenCalledWith(
+                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false',
+                {
+                    method: 'GET',
+                    headers: {
+                        accept: 'text/event-stream',
+                        'Content-Type': 'application/json',
+                    },
+                },
+            );
         });
 
         it('should handle empty message', async () => {
@@ -265,7 +288,7 @@ describe('RovoDevApiClient', () => {
 
             const response = await client.chat('');
 
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/chat', {
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/set_chat_message', {
                 method: 'POST',
                 headers: {
                     accept: 'text/event-stream',
@@ -274,6 +297,18 @@ describe('RovoDevApiClient', () => {
                 body: JSON.stringify({ message: '', context: [] }),
             });
             expect(response).toBe(mockResponse);
+
+            // after the POST /v3/set_chat_message, we expect a GET /v3/stream_chat to be called
+            expect(mockFetch).toHaveBeenCalledWith(
+                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false',
+                {
+                    method: 'GET',
+                    headers: {
+                        accept: 'text/event-stream',
+                        'Content-Type': 'application/json',
+                    },
+                },
+            );
         });
 
         it('should handle special characters in message', async () => {
@@ -287,7 +322,7 @@ describe('RovoDevApiClient', () => {
             const message = 'Test with "quotes" and \n newlines';
             const response = await client.chat(message);
 
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/chat', {
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/set_chat_message', {
                 method: 'POST',
                 headers: {
                     accept: 'text/event-stream',
@@ -296,6 +331,18 @@ describe('RovoDevApiClient', () => {
                 body: JSON.stringify({ message, context: [] }),
             });
             expect(response).toBe(mockResponse);
+
+            // after the POST /v3/set_chat_message, we expect a GET /v3/stream_chat to be called
+            expect(mockFetch).toHaveBeenCalledWith(
+                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false',
+                {
+                    method: 'GET',
+                    headers: {
+                        accept: 'text/event-stream',
+                        'Content-Type': 'application/json',
+                    },
+                },
+            );
         });
     });
 
@@ -310,7 +357,7 @@ describe('RovoDevApiClient', () => {
 
             const response = await client.replay();
 
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/replay', {
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/replay', {
                 method: 'POST',
                 headers: {
                     accept: 'text/event-stream',
@@ -330,25 +377,7 @@ describe('RovoDevApiClient', () => {
 
             mockFetch.mockResolvedValue(mockResponse);
 
-            await expect(client.replay()).rejects.toThrow("Failed to fetch '/v2/replay API: HTTP 503");
-        });
-    });
-
-    describe('getTools method', () => {
-        it('should throw not implemented error', () => {
-            expect(() => client.getTools()).toThrow('Method not implemented: tools');
-        });
-    });
-
-    describe('tool method', () => {
-        it('should throw not implemented error', () => {
-            expect(() => client.tool('test-tool', { arg1: 'value1' })).toThrow('Method not implemented: tool');
-        });
-    });
-
-    describe('invalidateFileCache method', () => {
-        it('should throw not implemented error', () => {
-            expect(() => client.invalidateFileCache()).toThrow('Method not implemented: invalidate-file-cache');
+            await expect(client.replay()).rejects.toThrow("Failed to fetch '/v3/replay API: HTTP 503");
         });
     });
 
@@ -366,7 +395,7 @@ describe('RovoDevApiClient', () => {
             const result = await client.getCacheFilePath(filePath);
 
             expect(mockFetch).toHaveBeenCalledWith(
-                `http://localhost:8080/v2/cache-file-path?file_path=${encodeURIComponent(filePath)}`,
+                `http://localhost:8080/v3/cache-file-path?file_path=${encodeURIComponent(filePath)}`,
                 {
                     method: 'GET',
                     headers: {
@@ -392,7 +421,7 @@ describe('RovoDevApiClient', () => {
             const result = await client.getCacheFilePath(filePath);
 
             expect(mockFetch).toHaveBeenCalledWith(
-                `http://localhost:8080/v2/cache-file-path?file_path=${encodeURIComponent(filePath)}`,
+                `http://localhost:8080/v3/cache-file-path?file_path=${encodeURIComponent(filePath)}`,
                 {
                     method: 'GET',
                     headers: {
@@ -415,7 +444,7 @@ describe('RovoDevApiClient', () => {
             mockFetch.mockResolvedValue(mockResponse);
 
             await expect(client.getCacheFilePath('/path/to/file.txt')).rejects.toThrow(
-                "Failed to fetch '/v2/cache-file-path?file_path=%2Fpath%2Fto%2Ffile.txt API: HTTP 404",
+                "Failed to fetch '/v3/cache-file-path?file_path=%2Fpath%2Fto%2Ffile.txt API: HTTP 404",
             );
         });
     });
@@ -432,7 +461,7 @@ describe('RovoDevApiClient', () => {
             mockFetch.mockResolvedValue(mockResponse);
             const sessionId = await client.createSession();
 
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v2/sessions/create', {
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/sessions/create', {
                 method: 'POST',
                 headers: {
                     accept: 'text/event-stream',
@@ -466,7 +495,7 @@ describe('RovoDevApiClient', () => {
             } as Response;
 
             mockFetch.mockResolvedValue(mockResponse);
-            await expect(client.createSession()).rejects.toThrow("Failed to fetch '/v2/sessions/create API: HTTP 500");
+            await expect(client.createSession()).rejects.toThrow("Failed to fetch '/v3/sessions/create API: HTTP 500");
         });
     });
 
@@ -562,6 +591,371 @@ describe('RovoDevApiClient', () => {
             expect(error.httpStatus).toBe(404);
             expect(error.apiResponse).toBe(mockResponse);
             expect(error).toBeInstanceOf(Error);
+        });
+    });
+
+    describe('acceptMcpTerms method', () => {
+        it('should send accept all terms request', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Accepted all terms' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.acceptMcpTerms(true)).resolves.toBeUndefined();
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/accept-mcp-terms', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ servers: [], accept_all: 'true' }),
+            });
+        });
+
+        it('should send accept decision for a server', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Accepted server terms' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.acceptMcpTerms('server1', 'accept')).resolves.toBeUndefined();
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/accept-mcp-terms', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    servers: [{ server_name: 'server1', decision: 'accept' }],
+                    accept_all: 'false',
+                }),
+            });
+        });
+
+        it('should send deny decision for a server', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Denied server terms' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.acceptMcpTerms('server2', 'deny')).resolves.toBeUndefined();
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/accept-mcp-terms', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ servers: [{ server_name: 'server2', decision: 'deny' }], accept_all: 'false' }),
+            });
+        });
+
+        it('should throw error if API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.acceptMcpTerms(true)).rejects.toThrow(
+                "Failed to fetch '/accept-mcp-terms API: HTTP 500",
+            );
+        });
+    });
+
+    describe('shutdown method', () => {
+        it('should send shutdown request successfully', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.shutdown()).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/shutdown', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: undefined,
+            });
+        });
+
+        it('should throw error when shutdown fails', async () => {
+            const mockResponse = {
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.shutdown()).rejects.toThrow("Failed to fetch '/shutdown API: HTTP 503");
+        });
+
+        it('should handle network errors during shutdown', async () => {
+            const networkError = new Error('Network error');
+            mockFetch.mockRejectedValue(networkError);
+
+            await expect(client.shutdown()).rejects.toThrow("Failed to fetch '/shutdown API: Network error");
+        });
+    });
+
+    describe('resumeToolCall method', () => {
+        it('should send allow decision for single tool call', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {
+                'tool-call-1': 'allow' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/resume_tool_calls', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    decisions: [
+                        {
+                            tool_call_id: 'tool-call-1',
+                            deny_message: undefined,
+                        },
+                    ],
+                }),
+            });
+        });
+
+        it('should send deny decision for single tool call', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {
+                'tool-call-2': 'deny' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/resume_tool_calls', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    decisions: [
+                        {
+                            tool_call_id: 'tool-call-2',
+                            deny_message: 'I denied the execution of this tool call',
+                        },
+                    ],
+                }),
+            });
+        });
+
+        it('should handle undecided choice as deny', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {
+                'tool-call-3': 'undecided' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/resume_tool_calls', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    decisions: [
+                        {
+                            tool_call_id: 'tool-call-3',
+                            deny_message: 'I denied the execution of this tool call',
+                        },
+                    ],
+                }),
+            });
+        });
+
+        it('should handle multiple tool calls with mixed choices', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {
+                'tool-call-allow': 'allow' as const,
+                'tool-call-deny': 'deny' as const,
+                'tool-call-undecided': 'undecided' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/resume_tool_calls', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    decisions: [
+                        {
+                            tool_call_id: 'tool-call-allow',
+                            deny_message: undefined,
+                        },
+                        {
+                            tool_call_id: 'tool-call-deny',
+                            deny_message: 'I denied the execution of this tool call',
+                        },
+                        {
+                            tool_call_id: 'tool-call-undecided',
+                            deny_message: 'I denied the execution of this tool call',
+                        },
+                    ],
+                }),
+            });
+        });
+
+        it('should handle empty permission choices', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {};
+
+            await expect(client.resumeToolCall(permissionChoices)).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/resume_tool_calls', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    decisions: [],
+                }),
+            });
+        });
+
+        it('should handle tool call IDs with special characters', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {
+                'tool-call-with-special-chars_123@test.com': 'allow' as const,
+                'tool/call\\with:slashes': 'deny' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/resume_tool_calls', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    decisions: [
+                        {
+                            tool_call_id: 'tool-call-with-special-chars_123@test.com',
+                            deny_message: undefined,
+                        },
+                        {
+                            tool_call_id: 'tool/call\\with:slashes',
+                            deny_message: 'I denied the execution of this tool call',
+                        },
+                    ],
+                }),
+            });
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {
+                'tool-call-1': 'allow' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).rejects.toThrow(
+                "Failed to fetch '/v3/resume_tool_calls API: HTTP 500",
+            );
+        });
+
+        it('should throw error when API call fails with 404', async () => {
+            const mockResponse = {
+                status: 404,
+                statusText: 'Not Found',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const permissionChoices = {
+                'tool-call-1': 'deny' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).rejects.toThrow(
+                "Failed to fetch '/v3/resume_tool_calls API: HTTP 404",
+            );
+        });
+
+        it('should handle network errors', async () => {
+            const networkError = new Error('Network connection failed');
+            mockFetch.mockRejectedValue(networkError);
+
+            const permissionChoices = {
+                'tool-call-1': 'allow' as const,
+            };
+
+            await expect(client.resumeToolCall(permissionChoices)).rejects.toThrow(
+                "Failed to fetch '/v3/resume_tool_calls API: Network connection failed",
+            );
         });
     });
 });

@@ -6,10 +6,10 @@ import { ChatMessageItem } from '../messaging/ChatMessageItem';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import { ChatMessage, DefaultMessage, parseToolReturnMessage } from '../utils';
-import { ErrorMessageItem } from './errorMessage';
+import { DialogMessageItem } from './DialogMessage';
 
-export const mdParser = new MarkdownIt({
-    html: true,
+const mdParser = new MarkdownIt({
+    html: false,
     breaks: true,
     typographer: true,
     linkify: true,
@@ -17,9 +17,16 @@ export const mdParser = new MarkdownIt({
 
 mdParser.linkify.set({ fuzzyLink: false });
 
+export const MarkedDown: React.FC<{ value: string }> = ({ value }) => {
+    // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- necessary to apply MarkDown formatting
+    return <span dangerouslySetInnerHTML={{ __html: mdParser.render(value) }} />;
+};
+
 export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
 }
+
+export type CheckFileExistsFunc = (filePath: string) => boolean | null;
 
 export const FollowUpActionFooter: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
     return (
@@ -41,6 +48,7 @@ export const renderChatHistory = (
     msg: ChatMessage,
     index: number,
     openFile: OpenFileFunc,
+    checkFileExists: CheckFileExistsFunc,
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean,
     retryAfterError: () => void,
 ) => {
@@ -49,21 +57,30 @@ export const renderChatHistory = (
             const parsedMessages = parseToolReturnMessage(msg);
             return parsedMessages.map((message) => {
                 if (message.technicalPlan) {
-                    return <TechnicalPlanComponent content={message.technicalPlan} openFile={openFile} />;
+                    return (
+                        <TechnicalPlanComponent
+                            content={message.technicalPlan}
+                            openFile={openFile}
+                            checkFileExists={checkFileExists}
+                        />
+                    );
                 }
                 return <ToolReturnParsedItem msg={message} openFile={openFile} />;
             });
-        case 'RovoDevError':
+        case 'RovoDevDialog':
             return (
-                <ErrorMessageItem
+                <DialogMessageItem
                     msg={msg}
                     isRetryAfterErrorButtonEnabled={isRetryAfterErrorButtonEnabled}
                     retryAfterError={retryAfterError}
+                    onToolPermissionChoice={
+                        () => {} /* this codepath is not supposed to have tool permissions requests */
+                    }
                 />
             );
         case 'RovoDev':
         case 'User':
-            return <ChatMessageItem msg={msg} />;
+            return <ChatMessageItem msg={msg} openFile={openFile} />;
         case 'RovoDevRetry':
             const retryMsg: DefaultMessage = {
                 text: msg.content,
@@ -73,6 +90,7 @@ export const renderChatHistory = (
                 <ChatMessageItem
                     msg={retryMsg}
                     icon={<StatusErrorIcon color="var(--ds-icon-danger)" label="error-icon" spacing="none" />}
+                    openFile={openFile}
                 />
             );
         default:
@@ -80,11 +98,21 @@ export const renderChatHistory = (
     }
 };
 
-export const FileLozenge: React.FC<{ filePath: string; openFile?: OpenFileFunc }> = ({ filePath, openFile }) => {
+export const FileLozenge: React.FC<{
+    filePath: string;
+    openFile?: OpenFileFunc;
+    isDisabled?: boolean;
+}> = ({ filePath, openFile, isDisabled }) => {
     const fileTitle = filePath ? filePath.match(/([^/\\]+)$/)?.[0] : undefined;
 
+    const handleClick = () => {
+        if (!isDisabled && openFile) {
+            openFile(filePath);
+        }
+    };
+
     return (
-        <div onClick={() => openFile && openFile(filePath)} className="file-lozenge">
+        <div onClick={handleClick} className={isDisabled ? 'file-lozenge file-lozenge-disabled' : 'file-lozenge'}>
             <span className="file-path">{fileTitle || filePath}</span>
         </div>
     );

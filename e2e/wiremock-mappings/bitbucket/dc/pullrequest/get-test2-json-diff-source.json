@@ -1,0 +1,26 @@
+{
+    "request": {
+        "method": "GET",
+        "urlPathPattern": "/rest/api/1.0/projects/mocked-project/repos/dc-mocked-repo/raw/test2.json",
+        "queryParameters": {
+            "at": {
+                "matches": "def456abc789012345678901234567890123456"
+            }
+        }
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "description": "Updated configuration for testing",
+            "enabled": true,
+            "settings": {
+                "debug": true,
+                "timeout": 10000,
+                "features": ["comments", "pullrequests"]
+            }
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

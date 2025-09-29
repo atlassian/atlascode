@@ -5,6 +5,7 @@ import { TechnicalPlan } from 'src/rovo-dev/rovoDevTypes';
 import { TechnicalPlanComponent } from './TechnicalPlanComponent';
 
 const mockOpenFile = jest.fn();
+const mockCheckFileExists = jest.fn().mockReturnValue(true);
 
 const mockTechnicalPlan: TechnicalPlan = {
     logicalChanges: [
@@ -51,18 +52,36 @@ describe('TechnicalPlanComponent', () => {
     });
 
     it('renders deep plan title', () => {
-        render(<TechnicalPlanComponent content={mockTechnicalPlan} openFile={mockOpenFile} />);
+        render(
+            <TechnicalPlanComponent
+                content={mockTechnicalPlan}
+                openFile={mockOpenFile}
+                checkFileExists={mockCheckFileExists}
+            />,
+        );
         expect(screen.getByText('Deep plan')).toBeTruthy();
     });
 
     it('renders all logical changes with counters', () => {
-        render(<TechnicalPlanComponent content={mockTechnicalPlan} openFile={mockOpenFile} />);
+        render(
+            <TechnicalPlanComponent
+                content={mockTechnicalPlan}
+                openFile={mockOpenFile}
+                checkFileExists={mockCheckFileExists}
+            />,
+        );
         expect(screen.getByText('1')).toBeTruthy();
         expect(screen.getByText('2')).toBeTruthy();
     });
 
     it('renders clarifying questions when present', () => {
-        render(<TechnicalPlanComponent content={mockTechnicalPlan} openFile={mockOpenFile} />);
+        render(
+            <TechnicalPlanComponent
+                content={mockTechnicalPlan}
+                openFile={mockOpenFile}
+                checkFileExists={mockCheckFileExists}
+            />,
+        );
         expect(screen.getByText('1.')).toBeTruthy();
         expect(screen.getByText('Question 1?')).toBeTruthy();
     });
@@ -90,19 +109,37 @@ describe('TechnicalPlanComponent', () => {
             ],
         };
 
-        render(<TechnicalPlanComponent content={planWithoutQuestions} openFile={mockOpenFile} />);
+        render(
+            <TechnicalPlanComponent
+                content={planWithoutQuestions}
+                openFile={mockOpenFile}
+                checkFileExists={mockCheckFileExists}
+            />,
+        );
         expect(screen.queryByLabelText('Clarifying Question')).not.toBeTruthy();
     });
 
     it('renders empty plan when no logical changes exist', () => {
         const emptyPlan: TechnicalPlan = { logicalChanges: [] };
-        render(<TechnicalPlanComponent content={emptyPlan} openFile={mockOpenFile} />);
+        render(
+            <TechnicalPlanComponent
+                content={emptyPlan}
+                openFile={mockOpenFile}
+                checkFileExists={mockCheckFileExists}
+            />,
+        );
         expect(screen.getByText('Deep plan')).toBeTruthy();
         expect(screen.queryByText('1')).not.toBeTruthy();
     });
 
     it('passes openFile prop to LogicalChange components', () => {
-        render(<TechnicalPlanComponent content={mockTechnicalPlan} openFile={mockOpenFile} />);
+        render(
+            <TechnicalPlanComponent
+                content={mockTechnicalPlan}
+                openFile={mockOpenFile}
+                checkFileExists={mockCheckFileExists}
+            />,
+        );
         // LogicalChange components should receive the openFile prop
         expect(mockOpenFile).not.toHaveBeenCalled(); // Just checking prop passing, not calling
     });

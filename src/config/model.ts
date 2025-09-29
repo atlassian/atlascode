@@ -5,7 +5,30 @@ export enum OutputLevel {
     Debug = 'debug',
 }
 
+export enum IssueSuggestionContextLevel {
+    TodoOnly = 'todoOnly',
+    CodeContext = 'codeContext',
+}
+
+export type IssueSuggestionSettings = {
+    isAvailable: boolean;
+    isEnabled: boolean;
+    level: IssueSuggestionContextLevel;
+};
+
+// Simplified representation of a TODO, used in IPC
+export type SimplifiedTodoIssueData = {
+    summary: string;
+    context: string;
+    position: {
+        line: number;
+        character: number;
+    };
+    uri: string;
+};
+
 export interface IConfig {
+    issueSuggestionContextLevel: IssueSuggestionContextLevel;
     outputLevel: OutputLevel;
     enableCharles: boolean;
     charlesCertPath: string;
@@ -17,6 +40,12 @@ export interface IConfig {
     enableCurlLogging: boolean;
     enableHttpsTunnel: boolean;
     helpExplorerEnabled: boolean;
+    rovodev: RovoDevConfig;
+}
+
+export interface RovoDevConfig {
+    showKeybinding: boolean;
+    debugPanelEnabled: boolean;
 }
 
 export interface JiraConfig {
@@ -187,6 +216,11 @@ const emptyJiraConfig: JiraConfig = {
     showCreateIssueProblems: false,
 };
 
+const emptyRovoDevConfig: RovoDevConfig = {
+    showKeybinding: false,
+    debugPanelEnabled: false,
+};
+
 const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {
     enabled: true,
 };
@@ -243,6 +277,7 @@ const emptyBitbucketConfig: BitbucketConfig = {
 };
 
 export const emptyConfig: IConfig = {
+    issueSuggestionContextLevel: IssueSuggestionContextLevel.CodeContext,
     outputLevel: OutputLevel.Silent,
     enableCharles: false,
     charlesCertPath: '',
@@ -254,4 +289,5 @@ export const emptyConfig: IConfig = {
     enableCurlLogging: false,
     enableHttpsTunnel: false,
     helpExplorerEnabled: true,
+    rovodev: emptyRovoDevConfig,
 };

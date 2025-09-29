@@ -29,7 +29,7 @@ import {
 import { Tooltip } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
-import * as React from 'react';
+import React from 'react';
 import EdiText, { EdiTextType } from 'react-editext';
 import { v4 } from 'uuid';
 
@@ -44,13 +44,17 @@ import {
     UserList,
 } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
+import { Features } from '../../../util/features';
 import { ConnectionTimeout } from '../../../util/time';
+import AISuggestionFooter from '../aiCreateIssue/AISuggestionFooter';
+import AISuggestionHeader from '../aiCreateIssue/AISuggestionHeader';
 import { colorToLozengeAppearanceMap } from '../colors';
 import * as FieldValidators from '../fieldValidators';
 import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
+import AtlaskitEditor from './common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
@@ -76,8 +80,10 @@ export interface CommonEditorViewState extends Message {
     showPMF: boolean;
     errorDetails: any;
     commentInputValue: string;
-    isRteEnabled: boolean;
     isRovoDevEnabled: boolean;
+    isGeneratingSuggestions?: boolean;
+    summaryKey: string;
+    isAtlaskitEditorEnabled: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -93,8 +99,9 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     isErrorBannerOpen: false,
     errorDetails: undefined,
     commentInputValue: '',
-    isRteEnabled: false,
     isRovoDevEnabled: false,
+    summaryKey: v4(),
+    isAtlaskitEditorEnabled: false,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -158,6 +165,21 @@ export abstract class AbstractIssueEditorPage<
         return val;
     }
 
+    private coerceToString(value: any): string {
+        if (value === undefined || value === null) {
+            return '';
+        }
+        const t = typeof value;
+        if (t === 'string') {
+            return value as string;
+        }
+        if (t === 'number' || t === 'boolean') {
+            return String(value);
+        }
+        // For any other type (objects, symbols, functions), render empty string
+        return '';
+    }
+
     onMessageReceived(e: any): boolean {
         let handled: boolean = false;
         switch (e.type) {
@@ -195,7 +217,9 @@ export abstract class AbstractIssueEditorPage<
                 break;
             }
             case 'updateFeatureFlags': {
-                this.setState({ isRteEnabled: e.featureFlags.rteEnabled });
+                this.setState({
+                    isAtlaskitEditorEnabled: e.featureFlags[Features.AtlaskitEditor] || false,
+                });
                 break;
             }
             case 'loadingStart': {
@@ -430,8 +454,7 @@ export abstract class AbstractIssueEditorPage<
                 let validationFailMessage = '';
                 const valType = field.valueType;
 
-                const defaultVal =
-                    this.state.fieldValues[field.key] === undefined ? '' : this.state.fieldValues[field.key];
+                const defaultVal = this.coerceToString(this.state.fieldValues[field.key]);
                 switch (valType) {
                     case ValueType.Number: {
                         validationFailMessage = `${field.name} must be a number`;
@@ -493,63 +516,76 @@ export abstract class AbstractIssueEditorPage<
                     }
                     return markup;
                 }
-
                 return (
-                    <Field
-                        defaultValue={defaultVal}
-                        label={<span>{field.name}</span>}
-                        isRequired={field.required}
-                        id={field.key}
-                        name={field.key}
-                        validate={validateFunc}
-                    >
-                        {(fieldArgs: any) => {
-                            let errDiv = <span />;
-                            if (fieldArgs.error && fieldArgs.error !== '') {
-                                errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
-                            }
+                    <>
+                        {field.key === 'summary' && <AISuggestionHeader vscodeApi={this._api} />}
+                        <Field
+                            key={this.state.summaryKey}
+                            defaultValue={defaultVal}
+                            label={<span>{field.name}</span>}
+                            isRequired={field.required}
+                            id={field.key}
+                            name={field.key}
+                            validate={validateFunc}
+                        >
+                            {(fieldArgs: any) => {
+                                let errDiv = <span />;
+                                if (fieldArgs.error && fieldArgs.error !== '') {
+                                    errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
+                                }
 
-                            let markup = (
-                                <Textfield
-                                    {...fieldArgs.fieldProps}
-                                    className="ac-inputField"
-                                    isDisabled={this.state.isSomethingLoading}
-                                    onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
-                                        this.handleInlineEdit(field, e.currentTarget.value),
-                                    )}
-                                    placeholder={field.key === 'summary' && 'What needs to be done?'}
-                                />
-                            );
-                            if ((field as InputFieldUI).isMultiline) {
-                                markup = (
-                                    <JiraIssueTextAreaEditor
+                                let markup = (
+                                    <Textfield
                                         {...fieldArgs.fieldProps}
-                                        value={this.state.fieldValues[field.key]}
-                                        isDisabled={this.state.isSomethingLoading}
-                                        onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
-                                            this.handleInlineEdit(field, val),
+                                        value={defaultVal}
+                                        className="ac-inputField"
+                                        isDisabled={this.state.isSomethingLoading || this.state.isGeneratingSuggestions}
+                                        onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
+                                            this.handleInlineEdit(field, e.currentTarget.value),
                                         )}
-                                        fetchUsers={async (input: string) =>
-                                            (await this.fetchUsers(input)).map((user) => ({
-                                                displayName: user.displayName,
-                                                avatarUrl: user.avatarUrls?.['48x48'],
-                                                mention: this.state.siteDetails.isCloud
-                                                    ? `[~accountid:${user.accountId}]`
-                                                    : `[~${user.name}]`,
-                                            }))
-                                        }
-                                        featureGateEnabled={this.state.isRteEnabled}
+                                        placeholder={field.key === 'summary' && 'What needs to be done?'}
                                     />
                                 );
-                            }
-                            return (
-                                <div>
-                                    {markup}
-                                    {errDiv}
-                                </div>
-                            );
-                        }}
-                    </Field>
+                                if ((field as InputFieldUI).isMultiline) {
+                                    markup = this.state.isAtlaskitEditorEnabled ? (
+                                        <AtlaskitEditor
+                                            defaultValue={this.state.fieldValues[field.key] || ''}
+                                            onBlur={(content: string) => {
+                                                this.handleInlineEdit(field, content);
+                                            }}
+                                        />
+                                    ) : (
+                                        <JiraIssueTextAreaEditor
+                                            {...fieldArgs.fieldProps}
+                                            value={this.coerceToString(this.state.fieldValues[field.key])}
+                                            isDisabled={
+                                                this.state.isSomethingLoading || this.state.isGeneratingSuggestions
+                                            }
+                                            onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
+                                                this.handleInlineEdit(field, val),
+                                            )}
+                                            fetchUsers={async (input: string) =>
+                                                (await this.fetchUsers(input)).map((user) => ({
+                                                    displayName: user.displayName,
+                                                    avatarUrl: user.avatarUrls?.['48x48'],
+                                                    mention: this.state.siteDetails.isCloud
+                                                        ? `[~accountid:${user.accountId}]`
+                                                        : `[~${user.name}]`,
+                                                }))
+                                            }
+                                        />
+                                    );
+                                }
+                                return (
+                                    <div>
+                                        {markup}
+                                        {errDiv}
+                                    </div>
+                                );
+                            }}
+                        </Field>
+                        {field.key === 'description' && <AISuggestionFooter vscodeApi={this._api} />}
+                    </>
                 );
             }
             case UIType.Date: {
@@ -561,7 +597,7 @@ export abstract class AbstractIssueEditorPage<
                             id={field.key}
                             name={field.key}
                             isLoading={this.state.loadingField === field.key}
-                            defaultValue={this.state.fieldValues[field.key]}
+                            defaultValue={this.coerceToString(this.state.fieldValues[field.key])}
                             isDisabled={this.state.isSomethingLoading}
                             className="ac-select-container"
                             selectProps={{ className: 'ac-select-container', classNamePrefix: 'ac-select' }}
@@ -619,7 +655,7 @@ export abstract class AbstractIssueEditorPage<
                         <DateTimePicker
                             id={field.key}
                             name={field.key}
-                            defaultValue={this.state.fieldValues[field.key]}
+                            defaultValue={this.coerceToString(this.state.fieldValues[field.key])}
                             isDisabled={this.state.isSomethingLoading}
                             className="ac-select-container"
                             datePickerSelectProps={{

@@ -10,16 +10,16 @@ jest.mock('../common/common', () => ({
             {filePath}
         </button>
     ),
-    mdParser: {
-        render: (text: string) => `<p>${text}</p>`,
-    },
+    MarkedDown: ({ value }: { value: string }) => <span>{value}</span>,
 }));
 
 describe('FileToChangeComponent', () => {
     const mockOpenFile = jest.fn();
+    const mockCheckFileExists = jest.fn().mockReturnValue(true);
     const defaultProps = {
         filePath: 'src/components/Example.tsx',
         openFile: mockOpenFile,
+        checkFileExists: mockCheckFileExists,
     };
 
     beforeEach(() => {

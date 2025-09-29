@@ -1,0 +1,68 @@
+{
+    "request": {
+        "method": "POST",
+        "urlPathPattern": "/rest/api/1.0/projects/mocked-project/repos/dc-mocked-repo/pull-requests/123/comments",
+        "bodyPatterns" : [{
+            "equalToJson" : {
+                "text": "test comment",
+                "anchor": {
+                    "line": 1,
+                    "lineType": "ADDED",
+                    "fileType": "TO",
+                    "path": "test2.json"
+                }
+            }
+        }]
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {
+            "properties": {
+                "repositoryId": 5
+            },
+            "id": 3,
+            "version": 0,
+            "text": "test comment",
+            "author": {
+                "name": "mockuser",
+                "emailAddress": "mockuser@atlassian.code",
+                "active": true,
+                "displayName": "Mock User",
+                "id": 2,
+                "slug": "mockuser",
+                "type": "NORMAL",
+                "links": {
+                    "self": [{
+                        "href": "https://bitbucket.mockeddomain.com/users/mockuser"
+                    }]
+                },
+                "avatarUrl": "https://example.com/avatar.png"
+            },
+            "createdDate": 1737116280000,
+            "updatedDate": 1737116280000,
+            "comments": [],
+            "anchor": {
+                "fromHash": "def456abc789012345678901234567890123456",
+                "toHash": "abcdef1234567890abcdef1234567890abcdef12",
+                "line": 1,
+                "lineType": "ADDED",
+                "fileType": "TO",
+                "path": "test2.json",
+                "diffType": "EFFECTIVE",
+                "orphaned": false
+            },
+            "threadResolved": false,
+            "severity": "NORMAL",
+            "state": "OPEN",
+            "permittedOperations": {
+                "editable": true,
+                "transitionable": true,
+                "deletable": true
+            },
+            "html": "<p>test comment</p>\n"
+        },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

@@ -1,11 +1,8 @@
 import { ButtonProps } from '@atlaskit/button';
 import TextArea from '@atlaskit/textarea';
-import Toggle from '@atlaskit/toggle';
-import Tooltip from '@atlaskit/tooltip';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
 
-import { useEditor } from '../../editor/Editor';
 import PopoutMentionPicker from '../../pullrequest/PopoutMentionPicker';
 
 type Props = {
@@ -19,14 +16,8 @@ type Props = {
     onInternalCommentSave?: () => void;
     isDescription?: boolean;
     saving?: boolean;
-    featureGateEnabled?: boolean;
+    isDisabled?: boolean;
 };
-
-interface User {
-    displayName: string;
-    mention: string;
-    avatarUrl?: string;
-}
 
 const JiraIssueTextAreaEditor: React.FC<Props> = ({
     value,
@@ -39,27 +30,15 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
     onInternalCommentSave,
     isDescription,
     saving,
-    featureGateEnabled = false,
+    isDisabled = false,
 }) => {
     const inputTextAreaRef = React.useRef<HTMLTextAreaElement>(null);
     const [cursorPosition, setCursorPosition] = React.useState(value?.length || 0);
-    const [rteEnabled, setRteEnabled] = React.useState(featureGateEnabled);
 
     const buttonProps: Partial<ButtonProps> = {
         spacing: 'compact',
         appearance: 'subtle',
     };
-
-    const { viewHost, handleSave } = useEditor<User>({
-        value,
-        onSave: (i: string) => {
-            onChange(i);
-            onSave?.(i);
-        },
-        onChange,
-        enabled: rteEnabled,
-        fetchUsers,
-    });
 
     React.useEffect(() => {
         if (inputTextAreaRef.current && cursorPosition > 0) {
@@ -84,12 +63,10 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
     );
     return (
         <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-            <div role="textbox" hidden={!rteEnabled} ref={viewHost} aria-label="Jira rich text editor" />
-            <div hidden={rteEnabled}>
+            <div>
                 <TextArea
                     style={{
                         background: 'var(--vscode-input-background)',
-                        color: 'var(--vscode-input-foreground)',
                         border: '1px solid var(--vscode-input-border)',
                         caretColor: 'var(--vscode-editorCursor-background)',
                         minHeight: isDescription ? '175px' : '100px',
@@ -101,7 +78,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                     autoFocus
                     onFocus={onEditorFocus ? onEditorFocus : undefined}
                     onChange={(e) => onChange(e.target.value)}
-                    isDisabled={saving}
+                    isDisabled={saving || isDisabled}
                 />
             </div>
             <div
@@ -123,7 +100,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                         <VSCodeButton
                             appearance="primary"
                             onClick={() => {
-                                rteEnabled ? handleSave() : onSave(value);
+                                onSave(value);
                             }}
                             disabled={saving}
                         >
@@ -140,7 +117,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                             Cancel
                         </VSCodeButton>
                     )}
-                    {fetchUsers && !rteEnabled && (
+                    {fetchUsers && (
                         <PopoutMentionPicker
                             targetButtonContent="@"
                             targetButtonTooltip="Mention @"
@@ -150,11 +127,6 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                         />
                     )}
                 </div>
-                {featureGateEnabled && (
-                    <Tooltip content="Toggle rich text editor" position="top">
-                        <Toggle label="rte toggle" defaultChecked onChange={(e) => setRteEnabled(e.target.checked)} />
-                    </Tooltip>
-                )}
             </div>
         </div>
     );

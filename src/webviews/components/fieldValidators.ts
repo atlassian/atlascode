@@ -13,8 +13,16 @@ export function validateMultiSelect(value: string, state: any): string | undefin
     //return (value !== undefined && value.length > 0) ? undefined : "EMPTY";
 }
 
-export function validateString(value: string, state?: any): string | undefined {
-    if (!value || value.trim().length < 1) {
+export function validateString(value: any, state?: any): string | undefined {
+    // Treat falsy values as empty (undefined, null, empty string, 0, false)
+    if (!value) {
+        return 'EMPTY';
+    }
+    // Only non-empty strings are valid
+    if (typeof value !== 'string') {
+        return 'EMPTY';
+    }
+    if (value.trim().length < 1) {
         return 'EMPTY';
     }
     return undefined;
