@@ -12,6 +12,10 @@ export type StrategyProps = {
      */
     clientID: string;
     /**
+     * Client ID for media API access (if different from main client ID)
+     */
+    mediaClientID?: string;
+    /**
      * Base URL for the initial authorization request
      */
     authorizationURL: string;
