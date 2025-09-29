@@ -241,6 +241,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
             {!process.env.ROVODEV_BBY && (
                 <RovoDevLanding
                     currentState={currentState}
+                    isHistoryEmpty={chatHistory.length === 0}
                     onLoginClick={onLoginClick}
                     onOpenFolder={onOpenFolder}
                     onMcpChoice={onMcpChoice}

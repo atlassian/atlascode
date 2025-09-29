@@ -26,6 +26,7 @@ const RovoDevImg = () => {
 
 export const RovoDevLanding: React.FC<{
     currentState: State;
+    isHistoryEmpty: boolean;
     onLoginClick: () => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
@@ -36,6 +37,7 @@ export const RovoDevLanding: React.FC<{
     onRequestJiraItems: () => void;
 }> = ({
     currentState,
+    isHistoryEmpty,
     onLoginClick,
     onOpenFolder,
     onMcpChoice,
@@ -49,9 +51,11 @@ export const RovoDevLanding: React.FC<{
 
     const shouldHideSuggestions = React.useMemo(
         () =>
+            !isHistoryEmpty ||
             currentState.state === 'Disabled' ||
+            currentState.state === 'ProcessTerminated' ||
             (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance'),
-        [currentState],
+        [currentState, isHistoryEmpty],
     );
 
     // Auto-request Jira work items when ready
