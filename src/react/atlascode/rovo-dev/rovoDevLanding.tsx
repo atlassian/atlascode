@@ -41,6 +41,7 @@ export const RovoDevLanding: React.FC<{
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
     onSendMessage: (message: string) => void;
     jiraWorkItems?: MinimalIssue<DetailedSiteInfo>[];
+    isJiraWorkItemsLoading?: boolean;
     onJiraItemClick?: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     onRequestJiraItems?: () => void;
 }> = ({
@@ -50,27 +51,31 @@ export const RovoDevLanding: React.FC<{
     onMcpChoice,
     onSendMessage,
     jiraWorkItems = [],
+    isJiraWorkItemsLoading = false,
     onJiraItemClick,
     onRequestJiraItems,
 }) => {
-    const requestedRef = React.useRef(false);
-    const currentStateRef = React.useRef(currentState.state);
+    const [hasRequestedItems, setHasRequestedItems] = React.useState(false);
 
-    // Track state changes to reset the flag when leaving WaitingForPrompt
+    // Auto-request Jira work items when ready
     React.useEffect(() => {
-        if (currentStateRef.current === 'WaitingForPrompt' && currentState.state !== 'WaitingForPrompt') {
-            requestedRef.current = false;
-        }
-        currentStateRef.current = currentState.state;
-    }, [currentState.state]);
+        const shouldRequest =
+            currentState.state === 'WaitingForPrompt' &&
+            onRequestJiraItems &&
+            !hasRequestedItems &&
+            jiraWorkItems.length === 0 &&
+            !isJiraWorkItemsLoading;
 
-    // Request Jira work items when component mounts and user is authenticated
-    React.useEffect(() => {
-        if (currentState.state === 'WaitingForPrompt' && onRequestJiraItems && !requestedRef.current) {
+        if (shouldRequest) {
             onRequestJiraItems();
-            requestedRef.current = true;
+            setHasRequestedItems(true);
         }
-    }, [currentState.state, onRequestJiraItems]);
+
+        // Reset flag when leaving WaitingForPrompt or when items are loaded
+        if (currentState.state !== 'WaitingForPrompt' || jiraWorkItems.length > 0) {
+            setHasRequestedItems(false);
+        }
+    }, [currentState.state, onRequestJiraItems, hasRequestedItems, jiraWorkItems.length, isJiraWorkItemsLoading]);
 
     if (process.env.ROVODEV_BBY) {
         return null;
@@ -118,21 +123,36 @@ export const RovoDevLanding: React.FC<{
                 </div>
             </div>
 
-            {jiraWorkItems.length > 0 && (
+            {(isJiraWorkItemsLoading || jiraWorkItems.length > 0) && (
                 <div style={{ marginTop: '24px', width: '100%', maxWidth: '270px' }}>
                     <div style={titleStyles}>Jira Work Items</div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        {jiraWorkItems.map((issue) => (
-                            <JiraWorkItem
-                                key={issue.key}
-                                issueKey={issue.key}
-                                summary={issue.summary}
-                                issueTypeIconUrl={issue.issuetype?.iconUrl}
-                                issueTypeName={issue.issuetype?.name}
-                                onClick={() => onJiraItemClick?.(issue)}
-                            />
-                        ))}
+                        {isJiraWorkItemsLoading ? (
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '8px',
+                                    color: 'var(--vscode-descriptionForeground)',
+                                }}
+                            >
+                                <i className="codicon codicon-loading codicon-modifier-spin" />
+                                <span>Loading work items...</span>
+                            </div>
+                        ) : (
+                            jiraWorkItems.map((issue) => (
+                                <JiraWorkItem
+                                    key={issue.key}
+                                    issueKey={issue.key}
+                                    summary={issue.summary}
+                                    issueTypeIconUrl={issue.issuetype?.iconUrl}
+                                    issueTypeName={issue.issuetype?.name}
+                                    onClick={() => onJiraItemClick?.(issue)}
+                                />
+                            ))
+                        )}
                     </div>
                 </div>
             )}

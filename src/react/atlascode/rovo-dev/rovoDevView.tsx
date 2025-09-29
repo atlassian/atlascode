@@ -86,6 +86,7 @@ const RovoDevView: React.FC = () => {
     const [promptText, setPromptText] = useState<string | undefined>(undefined);
     const [fileExistenceMap, setFileExistenceMap] = useState<Map<string, boolean>>(new Map());
     const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[]>([]);
+    const [isJiraWorkItemsLoading, setIsJiraWorkItemsLoading] = useState<boolean>(false);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -431,6 +432,10 @@ const RovoDevView: React.FC = () => {
                     setJiraWorkItems(event.issues);
                     break;
 
+                case RovoDevProviderMessageType.SetJiraWorkItemsLoading:
+                    setIsJiraWorkItemsLoading(event.isLoading);
+                    break;
+
                 default:
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendResponse({
@@ -774,6 +779,7 @@ const RovoDevView: React.FC = () => {
                 onMcpChoice={onMcpChoice}
                 onSendMessage={sendPrompt}
                 jiraWorkItems={jiraWorkItems}
+                isJiraWorkItemsLoading={isJiraWorkItemsLoading}
                 onJiraItemClick={onJiraItemClick}
                 onRequestJiraItems={onRequestJiraItems}
                 onToolPermissionChoice={onToolPermissionChoice}

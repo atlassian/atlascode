@@ -32,6 +32,7 @@ export const enum RovoDevProviderMessageType {
     SetPromptText = 'setPromptText',
     GetJiraWorkItems = 'getJiraWorkItems',
     SetJiraWorkItems = 'setJiraWorkItems',
+    SetJiraWorkItemsLoading = 'setJiraWorkItemsLoading',
     CheckFileExistsComplete = 'checkFileExistsComplete',
 }
 
@@ -84,6 +85,7 @@ export type RovoDevProviderMessage =
       >
     | ReducerAction<RovoDevProviderMessageType.SetPromptText, { text: string }>
     | ReducerAction<RovoDevProviderMessageType.SetJiraWorkItems, { issues: MinimalIssue<DetailedSiteInfo>[] }>
+    | ReducerAction<RovoDevProviderMessageType.SetJiraWorkItemsLoading, { isLoading: boolean }>
     | ReducerAction<
           RovoDevProviderMessageType.CheckFileExistsComplete,
           { requestId: string; filePath: string; exists: boolean }

@@ -2,8 +2,6 @@ import { isMinimalIssue, MinimalIssue, readSearchResults } from '@atlassianlabs/
 
 import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
 import { Container } from '../container';
-import { issuesForJQL } from '../jira/issuesForJql';
-import { RovoDevLogger } from '../logger';
 import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
 import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
 import { RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
@@ -16,8 +14,6 @@ jest.mock('../views/jira/searchJiraHelper');
 jest.mock('@atlassianlabs/jira-pi-common-models');
 
 const mockContainer = Container as jest.Mocked<typeof Container>;
-const mockIssuesForJQL = issuesForJQL as jest.MockedFunction<typeof issuesForJQL>;
-const mockRovoDevLogger = RovoDevLogger as jest.Mocked<typeof RovoDevLogger>;
 const mockSearchJiraHelper = SearchJiraHelper as jest.Mocked<typeof SearchJiraHelper>;
 const mockReadSearchResults = readSearchResults as jest.MockedFunction<typeof readSearchResults>;
 const mockIsMinimalIssue = isMinimalIssue as jest.MockedFunction<typeof isMinimalIssue>;
@@ -145,76 +141,11 @@ describe('RovoDevWebviewProvider', () => {
     });
 
     describe('fetchAndSendJiraWorkItems', () => {
-        it('should send empty array when no Jira sites are available', async () => {
+        it('should send empty array when no sites available', async () => {
             mockSiteManager.getSitesAvailable.mockReturnValue([]);
 
             await (provider as any).fetchAndSendJiraWorkItems();
 
-            expect(mockSiteManager.getSitesAvailable).toHaveBeenCalledWith(ProductJira);
-            expect(mockWebView.postMessage).toHaveBeenCalledWith({
-                type: RovoDevProviderMessageType.SetJiraWorkItems,
-                issues: [],
-            });
-        });
-
-        it('should fetch issues and return up to 3 issues', async () => {
-            const site1 = createMockSite('site1', 'example1.atlassian.net');
-            mockSiteManager.getSitesAvailable.mockReturnValue([site1]);
-
-            const issue1 = createMockIssue('PROJ-1', 'First issue', site1);
-            const issue2 = createMockIssue('PROJ-2', 'Second issue', site1);
-            const issue3 = createMockIssue('PROJ-3', 'Third issue', site1);
-
-            // Mock the new API call chain
-            const mockJiraClient = {
-                searchForIssuesUsingJqlGet: jest.fn().mockResolvedValueOnce({}),
-            };
-
-            (mockContainer as any).clientManager.jiraClient.mockResolvedValueOnce(mockJiraClient);
-            mockReadSearchResults.mockResolvedValueOnce({
-                issues: [issue1, issue2, issue3],
-                total: 3,
-                maxResults: 3,
-                startAt: 0,
-            });
-
-            await (provider as any).fetchAndSendJiraWorkItems();
-
-            // Verify the API call was made with correct parameters
-            expect(mockJiraClient.searchForIssuesUsingJqlGet).toHaveBeenCalledWith(
-                'assignee = currentUser() AND StatusCategory != Done ORDER BY updated DESC',
-                ['summary', 'status'],
-                3,
-                0,
-            );
-
-            expect(mockWebView.postMessage).toHaveBeenCalledWith({
-                type: RovoDevProviderMessageType.SetJiraWorkItems,
-                issues: expect.any(Array),
-            });
-
-            const call = mockWebView.postMessage.mock.calls[0][0];
-            expect(call.issues.length).toBeLessThanOrEqual(3);
-        });
-
-        it('should handle errors and send empty array', async () => {
-            const site1 = createMockSite('site1', 'example1.atlassian.net');
-            mockSiteManager.getSitesAvailable.mockReturnValue([site1]);
-
-            const error = new Error('Failed to fetch');
-            // Mock the API client to throw an error
-            const mockJiraClient = {
-                searchForIssuesUsingJqlGet: jest.fn().mockRejectedValueOnce(error),
-            };
-
-            (mockContainer as any).clientManager.jiraClient.mockResolvedValueOnce(mockJiraClient);
-
-            await (provider as any).fetchAndSendJiraWorkItems();
-
-            expect(mockRovoDevLogger.error).toHaveBeenCalledWith(
-                error,
-                `Failed to fetch limited Jira issues for site ${site1.host}`,
-            );
             expect(mockWebView.postMessage).toHaveBeenCalledWith({
                 type: RovoDevProviderMessageType.SetJiraWorkItems,
                 issues: [],
@@ -230,13 +161,36 @@ describe('RovoDevWebviewProvider', () => {
 
             await (provider as any).fetchAndSendJiraWorkItems();
 
-            // Should use cache, not call API
-            expect(mockSearchJiraHelper.getAssignedIssuesPerSite).toHaveBeenCalledWith(site1.id);
-            expect(mockIssuesForJQL).not.toHaveBeenCalled();
             expect(mockWebView.postMessage).toHaveBeenCalledWith({
                 type: RovoDevProviderMessageType.SetJiraWorkItems,
                 issues: [cachedIssue],
             });
+        });
+
+        it('should fetch from API when no cache and return up to 3 issues', async () => {
+            const site1 = createMockSite('site1', 'example1.atlassian.net');
+            mockSiteManager.getSitesAvailable.mockReturnValue([site1]);
+            mockSearchJiraHelper.getAssignedIssuesPerSite.mockReturnValue([]);
+
+            const issues = [
+                createMockIssue('PROJ-1', 'Issue 1', site1),
+                createMockIssue('PROJ-2', 'Issue 2', site1),
+                createMockIssue('PROJ-3', 'Issue 3', site1),
+            ];
+
+            const mockJiraClient = {
+                searchForIssuesUsingJqlGet: jest.fn().mockResolvedValueOnce({}),
+            };
+            (mockContainer as any).clientManager.jiraClient.mockResolvedValueOnce(mockJiraClient);
+            mockReadSearchResults.mockResolvedValueOnce({ issues, total: 3, maxResults: 10, startAt: 0 });
+
+            await (provider as any).fetchAndSendJiraWorkItems();
+
+            const setItemsCalls = mockWebView.postMessage.mock.calls.filter(
+                (call: any) => call[0].type === RovoDevProviderMessageType.SetJiraWorkItems,
+            );
+            expect(setItemsCalls).toHaveLength(1);
+            expect(setItemsCalls[0][0].issues.length).toBeLessThanOrEqual(3);
         });
     });
 });

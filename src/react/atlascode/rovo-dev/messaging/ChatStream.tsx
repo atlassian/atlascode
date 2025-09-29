@@ -51,6 +51,7 @@ interface ChatStreamProps {
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
     onSendMessage: (message: string) => void;
     jiraWorkItems?: MinimalIssue<DetailedSiteInfo>[];
+    isJiraWorkItemsLoading?: boolean;
     onJiraItemClick?: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     onRequestJiraItems?: () => void;
     onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice) => void;
@@ -75,6 +76,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onMcpChoice,
     onSendMessage,
     jiraWorkItems,
+    isJiraWorkItemsLoading,
     onJiraItemClick,
     onRequestJiraItems,
     onToolPermissionChoice,
@@ -247,6 +249,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 onMcpChoice={onMcpChoice}
                 onSendMessage={onSendMessage}
                 jiraWorkItems={jiraWorkItems}
+                isJiraWorkItemsLoading={isJiraWorkItemsLoading}
                 onJiraItemClick={onJiraItemClick}
                 onRequestJiraItems={onRequestJiraItems}
             />
