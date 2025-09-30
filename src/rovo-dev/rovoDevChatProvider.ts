@@ -248,6 +248,12 @@ export class RovoDevChatProvider {
         let isFirstByte = true;
         let isFirstMessage = true;
 
+        // Queue posts to the webview to avoid backpressure blocking the stream reader
+        let postQueue: Promise<any> = Promise.resolve();
+        const enqueuePost = (p: Thenable<any>) => {
+            postQueue = postQueue.then(() => p).catch(() => {});
+        };
+
         while (true) {
             const { done, value } = await reader.read();
 
@@ -263,7 +269,7 @@ export class RovoDevChatProvider {
                 }
 
                 for (const msg of parser.flush()) {
-                    await this.processRovoDevResponse(sourceApi, msg);
+                    enqueuePost(this.processRovoDevResponse(sourceApi, msg));
                 }
                 break;
             }
@@ -275,9 +281,13 @@ export class RovoDevChatProvider {
                     isFirstMessage = false;
                 }
 
-                await this.processRovoDevResponse(sourceApi, msg);
+                // Do not await here; enqueue to prevent blocking the reader
+                enqueuePost(this.processRovoDevResponse(sourceApi, msg));
             }
         }
+
+        // Ensure all queued posts are delivered before returning
+        await postQueue;
     }
 
     private processRovoDevResponse(sourceApi: StreamingApi, response: RovoDevResponse): Thenable<unknown> {
