@@ -174,12 +174,12 @@ const RovoDevView: React.FC = () => {
         setIsFeedbackFormVisible(false);
     }, [totalModifiedFiles, keepFiles]);
 
-    const handleAppendModifiedFileToolReturns = useCallback(
-        (toolReturn: ToolReturnGenericMessage) => {
-            if (isCodeChangeTool(toolReturn.tool_name)) {
-                const msg = parseToolReturnMessage(toolReturn).filter((msg) => msg.filePath !== undefined);
+    const handleAppendModifiedFileToolReturns = useCallback((toolReturn: ToolReturnGenericMessage) => {
+        if (isCodeChangeTool(toolReturn.tool_name)) {
+            const msg = parseToolReturnMessage(toolReturn).filter((msg) => msg.filePath !== undefined);
 
-                const filesMap = new Map([...totalModifiedFiles].map((item) => [item.filePath!, item]));
+            setTotalModifiedFiles((currentFiles) => {
+                const filesMap = new Map([...currentFiles].map((item) => [item.filePath!, item]));
 
                 // Logic for handling deletions and modifications
                 msg.forEach((file) => {
@@ -204,11 +204,10 @@ const RovoDevView: React.FC = () => {
                     }
                 });
 
-                setTotalModifiedFiles(Array.from(filesMap.values()));
-            }
-        },
-        [totalModifiedFiles],
-    );
+                return Array.from(filesMap.values());
+            });
+        }
+    }, []);
 
     const handleAppendResponse = useCallback(
         (response: Response) => {

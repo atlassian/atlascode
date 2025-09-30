@@ -23,7 +23,7 @@ export const UpdatedFilesComponent: React.FC<{
                 <div>
                     <i className="codicon codicon-source-control" />
                     <span>
-                        {modifiedFiles.length} Updated file{modifiedFiles.length > 1 ? 's' : ''}
+                        {modifiedFiles.length} updated file{modifiedFiles.length > 1 ? 's' : ''}
                     </span>
                 </div>
                 <div>
