@@ -1,7 +1,7 @@
 import { DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
 import { Container } from 'src/container';
 import { Logger } from 'src/logger';
-import { window, workspace } from 'vscode';
+import { Uri, window, workspace } from 'vscode';
 
 import { fetchIssueSuggestions } from '../../atlclients/issueBuilder';
 import { IssueSuggestionContextLevel, IssueSuggestionSettings, SimplifiedTodoIssueData } from '../../config/model';
@@ -73,9 +73,12 @@ export class IssueSuggestionManager {
     }
 
     async generateDummyIssueSuggestion(data: SimplifiedTodoIssueData) {
+        const uri = Uri.parse(data.uri);
+        const workspaceFolder = workspace.getWorkspaceFolder(uri);
+        const relativePath = workspaceFolder ? uri.fsPath.replace(workspaceFolder.uri.fsPath + '/', '') : uri.fsPath;
         return {
             summary: data.summary,
-            description: `File: ${data.uri}\nLine: ${data.position.line}`,
+            description: `File: ${relativePath}\nLine: ${data.position.line}`,
         };
     }
 
