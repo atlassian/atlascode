@@ -8,16 +8,12 @@ import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
 import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
-import { DisabledState, RovoDevContextItem, State } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevContextItem, State } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
-import {
-    RovoDevDisabledReason,
-    RovoDevProviderMessage,
-    RovoDevProviderMessageType,
-} from '../../../rovo-dev/rovoDevWebviewProviderMessages';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
 import { createRovoDevTemplate } from '../../../util/rovoDevTemplate';
 import { useMessagingApi } from '../messagingApi';
 import { FeedbackType } from './feedback-form/FeedbackForm';
@@ -43,22 +39,6 @@ import {
 } from './utils';
 
 const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
-
-function mapRovoDevDisabledReasonToSubState(reason: RovoDevDisabledReason): DisabledState['subState'] {
-    switch (reason) {
-        case 'needAuth':
-            return 'NeedAuth';
-        case 'noOpenFolder':
-            return 'NoWorkspaceOpen';
-        case 'other':
-            return 'Other';
-        case 'entitlementCheckFailed':
-            return 'EntitlementCheckFailed';
-        default:
-            // @ts-expect-error ts(2339) - reason here should be 'never'
-            throw new Error(reason.toString());
-    }
-}
 
 const IsBoysenberry = process.env.ROVODEV_BBY === 'true';
 
@@ -370,17 +350,16 @@ const RovoDevView: React.FC = () => {
                         finalizeResponse();
                     }
 
-                    const subState = mapRovoDevDisabledReasonToSubState(event.reason);
-                    if (subState === 'EntitlementCheckFailed') {
+                    if (event.reason === 'EntitlementCheckFailed') {
                         setCurrentState({
                             state: 'Disabled',
-                            subState,
+                            subState: event.reason,
                             detail: event.detail!,
                         });
                     } else {
                         setCurrentState({
                             state: 'Disabled',
-                            subState,
+                            subState: event.reason,
                         });
                     }
                     break;

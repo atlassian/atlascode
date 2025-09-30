@@ -299,7 +299,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         this.refreshDebugPanel(true);
                         if (!this.isBoysenberry && !this.isDisabled) {
                             if (!workspace.workspaceFolders?.length) {
-                                await this.signalRovoDevDisabled('noOpenFolder');
+                                await this.signalRovoDevDisabled('NoWorkspaceOpen');
                                 return;
                             } else {
                                 await webview.postMessage({
@@ -316,7 +316,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             const rovoDevApiClient = new RovoDevApiClient(rovoDevHost, fixedPort);
                             await this.initializeWithHealthcheck(rovoDevApiClient);
                         } else if (this.isBoysenberry) {
-                            await this.signalRovoDevDisabled('other');
+                            await this.signalRovoDevDisabled('Other');
                             throw new Error('Rovo Dev port not set');
                         } else {
                             this._processState = RovoDevProcessState.Starting;
@@ -1049,22 +1049,48 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // if result is undefined, it means we didn't manage to contact Rovo Dev within the allotted time
         // TODO - this scenario needs a better handling
         if (!result || result.status === 'unknown') {
-            await this.signalProcessFailedToInitialize(
-                `Service at at "${this._rovoDevApiClient.baseApiUrl}" wasn't ready within ${timeout} ms`,
-            );
+            if (this.isBoysenberry) {
+                const msg = result ? 'Rovo Dev service is unhealthy/unknown.' : 'Rovo Dev service is unreachable.';
+                await this.processError(
+                    new Error(`${msg}\rTry closing and reopening the Boysenberry session to retry.`),
+                    { title: 'Failed to initialize Rovo Dev' },
+                );
+                this.signalRovoDevDisabled('Other');
+            } else {
+                await this.signalProcessFailedToInitialize(
+                    `Service at at "${this._rovoDevApiClient.baseApiUrl}" wasn't ready within ${timeout} ms`,
+                );
+            }
             return;
         }
 
         // if result is unhealthy, it means Rovo Dev has failed during initialization (e.g., some MCP servers failed to start)
         // we can't continue - shutdown and set the process as terminated so the user can try again.
         if (result.status === 'unhealthy') {
-            await this.signalProcessFailedToInitialize();
+            if (this.isBoysenberry) {
+                await this.processError(
+                    new Error(
+                        `Rovo Dev service is unhealthy.\nTry closing and reopening the Boysenberry session to retry.`,
+                    ),
+                    { title: 'Failed to initialize Rovo Dev' },
+                );
+                this.signalRovoDevDisabled('Other');
+            } else {
+                await this.signalProcessFailedToInitialize();
+            }
             return;
         }
 
         // this scenario is when the user is not allowed to run Rovo Dev because it's disabled by the Jira administrator
         if (result.status === 'entitlement check failed') {
-            await this.signalRovoDevDisabled('entitlementCheckFailed', result.detail);
+            if (this.isBoysenberry) {
+                await this.processError(new Error(`${result.detail.message}\nCode: ${result.detail.payload.status}`), {
+                    title: result.detail.title,
+                });
+                this.signalRovoDevDisabled('Other');
+            } else {
+                await this.signalRovoDevDisabled('EntitlementCheckFailed', result.detail);
+            }
             return;
         }
 
@@ -1073,16 +1099,24 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             const mcp_servers = result.mcp_servers || {};
             const serversToReview = Object.keys(mcp_servers).filter((x) => mcp_servers[x] === 'pending user review');
 
-            if (serversToReview.length === 0) {
-                await this.signalProcessFailedToInitialize(
-                    'Failed to initialize Rovo Dev, something went wrong with the MCP servers acceptance flow.',
+            if (this.isBoysenberry) {
+                await this.processError(
+                    new Error(`Cannot start third party MCP servers: ${serversToReview.join(', ')}.`),
+                    { title: 'Failed to initialize Rovo Dev' },
                 );
+                this.signalRovoDevDisabled('Other');
             } else {
-                await webView.postMessage({
-                    type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
-                    isPromptPending: this._chatProvider.isPromptPending,
-                    mcpIds: serversToReview,
-                });
+                if (serversToReview.length === 0) {
+                    await this.signalProcessFailedToInitialize(
+                        'Failed to initialize Rovo Dev, something went wrong with the MCP servers acceptance flow.',
+                    );
+                } else {
+                    await webView.postMessage({
+                        type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
+                        isPromptPending: this._chatProvider.isPromptPending,
+                        mcpIds: serversToReview,
+                    });
+                }
             }
 
             return;
@@ -1125,9 +1159,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    public async signalRovoDevDisabled(reason: Exclude<RovoDevDisabledReason, 'entitlementCheckFailed'>): Promise<void>;
+    public async signalRovoDevDisabled(reason: Exclude<RovoDevDisabledReason, 'EntitlementCheckFailed'>): Promise<void>;
     public async signalRovoDevDisabled(
-        reason: 'entitlementCheckFailed',
+        reason: 'EntitlementCheckFailed',
         detail: RovoDevEntitlementCheckFailedDetail,
     ): Promise<void>;
     public async signalRovoDevDisabled(
