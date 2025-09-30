@@ -345,7 +345,11 @@ export abstract class RovoDevProcessManager {
     }
 
     private static async sendErrorToChat(rovoDevWebViewProvider: RovoDevWebviewProvider, error: Error) {
-        await rovoDevWebViewProvider.signalProcessFailedToInitialize(error.message);
+        if (error instanceof ProcessManagerError && error.type === 'needAuth') {
+            await rovoDevWebViewProvider.signalRovoDevDisabled('NeedAuth');
+        } else {
+            await rovoDevWebViewProvider.signalProcessFailedToInitialize(error.message);
+        }
     }
 }
 
