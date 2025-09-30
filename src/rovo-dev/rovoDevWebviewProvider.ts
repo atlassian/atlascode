@@ -189,6 +189,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             enableCommandUris: true,
             enableScripts: true,
             localResourceRoots: [
+                Uri.file(path.join(this._extensionPath, 'images')),
                 Uri.file(path.join(this._extensionPath, 'build')),
                 Uri.file(path.join(this._extensionPath, 'node_modules', '@vscode', 'codicons', 'dist')),
             ],
