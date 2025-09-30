@@ -82,8 +82,7 @@ const RovoDevView: React.FC = () => {
     const [debugPanelMcpContext, setDebugPanelMcpContext] = useState<Record<string, string>>({});
     const [promptText, setPromptText] = useState<string | undefined>(undefined);
     const [fileExistenceMap, setFileExistenceMap] = useState<Map<string, boolean>>(new Map());
-    const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[]>([]);
-    const [isJiraWorkItemsLoading, setIsJiraWorkItemsLoading] = useState<boolean>(false);
+    const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[] | undefined>(undefined);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -439,10 +438,6 @@ const RovoDevView: React.FC = () => {
                     setJiraWorkItems(event.issues);
                     break;
 
-                case RovoDevProviderMessageType.SetJiraWorkItemsLoading:
-                    setIsJiraWorkItemsLoading(event.isLoading);
-                    break;
-
                 default:
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendResponse({
@@ -702,12 +697,6 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
-    const onRequestJiraItems = useCallback(() => {
-        postMessage({
-            type: RovoDevViewResponseType.GetJiraWorkItems,
-        });
-    }, [postMessage]);
-
     const onJiraItemClick = useCallback(
         (issue: MinimalIssue<DetailedSiteInfo>) => {
             const template = createRovoDevTemplate(issue.key, issue.siteDetails);
@@ -786,9 +775,7 @@ const RovoDevView: React.FC = () => {
                 onMcpChoice={onMcpChoice}
                 onSendMessage={sendPrompt}
                 jiraWorkItems={jiraWorkItems}
-                isJiraWorkItemsLoading={isJiraWorkItemsLoading}
                 onJiraItemClick={onJiraItemClick}
-                onRequestJiraItems={onRequestJiraItems}
                 onToolPermissionChoice={onToolPermissionChoice}
             />
             {!hidePromptBox && (

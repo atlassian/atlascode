@@ -253,7 +253,7 @@ export abstract class RovoDevProcessManager {
         }
 
         const rovoDevURIs = GetRovoDevURIs(context);
-        await this.rovoDevWebviewProvider.signalInitializing();
+        await this.rovoDevWebviewProvider.signalInitializing(credentials.host);
 
         try {
             if (!fs.existsSync(rovoDevURIs.RovoDevBinPath)) {
@@ -389,9 +389,7 @@ class RovoDevTerminalInstance extends Disposable {
                 }
 
                 try {
-                    const { username, key } = credentials;
                     const siteUrl = `"https://${credentials.host}"`;
-
                     const shellArgs = ['serve', `${port}`, '--xid', 'rovodev-ide-vscode', '--site-url', siteUrl];
 
                     if (credentials.isStaging) {
@@ -408,9 +406,9 @@ class RovoDevTerminalInstance extends Disposable {
                         iconPath: this.rovoDevIconUri,
                         env: {
                             USER: process.env.USER,
-                            USER_EMAIL: username,
+                            USER_EMAIL: credentials.username,
                             ROVODEV_SANDBOX_ID: Container.appInstanceId,
-                            ...(key ? { USER_API_TOKEN: key } : {}),
+                            ...(credentials.key ? { USER_API_TOKEN: credentials.key } : {}),
                         },
                     });
 
