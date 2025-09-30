@@ -129,8 +129,15 @@ describe('RovoDevWebviewProvider', () => {
         (mockContainer as any).clientManager = mockClientManager;
         (mockContainer as any).jiraSettingsManager = mockJiraSettingsManager;
 
-        // Create provider instance
-        provider = new RovoDevWebviewProvider({} as any, {} as any);
+        // Create provider instance with proper context mock
+        const mockContext = {
+            workspaceState: {
+                get: jest.fn(),
+                update: jest.fn(),
+            },
+            subscriptions: [],
+        };
+        provider = new RovoDevWebviewProvider(mockContext as any, {} as any);
 
         // Access private _webView property and set it
         (provider as any)._webView = mockWebView;
@@ -138,6 +145,69 @@ describe('RovoDevWebviewProvider', () => {
 
     afterEach(() => {
         mockMathRandom.mockRestore();
+    });
+
+    describe('YOLO mode persistence', () => {
+        it('should load YOLO mode from workspace storage', async () => {
+            const mockWorkspaceRoot = '/path/to/workspace';
+            const expectedKey = `yoloMode_${mockWorkspaceRoot}`;
+
+            const mockContext = {
+                workspaceState: {
+                    get: jest.fn().mockReturnValue(true),
+                    update: jest.fn(),
+                },
+                subscriptions: [],
+            };
+
+            const provider = new RovoDevWebviewProvider(mockContext as any, {} as any);
+
+            jest.spyOn(provider as any, 'getWorkspaceRoot').mockReturnValue(mockWorkspaceRoot);
+
+            const result = await (provider as any).loadYoloModeFromStorage();
+
+            expect(mockContext.workspaceState.get).toHaveBeenCalledWith(expectedKey);
+            expect(result).toBe(true);
+        });
+
+        it('should save YOLO mode to workspace storage', async () => {
+            const mockWorkspaceRoot = '/path/to/workspace';
+            const expectedKey = `yoloMode_${mockWorkspaceRoot}`;
+
+            const mockContext = {
+                workspaceState: {
+                    get: jest.fn(),
+                    update: jest.fn(),
+                },
+                subscriptions: [],
+            };
+
+            const provider = new RovoDevWebviewProvider(mockContext as any, {} as any);
+
+            jest.spyOn(provider as any, 'getWorkspaceRoot').mockReturnValue(mockWorkspaceRoot);
+
+            await (provider as any).saveYoloModeToStorage(true);
+
+            expect(mockContext.workspaceState.update).toHaveBeenCalledWith(expectedKey, true);
+        });
+
+        it('should use global key when no workspace folder', async () => {
+            const mockContext = {
+                workspaceState: {
+                    get: jest.fn(),
+                    update: jest.fn(),
+                },
+                subscriptions: [],
+            };
+
+            const provider = new RovoDevWebviewProvider(mockContext as any, {} as any);
+
+            jest.spyOn(provider as any, 'getWorkspaceRoot').mockReturnValue(undefined);
+
+            await (provider as any).saveYoloModeToStorage(false);
+
+            expect(mockContext.workspaceState.update).toHaveBeenCalledWith('yoloMode_global', false);
+        });
     });
 
     describe('fetchAndSendJiraWorkItems', () => {

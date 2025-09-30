@@ -65,7 +65,10 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.ToolReturn, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.ShowDialog, { message: DialogMessage }>
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
-    | ReducerAction<RovoDevProviderMessageType.ProviderReady, { workspacePath?: string; homeDir?: string }>
+    | ReducerAction<
+          RovoDevProviderMessageType.ProviderReady,
+          { workspacePath?: string; homeDir?: string; yoloMode?: boolean }
+      >
     | ReducerAction<RovoDevProviderMessageType.SetInitializing, { isPromptPending: boolean }>
     | ReducerAction<
           RovoDevProviderMessageType.SetDownloadProgress,

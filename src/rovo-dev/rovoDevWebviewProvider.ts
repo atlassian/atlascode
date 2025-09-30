@@ -102,6 +102,26 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return this._rovoDevApiClient;
     }
 
+    private getWorkspaceRoot(): string | undefined {
+        return workspace.workspaceFolders?.[0]?.uri.fsPath;
+    }
+
+    private getYoloModeStorageKey(): string {
+        const workspaceRoot = this.getWorkspaceRoot();
+        return workspaceRoot ? `yoloMode_${workspaceRoot}` : 'yoloMode_global';
+    }
+
+    private async loadYoloModeFromStorage(): Promise<boolean> {
+        const key = this.getYoloModeStorageKey();
+        const stored = this._context.workspaceState.get<boolean>(key);
+        return stored ?? this.isBoysenberry;
+    }
+
+    private async saveYoloModeToStorage(enabled: boolean): Promise<void> {
+        const key = this.getYoloModeStorageKey();
+        await this._context.workspaceState.update(key, enabled);
+    }
+
     private get isDisabled() {
         return this._processState === RovoDevProcessState.Disabled;
     }
@@ -151,7 +171,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             onTelemetryError,
         );
         this._chatProvider = new RovoDevChatProvider(this.isBoysenberry, this._telemetryProvider);
-        this._chatProvider.yoloMode = this.isBoysenberry;
+
+        this.loadYoloModeFromStorage().then((yoloMode) => {
+            this._chatProvider.yoloMode = yoloMode;
+        });
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
@@ -302,10 +325,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                                 await this.signalRovoDevDisabled('noOpenFolder');
                                 return;
                             } else {
+                                const yoloMode = await this.loadYoloModeFromStorage();
                                 await webview.postMessage({
                                     type: RovoDevProviderMessageType.ProviderReady,
                                     workspacePath: workspace.workspaceFolders?.[0]?.uri.fsPath,
                                     homeDir: process.env.HOME || process.env.USERPROFILE,
+                                    yoloMode: yoloMode,
                                 });
                             }
                         }
@@ -377,6 +402,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.YoloModeToggled:
                         this._chatProvider.yoloMode = e.value;
+                        this.saveYoloModeToStorage(e.value);
                         break;
 
                     default:
