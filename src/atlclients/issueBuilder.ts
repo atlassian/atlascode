@@ -1,4 +1,4 @@
-import { AxiosInstance } from 'axios';
+import { AxiosInstance, isAxiosError } from 'axios';
 import { Logger } from 'src/logger';
 
 import { Container } from '../container';
@@ -57,8 +57,16 @@ export const fetchIssueSuggestions = async (
 
         return responseData;
     } catch (error) {
-        Logger.error(error, 'Error fetching issue suggestions');
-        throw error;
+        if (isAxiosError(error)) {
+            const message =
+                `[${error.response?.status}] ${error.response?.statusText}` +
+                (error.response?.data?.errorMessage ? ` - ${error.response.data.errorMessage}` : '');
+            Logger.error(new Error(message), message);
+            throw new Error(message);
+        } else {
+            Logger.error(error, error.message);
+            throw error;
+        }
     }
 };
 
