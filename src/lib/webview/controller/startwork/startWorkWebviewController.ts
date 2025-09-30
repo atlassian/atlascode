@@ -114,12 +114,14 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
             this.logger.debug(`JS-1324 Webview Controller - Repo data Count: ${repoData.length}`);
             this.logger.debug(`JS-1324 ${JSON.stringify(repoData.map((r) => r.workspaceRepo.rootUri))}`);
 
+            const hasValidRovoDevCredentials = await Container.hasValidRovoDevCredentials();
+
             this.postMessage({
                 type: StartWorkMessageType.Init,
                 ...this.initData!,
                 repoData,
                 ...this.api.getStartWorkConfig(),
-                isRovoDevEnabled: Container.isRovoDevEnabled,
+                isRovoDevEnabled: Container.isRovoDevEnabled && hasValidRovoDevCredentials,
             });
         } catch (e) {
             this.logger.error(e, 'Error updating start work page');
