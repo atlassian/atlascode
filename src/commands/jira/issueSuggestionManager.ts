@@ -56,6 +56,8 @@ export class IssueSuggestionManager {
                 };
             }
 
+            Container.analyticsApi.fireIssueSuggestionGeneratedEvent();
+
             return {
                 summary: issue.fieldValues.summary,
                 description: issue.fieldValues.description,
@@ -63,12 +65,11 @@ export class IssueSuggestionManager {
             };
         } catch (error) {
             Logger.error(error, 'Error fetching issue suggestions');
+            Container.analyticsApi.fireIssueSuggestionFailedEvent({
+                error: error.message,
+            });
             window.showErrorMessage('Error fetching issue suggestions: ' + error.message);
-            return {
-                summary: '',
-                description: '',
-                error: 'Error fetching issue suggestions: ' + error.message,
-            };
+            return this.generateDummyIssueSuggestion(data);
         }
     }
 
