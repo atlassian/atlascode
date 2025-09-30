@@ -2,32 +2,30 @@ import './RovoDev.css';
 import './RovoDevCodeHighlighting.css';
 
 import { setGlobalTheme } from '@atlaskit/tokens';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
+import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
 import { DisabledState, RovoDevContextItem, State } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
 import {
     RovoDevDisabledReason,
     RovoDevProviderMessage,
     RovoDevProviderMessageType,
 } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
+import { createRovoDevTemplate } from '../../../util/rovoDevTemplate';
 import { useMessagingApi } from '../messagingApi';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 import { ChatStream } from './messaging/ChatStream';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
-import {
-    McpConsentChoice,
-    ModifiedFile,
-    RovoDevViewResponse,
-    RovoDevViewResponseType,
-    ToolPermissionChoice,
-} from './rovoDevViewMessages';
+import { McpConsentChoice, ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import { DebugPanel } from './tools/DebugPanel';
 import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
@@ -54,6 +52,8 @@ function mapRovoDevDisabledReasonToSubState(reason: RovoDevDisabledReason): Disa
             return 'NoWorkspaceOpen';
         case 'other':
             return 'Other';
+        case 'entitlementCheckFailed':
+            return 'EntitlementCheckFailed';
         default:
             // @ts-expect-error ts(2339) - reason here should be 'never'
             throw new Error(reason.toString());
@@ -82,6 +82,8 @@ const RovoDevView: React.FC = () => {
     const [debugPanelMcpContext, setDebugPanelMcpContext] = useState<Record<string, string>>({});
     const [promptText, setPromptText] = useState<string | undefined>(undefined);
     const [fileExistenceMap, setFileExistenceMap] = useState<Map<string, boolean>>(new Map());
+    const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[]>([]);
+    const [isJiraWorkItemsLoading, setIsJiraWorkItemsLoading] = useState<boolean>(false);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -367,10 +369,20 @@ const RovoDevView: React.FC = () => {
                     ) {
                         finalizeResponse();
                     }
-                    setCurrentState({
-                        state: 'Disabled',
-                        subState: mapRovoDevDisabledReasonToSubState(event.reason),
-                    });
+
+                    const subState = mapRovoDevDisabledReasonToSubState(event.reason);
+                    if (subState === 'EntitlementCheckFailed') {
+                        setCurrentState({
+                            state: 'Disabled',
+                            subState,
+                            detail: event.detail!,
+                        });
+                    } else {
+                        setCurrentState({
+                            state: 'Disabled',
+                            subState,
+                        });
+                    }
                     break;
 
                 case RovoDevProviderMessageType.ContextAdded:
@@ -421,6 +433,14 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.SetPromptText:
                     setPromptText(event.text);
+                    break;
+
+                case RovoDevProviderMessageType.SetJiraWorkItems:
+                    setJiraWorkItems(event.issues);
+                    break;
+
+                case RovoDevProviderMessageType.SetJiraWorkItemsLoading:
+                    setIsJiraWorkItemsLoading(event.isLoading);
                     break;
 
                 default:
@@ -682,6 +702,20 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
+    const onRequestJiraItems = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.GetJiraWorkItems,
+        });
+    }, [postMessage]);
+
+    const onJiraItemClick = useCallback(
+        (issue: MinimalIssue<DetailedSiteInfo>) => {
+            const template = createRovoDevTemplate(issue.key, issue.siteDetails);
+            setPromptText(template);
+        },
+        [setPromptText],
+    );
+
     const onToolPermissionChoice = useCallback(
         (toolCallId: string, choice: ToolPermissionChoice) => {
             // remove the dialog after the choice is submitted
@@ -750,6 +784,11 @@ const RovoDevView: React.FC = () => {
                 onLoginClick={onLoginClick}
                 onOpenFolder={onOpenFolder}
                 onMcpChoice={onMcpChoice}
+                onSendMessage={sendPrompt}
+                jiraWorkItems={jiraWorkItems}
+                isJiraWorkItemsLoading={isJiraWorkItemsLoading}
+                onJiraItemClick={onJiraItemClick}
+                onRequestJiraItems={onRequestJiraItems}
                 onToolPermissionChoice={onToolPermissionChoice}
             />
             {!hidePromptBox && (
@@ -783,6 +822,7 @@ const RovoDevView: React.FC = () => {
                                     }
                                 });
                             }}
+                            openFile={openFile}
                         />
                         <PromptInputBox
                             disabled={currentState.state === 'ProcessTerminated'}

@@ -1,3 +1,4 @@
+import { isMinimalIssue, MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
 import * as fs from 'fs';
 import path from 'path';
 import { CommandContext, setCommandContext } from 'src/commandContext';
@@ -26,6 +27,7 @@ import {
 
 import { Container } from '../../src/container';
 import { RovoDevLogger } from '../../src/logger';
+import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
 import { Commands, rovodevInfo } from '../constants';
 import {
     ModifiedFile,
@@ -33,8 +35,10 @@ import {
     RovoDevViewResponseType,
 } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { GitErrorCodes } from '../typings/git';
+import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
-import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
+import { RovoDevApiClient } from './rovoDevApiClient';
+import { RovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
 import { RovoDevDwellTracker } from './rovoDevDwellTracker';
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
@@ -44,6 +48,7 @@ import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem } from './rovoDevTypes';
 import {
     RovoDevDisabledReason,
+    RovoDevEntitlementCheckFailedDetail,
     RovoDevProviderMessage,
     RovoDevProviderMessageType,
 } from './rovoDevWebviewProviderMessages';
@@ -362,6 +367,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await this.checkFileExists(e.filePath, e.requestId);
                         break;
 
+                    case RovoDevViewResponseType.GetJiraWorkItems:
+                        await this.fetchAndSendJiraWorkItems();
+                        break;
+
                     case RovoDevViewResponseType.ToolPermissionChoiceSubmit:
                         await this._chatProvider.signalToolRequestChoiceSubmit(e.toolCallId, e.choice);
                         break;
@@ -620,7 +629,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             info = await this.rovoDevApiClient?.healthcheck();
         } catch {}
 
-        if (info) {
+        if (info && info.mcp_servers) {
             for (const mcpServer in info.mcp_servers) {
                 this._debugPanelMcpContext[mcpServer] = info.mcp_servers[mcpServer];
             }
@@ -1040,7 +1049,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // if result is undefined, it means we didn't manage to contact Rovo Dev within the allotted time
         // TODO - this scenario needs a better handling
         if (!result || result.status === 'unknown') {
-            this.signalProcessFailedToInitialize(
+            await this.signalProcessFailedToInitialize(
                 `Service at at "${this._rovoDevApiClient.baseApiUrl}" wasn't ready within ${timeout} ms`,
             );
             return;
@@ -1049,29 +1058,32 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // if result is unhealthy, it means Rovo Dev has failed during initialization (e.g., some MCP servers failed to start)
         // we can't continue - shutdown and set the process as terminated so the user can try again.
         if (result.status === 'unhealthy') {
-            this.signalProcessFailedToInitialize();
+            await this.signalProcessFailedToInitialize();
             return;
         }
 
         // this scenario is when the user is not allowed to run Rovo Dev because it's disabled by the Jira administrator
-        // TODO - handle this better: AXON-1024
         if (result.status === 'entitlement check failed') {
-            this.signalProcessFailedToInitialize(
-                'Rovo Dev is currently disabled in your Jira site.\nPlease contact your administrator to enable it.',
-            );
+            await this.signalRovoDevDisabled('entitlementCheckFailed', result.detail);
             return;
         }
 
         // this scenario is when the user needs to accept/decline the usage of some MCP server before Rovo Dev can start
         if (result.status === 'pending user review') {
-            const serversToReview = Object.keys(result.mcp_servers).filter(
-                (x) => result.mcp_servers[x] === 'pending user review',
-            );
-            webView.postMessage({
-                type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
-                isPromptPending: this._chatProvider.isPromptPending,
-                mcpIds: serversToReview,
-            });
+            const mcp_servers = result.mcp_servers || {};
+            const serversToReview = Object.keys(mcp_servers).filter((x) => mcp_servers[x] === 'pending user review');
+
+            if (serversToReview.length === 0) {
+                await this.signalProcessFailedToInitialize(
+                    'Failed to initialize Rovo Dev, something went wrong with the MCP servers acceptance flow.',
+                );
+            } else {
+                await webView.postMessage({
+                    type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
+                    isPromptPending: this._chatProvider.isPromptPending,
+                    mcpIds: serversToReview,
+                });
+            }
 
             return;
         }
@@ -1113,7 +1125,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    public async signalRovoDevDisabled(reason: RovoDevDisabledReason) {
+    public async signalRovoDevDisabled(reason: Exclude<RovoDevDisabledReason, 'entitlementCheckFailed'>): Promise<void>;
+    public async signalRovoDevDisabled(
+        reason: 'entitlementCheckFailed',
+        detail: RovoDevEntitlementCheckFailedDetail,
+    ): Promise<void>;
+    public async signalRovoDevDisabled(
+        reason: RovoDevDisabledReason,
+        detail?: RovoDevEntitlementCheckFailedDetail,
+    ): Promise<void> {
         if (
             this._processState === RovoDevProcessState.Terminated ||
             this._processState === RovoDevProcessState.Disabled
@@ -1127,6 +1147,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await webView.postMessage({
             type: RovoDevProviderMessageType.RovoDevDisabled,
             reason,
+            detail,
         });
     }
 
@@ -1185,5 +1206,114 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._dwellTracker = undefined;
 
         return this.refreshDebugPanel();
+    }
+
+    private getCachedJiraIssues(sites: DetailedSiteInfo[]): MinimalIssue<DetailedSiteInfo>[] {
+        const cachedIssues: MinimalIssue<DetailedSiteInfo>[] = [];
+        for (const site of sites) {
+            const assignedIssuesForSite = SearchJiraHelper.getAssignedIssuesPerSite(site.id);
+            // Filter to only include MinimalIssue items (not IssueLinkIssue)
+            const minimalIssues = assignedIssuesForSite.filter(isMinimalIssue) as MinimalIssue<DetailedSiteInfo>[];
+            cachedIssues.push(...minimalIssues);
+        }
+
+        const filteredIssues = cachedIssues.filter(
+            (issue) => issue.status && issue.status.statusCategory && issue.status.statusCategory.name !== 'Done',
+        );
+
+        // Shuffle the issues to show random selection on each page reload
+        const shuffledIssues = this.shuffleArray([...filteredIssues]);
+        return shuffledIssues.slice(0, 3);
+    }
+
+    private async sendJiraWorkItems(issues: MinimalIssue<DetailedSiteInfo>[]): Promise<void> {
+        if (!this._webView) {
+            return;
+        }
+
+        await this._webView.postMessage({
+            type: RovoDevProviderMessageType.SetJiraWorkItems,
+            issues: issues,
+        });
+    }
+
+    private async fetchJiraIssuesFromAPI(sites: DetailedSiteInfo[]): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+        const jql = 'assignee = currentUser() AND StatusCategory != Done ORDER BY updated DESC';
+
+        // Fetch from all sites in parallel
+        const allIssues = await Promise.all(
+            sites.map(async (site) => {
+                try {
+                    const client = await Container.clientManager.jiraClient(site);
+                    const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
+                    const fields = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicFieldInfo);
+
+                    const res = await client.searchForIssuesUsingJqlGet(jql, fields, 10, 0);
+                    const searchResults = await readSearchResults(res, site, epicFieldInfo);
+                    return searchResults.issues;
+                } catch (error) {
+                    RovoDevLogger.error(error, `Failed to fetch Jira issues for site ${site.host}`);
+                    return [];
+                }
+            }),
+        );
+
+        // Flatten, shuffle, and return top 3
+        const flatIssues = allIssues.flat();
+        return this.shuffleArray(flatIssues).slice(0, 3);
+    }
+
+    private shuffleArray<T>(array: T[]): T[] {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
+    private async fetchAndSendJiraWorkItems() {
+        if (!this._webView) {
+            return;
+        }
+
+        const sites = Container.siteManager.getSitesAvailable(ProductJira);
+        if (sites.length === 0) {
+            await this.sendJiraWorkItems([]);
+            return;
+        }
+
+        // First check if we have cached issues - show them immediately
+        const cachedIssues = this.getCachedJiraIssues(sites);
+        if (cachedIssues.length > 0) {
+            await this.sendJiraWorkItems(cachedIssues);
+            return;
+        }
+
+        // No cache available - show loading and fetch from API
+        try {
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.SetJiraWorkItemsLoading,
+                isLoading: true,
+            });
+
+            const apiIssues = await this.fetchJiraIssuesFromAPI(sites);
+
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.SetJiraWorkItemsLoading,
+                isLoading: false,
+            });
+
+            await this.sendJiraWorkItems(apiIssues);
+        } catch (error) {
+            RovoDevLogger.error(error, 'Failed to fetch Jira work items');
+
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.SetJiraWorkItemsLoading,
+                isLoading: false,
+            });
+
+            await this.sendJiraWorkItems([]);
+        }
     }
 }

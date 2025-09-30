@@ -5,6 +5,7 @@
 ### Bug Fixes
 
 - Fix error while connecting several jira sites with an API token
+- Fix issue when pressing enter to submit the form does not work
 
 ## What's new in 3.8.17
 

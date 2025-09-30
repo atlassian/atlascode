@@ -1,20 +1,18 @@
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
+import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
+import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import { useMessagingApi } from '../../messagingApi';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
 import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
-import { RovoDevLanding } from '../rovoDevLanding';
-import {
-    McpConsentChoice,
-    RovoDevViewResponse,
-    RovoDevViewResponseType,
-    ToolPermissionChoice,
-} from '../rovoDevViewMessages';
+import { RovoDevLanding } from '../landing-page/RovoDevLanding';
+import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
@@ -47,6 +45,11 @@ interface ChatStreamProps {
     onLoginClick: () => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
+    onSendMessage: (message: string) => void;
+    jiraWorkItems: MinimalIssue<DetailedSiteInfo>[];
+    isJiraWorkItemsLoading: boolean;
+    onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
+    onRequestJiraItems: () => void;
     onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice) => void;
 }
 
@@ -67,6 +70,11 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onLoginClick,
     onOpenFolder,
     onMcpChoice,
+    onSendMessage,
+    jiraWorkItems,
+    isJiraWorkItemsLoading,
+    onJiraItemClick,
+    onRequestJiraItems,
     onToolPermissionChoice,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
@@ -230,12 +238,20 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            <RovoDevLanding
-                currentState={currentState}
-                onLoginClick={onLoginClick}
-                onOpenFolder={onOpenFolder}
-                onMcpChoice={onMcpChoice}
-            />
+            {!process.env.ROVODEV_BBY && (
+                <RovoDevLanding
+                    currentState={currentState}
+                    isHistoryEmpty={chatHistory.length === 0}
+                    onLoginClick={onLoginClick}
+                    onOpenFolder={onOpenFolder}
+                    onMcpChoice={onMcpChoice}
+                    onSendMessage={onSendMessage}
+                    jiraWorkItems={jiraWorkItems}
+                    isJiraWorkItemsLoading={isJiraWorkItemsLoading}
+                    onJiraItemClick={onJiraItemClick}
+                    onRequestJiraItems={onRequestJiraItems}
+                />
+            )}
             {!isChatHistoryDisabled &&
                 chatHistory &&
                 chatHistory.map((block, idx) => {
@@ -262,6 +278,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                     }
                                     onCopy={handleCopyResponse}
                                     onFeedback={handleFeedbackTrigger}
+                                    openFile={renderProps.openFile}
                                 />
                             );
                         } else if (block.source === 'ToolReturn') {

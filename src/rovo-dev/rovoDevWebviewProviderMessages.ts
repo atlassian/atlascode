@@ -1,7 +1,10 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 
+import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
 import { RovoDevResponse } from './responseParser';
+import { EntitlementCheckRovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
 import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
 export const enum RovoDevProviderMessageType {
@@ -28,6 +31,8 @@ export const enum RovoDevProviderMessageType {
     ShowFeedbackForm = 'showFeedbackForm',
     SetDebugPanel = 'setDebugPanel',
     SetPromptText = 'setPromptText',
+    SetJiraWorkItems = 'setJiraWorkItems',
+    SetJiraWorkItemsLoading = 'setJiraWorkItemsLoading',
     CheckFileExistsComplete = 'checkFileExistsComplete',
 }
 
@@ -44,10 +49,15 @@ interface NonFocusedContextRemovedResponse {
     context: RovoDevContextItem;
 }
 
-export type RovoDevDisabledReason = 'noOpenFolder' | 'needAuth' | 'other';
+export type RovoDevDisabledReason = 'noOpenFolder' | 'needAuth' | 'other' | 'entitlementCheckFailed';
+
+export type RovoDevEntitlementCheckFailedDetail = EntitlementCheckRovoDevHealthcheckResponse['detail'];
 
 export type RovoDevProviderMessage =
-    | ReducerAction<RovoDevProviderMessageType.RovoDevDisabled, { reason: RovoDevDisabledReason }>
+    | ReducerAction<
+          RovoDevProviderMessageType.RovoDevDisabled,
+          { reason: RovoDevDisabledReason; detail?: RovoDevEntitlementCheckFailedDetail }
+      >
     | ReducerAction<RovoDevProviderMessageType.SignalPromptSent, RovoDevPrompt & { echoMessage: boolean }>
     | ReducerAction<RovoDevProviderMessageType.Response, RovoDevObjectResponse>
     | ReducerAction<RovoDevProviderMessageType.CompleteMessage, { isReplay?: boolean }>
@@ -79,6 +89,8 @@ export type RovoDevProviderMessage =
           { enabled: boolean; context: Record<string, string>; mcpContext: Record<string, string> }
       >
     | ReducerAction<RovoDevProviderMessageType.SetPromptText, { text: string }>
+    | ReducerAction<RovoDevProviderMessageType.SetJiraWorkItems, { issues: MinimalIssue<DetailedSiteInfo>[] }>
+    | ReducerAction<RovoDevProviderMessageType.SetJiraWorkItemsLoading, { isLoading: boolean }>
     | ReducerAction<
           RovoDevProviderMessageType.CheckFileExistsComplete,
           { requestId: string; filePath: string; exists: boolean }

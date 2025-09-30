@@ -171,6 +171,13 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
             doClose();
         }, [doClose, updateWatches]);
 
+        const handleFormKeyDown = (event: React.KeyboardEvent) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                handleSubmit(handleSave)();
+            }
+        };
+
         const preventClickDefault = useCallback(
             (event: React.MouseEvent<HTMLButtonElement>) => event.preventDefault(),
             [],
@@ -193,7 +200,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText>{`Add ${product.name} Site`}</DialogContentText>
-                    <Grid container direction="column" spacing={2}>
+                    <Grid container direction="column" spacing={2} onKeyDown={handleFormKeyDown}>
                         <Grid item>
                             {autocompleteSites.length > 0 && (
                                 <Autocomplete

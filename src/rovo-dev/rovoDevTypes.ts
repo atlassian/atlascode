@@ -1,3 +1,5 @@
+import { RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
+
 export type RovoDevContextFileInfo = {
     name: string;
     absolutePath: string;
@@ -68,13 +70,21 @@ export interface InitializingMcpAcceptanceState extends AbstractInitializingStat
 
 export type InitializingState = InitializingOtherState | InitializingDownladingState | InitializingMcpAcceptanceState;
 
-export interface BasicState {
-    state: 'WaitingForPrompt' | 'GeneratingResponse' | 'CancellingResponse' | 'ExecutingPlan' | 'ProcessTerminated';
-}
-
-export interface DisabledState {
+export interface BasicDisabledState {
     state: 'Disabled';
     subState: 'NeedAuth' | 'NoWorkspaceOpen' | 'Other';
+}
+
+export interface EntitlementCheckDisabledState {
+    state: 'Disabled';
+    subState: 'EntitlementCheckFailed';
+    detail: RovoDevEntitlementCheckFailedDetail;
+}
+
+export type DisabledState = BasicDisabledState | EntitlementCheckDisabledState;
+
+export interface BasicState {
+    state: 'WaitingForPrompt' | 'GeneratingResponse' | 'CancellingResponse' | 'ExecutingPlan' | 'ProcessTerminated';
 }
 
 export type State = BasicState | InitializingState | DisabledState;

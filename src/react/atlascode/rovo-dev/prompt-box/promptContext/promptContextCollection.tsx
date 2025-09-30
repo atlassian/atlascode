@@ -1,6 +1,7 @@
 import React from 'react';
 import { RovoDevContextItem } from 'src/rovo-dev/rovoDevTypes';
 
+import { OpenFileFunc } from '../../common/common';
 import { PromptContextItem } from './promptContextItem';
 
 // PromptContextCollection: displays a row or column of PromptContextItem
@@ -12,7 +13,17 @@ export const PromptContextCollection: React.FC<{
     readonly?: boolean;
     onRemoveContext?: (item: RovoDevContextItem) => void;
     inChat?: boolean;
-}> = ({ content, direction = 'row', align = 'left', onToggleActiveItem, readonly = true, onRemoveContext, inChat }) => {
+    openFile?: OpenFileFunc;
+}> = ({
+    content,
+    direction = 'row',
+    align = 'left',
+    onToggleActiveItem,
+    readonly = true,
+    onRemoveContext,
+    inChat,
+    openFile,
+}) => {
     if (content.length === 0) {
         return null;
     }
@@ -46,6 +57,7 @@ export const PromptContextCollection: React.FC<{
                     selection={focusedItem.selection}
                     enabled={focusedItem.enabled}
                     onToggle={onToggleActiveItem}
+                    openFile={openFile}
                 />
             )}
             {addedItems.map((item, index) => (
@@ -56,6 +68,7 @@ export const PromptContextCollection: React.FC<{
                     selection={item.selection}
                     enabled={item.enabled}
                     onRemove={!readonly && onRemoveContext ? () => onRemoveContext(item) : undefined}
+                    openFile={openFile}
                 />
             ))}
         </div>

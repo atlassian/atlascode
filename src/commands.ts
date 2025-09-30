@@ -16,7 +16,6 @@ import { assignIssue } from './commands/jira/assignIssue';
 import { createIssue } from './commands/jira/createIssue';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey, showIssueForURL } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
-import { startWorkWithRovoDev } from './commands/jira/startWorkWithRovoDev';
 import { configuration } from './config/configuration';
 import { Commands, HelpTreeViewId } from './constants';
 import { Container } from './container';
@@ -176,9 +175,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                             ? issueNodeOrMinimalIssue
                             : issueNodeOrMinimalIssue.issue,
                     ),
-            ),
-            commands.registerCommand(Commands.StartWorkWithRovoDev, (issueNode: IssueNode) =>
-                startWorkWithRovoDev(issueNode.issue),
             ),
             commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, Uri, Uri, string]) => {
                 viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then((e) => {
@@ -391,9 +387,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                             ? issueNodeOrMinimalIssue
                             : issueNodeOrMinimalIssue.issue,
                     ),
-            ),
-            commands.registerCommand(Commands.StartWorkWithRovoDev, (issueNode: IssueNode) =>
-                startWorkWithRovoDev(issueNode.issue),
             ),
             commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, Uri, Uri, string]) => {
                 viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then((e) => {

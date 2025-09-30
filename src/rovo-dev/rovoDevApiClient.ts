@@ -1,4 +1,9 @@
-import { ToolPermissionChoice } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
+import {
+    RovoDevCancelResponse,
+    RovoDevChatRequest,
+    RovoDevHealthcheckResponse,
+    ToolPermissionChoice,
+} from './rovoDevApiClientInterfaces';
 
 function statusIsSuccessful(status: number | undefined) {
     return !!status && Math.floor(status / 100) === 2;
@@ -12,39 +17,6 @@ class RovoDevApiError extends Error {
     ) {
         super(message);
     }
-}
-
-export interface RovoDevChatRequestContextFileEntry {
-    type: 'file';
-    file_path: string;
-    selection?: {
-        start: number;
-        end: number;
-    };
-    note?: string;
-}
-
-export interface RovoDevChatRequestContextOtherEntry {
-    type: Exclude<string, 'file'>;
-    content: string;
-}
-
-export interface RovoDevChatRequest {
-    message: string;
-    context: (RovoDevChatRequestContextFileEntry | RovoDevChatRequestContextOtherEntry)[];
-    enable_deep_plan?: boolean;
-}
-
-export interface RovoDevHealthcheckResponse {
-    status: 'unknown' | 'healthy' | 'unhealthy' | 'entitlement check failed' | 'pending user review';
-    version: string;
-    mcp_servers: Record<string, string>;
-    sessionId: string | null; // from response header
-}
-
-export interface RovoDevCancelResponse {
-    message: string;
-    cancelled: boolean;
 }
 
 /** Implements the http client for the RovoDev CLI server */
