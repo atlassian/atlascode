@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 
 import { featureFlagClientInitializedEvent } from './analytics';
 import { AnalyticsClient, analyticsClient } from './analytics-node-client/src/client.min.js';
-import { isBasicAuthInfo, Product, ProductJira } from './atlclients/authInfo';
+import { Product, ProductJira } from './atlclients/authInfo';
 import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
@@ -483,21 +483,8 @@ export class Container {
         return this._isRovoDevEnabled;
     }
 
-    public static async hasValidRovoDevCredentials(): Promise<boolean> {
-        try {
-            const sites = this._siteManager.getSitesAvailable(ProductJira);
-
-            for (const site of sites) {
-                const authInfo = await this._credentialManager.getAuthInfo(site);
-                if (authInfo && isBasicAuthInfo(authInfo)) {
-                    return true;
-                }
-            }
-
-            return false;
-        } catch {
-            return false;
-        }
+    public static isRovoDevReady(): boolean {
+        return this._rovodevWebviewProvider?.isStarted ?? false;
     }
 
     private static _version: string;

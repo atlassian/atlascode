@@ -110,6 +110,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return this._webviewView?.visible ?? false;
     }
 
+    public get isStarted(): boolean {
+        return this._processState === RovoDevProcessState.Started;
+    }
+
     constructor(context: ExtensionContext, extensionPath: string) {
         super(() => {
             this._dispose();
