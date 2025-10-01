@@ -484,7 +484,7 @@ export class Container {
     }
 
     public static isRovoDevReady(): boolean {
-        return this._rovodevWebviewProvider?.isStarted ?? false;
+        return this._isRovoDevEnabled && this._rovodevWebviewProvider && !this._rovodevWebviewProvider.isDisabled;
     }
 
     private static _version: string;

@@ -102,16 +102,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return this._rovoDevApiClient;
     }
 
-    private get isDisabled() {
-        return this._processState === RovoDevProcessState.Disabled;
-    }
-
     public get isVisible(): boolean {
         return this._webviewView?.visible ?? false;
     }
 
     public get isStarted(): boolean {
         return this._processState === RovoDevProcessState.Started;
+    }
+
+    public get isDisabled(): boolean {
+        return this._processState === RovoDevProcessState.Disabled;
     }
 
     constructor(context: ExtensionContext, extensionPath: string) {
