@@ -127,7 +127,7 @@
                     "light": "resources/light/add.svg"
                 },
                 "category": "Rovo Dev",
-                "enablement": "atlascode:rovoDevEnabled"
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
                 "command": "atlascode.rovodev.showTerminal",
@@ -620,7 +620,7 @@
             "view/title": [
                 {
                     "command": "atlascode.rovodev.newChatSession",
-                    "when": "view == atlascode.views.rovoDev.webView",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "navigation@1"
                 },
                 {
@@ -842,7 +842,7 @@
                 },
                 {
                     "command": "atlascode.rovodev.newChatSession",
-                    "when": "atlascode:rovoDevEnabled"
+                    "when": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
                 },
                 {
                     "command": "atlascode.rovodev.showTerminal",

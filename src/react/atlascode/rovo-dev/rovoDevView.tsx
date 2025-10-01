@@ -8,16 +8,12 @@ import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
 import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
-import { DisabledState, RovoDevContextItem, State } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevContextItem, State } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
-import {
-    RovoDevDisabledReason,
-    RovoDevProviderMessage,
-    RovoDevProviderMessageType,
-} from '../../../rovo-dev/rovoDevWebviewProviderMessages';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
 import { createRovoDevTemplate } from '../../../util/rovoDevTemplate';
 import { useMessagingApi } from '../messagingApi';
 import { FeedbackType } from './feedback-form/FeedbackForm';
@@ -44,22 +40,6 @@ import {
 
 const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
 
-function mapRovoDevDisabledReasonToSubState(reason: RovoDevDisabledReason): DisabledState['subState'] {
-    switch (reason) {
-        case 'needAuth':
-            return 'NeedAuth';
-        case 'noOpenFolder':
-            return 'NoWorkspaceOpen';
-        case 'other':
-            return 'Other';
-        case 'entitlementCheckFailed':
-            return 'EntitlementCheckFailed';
-        default:
-            // @ts-expect-error ts(2339) - reason here should be 'never'
-            throw new Error(reason.toString());
-    }
-}
-
 const IsBoysenberry = process.env.ROVODEV_BBY === 'true';
 
 const RovoDevView: React.FC = () => {
@@ -82,8 +62,7 @@ const RovoDevView: React.FC = () => {
     const [debugPanelMcpContext, setDebugPanelMcpContext] = useState<Record<string, string>>({});
     const [promptText, setPromptText] = useState<string | undefined>(undefined);
     const [fileExistenceMap, setFileExistenceMap] = useState<Map<string, boolean>>(new Map());
-    const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[]>([]);
-    const [isJiraWorkItemsLoading, setIsJiraWorkItemsLoading] = useState<boolean>(false);
+    const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[] | undefined>(undefined);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -174,12 +153,12 @@ const RovoDevView: React.FC = () => {
         setIsFeedbackFormVisible(false);
     }, [totalModifiedFiles, keepFiles]);
 
-    const handleAppendModifiedFileToolReturns = useCallback(
-        (toolReturn: ToolReturnGenericMessage) => {
-            if (isCodeChangeTool(toolReturn.tool_name)) {
-                const msg = parseToolReturnMessage(toolReturn).filter((msg) => msg.filePath !== undefined);
+    const handleAppendModifiedFileToolReturns = useCallback((toolReturn: ToolReturnGenericMessage) => {
+        if (isCodeChangeTool(toolReturn.tool_name)) {
+            const msg = parseToolReturnMessage(toolReturn).filter((msg) => msg.filePath !== undefined);
 
-                const filesMap = new Map([...totalModifiedFiles].map((item) => [item.filePath!, item]));
+            setTotalModifiedFiles((currentFiles) => {
+                const filesMap = new Map([...currentFiles].map((item) => [item.filePath!, item]));
 
                 // Logic for handling deletions and modifications
                 msg.forEach((file) => {
@@ -204,11 +183,10 @@ const RovoDevView: React.FC = () => {
                     }
                 });
 
-                setTotalModifiedFiles(Array.from(filesMap.values()));
-            }
-        },
-        [totalModifiedFiles],
-    );
+                return Array.from(filesMap.values());
+            });
+        }
+    }, []);
 
     const handleAppendResponse = useCallback(
         (response: Response) => {
@@ -373,17 +351,16 @@ const RovoDevView: React.FC = () => {
                         finalizeResponse();
                     }
 
-                    const subState = mapRovoDevDisabledReasonToSubState(event.reason);
-                    if (subState === 'EntitlementCheckFailed') {
+                    if (event.reason === 'EntitlementCheckFailed') {
                         setCurrentState({
                             state: 'Disabled',
-                            subState,
+                            subState: event.reason,
                             detail: event.detail!,
                         });
                     } else {
                         setCurrentState({
                             state: 'Disabled',
-                            subState,
+                            subState: event.reason,
                         });
                     }
                     break;
@@ -440,10 +417,6 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.SetJiraWorkItems:
                     setJiraWorkItems(event.issues);
-                    break;
-
-                case RovoDevProviderMessageType.SetJiraWorkItemsLoading:
-                    setIsJiraWorkItemsLoading(event.isLoading);
                     break;
 
                 default:
@@ -705,12 +678,6 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
-    const onRequestJiraItems = useCallback(() => {
-        postMessage({
-            type: RovoDevViewResponseType.GetJiraWorkItems,
-        });
-    }, [postMessage]);
-
     const onJiraItemClick = useCallback(
         (issue: MinimalIssue<DetailedSiteInfo>) => {
             const template = createRovoDevTemplate(issue.key, issue.siteDetails);
@@ -789,9 +756,7 @@ const RovoDevView: React.FC = () => {
                 onMcpChoice={onMcpChoice}
                 onSendMessage={sendPrompt}
                 jiraWorkItems={jiraWorkItems}
-                isJiraWorkItemsLoading={isJiraWorkItemsLoading}
                 onJiraItemClick={onJiraItemClick}
-                onRequestJiraItems={onRequestJiraItems}
                 onToolPermissionChoice={onToolPermissionChoice}
             />
             {!hidePromptBox && (

@@ -258,13 +258,7 @@ export class Container {
 
         this._onboardingProvider = new OnboardingProvider();
 
-        if (
-            process.env.ROVODEV_BBY ||
-            (this.config.jira.enabled && this.featureFlagClient.checkGate(Features.RovoDevEnabled))
-        ) {
-            this._isRovoDevEnabled = true;
-            await this.enableRovoDev(context);
-        }
+        this.refreshRovoDev(context);
     }
 
     static async updateFeatureFlagTenantId(): Promise<boolean> {
@@ -294,7 +288,11 @@ export class Container {
     }
 
     private static async refreshRovoDev(context: ExtensionContext) {
-        if (this.config.jira.enabled && (await this.isAtlassianUser(ProductJira))) {
+        const isJiraEnabledAndAtlassianUser = this.config.jira.enabled && (await this.isAtlassianUser(ProductJira));
+        const isBoysenberryMode = !!process.env.ROVODEV_BBY;
+        const shouldEnableRovoDev = isJiraEnabledAndAtlassianUser || isBoysenberryMode;
+
+        if (shouldEnableRovoDev) {
             this._isRovoDevEnabled = true;
             await this.enableRovoDev(context);
         } else {

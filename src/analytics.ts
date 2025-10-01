@@ -10,6 +10,7 @@ import {
     ProductJira,
     SiteInfo,
 } from './atlclients/authInfo';
+import { IssueSuggestionSettings } from './config/configuration';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
 import { QuickFlowAnalyticsEvent } from './onboarding/quickFlow/types';
@@ -551,6 +552,22 @@ export async function viewScreenEvent(
 
 export async function feedbackSentEvent(event: FeedbackSentEvent): Promise<TrackEvent> {
     return trackEvent('feedbackSent', 'atlascode', { attributes: { ...event } });
+}
+
+export async function issueSuggestionGeneratedEvent(): Promise<TrackEvent> {
+    return trackEvent('generated', 'issueSuggestion');
+}
+
+export async function issueSuggestionFailedEvent(error: string): Promise<TrackEvent> {
+    return trackEvent('failed', 'issueSuggestion', { attributes: { error } });
+}
+
+export async function issueSuggestionSettingsChangeEvent(settings: IssueSuggestionSettings): Promise<TrackEvent> {
+    return trackEvent('changed', 'issueSuggestionSettings', { attributes: { ...settings } });
+}
+
+export async function apiTokenNudgeClickedEvent(source: string): Promise<TrackEvent> {
+    return trackEvent('clicked', 'apiTokenNudge', { attributes: { source } });
 }
 
 export async function quickFlowEvent(event: QuickFlowAnalyticsEvent): Promise<TrackEvent> {
