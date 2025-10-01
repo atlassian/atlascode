@@ -76,9 +76,11 @@ export const UpdateStatusSection: React.FC<UpdateStatusSectionProps> = ({
                             {state.issue.status.name}
                         </Lozenge>
                     </Grid>
-                    <Box display="flex" alignItems="center">
-                        <ArrowRightAltIcon />
-                    </Box>
+                    <Grid item>
+                        <Box display="flex" alignItems="center">
+                            <ArrowRightAltIcon />
+                        </Box>
+                    </Grid>
                     <Grid item>
                         <Box minWidth={150}>
                             <TextField
