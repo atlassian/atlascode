@@ -2,6 +2,7 @@ import StatusErrorIcon from '@atlaskit/icon/core/status-error';
 import StatusInfoIcon from '@atlaskit/icon/core/status-information';
 import StatusWarningIcon from '@atlaskit/icon/core/status-warning';
 import React from 'react';
+import { RovoDevToolName } from 'src/rovo-dev/responseParserInterfaces';
 import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
 
 import {
@@ -59,6 +60,7 @@ export const DialogMessageItem: React.FC<{
                         paddingTop: '2px',
                         paddingLeft: '2px',
                         width: 'calc(100% - 24px)',
+                        overflowWrap: 'break-word',
                     }}
                 >
                     <div style={messageContentStyles}>{title}</div>
@@ -69,7 +71,7 @@ export const DialogMessageItem: React.FC<{
                     </div>
 
                     {msg.type === 'toolPermissionRequest' && (
-                        <ToolCall toolName={msg.toolName} toolArgs={msg.toolArgs} />
+                        <ToolCall toolName={msg.toolName} toolArgs={msg.toolArgs} mcpServer={msg.mcpServer} />
                     )}
 
                     {msg.type === 'error' &&
@@ -151,7 +153,7 @@ const fileListStyles: React.CSSProperties = {
     overflow: 'hidden',
 };
 
-const friendlyToolName: Record<string, string> = {
+const friendlyToolName: Record<RovoDevToolName, string> = {
     create_file: 'Create file',
     delete_file: 'Delete file',
     move_file: 'Move file',
@@ -162,12 +164,14 @@ const friendlyToolName: Record<string, string> = {
     grep: 'Search for',
     bash: 'Run command',
     create_technical_plan: 'Create a technical plan',
+    mcp_invoke_tool: "Invoke an MCP server's tool",
 };
 
 const ToolCall: React.FC<{
-    toolName: string;
+    toolName: RovoDevToolName;
     toolArgs: string;
-}> = ({ toolName, toolArgs }) => {
+    mcpServer?: string;
+}> = ({ toolName, toolArgs, mcpServer }) => {
     const jsonArgs = React.useMemo(() => {
         try {
             return toolArgs ? JSON.parse(toolArgs) : {};
@@ -181,7 +185,7 @@ const ToolCall: React.FC<{
     return (
         <div>
             <div style={{ fontWeight: '600' }}>{toolFriendlyName}</div>
-            <ToolCallBody toolName={toolName} jsonArgs={jsonArgs} toolArgs={toolArgs} />
+            <ToolCallBody toolName={toolName} jsonArgs={jsonArgs} toolArgs={toolArgs} mcpServer={mcpServer} />
         </div>
     );
 };
@@ -190,7 +194,8 @@ const ToolCallBody: React.FC<{
     toolName: string;
     jsonArgs: any;
     toolArgs: string;
-}> = ({ toolName, jsonArgs, toolArgs }) => {
+    mcpServer?: string;
+}> = ({ toolName, jsonArgs, toolArgs, mcpServer }) => {
     if (toolName === 'bash') {
         return (
             <pre style={{ margin: '0' }}>
@@ -201,6 +206,19 @@ const ToolCallBody: React.FC<{
         return <code style={toolCallCodeBlockStyles}>{jsonArgs.content_pattern}</code>;
     } else if (toolName === 'create_technical_plan') {
         return null;
+    } else if (toolName === 'mcp_invoke_tool') {
+        return (
+            <table style={{ border: '0' }}>
+                <tr>
+                    <td style={{ paddingLeft: '8px' }}>Server:</td>
+                    <td style={{ paddingLeft: '8px' }}>{mcpServer}</td>
+                </tr>
+                <tr>
+                    <td style={{ paddingLeft: '8px' }}>Tool:</td>
+                    <td style={{ paddingLeft: '8px' }}>{jsonArgs.tool_name}</td>
+                </tr>
+            </table>
+        );
     } else if (Array.isArray(jsonArgs.file_paths)) {
         return (
             <ul style={fileListStyles}>

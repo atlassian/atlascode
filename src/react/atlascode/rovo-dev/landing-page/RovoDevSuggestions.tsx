@@ -43,20 +43,15 @@ export const RovoDevActions: React.FC<{
 };
 
 export const RovoDevJiraWorkItems: React.FC<{
-    isJiraWorkItemsLoading: boolean;
-    jiraWorkItems: MinimalIssue<DetailedSiteInfo>[];
+    jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
-}> = ({ isJiraWorkItemsLoading, jiraWorkItems, onJiraItemClick }) => {
-    if (!isJiraWorkItemsLoading && jiraWorkItems.length === 0) {
-        return null;
-    }
-
+}> = ({ jiraWorkItems, onJiraItemClick }) => {
     return (
         <div style={{ marginTop: '24px', width: '100%', maxWidth: '270px' }}>
             <div style={titleStyles}>Jira Work Items</div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {isJiraWorkItemsLoading && (
+                {jiraWorkItems === undefined && (
                     <div
                         style={{
                             display: 'flex',
@@ -70,7 +65,7 @@ export const RovoDevJiraWorkItems: React.FC<{
                         <span>Loading work items...</span>
                     </div>
                 )}
-                {!isJiraWorkItemsLoading &&
+                {jiraWorkItems !== undefined &&
                     jiraWorkItems.map((issue) => (
                         <JiraWorkItem
                             key={issue.key}

@@ -48,7 +48,7 @@ describe('appendResponse', () => {
 
     it('should group ToolReturn with previous message when groupable', () => {
         const prev: Response[] = [
-            { tool_name: 'test', source: 'ToolReturn', content: 'prev result', args: 'args', tool_call_id: 'id' },
+            { tool_name: 'grep', source: 'ToolReturn', content: 'prev result', args: 'args', tool_call_id: 'id' },
         ];
         const response: ToolReturnGenericMessage = {
             tool_name: 'bash',
@@ -144,8 +144,8 @@ describe('appendResponse', () => {
 
     it('should merge with existing thinking group', () => {
         const existingGroup: ChatMessage[] = [
-            { tool_name: 'tool1', source: 'ToolReturn', content: 'result', tool_call_id: 'id1' },
-            { tool_name: 'tool1', source: 'ToolReturn', content: 'result1', tool_call_id: 'id1' },
+            { tool_name: 'grep', source: 'ToolReturn', content: 'result', tool_call_id: 'id1' },
+            { tool_name: 'grep', source: 'ToolReturn', content: 'result1', tool_call_id: 'id1' },
         ];
         const prev: Response[] = [existingGroup];
         const response: ToolReturnGenericMessage = {
@@ -194,8 +194,8 @@ describe('appendResponse', () => {
     it('should handle array response when latest exists', () => {
         const prev: Response[] = [{ text: 'previous', source: 'User' }];
         const response: ChatMessage[] = [
-            { tool_name: 'tool1', source: 'ToolCall', args: 'args1', tool_call_id: 'id1' },
-            { tool_name: 'tool1', source: 'ToolReturn', content: 'result1', tool_call_id: 'id1' },
+            { tool_name: 'grep', source: 'ToolCall', args: 'args1', tool_call_id: 'id1' },
+            { tool_name: 'grep', source: 'ToolReturn', content: 'result1', tool_call_id: 'id1' },
         ] as const;
 
         const result = appendResponse(

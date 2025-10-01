@@ -1,3 +1,4 @@
+import { IssueSuggestionSettings } from 'src/config/model';
 import { QuickFlowAnalyticsEvent } from 'src/onboarding/quickFlow/types';
 
 import { DeepLinkEventErrorType } from '../analytics';
@@ -56,5 +57,12 @@ export interface AnalyticsApi {
     firePipelineRerunEvent(site: DetailedSiteInfo, source: string): Promise<void>;
     fireUIErrorEvent(errorInfo: UIErrorInfo): Promise<void>;
     fireQuickFlowEvent(event: QuickFlowAnalyticsEvent): Promise<void>;
+
     fireFeedbackSentEvent(event: FeedbackSentEvent): Promise<void>;
+    fireApiTokenNudgeClickedEvent({ source }: { source: string }): Promise<void>;
+
+    // Issue Suggestions
+    fireIssueSuggestionGeneratedEvent(): Promise<void>;
+    fireIssueSuggestionFailedEvent(attributes: { error: string }): Promise<void>;
+    fireIssueSuggestionSettingsChangeEvent(newSettings: IssueSuggestionSettings): Promise<void>;
 }

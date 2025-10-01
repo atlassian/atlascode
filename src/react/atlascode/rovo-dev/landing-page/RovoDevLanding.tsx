@@ -31,10 +31,8 @@ export const RovoDevLanding: React.FC<{
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
     onSendMessage: (message: string) => void;
-    jiraWorkItems: MinimalIssue<DetailedSiteInfo>[];
-    isJiraWorkItemsLoading: boolean;
+    jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
-    onRequestJiraItems: () => void;
 }> = ({
     currentState,
     isHistoryEmpty,
@@ -43,12 +41,8 @@ export const RovoDevLanding: React.FC<{
     onMcpChoice,
     onSendMessage,
     jiraWorkItems,
-    isJiraWorkItemsLoading,
     onJiraItemClick,
-    onRequestJiraItems,
 }) => {
-    const [hasRequestedItems, setHasRequestedItems] = React.useState(false);
-
     const shouldHideSuggestions = React.useMemo(
         () =>
             !isHistoryEmpty ||
@@ -57,24 +51,6 @@ export const RovoDevLanding: React.FC<{
             (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance'),
         [currentState, isHistoryEmpty],
     );
-
-    // Auto-request Jira work items when ready
-    React.useEffect(() => {
-        const shouldRequest =
-            !shouldHideSuggestions && !hasRequestedItems && jiraWorkItems.length === 0 && !isJiraWorkItemsLoading;
-
-        if (shouldRequest) {
-            onRequestJiraItems();
-            setHasRequestedItems(true);
-        }
-    }, [
-        currentState.state,
-        onRequestJiraItems,
-        hasRequestedItems,
-        jiraWorkItems.length,
-        isJiraWorkItemsLoading,
-        shouldHideSuggestions,
-    ]);
 
     return (
         <div
@@ -99,11 +75,7 @@ export const RovoDevLanding: React.FC<{
             {!shouldHideSuggestions && (
                 <>
                     <RovoDevActions onSendMessage={onSendMessage} />
-                    <RovoDevJiraWorkItems
-                        isJiraWorkItemsLoading={isJiraWorkItemsLoading}
-                        jiraWorkItems={jiraWorkItems}
-                        onJiraItemClick={onJiraItemClick}
-                    />
+                    <RovoDevJiraWorkItems jiraWorkItems={jiraWorkItems} onJiraItemClick={onJiraItemClick} />
                 </>
             )}
 
