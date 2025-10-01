@@ -1,4 +1,4 @@
-import { AxiosError, AxiosInstance } from 'axios';
+import { AxiosInstance } from 'axios';
 import { Logger } from 'src/logger';
 
 import { Container } from '../container';
@@ -57,7 +57,8 @@ export const fetchIssueSuggestions = async (
 
         return responseData;
     } catch (error) {
-        if (error instanceof AxiosError) {
+        // TODO: figure out what's wrong with axios and E2E tests - isAxiosError here breaks everything
+        if (error.response?.status && error.response?.statusText) {
             const message =
                 `[${error.response?.status}] ${error.response?.statusText}` +
                 (error.response?.data?.errorMessage ? ` - ${error.response.data.errorMessage}` : '');
