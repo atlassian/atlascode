@@ -859,10 +859,10 @@ export class CreateIssueWebview
                 case 'aiSuggestionFeedback': {
                     handled = true;
                     if (isAiSuggestionFeedback(msg)) {
-                        const { isPositive, todoData } = msg;
+                        const { isPositive, todoData, feedbackData } = msg;
 
                         const suggestionManager = new IssueSuggestionManager(this._issueSuggestionSettings!);
-                        suggestionManager.sendFeedback(isPositive, todoData);
+                        suggestionManager.sendFeedback(isPositive, todoData, feedbackData);
                     }
                     break;
                 }
