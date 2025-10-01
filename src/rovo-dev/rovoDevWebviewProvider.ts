@@ -103,13 +103,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return this._rovoDevApiClient;
     }
 
-    private getWorkspaceRoot(): string | undefined {
-        return workspace.workspaceFolders?.[0]?.uri.fsPath;
-    }
-
     private getYoloModeStorageKey(): string {
-        const workspaceRoot = this.getWorkspaceRoot();
-        return workspaceRoot ? `yoloMode_${workspaceRoot}` : 'yoloMode_global';
+        // Use a global key for YOLO mode across all workspaces
+        return 'yoloMode_global';
     }
 
     private async loadYoloModeFromStorage(): Promise<boolean> {
