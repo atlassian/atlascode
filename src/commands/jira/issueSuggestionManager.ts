@@ -106,7 +106,7 @@ export class IssueSuggestionManager {
             });
             if (feedbackData) {
                 await AxonFeedbackSubmitter.send({
-                    feature: 'issueSuggestions',
+                    feature: 'AI Issue Suggestions',
                     description: feedbackData.description,
                     canContact: feedbackData.contactMe,
                     email: (await getUserEmail()) ?? 'placeholder@email.com',

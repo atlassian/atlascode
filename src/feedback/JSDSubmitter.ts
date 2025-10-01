@@ -94,17 +94,17 @@ export const AxonFeedbackSubmitter = new JSDSubmitter<{
     email: string;
     canContact: boolean;
 }>({
-    widgetId: 'd76bb212-7451-4a04-8644-19fa2aec2181',
-    requestTypeId: 11826,
+    widgetId: '559f0b64-c9d1-4480-a9fd-b2d44d47f6f2',
+    requestTypeId: 11890,
     fieldMapper: {
         description: 'description',
         summary: 'summary',
         email: 'email',
-        canContact: 'customfield_11560',
-        feature: 'customfield_11529',
-        context: 'customfield_11528',
+        context: 'customfield_11561',
+        feature: 'customfield_11562',
+        canContact: 'customfield_11563',
     },
     valueMapper: {
-        canContact: (value: boolean) => (value ? { id: '11709' } : { id: '11710' }),
+        canContact: (value: boolean) => (value ? { id: '11711' } : { id: '11712' }),
     },
 });
