@@ -943,22 +943,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     /**
-     * Sets the text in the prompt input field of the RovoDev webview
-     * @param text The text to set in the prompt input field
-     */
-    public setPromptText(text: string): void {
-        const webView = this._webView;
-        if (!webView) {
-            return;
-        }
-
-        webView.postMessage({
-            type: RovoDevProviderMessageType.SetPromptText,
-            text: text,
-        });
-    }
-
-    /**
      * Sets the text in the prompt input field with focus, using the same reliable approach as invokeRovoDevAskCommand
      * @param text The text to set in the prompt input field
      */
@@ -974,7 +958,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
 
         if (ready) {
-            this.setPromptText(text);
+            this._webView!.postMessage({
+                type: RovoDevProviderMessageType.SetPromptText,
+                text,
+            });
         }
     }
 
