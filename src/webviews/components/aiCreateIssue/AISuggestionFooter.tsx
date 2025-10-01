@@ -22,6 +22,7 @@ const AISuggestionFooter: React.FC<{
     const [isEnabled, setIsEnabled] = useState(false);
     const [todoData, setTodoData] = useState<SimplifiedTodoIssueData | null>(null);
     const [showFeedbackOverlay, setShowFeedbackOverlay] = useState(false);
+    const [feedbackSent, setFeedbackSent] = useState(false);
 
     window.addEventListener('message', (event) => {
         const message = event.data;
@@ -39,6 +40,7 @@ const AISuggestionFooter: React.FC<{
             todoData,
             feedbackData,
         });
+        setFeedbackSent(true);
     };
 
     return (
@@ -75,7 +77,11 @@ const AISuggestionFooter: React.FC<{
                         minWidth: '100%',
                     }}
                 >
-                    <HelperMessage> Please provide feedback to improve Rovo Dev work item generation</HelperMessage>
+                    <HelperMessage style={{ marginTop: '10px' }}>
+                        {feedbackSent
+                            ? 'Thank you for your feedback! Your input helps us improve Rovo Dev.'
+                            : 'Please provide feedback to improve Rovo Dev work item generation'}
+                    </HelperMessage>
                     <div className="chat-message-actions" style={{ display: 'flex', gap: '2px', marginTop: '10px' }}>
                         <div style={{ flex: 1 }}></div>
                         <Tooltip content="Helpful">
@@ -84,6 +90,7 @@ const AISuggestionFooter: React.FC<{
                                 type="button"
                                 aria-label="like-response-button"
                                 className="chat-message-action"
+                                style={{ visibility: feedbackSent ? 'hidden' : 'visible' }}
                             >
                                 <ThumbsUpIcon label="thumbs-up" spacing="none" />
                             </button>
@@ -96,6 +103,7 @@ const AISuggestionFooter: React.FC<{
                                 type="button"
                                 aria-label="dislike-response-button"
                                 className="chat-message-action"
+                                style={{ visibility: feedbackSent ? 'hidden' : 'visible' }}
                             >
                                 <ThumbsDownIcon label="thumbs-down" spacing="none" />
                             </button>

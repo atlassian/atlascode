@@ -112,10 +112,8 @@ export class IssueSuggestionManager {
                     email: (await getUserEmail()) ?? 'placeholder@email.com',
                 });
             }
-            window.showInformationMessage(`Thank you for your feedback!`);
         } catch (error) {
             Logger.error(error, 'Error sending feedback');
-            window.showErrorMessage('Error sending feedback: ' + error.message);
         }
     }
 }
