@@ -59,6 +59,7 @@ export const DialogMessageItem: React.FC<{
                         paddingTop: '2px',
                         paddingLeft: '2px',
                         width: 'calc(100% - 24px)',
+                        overflowWrap: 'break-word',
                     }}
                 >
                     <div style={messageContentStyles}>{title}</div>

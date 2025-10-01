@@ -5,7 +5,7 @@ import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
 import { RovoDevResponse } from './responseParser';
 import { EntitlementCheckRovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
-import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
+import { DisabledState, RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
 export const enum RovoDevProviderMessageType {
     RovoDevDisabled = 'rovoDevDisabled',
@@ -32,7 +32,6 @@ export const enum RovoDevProviderMessageType {
     SetDebugPanel = 'setDebugPanel',
     SetPromptText = 'setPromptText',
     SetJiraWorkItems = 'setJiraWorkItems',
-    SetJiraWorkItemsLoading = 'setJiraWorkItemsLoading',
     CheckFileExistsComplete = 'checkFileExistsComplete',
 }
 
@@ -49,7 +48,7 @@ interface NonFocusedContextRemovedResponse {
     context: RovoDevContextItem;
 }
 
-export type RovoDevDisabledReason = 'noOpenFolder' | 'needAuth' | 'other' | 'entitlementCheckFailed';
+export type RovoDevDisabledReason = DisabledState['subState'];
 
 export type RovoDevEntitlementCheckFailedDetail = EntitlementCheckRovoDevHealthcheckResponse['detail'];
 
@@ -90,7 +89,6 @@ export type RovoDevProviderMessage =
       >
     | ReducerAction<RovoDevProviderMessageType.SetPromptText, { text: string }>
     | ReducerAction<RovoDevProviderMessageType.SetJiraWorkItems, { issues: MinimalIssue<DetailedSiteInfo>[] }>
-    | ReducerAction<RovoDevProviderMessageType.SetJiraWorkItemsLoading, { isLoading: boolean }>
     | ReducerAction<
           RovoDevProviderMessageType.CheckFileExistsComplete,
           { requestId: string; filePath: string; exists: boolean }

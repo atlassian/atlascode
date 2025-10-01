@@ -239,6 +239,11 @@ export abstract class RovoDevProcessManager {
         credentials: CloudCredentials | undefined,
         forceNewInstance?: boolean,
     ) {
+        if (!workspace.workspaceFolders?.length) {
+            await this.rovoDevWebviewProvider.signalRovoDevDisabled('NoWorkspaceOpen');
+            return;
+        }
+
         if (forceNewInstance) {
             this.stopRovoDevInstance();
         } else {
@@ -248,12 +253,12 @@ export abstract class RovoDevProcessManager {
         this.currentCredentials = credentials;
 
         if (!credentials) {
-            await this.sendErrorToChat(this.rovoDevWebviewProvider, new ProcessManagerError('needAuth'));
+            await this.rovoDevWebviewProvider.signalRovoDevDisabled('NeedAuth');
             return;
         }
 
         const rovoDevURIs = GetRovoDevURIs(context);
-        await this.rovoDevWebviewProvider.signalInitializing();
+        await this.rovoDevWebviewProvider.signalInitializing(credentials.host);
 
         try {
             if (!fs.existsSync(rovoDevURIs.RovoDevBinPath)) {
@@ -341,7 +346,7 @@ export abstract class RovoDevProcessManager {
 
     private static async sendErrorToChat(rovoDevWebViewProvider: RovoDevWebviewProvider, error: Error) {
         if (error instanceof ProcessManagerError && error.type === 'needAuth') {
-            await rovoDevWebViewProvider.signalRovoDevDisabled('needAuth');
+            await rovoDevWebViewProvider.signalRovoDevDisabled('NeedAuth');
         } else {
             await rovoDevWebViewProvider.signalProcessFailedToInitialize(error.message);
         }
@@ -389,9 +394,7 @@ class RovoDevTerminalInstance extends Disposable {
                 }
 
                 try {
-                    const { username, key } = credentials;
-                    const siteUrl = `"https://${credentials.host}"`;
-
+                    const siteUrl = `https://${credentials.host}`;
                     const shellArgs = ['serve', `${port}`, '--xid', 'rovodev-ide-vscode', '--site-url', siteUrl];
 
                     if (credentials.isStaging) {
@@ -408,9 +411,9 @@ class RovoDevTerminalInstance extends Disposable {
                         iconPath: this.rovoDevIconUri,
                         env: {
                             USER: process.env.USER,
-                            USER_EMAIL: username,
+                            USER_EMAIL: credentials.username,
                             ROVODEV_SANDBOX_ID: Container.appInstanceId,
-                            ...(key ? { USER_API_TOKEN: key } : {}),
+                            ...(credentials.key ? { USER_API_TOKEN: credentials.key } : {}),
                         },
                     });
 
