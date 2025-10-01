@@ -113,12 +113,20 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async loadYoloModeFromStorage(): Promise<boolean> {
+        if (this.isBoysenberry) {
+            return true;
+        }
+
         const key = this.getYoloModeStorageKey();
         const stored = this._context.workspaceState.get<boolean>(key);
-        return stored ?? this.isBoysenberry;
+        return stored ?? false;
     }
 
     private async saveYoloModeToStorage(enabled: boolean): Promise<void> {
+        if (this.isBoysenberry) {
+            return;
+        }
+
         const key = this.getYoloModeStorageKey();
         await this._context.workspaceState.update(key, enabled);
     }
