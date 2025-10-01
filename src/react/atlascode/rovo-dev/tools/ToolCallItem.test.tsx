@@ -14,7 +14,7 @@ function validateMessage(
 
 describe('ToolCallItem', () => {
     it('invalid tool call message is empty', () => {
-        const toolMessage = parseToolCallMessage('');
+        const toolMessage = parseToolCallMessage('' as any);
         expect(toolMessage).toBe('');
     });
 
@@ -91,7 +91,7 @@ describe('ToolCallItem', () => {
     });
 
     it('renders the tool name for unknown tools', () => {
-        const toolMessage = parseToolCallMessage('unknown_tool');
+        const toolMessage = parseToolCallMessage('unknown_tool' as any);
         const { getByText } = render(
             <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
         );

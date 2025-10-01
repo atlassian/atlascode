@@ -1,4 +1,5 @@
-import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
+import { RovoDevResponseParser } from './responseParser';
+import { RovoDevResponse } from './responseParserInterfaces';
 
 describe('RovoDevResponseParser', () => {
     let parser: RovoDevResponseParser;
@@ -132,8 +133,9 @@ describe('RovoDevResponseParser', () => {
                 expect(results).toHaveLength(1);
                 expect(results[0]).toEqual({
                     event_kind: 'tool-call',
-                    tool_name: '',
+                    tool_name: undefined,
                     args: '',
+                    mcp_server: undefined,
                     tool_call_id: 'call_123',
                 });
             });
@@ -235,7 +237,7 @@ describe('RovoDevResponseParser', () => {
                 expect(results[0]).toEqual({
                     event_kind: 'retry-prompt',
                     content: '',
-                    tool_name: '',
+                    tool_name: undefined,
                     tool_call_id: 'call_123',
                     timestamp: '2025-07-02T12:00:00Z',
                 });

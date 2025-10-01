@@ -3,7 +3,7 @@ import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
-import { RovoDevResponse } from './responseParser';
+import { RovoDevResponse } from './responseParserInterfaces';
 import { EntitlementCheckRovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
 import { DisabledState, RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 

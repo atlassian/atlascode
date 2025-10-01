@@ -7,12 +7,12 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
+import { RovoDevResponse } from 'src/rovo-dev/responseParserInterfaces';
 import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
 import { RovoDevContextItem, State } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
-import { RovoDevResponse } from '../../../rovo-dev/responseParser';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
 import { createRovoDevTemplate } from '../../../util/rovoDevTemplate';
 import { useMessagingApi } from '../messagingApi';
@@ -231,6 +231,7 @@ const RovoDevView: React.FC = () => {
                     ) {
                         finalizeResponse();
                     }
+                    setModalDialogs([]);
                     break;
 
                 case RovoDevProviderMessageType.ToolCall:

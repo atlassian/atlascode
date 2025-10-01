@@ -3,7 +3,8 @@ import { RovoDevViewResponse } from 'src/react/atlascode/rovo-dev/rovoDevViewMes
 import { v4 } from 'uuid';
 import { Event, Webview } from 'vscode';
 
-import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
+import { RovoDevResponseParser } from './responseParser';
+import { RovoDevResponse } from './responseParserInterfaces';
 import { RovoDevApiClient } from './rovoDevApiClient';
 import {
     RovoDevChatRequest,
@@ -396,6 +397,7 @@ export class RovoDevChatProvider {
                                 source: 'RovoDevDialog',
                                 toolName: tool.tool_name,
                                 toolArgs: tool.args,
+                                mcpServer: tool.mcp_server,
                                 text: 'To do this I will need to',
                                 toolCallId: tool.tool_call_id,
                             },
