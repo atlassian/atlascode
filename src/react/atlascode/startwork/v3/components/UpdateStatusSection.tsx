@@ -1,5 +1,5 @@
 import Lozenge from '@atlaskit/lozenge';
-import { emptyTransition } from '@atlassianlabs/jira-pi-common-models';
+import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import { Box, Checkbox, FormControlLabel, Grid, MenuItem, TextField, Typography } from '@mui/material';
 import React, { useCallback, useEffect } from 'react';
@@ -33,7 +33,7 @@ export const UpdateStatusSection: React.FC<UpdateStatusSectionProps> = ({
             // 2. Fallback to first non-initial transition (works for any workflow)
             // 3. Fallback to first available transition (guarantees something is selected)
             // 4. Final fallback to emptyTransition
-            const inProgressTransitionGuess =
+            const inProgressTransitionGuess: Transition =
                 availableTransitions.find((t) => !t.isInitial && t.to.name.toLowerCase().includes('progress')) ||
                 availableTransitions.find((t) => !t.isInitial) ||
                 availableTransitions[0] ||
