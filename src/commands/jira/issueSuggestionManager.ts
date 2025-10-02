@@ -1,5 +1,6 @@
 import { DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
 import { Container } from 'src/container';
+import { AxonFeedbackSubmitter } from 'src/feedback/JSDSubmitter';
 import { Logger } from 'src/logger';
 import { Uri, window, workspace } from 'vscode';
 
@@ -56,6 +57,8 @@ export class IssueSuggestionManager {
                 };
             }
 
+            Container.analyticsApi.fireIssueSuggestionGeneratedEvent();
+
             return {
                 summary: issue.fieldValues.summary,
                 description: issue.fieldValues.description,
@@ -63,12 +66,11 @@ export class IssueSuggestionManager {
             };
         } catch (error) {
             Logger.error(error, 'Error fetching issue suggestions');
+            Container.analyticsApi.fireIssueSuggestionFailedEvent({
+                error: error.message,
+            });
             window.showErrorMessage('Error fetching issue suggestions: ' + error.message);
-            return {
-                summary: '',
-                description: '',
-                error: 'Error fetching issue suggestions: ' + error.message,
-            };
+            return this.generateDummyIssueSuggestion(data);
         }
     }
 
@@ -88,7 +90,11 @@ export class IssueSuggestionManager {
             : this.generateDummyIssueSuggestion(data);
     }
 
-    async sendFeedback(isPositive: boolean, data: SimplifiedTodoIssueData) {
+    async sendFeedback(
+        isPositive: boolean,
+        data: SimplifiedTodoIssueData,
+        feedbackData?: { description: string; contactMe: boolean },
+    ) {
         const feedback = isPositive
             ? `Positive feedback for issue suggestion: ${data.summary}`
             : `Negative feedback for issue suggestion: ${data.summary}`;
@@ -98,10 +104,16 @@ export class IssueSuggestionManager {
                 feature: 'issueSuggestions',
                 feedbackType: isPositive ? 'positive' : 'negative',
             });
-            window.showInformationMessage(`Thank you for your feedback!`);
+            if (feedbackData) {
+                await AxonFeedbackSubmitter.send({
+                    feature: 'AI Issue Suggestions',
+                    description: feedbackData.description,
+                    canContact: feedbackData.contactMe,
+                    email: (await getUserEmail()) ?? 'placeholder@email.com',
+                });
+            }
         } catch (error) {
             Logger.error(error, 'Error sending feedback');
-            window.showErrorMessage('Error sending feedback: ' + error.message);
         }
     }
 }
@@ -151,4 +163,14 @@ async function getSuggestionAvailable(): Promise<boolean> {
     }
 
     return (await Container.credentialManager.findApiTokenForSite(selectedSite)) !== undefined;
+}
+
+async function getUserEmail(): Promise<string | undefined> {
+    const selectedSite = getSelectedSite();
+    if (!selectedSite) {
+        return undefined;
+    }
+
+    const client = await Container.credentialManager.getAuthInfo(selectedSite);
+    return client?.user.email;
 }

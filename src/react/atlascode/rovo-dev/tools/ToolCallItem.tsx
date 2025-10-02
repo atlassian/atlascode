@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { RovoDevToolName } from 'src/rovo-dev/responseParserInterfaces';
 import { InitializingDownladingState, InitializingState, State } from 'src/rovo-dev/rovoDevTypes';
 
 export const ToolCallItem: React.FC<{
@@ -29,12 +30,12 @@ export const ToolCallItem: React.FC<{
     );
 };
 
-export function parseToolCallMessage(msgToolName: string): string {
+export function parseToolCallMessage(msgToolName: RovoDevToolName): string {
+    if (!msgToolName) {
+        return '';
+    }
+
     switch (msgToolName) {
-        case '':
-        case null:
-        case undefined:
-            return '';
         case 'create_file':
             return 'Creating file';
         case 'delete_file':
@@ -55,8 +56,11 @@ export function parseToolCallMessage(msgToolName: string): string {
             return `Executing bash command`;
         case 'create_technical_plan':
             return 'Creating technical plan';
+        case 'mcp_invoke_tool':
+            return "Invoking MCP server's tool";
         default:
-            return msgToolName;
+            // @ts-expect-error ts(2339) - msgToolName here should be 'never'
+            return msgToolName.toString();
     }
 }
 

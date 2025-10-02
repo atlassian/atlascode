@@ -1,5 +1,20 @@
 // interfaces for the raw responses from the rovo dev agent
 
+import {
+    RovoDevClearResponse,
+    RovoDevExceptionResponse,
+    RovoDevOnCallToolStartResponse,
+    RovoDevPruneResponse,
+    RovoDevResponse,
+    RovoDevRetryPromptResponse,
+    RovoDevTextResponse,
+    RovoDevToolCallResponse,
+    RovoDevToolName,
+    RovoDevToolReturnResponse,
+    RovoDevUserPromptResponse,
+    RovoDevWarningResponse,
+} from './responseParserInterfaces';
+
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.UserPromptPart
 interface RovoDevUserPromptResponseRaw {
     content?: string;
@@ -26,10 +41,11 @@ interface RovoDevTextChunk {
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.ToolCallPart
 interface RovoDevToolCallResponseRaw {
-    tool_name?: string;
-    tool_name_delta?: string;
+    tool_name: RovoDevToolName;
     args?: string;
     args_delta?: string;
+    /** sets when the tool is being exposed by an MCP server */
+    mcp_server?: string;
     tool_call_id: string;
 }
 
@@ -40,7 +56,7 @@ interface RovoDevToolCallChunk {
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.ToolReturnPart
 interface RovoDevToolReturnResponseRaw {
-    tool_name: string;
+    tool_name: RovoDevToolName;
     content: string | object;
     tool_call_id: string;
     timestamp: string;
@@ -55,8 +71,7 @@ interface RovoDevToolReturnChunk {
 interface RovoDevRetryPromptResponseRaw {
     content?: string;
     content_delta?: string;
-    tool_name?: string;
-    tool_name_delta?: string;
+    tool_name: RovoDevToolName;
     tool_call_id: string;
     timestamp: string;
 }
@@ -169,90 +184,6 @@ interface RovoDevPartDeltaChunk {
     data: RovoDevPartDeltaResponseRaw;
 }
 
-// abstracted responses' interfaces
-
-export interface RovoDevUserPromptResponse {
-    event_kind: 'user-prompt';
-    content: string;
-    timestamp: string;
-}
-
-export interface RovoDevTextResponse {
-    event_kind: 'text';
-    index: number;
-    content: string;
-}
-
-export interface RovoDevToolCallResponse {
-    event_kind: 'tool-call';
-    tool_name: string;
-    args: string;
-    tool_call_id: string;
-}
-
-export interface RovoDevToolReturnResponse {
-    event_kind: 'tool-return';
-    tool_name: string;
-    content?: string;
-    parsedContent?: object;
-    tool_call_id: string;
-    timestamp: string;
-    toolCallMessage: RovoDevToolCallResponse;
-}
-
-export interface RovoDevRetryPromptResponse {
-    event_kind: 'retry-prompt';
-    content: string;
-    tool_name: string;
-    tool_call_id: string;
-    timestamp: string;
-}
-
-export interface RovoDevExceptionResponse {
-    event_kind: 'exception';
-    message: string;
-    title?: string;
-    type: string;
-}
-
-export interface RovoDevWarningResponse {
-    event_kind: 'warning';
-    message: string;
-    title?: string;
-}
-
-export interface RovoDevClearResponse {
-    event_kind: 'clear';
-    message: string;
-}
-
-export interface RovoDevPruneResponse {
-    event_kind: 'prune';
-    message: string;
-}
-
-export interface RovoDevOnCallToolStartResponse {
-    event_kind: 'on_call_tools_start';
-    tools: RovoDevToolCallResponse[];
-}
-
-export interface RovoDevCloseResponse {
-    event_kind: 'close';
-}
-
-export type RovoDevResponse =
-    | RovoDevUserPromptResponse
-    | RovoDevTextResponse
-    | RovoDevToolCallResponse
-    | RovoDevToolReturnResponse
-    | RovoDevRetryPromptResponse
-    | RovoDevExceptionResponse
-    | RovoDevWarningResponse
-    | RovoDevClearResponse
-    | RovoDevPruneResponse
-    | RovoDevOnCallToolStartResponse
-    | RovoDevCloseResponse;
-
 // parsing functions for specific response types
 
 function parseResponseUserPrompt(
@@ -289,14 +220,14 @@ function parseResponseToolCall(
     buffer?: RovoDevToolCallResponse,
 ): RovoDevToolCallResponse {
     if (buffer) {
-        buffer.tool_name += data.tool_name_delta || '';
         buffer.args += data.args_delta || '';
         return buffer;
     } else {
         return {
             event_kind: 'tool-call',
-            tool_name: data.tool_name || '',
+            tool_name: data.tool_name,
             args: data.args || '',
+            mcp_server: data.mcp_server,
             tool_call_id: data.tool_call_id,
         };
     }
@@ -322,13 +253,12 @@ function parseResponseRetryPrompt(
     buffer?: RovoDevRetryPromptResponse,
 ): RovoDevRetryPromptResponse {
     if (buffer) {
-        buffer.tool_name += data.tool_name_delta || '';
         buffer.content += data.content_delta || '';
         return buffer;
     } else {
         return {
             event_kind: 'retry-prompt',
-            tool_name: data.tool_name || '',
+            tool_name: data.tool_name,
             content: data.content || '',
             tool_call_id: data.tool_call_id,
             timestamp: data.timestamp,

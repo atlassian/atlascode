@@ -29,7 +29,6 @@ export const enum RovoDevViewResponseType {
     LaunchJiraAuth = 'launchJiraAuth',
     McpConsentChoiceSubmit = 'mcpConsentChoiceSubmit',
     CheckFileExists = 'checkFileExists',
-    GetJiraWorkItems = 'getJiraWorkItems',
     ToolPermissionChoiceSubmit = 'toolPermissionChoiceSubmit',
     YoloModeToggled = 'yoloModeToggled',
 }
@@ -69,7 +68,6 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>
     | ReducerAction<RovoDevViewResponseType.McpConsentChoiceSubmit, { choice: McpConsentChoice; serverName?: string }>
     | ReducerAction<RovoDevViewResponseType.CheckFileExists, { filePath: string; requestId: string }>
-    | ReducerAction<RovoDevViewResponseType.GetJiraWorkItems>
     | ReducerAction<
           RovoDevViewResponseType.ToolPermissionChoiceSubmit,
           { choice: ToolPermissionChoice; toolCallId: string }

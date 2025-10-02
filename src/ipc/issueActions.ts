@@ -184,6 +184,10 @@ export interface AiSuggeestionFeedbackAction extends Action {
     action: 'aiSuggestionFeedback';
     isPositive: boolean;
     todoData: SimplifiedTodoIssueData;
+    feedbackData?: {
+        description: string;
+        contactMe: boolean;
+    };
 }
 
 export function isGetImage(a: Action): a is GetImageAction {

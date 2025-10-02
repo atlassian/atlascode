@@ -39,7 +39,7 @@ export const DisabledMessage: React.FC<{
 
     if (currentState.state === 'Disabled' && currentState.subState === 'EntitlementCheckFailed') {
         return (
-            <div style={messageOuterStyles}>
+            <div style={{ ...messageOuterStyles, width: '100%' }}>
                 <DialogMessageItem
                     msg={{
                         source: 'RovoDevDialog',

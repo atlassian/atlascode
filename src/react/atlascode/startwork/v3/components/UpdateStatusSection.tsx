@@ -16,18 +16,6 @@ export const UpdateStatusSection: React.FC<UpdateStatusSectionProps> = ({
     const { transitionIssueEnabled, selectedTransition } = formState;
     const { onTransitionIssueEnabledChange, onSelectedTransitionChange } = formActions;
 
-    useEffect(() => {
-        const availableTransitions = state.issue.transitions.filter((t) => t.to.id !== state.issue.status.id);
-
-        const inProgressTransitionGuess: Transition =
-            availableTransitions.find((t) => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress')) ||
-            availableTransitions.find((t) => !t.isInitial) ||
-            availableTransitions[0] ||
-            emptyTransition;
-
-        onSelectedTransitionChange(inProgressTransitionGuess);
-    }, [state.issue, onSelectedTransitionChange]);
-
     const availableTransitions = state.issue.transitions.filter(
         (transition) => transition.to.id !== state.issue.status.id,
     );
@@ -35,8 +23,23 @@ export const UpdateStatusSection: React.FC<UpdateStatusSectionProps> = ({
     const isValidSelectedTransition = availableTransitions.some((t) => t.id === selectedTransition.id);
 
     useEffect(() => {
-        if (!isValidSelectedTransition && availableTransitions.length > 0) {
-            onSelectedTransitionChange(availableTransitions[0]);
+        if (availableTransitions.length === 0) {
+            return;
+        }
+
+        if (!isValidSelectedTransition) {
+            // Use the same logic as the previous version of the start work page:
+            // 1. Try to find a transition with "progress" in the name (covers most cases)
+            // 2. Fallback to first non-initial transition (works for any workflow)
+            // 3. Fallback to first available transition (guarantees something is selected)
+            // 4. Final fallback to emptyTransition
+            const inProgressTransitionGuess: Transition =
+                availableTransitions.find((t) => !t.isInitial && t.to.name.toLowerCase().includes('progress')) ||
+                availableTransitions.find((t) => !t.isInitial) ||
+                availableTransitions[0] ||
+                emptyTransition;
+
+            onSelectedTransitionChange(inProgressTransitionGuess);
         }
     }, [availableTransitions, isValidSelectedTransition, onSelectedTransitionChange]);
 
@@ -76,9 +79,11 @@ export const UpdateStatusSection: React.FC<UpdateStatusSectionProps> = ({
                             {state.issue.status.name}
                         </Lozenge>
                     </Grid>
-                    <Box display="flex" alignItems="center">
-                        <ArrowRightAltIcon />
-                    </Box>
+                    <Grid item>
+                        <Box display="flex" alignItems="center">
+                            <ArrowRightAltIcon />
+                        </Box>
+                    </Grid>
                     <Grid item>
                         <Box minWidth={150}>
                             <TextField

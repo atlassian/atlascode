@@ -86,7 +86,7 @@ const StartWorkPageV3: React.FunctionComponent = () => {
                                     submitState === 'submitting' ? <CircularProgress color="inherit" size={20} /> : null
                                 }
                             >
-                                Create branch
+                                {formState.branchSetupEnabled ? 'Create branch' : 'Start work'}
                             </Button>
                         </Box>
                     )}

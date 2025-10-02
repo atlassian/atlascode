@@ -800,6 +800,7 @@ export class CreateIssueWebview
                     handled = true;
                     if (isUpdateAiSettings(msg)) {
                         const newState = msg.newState;
+                        Container.analyticsApi.fireIssueSuggestionSettingsChangeEvent({ ...newState });
                         // update vscode settings accordingly
                         await configuration.update(
                             'issueSuggestion.enabled',
@@ -817,6 +818,7 @@ export class CreateIssueWebview
 
                 case 'addApiToken': {
                     handled = true;
+                    Container.analyticsApi.fireApiTokenNudgeClickedEvent({ source: 'createIssueView' });
                     commands.executeCommand(Commands.JiraAPITokenLogin);
                     break;
                 }
@@ -857,10 +859,10 @@ export class CreateIssueWebview
                 case 'aiSuggestionFeedback': {
                     handled = true;
                     if (isAiSuggestionFeedback(msg)) {
-                        const { isPositive, todoData } = msg;
+                        const { isPositive, todoData, feedbackData } = msg;
 
                         const suggestionManager = new IssueSuggestionManager(this._issueSuggestionSettings!);
-                        suggestionManager.sendFeedback(isPositive, todoData);
+                        suggestionManager.sendFeedback(isPositive, todoData, feedbackData);
                     }
                     break;
                 }

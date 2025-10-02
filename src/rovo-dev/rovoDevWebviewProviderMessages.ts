@@ -3,17 +3,20 @@ import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
-import { RovoDevResponse } from './responseParser';
+import {
+    RovoDevRetryPromptResponse,
+    RovoDevTextResponse,
+    RovoDevToolCallResponse,
+    RovoDevToolReturnResponse,
+} from './responseParserInterfaces';
 import { EntitlementCheckRovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
-import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
+import { DisabledState, RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
 export const enum RovoDevProviderMessageType {
     RovoDevDisabled = 'rovoDevDisabled',
     SignalPromptSent = 'signalPromptSent',
-    Response = 'response',
+    RovoDevResponseMessage = 'rovoDevResponseMessage',
     CompleteMessage = 'completeMessage',
-    ToolCall = 'toolCall',
-    ToolReturn = 'toolReturn',
     ShowDialog = 'showDialog',
     ClearChat = 'clearChat',
     ProviderReady = 'providerReady',
@@ -32,12 +35,7 @@ export const enum RovoDevProviderMessageType {
     SetDebugPanel = 'setDebugPanel',
     SetPromptText = 'setPromptText',
     SetJiraWorkItems = 'setJiraWorkItems',
-    SetJiraWorkItemsLoading = 'setJiraWorkItemsLoading',
     CheckFileExistsComplete = 'checkFileExistsComplete',
-}
-
-export interface RovoDevObjectResponse {
-    dataObject: RovoDevResponse;
 }
 
 interface FocusedContextRemovedResponse {
@@ -49,9 +47,15 @@ interface NonFocusedContextRemovedResponse {
     context: RovoDevContextItem;
 }
 
-export type RovoDevDisabledReason = 'noOpenFolder' | 'needAuth' | 'other' | 'entitlementCheckFailed';
+export type RovoDevDisabledReason = DisabledState['subState'];
 
 export type RovoDevEntitlementCheckFailedDetail = EntitlementCheckRovoDevHealthcheckResponse['detail'];
+
+export type RovoDevResponseMessageType =
+    | RovoDevTextResponse
+    | RovoDevToolCallResponse
+    | RovoDevToolReturnResponse
+    | RovoDevRetryPromptResponse;
 
 export type RovoDevProviderMessage =
     | ReducerAction<
@@ -59,13 +63,14 @@ export type RovoDevProviderMessage =
           { reason: RovoDevDisabledReason; detail?: RovoDevEntitlementCheckFailedDetail }
       >
     | ReducerAction<RovoDevProviderMessageType.SignalPromptSent, RovoDevPrompt & { echoMessage: boolean }>
-    | ReducerAction<RovoDevProviderMessageType.Response, RovoDevObjectResponse>
-    | ReducerAction<RovoDevProviderMessageType.CompleteMessage, { isReplay?: boolean }>
-    | ReducerAction<RovoDevProviderMessageType.ToolCall, RovoDevObjectResponse>
-    | ReducerAction<RovoDevProviderMessageType.ToolReturn, RovoDevObjectResponse>
+    | ReducerAction<RovoDevProviderMessageType.RovoDevResponseMessage, { message: RovoDevResponseMessageType }>
+    | ReducerAction<RovoDevProviderMessageType.CompleteMessage>
     | ReducerAction<RovoDevProviderMessageType.ShowDialog, { message: DialogMessage }>
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
-    | ReducerAction<RovoDevProviderMessageType.ProviderReady, { workspacePath?: string; homeDir?: string }>
+    | ReducerAction<
+          RovoDevProviderMessageType.ProviderReady,
+          { workspacePath?: string; homeDir?: string; yoloMode?: boolean }
+      >
     | ReducerAction<RovoDevProviderMessageType.SetInitializing, { isPromptPending: boolean }>
     | ReducerAction<
           RovoDevProviderMessageType.SetDownloadProgress,
@@ -90,7 +95,6 @@ export type RovoDevProviderMessage =
       >
     | ReducerAction<RovoDevProviderMessageType.SetPromptText, { text: string }>
     | ReducerAction<RovoDevProviderMessageType.SetJiraWorkItems, { issues: MinimalIssue<DetailedSiteInfo>[] }>
-    | ReducerAction<RovoDevProviderMessageType.SetJiraWorkItemsLoading, { isLoading: boolean }>
     | ReducerAction<
           RovoDevProviderMessageType.CheckFileExistsComplete,
           { requestId: string; filePath: string; exists: boolean }
