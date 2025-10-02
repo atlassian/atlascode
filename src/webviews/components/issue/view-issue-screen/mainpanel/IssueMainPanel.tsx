@@ -11,6 +11,7 @@ import { AdfAwareContent } from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
 import { AttachmentList } from '../../AttachmentList';
 import { AttachmentsModal } from '../../AttachmentsModal';
+import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 import WorklogForm from '../../WorklogForm';
@@ -35,10 +36,11 @@ type Props = {
     handleOpenIssue: (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => void;
     onDelete: (issueLink: any) => void;
     onFetchIssues: (input: string) => Promise<any>;
-    fetchUsers: (input: string) => Promise<any[]>;
+    fetchUsers: (input: string, accountId?: string) => Promise<any[]>;
     fetchImage: (url: string) => Promise<string>;
     onIssueUpdate?: (issueKey: string, fieldKey: string, newValue: any) => void;
     isAtlaskitEditorEnabled?: boolean;
+    mentionProvider: AtlascodeMentionProvider;
 };
 
 const IssueMainPanel: React.FC<Props> = ({
@@ -61,6 +63,7 @@ const IssueMainPanel: React.FC<Props> = ({
     fetchImage,
     onIssueUpdate,
     isAtlaskitEditorEnabled,
+    mentionProvider,
 }) => {
     const attachments = fields['attachment'] && fieldValues['attachment'] ? fieldValues['attachment'] : undefined;
     const subtasks =
@@ -194,6 +197,7 @@ const IssueMainPanel: React.FC<Props> = ({
                                 onContentChange={(content) => {
                                     setDescriptionText(content);
                                 }}
+                                mentionProvider={Promise.resolve(mentionProvider)}
                             />
                         ) : (
                             <JiraIssueTextAreaEditor
@@ -233,7 +237,7 @@ const IssueMainPanel: React.FC<Props> = ({
                             className="ac-inline-input-view-p"
                         >
                             {isAtlaskitEditorEnabled ? (
-                                <AdfAwareContent content={descriptionText} fetchImage={fetchImage} />
+                                <AdfAwareContent content={descriptionText} mentionProvider={mentionProvider} />
                             ) : renderedDescription ? (
                                 <RenderedContent html={renderedDescription} fetchImage={fetchImage} />
                             ) : (

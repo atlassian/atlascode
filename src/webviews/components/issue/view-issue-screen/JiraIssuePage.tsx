@@ -1,3 +1,4 @@
+import { MentionNameDetails, MentionNameStatus } from '@atlaskit/mention';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
@@ -27,6 +28,7 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
+import { AtlascodeMentionProvider } from '../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import NavItem from '../NavItem';
 import PullRequests from '../PullRequests';
 import { IssueCommentComponent } from './mainpanel/IssueCommentComponent';
@@ -45,6 +47,7 @@ export interface ViewState extends CommonEditorViewState, EditIssueData {
     hierarchyLoading: boolean;
     hierarchy: MinimalIssue<DetailedSiteInfo>[];
     containerWidth?: number;
+    mentionProvider: AtlascodeMentionProvider | null;
 }
 
 const emptyState: ViewState = {
@@ -56,16 +59,81 @@ const emptyState: ViewState = {
     isEditingComment: false,
     hierarchyLoading: false,
     hierarchy: [],
+    mentionProvider: null,
 };
+
+export type MentionInfo = {
+    displayName: string;
+    avatarUrl: string;
+    mention: string;
+    accountId: string;
+};
+
+export type CachedMention = MentionNameDetails & { ttl: Date };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
     private advancedSidebarFields: FieldUI[] = [];
     private advancedMainFields: FieldUI[] = [];
     private attachingInProgress = false;
+    protected mentionNames: Map<string, CachedMention>;
 
     constructor(props: any) {
         super(props);
         this.state = emptyState;
+        this.mentionNames = new Map<string, CachedMention>();
+    }
+
+    get mentionProvider() {
+        if (!this.state.mentionProvider) {
+            const provider = new AtlascodeMentionProvider(
+                {
+                    url: '',
+                    mentionNameResolver: {
+                        lookupName: async (id: string) => {
+                            const accountId = id.split('accountid:')[1];
+                            if (!accountId) {
+                                return {
+                                    id,
+                                    name: 'Unknown User',
+                                    status: MentionNameStatus.UNKNOWN,
+                                };
+                            }
+
+                            if (this.mentionNames.has(accountId)) {
+                                //TODO: implement cache invalidation
+                                return this.mentionNames.get(accountId)!;
+                            }
+
+                            const users = await this.fetchAndTransformUsers('', accountId);
+                            if (users.length === 0) {
+                                return {
+                                    id,
+                                    name: 'Unknown User',
+                                    status: MentionNameStatus.UNKNOWN,
+                                };
+                            }
+                            const resolvedMention = {
+                                id,
+                                name: users[0].displayName,
+                                status: MentionNameStatus.OK,
+                            };
+                            this.mentionNames.set(accountId, {
+                                ...resolvedMention,
+                                ttl: new Date(Date.now() + 5 * 60 * 1000),
+                            });
+                            return resolvedMention;
+                        },
+                        cacheName: (_id: string, _name: string) => {
+                            // currently this method is never called by Atlaskit. So it is implemented only to satisfy the interface
+                        },
+                    },
+                },
+                this.fetchAndTransformUsers,
+            );
+            this.setState({ mentionProvider: provider });
+            return provider;
+        }
+        return this.state.mentionProvider;
     }
 
     // TODO: proper error handling in webviews :'(
@@ -167,14 +235,28 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     };
 
-    fetchUsers = (input: string) => {
+    fetchUsers = (input: string, accountId?: string) => {
         const apiVersion = this.getApiVersion();
-        const userSearchUrl = this.state.siteDetails.isCloud
-            ? `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?query=`
-            : `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?username=`;
-
+        let userSearchUrl;
+        if (accountId) {
+            userSearchUrl = `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?accountId=${accountId}`;
+        } else {
+            userSearchUrl = this.state.siteDetails.isCloud
+                ? `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?query=`
+                : `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?username=`;
+        }
         return this.loadSelectOptions(input, userSearchUrl);
     };
+
+    fetchAndTransformUsers = async (input: string, accountId?: string): Promise<MentionInfo[]> =>
+        (await this.fetchUsers(input, accountId)).map((user) => {
+            return {
+                displayName: user.displayName,
+                avatarUrl: user.avatarUrls?.['48x48'],
+                mention: this.state.siteDetails.isCloud ? `[~accountid:${user.accountId}]` : `[~${user.name}]`,
+                accountId: user.accountId,
+            };
+        });
 
     protected override handleInlineEdit = async (field: FieldUI, newValue: any) => {
         switch (field.uiType) {
@@ -619,18 +701,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         await this.loadIssueOptions(this.state.fields['issuelinks'] as SelectFieldUI, input)
                     }
                     onDelete={this.handleDeleteIssuelink}
-                    fetchUsers={async (input: string) =>
-                        (await this.fetchUsers(input)).map((user) => ({
-                            displayName: user.displayName,
-                            avatarUrl: user.avatarUrls?.['48x48'],
-                            mention: this.state.siteDetails.isCloud
-                                ? `[~accountid:${user.accountId}]`
-                                : `[~${user.name}]`,
-                        }))
-                    }
+                    fetchUsers={this.fetchAndTransformUsers}
                     fetchImage={(img) => this.fetchImage(img)}
                     isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}
                     onIssueUpdate={this.handleChildIssueUpdate}
+                    mentionProvider={this.mentionProvider}
                 />
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (
@@ -642,15 +717,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             siteDetails={this.state.siteDetails}
                             onCreate={this.handleCreateComment}
                             onSave={this.handleUpdateComment}
-                            fetchUsers={async (input: string) =>
-                                (await this.fetchUsers(input)).map((user) => ({
-                                    displayName: user.displayName,
-                                    avatarUrl: user.avatarUrls?.['48x48'],
-                                    mention: this.state.siteDetails.isCloud
-                                        ? `[~accountid:${user.accountId}]`
-                                        : `[~${user.name}]`,
-                                }))
-                            }
+                            fetchUsers={this.fetchAndTransformUsers}
                             fetchImage={(img) => this.fetchImage(img)}
                             onDelete={this.handleDeleteComment}
                             isServiceDeskProject={
