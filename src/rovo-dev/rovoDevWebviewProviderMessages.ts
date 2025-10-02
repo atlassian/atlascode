@@ -94,7 +94,10 @@ export type RovoDevProviderMessage =
           { enabled: boolean; context: Record<string, string>; mcpContext: Record<string, string> }
       >
     | ReducerAction<RovoDevProviderMessageType.SetPromptText, { text: string }>
-    | ReducerAction<RovoDevProviderMessageType.SetJiraWorkItems, { issues: MinimalIssue<DetailedSiteInfo>[] }>
+    | ReducerAction<
+          RovoDevProviderMessageType.SetJiraWorkItems,
+          { issues: MinimalIssue<DetailedSiteInfo>[] | undefined }
+      >
     | ReducerAction<
           RovoDevProviderMessageType.CheckFileExistsComplete,
           { requestId: string; filePath: string; exists: boolean }

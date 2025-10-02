@@ -526,14 +526,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private sendJiraItemsToView(issues: MinimalIssue<DetailedSiteInfo>[]) {
+    private sendJiraItemsToView(issues: MinimalIssue<DetailedSiteInfo>[] | undefined) {
         if (!this._webView) {
             return;
         }
 
         return this._webView.postMessage({
             type: RovoDevProviderMessageType.SetJiraWorkItems,
-            issues: issues,
+            issues,
         });
     }
 
