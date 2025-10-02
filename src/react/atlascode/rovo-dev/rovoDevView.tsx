@@ -690,7 +690,7 @@ const RovoDevView: React.FC = () => {
         (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance');
 
     return (
-        <div className="rovoDevChat">
+        <div className={debugPanelEnabled ? 'rovoDevChat debugEnabled' : 'rovoDevChat'}>
             {debugPanelEnabled && (
                 <DebugPanel
                     currentState={currentState}

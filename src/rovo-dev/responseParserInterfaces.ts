@@ -1,5 +1,10 @@
 // abstracted responses' interfaces
 
+export interface RovoDevParsingError {
+    event_kind: '_parsing_error';
+    error: Error;
+}
+
 export interface RovoDevUserPromptResponse {
     event_kind: 'user-prompt';
     content: string;
@@ -72,6 +77,7 @@ export interface RovoDevCloseResponse {
 }
 
 export type RovoDevResponse =
+    | RovoDevParsingError
     | RovoDevUserPromptResponse
     | RovoDevTextResponse
     | RovoDevToolCallResponse
