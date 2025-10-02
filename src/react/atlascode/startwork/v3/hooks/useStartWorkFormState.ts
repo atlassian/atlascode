@@ -53,18 +53,33 @@ export function useStartWorkFormState(
             const defaultRepo = state.repoData[0];
             setSelectedRepository(defaultRepo);
             setSourceBranch(getDefaultSourceBranch(defaultRepo));
+
+            // Set default branch type - prefer repo branch types, fallback to custom prefixes, or empty prefix
             if (defaultRepo.branchTypes?.length > 0) {
                 setSelectedBranchType(defaultRepo.branchTypes[0]);
+            } else if (state.customPrefixes?.length > 0) {
+                const normalizedCustomPrefix = state.customPrefixes[0].endsWith('/')
+                    ? state.customPrefixes[0]
+                    : state.customPrefixes[0] + '/';
+                setSelectedBranchType({
+                    kind: state.customPrefixes[0],
+                    prefix: normalizedCustomPrefix,
+                });
+            } else {
+                // Set empty prefix to allow template-only generation
+                setSelectedBranchType({ kind: '', prefix: '' });
             }
+
             if (!upstream) {
                 setUpstream(defaultRepo.workspaceRepo.mainSiteRemote.remote.name);
             }
         }
-    }, [state.repoData, upstream]);
+    }, [state.repoData, state.customPrefixes, upstream]);
 
     // useEffect: auto-generate branch name
     useEffect(() => {
-        if (selectedRepository && selectedBranchType.prefix) {
+        if (selectedRepository && state.issue && state.customTemplate) {
+            // Always generate branch name, even with empty prefix (like old version)
             setLocalBranch(
                 generateBranchName(selectedRepository, selectedBranchType, state.issue, state.customTemplate),
             );
@@ -75,14 +90,28 @@ export function useStartWorkFormState(
         (repository: RepoData) => {
             setSelectedRepository(repository);
             setSourceBranch(getDefaultSourceBranch(repository));
+
+            // Set default branch type - prefer repo branch types, fallback to custom prefixes, or empty prefix
             if (repository.branchTypes?.length > 0) {
                 setSelectedBranchType(repository.branchTypes[0]);
+            } else if (state.customPrefixes?.length > 0) {
+                const normalizedCustomPrefix = state.customPrefixes[0].endsWith('/')
+                    ? state.customPrefixes[0]
+                    : state.customPrefixes[0] + '/';
+                setSelectedBranchType({
+                    kind: state.customPrefixes[0],
+                    prefix: normalizedCustomPrefix,
+                });
+            } else {
+                // Set empty prefix to allow template-only generation
+                setSelectedBranchType({ kind: '', prefix: '' });
             }
+
             if (!upstream) {
                 setUpstream(repository.workspaceRepo.mainSiteRemote.remote.name);
             }
         },
-        [upstream],
+        [upstream, state.customPrefixes],
     );
 
     const handleBranchTypeChange = useCallback((branchType: { kind: string; prefix: string }) => {

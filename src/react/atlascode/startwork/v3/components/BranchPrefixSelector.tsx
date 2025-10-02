@@ -33,26 +33,37 @@ export const BranchPrefixSelector: React.FC<BranchPrefixSelectorProps> = ({
 
     const hasOptions = (selectedRepository?.branchTypes?.length || 0) > 0 || convertedCustomPrefixes.length > 0;
 
-    if (!hasOptions) {
-        return null;
-    }
+    // Always show the selector to allow manual input, even if no predefined options
+    const options = hasOptions ? [...(selectedRepository?.branchTypes || []), ...convertedCustomPrefixes] : [];
 
     return (
         <Grid item xs={6}>
             <Typography variant="body2">Branch prefix</Typography>
             <Autocomplete
-                options={[...(selectedRepository?.branchTypes || []), ...convertedCustomPrefixes]}
-                groupBy={(option) =>
-                    (selectedRepository?.branchTypes || []).map((type) => type.kind).includes(option.kind)
-                        ? 'Repo Branch Type'
-                        : 'Custom Prefix'
+                options={options}
+                groupBy={
+                    hasOptions
+                        ? (option) =>
+                              (selectedRepository?.branchTypes || []).map((type) => type.kind).includes(option.kind)
+                                  ? 'Repo Branch Type'
+                                  : 'Custom Prefix'
+                        : undefined
                 }
-                getOptionLabel={(option) => option.kind}
-                renderInput={(params) => <TextField {...params} size="small" variant="outlined" />}
+                getOptionLabel={(option) => (typeof option === 'string' ? option : option.kind)}
+                renderInput={(params) => (
+                    <TextField {...params} size="small" variant="outlined" placeholder="Enter prefix (optional)" />
+                )}
                 size="small"
-                disableClearable
+                freeSolo
                 value={selectedBranchType}
                 onChange={handleBranchTypeChange}
+                onInputChange={(event, newInputValue) => {
+                    // Handle manual input for custom prefixes
+                    if (newInputValue && typeof newInputValue === 'string') {
+                        const normalizedPrefix = newInputValue.endsWith('/') ? newInputValue : newInputValue + '/';
+                        onBranchTypeChange({ kind: newInputValue, prefix: normalizedPrefix });
+                    }
+                }}
             />
         </Grid>
     );

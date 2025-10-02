@@ -23,22 +23,23 @@ describe('BranchPrefixSelector', () => {
         isCloud: false,
     };
 
-    it('should not render when no branch types or custom prefixes', () => {
+    it('should render even when no branch types or custom prefixes', () => {
         const repoWithoutBranchTypes = {
             ...mockRepoData,
             branchTypes: [],
         };
 
-        const { container } = render(
+        render(
             <BranchPrefixSelector
                 selectedRepository={repoWithoutBranchTypes}
-                selectedBranchType={{ kind: 'Feature', prefix: 'feature/' }}
+                selectedBranchType={{ kind: '', prefix: '' }}
                 customPrefixes={[]}
                 onBranchTypeChange={jest.fn()}
             />,
         );
 
-        expect(container.firstChild).toBeNull();
+        expect(screen.getByText('Branch prefix')).toBeTruthy();
+        expect(screen.getByPlaceholderText('Enter prefix (optional)')).toBeTruthy();
     });
 
     it('should render with branch types', () => {
