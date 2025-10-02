@@ -1497,6 +1497,8 @@
         "@atlaskit/inline-dialog": "^18.0.4",
         "@atlaskit/layering": "^3.0.0",
         "@atlaskit/lozenge": "^13.0.8",
+        "@atlaskit/media-core": "^37.0.0",
+        "@atlaskit/media-state": "^1.8.0",
         "@atlaskit/mention": "^24.2.18",
         "@atlaskit/modal-dialog": "^14.3.4",
         "@atlaskit/page": "^14.0.1",
@@ -1604,8 +1606,6 @@
         "websocket": "^1.0.35"
     },
     "devDependencies": {
-        "@atlaskit/media-core": "^37.0.0",
-        "@atlaskit/media-state": "^1.8.0",
         "@compiled/webpack-loader": "^0.19.6",
         "@jest/globals": "^30.1.1",
         "@playwright/test": "1.56.1",
