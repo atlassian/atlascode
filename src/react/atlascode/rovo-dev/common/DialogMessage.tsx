@@ -95,7 +95,7 @@ export const DialogMessageItem: React.FC<{
                                 justifyContent: 'flex-end',
                                 width: '100%',
                                 marginTop: '8px',
-                                gap: '4px',
+                                gap: '8px',
                             }}
                         >
                             <button
