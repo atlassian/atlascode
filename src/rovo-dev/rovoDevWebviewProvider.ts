@@ -309,7 +309,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.CheckGitChanges:
-                        const isClean = await this._prHandler!.isGitStateClean();
+                        const isClean = await this._prHandler?.isGitStateClean();
                         await webview.postMessage({
                             type: RovoDevProviderMessageType.CheckGitChangesComplete,
                             hasChanges: !isClean,
@@ -829,11 +829,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
-        const prHandler = this._prHandler!;
+        const prHandler = this._prHandler;
 
         let prLink: string | undefined;
         const webview = this._webView!;
         try {
+            if (!prHandler) {
+                throw new Error('Pull Request handler not initialized');
+            }
             if (!commitMessage || !branchName) {
                 throw new Error('Commit message and branch name are required to create a PR');
             }
@@ -863,10 +866,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async getCurrentBranchName(): Promise<void> {
-        const webview = this._webView!;
-        const prHandler = this._prHandler!;
+        const webview = this._webView;
+        const prHandler = this._prHandler;
 
         try {
+            if (!prHandler) {
+                throw new Error('Pull Request handler not initialized');
+            }
+            if (!webview) {
+                throw new Error('Webview not initialized');
+            }
             const branchName = await prHandler.getCurrentBranchName();
             await webview.postMessage({
                 type: RovoDevProviderMessageType.GetCurrentBranchNameComplete,
