@@ -88,17 +88,28 @@ export class SiteManager extends Disposable {
         this._onDidSitesAvailableChange.dispose();
     }
 
-    public addOrUpdateSite(newSite: DetailedSiteInfo) {
+    public async addOrUpdateSite(newSite: DetailedSiteInfo) {
         const allSites = this.readSitesFromGlobalStore(newSite.product.key);
         const oldSite = allSites?.find((site) => site.id === newSite.id && site.userId === newSite.userId);
         if (oldSite) {
             this.updateSite(oldSite, newSite);
         } else {
-            this.addSites([newSite]);
+            await this.addSites([newSite]);
         }
     }
 
-    public addSites(newSites: DetailedSiteInfo[]) {
+    async getSitesWithApiToken() {
+        const promises = await Promise.all(
+            this.getSitesAvailable(ProductJira).map(async (site) => ({
+                token: await Container.credentialManager.getApiTokenIfExists(site),
+                site: site,
+            })),
+        );
+
+        return promises.filter((s) => s.token !== undefined).map((s) => s.site);
+    }
+
+    public async addSites(newSites: DetailedSiteInfo[]) {
         if (newSites.length === 0) {
             return;
         }
@@ -107,14 +118,10 @@ export class SiteManager extends Disposable {
         let notify = true;
         let allSites = this.readSitesFromGlobalStore(productKey);
 
-        // Generally, we overwrite credential IDs on cloud sites to prevent
+        // Generally, we overwrite credentialId on cloud sites to prevent
         // several instances of OAuth credentials from existing at once.
         // However, we must NOT mix cloud API token credentials with OAuth credentials
-        const cloudCredentialIdsToKeep = new Set(
-            this.getSitesAvailable(ProductJira)
-                .filter((site) => Container.credentialManager.getApiTokenIfExists(site))
-                .map((s) => s.credentialId),
-        );
+        const cloudCredentialIdsToKeep = new Set((await this.getSitesWithApiToken()).map((s) => s.credentialId));
 
         if (allSites) {
             // Ensure all cloud sites use the per account credential ID

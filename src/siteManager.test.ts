@@ -64,6 +64,7 @@ describe('SiteManager', () => {
             getAuthInfo: jest.fn(),
             removeAuthInfo: jest.fn(),
             generateCredentialId: jest.fn(),
+            getApiTokenIfExists: jest.fn().mockResolvedValue(undefined),
         } as unknown as CredentialManager;
 
         CredentialManager.generateCredentialId = jest.fn((productKey, userId) => `${productKey}-${userId}`);
@@ -105,46 +106,46 @@ describe('SiteManager', () => {
     });
 
     describe('addSites', () => {
-        it('should add sites to empty state', () => {
+        it('should add sites to empty state', async () => {
             const newSites = [createDetailedSiteInfo(ProductJira)];
 
-            siteManager.addSites(newSites);
+            await siteManager.addSites(newSites);
 
             expect(mockGlobalStore.update).toHaveBeenCalledWith(`${ProductJira.key}Sites`, newSites);
             expect(siteManager.getSitesAvailable(ProductJira)).toEqual(newSites);
         });
 
-        it('should add sites to existing site collection', () => {
+        it('should add sites to existing site collection', async () => {
             const existingSite = createDetailedSiteInfo(ProductJira, 'site1');
             const newSite = createDetailedSiteInfo(ProductJira, 'site2');
 
             storedSites.set(`${ProductJira.key}Sites`, [existingSite]);
 
-            siteManager.addSites([newSite]);
+            await siteManager.addSites([newSite]);
 
             expect(mockGlobalStore.update).toHaveBeenCalledWith(`${ProductJira.key}Sites`, [existingSite, newSite]);
             expect(siteManager.getSitesAvailable(ProductJira)).toEqual([existingSite, newSite]);
         });
 
-        it('should not add duplicate sites', () => {
+        it('should not add duplicate sites', async () => {
             const site = createDetailedSiteInfo(ProductJira);
 
             storedSites.set(`${ProductJira.key}Sites`, [site]);
 
-            siteManager.addSites([site]);
+            await siteManager.addSites([site]);
 
             expect(mockGlobalStore.update).toHaveBeenCalledWith(`${ProductJira.key}Sites`, [site]);
             expect(siteManager.getSitesAvailable(ProductJira)).toEqual([site]);
         });
 
-        it('should ensure cloud sites use the per account credential ID', () => {
+        it('should ensure cloud sites use the per account credential ID', async () => {
             const cloudSite = createDetailedSiteInfo(ProductJira, 'cloud', 'user1', true);
             cloudSite.credentialId = 'old-id'; // Set wrong ID to test correction
 
             storedSites.set(`${ProductJira.key}Sites`, [cloudSite]);
 
             const newSite = createDetailedSiteInfo(ProductJira, 'site2');
-            siteManager.addSites([newSite]);
+            await siteManager.addSites([newSite]);
 
             const updatedSites = siteManager.getSitesAvailable(ProductJira);
             expect(updatedSites[0].credentialId).toBe(`${ProductJira.key}-user1`);
@@ -179,7 +180,7 @@ describe('SiteManager', () => {
     });
 
     describe('addOrUpdateSite', () => {
-        it('should update an existing site', () => {
+        it('should update an existing site', async () => {
             const existingSite = createDetailedSiteInfo(ProductJira);
             const updatedSite = { ...existingSite, name: 'Updated Site' };
 
@@ -187,17 +188,17 @@ describe('SiteManager', () => {
 
             jest.spyOn(siteManager, 'updateSite');
 
-            siteManager.addOrUpdateSite(updatedSite);
+            await siteManager.addOrUpdateSite(updatedSite);
 
             expect(siteManager.updateSite).toHaveBeenCalledWith(existingSite, updatedSite);
         });
 
-        it('should add a new site if it does not exist', () => {
+        it('should add a new site if it does not exist', async () => {
             const newSite = createDetailedSiteInfo(ProductJira);
 
             jest.spyOn(siteManager, 'addSites');
 
-            siteManager.addOrUpdateSite(newSite);
+            await siteManager.addOrUpdateSite(newSite);
 
             expect(siteManager.addSites).toHaveBeenCalledWith([newSite]);
         });

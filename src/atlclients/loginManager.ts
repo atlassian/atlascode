@@ -130,7 +130,7 @@ export class LoginManager {
             const sitesToAdd = promises.filter((p) => p !== undefined) as DetailedSiteInfo[];
 
             // Add all sites at once to prevent race condition
-            this._siteManager.addSites(sitesToAdd);
+            await this._siteManager.addSites(sitesToAdd);
 
             this.fireExplicitSiteChangeEvent(sitesToAdd);
         } catch (e) {
@@ -331,7 +331,7 @@ export class LoginManager {
 
         await this._credentialManager.saveAuthInfo(siteDetails, credentials);
 
-        this._siteManager.addOrUpdateSite(siteDetails);
+        await this._siteManager.addOrUpdateSite(siteDetails);
 
         return siteDetails;
     }
