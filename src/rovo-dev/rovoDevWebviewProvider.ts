@@ -330,12 +330,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.WebviewReady:
+                        // we may receive this message multiple times because the webview can be destroyed and recreated
+                        const refreshOnly = this._webviewReady;
+
                         this._webviewReady = true;
                         this.refreshDebugPanel(true);
+
                         if (!this.isBoysenberry && !this.isDisabled) {
                             if (!workspace.workspaceFolders?.length) {
                                 await this.signalRovoDevDisabled('NoWorkspaceOpen');
-                                return;
+                                break;
                             } else {
                                 const yoloMode = await this.loadYoloModeFromStorage();
                                 await webview.postMessage({
@@ -345,6 +349,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                                     yoloMode: yoloMode,
                                 });
                             }
+                        }
+
+                        // if we refresh only, we don't want to restart the process
+                        if (refreshOnly) {
+                            await this.initializeWithHealthcheck(this.rovoDevApiClient!);
+                            break;
                         }
 
                         const fixedPort = parseInt(process.env[rovodevInfo.envVars.port] || '0');
