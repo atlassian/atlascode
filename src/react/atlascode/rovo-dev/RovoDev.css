@@ -25,11 +25,11 @@ body {
     display: none !important;
 }
 
-#rovoDevLogo > path {
-    fill: #6A9A23;
+#rovoDevLogo > path:first-child {
+    fill: #94C748;  /* it was #6A9A23 */
 }
 
-.vscode-dark #rovoDevLogo > path {
+.vscode-dark #rovoDevLogo > path:first-child {
     fill: #94C748;
 }
 
